@@ -1,0 +1,6 @@
+include "example2b.skill"
+
+A {
+	A a;
+	B b;
+}

@@ -1,0 +1,20 @@
+/** A source code location. */
+SLoc {
+	i16 line;
+	i16 column;
+	string path;
+}
+
+tagged Block {
+	SLoc begin;
+	SLoc end;
+	string image;
+}
+
+tagged IfBlock with Block {
+	Block thenBlock;
+}
+
+tagged ITEBlock with IfBlock {
+	Block elseBlock;
+}

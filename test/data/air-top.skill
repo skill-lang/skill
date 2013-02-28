@@ -1,0 +1,54 @@
+include "air-pamm.skill"
+
+/**
+time.h compatible time, i.e. seconds since 1.1.1970 0:00.
+*/
+time {
+	i64 time;
+}
+
+/**
+An air file consists of a header, the analysed code, an analysis pipeline and an optional set of changes, that has to be applied eventually. 
+@author timm.felden@felden.com 
+*/
+File {
+	Header header;
+	CodeBase code;
+	Pipeline pipeline;
+	Changes changes;
+}
+
+/** The header ensures usage of correct versions and file type. */
+Header {
+	/* Looks like 00ATLAS0 in a hex editor. */
+	const i32 guard = 0x00A5710A;
+	const i16 major = 0x0;
+	const i16 minor = 0x1;
+	time lastModified;
+}
+
+CodeBase {
+	CompilationUnit[] units;
+	/** Number of global variables occuring in all compilation units. */
+	v64 varCount;
+	/** Number of function definitions occuring in all compilation units. */
+	v64 functionCount;
+	/** Number of basic blocks occuring in all compilation units. */
+	v64 blockCount;
+}
+
+CompilationUnit {
+	time lastModified;
+	/** Name of this compilation unit, i.e. its relative path. */
+	string name;
+	/** LLVM IR Bitcode version 3.3. */
+	string bitcode;
+}
+
+Pipeline {
+	annotation[] analyses;
+}
+
+Changes {
+	annotation[] changes;
+}

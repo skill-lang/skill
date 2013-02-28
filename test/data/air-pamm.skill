@@ -1,0 +1,282 @@
+include "air-top.skill"
+
+annotation Program {
+	Type[] types;
+	Function[] functions;
+	Variable[] globals;
+	ThreadGroup[] threadGroups;
+	Permission[] permissions;
+	PermissionSet[] permissionSets;
+	/** The actual implementation of debug information might depend on the way the PAMM program is created.*/
+	annotation debugInformation;
+}
+
+
+tagged Type {
+	/**
+	The number of heap objects required to represent an instance of this type.
+	*/
+	v64 abstractHeapObjectCount;
+}
+
+tagged GroundType with Type {
+	string name;
+	/**sizeOf(this), i.e. number of characters required to represent this type.*/
+	i8 size;
+}
+
+tagged PointerType with Type {
+	Type base;
+}
+
+/**
+Arrays are constant size arrays. Arrays of unknown size are represented by
+ pointers.
+*/
+tagged ArrayType with Type {
+	v64 size;
+	Type base;
+}
+
+tagged UnionType with Type {
+	/**
+	Child types of this union.
+	*/
+	Type[] children;
+}
+
+tagged StructType with Type {
+	/**
+	Element types.
+	*/
+	Type[] elements;
+}
+
+/**
+The type of a function and base type of a function pointer.
+*/
+tagged FunctionType with Type {
+	Type[] parameters;
+	Type result;
+}
+
+/**
+Note, that a thread group is in fact the type of a thread object.
+*/
+tagged ThreadGroup with Type {
+	/** The instruction responsible for the existence of this thread group;
+	 can be null, if the thread creation can not be observed, i.e. it is
+	 created by the OS.
+    @note: The heap object of a thread is the heap object created by its creator.
+    */
+	Instruction creator;
+	/** The instruction actually starting the thread. */
+	Instruction startSite;
+	/** A set of instructions, which will observe termination of a thread. */
+	auto set<Instruction> joinSites;
+	/** The main function(s) of this thread group. This array can contain more
+	 then one entry, if the actual function is not known or if it is in fact 
+	 a set of functions, that can be executed by the given group. */
+	set<Function> main;
+	/** In fact an enum with {0=0, 1=1, 2=any} */
+	i8 cardinality;
+	/** Threads that may be executed in parallel. (MHP) */
+	ThreadGroupSet runningParrallelWith;
+	/** True, iff the threads termination can not be observed by the process. */
+	bool eternal;
+}
+
+/**
+A set of thread groups.
+*/
+ThreadGroupSet {
+	set<ThreadGroup> threads;
+}
+
+
+HeapObject {
+	/** The object responsible for the creation of this object. */
+	auto any creator;
+	/** The type of the creating object. */
+	auto Type userType;
+}
+
+Function {
+	BasicBlock[] blocks;
+	BasicBlock begin;
+	auto Function[] callers;
+	auto Instruction[] callees;
+	FunctionType signature;
+	/** The functions representation on the heap. */
+	HeapObject heapObject;
+}
+
+BasicBlock {
+	auto Function owner;
+	BasicBlock[] predecessors;
+	auto BasicBlock[] successors;
+	Instruction[] code;
+}
+
+
+tagged Instruction{
+	/**
+	The instruction ID is used to identify the result of this instruction if any.
+	IDs are unique inside a function.
+	*/
+	auto i32 ID;
+	auto BasicBlock owner;
+}
+
+/**
+Fake instructions are inserted to represent constant values and are not directly part of basic blocks.
+*/
+tagged FakeInstruction with Instruction {
+	Type type;
+}
+
+tagged ConstIntegerInstruction with FakeInstruction {
+	v64 value;
+}
+
+/**
+Used to call specific functions.
+*/
+tagged ConstFunctionPointerInstruction with FakeInstruction {
+	Function target;
+}
+
+tagged AssignmentInstruction with Instruction {
+	/**
+	The assigned value.
+	*/
+	Instruction RHS;
+}
+
+tagged OperatorInstruction with Instruction {
+	/**
+	The image of the operator, e.g '+', '-', '*', ...
+	*/
+	string operator;
+	/**
+	Operands of the operator. The semantics of the operator might vary based on the number of operands.
+	*/
+	Instruction[] operands;
+}
+
+tagged AllocationInstruction with Instruction {
+	Type allocatedType;
+	/** The results representation on the heap. */
+	HeapObject heapObject;
+}
+
+tagged FreeInstruction with Instruction {
+	Instruction target;
+}
+
+tagged LoadInstruction with Instruction {
+	Instruction address;
+}
+
+tagged StoreInstruction with Instruction {
+	Instruction address;
+}
+
+/**
+Uses a pointer and an index and calculates a new pointer pointing to the object.
+*/
+tagged IndexOfInstruction with Instruction {
+	/** must have PointerType. */
+	Instruction base;
+	/** must have integer type. */
+	Instruction index;
+}
+
+tagged PhiInstruction with Instruction {
+	/** Arguments is required to have the exactly as many entries, as the
+	 owning block has predecessors. If the actual predecessor is the i'th entry
+	 in the predecessors array, the i'th value of this array will be selected
+    */
+	Instruction[] arguments;
+}
+
+/** 
+Tau instructions are used to denote expected indeterministic data flow between threads.
+*/
+tagged TauInstruction with Instruction {
+	/** Contains a set of instructions which can be the source of the inter thread control flow and associates it with a thread group set. */
+	map<Instruction, ThreadGroupSet> sources;
+}
+
+/**
+Indicates unintentional data flow between threads.
+*/
+tagged BetaInstruction with Instruction {
+	/** The default value, which can be used to get the expectable result of this operation. In case of this instruction, sources is mostly used in order to warn the user about potential data flow. */
+	Instruction default;
+	/** Contains a set of instructions which can be the source of the inter thread control flow and associates it with a thread group set. */
+	map<Instruction, ThreadGroupSet> sources;
+}
+
+/**
+Control flow continues at any of the target blocks.
+*/
+tagged GotoInstruction with Instruction {
+	set<BasicBlock> targets;
+}
+
+tagged ReturnInstruction with Instruction {
+	/** If a result is returned, it has been computed by this instruction. */
+	Instruction rval;
+}
+
+tagged CallInstruction with Instruction {
+	/** Pointer to a function which is invoked.
+	 In most cases, this will be a ConstFunctionPointerInstruction. */
+	Instruction target;
+	Instruction[] arguments;
+	FunctionType calleeSignature;
+}
+
+tagged ThreadStartInstruction with Instruction {
+	/** The thread group of the started thread is the type of the allocated object. */
+	AllocationInstruction target;
+}
+
+tagged ThreadJoinInstruction with Instruction {
+	/** Joins all threads which can be stored in the left hand side of the target instruction. */
+	Instruction target;
+}
+
+/**
+Instrucion to acquire a permission.
+*/
+tagged AcquireInstruction with Instruction {
+	Instruction target;
+}
+
+/**
+Instrucion to release a permission.
+*/
+tagged ReleaseInstruction with Instruction {
+	Instruction target;
+}
+
+
+/** A global variable. */
+Variable {
+	/* atomic, volatile, ...?*/
+	string name;
+	/** The functions representation on the heap. */
+	HeapObject heapObject;
+}
+
+/** aka Lock */
+Permission {
+	/* TODO state?!? */
+	Type type;
+}
+
+PermissionSet {
+	set<Permission> permissions;
+}
