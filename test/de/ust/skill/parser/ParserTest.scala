@@ -12,6 +12,10 @@ class ParserTest extends AssertionsForJUnit {
     val p = new Parser
     assertNotSame(0, p.process(new File("test/data/test.skill")).size)
   }
+  @Test def hints: Unit = {
+    val p = new Parser
+    assertNotSame(0, p.process(new File("test/data/hints.skill")).size)
+  }
   @Test def test2: Unit = {
     val p = new Parser
     assertNotSame(0, p.process(new File("test/data/test2.skill")).size)
