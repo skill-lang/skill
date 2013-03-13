@@ -1,7 +1,7 @@
 package de.ust.skill.parser
 
 sealed abstract class Node {
-  override def equals(obj:Any) = ASTEqualityChecker.check(this, obj)
+  override def equals(obj: Any) = ASTEqualityChecker.check(this, obj)
 }
 
 final class Restriction(val name: String, val args: List[Any]) extends Node {
@@ -36,14 +36,14 @@ final class DependentArrayType(baseType: String, val lengthFieldName: String) ex
 final class GroundType(val name: String) extends Type {
 }
 
-sealed abstract class Field() extends Node {
+sealed abstract class Field(val t: Type, val name: String) extends Node {
   var description: Description = new Description(None, List[Restriction](), List[Hint]());
 }
 
-final class Constant(val t: Type, val name: String, val value: Int) extends Field {
+final class Constant(t: Type, name: String, val value: Int) extends Field(t, name) {
 }
 
-final class Data(val isAuto: Boolean, val t: Type, val name: String) extends Field {
+final class Data(val isAuto: Boolean, t: Type, name: String) extends Field(t, name) {
 }
 
 final class Definition(

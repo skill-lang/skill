@@ -161,11 +161,7 @@ class Parser {
         rval = rval ++ result._2
       }
     }
-    typeCheck(rval)
+    (new TypeChecker).check(rval.toList)
     return rval;
-  }
-
-  private def typeCheck(defs: LinkedList[Definition]) {
-
   }
 }
