@@ -1,56 +1,37 @@
 package de.ust.skill.parser
 
-import org.scalatest.junit.AssertionsForJUnit
-import org.junit.Assert._
-import org.junit.Test
-import org.junit.Before
 import java.io.File
+
+import org.junit.Assert
+import org.junit.Test
+import org.scalatest.junit.AssertionsForJUnit
 
 class ParserTest extends AssertionsForJUnit {
 
-  @Test def test: Unit = {
+  def check(path: String) = {
     val p = new Parser
-    assertNotSame(0, p.process(new File("test/data/test.skill")).size)
+    Assert.assertNotSame(0, p.process(new File(path)).size)
   }
-  @Test def hints: Unit = {
+
+  @Test def test: Unit = check("test/data/test.skill")
+
+  @Test def hints: Unit = check("test/data/hints.skill")
+  @Test def test2: Unit = check("test/data/test2.skill")
+  @Test def test3: Unit = check("test/data/test3.skill")
+  @Test def example1: Unit = check("test/data/example1.skill")
+  @Test def example2a: Unit = check("test/data/example2a.skill")
+  @Test def example2b: Unit = check("test/data/example2b.skill")
+  @Test def unicode: Unit = check("test/data/unicode.skill")
+  @Test def airTop: Unit = check("test/data/air-top.skill")
+  @Test def airPamm: Unit = check("test/data/air-pamm.skill")
+  @Test def airHeap: Unit = check("test/data/air-pamm-heap.skill")
+
+  @Test def properIncludes: Unit = {
     val p = new Parser
-    assertNotSame(0, p.process(new File("test/data/hints.skill")).size)
-  }
-  @Test def test2: Unit = {
-    val p = new Parser
-    assertNotSame(0, p.process(new File("test/data/test2.skill")).size)
-  }
-  @Test def test3: Unit = {
-    val p = new Parser
-    assertNotSame(0, p.process(new File("test/data/test3.skill")).size)
-  }
-  @Test def example1: Unit = {
-    val p = new Parser
-    assertNotSame(0, p.process(new File("test/data/example1.skill")).size)
-  }
-  @Test def example2a: Unit = {
-    val p = new Parser
-    assertNotSame(0, p.process(new File("test/data/example2a.skill")).size)
-  }
-  @Test def example2b: Unit = {
-    val p = new Parser
-    p.process(new File("test/data/example2b.skill"))
-  }
-  @Test def unicode: Unit = {
-    val p = new Parser
-    p.process(new File("test/data/unicode.skill"))
-  }
-  @Test def airTop: Unit = {
-    val p = new Parser
-    p.process(new File("test/data/air-top.skill"))
-  }
-  @Test def airPamm: Unit = {
-    val p = new Parser
-    p.process(new File("test/data/air-pamm.skill"))
-  }
-  @Test def airHeap: Unit = {
-    val p = new Parser
-    p.process(new File("test/data/air-pamm-heap.skill"))
+    Assert.assertTrue(
+      ASTEqualityChecker.checkDefinitionList(
+        p.process(new File("test/data/air-top.skill")).toList,
+        p.process(new File("test/data/air-pamm.skill")).toList))
   }
 
 }

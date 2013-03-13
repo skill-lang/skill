@@ -2,11 +2,13 @@ package de.ust.skill.parser
 
 import java.io.File
 
+import scala.annotation.elidable
+import scala.annotation.migration
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.LinkedList
 import scala.util.parsing.combinator.JavaTokenParsers
 
-import de.ust.skill.ast.Definition
+import annotation.elidable.ASSERTION
 
 /**
  * The Parser does all stuff that is required for turning a set of files into a list of definitions.
@@ -14,11 +16,6 @@ import de.ust.skill.ast.Definition
  * @author Timm Felden
  */
 class Parser {
-  sealed abstract class TypeNode;
-  case class MapType(dom: TypeNode, range: TypeNode) extends TypeNode;
-  case class SetType(dom: TypeNode) extends TypeNode;
-  case class ListType(dom: TypeNode) extends TypeNode;
-  case class GroundType(name: String) extends TypeNode;
 
   /**
    * Converts a character stream into an AST using parser combinators.
@@ -57,17 +54,25 @@ class Parser {
     /**
      * restrictions as defined in the paper.
      */
-    def restriction = "@" ~> id ~ opt("(" ~> repsep((int | "%"), ",") <~ ")")
+    def restriction = "@" ~> id ~ opt("(" ~> repsep((int | "%"), ",") <~ ")") ^^ {
+      case s ~ arg => new Restriction(s, arg.getOrElse(List[Any]()))
+    }
     /**
      * hints as defined in the paper. Because hints can be ignored by the generator, it is safe to allow arbitrary
      * identifiers and to warn if the identifier is not a known hint.
      */
-    def hint = "!" ~> id
+    def hint = "!" ~> id ^^ { case s => new Hint(s) }
 
     /**
      * Description of a declration or field.
      */
-    def description = rep(restriction | hint) ~! opt(comment) ~! rep(restriction | hint)
+    def description = rep(restriction | hint) ~! opt(comment) ~! rep(restriction | hint) ^^ {
+      case l1 ~ c ~ l2 => {
+        val l = l1 ++ l2;
+        new Description(c, l.filter(p => p.isInstanceOf[Restriction]).asInstanceOf[List[Restriction]],
+          l.filter(p => p.isInstanceOf[Hint]).asInstanceOf[List[Hint]])
+      }
+    }
 
     /**
      * A declaration may start with a description, is followed by modifiers and a name, might have a super class and has
@@ -90,17 +95,17 @@ class Parser {
     /**
      * A field is either a constant or a real data field.
      */
-    def field = description ~! (constant | data)
+    def field = description ~! (constant | data) ^^ { case d ~ f => { f.description = d; f } }
 
     /**
-     * Constants a recognized by the keyword "const" and are required to have a value. 
-     */   
-    def constant = "const" ~> Type ~! id ~! ("=" ~> int) <~ opt(";")
-    
+     * Constants a recognized by the keyword "const" and are required to have a value.
+     */
+    def constant = "const" ~> Type ~! id ~! ("=" ~> int) <~ opt(";") ^^ { case t ~ n ~ v => new Constant(t, n, v) }
+
     /**
      * Data may be marked to be auto and will therefore only be present at runtime.
      */
-    def data = opt("auto") ~! Type ~! id <~ opt(";")
+    def data = opt("auto") ~! Type ~! id <~ opt(";") ^^ { case a ~ t ~ n => new Data(a.isDefined, t, n) }
 
     /**
      * Unfortunately, the straigth forward definition of this would lead to recursive types, thus we disallowed ADTs as
@@ -108,8 +113,16 @@ class Parser {
      * require the introduction of declarations, which essentially rename another more complex type. This has also an
      * impact on the way, data is and can be stored.
      */
-    def Type = ((("map" | "set" | "list") ~! ("<" ~> repsep(id, ",") <~ ">"))
-      | (id ~! opt("[" ~> opt(id | int) <~ "]")))
+    def Type = ((("map" | "set" | "list") ~! ("<" ~> repsep(id, ",") <~ ">")) ^^ {
+      case "map" ~ l => new de.ust.skill.parser.MapType(l)
+      case "set" ~ l => { assert(1 == l.size); new de.ust.skill.parser.SetType(l.head) }
+      case "list" ~ l => { assert(1 == l.size); new de.ust.skill.parser.ListType(l.head) }
+    }
+      // we use a backtracking approach here, because it simplifies the AST generation
+      | ((id ~ ("[" ~> int <~ "]")) ^^ { case n ~ arr => new ConstantArrayType(n, arr) }
+        | (id ~ ("[" ~> id <~ "]")) ^^ { case n ~ arr => new DependentArrayType(n, arr) }
+        | (id <~ ("[" ~ "]")) ^^ { n => new ArrayType(n) }
+        | (id) ^^ { case n => new GroundType(n) }))
 
     /**
      * The <b>main</b> function of the parser, which turn a string into a list of includes and declarations.
@@ -126,22 +139,33 @@ class Parser {
    */
   def process(input: File): LinkedList[Definition] = {
     val p = new FileParser();
-    val todo = new HashSet[File]();
-    todo.add(input);
-    val done = new HashSet[File]();
+    val base = input.getParentFile();
+    val todo = new HashSet[String]();
+    todo.add(input.getName());
+    val done = new HashSet[String]();
     var rval = new LinkedList[Definition]();
     while (!todo.isEmpty) {
-      val f = todo.first
+      val f = todo.head
       todo -= f;
-      val lines = scala.io.Source.fromFile(f.getAbsolutePath(), "utf-8").getLines.mkString(" ")
+      if (!done.contains(f)) {
+        done += f;
 
-      val result = p.process(lines)
+        val lines = scala.io.Source.fromFile(new File(base, f), "utf-8").getLines.mkString(" ")
 
-      // add includes to the todo list
+        val result = p.process(lines)
 
-      // add definitions
-      rval = rval ++ result._2
+        // add includes to the todo list
+        result._1.foreach(todo += _)
+
+        // add definitions
+        rval = rval ++ result._2
+      }
     }
+    typeCheck(rval)
     return rval;
+  }
+
+  private def typeCheck(defs: LinkedList[Definition]) {
+
   }
 }
