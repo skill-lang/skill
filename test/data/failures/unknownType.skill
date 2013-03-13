@@ -1,0 +1,4 @@
+Fail {
+	/** unknown type */
+	unknown _type_;
+}

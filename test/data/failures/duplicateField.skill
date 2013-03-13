@@ -1,0 +1,5 @@
+Fail {
+	v64 a;
+	/** duplicate definition */
+	v64 a;
+}

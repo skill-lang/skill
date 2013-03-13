@@ -1,0 +1,4 @@
+Fail {
+	/** there are no float constants */
+	const f32 field = 0x0;
+}

@@ -1,14 +1,13 @@
 package de.ust.skill.parser
 
 import java.io.File
-
 import scala.annotation.elidable
 import scala.annotation.migration
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.LinkedList
 import scala.util.parsing.combinator.JavaTokenParsers
-
 import annotation.elidable.ASSERTION
+import java.io.FileNotFoundException
 
 /**
  * The Parser does all stuff that is required for turning a set of files into a list of definitions.
@@ -66,7 +65,7 @@ class Parser {
     /**
      * Description of a declration or field.
      */
-    def description = rep(restriction | hint) ~! opt(comment) ~! rep(restriction | hint) ^^ {
+    def description = rep(restriction | hint) ~ opt(comment) ~ rep(restriction | hint) ^^ {
       case l1 ~ c ~ l2 => {
         val l = l1 ++ l2;
         new Description(c, l.filter(p => p.isInstanceOf[Restriction]).asInstanceOf[List[Restriction]],
@@ -78,7 +77,7 @@ class Parser {
      * A declaration may start with a description, is followed by modifiers and a name, might have a super class and has
      * a body.
      */
-    def declaration = description ~! modifier ~! id ~! opt((":" | "with") ~> id) ~! body ^^
+    def declaration = description ~ modifier ~ id ~! opt((":" | "with") ~> id) ~! body ^^
       { case c ~ m ~ n ~ s ~ b => new Definition(c, m, n, s, b) }
 
     /**
@@ -150,15 +149,19 @@ class Parser {
       if (!done.contains(f)) {
         done += f;
 
-        val lines = scala.io.Source.fromFile(new File(base, f), "utf-8").getLines.mkString(" ")
+        try {
+          val lines = scala.io.Source.fromFile(new File(base, f), "utf-8").getLines.mkString(" ")
 
-        val result = p.process(lines)
+          val result = p.process(lines)
 
-        // add includes to the todo list
-        result._1.foreach(todo += _)
+          // add includes to the todo list
+          result._1.foreach(todo += _)
 
-        // add definitions
-        rval = rval ++ result._2
+          // add definitions
+          rval = rval ++ result._2
+        } catch {
+          case e: FileNotFoundException => assert(false, "The include " + f + "could not be resolved to an existing file: " + e.getMessage())
+        }
       }
     }
     (new TypeChecker).check(rval.toList)

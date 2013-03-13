@@ -1,0 +1,4 @@
+Fail {
+	/** there are no half floats*/
+	f16 field;
+}
