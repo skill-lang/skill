@@ -1,5 +1,10 @@
 package de.ust.skill.parser
 
+/**
+ * The AST is used to turn skill definitions into source code.
+ * 
+ * @author Timm Felden
+ */
 sealed abstract class Node {
   override def equals(obj: Any) = ASTEqualityChecker.check(this, obj)
 }
