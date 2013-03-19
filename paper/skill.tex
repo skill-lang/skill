@@ -24,6 +24,14 @@
 %funny makros we want to use
 \newcommand{\den}[1]{[\![#1]\!]}
 
+%skill language definition
+\lstdefinelanguage{skill}
+{morekeywords={include,with,tagged,class,with,extends,annotation,const,auto,map,list,set,i1,i8,i16,i32,i64,v64,string,bool,f32,f64},
+sensitive=false,
+morecomment=[s]{/*}{*/},
+morestring=[b]",
+frameshape={nnn}{n}{y}{nyr},
+}
 
 \title{The Serialization Killer Language}
 \author{Timm Felden}
@@ -33,14 +41,27 @@
 \maketitle
 
 \begin{abstract}
- fooblaar
+ This work presents an alternative to various serialization approaches. The proposed serialization mechanism is fast, robust, extensible and easy to use. These goals are achieved by not using a human readable serialized form. \todo{blablabla}
 \end{abstract}
 
-\section{Einleitung}
+
+\renewcommand{\abstractname}{Acknowledgements}
+\begin{abstract}
+For productive criticism: Erhard Plödereder and Martin Wittiger \todo{muss noch schöner werden}
+\end{abstract}
+
+\todo{ensure that there are no compiler related examples, because those can be very confusing}
+\todo{proof read the whole thing to account for changes resulting from the discussion with EP}
+
+\section{Motivation}
 
 This paper presents an approach to serializing objects, which is tailored for usability, performance and portability. In order to achieve these goals, in contrast to XML, we will sacrifice generality and human readability of the serialized format. Unlike other general serialization mechanisms, we provide explicit support for extension points in the serialized data, in order to provide a minimum of upward compatibility and extensibility.
 
-\subsection{Abgrenzung}
+\subsection{Related Work}
+
+There are many approaches similar to ours, but most of them have a different focus. This section shall provide a concise list of related approaches. For potential users of skill, this might also present alternatives superior for individual use cases.
+
+The very nature of the problem requires different solutions, blablabla, skill is basically related to serialization like XML on one side and language interfaces like IDL or even JNI on the other side.
 
 \subsection*{XML}
 
@@ -69,7 +90,7 @@ Is not powerful enough to fit our purpose.
 
 \subsection*{Apatche Thrift \& Protobuf}
 
-Lacks subtypeing. Protobuf has a overly complex notation language. Both seem to be optimized for network protocols, thus they do not have indexed types, which will be a huge benefit. \todo{proof!}
+Lacks subtypeing. Protobuf has a overly complex notation language. Both seem to be optimized for network protocols, thus they do not have storage pools, which are the foundation of our serialization approach and an absolute requirement for some hints (see section \ref{hints}).
 
 
 \subsection*{Language Specific}
@@ -160,9 +181,10 @@ However, it is strongly advised against using any identifiers which form reserve
 
 \subsubsection*{Nice example}
 \todo{more comments, nicer, we will use this as running example}
-\begin{verbatim}
+
+\begin{lstlisting}[label=blockExample,caption=Running Example,language=skill]
 /** A source code location. */
-indexed SLoc {
+SLoc {
   i16 line;
   i16 column;
   string path;
@@ -181,38 +203,36 @@ tagged IfBlock with Block {
 tagged ITEBlock with IfBlock {
   Block elseBlock;
 }
-\end{verbatim}
+\end{lstlisting}
 
 \subsubsection*{Includes, self references}
 
-\texttt{example2a}:
-\begin{verbatim}
+\begin{lstlisting}[label=example2a,caption=Example 2a,language=skill]
 with "example2b.skill"
 
 indexed A {
   A a;
   B b;
 }
-\end{verbatim}
+\end{lstlisting}
 
-\texttt{example2b}:
-\begin{verbatim}
+\begin{lstlisting}[label=example2b,caption=Example 2b,language=skill]
 with "example2a.skill"
 
 B {
   A a;
 }
-\end{verbatim}
+\end{lstlisting}
 
 \subsubsection*{Unicode}
 The usage of non ASCII characters is completely legal, but might cause severe portability issues.
-\begin{verbatim}
+\begin{lstlisting}[label=unicode,caption=Unicode Support,language=skill]
 /** some arguably legal unicode characters. */
-indexed ö {
+ö {
   ö ß;
   ö €;
 }
-\end{verbatim}
+\end{lstlisting}
 
 
 \subsection{On ADTs}
@@ -228,13 +248,10 @@ Bedeutung der einzelnen Schlüsselwörter
 \subsection{Includes}
 The file referenced by the with statement is processed as well. The declarations of all files reachable over \texttt{with} statements are collected, before any declaration is evaluated.
 
-\subsection{indexed}
-Instances of this type are serialized using a storage pool and indices into that pool. The in-memory representation uses pointers and shared instances.
-
-\subsection{tagged}
+\subsection{\texttt{tagged}}
 The type has a tag which allows it to be subtyped using single inheritence.
 
-\subsection{annotation}
+\subsection{\texttt{annotation}}
 The type has a tag and a size, which allows it to be inserted at any annotation locations. This is useful in order to provide extension points in the file format. The file will still be readable by older implementations, which are not able to map any meaningful type into the annotation. Annotations may be subclassed by other annotations using single inheritence.
 
 As we will see later, annotation can be seen as equivalent to the type
@@ -243,15 +260,15 @@ tagged annotation {
   v64 size;
 }
 \end{verbatim}
-With the constraint, that size is the size of the serialized form of the annotation in bytes.
+with the constraint, that size is the size of the serialized form of the annotation in bytes.
 
 \subsection{Subtypeing}
 A subtype of a userdefined type can be declared by appending the keyword \texttt{with} and the supertypes name to a declaration. In order to be wellformed, the subtype must have exactly the type modifiers(i.e. indexed, tagged/annotation) of the supertype. This is because all subtypes of an indexed type will share a single storage pool.
 
-\subsection{const}
+\subsection{\texttt{const}}
 A const field can be used in order to create guards or version numbers, as well as overwriting deprecated fields with e.g. zeroes. The deserialization mechanism has to report an error if a constant field has an unexpected value.
 
-\subsection{auto}
+\subsection{\texttt{auto}}
 The language binding will create a field with the given type, but the content is transparent to the serialization mechanism. This is useful if the inference of the content of a field is likely to be faster then storing it, e.g. if it can be inferred lazy.
 
 \subsection{Abstract Data Types}
@@ -261,7 +278,7 @@ The type system has a built-in notion of arrays, maps, lists and sets. Note that
 \subsection{Comments}
 Comments provided in the skill file will be emitted into the generated code\footnote{If the target language does not allow for C-Style comments, the comments will be transformed in an appropriate way.}, thus allowing a user to profit from tooltips his IDE is likely to show him, containing this documentation. \todo{sprache!}
 
-\section{Typsystem}
+\section{The Type System}
 
 The basic layout of the type system is:
 
@@ -344,9 +361,9 @@ Let f be a field. The field is legal in one of the following cases:
 
 \subsection*{Strings}
 
-Strings are conceptually a length encoded sequence of utf8 encoded unicode characters. The in memory representation will try to make use of language features such as java.lang.String or std::u16string.
+Strings are conceptually a zero terminated sequence of utf8 encoded unicode characters. The in memory representation will try to make use of language features such as java.lang.String or std::u16string.
 
-Strings must not contain 0 characters. If a language, such as C, requires the usage of a terminating 0, all strings have to be terminated with a 0 in their deserialized form. The terminating 0 character is never part of the serialized version of a string.
+Strings must not contain 0 characters except for the terminating 0. If the users concept of a \textit{string} allows such data, he has to declare his own data type.
 
 \subsection*{Compound Types}
 
@@ -539,6 +556,7 @@ Note: In case of the File example, there is no way to violate the tree property.
 Note: It is legal for trees to form forests.
 
 \section{Hints}
+\label{hints}
 
 Hints are annotations that start with a single \verb/!/ and are followed by a hint name.
 
@@ -547,6 +565,9 @@ Try to use a data structure that provides fast (random) access. E.g. an array li
 
 \subsection*{Modification}
 Try to use a data structure that provides fast (random) modification. E.g. an linked list.
+
+\subsection*{Unique}
+Serialization shall unify objects with exactly the same serialized form. In combination with the @unique restriction, there shall at most be an error reported on deserialization.
 
 \subsection*{Distributed}
 Use a static map instead of fields to represent fields of definitions. This is usually an optimization if a definition has a lot of fields, but most use cases require only a small subset of them. Because hints do not modify the binary compatibility, some clients are likely to define the fields to be distributed or lazy.
@@ -570,29 +591,56 @@ binary{ i8[] data }
 \end{verbatim}
 
 
+\section{On Extensibility and Canonical Declaration Order}
+
+Extensibility is an important property. In this section, we develop a normal form of skill definitions, which will allow a robustness of a file format against modification. We will describe the effect of some changes, which can break decoding or encoding capabilities or break the API but not the file format (further ABI).
+
+\subsection{Equality of Field Names}
+
+Field names are equal, if their lexical representation is equal after converting all characters to lower case. Type declarations must not contain fields with equal names.
+
+\subsection{Canonical Declaration Order}
+
+A declaration is in canonical declaration order, if all field names are ordered in a lexically ascending way. This design choice is made, because it does not impact the serialization or deserialization speed and provides a bit of robustness against changes in definitions.
+
+\subsection{A Rule of Thumb}
+
+A change of the organization of input files or the order of their definition has no effect.
+
+The addition of new declarations has no effect.
+
+A change regarding comments has no significant effect.
+
+A change in restrictions of any kind may break the ABI, probably only for some language bindings. It will most certainly render some files illegal, which were legal before.
+
+A change of hints shall no significant effect, although some applications can stop working after a change of hints, e.g. if they access fields which are annotated with \verb/!ignore/.
+
+Inserting or removing the keyword \texttt{const} may\todo{really?} break compatibility.
+
+Changing the value of a constant will break the ABI.\footnote{Which is btw. the very purpose of constants.}
+
+Inserting or removing the keyword \texttt{auto} will break ABI, but not the API.
+
+Any change of the structure of existing declarations, i.e. changing the modifier, adding or removing fields, etc., will break compatibility as a whole.
+
 \section{Serialization}
 
-This section is about representing objects of an arbitary legal type $\mathcal{T}$ as a sequence of bytes. We will call this sequence stream, its formal Type will be named $S$, the current stream will be named $s$. We will assume that there is an implicit conversion between fixed sized integers and streams. Thus we only need to define a stream concatenation operator $\circ : S \times S → S$
+This section is about representing objects of an arbitrary legal type $\mathcal{T}$ as a sequence of bytes. We will call this sequence \textit{stream}, its formal Type will be named $S$, the current stream will be named $s$. We will assume that there is an implicit conversion between fixed sized integers\footnote{As well as between fixed sized floating point numbers, because we define them to be IEEE-754 encoded 32-/64-bit sequences.} and streams. We also make use of a stream concatenation operator $\circ : S \times S → S$.
 
-Folgenden Phasen:
-\begin{itemize}
- \item Menge der erreichbaren Objekte bestimmen
- \item Indices vergeben
- \item Stringpool schreiben.
- \item Andere Pools schreiben\footnote{Das serialisierte root objekt ist das erste objekt im entsprechenden pool. Es hat de jure den index 1.}.
-\end{itemize}
-
-The section is to describe the serialization function $\den{\_}:\mathcal{T} → S$, which serializes an object of any type into a stream.
+Before being able to understand the serialization of a whole graph of objects into a file, we have to fix a serialization function, which turns an arbitrary object into a stream. Let $\den{\_}:\mathcal{T} → S$ be the translation function, which serializes an object of any type into a stream.
 
 In the following definitions, let $o$ be the object to be serialized and $T$ be its type.
 \begin{itemize}
- \item For any $o$ of an unmodified user type, i.e. $mod(T)=\emptyset$, with field declarations $t_i$ $f_i$, the serialization is defined as $\den{o} = \den{f_0} \circ \cdots \circ \den{f_n}$. The serialization order equals the declaration order.
- \item For any $o$ of an indexed user type, the serialization in the respactive pool is done as if the type were not indexed. Outside of the pool, the serializaton of $o$ is defined as $\den{o} = indexOf(o)$, i.e. the index of the object inside the pool.
+ %null
  \item The NULL-Pointer, which is legal in case of indexed types is serialized as $\den{\texttt{NULL}} = 0$
- \item For any $o$ of a tagged type, the serialization is defined as $\den{o} = \den{name(T)} \circ \den{o'}$, where $o'$ is $o$ treated as if its type would not be tagged anymore, i.e. serialized tagged types are preceeded by their typenames. If $T$ is indexed as well, the indexed rule preceeds the tagged rule, i.e. the type name is stored in the storage pool, but not in a field.
- \item For any $o$ of annotation type, the serialization is defined as $\den{o} = sizeOf(\den{o'}) \circ \den{o'}$, i.e. the serialization of the actual payload is proceeded by the size of the payload. Therefore annotatio fields can contain arbitrary content.
+ %annotation -> * (v64 baseTypeName!!, v64index)
+ \item For any $o$ of annotation type, the serialization is defined as $\den{o} = sizeOf(\den{o'}) \circ \den{o'}$, i.e. the serialization of the actual payload is proceeded by the size of the payload. Therefore annotation fields can contain arbitrary content.
+ %tagged -> gibts nicht mehr
+ \item For any $o$ of a tagged type, the serialization is defined as $\den{o} = \den{name(T)} \circ \den{o'}$, where $o'$ is $o$ treated as if its type would not be tagged anymore, i.e. serialized tagged types are proceeded by their type names. If $T$ is indexed as well, the indexed rule proceeds the tagged rule, i.e. the type name is stored in the storage pool, but not in a field.
+ \item For any $o$ of an unmodified user type, i.e. $mod(T)=\emptyset$, with field declarations $t_i$ $f_i$, the serialization is defined as $\den{o} = \den{f_0} \circ \cdots \circ \den{f_n}$. The serialization order equals the canonical declaration order, as explained above.
+ \item For any $o$ of a user type not treated above, the serialization is defined as $\den{o} = indexOf(o)$, i.e. the index of the object inside the respective storage pool.
  
- \item The serialization of a string is its index in the string pool. The serialization of a string inside the string pool is its length, followed by its representing utf8 sequence \textbf{without} terminating 0 character. Interfaces requiring strings with terminating 0 character will add/remove them automatically.
+ \item The serialization of a string is its index in the string pool. The serialization of a string inside the string pool is its representing utf8 sequence followed by exactly one terminating 0 character. Interfaces requiring strings without terminating 0 character will add/remove them automatically.\footnote{If the stored string happens to be a type name, it is guaranteed that a lowercase conversion of the very string is idempotent.}
  \item Booleans are serialized using $\den{\top} = 0xFF$ and $\den{\bot} = 0x00$, i.e. a byte is used, which is all 1s in case of true and all 0s in case of false.
  
  \item For any $o$ of fixed size integer type $\den{o} = o$.
@@ -608,7 +656,24 @@ In the following definitions, let $o$ be the object to be serialized and $T$ be 
  \item Maps are serialized, as if they were pairs of elements of their argument types. Note that this will cause a nested map type such as \verb/map<T,map<U,V>>/ to be serialized using a schema $ \den{size(o)} \circ \den{o.t_1} \circ \den{size(o[t_1])} \circ \den{o[t_1].u_1} \circ \den{o[t_1].v_1} \circ \den{o[t_1].u_2} \circ \cdots \circ \den{size(o[t_2])} \circ \cdots \circ \den{o[t_n].v_m}$
 \end{itemize}
  
-Let $T_i$ be the set of indexed types with nonzero elements reachable from the serialization root r. Then the serialization of r can be described as $\den{strings}_{Pool} \circ encode(n) \circ \den{T_1}_{Pool} \circ \cdots \circ \den{T_n}_{Pool} \circ \den{r}$
+blablabla pools, ...
+
+File Layout:
+
+\begin{verbatim}
+v64 size
+string[size] stringPool
+
+bool lastStringIsDefinition
+
+while(next!=EOF){
+  v64 poolName
+  v64 sizeBytes
+  v64 sizeCount
+  opt(v64 basePoolStartIndex; iff extends)
+  [[ T[sizeCount] elements ]]
+}
+\end{verbatim}
 
 \section{Deserialization}
 
@@ -724,15 +789,16 @@ Element {
 \todo{some final comments to say, that the comparison is of course not completely fair, and that it is advised against mixing xml and skill in most cases}
 
 \section{Future Work}
-unique keyword? (alles, was in einem pool landet und die selbe serializierte darstellung hat wird durch das selbe objekt repräsentiert. Das ist derzeit nicht der Fall; eventuell muss man das machen um sicherzustellen, dass deserialisieren direkt gefolgt von serializisieren zu einer bitweise identischen datei führt, andernfalls möchte man das eventuell garnicht, weil man dann auch eine reihenfolge für die erzeugung von pools und das vergeben von indices in der serialisierten form vorgeben müsste)
 
 Serialisierungsnormalform? (Robustheit gegenüber Änderungen in der Spezifikation)
 
-Rangechecks, Invarianten und anderes Gedöns. -> @-statements
-
-Implementation hints für bestimmte typen wie listen, die fast access oder fast insert bieten. -> !-statements
-
 XML output mit XML Schema.
+
+Das neue Serialisierungsschema erlaubt es einen Viewer zu bauen, der Definition+Datei anzeigen kann.
+
+Integration der Definition in die Serialisierte Form, damit man die Daten generisch prüfen und anzeigen kann.
+
+Fun fact: Garbage Collection for serializable objects comes for free, if objects are always held in storage pools.
 
 \newpage
 \todos
