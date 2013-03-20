@@ -90,7 +90,7 @@ Is not powerful enough to fit our purpose.
 
 \subsection*{Apatche Thrift \& Protobuf}
 
-Lacks subtypeing. Protobuf has a overly complex notation language. Both seem to be optimized for network protocols, thus they do not have storage pools, which are the foundation of our serialization approach and an absolute requirement for some hints (see section \ref{hints}).
+Lacks subtypeing. Protobuf has a overly complex notation language. Both seem to be optimized for network protocols, thus they do not have storage pools, which are the foundation of our serialization approach and an absolute requirement for some of our features, such as hints (see section \ref{hints}).
 
 
 \subsection*{Language Specific}
@@ -117,7 +117,6 @@ INCLUDE :=
 
 DECLARATION :=
   DESCRIPTION
-  ("tagged"|"indexed"|"annotation")*
   <id>
   ((":"|"with"|"extends") <id>)?
   "{" FIELD* "}"
@@ -148,20 +147,23 @@ TYPE :=
   ("map" MAPTYPE
   |"set" SETTYPE
   |"list" LISTTYPE
-  |GROUNDTYPE)
+  |ARRAYTYPE)
   
 MAPTYPE :=
-  "<" TYPE "," TYPE ">"
+  "<" GROUNDTYPE ("," GROUNDTYPE)+ ">"
   
 SETTYPE :=
-  "<" TYPE ">"
+  "<" GROUNDTYPE ">"
   
 LISTTYPE :=
-  "<" TYPE ">"
+  "<" GROUNDTYPE ">"
+  
+ARRAYTYPE :=
+  GROUNDTYPE
+  ("[" (<id>|<int>)? "]")?
   
 GROUNDTYPE :=
   (<id>|"annotation")
-  ("[" (<id>|<int>)? "]")?
 
 \end{verbatim}
 Note: The Grammar is LL(1).
@@ -470,6 +472,8 @@ indexed Node {
 \subsection*{Unique}
 Objects stored in a storage pool have to be distinct in their serialized form, i.e. for each pair of objects, there has to be at least one field, with a different value.
 
+NOTE: This can cause difficulties in combination with sub-classing, because the uniqueness property must hold even on the part restricted to the topmost class declared to be unique.
+
 Applies to Declarations of indexed types.
 
 Signature: \verb/unique()/
@@ -582,6 +586,8 @@ The generated code is unable to access the respective field or type of declarati
 
 Hier irgendwie erklären, dass es nur typen gibt, die entweder notwendig sind (string) oder überall verfügbar, d.h. man redet im prinzip über den kleinsten gemeinsamen nenner aller prorgrammiersprachen. Der typ bool ist vorhanden, weil die meisten sprachen explizit zwischen integer und bool unterscheiden.
 
+Floats sind vorhanden, weil die Sprache sonst keine akzeptanz finden würde.
+
 Dass es typen wie unsigned oder positive nicht gibt ist schade, kann aber im zuge einer beschreibungssprache die restriktionen bietet einfach nachgerüstet werden.
 
 Es gibt keinen binary typ, weil dieser trivial definiert werden kann:
@@ -602,6 +608,8 @@ Field names are equal, if their lexical representation is equal after converting
 \subsection{Canonical Declaration Order}
 
 A declaration is in canonical declaration order, if all field names are ordered in a lexically ascending way. This design choice is made, because it does not impact the serialization or deserialization speed and provides a bit of robustness against changes in definitions.
+
+\todo{Hier MUSS noch eine Ordnung bezüglich Typen rein, die vor der lexikalischen Ordnnug stattfindet, sonst kann es sein, dass ein size feld erst nach dem betroffenen array liegt und dann ist die deserialisierung unmöglich}
 
 \subsection{A Rule of Thumb}
 
