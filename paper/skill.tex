@@ -52,6 +52,7 @@ For productive criticism: Erhard Plödereder and Martin Wittiger \todo{muss noch
 
 \todo{ensure that there are no compiler related examples, because those can be very confusing}
 \todo{proof read the whole thing to account for changes resulting from the discussion with EP}
+\todo{leider wird man nicht um einen glossar rumkommen. ABI, API, super type, base type, ...}
 
 \section{Motivation}
 
@@ -105,7 +106,7 @@ Interfaces between languages with different type systems are simply unproductive
 
 \section{Syntax}
 
-We use the tokens \verb/<id>/, \verb/<string>/, \verb/<int>/ and \verb/<comment>/. The represent C-style identifiers, strings, integer literals and comments respectively. Note that we use a comment token, which is need, because we want to emit the comments in the generated code, in order to integrate nicely into the target languages documenting system.
+We use the tokens \verb/<id>/, \verb/<string>/, \verb/<int>/ and \verb/<comment>/. They equal C-style identifiers, strings, integer literals and comments respectively. Note that we use a comment token, which is need, because we want to emit the comments in the generated code, in order to integrate nicely into the target languages documentation system.
 
 \begin{verbatim}
 UNIT :=
@@ -131,11 +132,11 @@ DESCRIPTION :=
   (RESTRICTION|HINT)*
   
 RESTRICTION :=
-  "@" <id> ("(" (R_ARG ("," R_ARG)*)? ")")?
+  "@" <id> ("(" (R_ARG ("," R_ARG)*)? ")")? ";"?
   
-R_ARG := ("%"| <int>)
+R_ARG := ("%"|<int>)
 
-HINT := "!" <id>
+HINT := "!" <id> ";"?
   
 CONSTANT :=
   "const" TYPE <id> "=" <int>
@@ -169,8 +170,6 @@ GROUNDTYPE :=
 Note: The Grammar is LL(1).
 
 Comment: The optional \texttt{;} at the end of includes or definitions are for convenience only.
-
-Comment: There will eventually be a mechanism to add functional specifications, such as range restrictions, to fields, which is expected to use \texttt{@} and \texttt{;}.
 
 \subsection{Reserved Words}
 
@@ -250,19 +249,20 @@ Bedeutung der einzelnen Schlüsselwörter
 \subsection{Includes}
 The file referenced by the with statement is processed as well. The declarations of all files reachable over \texttt{with} statements are collected, before any declaration is evaluated.
 
-\subsection{\texttt{tagged}}
-The type has a tag which allows it to be subtyped using single inheritence.
+\subsection{Subtypes}
+\todo{write new section}
 
 \subsection{\texttt{annotation}}
-The type has a tag and a size, which allows it to be inserted at any annotation locations. This is useful in order to provide extension points in the file format. The file will still be readable by older implementations, which are not able to map any meaningful type into the annotation. Annotations may be subclassed by other annotations using single inheritence.
+The type has a tag and a size, which allows it to be inserted at any annotation locations. This is useful in order to provide extension points in the file format. The file will still be readable by older implementations, which are not able to map any meaningful type into the annotation.
 
-As we will see later, annotation can be seen as equivalent to the type
+As we will see later, annotation can be seen as equivalent to the type definition
 \begin{verbatim}
-tagged annotation {
-  v64 size;
+annotation {
+  v64 baseTypeName;
+  v64 basePoolIndex;
 }
 \end{verbatim}
-with the constraint, that size is the size of the serialized form of the annotation in bytes.
+Of course, this is made transparent to the user.
 
 \subsection{Subtypeing}
 A subtype of a userdefined type can be declared by appending the keyword \texttt{with} and the supertypes name to a declaration. In order to be wellformed, the subtype must have exactly the type modifiers(i.e. indexed, tagged/annotation) of the supertype. This is because all subtypes of an indexed type will share a single storage pool.
@@ -373,35 +373,9 @@ The language offers several compound types. Sets, Lists and auto sized Arrays, i
 All ADTs will be mapped to their closest representation in the target language, while preserving these properties.
 Maps are viewed as a representation of serializable partial functions. Therefore they can contain other map types as their second type argument, which is basically an instance of currying.
 
-\subsection*{NULL Pointers}
+\subsection*{NULL Pointer}
 
-NULL Pointers can only be serialized if the respective type is indexed. Otherwise a NULL Pointer is considered an error and will cause the serialization to fail. This is because the resulting file can not be deserialized in all languages, because some languages might choose to represent the respective field e.g. as object. A short example shall illustrate the problem:
-\begin{verbatim}
-time{ i64 seconds }
-timeStamp{
-  ...
-  time lastModified;
-}
-\end{verbatim}
-
-In C this will likely look like:
-\begin{verbatim}
-struct time { uint64_t seconds; };
-struct timeStamp {
-  ...
-  time lastModified;
-}
-\end{verbatim}
-Note that the time object is allocated inside the timeStamp object.
-
-In Java this will likely look like:
-\begin{verbatim}
-class time { public long seconds; }
-class timeStamp { public time lastModified; }
-\end{verbatim}
-Note that it is legal to store \texttt{null} in the lastModified field.
-
-In case of indexed types, the special index 0 is used to serialize NULL. Indexed Types will always be represented by the client languages pointer implementation, i.e. pointer in C, references in Java or access in Ada.
+The null pointer is serialized using the index 0. Conceptually, null pointers of different types are different. In fact if an annotation is a null pointer, it still has a type. However, this detail should not be observable in most languages.
 
 
 \subsection{Examples}
@@ -559,6 +533,7 @@ File {
 Note: In case of the File example, there is no way to violate the tree property.
 Note: It is legal for trees to form forests.
 
+
 \section{Hints}
 \label{hints}
 
@@ -637,6 +612,9 @@ This section is about representing objects of an arbitrary legal type $\mathcal{
 
 Before being able to understand the serialization of a whole graph of objects into a file, we have to fix a serialization function, which turns an arbitrary object into a stream. Let $\den{\_}:\mathcal{T} → S$ be the translation function, which serializes an object of any type into a stream.
 
+This section uses the notion of base and super types. A super type denotes the direct super type of a type. The base type, is the topmost type in a type hierarchy, i.e. any type, which has itself no super type.
+The super type relation forms a forest.
+
 In the following definitions, let $o$ be the object to be serialized and $T$ be its type.
 \begin{itemize}
  %null
@@ -676,12 +654,26 @@ bool lastStringIsDefinition
 
 while(next!=EOF){
   v64 poolName
-  v64 sizeBytes
+  v64 superIndex
   v64 sizeCount
-  opt(v64 basePoolStartIndex; iff extends)
+  opt(v64 basePoolStartIndex; iff superIndex!=0)
+  v64 sizeBytes
   [[ T[sizeCount] elements ]]
 }
 \end{verbatim}
+
+Iff lastStringIsDefinition is true, the last string of the string pool contains a text that describes the all types usable in the file. This is provided mainly for checking and reflection purpose.
+
+The poolName is an index into the string pool and points to the type name stored in the pool.
+
+The superIndex is an index into the string pool and points to the name of the super type.
+
+The sizeCount contains the number of elements in the pool. This is required in order to move objects of an unknown subtype. It does also simplify the deserialization process.
+
+The basePoolStartIndex is the index of the first element in the base ...
+
+
+Note: Pools which do not have entries have to be omitted.
 
 \section{Deserialization}
 
