@@ -167,7 +167,7 @@ GROUNDTYPE :=
   (<id>|"annotation")
 
 \end{verbatim}
-Note: The Grammar is LL(1).
+Note: The Grammar is LL(1).\footnote{In fact it can be expressed as a single regular expression.}
 
 Comment: The optional \texttt{;} at the end of includes or definitions are for convenience only.
 
@@ -286,33 +286,33 @@ The basic layout of the type system is:
 
 \tikz [mindmap, every node/.style=concept, concept color=black!20,
 grow cyclic,
-level 1/.append style={level distance=4.5cm,sibling angle=60},
-level 2/.append style={level distance=3cm,sibling angle=100},
+level 1/.append style={level distance=4.2cm,sibling angle=100},
+level 2/.append style={level distance=2.7cm,sibling angle=100},
 level 3/.append style={level distance=2cm,sibling angle=35},
-level 4/.append style={level distance=2cm,sibling angle=35}]
-\node [root concept]{All Types}[clockwise from=-60] % root
+level 4/.append style={level distance=1.5cm,sibling angle=35}]
+\node [root concept]{All Types}[clockwise from=-50] % root
 child { node {User Types}}
 child { node {Built-In Types}[clockwise from=-30]
-  child{ node{Ground Types}
-    child{ node{Integer}[clockwise from=10]
-      child{ node{i1}}
-      child{ node{$\cdots$}}
-      child{ node{i64}}
-      child{ node{v64}}
-    }
-    child{ node{bool}}
-    child{ node{string}}
-    child{ node{Float}[clockwise from=-75]
-      child{ node{f32}}
-      child{ node{f64}}
-    }
-    child{ node{annotation}}
-  }
-  child{ node{Compound Types} 
+  child{ node{Compound Types}[clockwise from=-10]
     child{ node{map}}
     child{ node{set}}
     child{ node{list}}
     child{ node{array}}
+  }
+  child{ node{Ground Types}
+    child{ node{string}}
+    child{ node{Float}[clockwise from=-15]
+      child{ node{f64}}
+      child{ node{f32}}
+    }
+    child{ node{Integer}[clockwise from=-50]
+      child{ node{v64}}
+      child{ node{i64}}
+      child{ node{$\cdots$}}
+      child{ node{i1}}
+    }
+    child{ node{bool}}
+    child{ node{annotation}}
   }
 };
 
@@ -326,40 +326,50 @@ time {
 
 \subsection*{Legal Types}
 
-This section is to define the set of types, which can be used to declare legal fields inside a user type definition. Let $\mathcal{T}$ be the set of all types, $\mathcal{B} \in \mathcal{T}$ be the set of built-in types, $\mathcal{G} \in \mathcal{B}$ be the set of ground types, $\mathcal{C} \in \mathcal{B}$ be the set of compound types and $\mathcal{I} \in \mathcal{G}$ be the set of integer types. Let $mod: \mathcal{T}\setminus\mathcal{G} \rightarrow 2^{\{indexed, tagged, annotation\}}$ be the set of modifiers for a given type t.
+This section is to define the set of types, which can be used to declare legal fields inside a user type definition. Let $\mathcal{T}$ be the set of all types, $\mathcal{B} \in \mathcal{T}$ be the set of built-in types, $\mathcal{G} \in \mathcal{B}$ be the set of ground types, $\mathcal{C} \in \mathcal{B}$ be the set of compound types and $\mathcal{I} \in \mathcal{G}$ be the set of integer types.
 
-In this context, we talk about an unknown, but fixed set $\mathcal{T}$, which corresponds to the contents of a set of input files. We silently assume, that all types have unique names. Declaring a type with the name of another types is therefore considered an error.
+In this context, we talk about an unknown, but fixed set $\mathcal{T}$, which corresponds to the contents of a set of input files. All types have unique names.
 
-Wellformed type declaretions:
+Let $\texttt{t} \in \mathcal{T}\setminus\mathcal{B}$ be a type declaration, then wellformedness is the smallest predicate satisfying
 \begin{itemize}
- \item If $\texttt{s} \in \mathcal{T}\setminus\mathcal{G}$, $mod(\texttt{t}) = mod(\texttt{s})$ and $annotation \in mod(\texttt{t}) \rightarrow tagged \notin mod(\texttt{t}) \wedge indexed \notin mod(\texttt{t})$ then $mod(\texttt{t})$\verb/t with s{...}/ is a wellformed type declaration and \texttt{t} is called a subtype of \texttt{s}.
+ \item If $\texttt{s} \in \mathcal{T}\setminus\mathcal{B}$, then \verb/t with s{...}/ is a well formed type declaration and \texttt{t} is called a subtype of \texttt{s}.
  
- \item If $\texttt{t} \in \mathcal{T}\setminus\mathcal{G}$ and $annotation \notin mod(\texttt{t}) \vee tagged \notin mod(\texttt{t})$ then $mod(\texttt{t})$\verb/t {...}/ is a wellformed type declaration.
+ \item All field definitions of t are \textit{legal}.
  
- \item The subtype relation is acyclic.
+ \item The subtype relation forms a forest.
 \end{itemize}
 
 
-Let f be a field. The field is legal in one of the following cases:
+Let f be a field. The field is \textit{legal} in one of the following cases:
 \begin{itemize}
  \item If $\texttt{t} \in \mathcal{I}$ then \verb/const t f/ is a legal constant field.
  
  \item If $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ then \verb/t f/ is a legal field.
  
- \item For any $n \geq 2$ with $\texttt{t}_i \in \mathcal{T}\setminus\mathcal{C}$, $\texttt{map<t}_1\texttt{, map<}\cdots\texttt{ , t}_n\texttt{>}\cdots\texttt{> f}$ is a legal field.
+ \item For any $n \geq 2$ with $\texttt{t}_i \in \mathcal{G}$, $\texttt{map<t}_1\texttt{, }\cdots\texttt{, t}_n\texttt{> f}$ is a legal field.
  
- \item If $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ then \verb/set<t> f/ is a legal field.
- 
- \item If $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ then \verb/list<t> f/ is a legal field.
+ \item If $\texttt{t} \in \mathcal{G}$ then \verb/set<t> f/ and \verb/list<t> f/ are legal fields.
  
  \item If $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ then \verb/t[] f/ is a legal field.
  
- \item If $i \in \mathbb{N}$ and $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ then \verb/t[/$i$\verb/] f/ is a legal field.
+ \item If $i \in \mathbb{N}^+$ and $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ then \verb/t[/$i$\verb/] f/ is a legal field.
  
- \item If \verb/s size/ is a field in the same type declaration as \texttt{f} with $\texttt{s} \in \mathcal{I}$ and \texttt{size} is declared before \texttt{f}
- \footnote{this is required in order to make serialization work; another approach would be to choose a normal form, which would also make declarations robust against reordering} then \verb/t[size] f/ is a legal field.
+ \item If $\texttt{s} \in \mathcal{I}$, $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ and \verb/s size/ is a field, then, inside the same type declaration,\footnote{this is required in order to make serialization work; another approach would be to choose a normal form, which would also make declarations robust against reordering}
+  \verb/t[size] f/ is a legal field.
  
 \end{itemize}
+
+\subsection*{Type Order}
+
+Let $<_l$ be the lexical order. We define a partial order $\leq_t$ on $\mathcal{T}$ as follows:
+\begin{itemize}
+ \item $\forall t \in \mathcal{G}, s \in \mathcal{T}\setminus\mathcal{G}. t \leq_t s$.
+ \item $\forall t \in \mathcal{C}, s \in \mathcal{T}\setminus\mathcal{B}. t \leq_t s$.
+ \item $\forall s,t \in \mathcal{T}\setminus\mathcal{G}. s \leq_t t = s \leq_l t$.
+\end{itemize}
+
+Notice, that this order corresponds to an left to right order in the types overview picture.
+
 
 \subsection*{Strings}
 
@@ -383,16 +393,11 @@ The null pointer is serialized using the index 0. Conceptually, null pointers of
 This section will present some examples of ill-formed type declarations and brief explanations.
 
 \begin{verbatim}
-tagged EncodedString : string {
+EncodedString : string {
   string encoding;
 }
 \end{verbatim}
-Error: The built-in type string can not be sub classed.
-
-\begin{verbatim}
-annotation ...
-\end{verbatim}
-
+Error: The built-in type ``string'' can not be sub classed.
 
 \section{Invariants}
 Some invariants can be added to declarations and fields. These invariants can occur at the same place as comments, but can occur in any number. Invariants start with an \textsc{@} followed by a predicate. Each predicate has to supply a default argument \texttt{\%}, such that using only default arguments would not imply a restriction.
@@ -582,9 +587,9 @@ Field names are equal, if their lexical representation is equal after converting
 
 \subsection{Canonical Declaration Order}
 
-A declaration is in canonical declaration order, if all field names are ordered in a lexically ascending way. This design choice is made, because it does not impact the serialization or deserialization speed and provides a bit of robustness against changes in definitions.
+A declaration is in canonical declaration order, if all fields are in type order and fields with the same or uncomparable type order are sorted in lexical order.
 
-\todo{Hier MUSS noch eine Ordnung bezüglich Typen rein, die vor der lexikalischen Ordnnug stattfindet, sonst kann es sein, dass ein size feld erst nach dem betroffenen array liegt und dann ist die deserialisierung unmöglich}
+The type order relation is motivated by properties of compound types. The lexical order is motivated by the observation, that this order does not come with a cost, but provides some additional robustness against changes in definitions.
 
 \subsection{A Rule of Thumb}
 
@@ -672,6 +677,7 @@ The sizeCount contains the number of elements in the pool. This is required in o
 
 The basePoolStartIndex is the index of the first element in the base ...
 
+\todo{all pools related to the same base type have to be contiguous and adhere to the index order inside the base types storage pool; this should be a side effect of a straight forward implementation}
 
 Note: Pools which do not have entries have to be omitted.
 
@@ -797,6 +803,10 @@ XML output mit XML Schema.
 Das neue Serialisierungsschema erlaubt es einen Viewer zu bauen, der Definition+Datei anzeigen kann.
 
 Integration der Definition in die Serialisierte Form, damit man die Daten generisch prüfen und anzeigen kann.
+
+Abuse annotations for type-safe unions. The type system does not allow for unrestricted unions or intersection types. The former violate serialization invariants, the latter would either have no instances or be equal to an already existing (super) type.
+
+Der reflection Mechanismus muss die vorhandenen Strings mitbenutzen und deutlich effizienter sein, sonst ist der einfach zu teuer.
 
 Fun fact: Garbage Collection for serializable objects comes for free, if objects are always held in storage pools.
 
