@@ -2,7 +2,7 @@ package de.ust.skill.parser
 
 /**
  * The AST is used to turn skill definitions into source code.
- * 
+ *
  * @author Timm Felden
  */
 sealed abstract class Node {
@@ -22,23 +22,24 @@ final class Description(val comment: Option[String], val restrictions: List[Rest
 sealed abstract class Type extends Node {
 }
 
-final class MapType(val args: List[String]) extends Type {
+final class MapType(val args: List[GroundType]) extends Type {
 }
 
-final class SetType(val baseType: String) extends Type {
+final class SetType(val baseType: GroundType) extends Type {
 }
 
-final class ListType(val baseType: String) extends Type {
+final class ListType(val baseType: GroundType) extends Type {
 }
 
-sealed class ArrayType(val baseType: String) extends Type {
+sealed class ArrayType(val baseType: GroundType) extends Type {
 }
-final class ConstantArrayType(baseType: String, val length: Int) extends ArrayType(baseType) {
+final class ConstantArrayType(baseType: GroundType, val length: Int) extends ArrayType(baseType) {
 }
-final class DependentArrayType(baseType: String, val lengthFieldName: String) extends ArrayType(baseType) {
+final class DependentArrayType(baseType: GroundType, val lengthFieldName: String) extends ArrayType(baseType) {
 }
 
 final class GroundType(val name: String) extends Type {
+  override def toString = name
 }
 
 sealed abstract class Field(val t: Type, val name: String) extends Node {

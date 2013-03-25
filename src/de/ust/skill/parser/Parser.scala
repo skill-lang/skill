@@ -53,14 +53,14 @@ class Parser {
     /**
      * restrictions as defined in the paper.
      */
-    def restriction = "@" ~> id ~ opt("(" ~> repsep((int | "%"), ",") <~ ")") ^^ {
+    def restriction = "@" ~> id ~ opt("(" ~> repsep((int | "%"), ",") <~ ")") <~ opt(";") ^^ {
       case s ~ arg => new Restriction(s, arg.getOrElse(List[Any]()))
     }
     /**
      * hints as defined in the paper. Because hints can be ignored by the generator, it is safe to allow arbitrary
      * identifiers and to warn if the identifier is not a known hint.
      */
-    def hint = "!" ~> id ^^ { case s => new Hint(s) }
+    def hint = "!" ~> id <~ opt(";") ^^ { new Hint(_) }
 
     /**
      * Description of a declration or field.
@@ -77,7 +77,7 @@ class Parser {
      * A declaration may start with a description, is followed by modifiers and a name, might have a super class and has
      * a body.
      */
-    def declaration = description ~ modifier ~ id ~! opt((":" | "with") ~> id) ~! body ^^
+    def declaration = description ~ modifier ~ id ~! opt((":" | "with" | "extends") ~> id) ~! body ^^
       { case c ~ m ~ n ~ s ~ b => new Definition(c, m, n, s, b) }
 
     /**
@@ -87,7 +87,7 @@ class Parser {
       { m => (m.contains("class") || m.contains("tagged"), m.contains("annotation")) }
 
     /**
-     * A body consist of a nonempty list of fields.
+     * A body consist of a list of fields.
      */
     def body = "{" ~> rep(field) <~ "}"
 
@@ -112,16 +112,20 @@ class Parser {
      * require the introduction of declarations, which essentially rename another more complex type. This has also an
      * impact on the way, data is and can be stored.
      */
-    def Type = ((("map" | "set" | "list") ~! ("<" ~> repsep(id, ",") <~ ">")) ^^ {
+    def Type = ((("map" | "set" | "list") ~! ("<" ~> repsep(GroundType, ",") <~ ">")) ^^ {
       case "map" ~ l => new de.ust.skill.parser.MapType(l)
       case "set" ~ l => { assert(1 == l.size); new de.ust.skill.parser.SetType(l.head) }
       case "list" ~ l => { assert(1 == l.size); new de.ust.skill.parser.ListType(l.head) }
     }
       // we use a backtracking approach here, because it simplifies the AST generation
-      | ((id ~ ("[" ~> int <~ "]")) ^^ { case n ~ arr => new ConstantArrayType(n, arr) }
-        | (id ~ ("[" ~> id <~ "]")) ^^ { case n ~ arr => new DependentArrayType(n, arr) }
-        | (id <~ ("[" ~ "]")) ^^ { n => new ArrayType(n) }
-        | (id) ^^ { case n => new GroundType(n) }))
+      | ArrayType
+      | GroundType)
+
+    def ArrayType = ((GroundType ~ ("[" ~> int <~ "]")) ^^ { case n ~ arr => new ConstantArrayType(n, arr) }
+      | (GroundType ~ ("[" ~> id <~ "]")) ^^ { case n ~ arr => new DependentArrayType(n, arr) }
+      | (GroundType <~ ("[" ~ "]")) ^^ { n => new ArrayType(n) })
+
+    def GroundType = id ^^ { new GroundType(_) }
 
     /**
      * The <b>main</b> function of the parser, which turn a string into a list of includes and declarations.
