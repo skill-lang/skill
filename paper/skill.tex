@@ -1,6 +1,7 @@
 \documentclass[a4paper,10pt]{article}
 
 \usepackage{xltxtra} 
+\usepackage{amsmath}
 \usepackage[linkbordercolor={1 1 0}]{hyperref}
 \usepackage[marginpar]{todo}
 
@@ -363,12 +364,20 @@ Let f be a field. The field is \textit{legal} in one of the following cases:
 
 Let $<_l$ be the lexical order. We define a partial order $\leq_t$ on $\mathcal{T}$ as follows:
 \begin{itemize}
- \item $\forall t \in \mathcal{G}, s \in \mathcal{T}\setminus\mathcal{G}. t \leq_t s$.
- \item $\forall t \in \mathcal{C}, s \in \mathcal{T}\setminus\mathcal{B}. t \leq_t s$.
- \item $\forall s,t \in \mathcal{T}\setminus\mathcal{G}. s \leq_t t = s \leq_l t$.
+ \item $\forall t \in \mathcal{G}, s \in \mathcal{T}\setminus\mathcal{G}. t \leq_t s$
+ \item $\forall t \in \mathcal{C}, s \in \mathcal{T}\setminus\mathcal{B}. t \leq_t s$
+ \item $\forall s,t \in \mathcal{T}\setminus\mathcal{B}.\begin{cases}
+ s \leq_t t = base(s) \leq_l base(t), &\exists S,T. super(S,s) \wedge super(T, t)\\
+ s \leq_t t, & s \leq_l t \wedge \exists S. super(S,s) \wedge super(S,t)\\
+ s \leq_t t = s \leq_l t, & else
+ \end{cases}$
 \end{itemize}
 
+The informal short description is, first base types, then compound types and user types at the end, where the forest of user types maintains its structure but is order using the lexical order of type names.
+
 Notice, that this order corresponds to an left to right order in the types overview picture.
+
+The missing order of compound types is left away intentionally, because it allows for the exchange of some type definition after publishing a format, e.g. \verb/t[] f/ can be exchanged with \verb/list<t> f/.
 
 
 \subsection*{Strings}
@@ -599,9 +608,9 @@ The addition of new declarations has no effect.
 
 A change regarding comments has no significant effect.
 
-A change in restrictions of any kind may break the ABI, probably only for some language bindings. It will most certainly render some files illegal, which were legal before.
+A change in restrictions of any kind may break the API, potentially depending on the target programming language. It will most certainly change the set of legal files.
 
-A change of hints shall no significant effect, although some applications can stop working after a change of hints, e.g. if they access fields which are annotated with \verb/!ignore/.
+A change of hints shall have no significant effect, although some applications can stop working after a change of hints, e.g. if they access fields which are annotated with \verb/!ignore/.
 
 Inserting or removing the keyword \texttt{const} may\todo{really?} break compatibility.
 
@@ -649,6 +658,12 @@ In the following definitions, let $o$ be the object to be serialized and $T$ be 
  
 blablabla pools, ...
 
+\begin{itemize}
+ \item Pools are stored in ascending type order.
+ \item Strings which are used as pool names, are stored in the same order, thus the type order of user defined types is equal to the total order defined on the natural numbers during the serialization and deserialization process.
+\end{itemize}
+
+
 File Layout:
 
 \begin{verbatim}
@@ -675,7 +690,7 @@ The superIndex is an index into the string pool and points to the name of the su
 
 The sizeCount contains the number of elements in the pool. This is required in order to move objects of an unknown subtype. It does also simplify the deserialization process.
 
-The basePoolStartIndex is the index of the first element in the base ...
+The basePoolStartIndex is the index of the first element in the base types pool.
 
 \todo{all pools related to the same base type have to be contiguous and adhere to the index order inside the base types storage pool; this should be a side effect of a straight forward implementation}
 
@@ -796,26 +811,25 @@ Element {
 
 \section{Future Work}
 
-Serialisierungsnormalform? (Robustheit gegenüber Änderungen in der Spezifikation)
-
 XML output mit XML Schema.
 
-Das neue Serialisierungsschema erlaubt es einen Viewer zu bauen, der Definition+Datei anzeigen kann.
+Das neue Serialisierungsschema erlaubt es einen Viewer zu bauen, der Definition+Datei anzeigen kann. (Die future work ist hier der viewer)
 
-Integration der Definition in die Serialisierte Form, damit man die Daten generisch prüfen und anzeigen kann.
+Integration der Definition in die Serialisierte Form, damit man die Daten generisch prüfen und anzeigen kann. Hier braucht man noch ein gutes encoding, weil man sonst zu viel platz verbraucht.
 
 Abuse annotations for type-safe unions. The type system does not allow for unrestricted unions or intersection types. The former violate serialization invariants, the latter would either have no instances or be equal to an already existing (super) type.
-
-Der reflection Mechanismus muss die vorhandenen Strings mitbenutzen und deutlich effizienter sein, sonst ist der einfach zu teuer.
 
 Fun fact: Garbage Collection for serializable objects comes for free, if objects are always held in storage pools.
 
 \newpage
 \todos
 
-\part{Appendix A: Variable Length Coding}
+\part{Appendix}
+\renewcommand\thesection{\Alph{section}}
+\setcounter{section}{0}
+\section{Variable Length Coding}
 
-Size and Length information is stored as variable length coded 64 bit unsigned integers (aka C's \texttt{uint64\_t}). The basic idea is to use up to 9 bytes, where any byte starts with a 1 iff there is a consecutive byte. This leaves a payload of 7 bit for the first 8 bytes and 8 bits of payload for the ninth byte. This is very similar to the famous utf8 encoding and is justifed, as it is the case with utf8, by the assumption, that smaller numbers are a lot more likely. It has the nice property, that there are virtually no numerical size limitations.
+Size and Length information is stored as variable length coded 64 bit unsigned integers (aka C's \texttt{uint64\_t}). The basic idea is to use up to 9 bytes, where any byte starts with a 1 iff there is a consecutive byte. This leaves a payload of 7 bit for the first 8 bytes and 8 bits of payload for the ninth byte. This is very similar to the famous utf8 encoding and is motivated, as it is the case with utf8, by the assumption, that smaller numbers are a lot more likely. It has the nice property, that there are virtually no numerical size limitations.
 The following small C++ functions will illustrate the algorithm:
 \begin{lstlisting}[label=v64enc,caption=Variable Length Encoding,language=C++]
 uint8_t* encode(uint64_t v){
@@ -861,5 +875,39 @@ uint64_t decode(uint8_t* p){
 }
 \end{lstlisting}
 
+
+\section{Error Reporting}
+
+This section describes some errors regarding ill-formatted files, which must be detected and reported. The order is based on the expected order of checking for the described error. The described errors are expected to be the result of file corruption, format change or bugs in a language binding.
+
+\subsection*{Deserialization}
+\begin{itemize}
+\item If \texttt{EOF} is encountered unexpectedly, an error must be reported before producing any observable result.
+
+\item If an index into a pool is invalid\footnote{because it is larger then the last string in the pool}, an error must be reported.
+
+\item If the deserialization of a storage pool does not consume exactly the \texttt{sizeBytes} in its header, an error must be reported. Note: This is a strong indicator for a format change.
+
+\item If the serialized type order of storage pools does not match the expected type order, an error must be reported.
+
+\item If the serialized type information contains cycles, an error must be reported, which contains at least all type names in the detected cycle and the base type, if one can be determined.
+
+\item If a storage pools contains elements which, based on their location in the base pool, should be subtypes of some kind, but have no respective sub type storage pool, an error must be reported with at least, the base type name, the most exact known type name and the adjacent base type names.
+
+\item All known constant fields have to be checked before producing any observable result. If some constant value differs from the expected value, an error must be reported, which contains at least the type, the field type and name, the basePoolIndex, the index inside the types pool, the expected value and the actual value.
+
+\item If a serialized value violates a restriction or the invariant of a type,\footnote{Including sets containing multiple similar elements.} an error must be reported as soon as this fact can be observed. It is explicitly not required to check all serialized data for this property.
+\end{itemize}
+
+\section{Reserved Words}
+This section contains a table of words which must not be used as field names, because they are keywords in some languages. The usage of skill keywords will result in a direct error, whereas the usage of a word listed below will result in a warning, because the identifier will be escaped in the target language binding.
+
+
+\textbf{
+\begin{tabular}{ccccc}
+if &then& else &begin &end\\
+struct & class & public & protected &private... \\
+\end{tabular}
+}
 
 \end{document}
