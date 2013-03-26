@@ -19,7 +19,7 @@ object ASTPrettyPrinter {
     case n: ConstantArrayType => n.baseType + "[" + n.length + "]"
     case n: DependentArrayType => n.baseType + "[" + n.lengthFieldName + "]"
     case n: ArrayType => n.baseType + "[]"
-    case n: GroundType => n.name
+    case n: BaseType => n.name
 
     case n: Constant => (printNode(n.description) + "\nconst " + printNode(n.t) + " " + n.name
       + " = 0x" + n.value.toHexString + "\n")

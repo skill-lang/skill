@@ -24,7 +24,7 @@ object ASTEqualityChecker {
       case n: DependentArrayType => n.baseType.equals(o.asInstanceOf[DependentArrayType].baseType) &&
         n.lengthFieldName.equals(o.asInstanceOf[DependentArrayType].lengthFieldName)
       case n: ArrayType => n.baseType.equals(o.asInstanceOf[ArrayType].baseType)
-      case n: GroundType => n.name.equals(o.asInstanceOf[GroundType].name)
+      case n: BaseType => n.name.equals(o.asInstanceOf[BaseType].name)
 
       case n: Constant => n.t.equals(o.asInstanceOf[Constant].t) &&
         n.description.equals(o.asInstanceOf[Constant].description) &&

@@ -1,13 +1,19 @@
 package de.ust.skill.parser
 
 import java.io.File
-import scala.annotation.elidable
+import java.io.FileNotFoundException
+import java.lang.Long
+import scala.annotation.elidable.ASSERTION
 import scala.annotation.migration
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.LinkedList
+import scala.collection.mutable.ListBuffer
 import scala.util.parsing.combinator.JavaTokenParsers
-import annotation.elidable.ASSERTION
-import java.io.FileNotFoundException
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.VariableLengthArrayType
+import java.util.Arrays
 
 /**
  * The Parser does all stuff that is required for turning a set of files into a list of definitions.
@@ -29,7 +35,7 @@ class Parser {
     /**
      * Skill only has hex literals.
      */
-    def int = "0x" ~> """[0-9a-fA-F]*""".r ^^ { i => Integer.parseInt(i, 16) }
+    def int = "0x" ~> """[0-9a-fA-F]*""".r ^^ { i => Long.parseLong(i, 16) }
     /**
      * We use string literals to encode paths. If someone really calls a file ", someone should beat him hard.
      */
@@ -112,20 +118,20 @@ class Parser {
      * require the introduction of declarations, which essentially rename another more complex type. This has also an
      * impact on the way, data is and can be stored.
      */
-    def Type = ((("map" | "set" | "list") ~! ("<" ~> repsep(GroundType, ",") <~ ">")) ^^ {
+    def Type = ((("map" | "set" | "list") ~! ("<" ~> repsep(BaseType, ",") <~ ">")) ^^ {
       case "map" ~ l => new de.ust.skill.parser.MapType(l)
       case "set" ~ l => { assert(1 == l.size); new de.ust.skill.parser.SetType(l.head) }
       case "list" ~ l => { assert(1 == l.size); new de.ust.skill.parser.ListType(l.head) }
     }
       // we use a backtracking approach here, because it simplifies the AST generation
       | ArrayType
-      | GroundType)
+      | BaseType)
 
-    def ArrayType = ((GroundType ~ ("[" ~> int <~ "]")) ^^ { case n ~ arr => new ConstantArrayType(n, arr) }
-      | (GroundType ~ ("[" ~> id <~ "]")) ^^ { case n ~ arr => new DependentArrayType(n, arr) }
-      | (GroundType <~ ("[" ~ "]")) ^^ { n => new ArrayType(n) })
+    def ArrayType = ((BaseType ~ ("[" ~> int <~ "]")) ^^ { case n ~ arr => new ConstantArrayType(n, arr) }
+      | (BaseType ~ ("[" ~> id <~ "]")) ^^ { case n ~ arr => new DependentArrayType(n, arr) }
+      | (BaseType <~ ("[" ~ "]")) ^^ { n => new ArrayType(n) })
 
-    def GroundType = id ^^ { new GroundType(_) }
+    def BaseType = id ^^ { new BaseType(_) }
 
     /**
      * The <b>main</b> function of the parser, which turn a string into a list of includes and declarations.
@@ -137,10 +143,15 @@ class Parser {
   }
 
   /**
+   * returns an unsorted list of declarations
+   */
+  def process(input: File) = buildIR(parseAll(input))
+
+  /**
    * Parses a file and all related files and passes back a List of definitions. The returned definitions are also type
    * checked.
    */
-  def process(input: File): LinkedList[Definition] = {
+  def parseAll(input: File): LinkedList[Definition] = {
     val p = new FileParser();
     val base = input.getParentFile();
     val todo = new HashSet[String]();
@@ -164,11 +175,52 @@ class Parser {
           // add definitions
           rval = rval ++ result._2
         } catch {
-          case e: FileNotFoundException => assert(false, "The include " + f + "could not be resolved to an existing file: " + e.getMessage())
+          case e: FileNotFoundException => assert(false, "The include " + f +
+            "could not be resolved to an existing file: " + e.getMessage())
         }
       }
     }
     (new TypeChecker).check(rval.toList)
     return rval;
+  }
+
+  private def mkType(s: Type, decls: Map[String, Declaration]): de.ust.skill.ir.Type = s match {
+    case t: ListType ⇒ new de.ust.skill.ir.ListType(mkType(t.baseType, decls))
+    case t: SetType ⇒ new de.ust.skill.ir.SetType(mkType(t.baseType, decls))
+    case t: MapType ⇒ new de.ust.skill.ir.MapType(scala.collection.JavaConversions.asList(t.args.map(mkType(_, decls))))
+
+    case t: ConstantArrayType ⇒ new ConstantLengthArrayType(mkType(t.baseType, decls), t.length)
+    case t: DependentArrayType ⇒ new de.ust.skill.ir.DependentArrayType(mkType(t.baseType, decls), t.lengthFieldName)
+    case t: ArrayType ⇒ new VariableLengthArrayType(mkType(t.baseType, decls))
+
+    case t: BaseType ⇒ decls.get(t.name).getOrElse(GroundType.get(t.name)).ensuring({
+      r ⇒ if (null == r) throw new IllegalStateException("unknown declaration name " + t.name); true
+    })
+  }
+
+  /**
+   * Turns the AST into IR.
+   */
+  private def buildIR(defs: LinkedList[Definition]): List[Declaration] = {
+    // create declarations
+    var parents = defs map (f ⇒ (f.name, f)) toMap
+    val rval = parents.map({ case (n, f) ⇒ (n, new Declaration(n)) })
+    rval.foreach({
+      case (n, f) ⇒ f.setParentType(
+        rval.get(parents.get(n).get.parent.getOrElse(null)).getOrElse(null))
+    })
+
+    // fill field information into declarations
+    parents.foreach({
+      case (n, f) ⇒
+        val fields = new ListBuffer[de.ust.skill.ir.Field]()
+        f.body.foreach({
+          case x: Data ⇒ fields += new de.ust.skill.ir.Data(x.isAuto, mkType(x.t, rval), x.name)
+          case x: Constant ⇒ fields += new de.ust.skill.ir.Constant(mkType(x.t, rval), x.name, x.value)
+        })
+        rval.get(n).get.setFields(scala.collection.JavaConversions.asList(fields))
+    })
+
+    return rval.values.toList
   }
 }

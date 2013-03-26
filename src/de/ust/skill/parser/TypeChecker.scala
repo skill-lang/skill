@@ -34,7 +34,7 @@ class TypeChecker {
             "in " + d.name + "::" + f.name + ":> unknown base type " + t.baseType)
           case t: ArrayType => assert(knownTypes.contains(t.baseType.name),
             "in " + d.name + "::" + f.name + ":> unknown base type " + t.baseType)
-          case t: GroundType ⇒ assert(knownTypes.contains(t.name),
+          case t: BaseType ⇒ assert(knownTypes.contains(t.name),
             "in " + d.name + "::" + f.name + ":> unknown base type " + t.name)
         }
         // ensure that field names are unique inside the definition
@@ -54,10 +54,10 @@ class TypeChecker {
         }
         // ensure that constants are well-formed
         f match {
-          case c: Constant => assert(c.t.isInstanceOf[GroundType] &&
-            (c.t.asInstanceOf[GroundType].name.startsWith("i") ||
-              c.t.asInstanceOf[GroundType].name.startsWith("v")) &&
-              builtInTypes.contains(c.t.asInstanceOf[GroundType].name),
+          case c: Constant => assert(c.t.isInstanceOf[BaseType] &&
+            (c.t.asInstanceOf[BaseType].name.startsWith("i") ||
+              c.t.asInstanceOf[BaseType].name.startsWith("v")) &&
+              builtInTypes.contains(c.t.asInstanceOf[BaseType].name),
             "in " + d.name + "::" + f.name + ":> a constant must have an integer type!")
           case _ => ()
         }

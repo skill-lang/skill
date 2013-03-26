@@ -22,23 +22,23 @@ final class Description(val comment: Option[String], val restrictions: List[Rest
 sealed abstract class Type extends Node {
 }
 
-final class MapType(val args: List[GroundType]) extends Type {
+final class MapType(val args: List[BaseType]) extends Type {
 }
 
-final class SetType(val baseType: GroundType) extends Type {
+final class SetType(val baseType: BaseType) extends Type {
 }
 
-final class ListType(val baseType: GroundType) extends Type {
+final class ListType(val baseType: BaseType) extends Type {
 }
 
-sealed class ArrayType(val baseType: GroundType) extends Type {
+sealed class ArrayType(val baseType: BaseType) extends Type {
 }
-final class ConstantArrayType(baseType: GroundType, val length: Int) extends ArrayType(baseType) {
+final class ConstantArrayType(baseType: BaseType, val length: Long) extends ArrayType(baseType) {
 }
-final class DependentArrayType(baseType: GroundType, val lengthFieldName: String) extends ArrayType(baseType) {
+final class DependentArrayType(baseType: BaseType, val lengthFieldName: String) extends ArrayType(baseType) {
 }
 
-final class GroundType(val name: String) extends Type {
+final class BaseType(val name: String) extends Type {
   override def toString = name
 }
 
@@ -46,7 +46,7 @@ sealed abstract class Field(val t: Type, val name: String) extends Node {
   var description: Description = new Description(None, List[Restriction](), List[Hint]());
 }
 
-final class Constant(t: Type, name: String, val value: Int) extends Field(t, name) {
+final class Constant(t: Type, name: String, val value: Long) extends Field(t, name) {
 }
 
 final class Data(val isAuto: Boolean, t: Type, name: String) extends Field(t, name) {
