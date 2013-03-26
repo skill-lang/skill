@@ -15,4 +15,14 @@ public class VariableLengthArrayType extends ArrayType {
 	public Type getBaseType() {
 		return baseType;
 	}
+
+	@Override
+	public String toString() {
+		return baseType.getTypeName() + "[]";
+	}
+
+	@Override
+	public String getTypeName() {
+		return toString();
+	}
 }

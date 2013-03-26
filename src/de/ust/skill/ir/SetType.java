@@ -13,4 +13,14 @@ public class SetType extends CompoundType {
 	public Type getBaseType() {
 		return baseType;
 	}
+
+	@Override
+	public String toString() {
+		return "set<"+baseType.getTypeName() + ">";
+	}
+
+	@Override
+	public String getTypeName() {
+		return toString();
+	}
 }

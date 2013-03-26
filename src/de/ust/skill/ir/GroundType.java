@@ -60,4 +60,9 @@ public class GroundType extends Type {
 	public String toString() {
 		return name;
 	}
+
+	@Override
+	public String getTypeName() {
+		return name;
+	}
 }

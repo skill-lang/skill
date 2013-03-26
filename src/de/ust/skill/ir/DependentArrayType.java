@@ -23,4 +23,14 @@ public class DependentArrayType extends ArrayType {
 	public String getFieldName() {
 		return fieldName;
 	}
+
+	@Override
+	public String toString() {
+		return baseType.getTypeName() + "[" + fieldName + "]";
+	}
+
+	@Override
+	public String getTypeName() {
+		return toString();
+	}
 }

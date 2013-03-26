@@ -61,4 +61,12 @@ public abstract class Type implements Comparable<Type> {
 
 		return t.getBaseType().getName().compareTo(s.getBaseType().getName());
 	}
+	
+	@Override
+	abstract public String toString();
+	
+	/**
+	 * @return the type name, as used in a field declaration
+	 */
+	abstract public String getTypeName();
 }

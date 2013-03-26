@@ -13,4 +13,14 @@ public class ListType extends CompoundType {
 	public Type getBaseType() {
 		return baseType;
 	}
+
+	@Override
+	public String toString() {
+		return "list<"+baseType.getTypeName() + ">";
+	}
+
+	@Override
+	public String getTypeName() {
+		return toString();
+	}
 }

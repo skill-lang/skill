@@ -8,7 +8,7 @@ import scala.collection.mutable.HashMap
  * @author Timm Felden
  */
 class TypeChecker {
-  private val builtInTypes = Set[String]("any", "annotation", "bool", "i1", "i8", "i16", "i32", "i64", "v64", "string",
+  private val builtInTypes = Set[String]("annotation", "bool", "i1", "i8", "i16", "i32", "i64", "v64", "string",
     "f64", "f32")
   private var knownTypes: HashMap[String, Definition] = null;
 

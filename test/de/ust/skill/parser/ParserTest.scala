@@ -37,8 +37,8 @@ class ParserTest extends AssertionsForJUnit {
   @Test def process: Unit = {
     val p = new Parser
     Assert.assertArrayEquals(
-      p.process(new File("test/data/air-top.skill")).toArray:Array[Object],
-      p.process(new File("test/data/air-pamm.skill")).toArray:Array[Object])
+      p.process(new File("test/data/air-top.skill")).map(_.toString()).toArray:Array[Object],
+      p.process(new File("test/data/air-pamm.skill")).map(_.toString()).toArray:Array[Object])
   }
 
 }

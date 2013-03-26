@@ -25,4 +25,10 @@ public abstract class Field implements Comparable<Field> {
 			return canonicalName.compareTo(f.canonicalName);
 		return rval;
 	}
+
+	@Override
+	public String toString() {
+		return type.getTypeName() + " " + canonicalName;
+
+	}
 }

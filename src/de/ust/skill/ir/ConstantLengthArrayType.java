@@ -8,17 +8,27 @@ package de.ust.skill.ir;
 public class ConstantLengthArrayType extends ArrayType {
 	private final Type baseType;
 	private final long length;
-	
-	public ConstantLengthArrayType(Type baseType, long length){
+
+	public ConstantLengthArrayType(Type baseType, long length) {
 		this.baseType = baseType;
 		this.length = length;
 	}
-	
+
 	public Type getBaseType() {
 		return baseType;
 	}
-	
+
 	public long getLength() {
 		return length;
+	}
+
+	@Override
+	public String toString() {
+		return baseType.getTypeName() + "[" + length + "]";
+	}
+
+	@Override
+	public String getTypeName() {
+		return toString();
 	}
 }

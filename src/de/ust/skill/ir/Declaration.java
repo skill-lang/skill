@@ -23,9 +23,9 @@ public class Declaration extends Type {
 	}
 
 	public void setParentType(Declaration p) {
-		if(null==p)
+		if (null == p)
 			return;
-		
+
 		assert null == superType : "parent type already set";
 		baseType = p.getBaseType();
 		if (null == baseType)
@@ -72,5 +72,24 @@ public class Declaration extends Type {
 
 	public List<Field> getFields() {
 		return fields;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder(name);
+		if (null != superType) {
+			sb.append(":").append(superType.name);
+		}
+		sb.append("{");
+		for (Field f : fields)
+			sb.append("\t").append(f.toString()).append("\n");
+		sb.append("}");
+
+		return sb.toString();
+	}
+
+	@Override
+	public String getTypeName() {
+		return name;
 	}
 }
