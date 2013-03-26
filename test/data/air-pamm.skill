@@ -1,6 +1,6 @@
 include "air-top.skill"
 
-annotation Program {
+Program {
 	Type[] types;
 	Function[] functions;
 	Variable[] globals;
@@ -12,20 +12,20 @@ annotation Program {
 }
 
 
-tagged Type {
+Type {
 	/**
 	The number of heap objects required to represent an instance of this type.
 	*/
 	v64 abstractHeapObjectCount;
 }
 
-tagged GroundType with Type {
+GroundType with Type {
 	string name;
 	/**sizeOf(this), i.e. number of characters required to represent this type.*/
 	i8 size;
 }
 
-tagged PointerType with Type {
+PointerType with Type {
 	Type base;
 }
 
@@ -33,19 +33,19 @@ tagged PointerType with Type {
 Arrays are constant size arrays. Arrays of unknown size are represented by
  pointers.
 */
-tagged ArrayType with Type {
+ArrayType with Type {
 	v64 size;
 	Type base;
 }
 
-tagged UnionType with Type {
+UnionType with Type {
 	/**
 	Child types of this union.
 	*/
 	Type[] children;
 }
 
-tagged StructType with Type {
+StructType with Type {
 	/**
 	Element types.
 	*/
@@ -55,7 +55,7 @@ tagged StructType with Type {
 /**
 The type of a function and base type of a function pointer.
 */
-tagged FunctionType with Type {
+FunctionType with Type {
 	Type[] parameters;
 	Type result;
 }
@@ -63,7 +63,7 @@ tagged FunctionType with Type {
 /**
 Note, that a thread group is in fact the type of a thread object.
 */
-tagged ThreadGroup with Type {
+ThreadGroup with Type {
 	/** The instruction responsible for the existence of this thread group;
 	 can be null, if the thread creation can not be observed, i.e. it is
 	 created by the OS.
@@ -96,7 +96,7 @@ ThreadGroupSet {
 
 HeapObject {
 	/** The object responsible for the creation of this object. */
-	auto any creator;
+	auto annotation creator;
 	/** The type of the creating object. */
 	auto Type userType;
 }
@@ -119,7 +119,7 @@ BasicBlock {
 }
 
 
-tagged Instruction{
+Instruction{
 	/**
 	The instruction ID is used to identify the result of this instruction if any.
 	IDs are unique inside a function.
@@ -131,29 +131,29 @@ tagged Instruction{
 /**
 Fake instructions are inserted to represent constant values and are not directly part of basic blocks.
 */
-tagged FakeInstruction with Instruction {
+FakeInstruction with Instruction {
 	Type type;
 }
 
-tagged ConstIntegerInstruction with FakeInstruction {
+ConstIntegerInstruction with FakeInstruction {
 	v64 value;
 }
 
 /**
 Used to call specific functions.
 */
-tagged ConstFunctionPointerInstruction with FakeInstruction {
+ConstFunctionPointerInstruction with FakeInstruction {
 	Function target;
 }
 
-tagged AssignmentInstruction with Instruction {
+AssignmentInstruction with Instruction {
 	/**
 	The assigned value.
 	*/
 	Instruction RHS;
 }
 
-tagged OperatorInstruction with Instruction {
+OperatorInstruction with Instruction {
 	/**
 	The image of the operator, e.g '+', '-', '*', ...
 	*/
@@ -164,35 +164,35 @@ tagged OperatorInstruction with Instruction {
 	Instruction[] operands;
 }
 
-tagged AllocationInstruction with Instruction {
+AllocationInstruction with Instruction {
 	Type allocatedType;
 	/** The results representation on the heap. */
 	HeapObject heapObject;
 }
 
-tagged FreeInstruction with Instruction {
+FreeInstruction with Instruction {
 	Instruction target;
 }
 
-tagged LoadInstruction with Instruction {
+LoadInstruction with Instruction {
 	Instruction address;
 }
 
-tagged StoreInstruction with Instruction {
+StoreInstruction with Instruction {
 	Instruction address;
 }
 
 /**
 Uses a pointer and an index and calculates a new pointer pointing to the object.
 */
-tagged IndexOfInstruction with Instruction {
+IndexOfInstruction with Instruction {
 	/** must have PointerType. */
 	Instruction base;
 	/** must have integer type. */
 	Instruction index;
 }
 
-tagged PhiInstruction with Instruction {
+PhiInstruction with Instruction {
 	/** Arguments is required to have the exactly as many entries, as the
 	 owning block has predecessors. If the actual predecessor is the i'th entry
 	 in the predecessors array, the i'th value of this array will be selected
@@ -203,7 +203,7 @@ tagged PhiInstruction with Instruction {
 /** 
 Tau instructions are used to denote expected indeterministic data flow between threads.
 */
-tagged TauInstruction with Instruction {
+TauInstruction with Instruction {
 	/** Contains a set of instructions which can be the source of the inter thread control flow and associates it with a thread group set. */
 	map<Instruction, ThreadGroupSet> sources;
 }
@@ -211,7 +211,7 @@ tagged TauInstruction with Instruction {
 /**
 Indicates unintentional data flow between threads.
 */
-tagged BetaInstruction with Instruction {
+BetaInstruction with Instruction {
 	/** The default value, which can be used to get the expectable result of this operation. In case of this instruction, sources is mostly used in order to warn the user about potential data flow. */
 	Instruction default;
 	/** Contains a set of instructions which can be the source of the inter thread control flow and associates it with a thread group set. */
@@ -221,16 +221,16 @@ tagged BetaInstruction with Instruction {
 /**
 Control flow continues at any of the target blocks.
 */
-tagged GotoInstruction with Instruction {
+GotoInstruction with Instruction {
 	set<BasicBlock> targets;
 }
 
-tagged ReturnInstruction with Instruction {
+ReturnInstruction with Instruction {
 	/** If a result is returned, it has been computed by this instruction. */
 	Instruction rval;
 }
 
-tagged CallInstruction with Instruction {
+CallInstruction with Instruction {
 	/** Pointer to a function which is invoked.
 	 In most cases, this will be a ConstFunctionPointerInstruction. */
 	Instruction target;
@@ -238,12 +238,12 @@ tagged CallInstruction with Instruction {
 	FunctionType calleeSignature;
 }
 
-tagged ThreadStartInstruction with Instruction {
+ThreadStartInstruction with Instruction {
 	/** The thread group of the started thread is the type of the allocated object. */
 	AllocationInstruction target;
 }
 
-tagged ThreadJoinInstruction with Instruction {
+ThreadJoinInstruction with Instruction {
 	/** Joins all threads which can be stored in the left hand side of the target instruction. */
 	Instruction target;
 }
@@ -251,14 +251,14 @@ tagged ThreadJoinInstruction with Instruction {
 /**
 Instrucion to acquire a permission.
 */
-tagged AcquireInstruction with Instruction {
+AcquireInstruction with Instruction {
 	Instruction target;
 }
 
 /**
 Instrucion to release a permission.
 */
-tagged ReleaseInstruction with Instruction {
+ReleaseInstruction with Instruction {
 	Instruction target;
 }
 

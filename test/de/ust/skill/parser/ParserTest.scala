@@ -10,7 +10,7 @@ class ParserTest extends AssertionsForJUnit {
 
   def check(path: String) = {
     val p = new Parser
-    Assert.assertNotSame(0, p.process(new File(path)).size)
+    Assert.assertNotSame(0, p.parseAll(new File(path)).size)
   }
 
   @Test def test: Unit = check("test/data/test.skill")
@@ -30,8 +30,15 @@ class ParserTest extends AssertionsForJUnit {
     val p = new Parser
     Assert.assertTrue(
       ASTEqualityChecker.checkDefinitionList(
-        p.process(new File("test/data/air-top.skill")).toList,
-        p.process(new File("test/data/air-pamm.skill")).toList))
+        p.parseAll(new File("test/data/air-top.skill")).toList,
+        p.parseAll(new File("test/data/air-pamm.skill")).toList))
+  }
+
+  @Test def process: Unit = {
+    val p = new Parser
+    Assert.assertArrayEquals(
+      p.process(new File("test/data/air-top.skill")).toArray:Array[Object],
+      p.process(new File("test/data/air-pamm.skill")).toArray:Array[Object])
   }
 
 }

@@ -1,0 +1,3 @@
+fail {
+	auto any field
+}

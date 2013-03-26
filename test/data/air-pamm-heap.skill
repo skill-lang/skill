@@ -4,7 +4,7 @@ with "air-pamm.skill";
 Contains information equivalent to andersen analysis, 
 which is used to create heap fragments.
 */
-annotation HeapStructure {
+HeapStructure {
 	auto Program target;
 	v64 heapSize;
 	HeapObject[heapSize] heap;
@@ -20,7 +20,7 @@ PointsToSet {
 /**
 Detailed poinsto information containing context and flow information.
 */
-annotation DetailedHeapStructure {
+DetailedHeapStructure {
 	auto Program target;
 	/** Function ⇀ Instruction ⇀ PoinstToSet */
 	auto map<Function, Instruction, PointsToSet> payload;

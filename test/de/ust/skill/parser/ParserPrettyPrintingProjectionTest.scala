@@ -1,23 +1,24 @@
 package de.ust.skill.parser
 
 import java.io.File
+
+import scala.sys.process._
+
+import org.junit.Assert
 import org.junit.Test
 import org.scalatest.junit.AssertionsForJUnit
-import sys.process._
-import org.junit.Assert
-import org.junit.ComparisonFailure
 
 class ParserPrettyPrintingProjectionTest extends AssertionsForJUnit {
 
   def check(path: String) = {
     val p = new Parser
-    val first = p.process(new File(path)).toList
+    val first = p.parseAll(new File(path)).toList
     val tmp = File.createTempFile("test", "skill")
     ("echo " + ASTPrettyPrinter.prettyPrint(first)) #> tmp !
-    val second = p.process(tmp).toList
+    val second = p.parseAll(tmp).toList
     tmp.delete()
     ("echo " + ASTPrettyPrinter.prettyPrint(first)) #> tmp !
-    val third = p.process(tmp).toList
+    val third = p.parseAll(tmp).toList
     tmp.delete()
     Assert.assertTrue(ASTEqualityChecker.checkDefinitionList(third, second))
   }

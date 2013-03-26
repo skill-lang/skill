@@ -13,7 +13,7 @@ import org.scalatest.junit.AssertionsForJUnit
 class TypeCheckerTest extends AssertionsForJUnit {
   private def check(path: String) {
     val p = new Parser
-    p.process(new File(path))
+    p.parseAll(new File(path))
   }
 
   @Test(expected = classOf[AssertionError]) def dupDefs = check("test/data/failures/duplicateDefinition.skill")
@@ -25,4 +25,5 @@ class TypeCheckerTest extends AssertionsForJUnit {
   @Test(expected = classOf[AssertionError]) def unkownType = check("test/data/failures/unknownType.skill")
   @Test(expected = classOf[AssertionError]) def unkownFile = check("test/data/failures/unknownFile.skill")
   @Test(expected = classOf[AssertionError]) def empty = check("test/data/failures/empty.skill")
+  @Test(expected = classOf[AssertionError]) def anyType = check("test/data/failures/anyType.skill")
 }
