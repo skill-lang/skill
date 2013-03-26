@@ -27,12 +27,16 @@
 
 %skill language definition
 \lstdefinelanguage{skill}
-{morekeywords={include,with,tagged,class,with,extends,annotation,const,auto,map,list,set,i1,i8,i16,i32,i64,v64,string,bool,f32,f64},
+{morekeywords={include,with,with,extends,annotation,const,auto,map,list,set,i1,i8,i16,i32,i64,v64,string,bool,f32,f64},
 sensitive=false,
 morecomment=[s]{/*}{*/},
 morestring=[b]",
 frameshape={nnn}{n}{y}{nyr},
 }
+\lstset{emph={%  
+    tagged,class,indexed%
+    },emphstyle={\color{red}\bfseries\underbar}%
+}%
 
 \title{The Serialization Killer Language}
 \author{Timm Felden}
@@ -181,9 +185,6 @@ However, it is strongly advised against using any identifiers which form reserve
 
 \subsection{Examples}
 
-\subsubsection*{Nice example}
-\todo{more comments, nicer, we will use this as running example}
-
 \begin{lstlisting}[label=blockExample,caption=Running Example,language=skill]
 /** A source code location. */
 SLoc {
@@ -192,17 +193,17 @@ SLoc {
   string path;
 }
 
-tagged Block {
+Block {
   SLoc begin;
   SLoc end;
   string image;
 }
 
-tagged IfBlock with Block {
+IfBlock : Block {
   Block thenBlock;
 }
 
-tagged ITEBlock with IfBlock {
+ITEBlock : IfBlock {
   Block elseBlock;
 }
 \end{lstlisting}
@@ -212,7 +213,7 @@ tagged ITEBlock with IfBlock {
 \begin{lstlisting}[label=example2a,caption=Example 2a,language=skill]
 with "example2b.skill"
 
-indexed A {
+A {
   A a;
   B b;
 }
@@ -227,11 +228,11 @@ B {
 \end{lstlisting}
 
 \subsubsection*{Unicode}
-The usage of non ASCII characters is completely legal, but might cause severe portability issues.
+The usage of non ASCII characters is completely legal, but discouraged.
 \begin{lstlisting}[label=unicode,caption=Unicode Support,language=skill]
 /** some arguably legal unicode characters. */
 ö {
-  ö ß;
+  ö ∀;
   ö €;
 }
 \end{lstlisting}
@@ -285,38 +286,34 @@ Comments provided in the skill file will be emitted into the generated code\foot
 
 The basic layout of the type system is:
 
-\todo{remove built-in types, and add a set U for usertypes}
-
 \tikz [mindmap, every node/.style=concept, concept color=black!20,
 grow cyclic,
-level 1/.append style={level distance=4.2cm,sibling angle=100},
-level 2/.append style={level distance=2.7cm,sibling angle=100},
+level 1/.append style={level distance=4.2cm,sibling angle=65},
+level 2/.append style={level distance=2.7cm,sibling angle=40},
 level 3/.append style={level distance=2cm,sibling angle=35},
 level 4/.append style={level distance=1.5cm,sibling angle=35}]
-\node [root concept]{All Types}[clockwise from=-50] % root
+\node [root concept]{All Types}[clockwise from=20] % root
 child { node {User Types}}
-child { node {Built-In Types}[clockwise from=-30]
-  child{ node{Compound Types}[clockwise from=-10]
-    child{ node{map}}
-    child{ node{set}}
-    child{ node{list}}
-    child{ node{array}}
+child { node{Compound Types}[clockwise from=20]
+  child{ node{map}}
+  child{ node{set}}
+  child{ node{list}}
+  child{ node{array}}
+}
+child { node{Ground Types}[clockwise from=-45]
+  child{ node{string}}
+  child{ node{Float}[clockwise from=-35]
+    child{ node{f64}}
+    child{ node{f32}}
   }
-  child{ node{Ground Types}
-    child{ node{string}}
-    child{ node{Float}[clockwise from=-15]
-      child{ node{f64}}
-      child{ node{f32}}
-    }
-    child{ node{Integer}[clockwise from=-50]
-      child{ node{v64}}
-      child{ node{i64}}
-      child{ node{$\cdots$}}
-      child{ node{i1}}
-    }
-    child{ node{bool}}
-    child{ node{annotation}}
+  child{ node{Integer}[clockwise from=-70]
+    child{ node{v64}}
+    child{ node{i64}}
+    child{ node{$\cdots$}}
+    child{ node{i1}}
   }
+  child{ node{bool}}
+  child{ node{annotation}}
 };
 
 User types can be seen as nonempty tuples over all types. It is legal to \textit{rename} a ground type, in order to give it a special semantics. E.g. to create a time stamp by:
@@ -329,13 +326,13 @@ time {
 
 \subsection*{Legal Types}
 
-This section is to define the set of types, which can be used to declare legal fields inside a user type definition. Let $\mathcal{T}$ be the set of all types, $\mathcal{B} \in \mathcal{T}$ be the set of built-in types, $\mathcal{G} \in \mathcal{B}$ be the set of ground types, $\mathcal{C} \in \mathcal{B}$ be the set of compound types and $\mathcal{I} \in \mathcal{G}$ be the set of integer types.
+This section is to define the set of types, which can be used to declare legal fields inside a user type definition. Let $\mathcal{T}$ be the set of all types, $\mathcal{U} \subseteq \mathcal{T}$ be the set of user types, $\mathcal{G} \subseteq \mathcal{T}$ be the set of ground types, $\mathcal{C} \subseteq \mathcal{T}$ be the set of compound types and $\mathcal{I} \subseteq \mathcal{G}$ be the set of integer types.
 
 In this context, we talk about an unknown, but fixed set $\mathcal{T}$, which corresponds to the contents of a set of input files. All types have unique names.
 
-Let $\texttt{t} \in \mathcal{T}\setminus\mathcal{B}$ be a type declaration, then wellformedness is the smallest predicate satisfying
+Let $\texttt{t} \in \mathcal{U}$, then wellformedness is the smallest predicate satisfying
 \begin{itemize}
- \item If $\texttt{s} \in \mathcal{T}\setminus\mathcal{B}$, then \verb/t with s{...}/ is a well formed type declaration and \texttt{t} is called a subtype of \texttt{s}.
+ \item If $\texttt{s} \in \mathcal{U}$, then \verb/t with s{...}/ is a well formed type declaration and \texttt{t} is called a subtype of \texttt{s}, written $t <: s$
  
  \item All field definitions of t are \textit{legal}.
  
@@ -349,33 +346,30 @@ Let f be a field. The field is \textit{legal} in one of the following cases:
  
  \item If $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ then \verb/t f/ is a legal field.
  
- \item For any $n \geq 2$ with $\texttt{t}_i \in \mathcal{G}$, $\texttt{map<t}_1\texttt{, }\cdots\texttt{, t}_n\texttt{> f}$ is a legal field.
+ \item For any $n \geq 2$ with $\texttt{t}_i \in \mathcal{T}\setminus\mathcal{C}$, $\texttt{map<t}_1\texttt{, }\cdots\texttt{, t}_n\texttt{> f}$ is a legal field.
  
- \item If $\texttt{t} \in \mathcal{G}$ then \verb/set<t> f/ and \verb/list<t> f/ are legal fields.
+ \item If $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ then \verb/set<t> f/ and \verb/list<t> f/ are legal fields.
  
  \item If $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ then \verb/t[] f/ is a legal field.
  
  \item If $i \in \mathbb{N}^+$ and $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ then \verb/t[/$i$\verb/] f/ is a legal field.
  
- \item If $\texttt{s} \in \mathcal{I}$, $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ and \verb/s size/ is a field, then, inside the same type declaration,\footnote{this is required in order to make serialization work; another approach would be to choose a normal form, which would also make declarations robust against reordering}
-  \verb/t[size] f/ is a legal field.
- 
+ \item If $\texttt{s} \in \mathcal{I}$, $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ and \verb/s size/ is a field, then, inside the same type declaration, \verb/t[size] f/ is a legal field.
 \end{itemize}
+
+Then informal short definitions is that compound types can not be nested\footnote{This is actually ensured by the grammar.} and array lengths have to be integers.
 
 \subsection*{Type Order}
 
 Let $<_l$ be the lexical order. We define a partial order $\leq_t$ on $\mathcal{T}$ as follows:
 \begin{itemize}
  \item $\forall t \in \mathcal{G}, s \in \mathcal{T}\setminus\mathcal{G}. t \leq_t s$
- \item $\forall t \in \mathcal{C}, s \in \mathcal{T}\setminus\mathcal{B}. t \leq_t s$
- \item $\forall s,t \in \mathcal{T}\setminus\mathcal{B}.\begin{cases}
- s \leq_t t = base(s) \leq_l base(t), &\exists S,T. super(S,s) \wedge super(T, t)\\
- s \leq_t t, & s \leq_l t \wedge \exists S. super(S,s) \wedge super(S,t)\\
- s \leq_t t = s \leq_l t, & else
- \end{cases}$
+ \item $\forall t \in \mathcal{C}, s \in \mathcal{U}. t \leq_t s$
+ \item $\forall s,t \in \mathcal{U}. t \leq_t s \leftarrow s <: t $\footnote{This is \textit{super types first}.}
+ \item $\forall s,t \in \mathcal{U}. t \leq_t s = t \leq_l s\leftarrow \exists S \in \mathcal{U} \cup \{\bot\}. t <: S \wedge s <: S $\footnote{Types with the same or no supertype are order lexically.}
 \end{itemize}
 
-The informal short description is, first base types, then compound types and user types at the end, where the forest of user types maintains its structure but is order using the lexical order of type names.
+The informal short description is, first ground types, then compound types and user types at the end, where the forest of user types maintains its structure but is order using the lexical order of type names.
 
 Notice, that this order corresponds to an left to right order in the types overview picture.
 
