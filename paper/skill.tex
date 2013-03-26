@@ -152,19 +152,19 @@ TYPE :=
   |ARRAYTYPE)
   
 MAPTYPE :=
-  "<" GROUNDTYPE ("," GROUNDTYPE)+ ">"
+  "<" BASETYPE ("," BASETYPE)+ ">"
   
 SETTYPE :=
-  "<" GROUNDTYPE ">"
+  "<" BASETYPE ">"
   
 LISTTYPE :=
-  "<" GROUNDTYPE ">"
+  "<" BASETYPE ">"
   
 ARRAYTYPE :=
-  GROUNDTYPE
+  BASETYPE
   ("[" (<id>|<int>)? "]")?
   
-GROUNDTYPE :=
+BASETYPE :=
   (<id>|"annotation")
 
 \end{verbatim}
@@ -284,6 +284,8 @@ Comments provided in the skill file will be emitted into the generated code\foot
 \section{The Type System}
 
 The basic layout of the type system is:
+
+\todo{remove built-in types, and add a set U for usertypes}
 
 \tikz [mindmap, every node/.style=concept, concept color=black!20,
 grow cyclic,
@@ -586,7 +588,7 @@ binary{ i8[] data }
 \end{verbatim}
 
 
-\section{On Extensibility and Canonical Declaration Order}
+\section{On Extensibility and Canonical Field Order}
 
 Extensibility is an important property. In this section, we develop a normal form of skill definitions, which will allow a robustness of a file format against modification. We will describe the effect of some changes, which can break decoding or encoding capabilities or break the API but not the file format (further ABI).
 
@@ -594,9 +596,9 @@ Extensibility is an important property. In this section, we develop a normal for
 
 Field names are equal, if their lexical representation is equal after converting all characters to lower case. Type declarations must not contain fields with equal names.
 
-\subsection{Canonical Declaration Order}
+\subsection{Canonical Field Order}
 
-A declaration is in canonical declaration order, if all fields are in type order and fields with the same or uncomparable type order are sorted in lexical order.
+A declaration is in canonical field order, if all fields are in type order and fields with the same or uncomparable type order are sorted in lexical order.
 
 The type order relation is motivated by properties of compound types. The lexical order is motivated by the observation, that this order does not come with a cost, but provides some additional robustness against changes in definitions.
 
@@ -906,7 +908,8 @@ This section contains a table of words which must not be used as field names, be
 \textbf{
 \begin{tabular}{ccccc}
 if &then& else &begin &end\\
-struct & class & public & protected &private... \\
+struct & class & public & protected &private \\
+⇒ & ...
 \end{tabular}
 }
 
