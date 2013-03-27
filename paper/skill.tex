@@ -28,6 +28,8 @@
 %skill language definition
 \lstdefinelanguage{skill}
 {morekeywords={include,with,with,extends,annotation,const,auto,map,list,set,i1,i8,i16,i32,i64,v64,string,bool,f32,f64},
+breakatwhitespace=true,
+   breaklines=true,      
 sensitive=false,
 morecomment=[s]{/*}{*/},
 morestring=[b]",
@@ -55,8 +57,6 @@ frameshape={nnn}{n}{y}{nyr},
 For productive criticism: Erhard Plödereder and Martin Wittiger \todo{muss noch schöner werden}
 \end{abstract}
 
-\todo{ensure that there are no compiler related examples, because those can be very confusing}
-\todo{proof read the whole thing to account for changes resulting from the discussion with EP}
 \todo{leider wird man nicht um einen glossar rumkommen. ABI, API, super type, base type, ...}
 
 \section{Motivation}
@@ -178,7 +178,7 @@ Comment: The optional \texttt{;} at the end of includes or definitions are for c
 
 \subsection{Reserved Words}
 
-The language itself has only the reserved words \textbf{annotation}, \textbf{auto}, \textbf{const}, \textbf{indexed}, \textbf{tagged}, \textbf{with}, \textbf{map}, \textbf{list} and \textbf{set}.
+The language itself has only the reserved words \textbf{annotation}, \textbf{auto}, \textbf{const}, \textbf{with}, \textbf{map}, \textbf{list} and \textbf{set}. \todo{check for updates}
 
 However, it is strongly advised against using any identifiers which form reserved words in a potential target language, such as Ada, C++, C\#, Java, JavaScript or Python.
 \todo{Appendix with a list of all identifiers which form reserved words in one of the languages above, including our keywords}
@@ -317,12 +317,12 @@ child { node{Ground Types}[clockwise from=-45]
 };
 
 User types can be seen as nonempty tuples over all types. It is legal to \textit{rename} a ground type, in order to give it a special semantics. E.g. to create a time stamp by:
-\begin{verbatim}
+\begin{lstlisting}[label=timeExample,caption=Time,language=skill]
 time {
   /** seconds since 1.1.1970 0:00 UTC. */
   i64 date;
 }
-\end{verbatim}
+\end{lstlisting}
 
 \subsection*{Legal Types}
 
@@ -397,11 +397,11 @@ The null pointer is serialized using the index 0. Conceptually, null pointers of
 
 This section will present some examples of ill-formed type declarations and brief explanations.
 
-\begin{verbatim}
+\begin{lstlisting}[label=stringExample,caption=Legal Super Types,language=skill]
 EncodedString : string {
   string encoding;
 }
-\end{verbatim}
+\end{lstlisting}
 Error: The built-in type ``string'' can not be sub classed.
 
 \section{Invariants}
@@ -420,8 +420,7 @@ Signature: \verb/range(min, max)/: $\alpha \times \alpha → bool$
 
 Defaults: obvious.
 
-\subsubsection*{Examples}
-\begin{verbatim}
+\begin{lstlisting}[label=rangeExample,caption=Examples,language=skill]
 natural {
   @range(0,%)
   v64 data;
@@ -434,7 +433,7 @@ nonNegativeDouble {
   @range(0,%)
   f64 data;
 }
-\end{verbatim}
+\end{lstlisting}
 
 \subsection*{NonNull}
 Declares that an indexed field may not be null.
@@ -445,12 +444,11 @@ Signature: \verb/nonnull()/
 
 Defaults: none.
 
-\subsubsection*{Examples}
-\begin{verbatim}
-indexed Node {
+\begin{lstlisting}[label=nonnullExample,caption=Examples,language=skill]
+Node {
   @nonnull Node[] edges;
 }
-\end{verbatim}
+\end{lstlisting}
 
 
 \subsection*{Unique}
@@ -464,17 +462,15 @@ Signature: \verb/unique()/
 
 Defaults: none.
 
-\subsubsection*{Examples}
-
-\begin{verbatim}
-@unique indexed Operator {
+\begin{lstlisting}[label=uniqueExample,caption=Examples,language=skill]
+@unique Operator {
   string name;
 }
-@unique indexed Term {
+@unique Term {
   Operator operator;
   Term[] arguments;
 }
-\end{verbatim}
+\end{lstlisting}
 
 
 \subsection*{Singleton}
@@ -486,15 +482,13 @@ Signature: \verb/singleton()/
 
 Defaults: none.
 
-\subsubsection*{Examples}
-
-\begin{verbatim}
+\begin{lstlisting}[label=singletonExample,caption=Examples,language=skill]
 @singleton System { ... }
 @singleton Data{
   /** Note: if data would not be a singleton itself, it is likely to violate the singleton property */
   System foo;
 }
-\end{verbatim}
+\end{lstlisting}
 
 
 \subsection*{Tree}
@@ -514,17 +508,16 @@ Signature: \verb/notree()/
 
 Defaults: none.
 
-\subsubsection*{Examples}
-\begin{verbatim}
-indexed Sloc{...}
+\begin{lstlisting}[label=treeExample,caption=Examples,language=skill]
+Sloc{...}
 @tree
-indexed SyntaktikEntity{
+SyntaktikEntity{
   /** not a tree, because several entities, might share them */
   @notree Sloc sloc;
   
   SyntaktikEntity[] children;
 }
-indexed Routine {
+Routine {
   @notree
   Routine[] callers;
   @tree
@@ -539,7 +532,7 @@ File {
   string name;
   string content;
 } 
-\end{verbatim}
+\end{lstlisting}
 Note: In case of the File example, there is no way to violate the tree property.
 Note: It is legal for trees to form forests.
 
@@ -576,10 +569,10 @@ Floats sind vorhanden, weil die Sprache sonst keine akzeptanz finden würde.
 Dass es typen wie unsigned oder positive nicht gibt ist schade, kann aber im zuge einer beschreibungssprache die restriktionen bietet einfach nachgerüstet werden.
 
 Es gibt keinen binary typ, weil dieser trivial definiert werden kann:
-\begin{verbatim}
+\begin{lstlisting}[label=thriftBinary,caption=Binary,language=skill]
 /** binary as found in Apache Thrift */
 binary{ i8[] data }
-\end{verbatim}
+\end{lstlisting}
 
 
 \section{On Extensibility and Canonical Field Order}
@@ -618,7 +611,156 @@ Any change of the structure of existing declarations, i.e. changing the modifier
 
 \section{Serialization}
 
-This section is about representing objects of an arbitrary legal type $\mathcal{T}$ as a sequence of bytes. We will call this sequence \textit{stream}, its formal Type will be named $S$, the current stream will be named $s$. We will assume that there is an implicit conversion between fixed sized integers\footnote{As well as between fixed sized floating point numbers, because we define them to be IEEE-754 encoded 32-/64-bit sequences.} and streams. We also make use of a stream concatenation operator $\circ : S \times S → S$.
+This section is about representing objects as a sequence of bytes. We will call this sequence \textit{stream}, its formal Type will be named $S$, the current stream will be named $s$. We will assume that there is an implicit conversion between fixed sized integers\footnote{As well as between fixed sized floating point numbers, because we define them to be IEEE-754 encoded 32-/64-bit sequences.} and streams. We also make use of a stream concatenation operator $\circ : S \times S → S$.
+
+This section assumes, that all objects about to be serialized are already known. It further assumes, that their types and thus the values of the functions (i.e. baseTypeName, typeName, index, $\den{\_}$) explained below can be easily computed.
+
+
+\subsection{Storage Pools}
+
+This section contains the description of the high level file layout and gives meaning to the functions $baseTypeName: \mathcal{U} → S$, $typeName: \mathcal{U} → S$ and $index: \mathcal{U} → S$.
+
+The basic idea behind the serialization format is to store the data grouped by type into storage pools. If objects are referred to from other objects, those references are usually given as integer, which is interpreted as index into the respective storage pool.
+
+Because we will identify types by their name in human readable form, the first pool has to be the string pool. Because it is the first pool and the only pool, which stores objects of a built in type directly, it has a special layout. It starts with its size and is followed by exactly as many zero encoded utf8 strings. In skill inspired represenation, this would look like: \footnote{Note that the utf8 type is not predefined in skill; it is used to distinguish between the serialization of a string typed field and the very string object.}
+\begin{verbatim}
+v64 size;
+utf8[size] stringPool;
+\end{verbatim}
+
+Now, as we have the first pool, we can explain the \textit{index} function. All objects are stored concise pools, which basically can be seen as arrays of these objects. The index function returns the index of the objects, starting with the index 1\footnote{This is a bit unfortunate, because it may cause some bugs in language binding generators, but using the v64 encoding, it is important to save the 0 for the NULL pointer, as it is encoded with 1 byte instead of 9 bytes as it is the case for -1, which would be the most obvious alternative.} for the first object. The NULL pointer is represented by the index 0.
+
+Because we want to allow for full reflection capabilities, but we do not want to force users to pay for the mechanism, if they do not require it, we spend a byte to indicate whether the required data is present or not. The data is stored as the last object in the string pool. In skill this part would be:
+\begin{verbatim}
+bool lastStringIsDefinition;
+\end{verbatim}
+
+The remaining part is the serialization of the remaining nonempty storage pools. First, these pools are sorted in ascending type order. Then the fields defined of in the type stored in the pool are stored. Each pool keeps a start index, which allows for the reconstruction of the complete object. A short example shall illustrate the basic concept. It contains five types A,B,C,D and N. Each has a single field of type $\tau$ which is used to simplify the representation. The type Information for the objects in the base type pool can be inferred from the data stored in the pools using the links between the base type pool and the subtype pools (shown as arrows).
+
+%NOTE: if this picture is used in a paper, colors have to be replaced by stippled lines
+\begin{tikzpicture}
+%labels
+\node[draw=none] at (-1,0.25) {$S$:};
+\node[draw=none] at (-1,-0.25) {$\mathcal{T}$:};
+\node[draw=none] at (-0.7,-1) {$index$:};
+\node[draw=none] at (-0.9,2) {Def.:};
+
+%definitions
+\node[red,draw=none] at (2.5,2) {A \{ $\tau a$; \} };
+\node[green,draw=none] at (1.5,1.5) {B : {\color{red} A } \{ $\tau b$; \} };
+\node[blue,draw=none] at (1,1) {D : {\color{green} B } \{ $\tau d$; \} };
+\node[black,draw=none] at (4,1.5) {C : {\color{red} A } \{ $\tau c$; \} };
+
+\node[orange,draw=none] at (7.5,2) {N \{ $\tau n$; \} };
+
+%content
+ \node[color=black!60,draw=none] at (-0.35,0.25) {$\cdots$};
+ 
+ \node[red,draw=none] at (0.25,0.25) {${a}$};
+ \node[red,draw=none] at (0.75,0.25) {${a}$};
+ \node[red,draw=none] at (1.25,0.25) {${a}$};
+ \node[red,draw=none] at (1.75,0.25) {${a}$};
+ \node[red,draw=none] at (2.25,0.25) {${a}$};
+ \node[red,draw=none] at (2.75,0.25) {${a}$};
+ 
+ \node[green,draw=none] at (3.45,0.25) {$b$};
+ \node[green,draw=none] at (3.95,0.25) {${b}$};
+ \node[green,draw=none] at (4.45,0.25) {${b}$};
+ \node[green,draw=none] at (4.95,0.25) {${b}$};
+ 
+ \node[blue,draw=none] at (5.65,0.25) {${d}$};
+ 
+ \node[black,draw=none] at (6.35,0.25) {${c}$};
+ 
+ \node[orange,draw=none] at (6.9,0.25) {${n}$};
+ \node[orange,draw=none] at (7.55,0.25) {$\cdots$};
+ 
+%base pool index
+ 
+ \node[red,draw=none] at (0.25,-1) {1};
+ \node[red,draw=none] at (0.75,-1) {2};
+ \node[red,draw=none] at (1.25,-1) {3};
+ \node[red,draw=none] at (1.75,-1) {4};
+ \node[red,draw=none] at (2.25,-1) {5};
+ \node[red,draw=none] at (2.75,-1) {6};
+ 
+ \node[green,draw=none] at (3.45,-1) {2};
+ \node[green,draw=none] at (3.95,-1) {3};
+ \node[green,draw=none] at (4.45,-1) {4};
+ \node[green,draw=none] at (4.95,-1) {5};
+ 
+ \node[blue,draw=none] at (5.65,-1) {5};
+ 
+ \node[black,draw=none] at (6.35,-1) {6};
+ 
+ \node[orange,draw=none] at (6.9,-1) {1};
+ \node[orange,draw=none] at (7.55,-1) {$\cdots$};
+ 
+%base pool types
+ \node[red,draw=none] at (0.25,-0.25) {A};
+ \node[green,draw=none] at (0.75,-0.25) {B};
+ \node[green,draw=none] at (1.25,-0.25) {B};
+ \node[green,draw=none] at (1.75,-0.25) {B};
+ \node[blue,draw=none] at (2.25,-0.25) {D};
+ 
+ \node[black,draw=none] at (2.75,-0.25) {C};
+ 
+ \node[orange,draw=none] at (6.9,-0.25) {N};
+
+%frames
+ \draw[shift={(0.15,0)},thick,orange] (6.4999,0) grid [step=0.5] (7.4,0.5);
+
+ \draw[shift={(0.6,0)},thick,black] (5.3,0) grid [step=0.5] (6,0.5);
+ \draw[shift={(0.4,0)},thick,blue] (4.8,0) grid [step=0.5] (5.5,0.5);
+ \draw[shift={(0.2,0)},thick,green] (2.8,0) grid [step=0.5] (5,0.5);
+ \draw[thick,red] (0,0) grid [step=0.5] (3,0.5);
+ 
+%base type indices
+ \draw[thick,green,->] (3.1,0.1) -- (3.1,-0.5) -- (0.5,-0.5) -- (0.5,0);
+ \draw[thick,blue,->] (5.3,0.1) -- (5.3,-0.6) -- (2,-0.6) -- (2,0);
+ \draw[thick,blue,->] (5.3,0.1) -- (5.3,-0.6) -- (4.7,-0.6) -- (4.7,0);
+ \draw[thick,black,->] (6,0.1) -- (6,-0.7) -- (2.5,-0.7) -- (2.5,0);
+\end{tikzpicture}
+
+Note, that the pool of D comes in front of the pool of C, because it is smaller according to the type order.
+
+This leads to the serialization of a pool as:
+\begin{verbatim}
+v64 poolName
+v64 superIndex
+option(v64 basePoolStartIndex; iff superIndex!=0)
+v64 sizeCount
+v64 sizeBytes
+T[sizeCount] elements
+\end{verbatim}
+
+
+
+
+A concise description of the file layout could look like this:
+\begin{verbatim}
+v64 size
+utf8[size] stringPool
+
+bool lastStringIsDefinition
+
+while(next!=EOF){
+  v64 poolName
+  v64 superIndex
+  option(v64 basePoolStartIndex; iff superIndex!=0)
+  v64 sizeCount
+  v64 sizeBytes
+  [[ T[sizeCount] elements ]]
+}
+\end{verbatim}
+
+An interesting observation about this encoding is, that the shortest legal file consists of two bytes, which are both zero. Although the encoding makes use of various invariants it provides some means of error detection, as explained in the appendix.
+
+\subsection{Pool Elements}
+
+und hier erklären, wie man die felder von elementen serialisiert, wenn man den typ und den index des elements innerhalbe des serialisierten storage pools kennt.
+
+\subsection{old garbage! delete}
 
 Before being able to understand the serialization of a whole graph of objects into a file, we have to fix a serialization function, which turns an arbitrary object into a stream. Let $\den{\_}:\mathcal{T} → S$ be the translation function, which serializes an object of any type into a stream.
 
@@ -628,12 +770,10 @@ The super type relation forms a forest.
 In the following definitions, let $o$ be the object to be serialized and $T$ be its type.
 \begin{itemize}
  %null
- \item The NULL-Pointer, which is legal in case of indexed types is serialized as $\den{\texttt{NULL}} = 0$
+ \item The NULL-Pointer is serialized as $\den{\texttt{NULL}} = 0x00$
  %annotation -> * (v64 baseTypeName!!, v64index)
- \item For any $o$ of annotation type, the serialization is defined as $\den{o} = sizeOf(\den{o'}) \circ \den{o'}$, i.e. the serialization of the actual payload is proceeded by the size of the payload. Therefore annotation fields can contain arbitrary content.
- %tagged -> gibts nicht mehr
- \item For any $o$ of a tagged type, the serialization is defined as $\den{o} = \den{name(T)} \circ \den{o'}$, where $o'$ is $o$ treated as if its type would not be tagged anymore, i.e. serialized tagged types are proceeded by their type names. If $T$ is indexed as well, the indexed rule proceeds the tagged rule, i.e. the type name is stored in the storage pool, but not in a field.
- \item For any $o$ of an unmodified user type, i.e. $mod(T)=\emptyset$, with field declarations $t_i$ $f_i$, the serialization is defined as $\den{o} = \den{f_0} \circ \cdots \circ \den{f_n}$. The serialization order equals the canonical declaration order, as explained above.
+ \item For any $o$ of annotation type, the serialization is defined as $\den{o} = \den{baseTypeName(o)} \circ \den{baseTypeIndex(o)}$, i.e. a pointer to the name of a base type pool (=\texttt{v64}) and an index into that pool (=\texttt{v64}).
+ 
  \item For any $o$ of a user type not treated above, the serialization is defined as $\den{o} = indexOf(o)$, i.e. the index of the object inside the respective storage pool.
  
  \item The serialization of a string is its index in the string pool. The serialization of a string inside the string pool is its representing utf8 sequence followed by exactly one terminating 0 character. Interfaces requiring strings without terminating 0 character will add/remove them automatically.\footnote{If the stored string happens to be a type name, it is guaranteed that a lowercase conversion of the very string is idempotent.}
@@ -710,7 +850,7 @@ Of course, there can be optimizations in some languages. E.g. in C++, one can si
 \subsection{Examples}
 
 Nice example in C++:
-\begin{verbatim}
+\begin{lstlisting}[label=cppExample,caption=C++ Examples,language=C++]
 #include <stdint.h>
 #include <string>
 [...some other bouilerplate includes...]
@@ -732,11 +872,9 @@ struct ITEBlock : public IfBlock {
   Block elseBlock;
 };
 [...plus some boilerplate code for visitors, iostreams etc. ...]
-\end{verbatim}
+\end{lstlisting}
 
-
-Nice example in Java:
-\begin{verbatim}
+\begin{lstlisting}[label=javaExample,caption=Java Examples,language=Java]
 class SLoc {
   public short line;
   public short column;
@@ -755,11 +893,10 @@ class ITEBlock extends IfBlock {
   public Block elseBlock;
 }
 [...some read and write code, plus some visitors...]
-\end{verbatim}
+\end{lstlisting}
 
 
-Nice example in \LaTeX-formulas:
-\begin{verbatim}
+\begin{lstlisting}[label=latexExample,caption=LaTeX Examples,language={[LaTeX]TeX}]
 $(line, column, path) \in SLoc
   \subseteq \mathbb{Z} \times \mathbb{Z} \times string$
 
@@ -771,7 +908,7 @@ $(super, thenBlock) \in IfBlock
 
 $(super, elseBlock) \in ITEBlock
   \subseteq IfBlock \times Block$
-\end{verbatim}
+\end{lstlisting}
 Which looks like:
 
 $(line, column, path) \in SLoc \subseteq \mathbb{Z} \times \mathbb{Z} \times string$
