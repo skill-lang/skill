@@ -257,6 +257,8 @@ The file referenced by the with statement is processed as well. The declarations
 \subsection{\texttt{annotation}}
 The type has a tag and a size, which allows it to be inserted at any annotation locations. This is useful in order to provide extension points in the file format. The file will still be readable by older implementations, which are not able to map any meaningful type into the annotation.
 
+\todo{explain that using annotation objects of unknown type will result in a runtime error}
+
 As we will see later, annotation can be seen as equivalent to the type definition
 \begin{verbatim}
 annotation {
@@ -362,6 +364,7 @@ Then informal short definitions is that compound types can not be nested\footnot
 \subsection*{Type Order}
 
 Let $<_l$ be the lexical order. We define a partial order $\leq_t$ on $\mathcal{T}$ as follows:
+\todo{i1 muss kleiner sein als alles andere, damit man bitstrings zusammenpacken kann}
 \begin{itemize}
  \item $\forall t \in \mathcal{G}, s \in \mathcal{T}\setminus\mathcal{G}. t \leq_t s$
  \item $\forall t \in \mathcal{C}, s \in \mathcal{U}. t \leq_t s$
@@ -616,9 +619,20 @@ This section is about representing objects as a sequence of bytes. We will call 
 This section assumes, that all objects about to be serialized are already known. It further assumes, that their types and thus the values of the functions (i.e. baseTypeName, typeName, index, $\den{\_}$) explained below can be easily computed.
 
 
+\subsection{Steps of the Serialization Process}
+
+In general it is assumed that the serialization process is split into the following steps:
+\begin{enumerate}
+ \item All objects to be serialized are collected. This is usually done using the transitive closure of an initial set.
+ 
+ \item The items are organized into their storage pools, i.e. the index function is calculated.
+ 
+ \item The output stream is created as described below.
+\end{enumerate}
+
 \subsection{Storage Pools}
 
-This section contains the description of the high level file layout and gives meaning to the functions $baseTypeName: \mathcal{U} → S$, $typeName: \mathcal{U} → S$ and $index: \mathcal{U} → S$.
+This section contains the description of the high level file layout and gives meaning to the functions $baseTypeName: \mathcal{U} → S$, $typeName: \mathcal{U} → S$ and $index: \mathcal{U}\cup\{\textbf{string}\} → S$.
 
 The basic idea behind the serialization format is to store the data grouped by type into storage pools. If objects are referred to from other objects, those references are usually given as integer, which is interpreted as index into the respective storage pool.
 
@@ -635,7 +649,7 @@ Because we want to allow for full reflection capabilities, but we do not want to
 bool lastStringIsDefinition;
 \end{verbatim}
 
-The remaining part is the serialization of the remaining nonempty storage pools. First, these pools are sorted in ascending type order. Then the fields defined of in the type stored in the pool are stored. Each pool keeps a start index, which allows for the reconstruction of the complete object. A short example shall illustrate the basic concept. It contains five types A,B,C,D and N. Each has a single field of type $\tau$ which is used to simplify the representation. The type Information for the objects in the base type pool can be inferred from the data stored in the pools using the links between the base type pool and the subtype pools (shown as arrows).
+The remaining part is the serialization of the remaining nonempty storage pools. First, these pools are sorted in ascending type order. Then the fields defined of in the type stored in the pool are stored. Each pool keeps a start index, which allows for the reconstruction of the complete object. A short example shall illustrate the basic concept. It contains five types A,B,C,D and N. Each has a single field of type $\tau$ which is used to simplify the representation. The type Information for the objects in the base type pool can be inferred from the data stored in the pools using the links between the base type pool and the subtype pools (The base type start index (BPSI) field of pools with a super type -- shown as arrows). For the sake of readability, the name, size and count fields are omitted in the picture.
 
 %NOTE: if this picture is used in a paper, colors have to be replaced by stippled lines
 \begin{tikzpicture}
@@ -643,6 +657,7 @@ The remaining part is the serialization of the remaining nonempty storage pools.
 \node[draw=none] at (-1,0.25) {$S$:};
 \node[draw=none] at (-1,-0.25) {$\mathcal{T}$:};
 \node[draw=none] at (-0.7,-1) {$index$:};
+\node[draw=none] at (-0.85,-0.65) {\small{BPSI}:};
 \node[draw=none] at (-0.9,2) {Def.:};
 
 %definitions
@@ -718,7 +733,7 @@ The remaining part is the serialization of the remaining nonempty storage pools.
 %base type indices
  \draw[thick,green,->] (3.1,0.1) -- (3.1,-0.5) -- (0.5,-0.5) -- (0.5,0);
  \draw[thick,blue,->] (5.3,0.1) -- (5.3,-0.6) -- (2,-0.6) -- (2,0);
- \draw[thick,blue,->] (5.3,0.1) -- (5.3,-0.6) -- (4.7,-0.6) -- (4.7,0);
+ \draw[blue,->] (5.3,0.1) -- (5.3,-0.6) -- (4.7,-0.6) -- (4.7,0);
  \draw[thick,black,->] (6,0.1) -- (6,-0.7) -- (2.5,-0.7) -- (2.5,0);
 \end{tikzpicture}
 
@@ -734,6 +749,13 @@ v64 sizeBytes
 T[sizeCount] elements
 \end{verbatim}
 
+The poolName is an index into the string pool and points to the type name stored in the pool.
+
+The superIndex is an index into the string pool and points to the name of the super type.
+
+The sizeCount contains the number of elements in the pool. This is required in order to move objects of an unknown subtype. It does also simplify the deserialization process.
+
+The basePoolStartIndex is the index of the first element in the base types pool.
 
 
 
@@ -758,79 +780,45 @@ An interesting observation about this encoding is, that the shortest legal file 
 
 \subsection{Pool Elements}
 
-und hier erklären, wie man die felder von elementen serialisiert, wenn man den typ und den index des elements innerhalbe des serialisierten storage pools kennt.
-
-\subsection{old garbage! delete}
-
-Before being able to understand the serialization of a whole graph of objects into a file, we have to fix a serialization function, which turns an arbitrary object into a stream. Let $\den{\_}:\mathcal{T} → S$ be the translation function, which serializes an object of any type into a stream.
-
-This section uses the notion of base and super types. A super type denotes the direct super type of a type. The base type, is the topmost type in a type hierarchy, i.e. any type, which has itself no super type.
-The super type relation forms a forest.
-
-In the following definitions, let $o$ be the object to be serialized and $T$ be its type.
+Let $\den{\_}:\mathcal{T} → S$ be the translation function, which serializes a field of an object into a stream. The serialization of an objects takes places by serializing all its fields in canonical field order into the stream. In this section, we assume that the three functions defined in the last section are implicitly converted to streams using the v64 encoding. We assume further, that compound types provide a function $size: \mathcal{T} → \mathcal{I}$, which returns the number of elements stored in a given field.
+Let $f$ be a field of type $t$, then $\den{f}$ is defined as\footnote{We will use C-Style hexadecimal integer literals for integers in streams.}
 \begin{itemize}
  %null
- \item The NULL-Pointer is serialized as $\den{\texttt{NULL}} = 0x00$
+ \item $\forall t \in \mathcal{U}\cup\{\textbf{string}\}. \den{\texttt{NULL}} = \texttt{0x00}$
+ %pooled objects
+ \item $\forall t \in \mathcal{U}\cup\{\textbf{string}\}. \den{f} = index(f)$
+ 
  %annotation -> * (v64 baseTypeName!!, v64index)
- \item For any $o$ of annotation type, the serialization is defined as $\den{o} = \den{baseTypeName(o)} \circ \den{baseTypeIndex(o)}$, i.e. a pointer to the name of a base type pool (=\texttt{v64}) and an index into that pool (=\texttt{v64}).
+ \item $t=\textbf{annotation} \implies \den{\texttt{NULL}} = \texttt{0x00} \circ 0x00$\footnote{the first value is not important and may change in the future; it results from the encoding requiring a type for the null pointer.}
+ \item $t=\textbf{annotation} \implies \den{f} = baseTypeName(f) \circ index(t)$
  
- \item For any $o$ of a user type not treated above, the serialization is defined as $\den{o} = indexOf(o)$, i.e. the index of the object inside the respective storage pool.
+ %bool
+ \item $t=\textbf{bool} \implies \den{\top} = \texttt{0xFF} \wedge \den{\bot} = \texttt{0x00}$
  
- \item The serialization of a string is its index in the string pool. The serialization of a string inside the string pool is its representing utf8 sequence followed by exactly one terminating 0 character. Interfaces requiring strings without terminating 0 character will add/remove them automatically.\footnote{If the stored string happens to be a type name, it is guaranteed that a lowercase conversion of the very string is idempotent.}
- \item Booleans are serialized using $\den{\top} = 0xFF$ and $\den{\bot} = 0x00$, i.e. a byte is used, which is all 1s in case of true and all 0s in case of false.
+ %fixed int
+ \item $\forall t \in \mathcal{I}\setminus\{\textbf{v64}\}. \den{f} = f$
  
- \item For any $o$ of fixed size integer type $\den{o} = o$.
- \item v64, sizes and lengths are serialized using the variable length coding explained in appendix A: $\den{o} = encode(o)$ with encode as in listing \ref{v64enc}. This coding favors small natural numbers.
+ %v64
+ \item $\forall t \in \{\textbf{v64}\}. \den{f} = encode(f)$\footnote{With encode as defined in listing \ref{v64enc}.}
  
- \item For any $o$ of floating point type, the serialization is $\den{o} = o$, i.e. the in memory represenation is written into the stream. This assumes floats to be encoded according to IEEE-754.
+ %fixed float
+ \item $\forall t \in \{\textbf{f32},\textbf{f64}\}. \den{f} = f$\footnote{Assuming the float to be IEEE-754 encoded, which allows for an implicit bit-wise conversion to fixed sized integer.}
  
- \item For any variably sized array $o$, $\den{o} = \den{size(o)} \circ \den{o[0]} \circ \cdots \circ \den{o[size(o)-1]}$. Note, that size is treated as if it were a field of type \texttt{v64}.
- \item For any fix sized array $o$ or any array with a size that is the value of another field, $\den{o} = \den{o[0]} \circ \cdots \circ \den{o[size(o)-1]}$.
+ %fixed and dependent arrays
+ \item $\forall g \in \mathcal{G}, n \in \mathbb{N}^+. t = g\texttt{[}n\texttt{]} \implies \den{f} = \den{f_0} \circ \cdots \circ \den{f_{n-1}}$
  
- \item Lists and Sets are serialized as if they were variable sized arrays.
+ \item $\forall g \in \mathcal{G}, s \in \mathcal{I}, \texttt{s size}$\footnote{As stated above, size must be a field of the same declaration as f.} $. t = g\texttt{[size]} \wedge \texttt{size} \geq 0 \implies \den{f} = \den{f_0} \circ \cdots \circ \den{f_{\texttt{size}-1}}$\footnote{Note that this is the only case where the encoded field does not append anything to the stream.}
  
- \item Maps are serialized, as if they were pairs of elements of their argument types. Note that this will cause a nested map type such as \verb/map<T,map<U,V>>/ to be serialized using a schema $ \den{size(o)} \circ \den{o.t_1} \circ \den{size(o[t_1])} \circ \den{o[t_1].u_1} \circ \den{o[t_1].v_1} \circ \den{o[t_1].u_2} \circ \cdots \circ \den{size(o[t_2])} \circ \cdots \circ \den{o[t_n].v_m}$
+ %variable array, list and set
+ \item $\forall g \in \mathcal{G}, n = size(f). t \in \{g\texttt{[]}, \texttt{set<}g\texttt{>}, \texttt{list<}g\texttt{>}\} \implies \den{f} = \den{n} \circ \den{f_0} \circ \cdots \circ \den{f_{n-1}}$
+ 
+ %map
+ \item Maps are serialized from left to right by serializing the keyset and ammending each key with the map structure which it points to. In case of Maps with two types, this is equal to a list of key value tuples.
+ A field of type \verb/map<T,U,V>/ is serialized using a schema $ \den{size(f)} \circ \den{f.t_1} \circ \den{size(f[t_1])} \circ \den{f[t_1].u_1} \circ \den{f[t_1][u_1]} \circ \den{f[t_1].u_2} \circ \cdots \circ \den{size(f[t_2])} \circ \cdots \circ \den{f[t_n][u_m]}$
 \end{itemize}
- 
-blablabla pools, ...
-
-\begin{itemize}
- \item Pools are stored in ascending type order.
- \item Strings which are used as pool names, are stored in the same order, thus the type order of user defined types is equal to the total order defined on the natural numbers during the serialization and deserialization process.
-\end{itemize}
 
 
-File Layout:
 
-\begin{verbatim}
-v64 size
-string[size] stringPool
-
-bool lastStringIsDefinition
-
-while(next!=EOF){
-  v64 poolName
-  v64 superIndex
-  v64 sizeCount
-  opt(v64 basePoolStartIndex; iff superIndex!=0)
-  v64 sizeBytes
-  [[ T[sizeCount] elements ]]
-}
-\end{verbatim}
-
-Iff lastStringIsDefinition is true, the last string of the string pool contains a text that describes the all types usable in the file. This is provided mainly for checking and reflection purpose.
-
-The poolName is an index into the string pool and points to the type name stored in the pool.
-
-The superIndex is an index into the string pool and points to the name of the super type.
-
-The sizeCount contains the number of elements in the pool. This is required in order to move objects of an unknown subtype. It does also simplify the deserialization process.
-
-The basePoolStartIndex is the index of the first element in the base types pool.
-
-\todo{all pools related to the same base type have to be contiguous and adhere to the index order inside the base types storage pool; this should be a side effect of a straight forward implementation}
-
-Note: Pools which do not have entries have to be omitted.
 
 \section{Deserialization}
 
@@ -839,13 +827,14 @@ Deserialization is mostly straight forward.
 The general strategy is:
 \begin{itemize}
  \item the string pool is deserialized and a map from index to strings is created.
- \item all other objects are deserialized. Any fields referring to indexed types are stored in an adequate data structure.
- \item fields referring to indexed types are filled with pointers to the actual instances.
- \item the root object is deserialized
+ \item the type structure is reconstructed while the pools are copied into memory
+ \item objects are reconstructed
 \end{itemize}
 
-Of course, there can be optimizations in some languages. E.g. in C++, one can simply store create all Objects in one pass and store indices to the respective pools in the pointer typed fields by using an unsafe pointer/integer conversion, which can be corrected in a second pass, where those indices are replaced by the correct pointer values.
 
+\section{API}
+
+talk about the generated API and its features, like iterators, factories, access to singletons and stuff.
 
 \subsection{Examples}
 
@@ -951,6 +940,10 @@ Das neue Serialisierungsschema erlaubt es einen Viewer zu bauen, der Definition+
 Integration der Definition in die Serialisierte Form, damit man die Daten generisch prüfen und anzeigen kann. Hier braucht man noch ein gutes encoding, weil man sonst zu viel platz verbraucht.
 
 Abuse annotations for type-safe unions. The type system does not allow for unrestricted unions or intersection types. The former violate serialization invariants, the latter would either have no instances or be equal to an already existing (super) type.
+
+State somewhere, that a major advantage over XML is, that one is not required to link against a overly general implementation, which is nice if one is only interested in a very specific format.
+
+Maybe it is possible to have an omit-string-pool-names option in some scenarios, but this would require all pools to be nonempty and would severely limit extensibility. An omit-pool-size-count option is more likely to come, because it would \textit{just} require all clients knowing all types.\footnote{Otherwise one would not be able to store a file containing unknown subtype data in general}
 
 Fun fact: Garbage Collection for serializable objects comes for free, if objects are always held in storage pools.
 
