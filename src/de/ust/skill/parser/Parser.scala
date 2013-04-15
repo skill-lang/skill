@@ -54,7 +54,7 @@ class Parser {
     /**
      * Comments are first class citizens of our language, because we want to emit them in the output binding.
      */
-    def comment = """(\s|//.*|(?m)/\*(\*(?!/)|[^*])*\*/)*""".r
+    def comment = """/\*([^\*/]|/|\*+[^\*/])*\*+/""".r
 
     /**
      * restrictions as defined in the paper.
