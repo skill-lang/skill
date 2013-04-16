@@ -344,7 +344,7 @@ Let $\texttt{t} \in \mathcal{U}$, then wellformedness is the smallest predicate 
  \item The subtype relation forms a forest.
 \end{itemize}
 
-
+\todo{ das ist viel zu kompliziert und zu verwirrend und vor allem quasi unnötig, da echt viel von der grammatik abgedeckt wird} 
 Let f be a field. The field is \textit{legal} in one of the following cases:
 \begin{itemize}
  \item If $\texttt{t} \in \mathcal{I}$ then \verb/const t f/ is a legal constant field.
@@ -559,6 +559,7 @@ Serialization shall unify objects with exactly the same serialized form. In comb
 
 \subsection*{Distributed}
 Use a static map instead of fields to represent fields of definitions. This is usually an optimization if a definition has a lot of fields, but most use cases require only a small subset of them. Because hints do not modify the binary compatibility, some clients are likely to define the fields to be distributed or lazy.
+\todo{f.a vs. a[f]}
 
 \subsection*{Lazy}
 Deserialize the fields data only if it is actually used. Lazy implies distributed.
@@ -667,6 +668,7 @@ bool lastStringIsDefinition;
 
 The remaining part is the serialization of the remaining nonempty storage pools. First, these pools are sorted in ascending type order. Then the fields defined of in the type stored in the pool are stored. Each pool keeps a start index, which allows for the reconstruction of the complete object. A short example shall illustrate the basic concept. It contains five types A,B,C,D and N. Each has a single field of type $\tau$ which is used to simplify the representation. The type Information for the objects in the base type pool can be inferred from the data stored in the pools using the links between the base type pool and the subtype pools (The base type start index (BPSI) field of pools with a super type -- shown as arrows). For the sake of readability, the name, size and count fields are omitted in the picture.
 
+\todo{create a figure out of this with a nice frame and caption}
 %NOTE: if this picture is used in a paper, colors have to be replaced by stippled lines
 \begin{tikzpicture}
 %labels
