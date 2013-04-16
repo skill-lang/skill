@@ -244,9 +244,12 @@ ADTs are represented using arrays and pairs.
 
 ADTs showed to be useful and to increase the usability and understandability of the resulting code and file format.
 
-\section{Semantik}
+\todo{move or remove}
 
-Bedeutung der einzelnen Schlüsselwörter
+
+\section{Semantics}
+
+This section is to describe the meaning of individual keywords.
 
 \subsection{Includes}
 The file referenced by the with statement is processed as well. The declarations of all files reachable over \texttt{with} statements are collected, before any declaration is evaluated.
@@ -592,6 +595,17 @@ A declaration is in canonical field order, if all fields are in type order and f
 
 The type order relation is motivated by properties of compound types. The lexical order is motivated by the observation, that this order does not come with a cost, but provides some additional robustness against changes in definitions.
 
+
+\subsection{Partial Types}
+
+Objects can have partial types, if a part or the whole type of an object is unknown to the current binding\footnote{A problem that will arise frequently in the context of downward compatibility.}. It is important to understand that these objects can, under no circumstances, be deleted. If partial objects are encountered, one of the following actions should be taken (ordered by safety):
+\begin{itemize}
+ \item Serialization should be forbidden, i.e. the data is read-only.
+ \item Only new objects may be added, thus the unknown objects can not be corrupted. This may however break an invariant of an unknown type.
+ \item Only known objects will be serialized and all other objects will be discarded. This however is not an option for a lot of users.
+\end{itemize}
+
+
 \subsection{A Rule of Thumb}
 
 A change of the organization of input files or the order of their definition has no effect.
@@ -609,6 +623,8 @@ Inserting or removing the keyword \texttt{const} may\todo{really?} break compati
 Changing the value of a constant will break the ABI.\footnote{Which is btw. the very purpose of constants.}
 
 Inserting or removing the keyword \texttt{auto} will break ABI, but not the API.
+
+The presence of objects with unknown (sub-)type with pointers to objects of known type may corrupt a file if it is written. This is even the case for annotations. It is therefore suggested, not to use pointers to existing objects, but to subtype them and to annotate objects in this fashion, because the data can be carried around correctly, even if the complete type of the object is not known. Another approach would be to disallow writing of such files.
 
 Any change of the structure of existing declarations, i.e. changing the modifier, adding or removing fields, etc., will break compatibility as a whole.
 
@@ -833,6 +849,8 @@ The general strategy is:
 
 
 \section{API}
+
+The generated API has to be designed in a fashion, that integrates nicely with the languages programming paradigms. E.g. in Java it would be most useful to create a state object, which holds state of a bunch of serializable data and provides iterators over existing objcts, as well as factory methods and methods to remove objects form the state object. The serialized types can be represented by interfaces providing getters, setters, using hidden implementations, only known to the state object.
 
 talk about the generated API and its features, like iterators, factories, access to singletons and stuff.
 
