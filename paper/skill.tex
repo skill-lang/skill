@@ -94,6 +94,12 @@ Is not powerful enough to fit our purpose.
 
 \todo{ref David Lamb} Is not powerful enough and seems to be outdated.
 
+It also uses an ASCII representation in order to store data, which does not fit our purpose.
+
+Is itself superseded by XML.
+
+On the other hand, it shares the basic architecture with this proposal.
+
 
 \subsection*{Apatche Thrift \& Protobuf}
 
@@ -140,7 +146,7 @@ DESCRIPTION :=
 RESTRICTION :=
   "@" <id> ("(" (R_ARG ("," R_ARG)*)? ")")? ";"?
   
-R_ARG := ("%"|<int>)
+R_ARG := ("%"|<int>|<string>)
 
 HINT := "!" <id> ";"?
   
@@ -316,7 +322,7 @@ child { node{Ground Types}[clockwise from=-45]
     child{ node{v64}}
     child{ node{i64}}
     child{ node{$\cdots$}}
-    child{ node{i1}}
+    child{ node{i8}}
   }
   child{ node{bool}}
   child{ node{annotation}}
@@ -411,7 +417,7 @@ EncodedString : string {
 \end{lstlisting}
 Error: The built-in type ``string'' can not be sub classed.
 
-\section{Invariants}
+\section{Restrictions}
 Some invariants can be added to declarations and fields. These invariants can occur at the same place as comments, but can occur in any number. Invariants start with an \textsc{@} followed by a predicate. Each predicate has to supply a default argument \texttt{\%}, such that using only default arguments would not imply a restriction.
 If multiple predicates are annotated, the conjunction of them forms the invariant.
 The set of legal predicates is explained below.
@@ -496,6 +502,34 @@ Defaults: none.
   System foo;
 }
 \end{lstlisting}
+
+
+\subsection*{Ascription}
+A language specific type can be ascribed to a field. The type has to be compatible to the fields actual type, because the ascription will not change the ABI in any way. The first argument is the language name. The second type is generator dependent, but should be related to types as they occur in local variable or field declaration in the respective language.
+
+Although this kind of restriction puts a heavy burden on the language generator and decreases readability a lot, it can be used to increase the usability of the generated interface a lot, because language features such es enums in Java or unions and bitfields in C++ can be used.
+
+Applies to fields.
+
+Signature: \verb/as(language, type)/: $\texttt{string} \times \texttt{string} → \{\}$
+
+Defaults: not allowed.
+
+\begin{lstlisting}[label=ascriptionExample,caption=Examples,language=skill]
+System {
+  /**
+  The language binding makes use of an enumeration, which is supplied with the generated code.
+  
+  The C++ interface will use the different type using C-Casts to convert between the two types (which is completely fine if the enum uses char as a base type).
+  
+  The Java interface will assume the stored integer to be the ordinal of the enum SystemState.
+  */
+  @as("C++", "ccast SystemState")
+  @as("Java", "enum SystemState")
+  i8 state
+}
+\end{lstlisting}
+
 
 
 \subsection*{Tree}
@@ -1068,15 +1102,20 @@ struct & class & public & protected &private \\
 \section{Core Language}
 The core language is a subset of the full language which must be supported by any generator, which is called skill core language generator. Features included in the core language are:
 \begin{itemize}
- \item Integer types \texttt{i8} to \texttt{i64} and \texttt{v64}.
- \item \texttt{string} and \texttt{annotation}.
- \item Compound types.
- \item User Types with sub-typing.
+ \item Integer types \texttt{i8} to \texttt{i64} and \texttt{v64}
+ \item \texttt{string}, \texttt{bool} and \texttt{annotation}
+ \item Compound types
+ \item User Types with sub-typing
+ \item \texttt{const} and \texttt{auto} fields.
 \end{itemize}
 
 Thus the remaining parts required for full skill support are:
 \begin{itemize}
- \item Booleans.
+ \item Floats
+ \item Restrictions
+ \item Hints
+ \item Reflection?
+ \item Name mangeling to allow for usage of language keywords or illegal characters (unicode) in specification files, without making a language binding impossible.
 \end{itemize}
 
 
