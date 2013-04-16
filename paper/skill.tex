@@ -5,7 +5,6 @@
 \usepackage[linkbordercolor={1 1 0}]{hyperref}
 \usepackage[marginpar]{todo}
 
-
 \usepackage{color}
 \usepackage{xcolor}
 \usepackage{listings}
@@ -54,7 +53,9 @@ frameshape={nnn}{n}{y}{nyr},
 
 \renewcommand{\abstractname}{Acknowledgements}
 \begin{abstract}
-For productive criticism: Erhard Plödereder and Martin Wittiger \todo{muss noch schöner werden}
+Main criticis: Erhard Plödereder and Martin Wittiger.
+
+Additional criticis: Dominik Bruhn.
 \end{abstract}
 
 \todo{leider wird man nicht um einen glossar rumkommen. ABI, API, super type, base type, ...}
@@ -668,7 +669,9 @@ bool lastStringIsDefinition;
 
 The remaining part is the serialization of the remaining nonempty storage pools. First, these pools are sorted in ascending type order. Then the fields defined of in the type stored in the pool are stored. Each pool keeps a start index, which allows for the reconstruction of the complete object. A short example shall illustrate the basic concept. It contains five types A,B,C,D and N. Each has a single field of type $\tau$ which is used to simplify the representation. The type Information for the objects in the base type pool can be inferred from the data stored in the pools using the links between the base type pool and the subtype pools (The base type start index (BPSI) field of pools with a super type -- shown as arrows). For the sake of readability, the name, size and count fields are omitted in the picture.
 
-\todo{create a figure out of this with a nice frame and caption}
+\begin{figure}[h]
+ 
+
 %NOTE: if this picture is used in a paper, colors have to be replaced by stippled lines
 \begin{tikzpicture}
 %labels
@@ -754,6 +757,8 @@ The remaining part is the serialization of the remaining nonempty storage pools.
  \draw[blue,->] (5.3,0.1) -- (5.3,-0.6) -- (4.7,-0.6) -- (4.7,0);
  \draw[thick,black,->] (6,0.1) -- (6,-0.7) -- (2.5,-0.7) -- (2.5,0);
 \end{tikzpicture}
+\caption{The serialization scheme used to store objects into pools.}
+\end{figure}
 
 Note, that the pool of D comes in front of the pool of C, because it is smaller according to the type order.
 
@@ -1045,6 +1050,8 @@ This section describes some errors regarding ill-formatted files, which must be 
 \item If a serialized value violates a restriction or the invariant of a type,\footnote{Including sets containing multiple similar elements.} an error must be reported as soon as this fact can be observed. It is explicitly not required to check all serialized data for this property.
 \end{itemize}
 
+
+
 \section{Reserved Words}
 This section contains a table of words which must not be used as field names, because they are keywords in some languages. The usage of skill keywords will result in a direct error, whereas the usage of a word listed below will result in a warning, because the identifier will be escaped in the target language binding.
 
@@ -1056,5 +1063,21 @@ struct & class & public & protected &private \\
 ⇒ & ...
 \end{tabular}
 }
+
+
+\section{Core Language}
+The core language is a subset of the full language which must be supported by any generator, which is called skill core language generator. Features included in the core language are:
+\begin{itemize}
+ \item Integer types \texttt{i8} to \texttt{i64} and \texttt{v64}.
+ \item \texttt{string} and \texttt{annotation}.
+ \item Compound types.
+ \item User Types with sub-typing.
+\end{itemize}
+
+Thus the remaining parts required for full skill support are:
+\begin{itemize}
+ \item Booleans.
+\end{itemize}
+
 
 \end{document}
