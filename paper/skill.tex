@@ -265,9 +265,7 @@ The file referenced by the with statement is processed as well. The declarations
 \todo{write new section}
 
 \subsection{\texttt{annotation}}
-The type has a tag and a size, which allows it to be inserted at any annotation locations. This is useful in order to provide extension points in the file format. The file will still be readable by older implementations, which are not able to map any meaningful type into the annotation.
-
-\todo{explain that using annotation objects of unknown type will result in a runtime error}
+The type has a tag and a size, which allows it to be inserted at any annotation locations. This is useful in order to provide extension points in the file format. The file will still be readable by older implementations, which are not able to map any meaningful type into the annotation. A language binding is expected to provide something like an annotation proxy, which is used to represent annotation objects. If an application tries to get the object behind the proxy for an object of an unknown type, this will inevitably result in an error or exception. Therefore language bindings shall provide means of inspecting whether or not the type of the object behind an annotation is known.
 
 As we will see later, annotation can be seen as equivalent to the type definition
 \begin{verbatim}
@@ -642,27 +640,31 @@ Objects can have partial types, if a part or the whole type of an object is unkn
 \end{itemize}
 
 
-\subsection{A Rule of Thumb}
+\subsection{Sources of Incompatibility}
 
-A change of the organization of input files or the order of their definition has no effect.
+This section is to provide a concise list of changes and their effects on API and ABI compatibility.
 
-The addition of new declarations has no effect.
+\begin{itemize}
+ \item A change of the organization of input files or the order of their definition has no effect.
 
-A change regarding comments has no significant effect.
+ \item The addition of new declarations has no effect.
 
-A change in restrictions of any kind may break the API, potentially depending on the target programming language. It will most certainly change the set of legal files.
+ \item A change regarding comments has no significant effect.
 
-A change of hints shall have no significant effect, although some applications can stop working after a change of hints, e.g. if they access fields which are annotated with \verb/!ignore/.
+ \item A change in restrictions of any kind may break the API, potentially depending on the target programming language. It will most certainly change the set of legal files.
 
-Inserting or removing the keyword \texttt{const} may\todo{really?} break compatibility.
+ \item A change of hints shall have no significant effect, although some applications can stop working after a change of hints, e.g. if they access fields which are annotated with \verb/!ignore/.
 
-Changing the value of a constant will break the ABI.\footnote{Which is btw. the very purpose of constants.}
+ \item Inserting or removing the keyword \texttt{const} may\todo{really?} break compatibility.
 
-Inserting or removing the keyword \texttt{auto} will break ABI, but not the API.
+ \item Changing the value of a constant will break the ABI.\footnote{Which is btw. the very purpose of constants.}
 
-The presence of objects with unknown (sub-)type with pointers to objects of known type may corrupt a file if it is written. This is even the case for annotations. It is therefore suggested, not to use pointers to existing objects, but to subtype them and to annotate objects in this fashion, because the data can be carried around correctly, even if the complete type of the object is not known. Another approach would be to disallow writing of such files.
+ \item Inserting or removing the keyword \texttt{auto} will break ABI, but not the API.
 
-Any change of the structure of existing declarations, i.e. changing the modifier, adding or removing fields, etc., will break compatibility as a whole.
+ \item The presence of objects with unknown (sub)type with pointers to objects of known type may corrupt a file if it is written. This is even the case for annotations. It is therefore suggested, not to use pointers to existing objects, but to subtype them and to annotate objects in this fashion, because the data can be carried around correctly, even if the complete type of the object is not known. Another approach would be to disallow writing of such files.
+
+ \item Any change of the structure of existing declarations, i.e. changing the modifier, adding or removing fields, etc., will break compatibility as a whole.
+\end{itemize}
 
 \section{Serialization}
 
@@ -919,7 +921,9 @@ struct IfBlock : public Block {
 struct ITEBlock : public IfBlock {
   Block elseBlock;
 };
-[...plus some boilerplate code for visitors, iostreams etc. ...]
+[...
+  plus some boilerplate code for visitors, iostreams etc.
+...]
 \end{lstlisting}
 
 \begin{lstlisting}[label=javaExample,caption=Java Examples,language=Java]
@@ -929,7 +933,9 @@ class SLoc {
   public String path;
 }
 class Block {
-  final public String tag() { return this.getClass().getName(); }
+  final public String tag() {
+    return this.getClass().getName();
+  }
   public SLoc begin;
   public SLoc end;
   public String image:
