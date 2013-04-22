@@ -1,0 +1,44 @@
+%%%%% ACRONYMS %%%%%
+
+\newacronym{abi}{ABI}{Application Binary Interface}
+\newacronym{adt}{ADT}{Abstract Data Type}
+\newacronym{api}{API}{Application Programming Interface}
+
+%%%%% Actual Entries %%%%%
+
+\newglossaryentry{builtInType}{
+  name={built-in type},
+  description={Any predefined type, that is not a compound type, i.e. annotations, booleans, integers, floats and strings.},
+}
+\newglossaryentry{userType}{
+  name={user type},
+  description={Any type, that is defined by the user using a type declaration},
+}
+\newglossaryentry{groundType}{
+  name={ground type},
+  description={Any type, that is not a compound type, i.e. the union of user defined types and built-in types},
+}
+
+\newglossaryentry{superType}{
+  name={super type},
+  description={If a user type A extends a type B, B is called the super type (of A).},
+}
+\newglossaryentry{subType}{
+  name={sub type},
+  description={If a user type A extends a type B, A is called the sub type (of B).},
+}
+\newglossaryentry{baseType}{
+  name={base type},
+  description={The root of a type tree, i.e. the farthest type reach able over the super type relation.},
+}
+
+\newglossaryentry{unknownType}{
+  name={unknown type},
+  description={We will call a type \textit{unknown}, if there is no \gls{visibleDeclaration} of the type. Such types must not occur in a declaration file, but they can be encountered in the serialization or deserialization process.},
+}
+
+
+\newglossaryentry{visibleDeclaration}{
+  name={visible declaration},
+  description={We will call a type declaration \textit{visible}, if it is defined in the local file, or in any file transitively reachable over include directives.},
+}

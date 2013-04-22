@@ -5,6 +5,8 @@
 \usepackage[linkbordercolor={1 1 0}]{hyperref}
 \usepackage[marginpar]{todo}
 
+\usepackage[acronym,toc]{glossaries}
+
 \usepackage{color}
 \usepackage{xcolor}
 \usepackage{listings}
@@ -44,6 +46,9 @@ frameshape={nnn}{n}{y}{nyr},
 \author{Timm Felden}
 \date{\today}
 
+\makeglossaries
+\include{glossary}
+
 \begin{document}
 \maketitle
 
@@ -69,7 +74,7 @@ This paper presents an approach to serializing objects, which is tailored for us
 
 There are many approaches similar to ours, but most of them have a different focus. This section shall provide a concise list of related approaches. For potential users of skill, this might also present alternatives superior for individual use cases.
 
-The very nature of the problem requires different solutions, blablabla, skill is basically related to serialization like XML on one side and language interfaces like IDL or even JNI on the other side.
+The very nature of the problem requires different solutions, blablabla\todo{blabla}, skill is basically related to serialization like XML on one side and language interfaces like IDL or even JNI on the other side.
 
 \subsection*{XML}
 
@@ -164,19 +169,19 @@ TYPE :=
   |ARRAYTYPE)
   
 MAPTYPE :=
-  "<" BASETYPE ("," BASETYPE)+ ">"
+  "<" GROUNDTYPE ("," GROUNDTYPE)+ ">"
   
 SETTYPE :=
-  "<" BASETYPE ">"
+  "<" GROUNDTYPE ">"
   
 LISTTYPE :=
-  "<" BASETYPE ">"
+  "<" GROUNDTYPE ">"
   
 ARRAYTYPE :=
-  BASETYPE
+  GROUNDTYPE
   ("[" (<id>|<int>)? "]")?
   
-BASETYPE :=
+GROUNDTYPE :=
   (<id>|"annotation")
 
 \end{verbatim}
@@ -246,27 +251,14 @@ The usage of non ASCII characters is completely legal, but discouraged.
 \end{lstlisting}
 
 
-\subsection{On ADTs}
-
-ADTs are represented using arrays and pairs.
-
-ADTs showed to be useful and to increase the usability and understandability of the resulting code and file format.
-
-\todo{move or remove}
 
 
 \section{Semantics}
 
-This section is to describe the meaning of individual keywords.
+This section will describe the meaning of individual keywords.
 
 \subsection{Includes}
 The file referenced by the with statement is processed as well. The declarations of all files reachable over \texttt{with} statements are collected, before any declaration is evaluated.
-
-\subsection{Subtypes}
-
-A subtype declaration extends objects of its super type with additional fields.
-
-\todo{write a nicer section}
 
 \subsection{\texttt{annotation}}
 The type has a tag and a size, which allows it to be inserted at any annotation locations. This is useful in order to provide extension points in the file format. The file will still be readable by older implementations, which are not able to map any meaningful type into the annotation. A language binding is expected to provide something like an annotation proxy, which is used to represent annotation objects. If an application tries to get the object behind the proxy for an object of an unknown type, this will inevitably result in an error or exception. Therefore language bindings shall provide means of inspecting whether or not the type of the object behind an annotation is known.
@@ -280,8 +272,8 @@ annotation {
 \end{verbatim}
 Of course, this is made transparent to the user and some language bindings will offer a special and type safe treatment of annotations.
 
-\subsection{Subtypeing}
-A subtype of a userdefined type can be declared by appending the keyword \texttt{with} and the supertypes name to a declaration. In order to be wellformed, the subtype must have exactly the type modifiers(i.e. indexed, tagged/annotation) of the supertype. This is because all subtypes of an indexed type will share a single storage pool.
+\subsection{Sub Types}
+A \gls{subType} of a \gls{userType} can be declared by appending the keyword \texttt{with} and the \gls{superType}s name to a declaration. In order to be well-formed, the sub type relation must remain acyclic and must not contain \glspl{unknownType}.
 
 \subsection{\texttt{const}}
 A const field can be used in order to create guards or version numbers, as well as overwriting deprecated fields with e.g. zeroes. The deserialization mechanism has to report an error if a constant field has an unexpected value.
@@ -290,11 +282,19 @@ A const field can be used in order to create guards or version numbers, as well 
 The language binding will create a field with the given type, but the content is transparent to the serialization mechanism. This is useful if the inference of the content of a field is likely to be faster then storing it, e.g. if it can be inferred lazy.
 
 \subsection{Abstract Data Types}
-The type system has a built-in notion of arrays, maps, lists and sets. Note that all of them are, from the view of serialization, equivalent to length encodeded arrays. They are added just to make modeling easier. \todo{brrr sprache!}
-\todo{Ehrlich gesagt sollte man hier irgendwie das \LaTeX-backend beschreiben, das würde meistens erklären, was die einzelnen wörter bedeuten.}
+\todo{rewrite section; it emerged from the fusion of two sections talking about ADTs}
+
+\glspl{adt} showed to be useful and to increase the usability and understandability of the resulting code and file format.
+
+\glspl{adt} are represented using arrays and pairs.
+
+The type system has a built-in notion of arrays, maps, lists and sets. Note that all of them are, from the view of serialization, equivalent to length encodeded arrays. Their purpose is to increase the usability of the generated \gls{api}.
+
 
 \subsection{Comments}
 Comments provided in the skill file will be emitted into the generated code\footnote{If the target language does not allow for C-Style comments, the comments will be transformed in an appropriate way.}, thus allowing a user to profit from tooltips his IDE is likely to show him, containing this documentation. \todo{sprache!}
+
+
 
 \section{The Type System}
 
@@ -315,7 +315,7 @@ child { node{Compound Types}[clockwise from=30]
   child{ node{list}}
   child{ node{array}}
 }
-child { node{Ground Types}[clockwise from=-20]
+child { node{Built-In Types}[clockwise from=-20]
   child{ node{string}}
   child{ node{Float}[clockwise from=0]
     child{ node{f64}}
@@ -332,7 +332,7 @@ child { node{Ground Types}[clockwise from=-20]
   child{ node{annotation}}
 };
 
-User types can be seen as nonempty tuples over all types. It is legal to \textit{rename} a ground type, in order to give it a special semantics. E.g. to create a time stamp by:
+\Glspl{userType} can be seen as nonempty tuples over all types. \Glspl{builtInType} can be wrapped in order to give them special semantics. E.g. atime stamp can be created by:
 \begin{lstlisting}[label=timeExample,caption=Time,language=skill]
 time {
   /** seconds since 1.1.1970 0:00 UTC. */
@@ -505,6 +505,10 @@ Defaults: none.
 \end{lstlisting}
 
 
+% \subsection*{Integer Renaming}
+% In some languages it is possible to define subsets of integers by renameing the integer type. The type declaration must contain exactly one field of some integer type. The resulting type will be treated as integer type. Language support is encouraged to make use of language specific features such as typedefs. In Ada, this restriction should be processed together with the range restriction.
+
+
 \subsection*{Ascription}
 A language specific type can be ascribed to a field. The type has to be compatible to the fields actual type, because the ascription will not change the ABI in any way. The first argument is the language name. The second type is generator dependent, but should be related to types as they occur in local variable or field declaration in the respective language.
 
@@ -669,6 +673,9 @@ This section is to provide a concise list of changes and their effects on API an
  \item Any change of the structure of existing declarations, i.e. changing the modifier, adding or removing fields, etc., will break compatibility as a whole.
 \end{itemize}
 
+
+
+
 \section{Serialization}
 \label{serialization}
 
@@ -707,7 +714,7 @@ Because we want to allow for full reflection capabilities, but we do not want to
 bool lastStringIsDefinition;
 \end{verbatim}
 
-The remaining part is the serialization of the remaining nonempty storage pools. First, these pools are sorted in ascending type order. Then the fields defined of in the type stored in the pool are stored. Each pool keeps a start index, which allows for the reconstruction of the complete object. A short example shall illustrate the basic concept. It contains five types A,B,C,D and N. Each has a single field of type $\tau$ which is used to simplify the representation. The type Information for the objects in the base type pool can be inferred from the data stored in the pools using the links between the base type pool and the subtype pools (The base type start index (BPSI) field of pools with a super type -- shown as arrows). For the sake of readability, the name, size and count fields are omitted in the picture.
+The remaining part is the serialization of the remaining nonempty storage pools. First, these pools are sorted in ascending type order. Then the fields defined of in the type stored in the pool are stored. Each pool keeps a start index, which allows for the reconstruction of the complete object. A short example shall illustrate the basic concept. It contains five types A,B,C,D and N. Each has a single field of type $\tau$ which is used to simplify the representation. The type Information for the objects in the base type pool can be inferred from the data stored in the pools using the links between the base type pool and the subtype pools (The \gls{baseType} start index (BPSI) field of pools with a super type -- shown as arrows). For the sake of readability, the name, size and count fields are omitted in the picture.
 
 \begin{figure}[h]
  
@@ -897,7 +904,7 @@ The general strategy is:
 
 \section{API}
 
-The generated API has to be designed in a fashion, that integrates nicely with the languages programming paradigms. E.g. in Java it would be most useful to create a state object, which holds state of a bunch of serializable data and provides iterators over existing objcts, as well as factory methods and methods to remove objects form the state object. The serialized types can be represented by interfaces providing getters, setters, using hidden implementations, only known to the state object.
+The generated \gls{api} has to be designed in a fashion, that integrates nicely with the languages programming paradigms. E.g. in Java it would be most useful to create a state object, which holds state of a bunch of serializable data and provides iterators over existing objcts, as well as factory methods and methods to remove objects form the state object. The serialized types can be represented by interfaces providing getters, setters, using hidden implementations, only known to the state object.
 
 talk about the generated API and its features, like iterators, factories, access to singletons and stuff.
 
@@ -1129,5 +1136,10 @@ Thus the remaining parts required for full skill support are:
  \item Name mangeling to allow for usage of language keywords or illegal characters (unicode) in specification files, without making a language binding impossible.
 \end{itemize}
 
+
+\newpage
+%%% TODO REMOVE NEXT LINE
+\glsaddall
+\printglossaries
 
 \end{document}
