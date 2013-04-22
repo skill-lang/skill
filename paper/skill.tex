@@ -605,21 +605,8 @@ Use a static map instead of fields to represent fields of definitions. This is u
 Deserialize the fields data only if it is actually used. Lazy implies distributed.
 
 \subsection*{Ignore}
-The generated code is unable to access the respective field or type of declaration. This will lead to errors, if it is trying nontheless. This option is provided to allow clients to reduce the memory footprint, if needed.
+The generated code is unable to access the respective field or any field of the type of the target declaration. This will lead to errors, if it is tried nonetheless. This option is provided to allow clients to reduce the memory footprint, if needed.
 
-\section{On the Choice of Built-In Types}
-
-Hier irgendwie erklären, dass es nur typen gibt, die entweder notwendig sind (string) oder überall verfügbar, d.h. man redet im prinzip über den kleinsten gemeinsamen nenner aller prorgrammiersprachen. Der typ bool ist vorhanden, weil die meisten sprachen explizit zwischen integer und bool unterscheiden.
-
-Floats sind vorhanden, weil die Sprache sonst keine akzeptanz finden würde.
-
-Dass es typen wie unsigned oder positive nicht gibt ist schade, kann aber im zuge einer beschreibungssprache die restriktionen bietet einfach nachgerüstet werden.
-
-Es gibt keinen binary typ, weil dieser trivial definiert werden kann:
-\begin{lstlisting}[label=thriftBinary,caption=Binary,language=skill]
-/** binary as found in Apache Thrift */
-binary{ i8[] data }
-\end{lstlisting}
 
 
 \section{On Extensibility and Canonical Field Order}
