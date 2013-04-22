@@ -59,7 +59,7 @@ Additional criticis: Dominik Bruhn.
 \end{abstract}
 
 \todo{leider wird man nicht um einen glossar rumkommen. ABI, API, super type, base type, ...}
-
+\todo{man muss klar definieren, was groundtypes und was basetypes sind und die begriffe dann auch konsistent benutzen}
 \section{Motivation}
 
 This paper presents an approach to serializing objects, which is tailored for usability, performance and portability. In order to achieve these goals, in contrast to XML, we will sacrifice generality and human readability of the serialized format. Unlike other general serialization mechanisms, we provide explicit support for extension points in the serialized data, in order to provide a minimum of upward compatibility and extensibility.
@@ -1120,6 +1120,7 @@ Thus the remaining parts required for full skill support are:
  \item Floats
  \item Restrictions
  \item Hints
+ \item Language dependent treatment of comments, e.g. integration into doxygen or javadoc.\footnote{This may even require a language extension providing tags inside comments which are translated into tags of the respective documentation framework.}
  \item Reflection?
  \item Name mangeling to allow for usage of language keywords or illegal characters (unicode) in specification files, without making a language binding impossible.
 \end{itemize}
