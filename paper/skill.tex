@@ -23,6 +23,7 @@
 
 %funny makros we want to use
 \newcommand{\den}[1]{[\![#1]\!]}
+\newcommand{\skill}[0]{ SKilL }
 
 %skill language definition
 \lstdefinelanguage{skill}
@@ -262,19 +263,22 @@ This section is to describe the meaning of individual keywords.
 The file referenced by the with statement is processed as well. The declarations of all files reachable over \texttt{with} statements are collected, before any declaration is evaluated.
 
 \subsection{Subtypes}
-\todo{write new section}
+
+A subtype declaration extends objects of its super type with additional fields.
+
+\todo{write a nicer section}
 
 \subsection{\texttt{annotation}}
 The type has a tag and a size, which allows it to be inserted at any annotation locations. This is useful in order to provide extension points in the file format. The file will still be readable by older implementations, which are not able to map any meaningful type into the annotation. A language binding is expected to provide something like an annotation proxy, which is used to represent annotation objects. If an application tries to get the object behind the proxy for an object of an unknown type, this will inevitably result in an error or exception. Therefore language bindings shall provide means of inspecting whether or not the type of the object behind an annotation is known.
 
-As we will see later, annotation can be seen as equivalent to the type definition
+As we will see in section \ref{serialization}, annotations are roughly equivalent to the type definition
 \begin{verbatim}
 annotation {
   v64 baseTypeName;
   v64 basePoolIndex;
 }
 \end{verbatim}
-Of course, this is made transparent to the user.
+Of course, this is made transparent to the user and some language bindings will offer a special and type safe treatment of annotations.
 
 \subsection{Subtypeing}
 A subtype of a userdefined type can be declared by appending the keyword \texttt{with} and the supertypes name to a declaration. In order to be wellformed, the subtype must have exactly the type modifiers(i.e. indexed, tagged/annotation) of the supertype. This is because all subtypes of an indexed type will share a single storage pool.
@@ -296,30 +300,32 @@ Comments provided in the skill file will be emitted into the generated code\foot
 
 The basic layout of the type system is:
 
-\tikz [mindmap, every node/.style=concept, concept color=black!20,
+\tikz [small mindmap, every node/.style=concept, concept color=black!20,
 grow cyclic,
 level 1/.append style={level distance=4.2cm,sibling angle=65},
 level 2/.append style={level distance=2.7cm,sibling angle=40},
 level 3/.append style={level distance=2cm,sibling angle=35},
-level 4/.append style={level distance=1.5cm,sibling angle=35}]
-\node [root concept]{All Types}[clockwise from=20] % root
+level 4/.append style={level distance=1.5cm,sibling angle=35}
+]
+\node [root concept]{All Types}[clockwise from=0] % root
 child { node {User Types}}
-child { node{Compound Types}[clockwise from=20]
+child { node{Compound Types}[clockwise from=30]
   child{ node{map}}
   child{ node{set}}
   child{ node{list}}
   child{ node{array}}
 }
-child { node{Ground Types}[clockwise from=-45]
+child { node{Ground Types}[clockwise from=-20]
   child{ node{string}}
-  child{ node{Float}[clockwise from=-35]
+  child{ node{Float}[clockwise from=0]
     child{ node{f64}}
     child{ node{f32}}
   }
-  child{ node{Integer}[clockwise from=-70]
+  child{ node{Integer}[clockwise from=-30]
     child{ node{v64}}
     child{ node{i64}}
-    child{ node{$\cdots$}}
+    child{ node{i32}}
+    child{ node{i16}}
     child{ node{i8}}
   }
   child{ node{bool}}
@@ -334,45 +340,42 @@ time {
 }
 \end{lstlisting}
 
+\subsection*{Common Abbreviations}
+
+We will use some common abbreviations for sets of types in the rest of the manual:
+
+Let \ldots
+\begin{itemize}
+ \item[\ldots] $\mathcal{T}$ be the set of all types
+ \item[\ldots] $\mathcal{U}$ be the set of all user types
+ \item[\ldots] $\mathcal{I}$ be the set of all integer types, i.e. $\{\texttt{i8},\texttt{i16},\texttt{i32},\texttt{i64},\texttt{v64}\}$
+ \item[\ldots] $\mathcal{G}$ be the set of all ground types
+\end{itemize}
+
+We will call a type to be \textit{unknown}, if there is no declaration of the type, neither in the processed definition file, nor in any file transitively reachable through include directives. Such types must not occur in a declaration file, but they can be encountered in the serialization or deserialization process.
+
+
 \subsection*{Legal Types}
 
-This section is to define the set of types, which can be used to declare legal fields inside a user type definition. Let $\mathcal{T}$ be the set of all types, $\mathcal{U} \subseteq \mathcal{T}$ be the set of user types, $\mathcal{G} \subseteq \mathcal{T}$ be the set of ground types, $\mathcal{C} \subseteq \mathcal{T}$ be the set of compound types and $\mathcal{I} \subseteq \mathcal{G}$ be the set of integer types.
+% This section is to define the set of types, which can be used to declare legal fields inside a user type definition. Let $\mathcal{T}$ be the set of all types, $\mathcal{U} \subseteq \mathcal{T}$ be the set of user types, $\mathcal{G} \subseteq \mathcal{T}$ be the set of ground types, $\mathcal{C} \subseteq \mathcal{T}$ be the set of compound types and $\mathcal{I} \subseteq \mathcal{G}$ be the set of integer types.
+% 
+% In this context, we talk about an unknown, but fixed set $\mathcal{T}$, which corresponds to the contents of a set of input files. All types have unique names.
 
-In this context, we talk about an unknown, but fixed set $\mathcal{T}$, which corresponds to the contents of a set of input files. All types have unique names.
-
-Let $\texttt{t} \in \mathcal{U}$, then wellformedness is the smallest predicate satisfying
+The given grammar of \skill already ensures that intuitive usage of the language will result in legal type declarations. The remaining aspects of illegal type declarations boil down to ill-formed usage of type and field names and can be summarized as:
 \begin{itemize}
- \item If $\texttt{s} \in \mathcal{U}$, then \verb/t with s{...}/ is a well formed type declaration and \texttt{t} is called a subtype of \texttt{s}, written $t <: s$
+ \item Field names inside a type declaration must be unique inside the type and all its super types\footnote{The super type restriction may in fact be dropped?}.
  
- \item All field definitions of t are \textit{legal}.
+ \item The subtype relation is a partial order\footnote{In fact it forms a forest.} and does not contain unknown types.
+
+ \item For all fields f of dependent array type\footnote{E.g. a field \texttt{t[size] f} requires another field of integer type in the same declaration -- e.g. \texttt{i8 size}}, the size of the array has to denote a field of integer type in the very same declaration. The order of declaration is irrelevant.
  
- \item The subtype relation forms a forest.
+ \item Any base type has to be known, i.e. it is either a ground type or it is a user type defined in any document transitively reachable over include commands.
 \end{itemize}
 
-\todo{ das ist viel zu kompliziert und zu verwirrend und vor allem quasi unnötig, da echt viel von der grammatik abgedeckt wird} 
-Let f be a field. The field is \textit{legal} in one of the following cases:
-\begin{itemize}
- \item If $\texttt{t} \in \mathcal{I}$ then \verb/const t f/ is a legal constant field.
- 
- \item If $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ then \verb/t f/ is a legal field.
- 
- \item For any $n \geq 2$ with $\texttt{t}_i \in \mathcal{T}\setminus\mathcal{C}$, $\texttt{map<t}_1\texttt{, }\cdots\texttt{, t}_n\texttt{> f}$ is a legal field.
- 
- \item If $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ then \verb/set<t> f/ and \verb/list<t> f/ are legal fields.
- 
- \item If $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ then \verb/t[] f/ is a legal field.
- 
- \item If $i \in \mathbb{N}^+$ and $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ then \verb/t[/$i$\verb/] f/ is a legal field.
- 
- \item If $\texttt{s} \in \mathcal{I}$, $\texttt{t} \in \mathcal{T}\setminus\mathcal{C}$ and \verb/s size/ is a field, then, inside the same type declaration, \verb/t[size] f/ is a legal field.
-\end{itemize}
-
-Then informal short definitions is that compound types can not be nested\footnote{This is actually ensured by the grammar.} and array lengths have to be integers.
 
 \subsection*{Type Order}
 
 Let $<_l$ be the lexical order. We define a partial order $\leq_t$ on $\mathcal{T}$ as follows:
-\todo{i1 muss kleiner sein als alles andere, damit man bitstrings zusammenpacken kann}
 \begin{itemize}
  \item $\forall t \in \mathcal{G}, s \in \mathcal{T}\setminus\mathcal{G}. t \leq_t s$
  \item $\forall t \in \mathcal{C}, s \in \mathcal{U}. t \leq_t s$
@@ -667,6 +670,7 @@ This section is to provide a concise list of changes and their effects on API an
 \end{itemize}
 
 \section{Serialization}
+\label{serialization}
 
 This section is about representing objects as a sequence of bytes. We will call this sequence \textit{stream}, its formal Type will be named $S$, the current stream will be named $s$. We will assume that there is an implicit conversion between fixed sized integers\footnote{As well as between fixed sized floating point numbers, because we define them to be IEEE-754 encoded 32-/64-bit sequences.} and streams. We also make use of a stream concatenation operator $\circ : S \times S → S$.
 
