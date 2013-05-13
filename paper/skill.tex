@@ -11,6 +11,8 @@
 \usepackage{xcolor}
 \usepackage{listings}
 
+\usepackage{subcaption}
+
 \usepackage{caption}
 \DeclareCaptionFont{white}{\color{white}}
 \DeclareCaptionFormat{listing}{\colorbox{gray}{\parbox{\textwidth}{#1#2#3}}}
@@ -65,9 +67,12 @@ Additional criticis: Dominik Bruhn.
 
 \todo{leider wird man nicht um einen glossar rumkommen. ABI, API, super type, base type, ...}
 \todo{man muss klar definieren, was groundtypes und was basetypes sind und die begriffe dann auch konsistent benutzen}
+\todo{string in *unique string* o.ä. umbenennen, um verwirrung bei C Programmierern vorzubeugen}
 \section{Motivation}
 
-This paper presents an approach to serializing objects, which is tailored for usability, performance and portability. In order to achieve these goals, in contrast to XML, we will sacrifice generality and human readability of the serialized format. Unlike other general serialization mechanisms, we provide explicit support for extension points in the serialized data, in order to provide a minimum of upward compatibility and extensibility.
+This paper presents an approach to serializing objects, which is tailored for usability, performance and portability. In order to achieve these goals, in contrast to XML, we will sacrifice generality and human readability of the serialized format. Unlike other general serialization mechanisms, we provide explicit support for extension points in the serialized data, in order to provide a maximum of upward compatibility and extensibility.
+
+The primary target of the proposed serialization mechanism are users which have to provide several tools with large amounts of data in a type safe and fast manner, but without the \todo{hier muss noch was wegen version resilience, small footprint, den daten, die man so üblicherweise hat (~1000 objekte eines typs, pointer, etc) und den mehrfachen sichten über verschiedene spezifikationen rein. Außerdem sollte man erwähnen, dass man hier den reflection mechanismus for free bekommt}
 
 \subsection{Related Work}
 
@@ -77,7 +82,7 @@ There are many approaches similar to ours, but most of them have a different foc
 
 XML is a file format and might in fact be used as a backend. If a human readable storage on disk is not required, a binary encoding can be used to improve load/store performance significantly.
 
-In contrast to our approach, XML requires the serialized data to form a tree. This, however, is not a real problem, because there is at least one canonical transformation, which turns a graph into a tree (by adding a node and some attributes).
+In contrast to our approach, XML requires the serialized data to form a tree. In theory, this is not a real problem, because there is at least one canonical transformation, which turns a graph into a tree (by adding a node and some attributes). On the other hand, such a transformation will in most cases take away the readability of the serialized data, which makes XML pointless.
 
 \subsubsection*{XML Schema definitions}
 
@@ -279,16 +284,16 @@ A \gls{subType} of a \gls{userType} can be declared by appending the keyword \te
 A const field can be used in order to create guards or version numbers, as well as overwriting deprecated fields with e.g. zeroes. The deserialization mechanism has to report an error if a constant field has an unexpected value.
 
 \subsection{\texttt{auto}}
-The language binding will create a field with the given type, but the content is transparent to the serialization mechanism. This is useful if the inference of the content of a field is likely to be faster then storing it, e.g. if it can be inferred lazy.
+The language binding will create a field with the given type, but the content is transparent to the serialization mechanism. This is useful if the inference of the content of a field is likely to be faster then storing it, e.g. if it can be inferred lazily.
 
 \subsection{Abstract Data Types}
 \todo{rewrite section; it emerged from the fusion of two sections talking about ADTs}
 
 \glspl{adt} showed to be useful and to increase the usability and understandability of the resulting code and file format.
 
-\glspl{adt} are represented using arrays and pairs.
+\glspl{adt} are represented using arrays and pairs. \todo{ref encoding scheme which will be explained later; somewhat confusing}
 
-The type system has a built-in notion of arrays, maps, lists and sets. Note that all of them are, from the view of serialization, equivalent to length encodeded arrays. Their purpose is to increase the usability of the generated \gls{api}.
+The type system has a built-in notion of arrays, maps, lists and sets. Note that all of them are, from the view of serialization, equivalent to length encoded arrays. Their purpose is to increase the usability of the generated \gls{api}.
 
 
 \subsection{Comments}
@@ -298,8 +303,10 @@ Comments provided in the skill file will be emitted into the generated code\foot
 
 \section{The Type System}
 
-The basic layout of the type system is:
+\todo{ein paar einleitende worte}
 
+\begin{figure}[h]
+\centering
 \tikz [small mindmap, every node/.style=concept, concept color=black!20,
 grow cyclic,
 level 1/.append style={level distance=4.2cm,sibling angle=65},
@@ -331,6 +338,8 @@ child { node{Built-In Types}[clockwise from=-20]
   child{ node{bool}}
   child{ node{annotation}}
 };
+\caption{Layout of the Type System}
+\end{figure}
 
 \Glspl{userType} can be seen as nonempty tuples over all types. \Glspl{builtInType} can be wrapped in order to give them special semantics. E.g. a time stamp can be created by:
 \begin{lstlisting}[label=timeExample,caption=Time,language=skill]
@@ -695,7 +704,7 @@ Because we want to allow for full reflection capabilities, but we do not want to
 bool lastStringIsDefinition;
 \end{verbatim}
 
-The remaining part is the serialization of the remaining nonempty storage pools. First, these pools are sorted in ascending type order. Then the fields defined of in the type stored in the pool are stored. Each pool keeps a start index, which allows for the reconstruction of the complete object. A short example shall illustrate the basic concept. It contains five types A,B,C,D and N. Each has a single field of type $\tau$ which is used to simplify the representation. The type Information for the objects in the base type pool can be inferred from the data stored in the pools using the links between the base type pool and the subtype pools (The \gls{baseType} start index (BPSI) field of pools with a super type -- shown as arrows). For the sake of readability, the name, size and count fields are omitted in the picture.
+The remaining part is the serialization of the remaining nonempty storage pools. First, these pools are sorted in ascending type order. Then the fields defined in the type stored in the pool are stored. Each pool keeps a start index, which allows for the reconstruction of the complete object. A short example shall illustrate the basic concept. It contains five types A,B,C,D and N. Each has a single field of type $\tau$ which is used to simplify the representation. The type information for the objects in the base type pool can be inferred from the data stored in the pools using the links between the base type pool and the subtype pools (The \gls{baseType} start index (BPSI) field of pools with a super type -- shown as arrows). For the sake of readability, the name, size and count fields are omitted in the picture.
 
 \begin{figure}[h]
  
@@ -864,7 +873,7 @@ Let $f$ be a field of type $t$, then $\den{f}$ is defined as\footnote{We will us
  \item $\forall g \in \mathcal{B}, n = size(f). t \in \{g\texttt{[]}, \texttt{set<}g\texttt{>}, \texttt{list<}g\texttt{>}\} \implies \den{f} = \den{n} \circ \den{f_0} \circ \cdots \circ \den{f_{n-1}}$
  
  %map
- \item Maps are serialized from left to right by serializing the keyset and ammending each key with the map structure which it points to. In case of Maps with two types, this is equal to a list of key value tuples.
+ \item Maps are serialized from left to right by serializing the keyset and amending each key with the map structure which it points to. In case of Maps with two types, this is equal to a list of key value tuples.
  A field of type \verb/map<T,U,V>/ is serialized using a schema $ \den{size(f)} \circ \den{f.t_1} \circ \den{size(f[t_1])} \circ \den{f[t_1].u_1} \circ \den{f[t_1][u_1]} \circ \den{f[t_1].u_2} \circ \cdots \circ \den{size(f[t_2])} \circ \cdots \circ \den{f[t_n][u_m]}$
 \end{itemize}
 
@@ -885,7 +894,7 @@ The general strategy is:
 
 \section{API}
 
-The generated \gls{api} has to be designed in a fashion, that integrates nicely with the languages programming paradigms. E.g. in Java it would be most useful to create a state object, which holds state of a bunch of serializable data and provides iterators over existing objcts, as well as factory methods and methods to remove objects form the state object. The serialized types can be represented by interfaces providing getters, setters, using hidden implementations, only known to the state object.
+The generated \gls{api} has to be designed in a fashion that integrates nicely with the languages programming paradigms. E.g. in Java it would be most useful to create a state object, which holds state of a bunch of serializable data and provides iterators over existing objects, as well as factory methods and methods to remove objects form the state object. The serialized types can be represented by interfaces providing getters, setters, using hidden implementations, only known to the state object.
 
 talk about the generated API and its features, like iterators, factories, access to singletons and stuff.
 
@@ -1000,8 +1009,6 @@ Abuse annotations for type-safe unions. The type system does not allow for unres
 
 State somewhere, that a major advantage over XML is, that one is not required to link against a overly general implementation, which is nice if one is only interested in a very specific format.
 
-Maybe it is possible to have an omit-string-pool-names option in some scenarios, but this would require all pools to be nonempty and would severely limit extensibility. An omit-pool-size-count option is more likely to come, because it would \textit{just} require all clients knowing all types.\footnote{Otherwise one would not be able to store a file containing unknown subtype data in general}
-
 Fun fact: Garbage Collection for serializable objects comes for free, if objects are always held in storage pools.
 
 \newpage
@@ -1114,8 +1121,58 @@ Thus the remaining parts required for full skill support are:
  \item Hints
  \item Language dependent treatment of comments, e.g. integration into doxygen or javadoc.\footnote{This may even require a language extension providing tags inside comments which are translated into tags of the respective documentation framework.}
  \item Reflection?
- \item Name mangeling to allow for usage of language keywords or illegal characters (unicode) in specification files, without making a language binding impossible.
+ \item Name mangling to allow for usage of language keywords or illegal characters (unicode) in specification files, without making a language binding impossible.
 \end{itemize}
+
+
+
+\section{Numerical Constants}
+This section will list the translation of type IDs(see \ref{???}) and restriction IDs (see \ref{???, ???}).
+
+\begin{table}
+\begin{subtable}[t]{5cm}
+\centering
+\begin{tabular}{l|l}
+Type Name & Value \\\hline
+const i8 	& 0 \\
+const i16 	& 1 \\
+const i32 	& 2 \\
+const i64 	& 3 \\
+const v64 	& 4 \\
+annotation	& 5 \\
+bool		& 6 \\
+i8 		& 7 \\
+i16 		& 8 \\
+i32 		& 9 \\
+i64 		& 10 \\
+v64 		& 11 \\
+f32 		& 12 \\
+f64 		& 13 \\
+string		& 14 \\
+T[i] 		& 15 \\
+T[f] 		& 16 \\
+T[] 		& 17 \\
+list<T> 	& 18 \\
+set<T>	 	& 19 \\
+map<T$_1$, \ldots, T$_n$> & 20 \\
+T 		& 21 + $index_T$ \\
+\end{tabular}
+\caption{Type IDs}
+\end{subtable}
+~
+\begin{subtable}[t]{5cm}
+\centering
+\begin{tabular}{l|l}
+Restriction Name & Value \\\hline
+range 	& 0 \\
+nonnull 	& 1 \\
+unique 	& 2 \\
+singleton 	& 3 \\
+\ldots 	& \ldots \\
+\end{tabular}
+\caption{Restriction IDs}
+\end{subtable}
+\end{table}
 
 
 \newpage
