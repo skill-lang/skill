@@ -428,6 +428,20 @@ The set of legal predicates is explained below.
 
 If predicates, which are not directly applicable for compound types are used on compound types, they expand to the contents of the compound types, if applicable. Otherwise the usage of the predicate is illegal.
 
+\todo{hier muss man zwischen serialisierbaren und nicht serialisierbaren restrictions unterscheiden; serialisierbar sind alle restrictions, die auch auswirkungen auf die potentiell gespeicherten daten haben, wie range und nonnull}
+
+\subsection*{AsField}
+
+maps:
+
+In verbindung mit singletons kann man map-felder API-seitig zu feldern der interfaces machen!:)
+
+Dadurch können sich einzelne tools felder ein und ausblenden, die dann zu maps serialisiert werden.
+
+EP fordert, dass es einen Mechanismus gibt, der es einem erlaubt im nachhinein felder einzubauen;
+
+Dieser Mechanismus erlaubt es einem zu jedem Zeitpunkt felder einzublenden; die gefahr ist hier, dass die Declarationen sehr unübersichtlich werden!
+
 \subsection*{Range}
 Range restrictions are used to restrict integers and floats.
 
@@ -615,6 +629,8 @@ The generated code is unable to access the respective field or any field of the 
 \section{Extensibility and Canonical Field Order}
 
 Extensibility is an important property. In this section, we develop a normal form of \gls{skill} definitions, which will yield a file format robust against modification. We will describe the effect of some changes.
+
+\todo{EP: Man muss die Ordnung so bauen, dass man Felder löschen und einfügen kann!(=Reflection?)}
 
 \subsection{Equality of Field Names}
 
