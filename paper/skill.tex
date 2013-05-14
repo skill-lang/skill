@@ -395,6 +395,9 @@ The missing order of compound types is left away intentionally, because it allow
 
 \subsection{Strings}
 
+\todo{das ist im übrigen alles garnicth wahr, wenn man mal das serialisierungskapitel liest! ⇒ utf8[]}
+
+
 Strings are conceptually a zero terminated sequence of utf8 encoded unicode characters. The in memory representation will try to make use of language features such as java.lang.String or std::u16string.
 
 Strings must not contain 0 characters except for the terminating 0. If the users concept of a \textit{string} allows such data, he has to declare his own data type.
@@ -736,6 +739,8 @@ so funktioniert die serialisierung des reflection pools (indices beschreiben den
 
 
 \subsection{Storage Pools}
+
+\todo{sicherstellen, dass es verboten ist leere pools in eine datei zu schreiben}
 
 This section contains the description of the high level file layout and gives meaning to the functions $baseTypeName: \mathcal{U} → S$, $typeName: \mathcal{U} → S$ and $index: \mathcal{U}\cup\{\textbf{string}\} → S$.
 
