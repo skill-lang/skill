@@ -26,7 +26,7 @@
 % \setmonofont[Mapping=tex-text]{DejaVu Sans Mono}
 
 %funny makros we want to use
-\newcommand{\den}[1]{[\![#1]\!]}
+\newcommand{\den}[1]{\ensuremath{[\![#1]\!]}}
 
 %skill language definition
 \lstdefinelanguage{skill}
@@ -701,6 +701,40 @@ In general it is assumed that the serialization process is split into the follow
  \item The output stream is created as described below.
 \end{enumerate}
 
+\subsection{Reflection}
+\todo{move to a suitable location; write a small chapter at the beginning as well}
+
+so funktioniert die serialisierung des reflection pools (indices beschreiben den serialisierten typ, falls dieser unklar ist):
+
+\begin{itemize}
+ \item \den{REFL} = $\den{DECL_1} \circ \cdots \circ \den{DECL_n}$
+
+ \item \den{DECL} = $\den{DESC}\den{name}\den{superName}\den{FIELD_1}\circ \cdots \circ \den{FIELD_n}$\footnote{Actually, only the serializable restrictions are taken from the DESC-part.}
+ 
+ \item \den{HINT} = $\emptyset$
+ 
+ \item \den{comment} = $\emptyset$
+ 
+ \item \den{RESTRICTION} = $\emptyset$ iff. $id = \bot$
+ \item \den{RESTRICTION} = $\den{id}_{v64}\den{ARG_1}_{string} \circ $ iff. $id \neq \bot$\footnote{eine tabelle mit IDs findet sich im Anhang}\todo{ref id-table}
+ 
+ \item \den{FIELD} = \den{DESC}\den{TYPE}\den{name}
+ 
+ \item \den{TYPE} = $\varepsilon i. i \in [0,14] \wedge i = id(TYPE)$\todo{ref id-table}
+ 
+ \item \den{T[i]} = $15 \circ \den{i}_{v64} \circ \den{T}$
+ \item \den{T[f]} = $16 \circ \den{f.index}_{v64} \circ \den{T}$
+ \item \den{T[]} = $17 \circ \den{T}$
+ \item \den{\texttt{list}<T>} = $18 \circ \den{T}$
+ \item \den{\texttt{set}<T>} = $19 \circ \den{T}$
+ \item \den{\texttt{map}<T_1, \cdots, T_n>} = $20 \circ \den{n}_{v64} \circ \den{T_1} \circ \cdots \circ \den{T_n}$
+ 
+ \item \den{T} = $\den{T.reflIndex + 21}_{v64}$
+
+\end{itemize}
+
+
+
 \subsection{Storage Pools}
 
 This section contains the description of the high level file layout and gives meaning to the functions $baseTypeName: \mathcal{U} → S$, $typeName: \mathcal{U} → S$ and $index: \mathcal{U}\cup\{\textbf{string}\} → S$.
@@ -1143,7 +1177,7 @@ Thus the remaining parts required for full skill support are:
 
 
 \section{Numerical Constants}
-This section will list the translation of type IDs(see \ref{???}) and restriction IDs (see \ref{???, ???}).
+This section will list the translation of type IDs(see \ref{???}) and restriction IDs (see \ref{???, ???}). Restrictions with undefined IDs will not be serialized.
 
 \begin{table}
 \begin{subtable}[t]{5cm}
