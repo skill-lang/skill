@@ -73,6 +73,7 @@ Additional criticis: Dominik Bruhn.
 This paper presents an approach to serializing objects, which is tailored for usability, performance and portability. In order to achieve these goals, in contrast to XML, we will sacrifice generality and human readability of the serialized format. Unlike other general serialization mechanisms, we provide explicit support for extension points in the serialized data, in order to provide a maximum of upward compatibility and extensibility.
 
 The primary target of the proposed serialization mechanism are users which have to provide several tools with large amounts of data in a type safe and fast manner, but without the \todo{hier muss noch was wegen version resilience, small footprint, den daten, die man so üblicherweise hat (~1000 objekte eines typs, pointer, etc) und den mehrfachen sichten über verschiedene spezifikationen rein. Außerdem sollte man erwähnen, dass man hier den reflection mechanismus for free bekommt}
+\todo{hier vielleicht sagen, dass die erwartete zahl von instanzen im bereich [$10^2$;$10^9$] liegt}
 
 \subsection{Related Work}
 
@@ -101,13 +102,7 @@ Is not powerful enough to fit our purpose.
 
 \subsection*{IDL}
 
-\todo{ref David Lamb} Is not powerful enough and seems to be outdated.
-
-It also uses an ASCII representation in order to store data, which does not fit our purpose.
-
-Is itself superseded by XML.
-
-On the other hand, it shares the basic architecture with this proposal.
+A concise description of IDL can be fonud in \todo{ref David Lamb}. It seems not to be powerful enough and is certainly outdated. It is so old, that there are no bindings for any modern language. There is also not much documentation on further research on that area, thus creating a new approach with similar goals but modern techniques is in fact an option.
 
 
 \subsection*{Apatche Thrift \& Protobuf}
@@ -710,9 +705,9 @@ In general it is assumed that the serialization process is split into the follow
 so funktioniert die serialisierung des reflection pools (indices beschreiben den serialisierten typ, falls dieser unklar ist):
 
 \begin{itemize}
- \item \den{REFL} = $\den{DECL_1} \circ \cdots \circ \den{DECL_n}$
+ \item \den{REFL} = $\den{n}_{v64}\den{DECL_1} \circ \cdots \circ \den{DECL_n}$
 
- \item \den{DECL} = $\den{DESC}\den{name}\den{superName}\den{FIELD_1}\circ \cdots \circ \den{FIELD_n}$\footnote{Actually, only the serializable restrictions are taken from the DESC-part.}
+ \item \den{DECL} = $\den{DESC}\den{name}\den{superName}\den{n}_{v64}\den{FIELD_1}\circ \cdots \circ \den{FIELD_n}$\footnote{Actually, only the serializable restrictions are taken from the DESC-part.}
  
  \item \den{HINT} = $\emptyset$
  
@@ -739,6 +734,19 @@ so funktioniert die serialisierung des reflection pools (indices beschreiben den
 
 
 \subsection{Storage Pools}
+
+\todo{folgendes layout eignet sich eigentlich besser}
+\begin{verbatim}
+v64 upperHalfCount
+utf8[upperHalfCount][] significantStrings
+[[reflectionPool]]
+v64 lowerHalfSizeBytes
+i8[lowerHalfSizeBytes] insignificantStrings
+
+[[ordinary pools]]
+\end{verbatim}
+This allows for reading insignificant strings lazily.
+
 
 \todo{sicherstellen, dass es verboten ist leere pools in eine datei zu schreiben}
 
@@ -857,16 +865,13 @@ Note, that the pool of D comes in front of the pool of C, because it is smaller 
 This leads to the serialization of a pool as:
 \begin{verbatim}
 v64 poolName
-v64 superIndex
-option(v64 basePoolStartIndex; iff superIndex!=0)
+option(v64 basePoolStartIndex; iff has superType)
 v64 sizeCount
 v64 sizeBytes
 T[sizeCount] elements
 \end{verbatim}
 
 The poolName is an index into the string pool and points to the type name stored in the pool.
-
-The superIndex is an index into the string pool and points to the name of the super type.
 
 The sizeCount contains the number of elements in the pool. This is required in order to move objects of an unknown subtype. It does also simplify the deserialization process.
 
@@ -878,13 +883,11 @@ A concise description of the file layout could look like this:
 \begin{verbatim}
 v64 size
 utf8[size] stringPool
-
-bool lastStringIsDefinition
+[[TODO ...]]
 
 while(next!=EOF){
   v64 poolName
-  v64 superIndex
-  option(v64 basePoolStartIndex; iff superIndex!=0)
+  option(v64 basePoolStartIndex; iff has superType)
   v64 sizeCount
   v64 sizeBytes
   [[ T[sizeCount] elements ]]
@@ -1064,6 +1067,10 @@ Abuse annotations for type-safe unions. The type system does not allow for unres
 
 State somewhere, that a major advantage over XML is, that one is not required to link against a overly general implementation, which is nice if one is only interested in a very specific format.
 
+A notion of \textit{first class strings} can be used to separate the string pool into one pool at the beginning of the file which contains all the strings, that have to be used in order to understand the contents of the file and a second part of the pool, which can be skipped. This should give significant performance improvements if files with lots of unused strings are processed.
+
+True comments with \verb/# ... \n/?
+
 Fun fact: Garbage Collection for serializable objects comes for free, if objects are always held in storage pools.
 
 \newpage
@@ -1180,6 +1187,12 @@ Thus the remaining parts required for full skill support are:
 \end{itemize}
 
 
+
+\section{Numerical Limits}
+
+In order to keep serialized data platform independent, one has to respect the numerical limits of the various target platforms. For instance, the Java Virtual Machine will not allow arrays with a size larger then $2^31$ minus some elements. Therefore we establish the following rule:
+
+(De-)serialization of a file with an array of more then $2^30$ elements or a type with more then $2^30$ instances may fail due to numerical limits of the target platform.
 
 \section{Numerical Constants}
 This section will list the translation of type IDs(see \ref{???}) and restriction IDs (see \ref{???, ???}). Restrictions with undefined IDs will not be serialized.

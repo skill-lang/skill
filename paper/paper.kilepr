@@ -58,10 +58,10 @@ order=-1
 
 [item:skill.tex]
 archive=true
-column=148
+column=99
 encoding=UTF-8
 highlight=LaTeX
-line=441
+line=397
 mode=LaTeX
 open=true
 order=0
@@ -73,7 +73,7 @@ JumpList=
 ViMarks=
 
 [view-settings,view=0,item:skill.tex]
-CursorColumn=148
-CursorLine=441
+CursorColumn=99
+CursorLine=397
 JumpList=
 ViMarks=
