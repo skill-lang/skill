@@ -718,6 +718,7 @@ so funktioniert die serialisierung des reflection pools (indices beschreiben den
  
  \item \den{FIELD} = \den{DESC}\den{TYPE}\den{name}
  
+ \item \den{TYPE} = const ⇒ $id \circ \den{val}_{TYPE}$
  \item \den{TYPE} = $\varepsilon i. i \in [0,14] \wedge i = id(TYPE)$\todo{ref id-table}
  
  \item \den{T[i]} = $15 \circ \den{i}_{v64} \circ \den{T}$
@@ -908,7 +909,7 @@ Let $f$ be a field of type $t$, then $\den{f}$ is defined as\footnote{We will us
  
  %annotation -> * (v64 baseTypeName!!, v64index)
  \item $t=\textbf{annotation} \implies \den{\texttt{NULL}} = \texttt{0x00} \circ 0x00$\footnote{the first value is not important and may change in the future; it results from the encoding requiring a type for the null pointer.}
- \item $t=\textbf{annotation} \implies \den{f} = baseTypeName(f) \circ index(t)$
+ \item $t=\textbf{annotation} \implies \den{f} = baseTypeName(f) \circ index(t)$ \todo{hier eignet sich die type ID deutlich besser!}
  
  %bool
  \item $t=\textbf{bool} \implies \den{\top} = \texttt{0xFF} \wedge \den{\bot} = \texttt{0x00}$
@@ -1070,6 +1071,8 @@ State somewhere, that a major advantage over XML is, that one is not required to
 A notion of \textit{first class strings} can be used to separate the string pool into one pool at the beginning of the file which contains all the strings, that have to be used in order to understand the contents of the file and a second part of the pool, which can be skipped. This should give significant performance improvements if files with lots of unused strings are processed.
 
 True comments with \verb/# ... \n/?
+
+Alternativ kann man die reflection data aus dem ReflectionPool als Eingabesprache für einen Generator benutzen.
 
 Fun fact: Garbage Collection for serializable objects comes for free, if objects are always held in storage pools.
 
