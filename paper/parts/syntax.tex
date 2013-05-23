@@ -1,0 +1,129 @@
+\section{Syntax}
+
+We use the tokens \verb/<id>/, \verb/<string>/, \verb/<int>/ and \verb/<comment>/. They equal C-style identifiers, strings, integer literals and comments respectively. We use a comment token, because we want to emit the comments in the generated code, in order to integrate nicely into the target languages documentation system.
+
+\subsection{The Grammar}
+The grammar of a \gls{skill} definition file is defined as:
+\begin{verbatim}
+UNIT :=
+  INCLUDE*
+  DECLARATION*
+
+INCLUDE := 
+  ("include"|"with") <string> ";"?
+
+DECLARATION :=
+  DESCRIPTION
+  <id>
+  ((":"|"with"|"extends") <id>)?
+  "{" FIELD* "}"
+  
+FIELD :=
+  DESCRIPTION
+  (CONSTANT|DATA) ";"?
+  
+DESCRIPTION := 
+  (RESTRICTION|HINT)*
+  <comment>?
+  (RESTRICTION|HINT)*
+  
+RESTRICTION :=
+  "@" <id> ("(" (R_ARG ("," R_ARG)*)? ")")? ";"?
+  
+R_ARG := ("%"|<int>|<string>)
+
+HINT := "!" <id> ";"?
+  
+CONSTANT :=
+  "const" TYPE <id> "=" <int>
+  
+DATA :=
+  "auto"? TYPE <id>
+  
+TYPE :=
+  ("map" MAPTYPE
+  |"set" SETTYPE
+  |"list" LISTTYPE
+  |ARRAYTYPE)
+  
+MAPTYPE :=
+  "<" GROUNDTYPE ("," GROUNDTYPE)+ ">"
+  
+SETTYPE :=
+  "<" GROUNDTYPE ">"
+  
+LISTTYPE :=
+  "<" GROUNDTYPE ">"
+  
+ARRAYTYPE :=
+  GROUNDTYPE
+  ("[" (<id>|<int>)? "]")?
+  
+GROUNDTYPE :=
+  (<id>|"annotation")
+
+\end{verbatim}
+Note: The Grammar is LL(1).\footnote{In fact it can be expressed as a single regular expression.}
+
+Comment: The optional \texttt{;} at the end of includes or definitions are for convenience only.
+
+\subsection{Reserved Words}
+
+The language itself has only the reserved words \textbf{annotation}, \textbf{auto}, \textbf{const}, \textbf{with}, \textbf{map}, \textbf{list} and \textbf{set}. \todo{check for updates}
+
+However, it is strongly advised against using any identifiers which form reserved words in a potential target language, such as Ada, C++, C\#, Java, JavaScript or Python.
+\todo{Appendix with a list of all identifiers which form reserved words in one of the languages above, including our keywords}
+
+\subsection{Examples}
+
+\begin{lstlisting}[label=blockExample,caption=Running Example,language=skill]
+/** A source code location. */
+SLoc {
+  i16 line;
+  i16 column;
+  string path;
+}
+
+Block {
+  SLoc begin;
+  SLoc end;
+  string image;
+}
+
+IfBlock : Block {
+  Block thenBlock;
+}
+
+ITEBlock : IfBlock {
+  Block elseBlock;
+}
+\end{lstlisting}
+
+\subsubsection*{Includes, self references}
+
+\begin{lstlisting}[label=example2a,caption=Example 2a,language=skill]
+with "example2b.skill"
+
+A {
+  A a;
+  B b;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[label=example2b,caption=Example 2b,language=skill]
+with "example2a.skill"
+
+B {
+  A a;
+}
+\end{lstlisting}
+
+\subsubsection*{Unicode}
+The usage of non ASCII characters is completely legal, but discouraged.
+\begin{lstlisting}[label=unicode,caption=Unicode Support,language=skill]
+/** some arguably legal unicode characters. */
+ö {
+  ö ∀;
+  ö €;
+}
+\end{lstlisting}

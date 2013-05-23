@@ -1,0 +1,47 @@
+\section{Variable Length Coding}
+
+Size and Length information is stored as variable length coded 64 bit unsigned integers (aka C's \texttt{uint64\_t}). The basic idea is to use up to 9 bytes, where any byte starts with a 1 iff there is a consecutive byte. This leaves a payload of 7 bit for the first 8 bytes and 8 bits of payload for the ninth byte. This is very similar to the famous utf8 encoding and is motivated, as it is the case with utf8, by the assumption, that smaller numbers are a lot more likely. It has the nice property, that there are virtually no numerical size limitations.
+The following small C++ functions will illustrate the algorithm:
+\begin{lstlisting}[label=v64enc,caption=Variable Length Encoding,language=C++]
+uint8_t* encode(uint64_t v){
+  // calculate effective size
+  int size = 0;
+  {
+    auto q = v;
+    while(q){
+      q >>= 7;
+      size++;
+    }
+  }
+  if(!size){
+    auto rval = new uint8_t[1];
+    rval[0]=0;
+    return rval;
+  }else if(10==size)
+    size = 9;
+
+  // split
+  auto rval = new uint8_t[size];
+  int count=0;
+  for(;count<8&&count<size-1;count++){
+    rval[count] = v >> (7*count);
+    rval[count] |= 0x80;
+  }
+  rval[count] = v >> (7*count);
+  return rval;
+}
+\end{lstlisting}
+\begin{lstlisting}[label=v64dec,caption=Variable Length Decoding,language=C++]
+uint64_t decode(uint8_t* p){
+  int count = 0;
+  uint64_t rval = 0;
+  register uint64_t r;
+  for(;count<8 && (*p)&0x80; count++, p++){
+    r = p[0];
+    rval |= (r&0x7f)<<(7*count);
+  }
+  r = p[0];
+  rval |= (8==count?r:(r&0x7f))<<(7*count);
+  return rval;
+}
+\end{lstlisting}

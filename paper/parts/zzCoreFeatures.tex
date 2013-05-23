@@ -1,0 +1,113 @@
+\section{Error Reporting}
+
+This section describes some errors regarding ill-formatted files, which must be detected and reported. The order is based on the expected order of checking for the described error. The described errors are expected to be the result of file corruption, format change or bugs in a language binding.
+
+\subsection*{Deserialization}
+\begin{itemize}
+\item If \texttt{EOF} is encountered unexpectedly, an error must be reported before producing any observable result.
+
+\item If an index into a pool is invalid\footnote{because it is larger then the last string in the pool}, an error must be reported.
+
+\item If the deserialization of a storage pool does not consume exactly the \texttt{sizeBytes} in its header, an error must be reported. Note: This is a strong indicator for a format change.
+
+\item If the serialized type order of storage pools does not match the expected type order, an error must be reported.
+
+\item If the serialized type information contains cycles, an error must be reported, which contains at least all type names in the detected cycle and the base type, if one can be determined.
+
+\item If a storage pools contains elements which, based on their location in the base pool, should be subtypes of some kind, but have no respective sub type storage pool, an error must be reported with at least, the base type name, the most exact known type name and the adjacent base type names.
+
+\item All known constant fields have to be checked before producing any observable result. If some constant value differs from the expected value, an error must be reported, which contains at least the type, the field type and name, the basePoolIndex, the index inside the types pool, the expected value and the actual value.
+
+\item If a serialized value violates a restriction or the invariant of a type,\footnote{Including sets containing multiple similar elements.} an error must be reported as soon as this fact can be observed. It is explicitly not required to check all serialized data for this property.
+\end{itemize}
+
+
+
+\section{Reserved Words}
+This section contains a table of words which must not be used as field names, because they are keywords in some languages. The usage of skill keywords will result in a direct error, whereas the usage of a word listed below will result in a warning, because the identifier will be escaped in the target language binding.
+
+
+\textbf{
+\begin{tabular}{ccccc}
+if &then& else &begin &end\\
+struct & class & public & protected &private \\
+⇒ & ...
+\end{tabular}
+}
+
+
+\section{Core Language}
+The core language is a subset of the full language which must be supported by any generator, which is called skill core language generator. Features included in the core language are:
+\begin{itemize}
+ \item Integer types \texttt{i8} to \texttt{i64} and \texttt{v64}
+ \item \texttt{string}, \texttt{bool} and \texttt{annotation}
+ \item Compound types
+ \item User Types with sub-typing
+ \item \texttt{const} and \texttt{auto} fields.
+\end{itemize}
+
+Thus the remaining parts required for full skill support are:
+\begin{itemize}
+ \item Floats
+ \item Restrictions
+ \item Hints
+ \item Language dependent treatment of comments, e.g. integration into doxygen or javadoc.\footnote{This may even require a language extension providing tags inside comments which are translated into tags of the respective documentation framework.}
+ \item Reflection?
+ \item Name mangling to allow for usage of language keywords or illegal characters (unicode) in specification files, without making a language binding impossible.
+\end{itemize}
+
+
+
+\section{Numerical Limits}
+
+In order to keep serialized data platform independent, one has to respect the numerical limits of the various target platforms. For instance, the Java Virtual Machine will not allow arrays with a size larger then $2^31$ minus some elements. Therefore we establish the following rule:
+
+(De-)serialization of a file with an array of more then $2^30$ elements or a type with more then $2^30$ instances may fail due to numerical limits of the target platform.
+
+\section{Numerical Constants}
+This section will list the translation of type IDs(see \ref{???}) and restriction IDs (see \ref{???, ???}). Restrictions with undefined IDs will not be serialized.
+
+\begin{table}
+\begin{subtable}[t]{5cm}
+\centering
+\begin{tabular}{l|l}
+Type Name & Value \\\hline
+const i8 	& 0 \\
+const i16 	& 1 \\
+const i32 	& 2 \\
+const i64 	& 3 \\
+const v64 	& 4 \\
+annotation	& 5 \\
+bool		& 6 \\
+i8 		& 7 \\
+i16 		& 8 \\
+i32 		& 9 \\
+i64 		& 10 \\
+v64 		& 11 \\
+f32 		& 12 \\
+f64 		& 13 \\
+string		& 14 \\
+T[i] 		& 15 \\
+T[f] 		& 16 \\
+T[] 		& 17 \\
+list<T> 	& 18 \\
+set<T>	 	& 19 \\
+map<T$_1$, \ldots, T$_n$> & 20 \\
+T 		& 21 + $index_T$ \\
+\end{tabular}
+\caption{Type IDs}
+\end{subtable}
+~
+\begin{subtable}[t]{5cm}
+\centering
+\begin{tabular}{l|l}
+Restriction Name & Value \\\hline
+range 	& 0 \\
+nonnull 	& 1 \\
+unique 	& 2 \\
+singleton 	& 3 \\
+\ldots 	& \ldots \\
+\end{tabular}
+\caption{Restriction IDs}
+\end{subtable}
+\end{table}

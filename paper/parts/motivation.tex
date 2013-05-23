@@ -1,0 +1,50 @@
+\section{Motivation}
+
+This paper presents an approach to serializing objects, which is tailored for usability, performance and portability. In order to achieve these goals, in contrast to XML, we will sacrifice generality and human readability of the serialized format. Unlike other general serialization mechanisms, we provide explicit support for extension points in the serialized data, in order to provide a maximum of upward compatibility and extensibility.
+
+The primary target of the proposed serialization mechanism are users which have to provide several tools with large amounts of data in a type safe and fast manner, but without the \todo{hier muss noch was wegen version resilience, small footprint, den daten, die man so üblicherweise hat (~1000 objekte eines typs, pointer, etc) und den mehrfachen sichten über verschiedene spezifikationen rein. Außerdem sollte man erwähnen, dass man hier den reflection mechanismus for free bekommt}
+\todo{hier vielleicht sagen, dass die erwartete zahl von instanzen im bereich [$10^2$;$10^9$] liegt}
+
+\subsection{Related Work}
+
+There are many approaches similar to ours, but most of them have a different focus. This section shall provide a concise list of related approaches. For potential users of skill, this might also present alternatives superior for individual use cases.
+
+\subsection*{XML}
+
+XML is a file format and might in fact be used as a backend. If a human readable storage on disk is not required, a binary encoding can be used to improve load/store performance significantly.
+
+In contrast to our approach, XML requires the serialized data to form a tree. In theory, this is not a real problem, because there is at least one canonical transformation, which turns a graph into a tree (by adding a node and some attributes). On the other hand, such a transformation will in most cases take away the readability of the serialized data, which makes XML pointless.
+
+\subsubsection*{XML Schema definitions}
+
+The description language itself is more or less equivalent to most schema definition languages such as XML Schema \todo{cite w3c}. The downside is that schema definitions have to operate on XML and can not directly be used with a binary format. There is also
+no way to generate code for some client languages, including Ada, from a schema definition.
+
+\subsubsection*{JAXP and xmlbeansxx}
+
+For Java and C++, there are code generators, which can turn a XML schema file into code, which is able to deal with an XML in a similar way, as it is proposed by this work. In case of Java this is even in the standard library. The downside is, that, to our knowledge, this is only possible for Java and C++, thus it leaves us with portability issues. A minor problem of this approach is the lack of support for comment generation and the inefficient storage of serialized data.
+An interesting observation is, that this approach deprives XML of its flexibility advantage over our solution. \todo{brr}
+
+
+\subsection*{ASN.1}
+
+Is not powerful enough to fit our purpose.
+
+\subsection*{IDL}
+
+A concise description of IDL can be fonud in \todo{ref David Lamb}. It seems not to be powerful enough and is certainly outdated. It is so old, that there are no bindings for any modern language. There is also not much documentation on further research on that area, thus creating a new approach with similar goals but modern techniques is in fact an option.
+
+
+\subsection*{Apatche Thrift \& Protobuf}
+
+Lacks subtypeing. Protobuf has a overly complex notation language. Both seem to be optimized for network protocols, thus they do not have storage pools, which are the foundation of our serialization approach and an absolute requirement for some of our features, such as hints (see section \ref{hints}).
+
+
+\subsection*{Language Specific}
+
+Language specific is language specific and can therefore not be used to interface between subsystems written different programming languages such as Ada, Java, C or Haskell. Plus not every language offers such a mechanism. E.g. C.
+
+
+\subsection*{Language Interfaces}
+Language Interfaces do not permit serialization capabilities. Most language only provide interfaces for C, with varying quality and varying degree of automation. A significant problem are interfaces between languages with different memory models.
+Interfaces between languages with different type systems are simply unproductive:D

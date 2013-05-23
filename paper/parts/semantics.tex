@@ -1,0 +1,164 @@
+
+\section{Semantics}
+
+This section will describe the meaning of individual keywords.
+
+\subsection{Includes}
+The file referenced by the with statement is processed as well. The declarations of all files reachable over \texttt{with} statements are collected, before any declaration is evaluated.
+
+\subsection{\texttt{annotation}}
+The type has a tag and a size, which allows it to be inserted at any annotation locations. This is useful in order to provide extension points in the file format. The file will still be readable by older implementations, which are not able to map any meaningful type into the annotation. A language binding is expected to provide something like an annotation proxy, which is used to represent annotation objects. If an application tries to get the object behind the proxy for an object of an unknown type, this will inevitably result in an error or exception. Therefore language bindings shall provide means of inspecting whether or not the type of the object behind an annotation is known.
+
+As we will see in section \ref{serialization}, annotations are roughly equivalent to the type definition
+\begin{verbatim}
+annotation {
+  v64 baseTypeName;
+  v64 basePoolIndex;
+}
+\end{verbatim}
+Of course, this is made transparent to the user and some language bindings will offer a special and type safe treatment of annotations.
+
+\subsection{Sub Types}
+A \gls{subType} of a \gls{userType} can be declared by appending the keyword \texttt{with} and the \gls{superType}s name to a declaration. In order to be well-formed, the sub type relation must remain acyclic and must not contain \glspl{unknownType}.
+
+\subsection{\texttt{const}}
+A const field can be used in order to create guards or version numbers, as well as overwriting deprecated fields with e.g. zeroes. The deserialization mechanism has to report an error if a constant field has an unexpected value.
+
+\subsection{\texttt{auto}}
+The language binding will create a field with the given type, but the content is transparent to the serialization mechanism. This is useful if the inference of the content of a field is likely to be faster then storing it, e.g. if it can be inferred lazily.
+
+\subsection{Abstract Data Types}
+\todo{rewrite section; it emerged from the fusion of two sections talking about ADTs}
+
+\glspl{adt} showed to be useful and to increase the usability and understandability of the resulting code and file format.
+
+\glspl{adt} are represented using arrays and pairs. \todo{ref encoding scheme which will be explained later; somewhat confusing}
+
+The type system has a built-in notion of arrays, maps, lists and sets. Note that all of them are, from the view of serialization, equivalent to length encoded arrays. Their purpose is to increase the usability of the generated \gls{api}.
+
+
+\subsection{Comments}
+Comments provided in the skill file will be emitted into the generated code\footnote{If the target language does not allow for C-Style comments, the comments will be transformed in an appropriate way.}, thus allowing a user to get tool-tips in his IDE showing him this documentation. \todo{sprache!}
+
+
+
+\section{The Type System}
+
+\todo{ein paar einleitende worte}
+
+\begin{figure}[h]
+\centering
+\tikz [small mindmap, every node/.style=concept, concept color=black!20,
+grow cyclic,
+level 1/.append style={level distance=4.2cm,sibling angle=65},
+level 2/.append style={level distance=2.7cm,sibling angle=40},
+level 3/.append style={level distance=2cm,sibling angle=35},
+level 4/.append style={level distance=1.5cm,sibling angle=35}
+]
+\node [root concept]{All Types}[clockwise from=0] % root
+child { node {User Types}}
+child { node{Compound Types}[clockwise from=30]
+  child{ node{map}}
+  child{ node{set}}
+  child{ node{list}}
+  child{ node{array}}
+}
+child { node{Built-In Types}[clockwise from=-20]
+  child{ node{string}}
+  child{ node{Float}[clockwise from=0]
+    child{ node{f64}}
+    child{ node{f32}}
+  }
+  child{ node{Integer}[clockwise from=-30]
+    child{ node{v64}}
+    child{ node{i64}}
+    child{ node{i32}}
+    child{ node{i16}}
+    child{ node{i8}}
+  }
+  child{ node{bool}}
+  child{ node{annotation}}
+};
+\caption{Layout of the Type System}
+\end{figure}
+
+\Glspl{userType} can be seen as nonempty tuples over all types. \Glspl{builtInType} can be wrapped in order to give them special semantics. E.g. a time stamp can be created by:
+\begin{lstlisting}[label=timeExample,caption=Time,language=skill]
+time {
+  /** seconds since 1.1.1970 0:00 UTC. */
+  i64 date;
+}
+\end{lstlisting}
+
+\subsection*{Common Abbreviations}
+
+We will use some common abbreviations for sets of types in the rest of the manual:
+
+Let \ldots
+\begin{itemize}
+ \item[\ldots] $\mathcal{T}$ be the set of all types.
+ \item[\ldots] $\mathcal{U}$ be the set of all \glspl{userType}.
+ \item[\ldots] $\mathcal{I}$ be the set of all integer types, i.e. $\{\texttt{i8},\texttt{i16},\texttt{i32},\texttt{i64},\texttt{v64}\}$.
+ \item[\ldots] $\mathcal{B}$ be the set of all \glspl{builtInType}.
+\end{itemize}
+
+
+\subsection{Legal Types}
+
+The given grammar of \gls{skill} already ensures that intuitive usage of the language will result in legal type declarations. The remaining aspects of illegal type declarations boil down to ill-formed usage of type and field names and can be summarized as:
+\begin{itemize}
+ \item Field names inside a type declaration must be unique inside the type and all its super types\footnote{The super type restriction may in fact be dropped?}.
+ 
+ \item The subtype relation is a partial order\footnote{In fact it forms a forest.} and does not contain unknown types.
+
+ \item For all fields f of dependent array type\footnote{E.g. a field \texttt{t[size] f} requires another field of integer type in the same declaration -- e.g. \texttt{i8 size}}, the size of the array has to denote a field of integer type in the very same declaration. The order of declaration is irrelevant.
+ 
+ \item Any base type has to be known, i.e. it is either a ground type or it is a user type defined in any document transitively reachable over include commands.
+\end{itemize}
+
+
+\subsection{Type Order}
+
+Let $<_l$ be the lexical order. We define a partial order $\leq_t$ on $\mathcal{T}$ as follows:
+\begin{itemize}
+ \item $\forall t \in \mathcal{B}, s \in \mathcal{T}\setminus\mathcal{B}. t \leq_t s$
+ \item $\forall t \in \mathcal{C}, s \in \mathcal{U}. t \leq_t s$
+ \item $\forall s,t \in \mathcal{U}. t \leq_t s \leftarrow s <: t $\footnote{This is \textit{super types first}.}
+ \item $\forall s,t \in \mathcal{U}. t \leq_t s = t \leq_l s\leftarrow \exists S \in \mathcal{U} \cup \{\bot\}. t <: S \wedge s <: S $\footnote{Types with the same or no supertype are order lexically.}
+\end{itemize}
+
+The informal short description is, first ground types, then compound types and user types at the end, where the forest of user types maintains its structure but is order using the lexical order of type names.
+
+Notice, that this order corresponds to an left to right order in the types overview picture.
+
+The missing order of compound types is left away intentionally, because it allows for the exchange of some type definition after publishing a format, e.g. \verb/t[] f/ can be exchanged with \verb/list<t> f/.
+
+
+\subsection{Strings}
+
+Strings are conceptually a variable length sequence of utf8-encoded unicode characters. The in memory representation will try to make use of language features such as java.lang.String or std::u16string. The serialization is described in section \ref{???}. If a language demands 0-termination in strings, the language binding will ensure this.
+
+Strings should not contain 0 characters, because this may cause problems with languages such as C.
+
+
+\subsection{Compound Types}
+
+The language offers several compound types. Sets, Lists and auto sized Arrays, i.e. arrays without an explicit size, are basically views onto the same kind of serialized data, i.e. they are a length encoded list of elements of the supplied base type. Arrays are expected to have a constant size, i.e. they are not guaranteed to be resizable. Sets are not allowed to contain the same element twice.
+All ADTs will be mapped to their closest representation in the target language, while preserving these properties.
+Maps are viewed as a representation of serializable partial functions. Therefore they can contain other map types as their second type argument, which is basically an instance of currying.
+
+\subsection{NULL Pointer}
+
+The null pointer is serialized using the index 0. Conceptually, null pointers of different types are different. In fact if an annotation is a null pointer, it still has a type. However, this detail should not be observable in most languages.
+
+
+\subsection{Examples}
+
+This section will present some examples of ill-formed type declarations and brief explanations.
+
+\begin{lstlisting}[label=stringExample,caption=Legal Super Types,language=skill]
+EncodedString : string {
+  string encoding;
+}
+\end{lstlisting}
+Error: The built-in type ``string'' can not be sub classed.

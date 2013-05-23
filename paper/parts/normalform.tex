@@ -1,0 +1,53 @@
+\section{Extensibility and Canonical Field Order}
+
+Extensibility is an important property. In this section, we develop a normal form of \gls{skill} definitions, which will yield a file format robust against modification. We will describe the effect of some changes.
+
+\todo{EP: Man muss die Ordnung so bauen, dass man Felder löschen und einfügen kann!(=Reflection?)}
+
+\subsection{Equality of Field Names}
+
+Field names are equal, if their lexical representation is equal after converting all characters to lower case. Type declarations must not contain fields with equal names.
+
+\subsection{Canonical Field Order}
+
+A declaration is in canonical field order, if all fields are in type order and fields with the same or uncomparable type order are sorted in lexical order.
+
+The type order relation is motivated by properties of compound types. The lexical order is motivated by the observation, that this order does not come with a cost, but provides some additional robustness against changes in definitions.
+
+
+\subsection{Partial Types}
+
+Objects can have partial types, if a part or the whole type of an object is unknown to the current binding\footnote{A problem that will arise frequently in the context of downward compatibility.}. It is important to understand that these objects can, under no circumstances, be deleted. If partial objects are encountered, one of the following actions should be taken (ordered by safety):
+\begin{itemize}
+ \item Serialization should be forbidden, i.e. the data is read-only.
+ \item Only new objects may be added, thus the unknown objects can not be corrupted. This may however break an invariant of an unknown type.
+ \item Only known objects will be serialized and all other objects will be discarded. This however is not an option for a lot of users.
+\end{itemize}
+
+
+\subsection{Sources of Incompatibility}
+
+This section is to provide a concise list of changes and their effects on API and ABI compatibility.
+
+\begin{itemize}
+ \item A change of the organization of input files or the order of their definition has no effect.
+
+ \item The addition of new declarations has no effect.
+
+ \item A change regarding comments has no significant effect.
+
+ \item A change in restrictions of any kind may break the API, potentially depending on the target programming language. It will most certainly change the set of legal files.
+
+ \item A change of hints shall have no significant effect, although some applications can stop working after a change of hints, e.g. if they access fields which are annotated with \verb/!ignore/.
+
+ \item Inserting or removing the keyword \texttt{const} may\todo{really?} break compatibility.
+
+ \item Changing the value of a constant will break the ABI.\footnote{Which is btw. the very purpose of constants.}
+
+ \item Inserting or removing the keyword \texttt{auto} will break ABI, but not the API.
+
+ \item The presence of objects with unknown (sub)type with pointers to objects of known type may corrupt a file if it is written. This is even the case for annotations. It is therefore suggested, not to use pointers to existing objects, but to subtype them and to annotate objects in this fashion, because the data can be carried around correctly, even if the complete type of the object is not known. Another approach would be to disallow writing of such files.
+
+ \item Any change of the structure of existing declarations, i.e. changing the modifier, adding or removing fields, etc., will break compatibility as a whole.
+\end{itemize}
+

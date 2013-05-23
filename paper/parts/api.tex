@@ -1,0 +1,83 @@
+\section{API}
+
+The generated \gls{api} has to be designed in a fashion that integrates nicely with the languages programming paradigms. E.g. in Java it would be most useful to create a state object, which holds state of a bunch of serializable data and provides iterators over existing objects, as well as factory methods and methods to remove objects form the state object. The serialized types can be represented by interfaces providing getters, setters, using hidden implementations, only known to the state object.
+
+talk about the generated API and its features, like iterators, factories, access to singletons and stuff.
+
+\subsection{Examples}
+
+Nice example in C++:
+\begin{lstlisting}[label=cppExample,caption=C++ Examples,language=C++]
+#include <stdint.h>
+#include <string>
+[...some other bouilerplate includes...]
+struct SLoc {
+  uint16_t line;
+  uint16_t column;
+  std::string* path;
+};
+struct Block {
+  std::string* tag;
+  SLoc* begin;
+  SLoc* end;
+  std::string* image;
+};
+struct IfBlock : public Block {
+  Block thenBlock;
+};
+struct ITEBlock : public IfBlock {
+  Block elseBlock;
+};
+[...
+  plus some boilerplate code for visitors, iostreams etc.
+...]
+\end{lstlisting}
+
+\begin{lstlisting}[label=javaExample,caption=Java Examples,language=Java]
+class SLoc {
+  public short line;
+  public short column;
+  public String path;
+}
+class Block {
+  final public String tag() {
+    return this.getClass().getName();
+  }
+  public SLoc begin;
+  public SLoc end;
+  public String image:
+}
+class IfBlock extends Block {
+  public Block thenBlock;
+}
+class ITEBlock extends IfBlock {
+  public Block elseBlock;
+}
+[...some read and write code, plus some visitors...]
+\end{lstlisting}
+
+
+\begin{lstlisting}[label=latexExample,caption=LaTeX Examples,language={[LaTeX]TeX}]
+$(line, column, path) \in SLoc
+  \subseteq \mathbb{Z} \times \mathbb{Z} \times string$
+
+$(begin, end, image) \in Block
+  \subseteq SLoc \times SLoc \times string$
+
+$(super, thenBlock) \in IfBlock
+  \subseteq Block \times Block$
+
+$(super, elseBlock) \in ITEBlock
+  \subseteq IfBlock \times Block$
+\end{lstlisting}
+Which looks like:
+
+$(line, column, path) \in SLoc \subseteq \mathbb{Z} \times \mathbb{Z} \times string$
+
+$(begin, end, image) \in Block \subseteq SLoc \times SLoc \times string$
+
+$(super, thenBlock) \in IfBlock \subseteq Block \times Block$
+
+$(super, elseBlock) \in ITEBlock \subseteq IfBlock \times Block$
+
+Note: The incentive of the \LaTeX-output is to provide a mechanism for users to formalize their file format using mechanisms, that are or can not be available as a specification language. E.g. the sentence ``The path of a SLoc points to a valid file on the file system and the line and column form a valid location inside that file.'' can not be verified in a static manner. This is because the correctness of the property depends not only on the content to be verified, but on the verifying environment as well.
