@@ -41,7 +41,7 @@ so funktioniert die serialisierung des reflection pools (indices beschreiben den
  \item \den{TYPE} = $\varepsilon i. i \in [0,14] \wedge i = id(TYPE)$\todo{ref id-table}
  
  \item \den{T[i]} = $15 \circ \den{i}_{v64} \circ \den{T}$
- \item \den{T[f]} = $16 \circ \den{f.index}_{v64} \circ \den{T}$
+ \item \den{T[f]} = $16 \circ \den{f.nameIndex}_{v64} \circ \den{T}$
  \item \den{T[]} = $17 \circ \den{T}$
  \item \den{\texttt{list}<T>} = $18 \circ \den{T}$
  \item \den{\texttt{set}<T>} = $19 \circ \den{T}$
@@ -50,7 +50,7 @@ so funktioniert die serialisierung des reflection pools (indices beschreiben den
  \item \den{T} = $\den{T.reflIndex + 21}_{v64}$
 
 \end{itemize}
-
+\textbf{Elemente des Reflection pools müssen in Type Order sein!}
 
 
 \subsection{Storage Pools}
@@ -206,7 +206,7 @@ utf8[size] stringPool
 [[TODO ...]]
 
 while(next!=EOF){
-  v64 poolName
+  v64 poolIndex
   option(v64 basePoolStartIndex; iff has superType)
   v64 sizeCount
   v64 sizeBytes
@@ -268,3 +268,37 @@ The general strategy is:
  \item the type structure is reconstructed while the pools are copied into memory
  \item objects are reconstructed
 \end{itemize}
+
+\subsection*{Date Example}
+
+Let $d$ be the deserialization function -- basically the inverse function of \den{\_}.
+
+$d(01 04 64 61  74 65 01 00  01 00 01 00  0B 01 00 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
+
+$=d(01)d(04 64 61  74 65)d(01 00  01 00 01 00  0B 01 00 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
+
+$=[d(04) d(64 61  74 65)] d(01 00  01 00 01 00  0B 01 00 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
+
+$=[date] d(01 00  01 00 01 00  0B 01 00 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
+
+$=[date] d(01) d(00  01 00 01 00  0B 01 00 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
+
+$=[date] d(01) d(00) d(01 00 01 00  0B 01 00 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
+
+$=[date] d(01) d(00) d(01 00 01) 00  0B 01 00 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
+
+$=[date] d(01) d(00) d(01 00 01) d(00) 0B 01 00 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
+
+$=[date] d(01) d(00) d(01 00 01) d(00) d(0B 01) 00 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
+
+$=[date] [date \{d(00) d(0B 01)\}] d(00 02 0A 01 FF FF  FF FF FF FF  FF FF FF)$
+
+$=[date] [date \{v64\ date\}] d(00 02 0A 01 FF FF  FF FF FF FF  FF FF FF)$
+
+$=[date] [date \{v64\ date\}] d(00 02 0A) d(01 FF FF  FF FF FF FF  FF FF FF)$
+
+$=[date] [date \{v64\ date\}] pool\{date, [\_,\_], d(01 FF FF  FF FF FF FF  FF FF FF)\}$
+
+$=[date] [date \{v64\ date\}] pool\{date, [1,\_], d(FF FF  FF FF FF FF  FF FF FF)\}$
+
+$=[date] [date \{v64\ date\}] pool\{date, [1,-1]\}$
