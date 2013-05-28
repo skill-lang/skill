@@ -18,6 +18,8 @@ annotation {
 \end{verbatim}
 Of course, this is made transparent to the user and some language bindings will offer a special and type safe treatment of annotations.
 
+An implementation may treat an annotation pointing to an object of unknown type like a null reference. This behavior is safe, because such an object can not exist in the serialized file, thus the annotation has not been updated upon removal of the complete type pool. This behavior might look rather strange at first glance but is an effect of lazy treatment of informations stored in skill files and completely safe.
+
 \subsection{Sub Types}
 A \gls{subType} of a \gls{userType} can be declared by appending the keyword \texttt{with} and the \gls{superType}s name to a declaration. In order to be well-formed, the sub type relation must remain acyclic and must not contain \glspl{unknownType}.
 

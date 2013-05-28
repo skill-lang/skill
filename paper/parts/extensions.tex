@@ -1,4 +1,6 @@
-\section{Restrictions}
+\section{Type Annotations}
+
+\subsection{Restrictions}
 Some invariants can be added to declarations and fields. These invariants can occur at the same place as comments, but can occur in any number. Invariants start with an \textsc{@} followed by a predicate. Each predicate has to supply a default argument \texttt{\%}, such that using only default arguments would not imply a restriction.
 If multiple predicates are annotated, the conjunction of them forms the invariant.
 The set of legal predicates is explained below.
@@ -21,6 +23,7 @@ Dieser Mechanismus erlaubt es einem zu jedem Zeitpunkt felder einzublenden; die 
 
 \subsection*{Range}
 Range restrictions are used to restrict integers and floats.
+\todo{Falls $0 \notin [min,max]$ wird der default $min$.}
 
 Applies to fields: Integer, Float.
 
@@ -177,10 +180,10 @@ Note: In case of the File example, there is no way to violate the tree property.
 Note: It is legal for trees to form forests.
 
 
-\section{Hints}
+\subsection{Hints}
 \label{hints}
 
-Hints are annotations that start with a single \verb/!/ and are followed by a hint name.
+Hints are annotations that start with a single \verb/!/ and are followed by a hint name. Hints are used to control the behavior of the generated language binding and do not have an impact on the semantics of the stored data. Therefore they will not be stored in the reflection pool.
 
 \subsection*{Access}
 Try to use a data structure that provides fast (random) access. E.g. an array list.
