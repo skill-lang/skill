@@ -1,10 +1,14 @@
-\section{API}
+\section{In Memory Representation}
+This section is to describe the \gls{api} provided to the programmer and the representation of objects inside memory. Both are not mandatory and can depend on the target language and implementation.
+
+
+\subsection{API}
 
 The generated \gls{api} has to be designed in a fashion that integrates nicely with the languages programming paradigms. E.g. in Java it would be most useful to create a state object, which holds state of a bunch of serializable data and provides iterators over existing objects, as well as factory methods and methods to remove objects form the state object. The serialized types can be represented by interfaces providing getters, setters, using hidden implementations, only known to the state object.
 
 talk about the generated API and its features, like iterators, factories, access to singletons and stuff.
 
-\subsection{Examples}
+\subsection*{Examples}
 
 Nice example in C++:
 \begin{lstlisting}[label=cppExample,caption=C++ Examples,language=C++]
@@ -81,3 +85,79 @@ $(super, thenBlock) \in IfBlock \subseteq Block \times Block$
 $(super, elseBlock) \in ITEBlock \subseteq IfBlock \times Block$
 
 Note: The incentive of the \LaTeX-output is to provide a mechanism for users to formalize their file format using mechanisms, that are or can not be available as a specification language. E.g. the sentence ``The path of a SLoc points to a valid file on the file system and the line and column form a valid location inside that file.'' can not be verified in a static manner. This is because the correctness of the property depends not only on the content to be verified, but on the verifying environment as well.
+
+
+\subsection{Representation of Objects}
+
+The combination of laziness and consistency has the effect, that representation of objects inside memory is rather difficult. This section describes data structures and algorithms which basically do the job. In this section, we assume that all fields are present as arrays of bytes. We will describe the effects of parsing fields in an unmodified state, in a modified state, how to modify a state and finally how to write a state back to disk.
+
+\subsubsection{Proposed Data Structures}
+
+A state has to contain at least these informations:
+\begin{itemize}
+ \item an array of strings
+ \item the type information
+ \item storage pools
+\end{itemize}
+
+A storage pool has to hold the images of fields, which are not yet parsed.
+
+Objects are required to have an ID field, which corresponds to the ID of the deserialized(!) state. This field is required in order to map the lazy fields to the correct objects. It can also be reused in the serialization phase to assign unique IDs, which will be used instead of pointers.
+
+Objects of types with eager fields should have the respective fields. E.g. the declaration \verb/T {t a; !lazy t b;}/ should be represented by an object
+\begin{verbatim}
+InternalTObject { 
+  long ID;
+  t a;
+  /* getA, setA... */
+  
+  StoragePool tPool;
+  /* getB, setB... */
+}
+\end{verbatim}
+
+Note that the pointer to the enclosing storage pool is required for the correct treatment of lazy and distributed fields. This is because the pool holds the field data.
+
+
+Now that we have a representation for objects, we still have to store objects across storage pools. The possibility of inheritance requires us to store objects in multiple pools at the same time.
+We propose to store super and sub type information inside pools as links to the pools of the respective types. The objects should be stored as a ``double linked array list'', which is basically a linked list containing array lists:
+
+Each pool stores the objects, with the static type of the pool in an array list. The pools of subtypes are stored in a linked list. Now an iterator over all elements of a type uses an iterator over all elements of a pool in combination with iterators over the pool and all its sub pools. Therefore creating and deleting objects is an amortized O(1) operation and it is guaranteed to maintain the semantic structure of the file, if IDs are not updated in phases other than reading and writing a file.
+
+Note that, in the presence of distributed fields, the runtime complexity of these operations will change. It is expected to reduce to O(log(n)) where n is the largest number of objects with a common distributed field.
+
+
+\subsubsection{Reading Unmodified Data}
+
+Reading unmodified data is basically done by creating objects with ascending IDs and adding all eagerly processed fields to them. Pointer resolution in an unmodified state is an O(t) operation, where t is the size of the type hierarchy below the static type of the pointer.
+
+During the reconstruction of the initial dataset, an array in the base pool may be used to reduce the cost to O(1)\footnote{The creation time for the array can be paid for during the creation of the base pool.}. However, this helper array has to be dropped, as soon as the base pool is modified.
+
+
+\subsubsection{Modifying Data}
+
+The only legal way of modifying data is to access it through the generated API, which provides iterators, a type safe facade, factories and means of removing objects from states for each known type.
+A modification is any operation that will invalidate any existing object ID, i.e. deleting objects or inserting objects into nonempty storage pools. Adding objects to empty storage pools does not count as a modification in the sense of a modified state, because it is not possible, that a pointer to such an object lures in an yet untreated field.
+
+
+\subsubsection{Reading Data in an Modified State}
+
+Reading Data in a modified state, is very similar to reading data in the unmodified state. Except that resolution of stored pointers can no longer rely on the trick that the ID of an object is also the index into the base type pool. There is a solution for this problem using O(t + log(n)), where n is the number of instances with the same static type. However, the straightforward implementation is O(t+n).
+
+With this difference in mind, we strongly recommend adding a dirty flag to each storage pool which traces modifications. This will effectively eliminate the additional cost, because transformation of stored state is expected to be monotonic growing in a way that each step adds instances of a type, which was not present before and does not change old data.
+
+
+\subsubsection{Writing Data}
+
+Data which is lazy and modified can not be wrote to disk. Therefore any data which can potentially refer to modified data has to be evaluated. After evaluating the respective data, serialization is straightforward. The evaluation of lazy data referring to potentially modified data can be done in $O(out)$, where $out$ is the size of the output file. Writing the output is also in $O(out)$, thus it is not per se a problem.
+
+
+\subsubsection{Final Thoughts on Runtime Complexity}
+
+Although the last sections read a lot like accessing serializable data being unnecessary expensive, this is in fact not the case.
+
+Reading data without modifying it is $O(in)$, even if only a part of the data is read. This is mainly caused by the requirement of being able to process unknown data correctly. The actual cost should be limited by the cost of sequentially reading the input file from disk.
+
+Reading data modifying it and writing it back is $O(in + m + out)$, which is not surprising at all, because one has to pay for reading the initial file, writing the complete output file and the modifications.
+
+Only the usage of a lot of lazy or distributed data is expensive. It is generally advised against using the lazy attribute if a field is read for sure during the lifetime of a serializable state.
