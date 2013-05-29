@@ -189,17 +189,19 @@ Hints are annotations that start with a single \verb/!/ and are followed by a hi
 Try to use a data structure that provides fast (random) access. E.g. an array list.
 
 \subsection*{Modification}
-Try to use a data structure that provides fast (random) modification. E.g. an linked list.
+Try to use a data structure that provides fast (random) modification. E.g. a linked list.
 
 \subsection*{Unique}
 Serialization shall unify objects with exactly the same serialized form. In combination with the @unique restriction, there shall at most be an error reported on deserialization.
 
 \subsection*{Distributed}
-Use a static map instead of fields to represent fields of definitions. This is usually an optimization if a definition has a lot of fields, but most use cases require only a small subset of them. Because hints do not modify the binary compatibility, some clients are likely to define the fields to be distributed or lazy.
-\todo{f.a vs. a[f]}
+Use a static map instead of fields to represent fields of definitions. This is usually an optimization if a definition has a lot of fields, but most use cases require only a small subset of them. Because hints do not modify the binary compatibility, some clients are likely to define the fields to be distributed or even lazy. Note that this will increase both the memory footprint and the access time for the given field and will only be a benefit for memory-cache locality reasons. The internal representation will change from \texttt{f.a}, i.e. a regular field, to \texttt{pool.a[f]}, i.e a map in the storage pool which holds the field data for each instance. Note that the presence of distributed, lazy or ignored fields will require objects to carry a pointer to their storage pool, which may eliminate the cache savings completely.
 
 \subsection*{Lazy}
 Deserialize the fields data only if it is actually used. Lazy implies distributed.
 
+\subsection*{ReadOnly}
+The generated code is unable to modify the respective field or instances of the respective type. This options is provided to provide a consistent API while preventing from logical errors, such as modifying data from a previous stage of computation.
+
 \subsection*{Ignore}
-The generated code is unable to access the respective field or any field of the type of the target declaration. This will lead to errors, if it is tried nonetheless. This option is provided to allow clients to reduce the memory footprint, if needed.
+The generated code is unable to access the respective field or any field of the type of the target declaration. This will lead to errors, if it is tried nonetheless. This option is provided to provide a consistent API for a combined file format, but restrict usage of certain fields, which should be transparent to the current stage of computation.
