@@ -4,7 +4,7 @@ img_extIsRegExp=false
 img_extensions=.eps .jpg .jpeg .png .pdf .ps .fig .gif
 kileprversion=2
 kileversion=2.1.3
-lastDocument=parts/serialization.tex
+lastDocument=parts/api.tex
 masterDocument=
 name=paper
 pkg_extIsRegExp=false
@@ -26,7 +26,7 @@ Indentation Mode=normal
 Mode=LaTeX
 ReadWrite=true
 
-[document-settings,item:parts/extensions.tex]
+[document-settings,item:parts/api.tex]
 Bookmarks=
 Encoding=UTF-8
 FoldedColumns=
@@ -35,7 +35,7 @@ Highlighting=LaTeX
 Indentation Mode=normal
 Mode=LaTeX
 
-[document-settings,item:parts/normalform.tex]
+[document-settings,item:parts/extensions.tex]
 Bookmarks=
 Encoding=UTF-8
 FoldedColumns=
@@ -112,13 +112,13 @@ order=-1
 
 [item:parts/api.tex]
 archive=true
-column=1
-encoding=
-highlight=
-line=0
-mode=
-open=false
-order=-1
+column=182
+encoding=UTF-8
+highlight=LaTeX
+line=162
+mode=LaTeX
+open=true
+order=2
 
 [item:parts/extensions.tex]
 archive=true
@@ -150,32 +150,22 @@ mode=
 open=false
 order=-1
 
-[item:parts/normalform.tex]
-archive=true
-column=232
-encoding=UTF-8
-highlight=LaTeX
-line=14
-mode=LaTeX
-open=true
-order=2
-
 [item:parts/semantics.tex]
 archive=true
-column=0
+column=417
 encoding=UTF-8
 highlight=LaTeX
-line=0
+line=20
 mode=LaTeX
 open=false
 order=2
 
 [item:parts/serialization.tex]
 archive=true
-column=0
+column=31
 encoding=UTF-8
 highlight=LaTeX
-line=188
+line=263
 mode=LaTeX
 open=true
 order=1
@@ -212,10 +202,10 @@ order=-1
 
 [item:skill.tex]
 archive=true
-column=233
+column=26
 encoding=UTF-8
 highlight=LaTeX
-line=56
+line=77
 mode=LaTeX
 open=true
 order=0
@@ -226,27 +216,27 @@ CursorLine=10
 JumpList=
 ViMarks=
 
+[view-settings,view=0,item:parts/api.tex]
+CursorColumn=182
+CursorLine=162
+JumpList=
+ViMarks=
+
 [view-settings,view=0,item:parts/extensions.tex]
 CursorColumn=13
 CursorLine=39
 JumpList=
 ViMarks=
 
-[view-settings,view=0,item:parts/normalform.tex]
-CursorColumn=232
-CursorLine=14
-JumpList=
-ViMarks=
-
 [view-settings,view=0,item:parts/semantics.tex]
-CursorColumn=0
-CursorLine=0
+CursorColumn=417
+CursorLine=20
 JumpList=
 ViMarks=
 
 [view-settings,view=0,item:parts/serialization.tex]
-CursorColumn=0
-CursorLine=188
+CursorColumn=31
+CursorLine=263
 JumpList=
 ViMarks=
 
@@ -263,7 +253,7 @@ JumpList=
 ViMarks=
 
 [view-settings,view=0,item:skill.tex]
-CursorColumn=233
-CursorLine=56
+CursorColumn=26
+CursorLine=77
 JumpList=
 ViMarks=
