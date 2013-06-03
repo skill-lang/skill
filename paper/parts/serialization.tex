@@ -238,30 +238,14 @@ The general strategy is:
 
 Let $d$ be the deserialization function -- basically the inverse function of \den{\_}.
 
-$d(01 04 64 61  74 65 01 00  01 00 01 00  0B 01  01 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
-
-$=d(01)d(04 64 61  74 65)d(01 00  01 00 01 00  0B 01  01 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
-
-$=[d(04) d(64 61  74 65)] d(01 00  01 00 01 00  0B 01  01 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
-
-$=[date] d(01 00  01 00 01 00  0B 01  01 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
-
-$=[date] d(01) d(00  01 00 01 00  0B 01  01 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
-
-$=[date] d(01) d(00) d(01 00 01 00  0B 01  01 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
-
-$=[date] d(01) d(00) d(01 00 01) 00  0B 01  01 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
-
-$=[date] d(01) d(00) d(01 00 01) d(00) 0B 01  01 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
-
-$=[date] d(01) d(00) d(01 00 01) d(00) d(0B 01)  01 02  0A 01 FF FF  FF FF FF FF  FF FF FF)$
-
-$=[date] [date \{d(00) d(0B 01)\}] d( 01 02 0A 01 FF FF  FF FF FF FF  FF FF FF)$
-
-$=[date] [date \{v64\ date\}] d(01 02) d(0A 01 FF FF  FF FF FF FF  FF FF FF)$
-
-$=[date] [date \{v64\ date\}] pool\{date, 2, date=[d(01 FF FF  FF FF FF FF  FF FF FF)]\}$
-
-$=[date] [date \{v64\ date\}] pool\{date, 2, date=[1,d(FF FF  FF FF FF FF  FF FF FF)]\}$
-
-$=[date] [date \{v64\ date\}] pool\{date, 2, date=[1,-1]\}$
+$d(01 04 64 61  74 65 01 00  02 00 01 00  0B 01 0A 01   FF FF FF FF  FF FF FF FF  FF)$\\
+$=d(01) d(04 64 61  74 65 01 00  02 00 01 00  0B 01 0A 01   FF FF FF FF  FF FF FF FF  FF)$\\
+$=d(01) d(04) d(64 61  74 65 01 00  02 00 01 00  0B 01 0A 01   FF FF FF FF  FF FF FF FF  FF)$
+$=d(01) d(04) d(64 61  74 65) d(01 00  02 00 01 00  0B 01 0A 01   FF FF FF FF  FF FF FF FF  FF)$
+$=string[1:"date"] d(01 00  02 00 01 00  0B 01 0A 01   FF FF FF FF  FF FF FF FF  FF)$
+$=string[1:"date"] d(01) d(00) d(02) d(00) d(01) d(00  0B 01 0A 01   FF FF FF FF  FF FF FF FF  FF)$
+$=string[1:"date"] date[T:date[\_] 1:\_ 2:\_ d(00  0B 01 0A 01   FF FF FF FF  FF FF FF FF  FF)$
+$=string[1:"date"] date[T:date[d(00  0B 01)] 1:\_ 2:\_ d(0A 01   FF FF FF FF  FF FF FF FF  FF)$
+$=string[1:"date"] date[T:date[v64 date] 1:\_ 2:\_ d(0A 01   FF FF FF FF  FF FF FF FF  FF)$
+$=string[1:"date"] date[T:date[v64 date] 1:\_ 2:\_ d(01   FF FF FF FF  FF FF FF FF  FF)]$
+$=string[1:"date"] date[T:date[v64 date] 1:[1] 2:[-1]]$
