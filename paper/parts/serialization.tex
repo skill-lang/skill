@@ -21,7 +21,7 @@ In general it is assumed that the serialization process is split into the follow
 
 \subsection{General File Layout}
 
-The file layout is optimized for lazy loading of stored data. It does also support type-safe and consistent treatment of unknown data structures. In order to achieve this, we have to store the type system used by the file together with the stored data. The type system itself is using strings for its representation, thus we have motivated the following layout\footnote{The format is similar to skill itself; necessary extensions such as two dimensional variable length arrays should be self-explanatory.}:
+The file layout is optimized for lazy loading of stored data. It does also support type-safe and consistent treatment of unknown data structures. In order to achieve this, we have to store the type system used by the file together with the stored data. The type system itself is using strings for its representation, thus we have motivated the following layout.
 
 \begin{verbatim}
 utf8[][] stringPool
@@ -30,14 +30,14 @@ while(!EOF){
   string typeName
   string superTypeName
   option(v64 basePoolStartIndex; iff has superType)
-  v64 elementCount
+  v64 sizeCount
   [[restrictions]]
   v64 fieldCount
   foreach f in fields {
     [[f.restrictions]]
     [[f.type]]
     string f.name
-    @as(f.T[elementCount])
+    @as(f.T[sizeCount])
     i8[] f.elements
   }
 }
