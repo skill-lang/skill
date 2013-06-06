@@ -1,9 +1,42 @@
 \section{Motivation}
 
-This paper presents an approach to serializing objects, which is tailored for usability, performance and portability. In order to achieve these goals, in contrast to XML, we will sacrifice generality and human readability of the serialized format. Unlike other general serialization mechanisms, we provide explicit support for extension points in the serialized data, in order to provide a maximum of upward compatibility and extensibility.
+Many industrial and scientific projects suffer from platform or language dependent representation of their core data structures. These problems often cause software engineers to stick with outdated tools or even programming languages, thus causing a lot of frustration. This does not only increase the burden of hiring new project members, but can ultimately cause a project to die unnecessarily.
 
-The primary target of the proposed serialization mechanism are users which have to provide several tools with large amounts of data in a type safe and fast manner, but without the \todo{hier muss noch was wegen version resilience, small footprint, den daten, die man so üblicherweise hat (~1000 objekte eines typs, pointer, etc) und den mehrfachen sichten über verschiedene spezifikationen rein. Außerdem sollte man erwähnen, dass man hier den reflection mechanismus for free bekommt}
-\todo{hier vielleicht sagen, dass die erwartete zahl von instanzen im bereich [$10^2$;$10^9$] liegt}
+The approach presented in this paper provides means of platform and language independent specification of serializable data structures and therefore a safe way to let old tools of a tool suite talk to the knew ones, without even the need of recompiling the old ones.
+
+In order to achieve this goal, we introduce two new concepts:
+
+The first one is an easy to use specification language for data structures providing simple data types like integers and strings, abstract data types like sets and maps, type safe pointers, extension points and single inheritance.
+
+The second one is a formalized mapping of specified types to a bitwise representation of stored objects. The mapping is very compact and therefore scalable, easy to understand and therefore easy to bind to a new language. It does encode the type system and can therefore provide a maximum of upward and downward compatibility, while maintaining type safety at the same time. It allows for a maximum of safety when it comes to manipulating data that unknown to the generated interface, while maintaining high decoding and encoding speeds\footnote{The serialization and deserialization operations are linear in the size of the input/output file.}.
+
+In contrast to other serialization formats such as XML, the serializable data can not be viewed or modified with a text editor. This however does not mean, that it is not human readable, because one can provide a human usable editor to edit arbitrary skill files.
+
+A further improvement over XML is, that the reflective usage of stored data is expected to be quite rare, because the binding generator is able to generate an interface that ensures type safety of modifications and provides a nice integration into the target language.
+
+The expected file sizes range from 1 MiB to 2 GiB, while having virtually no relevant numerical limits in the file size\footnote{There are practical limits, such as Java having array lengths limited to ~$2^{31}$ or current file systems having a maximum file size limit that is roughly equivalent to the size of a file completely occupied by objects with a single field of a single byte. There will also be problems with raw I/O-Performance for very large files and an implementation of a binding generator, which can handle files not storable in the main memory is a tricky thing to do.}. Please note, that the skill file format is a lot more compact then equivalent XML files would be.
+It is expected, that files contain objects of hundreds of types with thousands of instances each. If a type in such a file would contain in average three pointers, the file size would still be around a mega byte, which is due to the explicit design goal of having a very small footprint. This will also lead to high load and store performance, because the raw disk speed will usually be the limiting factor.
+
+
+\subsection{Scientific Contributions}
+
+This section is a very concise representation of contributions, that in part have already been mentioned above and in parts, will be mentioned much later.
+
+The suggested serialization format and serialization language offer all of the following features at the same time:
+\begin{itemize}
+ \item a small footprint and therefore high decoding speeds
+ \item a fully reflective type encoding
+ \item type safe storage of pointers both to known and unknown types\footnote{I.e. regular references and annotations.}
+ \item the specification of a file format is modular\footnote{I.e. it can be distributed over many files.} and easy to use
+ \item no tool using a common intermediate representation has to know the complete specification. It is even possible to strip away or add individual fields of commonly used types.
+ \item the coding is platform and language independent
+ \item the coding offers a maximum of downward \textbf{and} upward compatibility
+ \item a programmer is communicating through a generated interface, which allows programmers knowing nothing about skill to interact with it, ensures type safety easily and allows programmers to write tools in the language they know the best\footnote{This is a problem especially in the scientific community, where many researchers work on similar problems but on completely different tools.}
+ \item stored data, that is never needed by a tool, will never be touched
+\end{itemize}
+
+Any of the arguments above have already been made in various contexts \todo{cite, cite, cite; llvm tutorial ``llvm and perl'', platform independent javabytecode, IDL, ada serialization, custom binary formats}, but there is no solution bringing all these demands together into a single product that does the job automatically.
+
 
 \subsection{Related Work}
 
@@ -38,6 +71,11 @@ A concise description of IDL can be fonud in \todo{ref David Lamb}. It seems not
 \subsection*{Apatche Thrift \& Protobuf}
 
 Lacks subtypeing. Protobuf has a overly complex notation language. Both seem to be optimized for network protocols, thus they do not have storage pools, which are the foundation of our serialization approach and an absolute requirement for some of our features, such as hints (see section \ref{hints}).
+
+
+\subsection*{Java Bytecode, LLVM/IR and others}
+
+Although Java Bytecode and the LLVM intermediate representation are hand crafted formats, they served as a guiding example in many ways.
 
 
 \subsection*{Language Specific}

@@ -147,7 +147,7 @@ Strings should not contain 0 characters, because this may cause problems with la
 
 The language offers several compound types. Sets, Lists and auto sized Arrays, i.e. arrays without an explicit size, are basically views onto the same kind of serialized data, i.e. they are a length encoded list of elements of the supplied base type. Arrays are expected to have a constant size, i.e. they are not guaranteed to be resizable. Sets are not allowed to contain the same element twice.
 All ADTs will be mapped to their closest representation in the target language, while preserving these properties.
-Maps are viewed as a representation of serializable partial functions. Therefore they can contain other map types as their second type argument, which is basically an instance of currying.
+Maps are viewed as a representation of serializable partial functions. Therefore they can contain other map types as their second type argument, which is basically an instance of currying. Maps are expected to be sparse, i.e. with less then half their fields being non default values.
 
 \subsection{NULL Pointer}
 
