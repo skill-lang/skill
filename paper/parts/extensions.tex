@@ -1,6 +1,8 @@
 \section{Type Annotations}
 
 \subsection{Restrictions}
+\label{restrictions}
+
 Some invariants can be added to declarations and fields. These invariants can occur at the same place as comments, but can occur in any number. Invariants start with an \textsc{@} followed by a predicate. Each predicate has to supply a default argument \texttt{\%}, such that using only default arguments would not imply a restriction.
 If multiple predicates are annotated, the conjunction of them forms the invariant.
 The set of legal predicates is explained below.
@@ -180,7 +182,7 @@ Signature: constantLengthPointer()\footnote{The length of the name is intended.}
 
 Defaults: none.
 
-\begin{lstlisting}[label=treeExample,caption=Examples,language=skill]
+\begin{lstlisting}[label=constantLengthPointerExample,caption=Examples,language=skill]
 /* stored points to information may exceed the available main memory, thus we have to access it directly from disk */
 PointsToTargets {
   @constantLengthPointer

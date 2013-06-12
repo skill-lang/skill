@@ -148,6 +148,7 @@ The order in which pools are serialized is currently unrestricted.
 
 
 \subsection{Pool Elements}
+\label{serialization:elements}
 
 In this section, we want to describe the serialization of individual fields using the function $\den{\_}_\tau$. The serialization of an objects takes places by serializing all its fields into the stream. In this section, we assume that the three functions defined in the last section are implicitly converted to streams using the v64 encoding. We assume further, that compound types provide a function $size: \mathcal{T} → \mathcal{I}$, which returns the number of elements stored in a given field.
 Let $f$ be a field of type $t$, then $\den{f}$ is defined as\footnote{We will use C-Style hexadecimal integer literals for integers in streams.}
@@ -213,6 +214,8 @@ Let $f$ be a field of type $t$, then $\den{f}$ is defined as\footnote{We will us
    \den{21+reflectionPoolIndex(t)}_{v64} & t \in \mathcal{U}\\
    \end{array} \right.$
 \end{itemize}
+Note that \textit{id}s of restrictions and types a listed in appendix \ref{app:constants}.
+
 
 \subsection{Endianness}
 

@@ -44,7 +44,7 @@ There are many approaches similar to ours, but most of them have a different foc
 
 \subsection*{XML}
 
-\gls{xml} is a file format. The main differences are:
+\gls{xml} is a file format (defined in \cite{xml11}). The main differences are:
 \begin{itemize}
  \item[+] XML can be manipulated with a text editor\footnote{Whereas skill requires a special editor, which will be provided by us eventually.}.
  \item[+] It is easier to write a libXML for a new language than to write a \gls{skill} backend\footnote{This is only a relevant point if no bindings exist for the language that you want to use.}.
@@ -57,7 +57,7 @@ There are many approaches similar to ours, but most of them have a different foc
 
 \subsubsection*{XML Schema definitions}
 
-The description language itself is more or less equivalent to most schema definition languages such as \gls{xsd} \todo{cite w3c}. The downside is that schema definitions have to operate on XML and can not directly be used with a binary format. There is also
+The description language itself is more or less equivalent to most schema definition languages such as \gls{xsd} (as described in \cite{xsd11-1,xsd11-2}). The downside is that schema definitions have to operate on XML and can not directly be used with a binary format. There is also
 no way to generate code for some client languages, including Ada, from a schema definition. For obvious reasons, there is no way to refer to other \gls{xml} documents from a \gls{skill} file. If this is a requirement, one might choose to stick with XML.
 
 We feel that the \gls{skill} specification language is easier to use and existing specifications are a lot easier to read then \gls{xsd} files.
