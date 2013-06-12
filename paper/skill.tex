@@ -59,14 +59,14 @@ frameshape={nnn}{n}{y}{nyr},
 
 \renewcommand{\abstractname}{Acknowledgements}
 \begin{abstract}
-Main criticis: Erhard Plödereder and Martin Wittiger.
+Main critics: Erhard Plödereder and Martin Wittiger.
 
-Additional criticis: Dominik Bruhn.
+Additional critics: Dominik Bruhn.
 \end{abstract}
 
 \todo{leider wird man nicht um einen glossar rumkommen. ABI, API, super type, base type, ...}
 \todo{man muss klar definieren, was groundtypes und was basetypes sind und die begriffe dann auch konsistent benutzen}
-\todo{string in *unique string* o.ä. umbenennen, um verwirrung bei C Programmierern vorzubeugen}
+\todo{namensäquivalenz muss immernoch mit lowercase arbeiten, wie es u.a. in Ada ist; die Konvention ist CamelCase und backends sind angehalten CamelCase in die entsprechende konvention der ausgabesprache zu übertragen, z.B. indem man in ada alles in uppercase schreibt und vor den inneren großbuchstaben einen \_ einfügt, falls es nur einer ist}
 
 
 \tableofcontents
@@ -120,6 +120,8 @@ True comments with \verb/# ... \n/?
 Alternativ kann man die reflection data aus dem ReflectionPool als Eingabesprache für einen Generator benutzen.
 
 Fun fact: Garbage Collection for serializable objects comes for free, if objects are always held in storage pools.
+
+Add generic/template import statements, which allow to import files together with a substitution. That way one can create more complex ADTs such as B-Trees. This feature is not a priority and only useful for large files and projects and requires ascription to yield the desired effect automatically.
 
 \newpage
 \todos

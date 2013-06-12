@@ -4,7 +4,7 @@ img_extIsRegExp=false
 img_extensions=.eps .jpg .jpeg .png .pdf .ps .fig .gif
 kileprversion=2
 kileversion=2.1.3
-lastDocument=parts/motivation.tex
+lastDocument=parts/extensions.tex
 masterDocument=
 name=paper
 pkg_extIsRegExp=false
@@ -121,23 +121,23 @@ order=-1
 
 [item:parts/api.tex]
 archive=true
-column=343
+column=610
 encoding=UTF-8
 highlight=LaTeX
 line=3
 mode=LaTeX
 open=true
-order=3
+order=2
 
 [item:parts/extensions.tex]
 archive=true
-column=141
+column=143
 encoding=UTF-8
 highlight=LaTeX
-line=137
+line=49
 mode=LaTeX
-open=false
-order=3
+open=true
+order=4
 
 [item:parts/motivation.aux]
 archive=true
@@ -156,18 +156,18 @@ encoding=UTF-8
 highlight=LaTeX
 line=77
 mode=LaTeX
-open=true
+open=false
 order=1
 
 [item:parts/semantics.tex]
 archive=true
-column=303
+column=207
 encoding=UTF-8
 highlight=LaTeX
-line=140
+line=135
 mode=LaTeX
 open=true
-order=2
+order=1
 
 [item:parts/serialization.tex]
 archive=true
@@ -191,13 +191,13 @@ order=-1
 
 [item:parts/zzCoreFeatures.tex]
 archive=true
-column=18
+column=65
 encoding=UTF-8
 highlight=LaTeX
-line=46
+line=41
 mode=LaTeX
-open=false
-order=-1
+open=true
+order=3
 
 [item:parts/zzV64.tex]
 archive=true
@@ -211,10 +211,10 @@ order=-1
 
 [item:skill.tex]
 archive=true
-column=0
+column=346
 encoding=UTF-8
 highlight=LaTeX
-line=58
+line=68
 mode=LaTeX
 open=true
 order=0
@@ -226,14 +226,14 @@ JumpList=
 ViMarks=
 
 [view-settings,view=0,item:parts/api.tex]
-CursorColumn=343
+CursorColumn=610
 CursorLine=3
 JumpList=
 ViMarks=
 
 [view-settings,view=0,item:parts/extensions.tex]
-CursorColumn=141
-CursorLine=137
+CursorColumn=143
+CursorLine=49
 JumpList=
 ViMarks=
 
@@ -244,8 +244,8 @@ JumpList=
 ViMarks=
 
 [view-settings,view=0,item:parts/semantics.tex]
-CursorColumn=303
-CursorLine=140
+CursorColumn=207
+CursorLine=135
 JumpList=
 ViMarks=
 
@@ -262,13 +262,13 @@ JumpList=
 ViMarks=
 
 [view-settings,view=0,item:parts/zzCoreFeatures.tex]
-CursorColumn=18
-CursorLine=46
+CursorColumn=65
+CursorLine=41
 JumpList=
 ViMarks=
 
 [view-settings,view=0,item:skill.tex]
-CursorColumn=0
-CursorLine=58
+CursorColumn=346
+CursorLine=68
 JumpList=
 ViMarks=

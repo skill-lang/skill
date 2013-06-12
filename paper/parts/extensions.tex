@@ -47,7 +47,7 @@ nonNegativeDouble {
 \end{lstlisting}
 
 \subsection*{NonNull}
-Declares that an indexed field may not be null.
+Declares that an indexed field may not be null. Note that this will take away the default value and can therefore cause compatibility problems.
 
 Applies to Field: Any indexed Type.
 
@@ -180,6 +180,29 @@ Note: In case of the File example, there is no way to violate the tree property.
 Note: It is legal for trees to form forests.
 
 
+\subsubsection*{Constant Length Pointer}
+The pointer is serialized using i64 instead of v64. Can be used on regular references and annotations. This restriction makes only sense if the generated supports lazy reading of partial storage pool and if the files that have to be dealt with would not fit into the main memory of the target machine. Using this restriction will most certainly increase the file size.
+
+This restriction is serializable and thus, does not affect compatibility in any way.
+
+Applies to fields.
+
+Signature: constantLengthPointer()\footnote{The length of the name is intended.}
+
+Defaults: none.
+
+\begin{lstlisting}[label=treeExample,caption=Examples,language=skill]
+/* stored points to information may exceed the available main memory, thus we have to access it directly from disk */
+PointsToTargets {
+  @constantLengthPointer
+  Context context;
+  @constantLengthPointer
+  HeapObject object;
+  @constantLengthPointer
+  PointsToSet targets;
+}
+\end{lstlisting}
+
 \subsection{Hints}
 \label{hints}
 
@@ -189,13 +212,13 @@ Hints are annotations that start with a single \verb/!/ and are followed by a hi
 Try to use a data structure that provides fast (random) access. E.g. an array list.
 
 \subsection*{Modification}
-Try to use a data structure that provides fast (random) modification. E.g. a linked list.
+Try to use a data structure that provides fast (random) modification. E.g. a linked list\footnote{Which has faster insert/delete operations than an array list.}.
 
 \subsection*{Unique}
 Serialization shall unify objects with exactly the same serialized form. In combination with the @unique restriction, there shall at most be an error reported on deserialization.
 
 \subsection*{Distributed}
-Use a static map instead of fields to represent fields of definitions. This is usually an optimization if a definition has a lot of fields, but most use cases require only a small subset of them. Because hints do not modify the binary compatibility, some clients are likely to define the fields to be distributed or even lazy. Note that this will increase both the memory footprint and the access time for the given field and will only be a benefit for memory-cache locality reasons. The internal representation will change from \texttt{f.a}, i.e. a regular field, to \texttt{pool.a[f]}, i.e a map in the storage pool which holds the field data for each instance. Note that the presence of distributed, lazy or ignored fields will require objects to carry a pointer to their storage pool, which may eliminate the cache savings completely.
+Use a static map instead of fields to represent fields of definitions in memory. This is usually an optimization if a definition has a lot of fields, but most use cases require only a small subset of them. Because hints do not modify the binary compatibility, some clients are likely to define the fields to be distributed or even lazy. Note that this will increase both the memory footprint and the access time for the given field and will only be a benefit for memory-cache locality reasons. The internal representation will change from \texttt{f.a}, i.e. a regular field, to \texttt{pool.a[f]}, i.e a map in the storage pool which holds the field data for each instance. Note that the presence of distributed, lazy or ignored fields will require objects to carry a pointer to their storage pool, which may eliminate the cache savings completely.
 
 \subsection*{Lazy}
 Deserialize the fields data only if it is actually used. Lazy implies distributed.

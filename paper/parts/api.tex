@@ -1,7 +1,7 @@
 \section{In Memory Representation}
 This section is to describe the \gls{api} provided to the programmer and the representation of objects inside memory. Both are not mandatory and can depend on the target language and implementation.
 
-\todo{Hier muss man noch etwas darüber sagen, was man macht, wenn die in memory representation nicht mit der repräsentation in datein übereinstimmt. Hier bieten sich die beiden formen invariante typen und größere typen an. Das format darf sich im contravianten fall aber nicht ändern, weil man sonst die aufwärtskompatibilität gefährden würde.}
+\todo{Hier muss man noch etwas darüber sagen, was man macht, wenn die in memory representation nicht mit der repräsentation in datein übereinstimmt. Hier bieten sich die beiden formen invariante typen und größere typen an. Das format darf sich im contravianten fall aber nicht ändern, weil man sonst die aufwärtskompatibilität gefährden würde. Man kann noch über einen modus *enforced downcasts* nachdenken, der allerdings unweigerlich fehler verursachen wird, wenn downcasts bei classen auftreten, die inkompatibel sind. Außerdem werden defaultwerte erzeugt und die semantik von integer feldern ist gefährdet.}
 
 \subsection{API}
 
