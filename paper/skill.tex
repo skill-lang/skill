@@ -64,8 +64,6 @@ Main critics: Erhard Plödereder and Martin Wittiger.
 Additional critics: Dominik Bruhn.
 \end{abstract}
 
-\todo{leider wird man nicht um einen glossar rumkommen. ABI, API, super type, base type, ...}
-\todo{man muss klar definieren, was groundtypes und was basetypes sind und die begriffe dann auch konsistent benutzen}
 \todo{namensäquivalenz muss immernoch mit lowercase arbeiten, wie es u.a. in Ada ist; die Konvention ist CamelCase und backends sind angehalten CamelCase in die entsprechende konvention der ausgabesprache zu übertragen, z.B. indem man in ada alles in uppercase schreibt und vor den inneren großbuchstaben einen \_ einfügt, falls es nur einer ist}
 
 
@@ -79,27 +77,6 @@ Additional critics: Dominik Bruhn.
 \include{parts/serialization}
 \include{parts/api}
 
-
-\section{Case Study: Skill Encoded XML}
-Although it is not very clever to use skill for encoding xml files, because one basically looses all benefits from both worlds, we will do so as demonstration for the compression yielded by the skill serialization scheme. Honestly most effects will be obtained from strings being stored in the string pool. Because most of the validation mechanisms directly built into xml are not required in skill and for the sake of simplicity, we will strip xml to its bare payload:
-\begin{lstlisting}[label=sex,caption=Skill Encoded XML]
-XML {
-  string xmlDecl;
-  Element element;
-}
-Element {
-  string name;
-  map<string, string> attributes;
-  /** @note we will supply the empty string, if no
-            content is present */
-  string content;
-  Element[] children;
-}
-\end{lstlisting}
-
-\todo{compare size of some svg files}
-\todo{compare speed of load/store of those svg files}
-\todo{some final comments to say, that the comparison is of course not completely fair, and that it is advised against mixing xml and skill in most cases}
 
 \section{Future Work}
 

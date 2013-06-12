@@ -13,14 +13,13 @@ If predicates, which are not directly applicable for compound types are used on 
 
 
 \subsection*{Range}
-Range restrictions are used to restrict integers and floats.
-\todo{Falls $0 \notin [min,max]$ wird der default $min$.}
+Range restrictions are used to restrict integers and floats. Note that this will change the default value of the argument field to \textit{min} if $0 \notin [min,max]$.
 
 Applies to fields: Integer, Float.
 
 Signature: \verb/range(min, max)/: $\alpha \times \alpha → bool$
 
-Defaults: obvious.
+Defaults: the smallest/largest value of the argument type.
 
 \begin{lstlisting}[label=rangeExample,caption=Examples,language=skill]
 natural {

@@ -30,17 +30,14 @@ A const field can be used in order to create guards or version numbers, as well 
 The language binding will create a field with the given type, but the content is transparent to the serialization mechanism. This is useful if the inference of the content of a field is likely to be faster then storing it, e.g. if it can be inferred lazily.
 
 \subsection{Abstract Data Types}
-\todo{rewrite section; it emerged from the fusion of two sections talking about ADTs}
 
-\glspl{adt} showed to be useful and to increase the usability and understandability of the resulting code and file format.
+\glspl{adt} (in the sense of \cite{adts}) showed to be useful and to increase the usability and understandability of the resulting code and file format. The existential type characteristics can even be used by \gls{skill} using restrictions and hints. In the file format, \glspl{adt} are represented using arrays and pairs as explained in detail in section \ref{serialization:elements}.
 
-\glspl{adt} are represented using arrays and pairs. \todo{ref encoding scheme which will be explained later; somewhat confusing}
-
-The type system has a built-in notion of arrays, maps, lists and sets. Note that all of them are, from the view of serialization, equivalent to length encoded arrays. Their purpose is to increase the usability of the generated \gls{api}.
+The type system has a built-in notion of arrays, maps, lists and sets. Note that all of them are, from the view of serialization, equivalent to length encoded arrays. Their main purpose is to increase the usability of the generated \gls{api}.
 
 
 \subsection{Comments}
-Comments provided in the skill file will be emitted into the generated code\footnote{If the target language does not allow for C-Style comments, the comments will be transformed in an appropriate way.}, thus allowing a user to get tool-tips in his IDE showing him this documentation. \todo{sprache!}
+Comments provided in the \gls{skill} specification will be emitted into the generated code\footnote{If the target language does not allow for C-Style comments, the comments will be transformed in an appropriate way.}. This approach enables users to get tool-tips in an IDE showing him this documentation. Future revisions are expected to expand the notion of a comment to match the of most documentation generation systems, such as doxygen \cite{doxygen} or javadoc \cite{javadoc}.
 
 
 
@@ -48,7 +45,7 @@ Comments provided in the skill file will be emitted into the generated code\foot
 
 \todo{ein paar einleitende worte}
 
-\begin{figure}[H]
+\begin{figure}[ht]
 \centering
 \tikz [small mindmap, every node/.style=concept, concept color=black!20,
 grow cyclic,
