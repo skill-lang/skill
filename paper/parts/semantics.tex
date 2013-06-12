@@ -4,7 +4,7 @@
 This section will describe the meaning of individual keywords.
 
 \subsection{Includes}
-The file referenced by the with statement is processed as well. The declarations of all files reachable over \texttt{with} statements are collected, before any declaration is evaluated.
+The file referenced by the with statement is processed as well. The declarations of all files transitively reachable over \texttt{with} statements are collected, before any declaration in any file is evaluated.
 
 \subsection{\texttt{annotation}}
 The type has a tag and a size, which allows it to be inserted at any annotation locations. This is useful in order to provide extension points in the file format. The file will still be readable by older implementations, which are not able to map any meaningful type into the annotation. A language binding is expected to provide something like an annotation proxy, which is used to represent annotation objects. If an application tries to get the object behind the proxy for an object of an unknown type, this will inevitably result in an error or exception. Therefore language bindings shall provide means of inspecting whether or not the type of the object behind an annotation is known.
