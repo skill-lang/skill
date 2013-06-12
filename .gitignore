@@ -13,6 +13,9 @@ local.properties
 .settings/
 .loadpath
 
+# kile backups
+*.tex.backup
+
 # External tool builders
 .externalToolBuilders/
 
