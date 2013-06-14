@@ -29,6 +29,7 @@ A const field can be used in order to create guards or version numbers, as well 
 \subsection{\texttt{auto}}
 The language binding will create a field with the given type, but the content is transparent to the serialization mechanism. This is useful if the inference of the content of a field is likely to be faster then storing it, e.g. if it can be inferred lazily.
 
+
 \subsection{Abstract Data Types}
 
 \glspl{adt} (in the sense of \cite{adts}) showed to be useful and to increase the usability and understandability of the resulting code and file format. The existential type characteristics can even be used by \gls{skill} using restrictions and hints. In the file format, \glspl{adt} are represented using arrays and pairs as explained in detail in section \ref{serialization:elements}.

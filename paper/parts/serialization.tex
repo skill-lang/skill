@@ -14,7 +14,7 @@ In general it is assumed that the serialization process is split into the follow
 \begin{enumerate}
  \item All objects to be serialized are collected. This is usually done using the transitive closure of an initial set.
  
- \item The items are organized into their storage pools, i.e. the index function is calculated.\todo{das ist nur die halbe wahrheit, weil man hier auch noch updates(im sinne von dynamischer logik:)) für modifikationen machen muss}
+ \item The items are organized into their storage pools, i.e. the index function is calculated. If the state was created by deserialization and indices have changed, fields using these indices have to be updated.
  
  \item The output stream is created as described below.
 \end{enumerate}
@@ -52,9 +52,9 @@ Writing objects of a pool requires the following functions: $baseTypeName: \math
 
 The basic idea behind the serialization format is to store the data grouped by type into storage pools. If objects are referred to from other objects, those references are given as an integer, which is interpreted as index into the respective storage pool. The NULL pointer is represented by the index 0.
 
-Each pool keeps a start index, which allows for the reconstruction of the complete object. A short example shall illustrate the basic concept. It contains five types A,B,C,D and N. Each has a single field of type $\tau$ which is used to simplify the representation. The type information for the objects in the base type pool can be inferred from the data stored in the pools using the links between the base type pool and the subtype pools (The \gls{baseType} start index (BPSI) field of pools with a super type -- shown as arrows). For the sake of readability, the name, size and count fields are omitted in the picture.
+Each pool keeps a start index, which allows for the reconstruction of the complete object. A short example (Fig. \ref{fig:serialization:pool}) shall illustrate the basic concept. It contains five types A,B,C,D and N. Each has a single field of type $\tau$ which is used to simplify the representation. The type information for the objects in the base type pool can be inferred from the data stored in the pools using the links between the base type pool and the subtype pools (The \gls{baseType} start index (BPSI) field of pools with a super type -- shown as arrows). For the sake of readability, the name, size and count fields are omitted in the picture.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 
 %NOTE: if this picture is used in a paper, colors have to be replaced by stippled lines
 \begin{tikzpicture}
@@ -142,6 +142,7 @@ Each pool keeps a start index, which allows for the reconstruction of the comple
  \draw[thick,black,->] (6,0.1) -- (6,-0.7) -- (2.5,-0.7) -- (2.5,0);
 \end{tikzpicture}
 \caption{The serialization scheme used to store objects into pools.}
+\label{fig:serialization:pool}
 \end{figure}
 
 The order in which pools are serialized is currently unrestricted.
