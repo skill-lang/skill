@@ -117,24 +117,6 @@ The given grammar of \gls{skill} already ensures that intuitive usage of the lan
 \end{itemize}
 
 
-%%% DEPRECATED: %%%
-% \subsection{Type Order}
-% 
-% Let $<_l$ be the lexical order. We define a partial order $\leq_t$ on $\mathcal{T}$ as follows:
-% \begin{itemize}
-%  \item $\forall t \in \mathcal{B}, s \in \mathcal{T}\setminus\mathcal{B}. t \leq_t s$
-%  \item $\forall t \in \mathcal{C}, s \in \mathcal{U}. t \leq_t s$
-%  \item $\forall s,t \in \mathcal{U}. t \leq_t s \leftarrow s <: t $\footnote{This is \textit{super types first}.}
-%  \item $\forall s,t \in \mathcal{U}. t \leq_t s = t \leq_l s\leftarrow \exists S \in \mathcal{U} \cup \{\bot\}. t <: S \wedge s <: S $\footnote{Types with the same or no supertype are order lexically.}
-% \end{itemize}
-% 
-% The informal short description is, first ground types, then compound types and user types at the end, where the forest of user types maintains its structure but is order using the lexical order of type names.
-% 
-% Notice, that this order corresponds to an left to right order in the types overview picture.
-% 
-% The missing order of compound types is left away intentionally, because it allows for the exchange of some type definition after publishing a format, e.g. \verb/t[] f/ can be exchanged with \verb/list<t> f/.
-
-
 \subsection{Strings}
 
 Strings are conceptually a variable length sequence of utf8-encoded unicode characters. The in memory representation will try to make use of language features such as java.lang.String or std::u16string. The serialization is described in section \ref{serialization}. If a language demands 0-termination in strings, the language binding will ensure this.
