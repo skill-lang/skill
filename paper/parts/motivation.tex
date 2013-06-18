@@ -47,7 +47,7 @@ There are many approaches similar to ours, but most of them have a different foc
 \gls{xml} is a file format (defined in \cite{xml11}). The main differences are:
 \begin{itemize}
  \item[+] XML can be manipulated with a text editor\footnote{Whereas skill requires a special editor, which will be provided by us eventually.}.
- \item[+] It is easier to write a libXML for a new language than to write a \gls{skill} backend\footnote{This is only a relevant point if no bindings exist for the language that you want to use.}.
+ \item[+] It is easier to write a libXML for a new language than to write a \gls{skill} back-end\footnote{This is only a relevant point if no bindings exist for the language that you want to use.}.
  \item[-] XML is not an efficient encoding in terms of (disk-)space usage
  \item[-] XML is not type safe. This can be overcome partially by the \gls{xsd}.
  \item[-] XML does not provide references to other objects out of the box.
@@ -84,7 +84,7 @@ The published format is stated to be ASCII (\cite{lamb87} §2.4), which will cau
 
 \subsection*{Apatche Thrift \& Protobuf}
 
-Both lack subtyping. Protobuf has an overly complex notation language. Both seem to be optimized for network protocols, thus they do not have storage pools, which are the foundation of our serialization approach and an absolute requirement for some of our features, such as hints (see section \ref{hints}).
+Both lack sub-typing. Protobuf has an overly complex notation language. Both seem to be optimized for network protocols, thus they do not have storage pools, which are the foundation of our serialization approach and an absolute requirement for some of our features, such as hints (see section \ref{hints}).
 
 
 \subsection*{Java Bytecode, LLVM/IR and others}

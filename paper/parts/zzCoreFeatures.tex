@@ -10,8 +10,6 @@ This section describes some errors regarding ill-formatted files, which must be 
 
 \item If the deserialization of a storage pool does not consume exactly the \texttt{sizeBytes} in its header, an error must be reported. Note: This is a strong indicator for a format change.
 
-\item If the serialized type order of storage pools does not match the expected type order, an error must be reported.
-
 \item If the serialized type information contains cycles, an error must be reported, which contains at least all type names in the detected cycle and the base type, if one can be determined.
 
 \item If a storage pools contains elements which, based on their location in the base pool, should be subtypes of some kind, but have no respective sub type storage pool, an error must be reported with at least, the base type name, the most exact known type name and the adjacent base type names.

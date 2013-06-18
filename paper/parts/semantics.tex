@@ -7,7 +7,7 @@ This section will describe the meaning of individual keywords.
 The file referenced by the with statement is processed as well. The declarations of all files transitively reachable over \texttt{with} statements are collected, before any declaration in any file is evaluated.
 
 \subsection{\texttt{annotation}}
-The type has a tag and a size, which allows it to be inserted at any annotation locations. This is useful in order to provide extension points in the file format. The file will still be readable by older implementations, which are not able to map any meaningful type into the annotation. A language binding is expected to provide something like an annotation proxy, which is used to represent annotation objects. If an application tries to get the object behind the proxy for an object of an unknown type, this will inevitably result in an error or exception. Therefore language bindings shall provide means of inspecting whether or not the type of the object behind an annotation is known.
+Annotations are designed to be the main extension points in a file format. Annotations are basically typed pointers to arbitrary types. This is achieved by adding the type of the pointer to a regular reference. A language binding is expected to provide something like an annotation proxy, which is used to represent annotation objects. If an application tries to get the object behind the proxy for an object of an unknown type, this will usually result in an error or exception\footnote{The reflection mechanism allows for other solutions, but raising an exception is the most obvious reaction.}. Therefore language bindings shall provide means of inspecting whether or not the type of the object behind an annotation is known.
 
 As we will see in section \ref{serialization}, annotations are roughly equivalent to the type definition
 \begin{verbatim}
@@ -117,21 +117,22 @@ The given grammar of \gls{skill} already ensures that intuitive usage of the lan
 \end{itemize}
 
 
-\subsection{Type Order}
-
-Let $<_l$ be the lexical order. We define a partial order $\leq_t$ on $\mathcal{T}$ as follows:
-\begin{itemize}
- \item $\forall t \in \mathcal{B}, s \in \mathcal{T}\setminus\mathcal{B}. t \leq_t s$
- \item $\forall t \in \mathcal{C}, s \in \mathcal{U}. t \leq_t s$
- \item $\forall s,t \in \mathcal{U}. t \leq_t s \leftarrow s <: t $\footnote{This is \textit{super types first}.}
- \item $\forall s,t \in \mathcal{U}. t \leq_t s = t \leq_l s\leftarrow \exists S \in \mathcal{U} \cup \{\bot\}. t <: S \wedge s <: S $\footnote{Types with the same or no supertype are order lexically.}
-\end{itemize}
-
-The informal short description is, first ground types, then compound types and user types at the end, where the forest of user types maintains its structure but is order using the lexical order of type names.
-
-Notice, that this order corresponds to an left to right order in the types overview picture.
-
-The missing order of compound types is left away intentionally, because it allows for the exchange of some type definition after publishing a format, e.g. \verb/t[] f/ can be exchanged with \verb/list<t> f/.
+%%% DEPRECATED: %%%
+% \subsection{Type Order}
+% 
+% Let $<_l$ be the lexical order. We define a partial order $\leq_t$ on $\mathcal{T}$ as follows:
+% \begin{itemize}
+%  \item $\forall t \in \mathcal{B}, s \in \mathcal{T}\setminus\mathcal{B}. t \leq_t s$
+%  \item $\forall t \in \mathcal{C}, s \in \mathcal{U}. t \leq_t s$
+%  \item $\forall s,t \in \mathcal{U}. t \leq_t s \leftarrow s <: t $\footnote{This is \textit{super types first}.}
+%  \item $\forall s,t \in \mathcal{U}. t \leq_t s = t \leq_l s\leftarrow \exists S \in \mathcal{U} \cup \{\bot\}. t <: S \wedge s <: S $\footnote{Types with the same or no supertype are order lexically.}
+% \end{itemize}
+% 
+% The informal short description is, first ground types, then compound types and user types at the end, where the forest of user types maintains its structure but is order using the lexical order of type names.
+% 
+% Notice, that this order corresponds to an left to right order in the types overview picture.
+% 
+% The missing order of compound types is left away intentionally, because it allows for the exchange of some type definition after publishing a format, e.g. \verb/t[] f/ can be exchanged with \verb/list<t> f/.
 
 
 \subsection{Strings}
@@ -143,7 +144,7 @@ Strings should not contain 0 characters, because this may cause problems with la
 
 \subsection{Compound Types}
 
-The language offers several compound types. Sets, Lists and auto sized Arrays, i.e. arrays without an explicit size, are basically views onto the same kind of serialized data, i.e. they are a length encoded list of elements of the supplied base type. Arrays are expected to have a constant size, i.e. they are not guaranteed to be resizable. Sets are not allowed to contain the same element twice.
+The language offers several compound types. Sets, Lists and auto sized Arrays\footnote{I.e. arrays, which do neither have constant size nor a size that is determined by the value of another field of the object.} are basically views onto the same kind of serialized data, i.e. they are a length encoded list of elements of the supplied base type. Arrays are expected to have a constant size, i.e. they are not guaranteed to be resizable. Sets are not allowed to contain the same element twice.
 All ADTs will be mapped to their closest representation in the target language, while preserving these properties.
 Maps are viewed as a representation of serializable partial functions. Therefore they can contain other map types as their second type argument, which is basically an instance of currying. Maps are expected to be sparse, i.e. with less then half their fields being non default values.
 

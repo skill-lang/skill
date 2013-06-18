@@ -54,10 +54,9 @@ Node {
 
 \subsection*{Unique}
 Objects stored in a storage pool have to be distinct in their serialized form, i.e. for each pair of objects, there has to be at least one field, with a different value.
+Because the combination of unique with sub-typing has counter intuitive properties, we decided that using the unique restriction together with a type that has sub- or super-types is considered an error.
 
-NOTE: This can cause difficulties in combination with sub-classing, because the uniqueness property must hold even on the part restricted to the topmost class declared to be unique.
-
-Applies to Declarations of indexed types.
+Applies to Declarations.
 
 Signature: \verb/unique()/
 
@@ -99,7 +98,7 @@ Defaults: none.
 \subsection*{Ascription}
 A language specific type can be ascribed to a field. The type has to be compatible to the fields actual type, because the ascription will not change the ABI in any way. The first argument is the language name. The second type is generator dependent, but should be related to types as they occur in local variable or field declaration in the respective language.
 
-Although this kind of restriction puts a heavy burden on the language generator and decreases readability a lot, it can be used to increase the usability of the generated interface a lot, because language features such es enums in Java or unions and bitfields in C++ can be used.
+Although this kind of restriction puts a heavy burden on the language generator and decreases readability a lot, it can be used to increase the usability of the generated interface a lot, because language features such es enums in Java or unions and bit fields in C++ can be used.
 
 Applies to fields.
 
@@ -121,53 +120,6 @@ System {
   i8 state
 }
 \end{lstlisting}
-
-
-
-\subsection*{Tree}
-The reference graph below created by objects of this type forms a tree. The type of the objects is irrelevant. Strings and fields with notree annotation, are not taken into account.
-
-Applies to Declarations or Field.
-
-Signature: \verb/tree()/
-
-Defaults: none.
-
-
-\subsubsection*{notree}
-Applies to field.
-
-Signature: \verb/notree()/
-
-Defaults: none.
-
-\begin{lstlisting}[label=treeExample,caption=Examples,language=skill]
-Sloc{...}
-@tree
-SyntaktikEntity{
-  /** not a tree, because several entities, might share them */
-  @notree Sloc sloc;
-  
-  SyntaktikEntity[] children;
-}
-Routine {
-  @notree
-  Routine[] callers;
-  @tree
-  Routine[] dominators;
-}
-
-@tree
-File {
-  File[] children;
-  /** several files could have the same name,
-       but strings are implicitly @notree */
-  string name;
-  string content;
-} 
-\end{lstlisting}
-Note: In case of the File example, there is no way to violate the tree property.
-Note: It is legal for trees to form forests.
 
 
 \subsubsection*{Constant Length Pointer}
@@ -192,6 +144,9 @@ PointsToTargets {
   PointsToSet targets;
 }
 \end{lstlisting}
+
+
+
 
 \subsection{Hints}
 \label{hints}
