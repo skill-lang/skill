@@ -38,13 +38,20 @@ The type system has a built-in notion of arrays, maps, lists and sets. Note that
 
 
 \subsection{Comments}
+
 Comments provided in the \gls{skill} specification will be emitted into the generated code\footnote{If the target language does not allow for C-Style comments, the comments will be transformed in an appropriate way.}. This approach enables users to get tool-tips in an IDE showing him this documentation. Future revisions are expected to expand the notion of a comment to match the of most documentation generation systems, such as doxygen \cite{doxygen} or javadoc \cite{javadoc}.
+
 
 
 
 \section{The Type System}
 
-\todo{ein paar einleitende worte}
+The description language and the file format are both intended to be \textit{type safe}. The notion of type safety is usually connected to a state transitioning system. In our context, the only observable state transitions are from the on-disk representation to the in-memory representation and vice versa. Thus with \textit{type safe} we want to state, that deserialization and serialization of data will not change the type of the data. It is further guaranteed that deserialized references will point to objects of the static type of the reference. Further, if one were to deserialize an object of an incompatible type, an error will be raised.
+
+
+These properties require some form of platform independent type system\footnote{In contrast to e.g. C, types have a known length and endianness.}, which is described in brevity in this section. The general layout of the file system is visualized in Fig. \ref{fig:types}.
+
+
 
 \begin{figure}[ht]
 \centering
@@ -80,17 +87,11 @@ child { node{Built-In Types}[clockwise from=-20]
   child{ node{annotation}}
 };
 \caption{Layout of the Type System}
+\label{fig:types}
 \end{figure}
 
-\Glspl{userType} can be seen as nonempty tuples over all types. \Glspl{builtInType} can be wrapped in order to give them special semantics. E.g. a time stamp can be created by:
-\begin{lstlisting}[label=timeExample,caption=Time,language=skill]
-time {
-  /** seconds since 1.1.1970 0:00 UTC. */
-  i64 date;
-}
-\end{lstlisting}
-
 \subsection*{Common Abbreviations}
+\label{types:abbreviations}
 
 We will use some common abbreviations for sets of types in the rest of the manual:
 
@@ -123,12 +124,26 @@ Strings are conceptually a variable length sequence of utf8-encoded unicode char
 
 Strings should not contain 0 characters, because this may cause problems with languages such as C.
 
+The API shall behave as if strings were defined with the hint \texttt{pure} and \texttt{unique} (see section \ref{hints}).
+
+
+\subsection{User Types}
+
+\Glspl{userType} can be interpreted as sets of type-name-pairs. \Glspl{builtInType} can be wrapped in order to give them special semantics\footnote{Note, that this will in fact create a record and is different to Adas renaming semantics; references to dates will be stored as pointers to date objects, thus it might be a good idea to make such time stamps unique.}. E.g. a time stamp can be created by:
+\begin{lstlisting}[label=timeExample,caption=Time,language=skill]
+time {
+  /** seconds since 1.1.1970 0:00 UTC. */
+  i64 date;
+}
+\end{lstlisting}
+
 
 \subsection{Compound Types}
 
 The language offers several compound types. Sets, Lists and auto sized Arrays\footnote{I.e. arrays, which do neither have constant size nor a size that is determined by the value of another field of the object.} are basically views onto the same kind of serialized data, i.e. they are a length encoded list of elements of the supplied base type. Arrays are expected to have a constant size, i.e. they are not guaranteed to be resizable. Sets are not allowed to contain the same element twice.
 All ADTs will be mapped to their closest representation in the target language, while preserving these properties.
 Maps are viewed as a representation of serializable partial functions. Therefore they can contain other map types as their second type argument, which is basically an instance of currying. Maps are expected to be sparse, i.e. with less then half their fields being non default values.
+
 
 \subsection{NULL Pointer}
 
