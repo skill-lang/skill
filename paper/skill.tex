@@ -15,7 +15,7 @@
 
 \usepackage{caption}
 \DeclareCaptionFont{white}{\color{white}}
-\DeclareCaptionFormat{listing}{\colorbox{gray}{\parbox{\textwidth}{#1#2#3}}}
+\DeclareCaptionFormat{listing}{\colorbox{gray}{\parbox{0.983\textwidth}{#1#2#3}}}
 \captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white}
 
 \usepackage{tikz}
@@ -36,7 +36,7 @@ breakatwhitespace=true,
 sensitive=false,
 morecomment=[s]{/*}{*/},
 morestring=[b]",
-frameshape={nnn}{n}{y}{nyr},
+frameshape={nnn}{n}{n}{nyn},
 }
 \lstset{emph={%  
     tagged,class,indexed%

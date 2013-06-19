@@ -31,10 +31,10 @@ while(!EOF){
   string superTypeName
   option(v64 basePoolStartIndex; iff has superType)
   v64 elementCount
-  [[restrictions]]
+  restriction[] REST
   v64 fieldCount
   foreach f in fields {
-    [[f.restrictions]]
+    restriction[] f.REST
     [[f.type]]
     string f.name
     @as(f.T[elementCount])
@@ -192,13 +192,13 @@ Let $f$ be a field of type $t$, then $\den{f}$ is defined as\footnote{We will us
  
  %map
  \item Maps are serialized from left to right by serializing the keyset and amending each key with the map structure which it points to. In case of Maps with two types, this is equal to a list of key value tuples.
- A field of type \verb/map<T,U,V>/ is serialized using a schema $ \den{size(f)} \circ \den{f.t_1} \circ \den{size(f[t_1])} \circ \den{f[t_1].u_1} \circ \den{f[t_1][u_1]} \circ \den{f[t_1].u_2} \circ \cdots \circ \den{size(f[t_2])} \circ \cdots \circ \den{f[t_n][u_m]}$. Note that we treat maps like map<T, map<U,V>>.
+ A field of type \verb/map<T,U,V>/ is serialized using a schema $ \den{size(f)} \circ \den{f.t_1} \circ \den{size(f[t_1])} \circ \den{f[t_1].u_1} \circ \den{f[t_1][u_1]} \circ \den{f[t_1].u_2} \circ \cdots \circ \den{size(f[t_2])} \circ \cdots \circ \den{f[t_n][u_m]}$. Note that we treat maps like map<T, map<U,V>\,>.
  
  %restrictions
- \item $\den{RESTRICTION} = \left\{ 
+ \item $\den{r}_{restriction} = \left\{ 
    \begin{array}{l l}
-     \emptyset, & id = \bot\\
-     \den{id}_{v64}\den{arg_1}_{string}\circ \cdots \circ \den{arg_n}_{string} & else
+     \emptyset, & r.id = \bot\\
+     \den{r.id}_{v64}\den{r.arg_1}_{string}\circ \cdots \circ \den{r.arg_n}_{string} & else
    \end{array} \right.$
  
  %types
@@ -212,10 +212,12 @@ Let $f$ be a field of type $t$, then $\den{f}$ is defined as\footnote{We will us
    18 \circ \den{T} & t = list<T>\\
    19 \circ \den{T} & t = set<T>\\
    20\circ \den{n}_{v64} \circ \den{T_1} \circ \cdots \circ \den{T_n} & t = map<T_i,\ldots,T_n>\\
-   \den{21+reflectionPoolIndex(t)}_{v64} & t \in \mathcal{U}\\
+   \den{21+storagePoolIndex(t)}_{v64} & t \in \mathcal{U}\\
    \end{array} \right.$
 \end{itemize}
-Note that \textit{id}s of restrictions and types a listed in appendix \ref{app:constants}.
+\textit{id}s of restrictions and types a listed in appendix \ref{app:constants}.
+
+Note that the function $storagePoolIndex$ is implicitly given by the order of storage pools appearing in a file and has therefore to be computed both upon serialization and deserialization.
 
 
 \subsection{Endianness}

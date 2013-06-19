@@ -35,7 +35,7 @@ The suggested serialization format and serialization language offer all of the f
  \item stored data, that is never needed by a tool, will never be touched
 \end{itemize}
 
-Any of the arguments above have already been made in various contexts \todo{cite, cite, cite; llvm tutorial ``llvm and perl'', platform independent javabytecode, IDL, ada serialization, custom binary formats}, but there is, to the best of our knowledge, no solution bringing all these demands together into a single product that does the job automatically.
+Any of the arguments above have already been made in various contexts (e.g. \cite{ada05} §13.13, \cite{llvm}, \cite{xml11}, \cite{lamb87}), but there is, to the best of our knowledge, no solution bringing all these demands together into a single product that does the job automatically.
 
 
 \subsection{Related Work}
@@ -89,12 +89,14 @@ Both lack sub-typing. Protobuf has an overly complex notation language. Both see
 
 \subsection*{Java Bytecode, LLVM/IR and others}
 
-Although Java Bytecode and the LLVM Intermediate Representation are hand crafted formats, they served as a guiding example in many ways.
+Although Java Bytecode (see \cite{jvmspec}) and the LLVM Intermediate Representation (see \cite{llvm}) are hand crafted formats, they served as a guiding example in many ways.
 
 
 \subsection*{Language Specific}
 
 Language specific is language specific and can therefore not be used to interface between subsystems written in different programming languages, without a lot of effort. Our aim is clearly a language independent and easy to use serialization format.
+%hier sollte man eigentlich was zu ada §13.13 sagen; irgendwie passt das aber nicht
+\nocite{ada05}
 
 
 \subsection*{Language Interfaces}
