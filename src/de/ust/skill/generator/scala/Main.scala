@@ -57,11 +57,11 @@ object Main {
       out.write("//////// UTILS ////////\n")
       
       //nice toString
-      out.write("\noverride def toString(): String = \"" + d.getName() + "(")
+      out.write("\noverride def toString(): String = \"" + d.getName() + "(\"")
       d.getFields().foreach({ f ⇒
         out.write("+" + f.getName()+"+\", \"")
       })
-      out.write("+)\n")
+      out.write("+\")\"\n")
       
       out.write("}");
 
