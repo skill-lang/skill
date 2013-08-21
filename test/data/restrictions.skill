@@ -1,0 +1,10 @@
+/**
+Restrictions parser test, due to a strange parser bug.
+*/
+@notAHint
+@access
+@modification
+restrictions {
+	@lazy
+	i64 data;	
+}

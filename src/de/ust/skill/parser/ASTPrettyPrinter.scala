@@ -8,8 +8,8 @@ object ASTPrettyPrinter {
   def prettyPrint(nodes: List[Node]) = nodes.map(n => printNode(n)).foldLeft("")(_ + "\n\n" + _);
 
   def printNode(n: Node): String = n match {
-    case n: Restriction => "@" + n.name + "(" + printList(n.args) + ")"
-    case n: Hint => "!" + n.name
+    case n: Restriction => "@" + n.name + "(" + printList(n.args) + ")" + " "
+    case n: Hint => "!" + n.name + " "
     case n: Description => (n.restrictions.map(printNode) ++ n.hints.map(printNode))
       .fold(n.comment.getOrElse(""))(_ + "\n" + _)
 
@@ -27,7 +27,7 @@ object ASTPrettyPrinter {
       + n.name + "\n")
 
     case n: Definition => printNode(n.description) +
-      (if (n.isClass) "\nclass" else if (n.isAnnotation) "\nannotation" else "\n") + n.name +
+      n.name +
       (if (n.parent.isDefined) " : " + n.parent.get else"") + n.body.map(printNode).fold(" {\n")(_ + _) + "}\n" 
   }
 

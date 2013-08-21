@@ -3,17 +3,19 @@ package de.ust.skill.parser
 import java.io.File
 import java.io.FileNotFoundException
 import java.lang.Long
-import scala.annotation.elidable.ASSERTION
+
 import scala.annotation.migration
+import scala.collection.JavaConverters.bufferAsJavaListConverter
+import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.LinkedList
 import scala.collection.mutable.ListBuffer
-import scala.util.parsing.combinator.JavaTokenParsers
+import scala.util.parsing.combinator.RegexParsers
+
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.VariableLengthArrayType
-import java.util.Arrays
 
 /**
  * The Parser does all stuff that is required for turning a set of files into a list of definitions.
@@ -27,15 +29,15 @@ class Parser {
    *
    * Grammar as explained in the paper.
    */
-  class FileParser extends JavaTokenParsers {
+  class FileParser extends RegexParsers {
     /**
      * Usual identifiers including arbitrary unicode characters.
      */
-    def id = """[a-zA-Z_\u00ff-\uffff][\w\u00ff-\uffff]*""".r
+    def id = """[a-zA-Z_\u007f-\uffff][\w\u007f-\uffff]*""".r
     /**
      * Skill only has hex literals.
      */
-    def int = "0x" ~> """[0-9a-fA-F]*""".r ^^ { i => Long.parseLong(i, 16) }
+    def int = "0x" ~> ("""[0-9a-fA-F]*""".r ^^ { i ⇒ Long.parseLong(i, 16) })
     /**
      * We use string literals to encode paths. If someone really calls a file ", someone should beat him hard.
      */
@@ -44,7 +46,9 @@ class Parser {
     /**
      * A file is a list of includes followed by a list of declarations.
      */
-    def file = rep(includes) ~! rep(declaration) ^^ { case i ~ d => (i, d) }
+    def file = rep(includes) ~! rep(declaration) ^^ {
+      case i ~ d ⇒ (i, d)
+    }
 
     /**
      * Includes are just strings containing relative paths to *our* path.
@@ -60,22 +64,22 @@ class Parser {
      * restrictions as defined in the paper.
      */
     def restriction = "@" ~> id ~ opt("(" ~> repsep((int | "%"), ",") <~ ")") <~ opt(";") ^^ {
-      case s ~ arg => new Restriction(s, arg.getOrElse(List[Any]()))
+      case s ~ arg ⇒ new Restriction(s, arg.getOrElse(List[Any]()))
     }
     /**
      * hints as defined in the paper. Because hints can be ignored by the generator, it is safe to allow arbitrary
      * identifiers and to warn if the identifier is not a known hint.
      */
-    def hint = "!" ~> id <~ opt(";") ^^ { new Hint(_) }
+    def hint = "!" ~> (id <~ opt(";")) ^^ { new Hint(_) }
 
     /**
      * Description of a declration or field.
      */
     def description = rep(restriction | hint) ~ opt(comment) ~ rep(restriction | hint) ^^ {
-      case l1 ~ c ~ l2 => {
+      case l1 ~ c ~ l2 ⇒ {
         val l = l1 ++ l2;
-        new Description(c, l.filter(p => p.isInstanceOf[Restriction]).asInstanceOf[List[Restriction]],
-          l.filter(p => p.isInstanceOf[Hint]).asInstanceOf[List[Hint]])
+        new Description(c, l.filter(p ⇒ p.isInstanceOf[Restriction]).asInstanceOf[List[Restriction]],
+          l.filter(p ⇒ p.isInstanceOf[Hint]).asInstanceOf[List[Hint]])
       }
     }
 
@@ -83,14 +87,9 @@ class Parser {
      * A declaration may start with a description, is followed by modifiers and a name, might have a super class and has
      * a body.
      */
-    def declaration = description ~ modifier ~ id ~! opt((":" | "with" | "extends") ~> id) ~! body ^^
-      { case c ~ m ~ n ~ s ~ b => new Definition(c, m, n, s, b) }
-
-    /**
-     * Tells us whether a declaratino is a class, an annotation or just plain data.
-     */
-    def modifier = rep("tagged" | "class" | "annotation") ^^
-      { m => (m.contains("class") || m.contains("tagged"), m.contains("annotation")) }
+    def declaration = description ~ id ~ opt((":" | "with" | "extends") ~> id) ~! body ^^ {
+      case c ~ n ~ s ~ b ⇒ new Definition(c, n, s, b)
+    }
 
     /**
      * A body consist of a list of fields.
@@ -100,17 +99,17 @@ class Parser {
     /**
      * A field is either a constant or a real data field.
      */
-    def field = description ~! (constant | data) ^^ { case d ~ f => { f.description = d; f } }
+    def field = description ~ (constant | data) ^^ { case d ~ f ⇒ { f.description = d; f } }
 
     /**
      * Constants a recognized by the keyword "const" and are required to have a value.
      */
-    def constant = "const" ~> Type ~! id ~! ("=" ~> int) <~ opt(";") ^^ { case t ~ n ~ v => new Constant(t, n, v) }
+    def constant = "const" ~> Type ~! id ~! ("=" ~> int) <~ opt(";") ^^ { case t ~ n ~ v ⇒ new Constant(t, n, v) }
 
     /**
      * Data may be marked to be auto and will therefore only be present at runtime.
      */
-    def data = opt("auto") ~! Type ~! id <~ opt(";") ^^ { case a ~ t ~ n => new Data(a.isDefined, t, n) }
+    def data = opt("auto") ~ Type ~! id <~ opt(";") ^^ { case a ~ t ~ n ⇒ new Data(a.isDefined, t, n) }
 
     /**
      * Unfortunately, the straigth forward definition of this would lead to recursive types, thus we disallowed ADTs as
@@ -119,26 +118,26 @@ class Parser {
      * impact on the way, data is and can be stored.
      */
     def Type = ((("map" | "set" | "list") ~! ("<" ~> repsep(BaseType, ",") <~ ">")) ^^ {
-      case "map" ~ l => new de.ust.skill.parser.MapType(l)
-      case "set" ~ l => { assert(1 == l.size); new de.ust.skill.parser.SetType(l.head) }
-      case "list" ~ l => { assert(1 == l.size); new de.ust.skill.parser.ListType(l.head) }
+      case "map" ~ l  ⇒ new de.ust.skill.parser.MapType(l)
+      case "set" ~ l  ⇒ { assert(1 == l.size); new de.ust.skill.parser.SetType(l.head) }
+      case "list" ~ l ⇒ { assert(1 == l.size); new de.ust.skill.parser.ListType(l.head) }
     }
       // we use a backtracking approach here, because it simplifies the AST generation
       | ArrayType
       | BaseType)
 
-    def ArrayType = ((BaseType ~ ("[" ~> int <~ "]")) ^^ { case n ~ arr => new ConstantArrayType(n, arr) }
-      | (BaseType ~ ("[" ~> id <~ "]")) ^^ { case n ~ arr => new DependentArrayType(n, arr) }
-      | (BaseType <~ ("[" ~ "]")) ^^ { n => new ArrayType(n) })
+    def ArrayType = ((BaseType ~ ("[" ~> int <~ "]")) ^^ { case n ~ arr ⇒ new ConstantArrayType(n, arr) }
+      | (BaseType ~ ("[" ~> id <~ "]")) ^^ { case n ~ arr ⇒ new DependentArrayType(n, arr) }
+      | (BaseType <~ ("[" ~ "]")) ^^ { n ⇒ new ArrayType(n) })
 
     def BaseType = id ^^ { new BaseType(_) }
 
     /**
      * The <b>main</b> function of the parser, which turn a string into a list of includes and declarations.
      */
-    def process(in: String) = parseAll(phrase(file), in) match {
-      case Success(rval, _) => rval
-      case f => println(f); throw new Exception("parsing failed: " + f);
+    def process(in: String) = parseAll(file, in) match {
+      case Success(rval, _) ⇒ rval
+      case f                ⇒ println(f); throw new Exception("parsing failed: "+f);
     }
   }
 
@@ -175,8 +174,8 @@ class Parser {
           // add definitions
           rval = rval ++ result._2
         } catch {
-          case e: FileNotFoundException => assert(false, "The include " + f +
-            "could not be resolved to an existing file: " + e.getMessage())
+          case e: FileNotFoundException ⇒ assert(false, "The include "+f+
+            "could not be resolved to an existing file: "+e.getMessage())
         }
       }
     }
@@ -185,16 +184,16 @@ class Parser {
   }
 
   private def mkType(s: Type, decls: Map[String, Declaration]): de.ust.skill.ir.Type = s match {
-    case t: ListType ⇒ new de.ust.skill.ir.ListType(mkType(t.baseType, decls))
-    case t: SetType ⇒ new de.ust.skill.ir.SetType(mkType(t.baseType, decls))
-    case t: MapType ⇒ new de.ust.skill.ir.MapType(scala.collection.JavaConversions.asList(t.args.map(mkType(_, decls))))
+    case t: ListType           ⇒ new de.ust.skill.ir.ListType(mkType(t.baseType, decls))
+    case t: SetType            ⇒ new de.ust.skill.ir.SetType(mkType(t.baseType, decls))
+    case t: MapType            ⇒ new de.ust.skill.ir.MapType(t.args.map(mkType(_, decls)).asJava)
 
-    case t: ConstantArrayType ⇒ new ConstantLengthArrayType(mkType(t.baseType, decls), t.length)
+    case t: ConstantArrayType  ⇒ new ConstantLengthArrayType(mkType(t.baseType, decls), t.length)
     case t: DependentArrayType ⇒ new de.ust.skill.ir.DependentArrayType(mkType(t.baseType, decls), t.lengthFieldName)
-    case t: ArrayType ⇒ new VariableLengthArrayType(mkType(t.baseType, decls))
+    case t: ArrayType          ⇒ new VariableLengthArrayType(mkType(t.baseType, decls))
 
     case t: BaseType ⇒ decls.get(t.name).getOrElse(GroundType.get(t.name)).ensuring({
-      r ⇒ if (null == r) throw new IllegalStateException("unknown declaration name " + t.name); true
+      r ⇒ if (null == r) throw new IllegalStateException("unknown declaration name "+t.name); true
     })
   }
 
@@ -203,7 +202,7 @@ class Parser {
    */
   private def buildIR(defs: LinkedList[Definition]): List[Declaration] = {
     // create declarations
-    var parents = defs map (f ⇒ (f.name, f)) toMap
+    var parents = defs.map(f ⇒ (f.name, f)).toMap
     val rval = parents.map({ case (n, f) ⇒ (n, new Declaration(n)) })
     rval.foreach({
       case (n, f) ⇒ f.setParentType(
@@ -215,10 +214,10 @@ class Parser {
       case (n, f) ⇒
         val fields = new ListBuffer[de.ust.skill.ir.Field]()
         f.body.foreach({
-          case x: Data ⇒ fields += new de.ust.skill.ir.Data(x.isAuto, mkType(x.t, rval), x.name)
+          case x: Data     ⇒ fields += new de.ust.skill.ir.Data(x.isAuto, mkType(x.t, rval), x.name)
           case x: Constant ⇒ fields += new de.ust.skill.ir.Constant(mkType(x.t, rval), x.name, x.value)
         })
-        rval.get(n).get.setFields(scala.collection.JavaConversions.asList(fields))
+        rval.get(n).get.setFields(fields.asJava)
     })
 
     return rval.values.toList

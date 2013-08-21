@@ -53,8 +53,6 @@ final class Data(val isAuto: Boolean, t: Type, name: String) extends Field(t, na
 }
 
 final class Definition(
-  val description: Description, mod: (Boolean, Boolean),
+  val description: Description,
   val name: String, val parent: Option[String], val body: List[Field]) extends Node {
-  val isClass = mod._1
-  val isAnnotation = mod._2
 }

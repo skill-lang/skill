@@ -39,8 +39,6 @@ object ASTEqualityChecker {
       case n: Definition => n.parent.equals(o.asInstanceOf[Definition].parent) &&
         n.description.equals(o.asInstanceOf[Definition].description) &&
         n.name.equals(o.asInstanceOf[Definition].name) &&
-        n.isClass == o.asInstanceOf[Definition].isClass &&
-        n.isAnnotation == o.asInstanceOf[Definition].isAnnotation &&
         checkFieldList(n.body, o.asInstanceOf[Definition].body)
     }
   }

@@ -7,6 +7,7 @@ import scala.sys.process._
 import org.junit.Assert
 import org.junit.Test
 import org.scalatest.junit.AssertionsForJUnit
+import scala.language.postfixOps
 
 class ParserPrettyPrintingProjectionTest extends AssertionsForJUnit {
 
@@ -14,10 +15,10 @@ class ParserPrettyPrintingProjectionTest extends AssertionsForJUnit {
     val p = new Parser
     val first = p.parseAll(new File(path)).toList
     val tmp = File.createTempFile("test", "skill")
-    ("echo " + ASTPrettyPrinter.prettyPrint(first)) #> tmp !
+    ("echo "+ASTPrettyPrinter.prettyPrint(first)) #> tmp !
     val second = p.parseAll(tmp).toList
     tmp.delete()
-    ("echo " + ASTPrettyPrinter.prettyPrint(first)) #> tmp !
+    ("echo "+ASTPrettyPrinter.prettyPrint(first)) #> tmp !
     val third = p.parseAll(tmp).toList
     tmp.delete()
     Assert.assertTrue(ASTEqualityChecker.checkDefinitionList(third, second))

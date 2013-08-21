@@ -5,16 +5,16 @@ SLoc {
 	string path;
 }
 
-tagged Block {
+Block {
 	SLoc begin;
 	SLoc end;
 	string image;
 }
 
-tagged IfBlock with Block {
+IfBlock with Block {
 	Block thenBlock;
 }
 
-tagged ITEBlock with IfBlock {
+ITEBlock with IfBlock {
 	Block elseBlock;
 }
