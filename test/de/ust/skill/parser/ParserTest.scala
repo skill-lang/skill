@@ -5,17 +5,18 @@ import org.scalatest._
 import org.scalatest.junit.AssertionsForJUnit
 import org.junit.Assert
 import org.junit.Test
+import scala.collection.JavaConversions._
 
 class ParserTest extends AssertionsForJUnit {
 
   private def check(path: String) = {
     val p = new Parser
-    assert(0!=p.parseAll(new File(path)).size)
+    assert(0 != p.parseAll(new File(path)).size)
   }
 
   @Test def hints: Unit = check("test/data/hints.skill")
   @Test def restrictions: Unit = check("test/data/restrictions.skill")
-  
+
   @Test def test: Unit = check("test/data/test.skill")
   @Test def test2: Unit = check("test/data/test2.skill")
   @Test def test3: Unit = check("test/data/test3.skill")

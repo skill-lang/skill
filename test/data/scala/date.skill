@@ -1,0 +1,2 @@
+/** A simple date test with known Translation */
+Date { /** seconds since 1.1.1970 UTC */ v64 date }

@@ -150,7 +150,7 @@ class Parser {
    * Parses a file and all related files and passes back a List of definitions. The returned definitions are also type
    * checked.
    */
-  def parseAll(input: File): LinkedList[Definition] = {
+  private[parser] def parseAll(input: File): LinkedList[Definition] = {
     val p = new FileParser();
     val base = input.getParentFile();
     val todo = new HashSet[String]();
@@ -179,7 +179,7 @@ class Parser {
         }
       }
     }
-    (new TypeChecker).check(rval.toList)
+    TypeChecker.check(rval.toList)
     return rval;
   }
 
@@ -200,7 +200,7 @@ class Parser {
   /**
    * Turns the AST into IR.
    */
-  private def buildIR(defs: LinkedList[Definition]): List[Declaration] = {
+  private def buildIR(defs: LinkedList[Definition]): java.util.List[Declaration] = {
     // create declarations
     var parents = defs.map(f ⇒ (f.name, f)).toMap
     val rval = parents.map({ case (n, f) ⇒ (n, new Declaration(n)) })
@@ -220,6 +220,6 @@ class Parser {
         rval.get(n).get.setFields(fields.asJava)
     })
 
-    return rval.values.toList
+    return rval.values.toList.asJava
   }
 }

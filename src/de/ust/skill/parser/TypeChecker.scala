@@ -7,15 +7,14 @@ import scala.collection.mutable.HashMap
  *
  * @author Timm Felden
  */
-class TypeChecker {
+object TypeChecker {
   private val builtInTypes = Set[String]("annotation", "bool", "i1", "i8", "i16", "i32", "i64", "v64", "string",
     "f64", "f32")
-  private var knownTypes: HashMap[String, Definition] = null;
 
   def check(defs: List[Definition]) {
     assert(defs.size > 0, "There are no definitions to check!")
 
-    knownTypes = new HashMap
+    var knownTypes = new HashMap[String, Definition]
     builtInTypes.foreach(s => knownTypes.put(s, null))
     // ensure that type names are unique and do not overwrite built in types
     defs.foreach(d => {
