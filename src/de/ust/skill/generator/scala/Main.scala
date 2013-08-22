@@ -22,7 +22,10 @@ object Main
     with DeclarationInterfaceMaker
     with IteratorMaker
     with TypeInfoMaker
-    with SerializableStateMaker {
+    with SerializableStateMaker
+    with ByteStreamParsersMaker
+    with StringPoolMaker
+    with StoragePoolMaker{
 
   def printHelp {
     println("usage:")
@@ -49,6 +52,9 @@ object Main
     makeSerializableState(new PrintWriter(new File(outPath+"internal/SerializableState.scala")), IR)
 
     //generate general code
+    makeStringPool(new PrintWriter(new File(outPath+"internal/pool/StringPool.scala")))
+    makeStoragePool(new PrintWriter(new File(outPath+"internal/pool/StoragePool.scala")))
+    makeByteStreamParsers(new PrintWriter(new File(outPath+"internal/pool/ByteStreamParsers.scala")))
     makeFileParser(new PrintWriter(new File(outPath+"internal/FileParser.scala")))
     makeIterator(new PrintWriter(new File(outPath+"internal/Iterator.scala")))
     makeTypeInfo(new PrintWriter(new File(outPath+"internal/TypeInfo.scala")))
@@ -74,11 +80,11 @@ object Main
   override protected def copyFromTemplate(out: PrintWriter, template: String) {
     Source.fromFile("src/de/ust/skill/generator/scala/templates/"+template).getLines.foreach({ s ⇒ out.write(s+"\n") })
   }
-  
+
   /**
    * provides the package prefix
-   * 
+   *
    * TODO provide a mechanism to actually set this
    */
-  override protected def packagePrefix():String = ""
+  override protected def packagePrefix(): String = ""
 }

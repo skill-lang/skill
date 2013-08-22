@@ -1,0 +1,145 @@
+import java.io.BufferedInputStream
+import java.io.IOException
+import java.nio.ByteBuffer
+
+import scala.collection.mutable.ArrayBuffer
+import scala.language.implicitConversions
+import scala.util.parsing.combinator.Parsers
+import scala.util.parsing.input.Position
+import scala.util.parsing.input.Reader
+
+/**
+ * @note This parser does not support backtracking. If one would be interest in backtracking the atomic parsers should
+ *  use the in.mark and in.reset methods if they fail.
+ *  
+ *  @author Timm Felden
+ */
+class ByteStreamParsers extends Parsers {
+  type Elem = Byte
+  protected implicit def readerToByteReader(x: Input): ByteReader = x.asInstanceOf[ByteReader]
+
+  case class ByteOffsetPosition(offset: Int) extends Position {
+    final val line = 1
+    def column = offset + 1
+    def lineContents: String = ""
+  }
+
+  /**
+   * @note the underlying implementation will very likely break backtracking capabilities of a combined parser
+   */
+  class ByteReader(val stream: BufferedInputStream) extends Reader[Byte] {
+
+    def first: Byte = throw new NoSuchMethodError("unsupported operation")
+    def rest: ByteReader = throw new NoSuchMethodError("unsupported operation")
+    def pos: Position = ByteOffsetPosition(offset)
+    def atEnd = stream.available() > 0
+
+    override def drop(n: Int): ByteReader = { stream.skip(n); this }
+    def take(n: Int): Array[Byte] = { val r = new Array[Byte](n); stream.read(r); r }
+    def has(n: Int): Boolean = stream.available() >= n
+    def next: Byte = {
+      val r = stream.read();
+      if (-1 == r) throw new IOException("Reached EOF");
+      r.toByte
+    }
+  }
+
+  def hasMore(): Parser[Unit] = new Parser[Unit] {
+    def apply(in: Input) = {
+      if (in has 1)
+        Success((), in)
+      else
+        Failure("EOF", in)
+    }
+  }
+
+  def bytes(n: Int): Parser[Array[Byte]] = new Parser[Array[Byte]] {
+    def apply(in: Input) = {
+      if (in has n)
+        Success(in take n, in)
+      else
+        Error("Unexpected end of file.", in)
+    }
+  }
+  def bytes(n: Long): Parser[Array[Byte]] = bytes(n.asInstanceOf[Int])
+
+  def i8 = new Parser[Byte] {
+    def apply(in: Input) = {
+      if (in has 1)
+        Success((in take 1)(0), in)
+      else
+        Error("Unexpected end of file.", in)
+    }
+  }
+  def i16 = new Parser[Short] {
+    def apply(in: Input) = {
+      if (in has 2)
+        Success(ByteBuffer.wrap(in take 2).getShort, in)
+      else
+        Error("Unexpected end of file.", in)
+    }
+  }
+  def i32 = new Parser[Int] {
+    def apply(in: Input) = {
+      if (in has 4)
+        Success(ByteBuffer.wrap(in take 4).getInt, in)
+      else
+        Error("Unexpected end of file.", in)
+    }
+  }
+  def i64 = new Parser[Long] {
+    def apply(in: Input) = {
+      if (in has 8)
+        Success(ByteBuffer.wrap(in take 8).getLong, in)
+      else
+        Error("Unexpected end of file.", in)
+    }
+  }
+
+  def v64 = new Parser[Long] {
+    def apply(in: Input) = {
+      try {
+        var count:Long = 0
+        var rval:Long = 0
+        var r:Long = in.next
+        while (count < 8 && 0 != (r & 0x80)) {
+          rval |= (r & 0x7f) << (7 * count);
+
+          count += 1;
+          r = in.next
+        }
+        rval = (rval | (count match {
+          case 8 ⇒ r
+          case _ ⇒ (r & 0x7f)
+        }) << (7 * count));
+        Success(rval, in)
+      } catch {
+        case _: IOException ⇒ Error("Unexpected end of file.", in)
+      }
+    }
+  }
+
+  def f32 = new Parser[Float] {
+    def apply(in: Input) = {
+      if (in has 4)
+        Success(ByteBuffer.wrap(in take 4).getFloat, in)
+      else
+        Error("Unexpected end of file.", in)
+    }
+  }
+  def f64 = new Parser[Double] {
+    def apply(in: Input) = {
+      if (in has 8)
+        Success(ByteBuffer.wrap(in take 8).getDouble, in)
+      else
+        Error("Unexpected end of file.", in)
+    }
+  }
+
+  def string(strings: ArrayBuffer[String]) = v64 ^^ {
+    _ match {
+      case 0 ⇒ null
+      case i ⇒ strings(i.toInt - 1)
+    }
+  }
+}

@@ -1,0 +1,148 @@
+class StoragePool(
+  val name: String, val userType: UserType, val superPool: Option[StoragePool],
+  var storedSize: Long, var basePoolStartIndex: Long) {
+
+  /**
+   * true iff the pool has a shallow modification, i.e. an index may have changed
+   */
+  protected[this] var dirty = false;
+
+  /**
+   * T is the type of elements stored in this pool. This feature will be used to create sub pools for known types.
+   */
+  protected type T <: AnyRef
+
+  var subPools = new ArrayBuffer[StoragePool]
+
+  var f: Array[Void] = null
+
+  /**
+   * Maps names to indices in the actual object, i.e. the first valid index in a storage pool can start at an arbitrary
+   *  positive number, but indices of base pools will start at 0.
+   */
+  var fieldNames = new HashMap[String, Int]
+  /**
+   * Maps field indices to types. Contains types of super types as well.
+   */
+  var fieldTypes = new HashMap[Int, TypeInfo]
+
+  // initialize field names types
+  {
+    if (superPool.isDefined) {
+      fieldNames ++= superPool.get.fieldNames
+      fieldTypes ++= superPool.get.fieldTypes
+    }
+    userType.fields.foreach({
+      case (t, n, p) ⇒ {
+        fieldTypes.put(fieldNames.size, t)
+        fieldNames.put(n, fieldNames.size)
+      }
+    })
+  }
+
+  /**
+   * All stored objects, which have exactly the type T. Objects are stored as arrays of field entries. The types of the
+   *  respective fields can be retrieved using the fieldTypes map.
+   */
+  private[internal] var data: ArrayBuffer[T] = new ArrayBuffer[T](storedSize.toInt)
+
+  def sizeCount: Long = {
+    if (null == data)
+      storedSize;
+    else
+      data size;
+  }
+
+  /**
+   * Retrieves an element based on its current index.
+   */
+  def getByCurrentIndex(index: Long): T = {
+    return data(index.toInt - 1)
+  }
+
+  /**
+   * Retrieves an element based on its ID, i.e. its original index in the deserialized file.
+   *
+   * @note will only work if the state has been read from a file or been written to a file
+   */
+  def getByID(index: Long): T = {
+    return data(index.toInt - 1)
+  }
+
+  /**
+   * prepares serialization, i.e. ensures that all objects get IDs, which can be used as logic pointers,
+   * and can be written to disk
+   */
+  private[internal] def prepareSerialization(σ: SerializableState) {
+
+  }
+
+  /**
+   * writes fields from memory into their serialized form.
+   *
+   * does nothing in case of general pools.(reflection???)
+   */
+  private[internal] def writeFields(σ: SerializableState) {
+
+  }
+
+  import SerializableState.v64
+
+  /**
+   * writes the pool into a file, after all pools of a state have been prepared
+   *
+   * the resulting layout is described in SKilL §6.2
+   */
+  private[internal] def write(out: BufferedOutputStream, σ: SerializableState) {
+    def putName(s: String) {
+      out.write(v64(σ.knownStrings.indexOf(s.toLowerCase()).toLong + 1))
+    }
+
+    //string typeName
+    putName(name)
+
+    //string superTypeName &&
+    //option(v64 basePoolStartIndex; iff has superType)
+    superPool match {
+      case None ⇒ out.write(v64(0))
+      case Some(s) ⇒ {
+        putName(s.name)
+        out.write(v64(basePoolStartIndex))
+      }
+    }
+
+    //v64 elementCount
+    out.write(v64(sizeCount))
+
+    //restriction[] REST
+    // TODO write restrictions
+    out.write(v64(0))
+
+    //v64 fieldCount
+    out.write(v64(userType.fields.length))
+
+    //foreach f in fields
+    userType.fields.foreach {
+      case (t, n, e) ⇒
+        //restriction[] f.REST
+        // TODO write restrictions
+        out.write(v64(0))
+
+        //[[f.type]]
+        out.write(v64(t.typeId))
+
+        //string f.name
+        putName(n)
+
+        //@as(f.T[elementCount])
+        //i8[] f.elements
+        out.write(v64(e.length))
+        out.write(e)
+    }
+
+  }
+}
+
+object StoragePool {
+  val NONE: Iterable[StoragePool] = List[StoragePool]()
+}
