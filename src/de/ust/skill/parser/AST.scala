@@ -35,8 +35,6 @@ sealed class ArrayType(val baseType: BaseType) extends Type {
 }
 final class ConstantArrayType(baseType: BaseType, val length: Long) extends ArrayType(baseType) {
 }
-final class DependentArrayType(baseType: BaseType, val lengthFieldName: String) extends ArrayType(baseType) {
-}
 
 final class BaseType(val name: String) extends Type {
   override def toString = name

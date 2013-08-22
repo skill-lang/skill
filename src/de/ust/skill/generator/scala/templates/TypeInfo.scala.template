@@ -112,12 +112,6 @@ class ConstantLengthArrayInfo(val length: Int, var groundType: TypeInfo) extends
   
   def typeId: Long = 15
 }
-class DependentLengthArrayInfo(val field: String, var groundType: TypeInfo) extends CompoundTypeInfo {
-
-  override def toString(): String = groundType+"["+field+"]"
-  
-  def typeId: Long = 16
-}
 class VariableLengthArrayInfo(var groundType: TypeInfo) extends CompoundTypeInfo {
 
   override def toString(): String = groundType+"[]"

@@ -18,7 +18,6 @@ class TypeCheckerTest extends AssertionsForJUnit {
 
   @Test(expected = classOf[AssertionError]) def dupDefs = check("test/data/failures/duplicateDefinition.skill")
   @Test(expected = classOf[AssertionError]) def dupField = check("test/data/failures/duplicateField.skill")
-  @Test(expected = classOf[AssertionError]) def missingField = check("test/data/failures/missingLengthField.skill")
   @Test(expected = classOf[AssertionError]) def halfFloat = check("test/data/failures/halfFloat.skill")
   @Test(expected = classOf[AssertionError]) def constFloat = check("test/data/failures/floatConstant.skill")
   @Test(expected = classOf[AssertionError]) def constSelf = check("test/data/failures/selfConst.skill")

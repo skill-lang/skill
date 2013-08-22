@@ -6,10 +6,10 @@ which is used to create heap fragments.
 */
 HeapStructure {
 	auto Program target;
-	v64 heapSize;
-	HeapObject[heapSize] heap;
+	/** The heap; is as big as heapStructure */
+	HeapObject[] heap;
 	/** Flow and context insensitive heap structure. */
-	PointsToSet[heapSize] heapStructure;
+	PointsToSet[] heapStructure;
 }
 
 PointsToSet {

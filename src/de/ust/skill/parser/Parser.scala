@@ -127,7 +127,6 @@ class Parser {
       | BaseType)
 
     def ArrayType = ((BaseType ~ ("[" ~> int <~ "]")) ^^ { case n ~ arr ⇒ new ConstantArrayType(n, arr) }
-      | (BaseType ~ ("[" ~> id <~ "]")) ^^ { case n ~ arr ⇒ new DependentArrayType(n, arr) }
       | (BaseType <~ ("[" ~ "]")) ^^ { n ⇒ new ArrayType(n) })
 
     def BaseType = id ^^ { new BaseType(_) }
@@ -189,7 +188,6 @@ class Parser {
     case t: MapType            ⇒ new de.ust.skill.ir.MapType(t.args.map(mkType(_, decls)).asJava)
 
     case t: ConstantArrayType  ⇒ new ConstantLengthArrayType(mkType(t.baseType, decls), t.length)
-    case t: DependentArrayType ⇒ new de.ust.skill.ir.DependentArrayType(mkType(t.baseType, decls), t.lengthFieldName)
     case t: ArrayType          ⇒ new VariableLengthArrayType(mkType(t.baseType, decls))
 
     case t: BaseType ⇒ decls.get(t.name).getOrElse(GroundType.get(t.name)).ensuring({

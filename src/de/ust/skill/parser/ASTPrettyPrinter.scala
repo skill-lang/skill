@@ -17,7 +17,6 @@ object ASTPrettyPrinter {
     case n: SetType => "set<" + n.baseType + ">"
     case n: ListType => "list<" + n.baseType + ">"
     case n: ConstantArrayType => n.baseType + "[" + n.length + "]"
-    case n: DependentArrayType => n.baseType + "[" + n.lengthFieldName + "]"
     case n: ArrayType => n.baseType + "[]"
     case n: BaseType => n.name
 
