@@ -2,12 +2,27 @@ package de.ust.skill.generator.scala
 
 import java.io.File
 import java.io.PrintWriter
+
 import scala.collection.JavaConversions.asScalaBuffer
-import de.ust.skill.ir._
-import de.ust.skill.parser.Parser
 import scala.io.Source
 
-object Main extends FileParserMaker with DeclarationInterfaceMaker {
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.Type
+import de.ust.skill.parser.Parser
+
+/**
+ * A generator turns a set of skill declarations into a scala interface providing means of manipulating skill files
+ * containing instances of the respective definitions.
+ *
+ * @author Timm Felden
+ */
+object Main
+    extends FileParserMaker
+    with DeclarationInterfaceMaker
+    with IteratorMaker
+    with TypeInfoMaker
+    with SerializableStateMaker {
 
   def printHelp {
     println("usage:")
@@ -31,17 +46,18 @@ object Main extends FileParserMaker with DeclarationInterfaceMaker {
 
     //generate public interface for type declarations
     IR.foreach({ d ⇒ makeDeclarationInterface(new PrintWriter(new File(outPath + d.getName()+".scala")), d) })
+    makeSerializableState(new PrintWriter(new File(outPath+"internal/SerializableState.scala")), IR)
 
     //generate general code
     makeFileParser(new PrintWriter(new File(outPath+"internal/FileParser.scala")))
-
-    //generate IR specific code?
+    makeIterator(new PrintWriter(new File(outPath+"internal/Iterator.scala")))
+    makeTypeInfo(new PrintWriter(new File(outPath+"internal/TypeInfo.scala")))
   }
 
   /**
    * Translates types into scala type names.
    */
-  override def _T(t: Type): String = t match {
+  override protected def _T(t: Type): String = t match {
     case t: GroundType ⇒ t.getName() match {
       case "i8"  ⇒ "Byte"
       case "i16" ⇒ "Short"
@@ -55,7 +71,14 @@ object Main extends FileParserMaker with DeclarationInterfaceMaker {
   /**
    * Reads a template file and copies the input to out.
    */
-  override def copyFromTemplate(out: PrintWriter, template: String) {
+  override protected def copyFromTemplate(out: PrintWriter, template: String) {
     Source.fromFile("src/de/ust/skill/generator/scala/templates/"+template).getLines.foreach({ s ⇒ out.write(s+"\n") })
   }
+  
+  /**
+   * provides the package prefix
+   * 
+   * TODO provide a mechanism to actually set this
+   */
+  override protected def packagePrefix():String = ""
 }

@@ -6,8 +6,10 @@ import scala.collection.JavaConversions.asScalaBuffer
 import de.ust.skill.ir.Type
 
 trait DeclarationInterfaceMaker {
-  protected def makeDeclarationInterface(out:PrintWriter, d:Declaration){
+  protected def makeDeclarationInterface(out: PrintWriter, d: Declaration) {
     //package
+    if (packagePrefix.length > 0)
+      out.write(s"package ${packagePrefix.substring(0, packagePrefix.length - 1)}\n\n")
 
     //imports
 
@@ -38,9 +40,14 @@ trait DeclarationInterfaceMaker {
 
     out.close()
   }
-  
+
   /**
    * Assume the existence of a translation function for types.
    */
   protected def _T(t: Type): String
+
+  /**
+   * Assume a package prefix provider.
+   */
+  protected def packagePrefix(): String
 }

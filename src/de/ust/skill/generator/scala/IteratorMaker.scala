@@ -2,26 +2,17 @@ package de.ust.skill.generator.scala
 
 import java.io.PrintWriter
 
-trait FileParserMaker {
-  protected def makeFileParser(out: PrintWriter) {
+trait IteratorMaker {
+  protected def makeIterator(out: PrintWriter) {
     //package & imports
     out.write(s"""package ${packagePrefix}internal
 
-import java.io.BufferedInputStream
-import java.io.ByteArrayInputStream
-import java.io.File
-import java.io.FileInputStream
+import ${packagePrefix}internal.StoragePool
 
-import scala.Array.canBuildFrom
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.language.implicitConversions
-
-import ${packagePrefix}internal.pool._
 """)
 
     //the body itself is always the same
-    copyFromTemplate(out, "FileParser.scala.template")
+    copyFromTemplate(out, "Iterator.scala.template")
 
     //class prefix
     out.close()

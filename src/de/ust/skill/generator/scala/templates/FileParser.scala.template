@@ -1,3 +1,6 @@
+/**
+ * @author Timm Felden
+ */
 class FileParser extends ByteStreamParsers {
   /**
    * @param σ the processed serializable state

@@ -1,0 +1,42 @@
+
+class SkillReflectiveAccessException(msg: String) extends Exception(msg) {
+
+}
+
+/**
+ * This class is used to handle objects in a serializable state.
+ * 
+ * @author Timm Felden
+ */
+class SerializableState {
+  import SerializableState._
+
+  private[expected] var pools = new HashMap[String, StoragePool]
+
+  private[expected] var knownStrings = new ArrayBuffer[String];
+
+  def write(target: File) {
+    val file = new BufferedOutputStream(new FileOutputStream(target))
+
+    // collect all known objects
+    // TODO implementation
+
+    // write string pool
+    file.write(v64(knownStrings.size))
+    knownStrings.foreach({ s ⇒
+      file.write(v64(s.length()))
+      file.write(s.getBytes())
+    })
+
+    // prepare pools, i.e. ensure that all objects get IDs which can be turned into logic pointers
+    pools.values.foreach(_.prepareSerialization(this))
+
+    // write fields back to their buffers
+    pools.values.foreach(_.writeFields(this))
+
+    // write pools
+    pools.values.foreach(_.write(file, this))
+
+    // done:)
+    file.close()
+  }
