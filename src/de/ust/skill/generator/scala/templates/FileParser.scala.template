@@ -1,0 +1,197 @@
+class FileParser extends ByteStreamParsers {
+  /**
+   * @param σ the processed serializable state
+   * @return a function that maps logical indices to the corresponding strings
+   */
+  private[this] implicit def poolAccess(σ: SerializableState): (Long ⇒ String) = { i ⇒ σ.knownStrings(i.toInt - 1) }
+
+  // string pool
+  private[this] def pooledString = v64 >> bytes ^^ { new String(_, "UTF-8") }
+  private def stringPool = (v64 >> { i ⇒ repN(i.toInt, pooledString) }) ^^ { _.toArray }
+
+  // reflection pool
+  private def storagePools(σ: SerializableState) = rep(hasMore ~> storagePool(σ))
+  /**
+   * see skill ref man §6.2
+   */
+  private[this] def storagePool(σ: SerializableState) = ((v64 ^^ { i ⇒ σ(i) }) ~
+    (v64 >> superInformation(σ)) ~ v64 ~ restrictions ~
+    (v64 >> { i ⇒ repN(i.toInt, field(σ)) })) ^^ {
+      case name ~ sup ~ count ~ rest ~ fields ⇒ { (name, sup, count, rest, fields) }
+    }
+
+  /**
+   *  @return a tupel with (super name, super index)
+   */
+  private[this] def superInformation(σ: SerializableState)(index: Long) = {
+    if (index != 0)
+      v64 ^^ { i ⇒ (Some(σ(i)), index) }
+    else
+      success((None, 0L))
+  }
+
+  /**
+   * restrictions are currently restored to their textual representation
+   */
+  private[this] def restrictions = v64 >> { i ⇒ repN(i.toInt, restriction) }
+  private[this] def restriction = v64 >> { i ⇒
+    i match {
+      case 0 ⇒ v64 ~ v64 ^^ { case l ~ r ⇒ "range("+l+", "+r+")" }
+      case 1 ⇒ success("nonnull")
+      case 2 ⇒ success("unique")
+      //TODO ...
+      case _ ⇒ throw new java.lang.Error("Restrictions not yet supported!")
+    }
+  }
+
+  private[this] def field(σ: SerializableState) = restrictions ~ typeInfo(σ) ~ v64 ~ (v64 >> bytes) ^^ {
+    case d ~ t ~ n ~ payload ⇒ (t, σ(n), payload)
+  }
+
+  private def typeInfo(σ: SerializableState) = v64 >> { i ⇒
+    i match {
+      case 0  ⇒ i8 ^^ { new ConstantI8Info(_) }
+      case 1  ⇒ i16 ^^ { new ConstantI16Info(_) }
+      case 2  ⇒ i32 ^^ { new ConstantI32Info(_) }
+      case 3  ⇒ i64 ^^ { new ConstantI64Info(_) }
+      case 4  ⇒ v64 ^^ { new ConstantV64Info(_) }
+      case 5  ⇒ success(new AnnotationInfo())
+      case 6  ⇒ success(new BoolInfo())
+      case 7  ⇒ success(new I8Info())
+      case 8  ⇒ success(new I16Info())
+      case 9  ⇒ success(new I32Info())
+      case 10 ⇒ success(new I64Info())
+      case 11 ⇒ success(new V64Info())
+      case 12 ⇒ success(new F32Info())
+      case 13 ⇒ success(new F64Info())
+      case 14 ⇒ success(new StringInfo())
+      case 15 ⇒ v64 ~ baseTypeInfo ^^ { case i ~ t ⇒ new ConstantLengthArrayInfo(i.toInt, t) }
+      case 16 ⇒ v64 ~ baseTypeInfo ^^ { case i ~ t ⇒ new DependentLengthArrayInfo(σ(i), t) }
+      case 17 ⇒ baseTypeInfo ^^ { new VariableLengthArrayInfo(_) }
+      case 18 ⇒ baseTypeInfo ^^ { new ListInfo(_) }
+      case 19 ⇒ baseTypeInfo ^^ { new SetInfo(_) }
+      case 20 ⇒ v64 >> { n ⇒ repN(n.toInt, baseTypeInfo) } ^^ { new MapInfo(_) }
+      case i  ⇒ success(new PreliminaryUserType(i - 21))
+    }
+  }
+
+  /**
+   * matches only types which are legal arguments to ADTs
+   */
+  private def baseTypeInfo = v64 ^^ { i ⇒
+    i match {
+      case 5           ⇒ new AnnotationInfo()
+      case 6           ⇒ new BoolInfo()
+      case 7           ⇒ new I8Info()
+      case 8           ⇒ new I16Info()
+      case 9           ⇒ new I32Info()
+      case 10          ⇒ new I64Info()
+      case 11          ⇒ new V64Info()
+      case 12          ⇒ new F32Info()
+      case 13          ⇒ new F64Info()
+      case 14          ⇒ new StringInfo()
+      case i if i > 20 ⇒ new PreliminaryUserType(i - 21)
+    }
+  }
+
+  private def readSingleField(t: TypeInfo, σ: SerializableState): Parser[Any] = t match {
+    case d: ConstantI8Info          ⇒ success()
+    case d: ConstantI16Info         ⇒ success()
+    case d: ConstantI32Info         ⇒ success()
+    case d: ConstantI64Info         ⇒ success()
+    case d: ConstantV64Info         ⇒ success()
+    case d: I8Info                  ⇒ i8
+    case d: I16Info                 ⇒ i16
+    case d: I32Info                 ⇒ i32
+    case d: I64Info                 ⇒ i64
+    case d: V64Info                 ⇒ v64
+    case d: AnnotationInfo          ⇒ (v64 ~ v64) ^^ { case t ~ i ⇒ (t, i) }
+    case d: BoolInfo                ⇒ i8 ^^ { _ != 0 }
+    case d: F32Info                 ⇒ f32
+    case d: F64Info                 ⇒ f64
+    case d: StringInfo              ⇒ string(σ.knownStrings)
+
+    case d: ConstantLengthArrayInfo ⇒ repN(d.length, readSingleField(d.groundType, σ)) ^^ { _.toArray }
+    case d: VariableLengthArrayInfo ⇒ (v64 >> { i ⇒ repN(i.toInt, readSingleField(d.groundType, σ)) }) ^^ { _.toArray }
+    case d: ListInfo                ⇒ (v64 >> { i ⇒ repN(i.toInt, readSingleField(d.groundType, σ)) }) ^^ { _.toList }
+    case d: SetInfo                 ⇒ (v64 >> { i ⇒ repN(i.toInt, readSingleField(d.groundType, σ)) }) ^^ { _.toSet }
+
+    case d: UserType ⇒ v64 ^^ {
+      _ match {
+        case 0 ⇒ null
+        case index ⇒ σ.pools.get(d.name).getOrElse(
+          throw new IllegalStateException("Found a nonnull reference to missing usertype "+d.name)).getByID(index)
+      }
+
+    }
+
+    case d: PreliminaryUserType ⇒ throw new IllegalStateException(
+      "preliminary usertypes should already have been eleminitad")
+  }
+
+  /**
+   * @return the correct type of storage pool containing the correct data and type
+   */
+  def makePool(σ: SerializableState,
+               name: String,
+               t: UserType,
+               parent: Option[StoragePool],
+               size: Long,
+               idx: Long): StoragePool = name match {
+    case "date" ⇒ new DateStoragePool(t, size, σ)
+
+    case _      ⇒ new StoragePool(name, t, parent, size, idx)
+  }
+
+  def read(f: File): SerializableState = {
+
+    val in = new ByteReader(new BufferedInputStream(new FileInputStream(f)))
+    val p = new FileParser
+
+    // read the string pool
+    val rval = new SerializableState
+    rval.knownStrings.appendAll(p.stringPool(in).get)
+
+    // read the storage pools
+    val raw = p.storagePools(rval)(in).getOrElse({
+      rval.dumpDebugInfo;
+      throw new IllegalStateException("encountered unexpected end of file while parsing storage pools in <<dumped>>")
+    }).toArray
+
+    val typemap = new HashMap[String, UserType]
+    var i = 0
+    var refl = raw.map({
+      case (n, (s, _), _, _, f) ⇒
+        val rval = new UserType(i, n, s, new ArrayBuffer[(TypeInfo, String, Array[Byte])] ++= f);
+        typemap.put(n, rval);
+        i += 1;
+        rval
+    }).toArray
+
+    // eliminate preliminary user types
+    refl.foreach({ t ⇒
+      for (i ← (0 until t.fields.length))
+        t.fields(i) = t.fields(i) match {
+          case (p: PreliminaryUserType, n, d) ⇒ (refl(p.id.toInt), n, d)
+          case x                              ⇒ x
+        }
+    })
+
+    // create storage pools
+    i = 0
+    refl.foreach({ t ⇒
+      rval.pools.put(t.name, makePool(rval, t.name, t, t.superName match {
+        case Some(s: String) ⇒ rval.pools.get(s)
+        case None            ⇒ None
+      }, raw(i)._3, raw(i)._2._2));
+      i += 1
+    })
+
+    return rval
+  }
+  def readField(σ: SerializableState, count: Long, t: TypeInfo, data: Array[Byte]): List[Any] = {
+    val in = new ByteReader(new BufferedInputStream(new ByteArrayInputStream(data)))
+
+    repN(count.toInt, readSingleField(t, σ))(in).get
+  }
+}
