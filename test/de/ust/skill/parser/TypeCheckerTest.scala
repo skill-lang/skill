@@ -16,13 +16,13 @@ class TypeCheckerTest extends AssertionsForJUnit {
     p.parseAll(new File(path))
   }
 
-  @Test(expected = classOf[AssertionError]) def dupDefs = check("test/data/failures/duplicateDefinition.skill")
-  @Test(expected = classOf[AssertionError]) def dupField = check("test/data/failures/duplicateField.skill")
-  @Test(expected = classOf[AssertionError]) def halfFloat = check("test/data/failures/halfFloat.skill")
-  @Test(expected = classOf[AssertionError]) def constFloat = check("test/data/failures/floatConstant.skill")
-  @Test(expected = classOf[AssertionError]) def constSelf = check("test/data/failures/selfConst.skill")
-  @Test(expected = classOf[AssertionError]) def unkownType = check("test/data/failures/unknownType.skill")
-  @Test(expected = classOf[AssertionError]) def unkownFile = check("test/data/failures/unknownFile.skill")
-  @Test(expected = classOf[AssertionError]) def empty = check("test/data/failures/empty.skill")
-  @Test(expected = classOf[AssertionError]) def anyType = check("test/data/failures/anyType.skill")
+  @Test(expected = classOf[AssertionError]) def dupDefs = check("testdata/failures/duplicateDefinition.skill")
+  @Test(expected = classOf[AssertionError]) def dupField = check("testdata/failures/duplicateField.skill")
+  @Test(expected = classOf[AssertionError]) def halfFloat = check("testdata/failures/halfFloat.skill")
+  @Test(expected = classOf[AssertionError]) def constFloat = check("testdata/failures/floatConstant.skill")
+  @Test(expected = classOf[AssertionError]) def constSelf = check("testdata/failures/selfConst.skill")
+  @Test(expected = classOf[AssertionError]) def unkownType = check("testdata/failures/unknownType.skill")
+  @Test(expected = classOf[AssertionError]) def unkownFile = check("testdata/failures/unknownFile.skill")
+  @Test(expected = classOf[AssertionError]) def empty = check("testdata/failures/empty.skill")
+  @Test(expected = classOf[AssertionError]) def anyType = check("testdata/failures/anyType.skill")
 }
