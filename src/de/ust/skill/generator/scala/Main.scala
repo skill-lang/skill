@@ -8,7 +8,7 @@ import scala.collection.JavaConversions.asScalaBuffer
 import de.ust.skill.ir._
 import de.ust.skill.parser.Parser
 
-object Main {
+object Main extends FileParserMaker with DeclarationInterfaceMaker {
 
   def printHelp {
     println("usage:")
@@ -31,49 +31,15 @@ object Main {
     val IR = (new Parser).process(new File(skillPath))
 
     //generate public interface for type declarations
-    IR.foreach({ d ⇒
-      val out = new PrintWriter(new File(outPath + d.getName()+".scala"))
-      //package
-
-      //imports
-
-      //class prefix
-      out.write("trait " + d.getName() + " {\n")
-
-      //body
-      out.write("//////// FIELD INTERACTION ////////\n")
-      d.getFields().foreach({ f ⇒
-        out.write("def "+f.getName()+"(): "+_T(f.getType())+"\n")
-        out.write("def set"+f.getName().capitalize+"("+f.getName()+": "+_T(f.getType())+"):Unit\n")
-
-      })
-
-
-      //class postfix
-      out.write("//////// OBJECT CREATION AND DESTRUCTION ////////\n")
-      
-      
-      
-      out.write("//////// UTILS ////////\n")
-      
-      //nice toString
-      out.write("\noverride def toString(): String = \"" + d.getName() + "(\"")
-      d.getFields().foreach({ f ⇒
-        out.write("+" + f.getName()+"+\", \"")
-      })
-      out.write("+\")\"\n")
-      
-      out.write("}");
-
-      out.close()
-    })
+    IR.foreach({ d ⇒ makeDeclarationInterface(new PrintWriter(new File(outPath + d.getName()+".scala")), d) })
 
     //generate general code
+    makeFileParser(new PrintWriter(new File(outPath+"internal/FileParser.scala")))
 
     //generate IR specific code?
   }
 
-  private def _T(t: Type): String = t match {
+  override def _T(t: Type): String = t match {
     case t: GroundType ⇒ t.getName() match {
       case "i8"  ⇒ "Byte"
       case "i16" ⇒ "Short"
