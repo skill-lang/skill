@@ -5,6 +5,6 @@ import org.junit.Test
 
 class DateTest extends AssertionsForJUnit {
   @Test def test {
-    Main.main(Array[String]("testdata/scala/date.skill", "testdata/scala/src/"))
+    Main.main(Array[String]("scala/date.skill", "scala/src/"))
   }
 }

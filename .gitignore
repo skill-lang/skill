@@ -63,3 +63,11 @@ local.properties
 .*
 !.gitignore
 *~
+
+# sbt project
+project/**
+!project/plugins.sbt
+target/**
+
+# Mac OS X
+.DS_Store
