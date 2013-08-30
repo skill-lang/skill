@@ -150,22 +150,22 @@ class Parser {
    * checked.
    */
   private[parser] def parseAll(input: File): LinkedList[Definition] = {
-    val p = new FileParser();
+    val parser = new FileParser();
     val base = input.getParentFile();
     val todo = new HashSet[String]();
     todo.add(input.getName());
     val done = new HashSet[String]();
     var rval = new LinkedList[Definition]();
     while (!todo.isEmpty) {
-      val f = todo.head
-      todo -= f;
-      if (!done.contains(f)) {
-        done += f;
+      val file = todo.head
+      todo -= file;
+      if (!done.contains(file)) {
+        done += file;
 
         try {
-          val lines = scala.io.Source.fromFile(new File(base, f), "utf-8").getLines.mkString(" ")
+          val lines = scala.io.Source.fromFile(new File(base, file), "utf-8").getLines.mkString(" ")
 
-          val result = p.process(lines)
+          val result = parser.process(lines)
 
           // add includes to the todo list
           result._1.foreach(todo += _)
@@ -173,7 +173,7 @@ class Parser {
           // add definitions
           rval = rval ++ result._2
         } catch {
-          case e: FileNotFoundException ⇒ assert(false, "The include "+f+
+          case e: FileNotFoundException ⇒ assert(false, "The include "+file+
             "could not be resolved to an existing file: "+e.getMessage())
         }
       }
