@@ -5,18 +5,18 @@ package de.ust.skill.ir;
  */
 public class SetType extends CompoundType {
 	private final Type baseType;
-	
-	public SetType(Type baseType){
-		this.baseType=baseType;
+
+	public SetType(Type baseType) {
+		this.baseType = baseType;
 	}
-	
+
 	public Type getBaseType() {
 		return baseType;
 	}
 
 	@Override
 	public String toString() {
-		return "set<"+baseType.getTypeName() + ">";
+		return "set<" + baseType.getTypeName() + ">";
 	}
 
 	@Override

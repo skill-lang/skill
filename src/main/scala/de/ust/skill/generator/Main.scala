@@ -25,7 +25,7 @@ object Main
     with SerializableStateMaker
     with ByteStreamParsersMaker
     with StringPoolMaker
-    with StoragePoolMaker{
+    with StoragePoolMaker {
 
   def printHelp {
     println("usage:")

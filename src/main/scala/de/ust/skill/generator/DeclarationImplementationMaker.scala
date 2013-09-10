@@ -22,7 +22,7 @@ class Date(var _date:Long) extends _root_.expected.Date {
   override def set${f.getName().capitalize}(${f.getName()}: ${_T(f.getType())})= _${f.getName()} = ${f.getName()}
 """)
     })
-    
+
     out.write("}")
     out.close()
   }

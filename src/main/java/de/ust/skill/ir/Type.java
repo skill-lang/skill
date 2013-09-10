@@ -15,13 +15,11 @@ public abstract class Type implements Comparable<Type> {
 
 		boolean r, l;
 		// check for ground types
-		if ((l = (this instanceof GroundType))
-				| (r = (o instanceof GroundType))) {
+		if ((l = (this instanceof GroundType)) | (r = (o instanceof GroundType))) {
 			return l == r ? 0 : (l ? -1 : 1);
 		}
 		// check for compound types
-		if ((l = (this instanceof CompoundType))
-				| (r = (o instanceof CompoundType))) {
+		if ((l = (this instanceof CompoundType)) | (r = (o instanceof CompoundType))) {
 			return l == r ? 0 : (l ? -1 : 1);
 		}
 
@@ -61,10 +59,10 @@ public abstract class Type implements Comparable<Type> {
 
 		return t.getBaseType().getName().compareTo(s.getBaseType().getName());
 	}
-	
+
 	@Override
 	abstract public String toString();
-	
+
 	/**
 	 * @return the type name, as used in a field declaration
 	 */

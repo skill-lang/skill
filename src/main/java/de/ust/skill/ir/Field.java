@@ -14,19 +14,18 @@ public abstract class Field implements Comparable<Field> {
 		this.canonicalName = name.toLowerCase();
 		this.type = type;
 	}
-	
-	public String getName(){
+
+	public String getName() {
 		return name;
 	}
-	
-	public String getCanonicalName(){
+
+	public String getCanonicalName() {
 		return canonicalName;
 	}
-	
-	public Type getType(){
+
+	public Type getType() {
 		return type;
 	}
-	
 
 	/**
 	 * implements canonical field order

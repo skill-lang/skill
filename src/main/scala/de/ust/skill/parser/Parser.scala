@@ -183,12 +183,12 @@ class Parser {
   }
 
   private def mkType(s: Type, decls: Map[String, Declaration]): de.ust.skill.ir.Type = s match {
-    case t: ListType           ⇒ new de.ust.skill.ir.ListType(mkType(t.baseType, decls))
-    case t: SetType            ⇒ new de.ust.skill.ir.SetType(mkType(t.baseType, decls))
-    case t: MapType            ⇒ new de.ust.skill.ir.MapType(t.args.map(mkType(_, decls)).asJava)
+    case t: ListType          ⇒ new de.ust.skill.ir.ListType(mkType(t.baseType, decls))
+    case t: SetType           ⇒ new de.ust.skill.ir.SetType(mkType(t.baseType, decls))
+    case t: MapType           ⇒ new de.ust.skill.ir.MapType(t.args.map(mkType(_, decls)).asJava)
 
-    case t: ConstantArrayType  ⇒ new ConstantLengthArrayType(mkType(t.baseType, decls), t.length)
-    case t: ArrayType          ⇒ new VariableLengthArrayType(mkType(t.baseType, decls))
+    case t: ConstantArrayType ⇒ new ConstantLengthArrayType(mkType(t.baseType, decls), t.length)
+    case t: ArrayType         ⇒ new VariableLengthArrayType(mkType(t.baseType, decls))
 
     case t: BaseType ⇒ decls.get(t.name).getOrElse(GroundType.get(t.name)).ensuring({
       r ⇒ if (null == r) throw new IllegalStateException("unknown declaration name "+t.name); true

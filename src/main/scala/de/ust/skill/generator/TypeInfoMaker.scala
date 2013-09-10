@@ -19,7 +19,7 @@ trait TypeInfoMaker {
    * Assume template copy functionality.
    */
   protected def copyFromTemplate(out: PrintWriter, template: String): Unit
-  
+
   /**
    * Assume a package prefix provider.
    */

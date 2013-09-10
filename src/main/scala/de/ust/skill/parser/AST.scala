@@ -16,7 +16,7 @@ final class Hint(val name: String) extends Node {
 }
 
 final class Description(val comment: Option[String], val restrictions: List[Restriction],
-  val hints: List[Hint]) extends Node {
+                        val hints: List[Hint]) extends Node {
 }
 
 sealed abstract class Type extends Node {
@@ -51,6 +51,6 @@ final class Data(val isAuto: Boolean, t: Type, name: String) extends Field(t, na
 }
 
 final class Definition(
-  val description: Description,
-  val name: String, val parent: Option[String], val body: List[Field]) extends Node {
+    val description: Description,
+    val name: String, val parent: Option[String], val body: List[Field]) extends Node {
 }
