@@ -20,6 +20,7 @@ import de.ust.skill.generator.scala.internal.parsers.ByteReaderMaker
 import de.ust.skill.generator.scala.internal.parsers.FieldParserMaker
 import de.ust.skill.generator.scala.internal.SkillExceptionMaker
 import de.ust.skill.generator.scala.internal.types.DeclarationImplementationMaker
+import de.ust.skill.generator.scala.internal.pool.DeclaredPoolsMaker
 
 /**
  * A generator turns a set of skill declarations into a scala interface providing means of manipulating skill files
@@ -31,6 +32,7 @@ object Main
     extends FileParserMaker
     with DeclarationInterfaceMaker
     with DeclarationImplementationMaker
+    with DeclaredPoolsMaker
     with IteratorMaker
     with SkillExceptionMaker
     with TypeInfoMaker

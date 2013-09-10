@@ -39,7 +39,7 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
     out.write("  //////// UTILS ////////\n\n")
 
     //nice toString
-    out.write(d.getFields.map({ f ⇒ f.getName() }).toArray.mkString(
+    out.write(d.getFields.map({ f ⇒ f.getName() }).mkString(
       s"""  override def toString(): String = "${d.getName()}("+""",
       "+\", \"+",
       "+\")\"\n"))
