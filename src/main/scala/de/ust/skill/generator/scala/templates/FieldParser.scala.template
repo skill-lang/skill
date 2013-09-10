@@ -1,0 +1,90 @@
+
+/**
+ * The field parser is able to turn field data from a type block data chunk into an array of field entries
+ */
+final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
+  private def readSingleField(t: TypeInfo): Parser[Any] = t match {
+    case d: ConstantI8Info          ⇒ success()
+    case d: ConstantI16Info         ⇒ success()
+    case d: ConstantI32Info         ⇒ success()
+    case d: ConstantI64Info         ⇒ success()
+    case d: ConstantV64Info         ⇒ success()
+    case d: I8Info                  ⇒ i8
+    case d: I16Info                 ⇒ i16
+    case d: I32Info                 ⇒ i32
+    case d: I64Info                 ⇒ i64
+    case d: V64Info                 ⇒ v64
+    case d: AnnotationInfo          ⇒ (v64 ~ v64) ^^ { case t ~ i ⇒ (t, i) }
+    case d: BoolInfo                ⇒ i8 ^^ { _ != 0 }
+    case d: F32Info                 ⇒ f32
+    case d: F64Info                 ⇒ f64
+    case d: StringInfo              ⇒ string(σ)
+
+    // array like compound types
+    case d: ConstantLengthArrayInfo ⇒ repN(d.length, readSingleField(d.groundType)) ^^ { _.toArray }
+    case d: VariableLengthArrayInfo ⇒ (v64 >> { i ⇒ repN(i.toInt, readSingleField(d.groundType)) }) ^^ { _.toArray }
+    case d: ListInfo                ⇒ (v64 >> { i ⇒ repN(i.toInt, readSingleField(d.groundType)) }) ^^ { _.toList }
+    case d: SetInfo                 ⇒ (v64 >> { i ⇒ repN(i.toInt, readSingleField(d.groundType)) }) ^^ { _.toSet }
+
+    //maps are rather complicated
+    case d: MapInfo                 ⇒ parseMap(d)
+
+    // user types are just references, easy pray
+    case d: UserType ⇒ v64 ^^ {
+      _ match {
+        case 0 ⇒ null
+        case index ⇒ σ.pools.get(d.name).getOrElse(
+          throw new IllegalStateException("Found a nonnull reference to missing usertype "+d.name)).getByID(index)
+      }
+
+    }
+
+    case d: PreliminaryUserType ⇒ throw new IllegalStateException(
+      "preliminary usertypes should already have been eleminitad")
+  }
+
+  /**
+   * if d is a map<T,U,V>, the result is a Parser[Map[T,Map[U,V]]]
+   */
+  private def parseMap(d: MapInfo) = {
+    def lastMap(t: TypeInfo) = readSingleField(t);
+    def binaryMap(values: Parser[Any], t: TypeInfo) = {
+      v64 >> { i ⇒ repN(i.toInt, readSingleField(t) ~ values) } ^^ { flat ⇒
+        var rval = new HashMap[Any, Any]
+        flat.foreach({
+          case k ~ v ⇒
+            rval.put(k, v)
+        })
+        rval
+      }
+    }
+
+    val types = d.groundType.reverse;
+
+    types.tail.foldLeft(lastMap(types.head))(binaryMap(_, _))
+  }
+
+  /**
+   * Reads Fields into a List of the respective type.
+   *
+   * @note The return type is any, because there is no safe way for a static type system to know the type up-front.
+   */
+  def readField(count: Long, t: TypeInfo, data: List[ChunkInfo]): List[Any] = {
+    val in = σ.fromReader
+    var rval = new LinkedList[Any]()
+
+    data.foreach({ chunk ⇒
+      in.push(chunk.position)
+      rval ++= repN(chunk.count.toInt, readSingleField(t))(in).get
+
+      // ensure the data chunk had the expected size
+      if (in.position != (chunk.position + chunk.length))
+        PoolSizeMissmatchError(in.position, chunk.position + chunk.length, t)
+
+      in.pop
+    })
+
+    rval.toList
+  }
+
+}

@@ -6,9 +6,19 @@ import de.ust.skill.generator.scala.GeneralOutputMaker
 trait ByteStreamParsersMaker extends GeneralOutputMaker{
   override def make {
     super.make
-    val out = open("internal/pool/ByteStreamParsers.scala")
+    val out = open("internal/parsers/ByteStreamParsers.scala")
     //package
-    out.write(s"package ${packagePrefix}internal.pool\n\n")
+    out.write(s"""package ${packagePrefix}internal.parsers
+
+import java.util.Arrays
+
+import scala.language.implicitConversions
+import scala.util.parsing.combinator.Parsers
+
+import ${packagePrefix}internal.SerializableState
+import ${packagePrefix}internal.SkillException
+import ${packagePrefix}internal.UnexpectedEOF
+""")
 
     //(imports are part of the template) 
     //the body itself is always the same

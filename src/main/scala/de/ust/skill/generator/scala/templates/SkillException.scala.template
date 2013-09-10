@@ -1,0 +1,91 @@
+/**
+ * The top class for exceptions thrown by the SKilL API.
+ *
+ * @author Timm Felden
+ */
+class SkillException(msg: String, cause: Throwable) extends Exception(msg, cause) {
+  def this(cause: Throwable) = this(cause.getMessage(), cause)
+  def this(msg: String) = this(msg, null)
+}
+object SkillException {
+  def apply(msg: String, cause: Throwable) = throw new SkillException(msg, cause)
+}
+
+/**
+ * Exception implementing this trait are expectable, when reading or writing skill files. They correspond to §Appendix.B
+ * 
+ * @author Timm Felden
+ */
+trait ExpectableSkillException {}
+
+/**
+ * This exception is used if byte stream related errors occur.
+ *
+ * @author Timm Felden
+ */
+class ParseException(msg: String) extends SkillException(msg) {}
+object ParseException {
+  def apply(msg: String) = throw new ParseException(msg)
+}
+
+/**
+ * This exception is used if byte stream related errors occur.
+ *
+ * @author Timm Felden
+ */
+class ByteReaderException(msg: String, cause: Throwable) extends SkillException(msg, cause) {}
+object ByteReaderException {
+  def apply(msg: String) = throw new ByteReaderException(msg, null)
+}
+
+/**
+ * Thrown, if the end of file is reached at an illegal point, i.e. inside a block.
+ *
+ * @author Timm Felden
+ */
+class UnexpectedEOF(msg: String, cause: Throwable)
+  extends ByteReaderException(msg, cause)
+  with ExpectableSkillException {}
+object UnexpectedEOF {
+  def apply(msg: String) = throw new UnexpectedEOF(msg, null)
+  def apply(msg: String, cause: Throwable) = throw new UnexpectedEOF(msg, cause)
+}
+
+/**
+ * Thrown, if an index into a pool is invalid.
+ *
+ * @author Timm Felden
+ */
+class InvalidPoolIndex(index: Long, size: Long, pool: String)
+  extends SkillException(s"invalid index $index into pool $pool(size:$size)")
+  with ExpectableSkillException {}
+object InvalidPoolIndex {
+  def apply(index: Long, size: Long, pool: String) = throw new InvalidPoolIndex(index, size, pool)
+}
+
+/**
+ * Thrown, if field deserialization consumes less bytes then specified by the header.
+ *
+ * @author Timm Felden
+ */
+class PoolSizeMissmatchError(expected: Long, actual: Long, t: TypeInfo)
+  extends SkillException(s"expected: $expected, was: $actual, field type: $t")
+  with ExpectableSkillException {}
+object PoolSizeMissmatchError {
+  def apply(expected: Long, actual: Long, t: TypeInfo) =
+    throw new PoolSizeMissmatchError(expected: Long, actual: Long, t: TypeInfo)
+}
+
+/**
+ * Thrown in case of a type miss-match on a field type.
+ *
+ * @author Timm Felden
+ */
+class TypeMissmatchError(t: TypeInfo, expected: String, fieldName: String)
+  extends SkillException(s"""Encountered incompatible type "$t" (expected: $expected)
+for field $fieldName in constarcution of DateStoragePool.""")
+  with ExpectableSkillException {}
+object TypeMissmatchError {
+  def apply(t: TypeInfo, expected: String, fieldName: String) =
+    throw new TypeMissmatchError(t: TypeInfo, expected: String, fieldName: String)
+}

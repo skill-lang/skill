@@ -2,19 +2,17 @@ package de.ust.skill.generator.scala.internal
 
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait IteratorMaker extends GeneralOutputMaker{
+trait SkillExceptionMaker extends GeneralOutputMaker{
   override def make {
     super.make
-    val out = open("internal/Iterator.scala")
+    val out = open("internal/SkillException.scala")
     //package & imports
     out.write(s"""package ${packagePrefix}internal
-
-import ${packagePrefix}internal.pool.StoragePool
 
 """)
 
     //the body itself is always the same
-    copyFromTemplate(out, "Iterator.scala.template")
+    copyFromTemplate(out, "SkillException.scala.template")
 
     //class prefix
     out.close()

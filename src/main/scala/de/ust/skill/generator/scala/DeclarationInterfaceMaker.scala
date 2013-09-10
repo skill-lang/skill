@@ -8,11 +8,11 @@ import de.ust.skill.ir.Type
 trait DeclarationInterfaceMaker extends GeneralOutputMaker {
   override def make {
     super.make
-    IR.foreach({ d⇒
+    IR.foreach({ d ⇒
       makeDeclarationInterface(open(d.getName()+".scala"), d)
     })
   }
-  
+
   private def makeDeclarationInterface(out: PrintWriter, d: Declaration) {
     //package
     if (packagePrefix.length > 0)
@@ -24,24 +24,25 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
     out.write("trait "+d.getName()+" {\n")
 
     //body
-    out.write("//////// FIELD INTERACTION ////////\n")
+    out.write("  //////// FIELD INTERACTION ////////\n\n")
     d.getFields().foreach({ f ⇒
-      out.write("def "+f.getName()+"(): "+_T(f.getType())+"\n")
-      out.write("def set"+f.getName().capitalize+"("+f.getName()+": "+_T(f.getType())+"):Unit\n")
+      val name = f.getName
+      val Name = f.getName.capitalize
 
+      out.write(s"  def $name(): ${_T(f.getType())}\n")
+      out.write(s"  def set$Name($name: ${_T(f.getType())}): Unit\n\n")
     })
 
     //class postfix
-    out.write("//////// OBJECT CREATION AND DESTRUCTION ////////\n")
+    out.write("  //////// OBJECT CREATION AND DESTRUCTION ////////\n\n")
 
-    out.write("//////// UTILS ////////\n")
+    out.write("  //////// UTILS ////////\n\n")
 
     //nice toString
-    out.write("\noverride def toString(): String = \""+d.getName()+"(\"")
-    d.getFields().foreach({ f ⇒
-      out.write("+"+f.getName()+"+\", \"")
-    })
-    out.write("+\")\"\n")
+    out.write(d.getFields.map({ f ⇒ f.getName() }).toArray.mkString(
+      s"""  override def toString(): String = "${d.getName()}("+""",
+      "+\", \"+",
+      "+\")\"\n"))
 
     out.write("}");
 

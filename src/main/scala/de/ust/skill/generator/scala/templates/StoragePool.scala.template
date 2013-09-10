@@ -1,6 +1,12 @@
+
+/**
+ * General purpose storage pool, which is used if for unknown types. Other storage pool inherit from this class.
+ *
+ * @author Timm Felden
+ */
 class StoragePool(
-  val name: String, val userType: UserType, val superPool: Option[StoragePool],
-  var storedSize: Long, var basePoolStartIndex: Long) {
+    val name: String, val userType: UserType, val superPool: Option[StoragePool],
+    var storedSize: Long, var basePoolStartIndex: Long) {
 
   /**
    * true iff the pool has a shallow modification, i.e. an index may have changed
@@ -32,11 +38,9 @@ class StoragePool(
       fieldNames ++= superPool.get.fieldNames
       fieldTypes ++= superPool.get.fieldTypes
     }
-    userType.fields.foreach({
-      case (t, n, p) ⇒ {
-        fieldTypes.put(fieldNames.size, t)
-        fieldNames.put(n, fieldNames.size)
-      }
+    userType.fields.foreach({ f ⇒
+      fieldTypes.put(fieldNames.size, f.t)
+      fieldNames.put(f.name, fieldNames.size)
     })
   }
 
@@ -77,13 +81,20 @@ class StoragePool(
 
   }
 
+  protected var endOffsets = new HashMap[FieldDeclaration, Long]()
   /**
    * writes fields from memory into their serialized form.
-   *
-   * does nothing in case of general pools.(reflection???)
+   * saves end-offsets for writing the header
    */
-  private[internal] def writeFields(σ: SerializableState) {
+  private[internal] def writeFieldData(out: ByteArrayOutputStream, σ: SerializableState) {
+    userType.fields.foreach(writeFieldData(out, σ, _))
+  }
 
+  protected[this] def writeFieldData(out: ByteArrayOutputStream, σ: SerializableState, f: FieldDeclaration) {
+    // TODO write generic field data
+
+    // note this is only correct if data is written; for now this will cause errors, but the bug is the TODO above
+    endOffsets.put(f, out.size)
   }
 
   import SerializableState.v64
@@ -93,10 +104,10 @@ class StoragePool(
    *
    * the resulting layout is described in SKilL §6.2
    */
-  private[internal] def write(out: BufferedOutputStream, σ: SerializableState) {
-    def putName(s: String) {
-      out.write(v64(σ.knownStrings.indexOf(s.toLowerCase()).toLong + 1))
-    }
+  final private[internal] def write(out: FileChannel, σ: SerializableState) {
+    // little helpers
+    def writeV64(i: Long) = out.write(ByteBuffer.wrap(v64(i)))
+    def putName(s: String) = writeV64(σ.strings.serializationIDs(s))
 
     //string typeName
     putName(name)
@@ -104,41 +115,36 @@ class StoragePool(
     //string superTypeName &&
     //option(v64 basePoolStartIndex; iff has superType)
     superPool match {
-      case None ⇒ out.write(v64(0))
+      case None ⇒ writeV64(0)
       case Some(s) ⇒ {
         putName(s.name)
-        out.write(v64(basePoolStartIndex))
+        writeV64(basePoolStartIndex)
       }
     }
 
     //v64 elementCount
-    out.write(v64(sizeCount))
+    writeV64(sizeCount)
 
     //restriction[] REST
     // TODO write restrictions
-    out.write(v64(0))
+    writeV64(0)
 
     //v64 fieldCount
-    out.write(v64(userType.fields.length))
+    writeV64(userType.fields.length)
 
     //foreach f in fields
-    userType.fields.foreach {
-      case (t, n, e) ⇒
-        //restriction[] f.REST
-        // TODO write restrictions
-        out.write(v64(0))
+    userType.fields.foreach({ f ⇒
+      // restriction[] f.REST
+      // TODO write restrictions
+      writeV64(0)
 
-        //[[f.type]]
-        out.write(v64(t.typeId))
+      //[[f.type]]
+      writeV64(f.t.typeId)
 
-        //string f.name
-        putName(n)
-
-        //@as(f.T[elementCount])
-        //i8[] f.elements
-        out.write(v64(e.length))
-        out.write(e)
-    }
+      //string f.name
+      putName(f.name)
+      writeV64(endOffsets(f))
+    })
 
   }
 }

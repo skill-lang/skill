@@ -2,10 +2,8 @@ package de.ust.skill.generator.scala
 
 import java.io.File
 import java.io.PrintWriter
-
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.io.Source
-
 import de.ust.skill.generator.scala.internal.FieldDeclarationMaker
 import de.ust.skill.generator.scala.internal.IteratorMaker
 import de.ust.skill.generator.scala.internal.SerializableStateMaker
@@ -18,6 +16,10 @@ import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.Type
 import de.ust.skill.parser.Parser
+import de.ust.skill.generator.scala.internal.parsers.ByteReaderMaker
+import de.ust.skill.generator.scala.internal.parsers.FieldParserMaker
+import de.ust.skill.generator.scala.internal.SkillExceptionMaker
+import de.ust.skill.generator.scala.internal.types.DeclarationImplementationMaker
 
 /**
  * A generator turns a set of skill declarations into a scala interface providing means of manipulating skill files
@@ -28,12 +30,16 @@ import de.ust.skill.parser.Parser
 object Main
     extends FileParserMaker
     with DeclarationInterfaceMaker
+    with DeclarationImplementationMaker
     with IteratorMaker
+    with SkillExceptionMaker
     with TypeInfoMaker
     with FieldDeclarationMaker
     with SerializableStateMaker
     with ByteStreamParsersMaker
+    with FieldParserMaker
     with StringPoolMaker
+    with ByteReaderMaker
     with StoragePoolMaker {
 
   var outPath: String = null
@@ -90,5 +96,5 @@ object Main
    *
    * TODO provide a mechanism to actually set this
    */
-  override protected def packagePrefix(): String = ""
+  override protected def packagePrefix(): String = "expected."
 }

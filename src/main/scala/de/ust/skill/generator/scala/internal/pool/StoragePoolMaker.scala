@@ -11,15 +11,15 @@ trait StoragePoolMaker extends GeneralOutputMaker{
     out.write(s"""package ${packagePrefix}internal.pool
 
 import java.io.BufferedOutputStream
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.language.postfixOps
 
-import ${packagePrefix}internal.SerializableState
-import ${packagePrefix}internal.TypeInfo
-import ${packagePrefix}internal.UserType
-
+import ${packagePrefix}internal._
 """)
 
     //the body itself is always the same

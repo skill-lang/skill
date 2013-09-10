@@ -3,16 +3,20 @@
    */
   def dumpDebugInfo = {
     println("DEBUG INFO START")
-    println("StringPool:")
-    knownStrings.foreach(println(_))
+    println(s"StringPool (${strings.size}):")
+    for (i ← 1 to strings.size) {
+      if (!strings.idMap.contains(i))
+        print("lazy ⇒ ")
+      println(getString(i))
+    }
     println("")
     println("ReflectionPool:")
     pools.values.foreach(s ⇒ println(s.userType.getDeclaration))
     println("")
     println("StoragePools:")
     pools.values.foreach({ s ⇒
-      println(s.name + ": " + s.sizeCount);
-      println(s.data.fold(" ")("" + _ + " | " + _) + " |")
+      println(s.name+": "+s.sizeCount);
+      println(s.data.fold(" ")(""+_+" | "+_)+" |")
     })
     println("")
 
@@ -30,7 +34,7 @@ object SerializableState {
   /**
    * Reads a skill file and turns it into a serializable state.
    */
-  def read(target: File): SerializableState = (new FileParser).read(target)
+  def read(target: Path): SerializableState = FileParser.read(target)
 
   /**
    *  encode a v64 value into a stream

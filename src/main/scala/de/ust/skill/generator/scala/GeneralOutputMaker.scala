@@ -31,7 +31,7 @@ trait GeneralOutputMaker {
    * Creates the correct PrintWriter for the argument file.
    */
   def open(path:String) = {
-    val f = new File(outPath + path)
+    val f = new File(s"$outPath$packagePath$path")
     f.getParentFile.mkdirs
     f.createNewFile
     new PrintWriter(f)
@@ -51,4 +51,10 @@ trait GeneralOutputMaker {
    * Assume a package prefix provider.
    */
   protected def packagePrefix(): String
+  
+  private lazy val packagePath = if(packagePrefix.length > 0){
+    packagePrefix.replace(".", "/")
+  } else {
+    ""
+  }
 }

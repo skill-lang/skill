@@ -1,32 +1,244 @@
+
 /**
+ * see skill ref man §6.2
+ *
  * @author Timm Felden
+ * @note Lazy deserialization with multiple blocks will require a block counter which is stored along offsets
  */
-class FileParser extends ByteStreamParsers {
+final private class FileParser extends ByteStreamParsers {
+
+  /**
+   * A type decalariation, as it occurs during parsing of a type blocks header.
+   *
+   * @author Timm Felden
+   */
+  private class TypeDeclaration(
+      val name: String,
+      val superName: Option[String],
+      val lbpsi: Long,
+      val count: Long /*, restrictions*/ ,
+      val fieldCount: Long) {
+    var fieldDeclarations: List[FieldDeclaration] = null
+
+    /**
+     * Reads field declarations matching this type declaration from a stream, based on the state σ
+     *
+     * TODO treat restrictions
+     */
+    def parseFieldDeclarations: Parser[TypeDeclaration] = {
+      // if we have new instances and the type existed and there are new fields, we get into special cases
+      if (count > 0 && σ.pools.contains(name)) {
+        val knownFields = σ.pools(name).userType.fields.size
+        assert(knownFields > 0, s"The block contains lacks $knownFields field declarations.")
+        var fieldIndex = 0
+
+        tryCatch(repN(knownFields.toInt, v64 ^^ { end ⇒
+          var result = σ.pools(name).userType.fields(fieldIndex)
+          result.end = end
+
+          result
+        }) >> { fields ⇒
+          repN((fieldCount - knownFields).toInt, restrictions ~ fieldTypeDeclaration ~ v64 ~ v64 ^^ {
+            case r ~ t ~ n ~ end ⇒
+              new FieldDeclaration(t, σ(n), end)
+          }) ^^ { newFields ⇒
+            fields ++ newFields
+          }
+        }
+        )(s"partial type declaration in type $name failed")
+      } else {
+        // we append only fields to the type; it is not important whether or not it existed before;
+        //  all fields contain all decalrations
+        tryCatch(
+          repN(fieldCount.toInt,
+            restrictions ~ fieldTypeDeclaration ~ v64 ~ v64 ^^ {
+              case r ~ t ~ n ~ end ⇒
+                val name = σ(n)
+                new FieldDeclaration(t, name, end)
+            })
+        )(s"full type declaration in type $name failed")
+      }
+    } ^^ { r ⇒
+      fieldDeclarations = r;
+      this
+    }
+
+  }
+
+  /**
+   * the state to be created is shared across a file parser instance; file parser instances are used to turn a file into
+   * a new state anyway.
+   */
+  private val σ = new SerializableState;
+
+  private var userTypeIndexMap = new HashMap[Long, UserType]
+
   /**
    * @param σ the processed serializable state
    * @return a function that maps logical indices to the corresponding strings
    */
-  private[this] implicit def poolAccess(σ: SerializableState): (Long ⇒ String) = { i ⇒ σ.knownStrings(i.toInt - 1) }
+  private[this] implicit def poolAccess(σ: SerializableState): (Long ⇒ String) = σ.getString(_)
 
-  // string pool
-  private[this] def pooledString = v64 >> bytes ^^ { new String(_, "UTF-8") }
-  private def stringPool = (v64 >> { i ⇒ repN(i.toInt, pooledString) }) ^^ { _.toArray }
+  /**
+   * turns a file into a raw serializable state
+   */
+  private def file: Parser[SerializableState] = {
+    var blockCounter = 1;
+    tryCatch(
+      rep(hasMore ~>
+        stringBlock ~
+        typeBlock ~ { blockCounter += 1; success() }
+      ) ^^ { _ ⇒ σ }
+    )(s"file parsing failed in block $blockCounter ")
+  }
 
-  // reflection pool
-  private def storagePools(σ: SerializableState) = rep(hasMore ~> storagePool(σ))
+  /**
+   * reads a string block
+   */
+  private def stringBlock: Parser[Unit] = tryCatch(
+    tryCatch(
+      v64 >> { count ⇒ repN(count.toInt, i32) }
+    )("string block head corrupted")
+      >> stringBlockData
+  )("string block parsing failed")
+
+  private def stringBlockData(offsets: List[Int]) = tryCatch(new Parser[Unit] {
+    def apply(in: Input) = {
+      // add absolute offsets and lengths to the states position buffer
+      var it = offsets.iterator
+      var last = 0
+      val off = in.position
+      val map = σ.strings.stringPositions
+
+      while (it.hasNext) {
+        val next = it.next()
+        map.put(map.size + 1, (off + last, next - last))
+        last = next
+      }
+
+      // jump over string data
+      Success((), in.drop(last.toInt))
+    }
+  })("string offset processing failed")
+
+  /**
+   * reads a type block and adds the contained type information to the pool.
+   * At the moment, it will process fields as well, because we do not have a good random access file stream
+   *  implementation, yet.
+   */
+  private def typeBlock: Parser[Unit] = tryCatch(
+    (v64 >>
+      { count ⇒ repN(count.toInt, typeDeclaration) } ^^ { rawList: List[TypeDeclaration] ⇒
+        val raw = rawList.toArray
+
+        var i = userTypeIndexMap.size
+        var refl = raw.map({
+          decl ⇒
+            assert(null != decl.fieldDeclarations, s"forgot to parse field declarations of type ${decl.name}")
+
+            val rval = new UserType(i, decl.name, decl.superName,
+              new ArrayBuffer[FieldDeclaration] ++= decl.fieldDeclarations
+            );
+            userTypeIndexMap.put(rval.index, rval)
+            i += 1;
+            rval
+        }).toArray
+
+        // eliminate preliminary user types
+        refl.foreach({ t ⇒
+          t.fields.foreach(f ⇒ {
+            if (f.t.isInstanceOf[PreliminaryUserType]) {
+              val index = f.t.asInstanceOf[PreliminaryUserType].index
+              if (userTypeIndexMap.contains(index))
+                f.t = userTypeIndexMap(index)
+              else
+                throw new SkillException(
+                  s"${t.name}.${f.name} refers to an invalid user type $index (last valid is ${userTypeIndexMap.size})"
+                )
+            }
+          })
+        })
+
+        (raw, refl)
+      }) >> { arg ⇒
+        typeChunks(arg._1) ^^ {
+          case () ⇒
+            val raw = arg._1;
+            // create storage pools
+            var i = 0
+            arg._2.foreach({ t ⇒
+              σ.pools.put(t.name, makePool(σ, t.name, t, t.superName match {
+                case Some(s: String) ⇒ σ.pools.get(s)
+                case None            ⇒ None
+              }, raw(i).count, raw(i).lbpsi));
+              i += 1
+            })
+        }
+      }
+  )("type block parsing failed")
+
+  /**
+   * reads type chunks using the raw information from the type block
+   */
+  private def typeChunks(declarations: Array[TypeDeclaration]) = new Parser[Unit] {
+    def apply(in: Input) = try {
+
+      var lastOffset = 0L;
+
+      declarations.foreach({ d ⇒
+        d.fieldDeclarations.foreach({ f ⇒
+          // the stream is at $lastOffset; we want to read until the fields offset
+          f.dataChunks ++= List(ChunkInfo(in.position, f.end - lastOffset, d.count))
+          lastOffset = f.end
+
+          //invalidate end for security reasons
+          f.end = -1
+        })
+      })
+
+      // jump over the data chunk, it might be processed in the future
+      in.drop(lastOffset.toInt)
+
+      Success((), in)
+    } catch { case e: SkillException ⇒ SkillException("type chunk parsing failed", e) }
+  }
+
   /**
    * see skill ref man §6.2
    */
-  private[this] def storagePool(σ: SerializableState) = ((v64 ^^ { i ⇒ σ(i) }) ~
-    (v64 >> superInformation(σ)) ~ v64 ~ restrictions ~
-    (v64 >> { i ⇒ repN(i.toInt, field(σ)) })) ^^ {
-      case name ~ sup ~ count ~ rest ~ fields ⇒ { (name, sup, count, rest, fields) }
-    }
+  private[this] def typeDeclaration: Parser[TypeDeclaration] = tryCatch(
+    (v64 ^^ { i ⇒ σ(i) }) >> { name ⇒
+      // check if we append to an existing type
+      if (σ.pools.contains(name)) {
+        val t = σ.pools(name)
+        var s: Option[String] = None
+
+        tryCatch((t.superPool match {
+          case Some(sup) ⇒
+            s = Some(sup.name); v64
+          case _ ⇒ success(0L)
+        }) ~ v64 ~ v64 ^^ {
+          case lbpsi ~ count ~ fields ⇒
+            new TypeDeclaration(name, s, lbpsi, count, fields)
+        })(s"failed to parse type $name")
+
+      } else {
+        tryCatch(((v64 >> superInformation) ~
+          v64 ~
+          restrictions ~
+          v64
+        ) ^^ {
+            case sup ~ count ~ restrictions ~ fields ⇒
+              new TypeDeclaration(name, sup._1, sup._2, count, fields)
+          })(s"failed to parse new type $name")
+      }
+    } >> { _.parseFieldDeclarations }
+  )("type declaration parsing failed")
 
   /**
-   *  @return a tupel with (super name, super index)
+   *  @return a tuple with (super name, super index)
    */
-  private[this] def superInformation(σ: SerializableState)(index: Long) = {
+  private[this] def superInformation(index: Long) = {
     if (index != 0)
       v64 ^^ { i ⇒ (Some(σ(i)), index) }
     else
@@ -36,99 +248,73 @@ class FileParser extends ByteStreamParsers {
   /**
    * restrictions are currently restored to their textual representation
    */
-  private[this] def restrictions = v64 >> { i ⇒ repN(i.toInt, restriction) }
-  private[this] def restriction = v64 >> { i ⇒
-    i match {
-      case 0 ⇒ v64 ~ v64 ^^ { case l ~ r ⇒ "range("+l+", "+r+")" }
-      case 1 ⇒ success("nonnull")
-      case 2 ⇒ success("unique")
-      //TODO ...
-      case _ ⇒ throw new java.lang.Error("Restrictions not yet supported!")
-    }
-  }
+  private[this] def restrictions: Parser[List[String]] = v64 >> { i ⇒ repN(i.toInt, restriction) }
+  private[this] def restriction = tryCatch(
+    v64 >> { i ⇒
+      i match {
+        case 0 ⇒ try { v64 ~ v64 ~ v64 ^^ { case l ~ r ~ b ⇒ s"range(${σ(l)}, ${σ(r)}, ${σ(b)})" } }
+        catch { case e: Exception ⇒ SkillException("malformed range extension", e) }
 
-  private[this] def field(σ: SerializableState) = restrictions ~ typeInfo(σ) ~ v64 ~ (v64 >> bytes) ^^ {
-    case d ~ t ~ n ~ payload ⇒ (t, σ(n), payload)
-  }
-
-  private def typeInfo(σ: SerializableState) = v64 >> { i ⇒
-    i match {
-      case 0  ⇒ i8 ^^ { new ConstantI8Info(_) }
-      case 1  ⇒ i16 ^^ { new ConstantI16Info(_) }
-      case 2  ⇒ i32 ^^ { new ConstantI32Info(_) }
-      case 3  ⇒ i64 ^^ { new ConstantI64Info(_) }
-      case 4  ⇒ v64 ^^ { new ConstantV64Info(_) }
-      case 5  ⇒ success(new AnnotationInfo())
-      case 6  ⇒ success(new BoolInfo())
-      case 7  ⇒ success(new I8Info())
-      case 8  ⇒ success(new I16Info())
-      case 9  ⇒ success(new I32Info())
-      case 10 ⇒ success(new I64Info())
-      case 11 ⇒ success(new V64Info())
-      case 12 ⇒ success(new F32Info())
-      case 13 ⇒ success(new F64Info())
-      case 14 ⇒ success(new StringInfo())
-      case 15 ⇒ v64 ~ baseTypeInfo ^^ { case i ~ t ⇒ new ConstantLengthArrayInfo(i.toInt, t) }
-      case 17 ⇒ baseTypeInfo ^^ { new VariableLengthArrayInfo(_) }
-      case 18 ⇒ baseTypeInfo ^^ { new ListInfo(_) }
-      case 19 ⇒ baseTypeInfo ^^ { new SetInfo(_) }
-      case 20 ⇒ v64 >> { n ⇒ repN(n.toInt, baseTypeInfo) } ^^ { new MapInfo(_) }
-      case i  ⇒ success(new PreliminaryUserType(i - 21))
+        case 1  ⇒ success("nullable")
+        case 2  ⇒ success("unique")
+        case 3  ⇒ success("singleton")
+        case 4  ⇒ success("constantLengthPointer")
+        case 5  ⇒ success("monotone")
+        case id ⇒ throw new java.lang.Error(s"Restrictions ID $id not yet supported!")
+      }
     }
-  }
+  )("restriction parsing failed")
+
+  /**
+   * Turns a field type into a preliminary type information. In case of user types, the declaration of the respective
+   *  user type may follow after the field declaration.
+   */
+  private def fieldTypeDeclaration: Parser[TypeInfo] = try {
+    v64 >> { i ⇒
+      i match {
+        case 0            ⇒ i8 ^^ { new ConstantI8Info(_) }
+        case 1            ⇒ i16 ^^ { new ConstantI16Info(_) }
+        case 2            ⇒ i32 ^^ { new ConstantI32Info(_) }
+        case 3            ⇒ i64 ^^ { new ConstantI64Info(_) }
+        case 4            ⇒ v64 ^^ { new ConstantV64Info(_) }
+        case 5            ⇒ success(new AnnotationInfo())
+        case 6            ⇒ success(new BoolInfo())
+        case 7            ⇒ success(new I8Info())
+        case 8            ⇒ success(new I16Info())
+        case 9            ⇒ success(new I32Info())
+        case 10           ⇒ success(new I64Info())
+        case 11           ⇒ success(new V64Info())
+        case 12           ⇒ success(new F32Info())
+        case 13           ⇒ success(new F64Info())
+        case 14           ⇒ success(new StringInfo())
+        case 15           ⇒ v64 ~ baseTypeInfo ^^ { case i ~ t ⇒ new ConstantLengthArrayInfo(i.toInt, t) }
+        case 17           ⇒ baseTypeInfo ^^ { new VariableLengthArrayInfo(_) }
+        case 18           ⇒ baseTypeInfo ^^ { new ListInfo(_) }
+        case 19           ⇒ baseTypeInfo ^^ { new SetInfo(_) }
+        case 20           ⇒ v64 >> { n ⇒ repN(n.toInt, baseTypeInfo) } ^^ { new MapInfo(_) }
+        case i if i >= 32 ⇒ success(new PreliminaryUserType(i - 32))
+        case id           ⇒ ParseException(s"invalid type ID: $id")
+      }
+    }
+  } catch { case e: SkillException ⇒ SkillException("field type parsing failed", e) }
 
   /**
    * matches only types which are legal arguments to ADTs
    */
-  private def baseTypeInfo = v64 ^^ { i ⇒
+  private def baseTypeInfo: Parser[TypeInfo] = v64 ^^ { i ⇒
     i match {
-      case 5           ⇒ new AnnotationInfo()
-      case 6           ⇒ new BoolInfo()
-      case 7           ⇒ new I8Info()
-      case 8           ⇒ new I16Info()
-      case 9           ⇒ new I32Info()
-      case 10          ⇒ new I64Info()
-      case 11          ⇒ new V64Info()
-      case 12          ⇒ new F32Info()
-      case 13          ⇒ new F64Info()
-      case 14          ⇒ new StringInfo()
-      case i if i > 20 ⇒ new PreliminaryUserType(i - 21)
+      case 5            ⇒ new AnnotationInfo()
+      case 6            ⇒ new BoolInfo()
+      case 7            ⇒ new I8Info()
+      case 8            ⇒ new I16Info()
+      case 9            ⇒ new I32Info()
+      case 10           ⇒ new I64Info()
+      case 11           ⇒ new V64Info()
+      case 12           ⇒ new F32Info()
+      case 13           ⇒ new F64Info()
+      case 14           ⇒ new StringInfo()
+      case i if i >= 32 ⇒ new PreliminaryUserType(i - 32)
     }
-  }
-
-  private def readSingleField(t: TypeInfo, σ: SerializableState): Parser[Any] = t match {
-    case d: ConstantI8Info          ⇒ success()
-    case d: ConstantI16Info         ⇒ success()
-    case d: ConstantI32Info         ⇒ success()
-    case d: ConstantI64Info         ⇒ success()
-    case d: ConstantV64Info         ⇒ success()
-    case d: I8Info                  ⇒ i8
-    case d: I16Info                 ⇒ i16
-    case d: I32Info                 ⇒ i32
-    case d: I64Info                 ⇒ i64
-    case d: V64Info                 ⇒ v64
-    case d: AnnotationInfo          ⇒ (v64 ~ v64) ^^ { case t ~ i ⇒ (t, i) }
-    case d: BoolInfo                ⇒ i8 ^^ { _ != 0 }
-    case d: F32Info                 ⇒ f32
-    case d: F64Info                 ⇒ f64
-    case d: StringInfo              ⇒ string(σ.knownStrings)
-
-    case d: ConstantLengthArrayInfo ⇒ repN(d.length, readSingleField(d.groundType, σ)) ^^ { _.toArray }
-    case d: VariableLengthArrayInfo ⇒ (v64 >> { i ⇒ repN(i.toInt, readSingleField(d.groundType, σ)) }) ^^ { _.toArray }
-    case d: ListInfo                ⇒ (v64 >> { i ⇒ repN(i.toInt, readSingleField(d.groundType, σ)) }) ^^ { _.toList }
-    case d: SetInfo                 ⇒ (v64 >> { i ⇒ repN(i.toInt, readSingleField(d.groundType, σ)) }) ^^ { _.toSet }
-
-    case d: UserType ⇒ v64 ^^ {
-      _ match {
-        case 0 ⇒ null
-        case index ⇒ σ.pools.get(d.name).getOrElse(
-          throw new IllegalStateException("Found a nonnull reference to missing usertype "+d.name)).getByID(index)
-      }
-
-    }
-
-    case d: PreliminaryUserType ⇒ throw new IllegalStateException(
-      "preliminary usertypes should already have been eleminitad")
   }
 
   /**
@@ -145,55 +331,30 @@ class FileParser extends ByteStreamParsers {
     case _      ⇒ new StoragePool(name, t, parent, size, idx)
   }
 
-  def read(f: File): SerializableState = {
-
-    val in = new ByteReader(new BufferedInputStream(new FileInputStream(f)))
-    val p = new FileParser
-
-    // read the string pool
-    val rval = new SerializableState
-    rval.knownStrings.appendAll(p.stringPool(in).get)
-
-    // read the storage pools
-    val raw = p.storagePools(rval)(in).getOrElse({
-      rval.dumpDebugInfo;
-      throw new IllegalStateException("encountered unexpected end of file while parsing storage pools in <<dumped>>")
-    }).toArray
-
-    val typemap = new HashMap[String, UserType]
-    var i = 0
-    var refl = raw.map({
-      case (n, (s, _), _, _, f) ⇒
-        val rval = new UserType(i, n, s, new ArrayBuffer[(TypeInfo, String, Array[Byte])] ++= f);
-        typemap.put(n, rval);
-        i += 1;
-        rval
-    }).toArray
-
-    // eliminate preliminary user types
-    refl.foreach({ t ⇒
-      for (i ← (0 until t.fields.length))
-        t.fields(i) = t.fields(i) match {
-          case (p: PreliminaryUserType, n, d) ⇒ (refl(p.id.toInt), n, d)
-          case x                              ⇒ x
-        }
-    })
-
-    // create storage pools
-    i = 0
-    refl.foreach({ t ⇒
-      rval.pools.put(t.name, makePool(rval, t.name, t, t.superName match {
-        case Some(s: String) ⇒ rval.pools.get(s)
-        case None            ⇒ None
-      }, raw(i)._3, raw(i)._2._2));
-      i += 1
-    })
-
-    return rval
+  def readFile(path: Path): SerializableState = {
+    try {
+      σ.fromReader = new ByteReader(Files.newByteChannel(path).asInstanceOf[FileChannel])
+      val in = σ.fromReader
+      file(in) match {
+        case Success(r, i) ⇒ r
+        case NoSuccess(msg, i) ⇒ throw new SkillException(
+          s"""Failed to parse ${path}:
+  Message: $msg
+  Got stuck at byte ${in.pos.column} with at least ${in.minimumBytesToGo} bytes to go.
+  The next Byte is a ${try { in.next.toHexString } catch { case _: Exception ⇒ "EOF" }}.
+        """)
+      }
+    } catch {
+      case e: SkillException ⇒ throw new SkillException(s"failed to read file $path", e)
+    }
   }
-  def readField(σ: SerializableState, count: Long, t: TypeInfo, data: Array[Byte]): List[Any] = {
-    val in = new ByteReader(new BufferedInputStream(new ByteArrayInputStream(data)))
+}
 
-    repN(count.toInt, readSingleField(t, σ))(in).get
-  }
+object FileParser extends ByteStreamParsers {
+  import FileParser._
+
+  /**
+   * reads the contents of a file, creating a new state
+   */
+  def read(path: Path): SerializableState = (new FileParser).readFile(path)
 }

@@ -6,7 +6,7 @@ import de.ust.skill.generator.scala.GeneralOutputMaker
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   override def make {
     super.make
-    val out = open("internal/TypeInfo.scala")
+    val out = open("internal/FieldDeclaration.scala")
     //package
     out.write(s"package ${packagePrefix}internal\n\n")
 

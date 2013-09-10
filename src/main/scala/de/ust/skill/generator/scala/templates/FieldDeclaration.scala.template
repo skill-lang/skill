@@ -1,4 +1,3 @@
-
 /**
  * @param position the position of the chunk inside the file
  * @param length the length of the chunk in bytes

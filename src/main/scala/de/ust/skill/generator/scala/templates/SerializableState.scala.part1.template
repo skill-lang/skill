@@ -1,42 +1,89 @@
 
-class SkillReflectiveAccessException(msg: String) extends Exception(msg) {
-
-}
-
 /**
  * This class is used to handle objects in a serializable state.
- * 
+ *
  * @author Timm Felden
  */
 class SerializableState {
   import SerializableState._
 
-  private[expected] var pools = new HashMap[String, StoragePool]
+  /**
+   * path of the file, the serializable state has been created from; this is required for lazy evaluation and appending
+   *
+   * null iff the state has not been created from a file
+   */
+  private[internal] var fromReader: ByteReader = null
 
-  private[expected] var knownStrings = new ArrayBuffer[String];
+  private[internal] var pools = new HashMap[String, StoragePool]
 
-  def write(target: File) {
-    val file = new BufferedOutputStream(new FileOutputStream(target))
+  private[internal] val strings = new StringPool
+
+  /**
+   * Creates a new SKilL file at target.
+   */
+  def write(target: Path) {
+    val file = Files.newByteChannel(target,
+      StandardOpenOption.CREATE,
+      StandardOpenOption.WRITE,
+      StandardOpenOption.TRUNCATE_EXISTING).asInstanceOf[FileChannel]
 
     // collect all known objects
     // TODO implementation
-
-    // write string pool
-    file.write(v64(knownStrings.size))
-    knownStrings.foreach({ s ⇒
-      file.write(v64(s.length()))
-      file.write(s.getBytes())
-    })
+    strings.prepareSerialization(this)
 
     // prepare pools, i.e. ensure that all objects get IDs which can be turned into logic pointers
     pools.values.foreach(_.prepareSerialization(this))
 
-    // write fields back to their buffers
-    pools.values.foreach(_.writeFields(this))
+    // write string pool
+    strings.write(file, this)
 
-    // write pools
+    // write count of the type block
+    file.write(ByteBuffer.wrap(v64(pools.size)))
+
+    // write fields back to their buffers
+    val out = new ByteArrayOutputStream
+    pools.values.foreach(_.writeFieldData(out, this))
+
+    // write header
     pools.values.foreach(_.write(file, this))
+
+    // write data
+    file.write(ByteBuffer.wrap(out.toByteArray()))
 
     // done:)
     file.close()
+  }
+
+  /**
+   * retrieves a string from the known strings; this can cause disk access, due to the lazy nature of the implementation
+   *
+   * @throws ArrayOutOfBoundsException if index is not valid
+   */
+  def getString(index: Long): String = {
+    if (0 == index)
+      return null
+
+    strings.idMap.get(index) match {
+      case Some(s) ⇒ s
+      case None ⇒ {
+        if (index > strings.stringPositions.size)
+          InvalidPoolIndex(index, strings.stringPositions.size, "string")
+
+        val off = strings.stringPositions(index)
+        fromReader.push(off._1)
+        var chars = fromReader.bytes(off._2)
+        fromReader.pop
+
+        val result = new String(chars, "UTF-8")
+        strings.idMap.put(index, result)
+        result
+      }
+    }
+  }
+
+  /**
+   * adds a string to the state
+   */
+  def addString(string: String) {
+    strings.newStrings += string
   }
