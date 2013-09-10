@@ -48,16 +48,18 @@ object Main
     val IR = (new Parser).process(new File(skillPath))
 
     //generate public interface for type declarations
-    IR.foreach({ d ⇒ makeDeclarationInterface(new PrintWriter(new File(outPath + d.getName()+".scala")), d) })
-    makeSerializableState(new PrintWriter(new File(outPath+"internal/SerializableState.scala")), IR)
+    IR.foreach({ d ⇒
+      makeDeclarationInterface(Writer(outPath + d.getName()+".scala"), d)
+    })
+    makeSerializableState(Writer(outPath+"internal/SerializableState.scala"), IR)
 
     //generate general code
-    makeStringPool(new PrintWriter(new File(outPath+"internal/pool/StringPool.scala")))
-    makeStoragePool(new PrintWriter(new File(outPath+"internal/pool/StoragePool.scala")))
-    makeByteStreamParsers(new PrintWriter(new File(outPath+"internal/pool/ByteStreamParsers.scala")))
-    makeFileParser(new PrintWriter(new File(outPath+"internal/FileParser.scala")))
-    makeIterator(new PrintWriter(new File(outPath+"internal/Iterator.scala")))
-    makeTypeInfo(new PrintWriter(new File(outPath+"internal/TypeInfo.scala")))
+    makeStringPool(Writer(outPath+"internal/pool/StringPool.scala"))
+    makeStoragePool(Writer(outPath+"internal/pool/StoragePool.scala"))
+    makeByteStreamParsers(Writer(outPath+"internal/pool/ByteStreamParsers.scala"))
+    makeFileParser(Writer(outPath+"internal/FileParser.scala"))
+    makeIterator(Writer(outPath+"internal/Iterator.scala"))
+    makeTypeInfo(Writer(outPath+"internal/TypeInfo.scala"))
   }
 
   /**
@@ -78,7 +80,7 @@ object Main
    * Reads a template file and copies the input to out.
    */
   override protected def copyFromTemplate(out: PrintWriter, template: String) {
-    Source.fromFile("src/de/ust/skill/generator/scala/templates/"+template).getLines.foreach({ s ⇒ out.write(s+"\n") })
+    Source.fromFile("src/main/scala/de/ust/skill/generator/scala/templates/"+template).getLines.foreach({ s ⇒ out.write(s+"\n") })
   }
 
   /**

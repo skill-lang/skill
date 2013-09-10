@@ -3,8 +3,8 @@ package de.ust.skill.parser
 import java.io.File
 import java.io.FileNotFoundException
 import java.lang.Long
+import java.nio.file.FileSystems
 
-import scala.annotation.migration
 import scala.collection.JavaConverters.bufferAsJavaListConverter
 import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.collection.mutable.HashSet
@@ -174,7 +174,7 @@ class Parser {
           rval = rval ++ result._2
         } catch {
           case e: FileNotFoundException ⇒ assert(false, "The include "+file+
-            "could not be resolved to an existing file: "+e.getMessage())
+            "could not be resolved to an existing file: "+e.getMessage()+"\nWD:"+FileSystems.getDefault().getPath(".").toAbsolutePath().toString())
         }
       }
     }
