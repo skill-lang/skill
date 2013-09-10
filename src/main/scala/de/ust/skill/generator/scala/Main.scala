@@ -2,19 +2,22 @@ package de.ust.skill.generator.scala
 
 import java.io.File
 import java.io.PrintWriter
+
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.io.Source
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.Type
-import de.ust.skill.parser.Parser
+
+import de.ust.skill.generator.scala.internal.FieldDeclarationMaker
 import de.ust.skill.generator.scala.internal.IteratorMaker
 import de.ust.skill.generator.scala.internal.SerializableStateMaker
 import de.ust.skill.generator.scala.internal.TypeInfoMaker
 import de.ust.skill.generator.scala.internal.parsers.ByteStreamParsersMaker
 import de.ust.skill.generator.scala.internal.parsers.FileParserMaker
-import de.ust.skill.generator.scala.internal.pool.StringPoolMaker
 import de.ust.skill.generator.scala.internal.pool.StoragePoolMaker
+import de.ust.skill.generator.scala.internal.pool.StringPoolMaker
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.Type
+import de.ust.skill.parser.Parser
 
 /**
  * A generator turns a set of skill declarations into a scala interface providing means of manipulating skill files
@@ -27,10 +30,14 @@ object Main
     with DeclarationInterfaceMaker
     with IteratorMaker
     with TypeInfoMaker
+    with FieldDeclarationMaker
     with SerializableStateMaker
     with ByteStreamParsersMaker
     with StringPoolMaker
     with StoragePoolMaker {
+
+  var outPath: String = null
+  var IR:List[Declaration] = null
 
   def printHelp {
     println("usage:")
@@ -47,24 +54,14 @@ object Main
       return
     }
     val skillPath = args(args.length - 2)
-    val outPath = args(args.length - 1)
+    outPath = args(args.length - 1)
 
     //parse argument code
-    val IR = (new Parser).process(new File(skillPath))
+    IR = (new Parser).process(new File(skillPath)).toList
 
-    //generate public interface for type declarations
-    IR.foreach({ d ⇒
-      makeDeclarationInterface(Writer(outPath + d.getName()+".scala"), d)
-    })
-    makeSerializableState(Writer(outPath+"internal/SerializableState.scala"), IR)
 
-    //generate general code
-    makeStringPool(Writer(outPath+"internal/pool/StringPool.scala"))
-    makeStoragePool(Writer(outPath+"internal/pool/StoragePool.scala"))
-    makeByteStreamParsers(Writer(outPath+"internal/pool/ByteStreamParsers.scala"))
-    makeFileParser(Writer(outPath+"internal/FileParser.scala"))
-    makeIterator(Writer(outPath+"internal/Iterator.scala"))
-    makeTypeInfo(Writer(outPath+"internal/TypeInfo.scala"))
+    // create output using maker chain
+    make;
   }
 
   /**

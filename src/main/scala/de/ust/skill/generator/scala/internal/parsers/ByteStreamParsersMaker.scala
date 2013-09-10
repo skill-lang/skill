@@ -1,9 +1,12 @@
 package de.ust.skill.generator.scala.internal.parsers
 
 import java.io.PrintWriter
+import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait ByteStreamParsersMaker {
-  protected def makeByteStreamParsers(out: PrintWriter) {
+trait ByteStreamParsersMaker extends GeneralOutputMaker{
+  override def make {
+    super.make
+    val out = open("internal/pool/ByteStreamParsers.scala")
     //package
     out.write(s"package ${packagePrefix}internal.pool\n\n")
 

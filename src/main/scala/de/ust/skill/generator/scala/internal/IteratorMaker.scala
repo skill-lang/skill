@@ -1,9 +1,11 @@
 package de.ust.skill.generator.scala.internal
 
-import java.io.PrintWriter
+import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait IteratorMaker {
-  protected def makeIterator(out: PrintWriter) {
+trait IteratorMaker extends GeneralOutputMaker{
+  override def make {
+    super.make
+    val out = open("internal/Iterator.scala")
     //package & imports
     out.write(s"""package ${packagePrefix}internal
 
@@ -17,14 +19,4 @@ import ${packagePrefix}internal.StoragePool
     //class prefix
     out.close()
   }
-
-  /**
-   * Assume template copy functionality.
-   */
-  protected def copyFromTemplate(out: PrintWriter, template: String): Unit
-
-  /**
-   * Assume a package prefix provider.
-   */
-  protected def packagePrefix(): String
 }

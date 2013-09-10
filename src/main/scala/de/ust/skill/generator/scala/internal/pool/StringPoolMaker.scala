@@ -1,9 +1,12 @@
 package de.ust.skill.generator.scala.internal.pool
 
 import java.io.PrintWriter
+import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait StringPoolMaker {
-  protected def makeStringPool(out: PrintWriter) {
+trait StringPoolMaker extends GeneralOutputMaker{
+  override def make{
+    super.make
+    val out = open("internal/pool/StringPool.scala")
     out.write(s"""package ${packagePrefix}internal.pool
 
 import scala.collection.mutable.HashSet
@@ -30,9 +33,4 @@ class StringPool {
 }""")
     out.close()
   }
-
-  /**
-   * Assume a package prefix provider.
-   */
-  protected def packagePrefix(): String
 }

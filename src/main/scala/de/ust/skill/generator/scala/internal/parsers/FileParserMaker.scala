@@ -1,11 +1,14 @@
 package de.ust.skill.generator.scala.internal.parsers
 
 import java.io.PrintWriter
+import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait FileParserMaker {
-  protected def makeFileParser(out: PrintWriter) {
+trait FileParserMaker extends GeneralOutputMaker{
+  override def make {
+    super.make
+    val out = open("internal/parsers/FileParser.scala")
     //package & imports
-    out.write(s"""package ${packagePrefix}internal
+    out.write(s"""package ${packagePrefix}internal.parsers
 
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
