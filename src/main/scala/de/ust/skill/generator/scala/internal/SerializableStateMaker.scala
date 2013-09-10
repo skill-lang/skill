@@ -1,10 +1,10 @@
-package de.ust.skill.generator.scala
+package de.ust.skill.generator.scala.internal
+
+import java.io.PrintWriter
+
+import scala.collection.JavaConversions.asScalaBuffer
 
 import de.ust.skill.ir.Declaration
-import java.io.PrintWriter
-import scala.collection.JavaConversions.asScalaBuffer
-import de.ust.skill.ir.Type
-
 trait SerializableStateMaker {
   protected def makeSerializableState(out: PrintWriter, ir: java.util.List[Declaration]) {
     //package & imports

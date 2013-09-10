@@ -1,8 +1,10 @@
-package de.ust.skill.generator.scala
+package de.ust.skill.generator.scala.internal.types
+
+import java.io.PrintWriter
+
+import scala.collection.JavaConversions.asScalaBuffer
 
 import de.ust.skill.ir.Declaration
-import java.io.PrintWriter
-import scala.collection.JavaConversions.asScalaBuffer
 import de.ust.skill.ir.Type
 
 trait DeclarationImplementationMaker {

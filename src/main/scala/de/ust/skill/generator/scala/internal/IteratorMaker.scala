@@ -1,4 +1,4 @@
-package de.ust.skill.generator.scala
+package de.ust.skill.generator.scala.internal
 
 import java.io.PrintWriter
 

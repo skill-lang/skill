@@ -2,14 +2,19 @@ package de.ust.skill.generator.scala
 
 import java.io.File
 import java.io.PrintWriter
-
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.io.Source
-
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.Type
 import de.ust.skill.parser.Parser
+import de.ust.skill.generator.scala.internal.IteratorMaker
+import de.ust.skill.generator.scala.internal.SerializableStateMaker
+import de.ust.skill.generator.scala.internal.TypeInfoMaker
+import de.ust.skill.generator.scala.internal.parsers.ByteStreamParsersMaker
+import de.ust.skill.generator.scala.internal.parsers.FileParserMaker
+import de.ust.skill.generator.scala.internal.pool.StringPoolMaker
+import de.ust.skill.generator.scala.internal.pool.StoragePoolMaker
 
 /**
  * A generator turns a set of skill declarations into a scala interface providing means of manipulating skill files
