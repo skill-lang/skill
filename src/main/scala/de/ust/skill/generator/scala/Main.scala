@@ -30,12 +30,44 @@ import de.ust.skill.ir.MapType
 import scala.Boolean
 
 /**
+ * Entry point of the scala generator.
+ */
+object Main {
+  def printHelp {
+    println("usage:")
+    println("[options] skillPath outPath")
+  }
+
+  /**
+   * Takes an argument skill file name and generates a scala binding.
+   */
+  def main(args: Array[String]): Unit = {
+    var m = new Main
+
+    //processing command line arguments
+    if (2 > args.length) {
+      printHelp
+      return
+    }
+    m.setOptions(args.slice(0, args.length - 2))
+    val skillPath = args(args.length - 2)
+    m.outPath = args(args.length - 1)
+
+    //parse argument code
+    m.IR = (new Parser).process(new File(skillPath)).toList
+
+    // create output using maker chain
+    m.make;
+  }
+}
+
+/**
  * A generator turns a set of skill declarations into a scala interface providing means of manipulating skill files
  * containing instances of the respective definitions.
  *
  * @author Timm Felden
  */
-object Main
+class Main
     extends FileParserMaker
     with DeclarationInterfaceMaker
     with DeclarationImplementationMaker
@@ -53,31 +85,6 @@ object Main
 
   var outPath: String = null
   var IR: List[Declaration] = null
-
-  def printHelp {
-    println("usage:")
-    println("[options] skillPath outPath")
-  }
-
-  /**
-   * Takes an argument skill file name and generates a scala binding.
-   */
-  def main(args: Array[String]): Unit = {
-    //processing command line arguments
-    if (2 > args.length) {
-      printHelp
-      return
-    }
-    setOptions(args.slice(0, args.length - 2))
-    val skillPath = args(args.length - 2)
-    outPath = args(args.length - 1)
-
-    //parse argument code
-    IR = (new Parser).process(new File(skillPath)).toList
-
-    // create output using maker chain
-    make;
-  }
 
   /**
    * Translates types into scala type names.
@@ -110,7 +117,7 @@ object Main
       types.tail.fold(types.head)({ (U, t) ⇒ s"Map[$t, $U]" });
     }
 
-    case t: Declaration ⇒ "_root_." + packagePrefix + t.getName()
+    case t: Declaration ⇒ "_root_."+packagePrefix + t.getName()
   }
 
   /**

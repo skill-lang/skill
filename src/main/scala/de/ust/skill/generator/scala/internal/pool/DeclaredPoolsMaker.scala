@@ -37,7 +37,7 @@ import ${packagePrefix}internal._
 import ${packagePrefix}internal.parsers.FieldParser
 import ${packagePrefix}internal.SerializableState.v64
 
-class ${name}StoragePool(userType: UserType, storedSize: Long, σ: SerializableState)
+final class ${name}StoragePool(userType: UserType, storedSize: Long, σ: SerializableState)
     extends StoragePool("$sName", userType, None, storedSize, 0) {
 
   import SerializableState.v64

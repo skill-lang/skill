@@ -3,7 +3,7 @@ include "air-pamm.skill"
 /**
 time.h compatible time, i.e. seconds since 1.1.1970 0:00.
 */
-time {
+Time {
 	i64 time;
 }
 
@@ -24,7 +24,7 @@ Header {
 	const i32 guard = 0x00A5710A;
 	const i16 major = 0x0;
 	const i16 minor = 0x1;
-	time lastModified;
+	Time lastModified;
 }
 
 CodeBase {
@@ -38,7 +38,7 @@ CodeBase {
 }
 
 CompilationUnit {
-	time lastModified;
+	Time lastModified;
 	/** Name of this compilation unit, i.e. its relative path. */
 	string name;
 	/** LLVM IR Bitcode version 3.3. */

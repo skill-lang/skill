@@ -3,6 +3,7 @@ SLoc {
 	i16 line;
 	i16 column;
 	string path;
+	map<v64,i8,Block> foo;
 }
 
 Block {

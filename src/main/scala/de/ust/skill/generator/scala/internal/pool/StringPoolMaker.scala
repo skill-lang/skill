@@ -19,7 +19,7 @@ import ${packagePrefix}internal.SerializableState.v64
 import java.nio.ByteBuffer
 import java.io.ByteArrayOutputStream
 
-class StringPool {
+final class StringPool {
   import SerializableState.v64;
 
   /**

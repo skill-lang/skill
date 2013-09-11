@@ -30,11 +30,10 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
     //body
     out.write("  //////// FIELD INTERACTION ////////\n\n")
     d.getFields().foreach({ f ⇒
-      val name = f.getName
-      val Name = f.getName.capitalize
+      val name = f.getName.capitalize
 
-      out.write(s"  def $name(): ${_T(f.getType())}\n")
-      out.write(s"  def set$Name($name: ${_T(f.getType())}): Unit\n\n")
+      out.write(s"  def get$name(): ${_T(f.getType())}\n")
+      out.write(s"  def set$name($name: ${_T(f.getType())}): Unit\n\n")
     })
 
     //class postfix
@@ -44,16 +43,10 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
 
     //nice toString
     {
-      def mkFields(d: Declaration): Buffer[String] = {
-        val ts = d.getFields.map({ f ⇒ s""""${f.getName()}: "+${f.getName()}""" })
-        if (null != d.getSuperType())
-          ts ++ mkFields(d.getSuperType())
-        else
-          ts
-      }
+      val ts = d.getAllFields.map({ f ⇒ s""""${f.getName()}: "+get${f.getName().capitalize}""" })
       if (null != d.getSuperType())
         out.write("  override\n")
-      out.write(mkFields(d).mkString(
+      out.write(ts.mkString(
         // TODO maybe we should add a this:this.toString; we have to check toString first
         s"""  def prettyString(): String = "${d.getName()}("+""",
         "+\", \"+",

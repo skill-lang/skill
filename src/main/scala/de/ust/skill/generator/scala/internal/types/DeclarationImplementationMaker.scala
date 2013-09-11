@@ -21,7 +21,7 @@ trait DeclarationImplementationMaker extends GeneralOutputMaker {
     // head
     out.write(s"""package ${packagePrefix}internal.types
 
-class $name(
+final class $name(
   """)
 
     // data
@@ -34,9 +34,10 @@ class $name(
     // getters & setters
     fields.foreach({ f ⇒
       val name = f.getName()
+      val Name = name.capitalize
       out.write(s"""
-  final def $name = _$name
-  final def set${name.capitalize}($name: ${_T(f.getType())}) = _$name = $name
+  final def get$Name = _$name
+  final def set$Name($Name: ${_T(f.getType())}) = _$name = $Name
 
 """)
     })
