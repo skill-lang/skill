@@ -1,0 +1,3 @@
+The file contains a string pool index, which is way behind EOF. (The first string ist stated to have 352 characters)
+
+FYI: The file can be turned into something perfectly legal by adding a 00 sequence to the beginning of each string offset. (Because the offsets use only three instead of four bytes).

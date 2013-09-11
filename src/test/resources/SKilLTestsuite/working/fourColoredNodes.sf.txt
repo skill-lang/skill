@@ -1,0 +1,20 @@
+Kind of cross-over of examples in SKilL TR §6.2.3.
+
+This file contains two blocks; the first adds two dates, the second adds another two dates and a new field.
+This test checks the rather unusal situation, where a tool adds instances and new fields.
+
+Types:
+Block1: Node{ i8 id; }
+Block2: Node ⇒ Node{ i8 id; string color; }
+
+Data:
+Block1:
+node#1 { 23 }
+node#2 { 42 }
+
+Block2:
+
+node#1 { +red }
+node#2 { +black }
+node#3 { -1, red }
+node#3 { 2, black }

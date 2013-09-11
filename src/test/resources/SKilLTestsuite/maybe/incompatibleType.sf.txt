@@ -1,0 +1,7 @@
+This file is used to produce an incompatible type error.
+
+The error should be reproducable, if the following type declaration is used:
+
+Date {
+  v64 date;
+}

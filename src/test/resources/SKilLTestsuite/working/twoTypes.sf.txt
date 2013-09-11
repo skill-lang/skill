@@ -1,0 +1,15 @@
+Distributes two types with an instance each over two blocks.
+This can be used to ensure that type indices are created correctly in the context of multiple blocks.
+
+The file will fail to parse, if the type index is interpreted on a per block basis.
+
+Types:
+Block1: a{a a;}
+Block2: b{b b;}
+
+Instances:
+Block1:
+a{→self}
+
+Block2:
+b{→self}

@@ -1,0 +1,8 @@
+Type:
+Node { 
+  Node node;
+}
+
+Data:
+node#1{→node2}
+node#2{→node1}

@@ -1,0 +1,10 @@
+Folders below contain skill files which are meant to serve as a test suit for language bindings.
+
+There are three categories:
+
+1. working: These files are legal binary skill files and should be readable by most generated code. (The only reason for failure is the presence of a type declaration that is not compatible with one found inside the .sf-file)
+
+2. maybe: These files are broken, but contain errors that wont be detected by a lazy evaluation of the file.
+
+3. broken: Illegal files, which are intentionally broken. These serve as a detector for bugs in generated bindings.
+

@@ -1,0 +1,3 @@
+The serialized data chunk will consume only two bytes, instead of one.
+
+Detection requires a type declaration "Date { Date date; }"

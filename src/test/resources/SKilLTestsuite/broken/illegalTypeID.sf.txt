@@ -1,0 +1,3 @@
+Uses a reserved type ID.
+
+At the momenent, there are some reserved type IDs that may eventually be used for future built-in types.
