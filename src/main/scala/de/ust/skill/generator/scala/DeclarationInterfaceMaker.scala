@@ -4,6 +4,7 @@ import de.ust.skill.ir.Declaration
 import java.io.PrintWriter
 import scala.collection.JavaConversions.asScalaBuffer
 import de.ust.skill.ir.Type
+import scala.collection.mutable.Buffer
 
 trait DeclarationInterfaceMaker extends GeneralOutputMaker {
   override def make {
@@ -21,7 +22,10 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
     //imports
 
     //class prefix
-    out.write("trait "+d.getName()+" {\n")
+    out.write(s"trait ${d.getName()} ${
+      if (null != d.getSuperType()) s"extends ${d.getSuperType().getTypeName()}"
+      else ""
+    } {\n")
 
     //body
     out.write("  //////// FIELD INTERACTION ////////\n\n")
@@ -39,10 +43,22 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
     out.write("  //////// UTILS ////////\n\n")
 
     //nice toString
-    out.write(d.getFields.map({ f ⇒ f.getName() }).mkString(
-      s"""  override def toString(): String = "${d.getName()}("+""",
-      "+\", \"+",
-      "+\")\"\n"))
+    {
+      def mkFields(d: Declaration): Buffer[String] = {
+        val ts = d.getFields.map({ f ⇒ s""""${f.getName()}: "+${f.getName()}""" })
+        if (null != d.getSuperType())
+          ts ++ mkFields(d.getSuperType())
+        else
+          ts
+      }
+      if (null != d.getSuperType())
+        out.write("  override\n")
+      out.write(mkFields(d).mkString(
+        // TODO maybe we should add a this:this.toString; we have to check toString first
+        s"""  def prettyString(): String = "${d.getName()}("+""",
+        "+\", \"+",
+        "+\")\"\n"))
+    }
 
     out.write("}");
 

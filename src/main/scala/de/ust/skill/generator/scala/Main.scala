@@ -21,6 +21,13 @@ import de.ust.skill.generator.scala.internal.parsers.FieldParserMaker
 import de.ust.skill.generator.scala.internal.SkillExceptionMaker
 import de.ust.skill.generator.scala.internal.types.DeclarationImplementationMaker
 import de.ust.skill.generator.scala.internal.pool.DeclaredPoolsMaker
+import de.ust.skill.ir.CompoundType
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.MapType
+import scala.Boolean
 
 /**
  * A generator turns a set of skill declarations into a scala interface providing means of manipulating skill files
@@ -45,7 +52,7 @@ object Main
     with StoragePoolMaker {
 
   var outPath: String = null
-  var IR:List[Declaration] = null
+  var IR: List[Declaration] = null
 
   def printHelp {
     println("usage:")
@@ -61,12 +68,12 @@ object Main
       printHelp
       return
     }
+    setOptions(args.slice(0, args.length - 2))
     val skillPath = args(args.length - 2)
     outPath = args(args.length - 1)
 
     //parse argument code
     IR = (new Parser).process(new File(skillPath)).toList
-
 
     // create output using maker chain
     make;
@@ -77,12 +84,32 @@ object Main
    */
   override protected def _T(t: Type): String = t match {
     case t: GroundType ⇒ t.getName() match {
-      case "i8"  ⇒ "Byte"
-      case "i16" ⇒ "Short"
-      case "i32" ⇒ "Int"
-      case "i64" ⇒ "Long"
-      case "v64" ⇒ "Long"
+      // BUG #2
+      case "annotation" ⇒ "AnyRef"
+
+      case "bool"       ⇒ "Boolean"
+
+      case "i8"         ⇒ "Byte"
+      case "i16"        ⇒ "Short"
+      case "i32"        ⇒ "Int"
+      case "i64"        ⇒ "Long"
+      case "v64"        ⇒ "Long"
+
+      case "f32"        ⇒ "Float"
+      case "f64"        ⇒ "Double"
+
+      case "string"     ⇒ "String"
     }
+
+    case t: ConstantLengthArrayType ⇒ s"Array[${_T(t.getBaseType())}]"
+    case t: VariableLengthArrayType ⇒ s"Array[${_T(t.getBaseType())}]"
+    case t: ListType                ⇒ s"List[${_T(t.getBaseType())}]"
+    case t: SetType                 ⇒ s"Set[${_T(t.getBaseType())}]"
+    case t: MapType ⇒ {
+      val types = t.getBaseType().reverse.map(_T(_))
+      types.tail.fold(types.head)({ (U, t) ⇒ s"Map[$t, $U]" });
+    }
+
     case t: Declaration ⇒ t.getName()
   }
 
@@ -98,5 +125,15 @@ object Main
    *
    * TODO provide a mechanism to actually set this
    */
-  override protected def packagePrefix(): String = "expected."
+  override protected def packagePrefix(): String = _packagePrefix
+  private var _packagePrefix = ""
+
+  private def setOptions(args: Array[String]) {
+    var index = 0
+    while (index < args.length) args(index) match {
+      case "-p"    ⇒ _packagePrefix = args(index + 1)+"."; index += 2;
+
+      case unknown ⇒ sys.error(s"unkown Argument: $unknown")
+    }
+  }
 }

@@ -30,7 +30,7 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
 import java.io.ByteArrayOutputStream
 import scala.collection.mutable.ArrayBuffer
 
-import ${packagePrefix}internal.types.Date
+import ${packagePrefix}internal.types._
 import ${packagePrefix}internal._
 import ${packagePrefix}internal.parsers.FieldParser
 import ${packagePrefix}internal.SerializableState.v64
