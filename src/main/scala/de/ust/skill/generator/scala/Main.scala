@@ -110,7 +110,7 @@ object Main
       types.tail.fold(types.head)({ (U, t) ⇒ s"Map[$t, $U]" });
     }
 
-    case t: Declaration ⇒ t.getName()
+    case t: Declaration ⇒ "_root_." + packagePrefix + t.getName()
   }
 
   /**

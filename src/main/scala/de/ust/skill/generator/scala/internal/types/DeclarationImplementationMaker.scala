@@ -16,7 +16,7 @@ trait DeclarationImplementationMaker extends GeneralOutputMaker {
 
   private def makeDeclaration(out: PrintWriter, d: Declaration) {
     val name = d.getName()
-    val fields = d.getFields
+    val fields = d.getAllFields
 
     // head
     out.write(s"""package ${packagePrefix}internal.types
@@ -35,8 +35,8 @@ class $name(
     fields.foreach({ f ⇒
       val name = f.getName()
       out.write(s"""
-  override def $name = _$name
-  override def set${name.capitalize}($name: ${_T(f.getType())}) = _$name = $name
+  final def $name = _$name
+  final def set${name.capitalize}($name: ${_T(f.getType())}) = _$name = $name
 
 """)
     })

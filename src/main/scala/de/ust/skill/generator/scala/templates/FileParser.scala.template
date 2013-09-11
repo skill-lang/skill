@@ -1,12 +1,4 @@
 
-/**
- * see skill ref man §6.2
- *
- * @author Timm Felden
- * @note Lazy deserialization with multiple blocks will require a block counter which is stored along offsets
- */
-final private class FileParser extends ByteStreamParsers {
-
   /**
    * A type decalariation, as it occurs during parsing of a type blocks header.
    *
@@ -315,20 +307,6 @@ final private class FileParser extends ByteStreamParsers {
       case 14           ⇒ new StringInfo()
       case i if i >= 32 ⇒ new PreliminaryUserType(i - 32)
     }
-  }
-
-  /**
-   * @return the correct type of storage pool containing the correct data and type
-   */
-  def makePool(σ: SerializableState,
-               name: String,
-               t: UserType,
-               parent: Option[StoragePool],
-               size: Long,
-               idx: Long): StoragePool = name match {
-    case "date" ⇒ new DateStoragePool(t, size, σ)
-
-    case _      ⇒ new StoragePool(name, t, parent, size, idx)
   }
 
   def readFile(path: Path): SerializableState = {

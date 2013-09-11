@@ -70,8 +70,24 @@ public class Declaration extends Type {
 		this.fields = Collections.unmodifiableList(fields);
 	}
 
+	/**
+	 * @return the fields added in this type
+	 */
 	public List<Field> getFields() {
 		return fields;
+	}
+
+	/**
+	 * @return all fields of an instance of the type, including fields declared
+	 *         in super types
+	 */
+	public List<Field> getAllFields() {
+		if(null!=superType){
+			List<Field> f = superType.getAllFields();
+			f.addAll(fields);
+			return f;
+		}
+		return new ArrayList<>(fields);
 	}
 
 	@Override

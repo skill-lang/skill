@@ -1,9 +1,11 @@
 package de.ust.skill.generator.scala.internal.pool
 
+import java.io.PrintWriter
+
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.scala.GeneralOutputMaker
 import de.ust.skill.ir.Declaration
-import java.io.PrintWriter
-import scala.collection.JavaConversions.asScalaBuffer
 
 /**
  * Creates storage pools for declared types.
@@ -22,7 +24,7 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
   private def makePool(out: PrintWriter, d: Declaration) {
     val name = d.getName()
     val sName = name.toLowerCase()
-    val fields = d.getFields().toList
+    val fields = d.getAllFields().toList
 
     // head
     out.write(s"""package ${packagePrefix}internal.pool
@@ -53,7 +55,7 @@ class ${name}StoragePool(userType: UserType, storedSize: Long, σ: SerializableS
       val scalaType = _T(f.getType())
 
       out.write(s"""
-    // ${f.getType()} $name
+    // ${f.getType().getTypeName()} $name
     var $fd = new ArrayBuffer[$scalaType]
     userType.fields.filter({ f ⇒ "${f.getCanonicalName()}".equals(f.name) }).foreach(_ match {
       // correct field type
@@ -64,7 +66,7 @@ class ${name}StoragePool(userType: UserType, storedSize: Long, σ: SerializableS
         $fd ++= fieldParser.readField(storedSize, f.t, f.dataChunks).asInstanceOf[List[$scalaType]]
 
       // incompatible field type
-      case f ⇒ TypeMissmatchError(f.t, "${f.getType()}", "$name")
+      case f ⇒ TypeMissmatchError(f.t, "${f.getType().getTypeName().toLowerCase()}", "$name")
     })
     if ($fd.isEmpty)
       $fd ++= new Array[$scalaType](storedSize.toInt)
@@ -100,7 +102,7 @@ class ${name}StoragePool(userType: UserType, storedSize: Long, σ: SerializableS
       //TODO write(v64 ... this has to be replaced by something more generic and faster which takes f.t and an accessor to f.data
       out.write(s"""
         case "${f.getCanonicalName()}" ⇒ {
-          data.foreach { o ⇒ out.write(v64(o.$name)) }
+          data.foreach { o ⇒ /** TODO write o.$name */ }
           endOffsets.put(f, out.size())
         }
 """)

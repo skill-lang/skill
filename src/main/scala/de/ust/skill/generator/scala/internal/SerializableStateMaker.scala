@@ -1,6 +1,9 @@
 package de.ust.skill.generator.scala.internal
 
+import scala.collection.JavaConversions._
+
 import de.ust.skill.generator.scala.GeneralOutputMaker
+
 trait SerializableStateMaker extends GeneralOutputMaker {
   override def make {
     super.make
@@ -33,9 +36,7 @@ import ${packagePrefix}internal.types._
       val sName = name.toLowerCase()
       val tName = packagePrefix + name
 
-      // TODO t.fields.fold...
-      val addArgs = "date: Long"
-      val consArgs = "date"
+      val addArgs = t.getAllFields().map({ f ⇒ s"${f.getName()}: ${_T(f.getType())}" }).mkString(", ")
 
       out.write(s"""
   /**
@@ -46,7 +47,7 @@ import ${packagePrefix}internal.types._
   /**
    * adds a new $name to the $name pool
    */
-  def add$Name($addArgs) = pools("$sName").asInstanceOf[${Name}StoragePool].add$Name(new ${packagePrefix}internal.types.$name($consArgs))
+  def add$Name($addArgs) = pools("$sName").asInstanceOf[${Name}StoragePool].add$Name(new ${packagePrefix}internal.types.$name($addArgs))
 
 """)
 
