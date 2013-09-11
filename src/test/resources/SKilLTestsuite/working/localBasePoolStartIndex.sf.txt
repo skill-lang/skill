@@ -1,0 +1,26 @@
+Contains an implementation of SKilL TR §6.3.2:
+
+Block1:
+Types: 
+A { A a; }
+B : A { B b; } 
+C : A { C c; }
+
+Data:
+aabbbc (all fields contain self-references)
+
+Block2:
+Types:
+D : B { D d; }
+
+Data:
+bbdd (all fields contain self-references)
+
+Block3:
+Types:
+
+Data:
+acd (all fields contain self-references)
+
+
+This file can be used to check propper deserialization of data containing sub-types. It requires the declarations of the type blocks, because otherwise deserialization may not happen at all.
