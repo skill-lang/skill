@@ -40,7 +40,7 @@ final private class FileParser extends ByteStreamParsers {
 
     // make pool (depends on IR)
     IR.foreach({ d ⇒
-      out.write(s"""        case "${d.getName().toLowerCase()}" ⇒ new ${d.getName()}StoragePool(t, σ)
+      out.write(s"""        case "${d.getName().toLowerCase()}" ⇒ new ${d.getName()}StoragePool(t, σ, blockCounter)
 """)
     })
 

@@ -2,7 +2,7 @@
         case _ ⇒ new StoragePool(t, t.superName match {
           case Some(name) ⇒ σ.pools.get(name).ensuring(_.isDefined)
           case None       ⇒ None
-        })
+        }, blockCounter)
       }
       σ.pools.put(t.name, result)
       t.subTypes.foreach(makePool(_))

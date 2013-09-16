@@ -6,10 +6,16 @@
  */
 class Iterator[T <: AnyRef] private[internal] (val staticType: StoragePool) extends Traversable[T] {
 
-  // the index in the dynamic type pool; if we iterated over all pools, the index will be set to 0
-  private var index = 1L
+  // pools are usually separated into several blocks and new instances
+  private var currentBlock = 0
+  private val blocks = staticType.userType.blockInfos
+  // the index in the dynamic type pool; we start with the fake index 0 and move to the next valid position
+  private var index = 0L
+  // move to the first valid position
+  reset
 
   // the current type we are looking into
+  // TODO this is a stack of types and it is only used if we are iterating over new instances
   private var dynamicType = staticType
 
   /**
@@ -25,14 +31,34 @@ class Iterator[T <: AnyRef] private[internal] (val staticType: StoragePool) exte
   }
 
   /**
-   * move to the next element
+   * move to the next valid element, if any exists; invalidate the iterator otherwise
    */
-  def next() = {
-    // TODO not correct!!! (need to consider sub types, blocks and new instances)
-    if (index >= dynamicType.sizeCount)
-      index = 0
-    else
-      index += 1
+  def next() {
+    // assume the next position is the next index
+    index += 1
+
+    // are we still in the block part?
+    if (blocks.contains(currentBlock)) {
+      // check if there is another instance in the current block
+      if (blocks(currentBlock).bpsi + blocks(currentBlock).count > index)
+        return
+      else {
+        // check if there is another instane in a block
+        for (i ← currentBlock + 1 until staticType.blockCount) {
+          if (blocks.contains(i) && blocks(i).count > 0) {
+            index = blocks(i).bpsi
+            currentBlock = i
+            return
+          }
+        }
+      }
+      // we iterated over all instances from the deserialized file; invalidate the currentBlock
+      currentBlock = -1
+    }
+
+    // TODO iterate over new instances
+    index = 0
+    return
   }
 
   /**
@@ -40,6 +66,21 @@ class Iterator[T <: AnyRef] private[internal] (val staticType: StoragePool) exte
    *  elemnts.
    */
   def valid = 0 != index
+
+  /**
+   * resets the cursor to the first valid position, if any
+   */
+  def reset() {
+    currentBlock = 0
+    val max = staticType.blockCount
+    for (i ← 0 until max) {
+      if (blocks.contains(i) && blocks(i).count > 0) {
+        index = blocks(i).bpsi
+        currentBlock = i
+        return
+      }
+    }
+  }
 
   def foreach[U](f: T ⇒ U) = while (valid) { f(get); next }
 

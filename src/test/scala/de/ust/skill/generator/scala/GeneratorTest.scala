@@ -8,7 +8,7 @@ class GeneratorTest extends AssertionsForJUnit {
     Main.main(Array[String]("-p", out, "src/test/resources/scala/"+src, "tmp/scala/src/"))
   }
 
-  @Test def date = check("date.skill", "expected")
+  @Test def date = check("date.skill", "date")
   @Test def pamm = check("air-pamm.skill", "pamm")
   @Test def blocks = check("blocks.skill", "block")
   @Test def subtypes = check("subtypesExample.skill", "subtypes")

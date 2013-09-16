@@ -19,11 +19,17 @@ trait KnownPool {
 /**
  * General purpose storage pool, which is used if for unknown types. Other storage pool inherit from this class.
  *
+ * @param userType the type of the objects stored in this pool
+ * @param superPool Some(super) if super is the pool containing the super type instances;
+ * @param blockCount the number of blocks the pool had in the file creating the pool; will be 0 if the pool has not been
+ *                    created by a file
+ *
  * @author Timm Felden
  */
 class StoragePool(
     val userType: UserType,
-    val superPool: Option[StoragePool]) {
+    val superPool: Option[StoragePool],
+    val blockCount: Int) {
   val name = userType.name
   val basePool: StoragePool = superPool match {
     case Some(base) ⇒ base.basePool
@@ -113,7 +119,7 @@ class StoragePool(
   private[internal] def prepareSerialization(σ: SerializableState) {
 
   }
-  
+
   private[internal] def writeFieldData(out: ByteArrayOutputStream, σ: SerializableState) {}
 
   protected var endOffsets = new HashMap[FieldDeclaration, Long]()

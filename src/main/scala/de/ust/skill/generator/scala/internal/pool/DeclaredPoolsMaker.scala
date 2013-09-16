@@ -48,13 +48,13 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
   private def makePool(out: PrintWriter, d: Declaration) {
     val name = d.getName()
     val sName = name.toLowerCase()
-    val fields = d.getAllFields().toList
+    val fields = d.getFields().toList
 
     // head
     out.write(s"""package ${packagePrefix}internal.pool
 
 import java.io.ByteArrayOutputStream
-    
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
@@ -63,13 +63,13 @@ import ${packagePrefix}internal.parsers.FieldParser
 import ${packagePrefix}internal.SerializableState.v64
 import ${packagePrefix}internal.types._
 
-final class ${name}StoragePool(userType: UserType, σ: SerializableState)
+final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockCount: Int)
     extends StoragePool(userType.ensuring(_.name.equals("$sName")), ${
       d.getSuperType() match {
         case null ⇒ "None";
         case s    ⇒ s"""σ.pools.get("${s.getName().toLowerCase()}")"""
       }
-    })
+    }, blockCount)
     with KnownPool {
 
   import SerializableState.v64
@@ -122,7 +122,8 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState)
       })
 
       // map field data to instances
-      σ.get${d.getName().capitalize}s.indexedForeach { (o, i) ⇒ o.asInstanceOf[T].set${f.getName().capitalize}(fieldData(i.toInt - 1)) }
+      var off = 0
+      σ.get${d.getName().capitalize}s.foreach { o ⇒ o.asInstanceOf[T].set${f.getName().capitalize}(fieldData(off)); off += 1 }
     }
 """)
     })
@@ -152,7 +153,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState)
     userType.fields.foreach({ f ⇒
       f.name match {""")
 
-    d.getFields.foreach({ f ⇒
+    fields.foreach({ f ⇒
       val name = f.getName()
       //TODO write(v64 ... this has to be replaced by something more generic and faster which takes f.t and an accessor to f.data
       out.write(s"""
