@@ -28,6 +28,10 @@ import de.ust.skill.ir.SetType
 import de.ust.skill.ir.ListType
 import de.ust.skill.ir.MapType
 import scala.Boolean
+import de.ust.skill.ir.Field
+import de.ust.skill.generator.scala.internal.IteratorMaker
+import de.ust.skill.generator.scala.internal.BlockInfoMaker
+import de.ust.skill.generator.scala.internal.IteratorMaker
 
 /**
  * Entry point of the scala generator.
@@ -73,6 +77,7 @@ class Main
     with DeclarationImplementationMaker
     with DeclaredPoolsMaker
     with IteratorMaker
+    with BlockInfoMaker
     with SkillExceptionMaker
     with TypeInfoMaker
     with FieldDeclarationMaker
@@ -142,5 +147,18 @@ class Main
 
       case unknown ⇒ sys.error(s"unkown Argument: $unknown")
     }
+  }
+
+  override protected def defaultValue(f: Field) = f.getType() match {
+    case t: GroundType ⇒ t.getTypeName() match {
+      case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
+      case "f32" | "f64"                        ⇒ "0.0f"
+      case "bool"                               ⇒ "false"
+      case _                                    ⇒ "null"
+    }
+
+    // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
+
+    case _ ⇒ "null"
   }
 }

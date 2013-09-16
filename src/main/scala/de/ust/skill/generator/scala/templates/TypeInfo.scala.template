@@ -1,7 +1,5 @@
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import scala.collection.mutable.LinkedList
-import scala.collection.mutable.StringBuilder
 
 /**
  * The type info objects are used to reflect the type information stored in a skill file. They are required for
@@ -155,9 +153,27 @@ class UserType(
   var fields: ArrayBuffer[FieldDeclaration])
     extends TypeInfo {
 
-  var superType: UserType = null
-  val subTypes = new LinkedList[UserType]
+  // Total number of instances seen until now.
+  var instanceCount = 0L;
 
+  /**
+   *  Block information gathered until now. Can contain NULL-pointers, iff the respective block did not contain any
+   *   instances of this type.
+   */
+  var blockInfos = new HashMap[Int, BlockInfo]
+  private[internal] def addBlockInfo(info: BlockInfo, blockCounter: Int) = {
+    instanceCount += info.count
+    blockInfos.put(blockCounter, info)
+  }
+
+  // various links between types
+  var baseType: UserType = superName match { case None ⇒ this; case _ ⇒ null }
+  var superType: UserType = null
+  var subTypes = new ArrayBuffer[UserType]
+
+  /**
+   * Pretty printed skill declaration of this user type.
+   */
   def getDeclaration(): String = {
     var r = new StringBuilder(name)
     if (superName.isDefined)

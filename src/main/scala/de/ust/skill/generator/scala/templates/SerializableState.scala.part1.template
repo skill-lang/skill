@@ -42,10 +42,10 @@ class SerializableState {
 
     // write fields back to their buffers
     val out = new ByteArrayOutputStream
-    pools.values.foreach(_.writeFieldData(out, this))
+    // TODO pools.values.foreach(_.writeFieldData(out, this))
 
     // write header
-    pools.values.foreach(_.write(file, this))
+    // TODO pools.values.foreach(_.write(file, this))
 
     // write data
     file.write(ByteBuffer.wrap(out.toByteArray()))

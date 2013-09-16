@@ -1,12 +1,34 @@
 
 /**
+ * Marker to indicate that a pool has a type known at generation time.
+ *
+ * @author Timm Felden
+ */
+trait KnownPool {
+  /**
+   * Can be used on known pools to construct instances of the pool, AFTER the sub pool relation has been constructed.
+   */
+  private[internal] def constructPool(): Unit
+
+  /**
+   * Reads all fields required by the generation time specification.
+   */
+  private[internal] def readFields(): Unit
+}
+
+/**
  * General purpose storage pool, which is used if for unknown types. Other storage pool inherit from this class.
  *
  * @author Timm Felden
  */
 class StoragePool(
-    val name: String, val userType: UserType, val superPool: Option[StoragePool],
-    var storedSize: Long, var basePoolStartIndex: Long) {
+    val userType: UserType,
+    val superPool: Option[StoragePool]) {
+  val name = userType.name
+  val basePool: StoragePool = superPool match {
+    case Some(base) ⇒ base.basePool
+    case None       ⇒ this
+  };
 
   /**
    * true iff the pool has a shallow modification, i.e. an index may have changed
@@ -18,7 +40,10 @@ class StoragePool(
    */
   protected type T <: AnyRef
 
-  var subPools = new ArrayBuffer[StoragePool]
+  /**
+   * the sub pools are constructed during construction of all storage pools of a state
+   */
+  protected var subPools = new ArrayBuffer[StoragePool]
 
   var f: Array[Void] = null
 
@@ -37,6 +62,7 @@ class StoragePool(
     if (superPool.isDefined) {
       fieldNames ++= superPool.get.fieldNames
       fieldTypes ++= superPool.get.fieldTypes
+      superPool.get.subPools += this
     }
     userType.fields.foreach({ f ⇒
       fieldTypes.put(fieldNames.size, f.t)
@@ -48,21 +74,25 @@ class StoragePool(
    * All stored objects, which have exactly the type T. Objects are stored as arrays of field entries. The types of the
    *  respective fields can be retrieved using the fieldTypes map.
    */
-  private[internal] var data: ArrayBuffer[T] = new ArrayBuffer[T](storedSize.toInt)
+  // BASETYPE private[internal] var data: Array[T] = new Array[T](storedSize.toInt)
+  private[internal] var newObjects = ArrayBuffer[T]()
 
+  /**
+   * size is an O(t) opertion, because all subtypes have to be querried
+   */
   def sizeCount: Long = {
-    if (null == data)
-      storedSize;
-    else
-      data size;
+    // TODO horribly incorrect
+    userType.instanceCount
   }
+
+  def getIterator(): Iterator[T] = new Iterator[T](this)
 
   /**
    * Retrieves an element based on its current index.
+   *
+   * TODO horribly incorrect; does not allow for new instances!!!
    */
-  def getByCurrentIndex(index: Long): T = {
-    return data(index.toInt - 1)
-  }
+  def getByCurrentIndex(index: Long): T = getByID(index)
 
   /**
    * Retrieves an element based on its ID, i.e. its original index in the deserialized file.
@@ -70,7 +100,10 @@ class StoragePool(
    * @note will only work if the state has been read from a file or been written to a file
    */
   def getByID(index: Long): T = {
-    return data(index.toInt - 1)
+    if (basePool.isInstanceOf[KnownPool])
+      return basePool.getByID(index).asInstanceOf[T];
+    else
+      throw new NoSuchMethodError(s"Can not be called on a fully generic storage pool: $name");
   }
 
   /**
@@ -80,73 +113,10 @@ class StoragePool(
   private[internal] def prepareSerialization(σ: SerializableState) {
 
   }
+  
+  private[internal] def writeFieldData(out: ByteArrayOutputStream, σ: SerializableState) {}
 
   protected var endOffsets = new HashMap[FieldDeclaration, Long]()
-  /**
-   * writes fields from memory into their serialized form.
-   * saves end-offsets for writing the header
-   */
-  private[internal] def writeFieldData(out: ByteArrayOutputStream, σ: SerializableState) {
-    userType.fields.foreach(writeFieldData(out, σ, _))
-  }
-
-  protected[this] def writeFieldData(out: ByteArrayOutputStream, σ: SerializableState, f: FieldDeclaration) {
-    // TODO write generic field data
-
-    // note this is only correct if data is written; for now this will cause errors, but the bug is the TODO above
-    endOffsets.put(f, out.size)
-  }
-
-  import SerializableState.v64
-
-  /**
-   * writes the pool into a file, after all pools of a state have been prepared
-   *
-   * the resulting layout is described in SKilL §6.2
-   */
-  final private[internal] def write(out: FileChannel, σ: SerializableState) {
-    // little helpers
-    def writeV64(i: Long) = out.write(ByteBuffer.wrap(v64(i)))
-    def putName(s: String) = writeV64(σ.strings.serializationIDs(s))
-
-    //string typeName
-    putName(name)
-
-    //string superTypeName &&
-    //option(v64 basePoolStartIndex; iff has superType)
-    superPool match {
-      case None ⇒ writeV64(0)
-      case Some(s) ⇒ {
-        putName(s.name)
-        writeV64(basePoolStartIndex)
-      }
-    }
-
-    //v64 elementCount
-    writeV64(sizeCount)
-
-    //restriction[] REST
-    // TODO write restrictions
-    writeV64(0)
-
-    //v64 fieldCount
-    writeV64(userType.fields.length)
-
-    //foreach f in fields
-    userType.fields.foreach({ f ⇒
-      // restriction[] f.REST
-      // TODO write restrictions
-      writeV64(0)
-
-      //[[f.type]]
-      writeV64(f.t.typeId)
-
-      //string f.name
-      putName(f.name)
-      writeV64(endOffsets(f))
-    })
-
-  }
 }
 
 object StoragePool {

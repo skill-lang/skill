@@ -10,10 +10,7 @@ trait StoragePoolMaker extends GeneralOutputMaker{
     //package & imports
     out.write(s"""package ${packagePrefix}internal.pool
 
-import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
-import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap

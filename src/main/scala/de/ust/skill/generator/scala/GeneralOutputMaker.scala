@@ -4,33 +4,34 @@ import java.io.File
 import java.io.PrintWriter
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Type
+import de.ust.skill.ir.Field
 
 /**
  * The parent class for all output makers.
- * 
+ *
  * @author Timm Felden
  */
 trait GeneralOutputMaker {
-  
+
   /**
    * The base path of the output.
    */
-  var outPath:String
-  
+  var outPath: String
+
   /**
    * The intermediate representation of the (known) output type system.
    */
-  var IR:List[Declaration]
-  
+  var IR: List[Declaration]
+
   /**
    * Makes the output; has to invoke super.make!!!
    */
-  protected def make{}
-  
+  protected def make {}
+
   /**
    * Creates the correct PrintWriter for the argument file.
    */
-  def open(path:String) = {
+  def open(path: String) = {
     val f = new File(s"$outPath$packagePath$path")
     f.getParentFile.mkdirs
     f.createNewFile
@@ -51,8 +52,13 @@ trait GeneralOutputMaker {
    * Assume a package prefix provider.
    */
   protected def packagePrefix(): String
-  
-  private lazy val packagePath = if(packagePrefix.length > 0){
+
+  /**
+   * Provides a string representation of the default value of f.
+   */
+  protected def defaultValue(f: Field): String
+
+  private lazy val packagePath = if (packagePrefix.length > 0) {
     packagePrefix.replace(".", "/")
   } else {
     ""

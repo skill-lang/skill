@@ -16,7 +16,10 @@
     println("StoragePools:")
     pools.values.foreach({ s ⇒
       println(s.name+": "+s.sizeCount);
-      println(s.data.fold(" ")(""+_+" | "+_)+" |")
+      // TODO use interface for prettyString!
+      try {
+        println(s.getIterator.mkString("  ", "\n  ", "\n"))
+      } catch { case _: NoSuchMethodError ⇒ println("<< some generic data >>") }
     })
     println("")
 

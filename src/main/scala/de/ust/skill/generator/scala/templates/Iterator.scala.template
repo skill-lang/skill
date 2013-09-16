@@ -4,7 +4,7 @@
  * @param T is in fact the API type of the objects stored in the static type storage pool
  * @author Timm Felden
  */
-class Iterator[T <: AnyRef] private[internal] (val staticType: StoragePool) {
+class Iterator[T <: AnyRef] private[internal] (val staticType: StoragePool) extends Traversable[T] {
 
   // the index in the dynamic type pool; if we iterated over all pools, the index will be set to 0
   private var index = 1L
@@ -21,18 +21,18 @@ class Iterator[T <: AnyRef] private[internal] (val staticType: StoragePool) {
    */
   implicit def get(): T = {
     require(valid)
-    return dynamicType.getByCurrentIndex(index).asInstanceOf[T]
+    return staticType.getByCurrentIndex(index).asInstanceOf[T]
   }
 
   /**
    * move to the next element
    */
   def next() = {
+    // TODO not correct!!! (need to consider sub types, blocks and new instances)
     if (index >= dynamicType.sizeCount)
       index = 0
     else
       index += 1
-    // TODO sub pools need to be considered too!
   }
 
   /**
@@ -40,4 +40,13 @@ class Iterator[T <: AnyRef] private[internal] (val staticType: StoragePool) {
    *  elemnts.
    */
   def valid = 0 != index
+
+  def foreach[U](f: T ⇒ U) = while (valid) { f(get); next }
+
+  /**
+   * like foreach, but provides an index as well
+   * @note index starts from 1
+   * @note invalidates the iterator
+   */
+  def indexedForeach(f: (T, Long) ⇒ Unit) = while (valid) { f(get, index); next }
 }

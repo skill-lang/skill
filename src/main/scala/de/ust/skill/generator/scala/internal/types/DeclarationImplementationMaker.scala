@@ -5,6 +5,7 @@ import scala.collection.JavaConversions.asScalaBuffer
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Type
 import de.ust.skill.generator.scala.GeneralOutputMaker
+import de.ust.skill.ir.Field
 
 trait DeclarationImplementationMaker extends GeneralOutputMaker {
   override def make {
@@ -25,10 +26,13 @@ final class $name(
   """)
 
     // data
-    out.write(fields.map({ f ⇒ s"var _${f.getName()}: ${_T(f.getType())}" }).toArray.mkString("", ",\n  ", ""))
+    out.write(fields.map({ f ⇒ s"private var _${f.getName()}: ${_T(f.getType())}" }).toArray.mkString("", ",\n  ", ""))
 
     out.write(s""")
     extends _root_.${packagePrefix}$name {
+  def this() {
+    this(${d.getAllFields().map(defaultValue(_)).mkString(", ")})
+  }
 """)
 
     // getters & setters

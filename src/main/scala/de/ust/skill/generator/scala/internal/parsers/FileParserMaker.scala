@@ -14,7 +14,6 @@ import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
 
-import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.language.implicitConversions
@@ -23,33 +22,27 @@ import ${packagePrefix}internal._
 import ${packagePrefix}internal.pool._
 
 /**
- * see skill ref man §6.2
+ * see skill ref man §6.2.
+ *
+ * The file parser reads a file and gathers type declarations.
+ * It creates a new SerializableState which contains types for these type declaration.
  *
  * @author Timm Felden
- * @note Lazy deserialization with multiple blocks will require a block counter which is stored along offsets
  */
 final private class FileParser extends ByteStreamParsers {
   /**
-   * @return the correct type of storage pool containing the correct data and type
+   * creates storage pools in type order
    */
-  def makePool(σ: SerializableState,
-               name: String,
-               t: UserType,
-               parent: Option[StoragePool],
-               size: Long,
-               idx: Long): StoragePool = name match {
+  private def makeState() {
+    def makePool(t: UserType): StoragePool = {
+      val result = t.name match {
 """)
 
     // make pool (depends on IR)
     IR.foreach({ d ⇒
-      out.write(s"""    case "${d.getName().toLowerCase()}" ⇒ new ${d.getName()}StoragePool(t, size, σ)
+      out.write(s"""        case "${d.getName().toLowerCase()}" ⇒ new ${d.getName()}StoragePool(t, σ)
 """)
     })
-
-    out.write("""
-    case _      ⇒ new StoragePool(name, t, parent, size, idx)
-  }
-""")
 
     // the remaining body is always the same
     copyFromTemplate(out, "FileParser.scala.template")

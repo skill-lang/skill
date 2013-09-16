@@ -1,6 +1,26 @@
 
+        case _ ⇒ new StoragePool(t, t.superName match {
+          case Some(name) ⇒ σ.pools.get(name).ensuring(_.isDefined)
+          case None       ⇒ None
+        })
+      }
+      σ.pools.put(t.name, result)
+      t.subTypes.foreach(makePool(_))
+      result
+    }
+
+    // make base pools; the makePool function makes sub pools
+    userTypeIndexMap.values.filter(_.superName.isEmpty).foreach({ b ⇒
+      val p = makePool(b)
+      if (p.isInstanceOf[KnownPool])
+        p.asInstanceOf[KnownPool].constructPool
+      else
+        println(s"unknown pool $p")
+    })
+  }
+
   /**
-   * A type decalariation, as it occurs during parsing of a type blocks header.
+   * A type declaration, as it occurs during parsing of a type blocks header.
    *
    * @author Timm Felden
    */
@@ -9,7 +29,17 @@
       val superName: Option[String],
       val lbpsi: Long,
       val count: Long /*, restrictions*/ ,
-      val fieldCount: Long) {
+      val fieldCount: Long,
+      // null iff the type occurred first in this block
+      var userType: UserType) {
+
+    // ensure presence of lbpsi type start indices
+    if (superName.isEmpty && !localBlockBaseTypeStartIndices.contains(name))
+      localBlockBaseTypeStartIndices.put(name, 0L)
+
+    /**
+     * Field declarations obtained from the header.
+     */
     var fieldDeclarations: List[FieldDeclaration] = null
 
     /**
@@ -17,26 +47,30 @@
      *
      * TODO treat restrictions
      */
-    def parseFieldDeclarations: Parser[TypeDeclaration] = {
+    def parseFieldDeclarations: Parser[TypeDeclaration] = tryCatch({
       // if we have new instances and the type existed and there are new fields, we get into special cases
-      if (count > 0 && σ.pools.contains(name)) {
-        val knownFields = σ.pools(name).userType.fields.size
+      if (null != userType && count > 0) {
+        val knownFields = userType.fields.size
         assert(knownFields > 0, s"The block contains lacks $knownFields field declarations.")
         var fieldIndex = 0
 
-        tryCatch(repN(knownFields.toInt, v64 ^^ { end ⇒
-          var result = σ.pools(name).userType.fields(fieldIndex)
-          result.end = end
+        tryCatch(repN(knownFields.toInt,
+          v64 ^^ { end ⇒
+            var result = userType.fields(fieldIndex)
+            result.end = end
 
-          result
-        }) >> { fields ⇒
-          repN((fieldCount - knownFields).toInt, restrictions ~ fieldTypeDeclaration ~ v64 ~ v64 ^^ {
-            case r ~ t ~ n ~ end ⇒
-              new FieldDeclaration(t, σ(n), end)
-          }) ^^ { newFields ⇒
-            fields ++ newFields
+            result
           }
-        }
+        ) >> { fields ⇒
+            repN((fieldCount - knownFields).toInt, restrictions ~ fieldTypeDeclaration ~ v64 ~ v64 ^^ {
+              case r ~ t ~ n ~ end ⇒
+                val result = new FieldDeclaration(t, σ(n), end)
+                userType.fields.append(result)
+                result
+            }) ^^ { newFields ⇒
+              fields ++ newFields
+            }
+          }
         )(s"partial type declaration in type $name failed")
       } else {
         // we append only fields to the type; it is not important whether or not it existed before;
@@ -53,7 +87,7 @@
     } ^^ { r ⇒
       fieldDeclarations = r;
       this
-    }
+    })(s"failed to parse a field of $name")
 
   }
 
@@ -63,7 +97,16 @@
    */
   private val σ = new SerializableState;
 
+  // helper structures required to build user types
   private var userTypeIndexMap = new HashMap[Long, UserType]
+  private var userTypeNameMap = new HashMap[String, UserType]
+  private var blockCounter = 0;
+
+  /**
+   * The map contains start indices of base types, which are required at the end of the type header processing phase to
+   *  create absolute base pool indices from relative ones.
+   */
+  private var localBlockBaseTypeStartIndices = new HashMap[String, Long]
 
   /**
    * @param σ the processed serializable state
@@ -75,12 +118,19 @@
    * turns a file into a raw serializable state
    */
   private def file: Parser[SerializableState] = {
-    var blockCounter = 1;
     tryCatch(
       rep(hasMore ~>
         stringBlock ~
-        typeBlock ~ { blockCounter += 1; success() }
-      ) ^^ { _ ⇒ σ }
+        (typeBlock ^^ { declarations ⇒
+          // update counters
+          declarations.filter(_.superName.isEmpty).foreach({ d ⇒
+            localBlockBaseTypeStartIndices.put(d.name, d.userType.instanceCount)
+          })
+
+          blockCounter += 1
+          ()
+        })
+      ) ^^ { _ ⇒ makeState; σ }
     )(s"file parsing failed in block $blockCounter ")
   }
 
@@ -118,61 +168,64 @@
    * At the moment, it will process fields as well, because we do not have a good random access file stream
    *  implementation, yet.
    */
-  private def typeBlock: Parser[Unit] = tryCatch(
-    (v64 >>
-      { count ⇒ repN(count.toInt, typeDeclaration) } ^^ { rawList: List[TypeDeclaration] ⇒
-        val raw = rawList.toArray
+  private def typeBlock: Parser[Array[TypeDeclaration]] = tryCatch(
+    (v64 >> { count ⇒ repN(count.toInt, typeDeclaration) } ^^ { rawList: List[TypeDeclaration] ⇒
+      val raw = rawList.toArray
 
-        var i = userTypeIndexMap.size
-        var refl = raw.map({
-          decl ⇒
-            assert(null != decl.fieldDeclarations, s"forgot to parse field declarations of type ${decl.name}")
+      // create new user types for types that did not exist until now
+      raw.filter(null == _.userType).foreach({ td ⇒
+        val u = new UserType(
+          userTypeIndexMap.size,
+          td.name,
+          td.superName,
+          new ArrayBuffer[FieldDeclaration] ++= td.fieldDeclarations
+        )
+        userTypeIndexMap.put(u.index, u)
+        userTypeNameMap.put(u.name, u)
+        td.userType = u
+      })
 
-            val rval = new UserType(i, decl.name, decl.superName,
-              new ArrayBuffer[FieldDeclaration] ++= decl.fieldDeclarations
-            );
-            userTypeIndexMap.put(rval.index, rval)
-            i += 1;
-            rval
-        }).toArray
-
-        // eliminate preliminary user types
-        refl.foreach({ t ⇒
-          t.fields.foreach(f ⇒ {
-            if (f.t.isInstanceOf[PreliminaryUserType]) {
-              val index = f.t.asInstanceOf[PreliminaryUserType].index
-              if (userTypeIndexMap.contains(index))
-                f.t = userTypeIndexMap(index)
-              else
-                throw new SkillException(
-                  s"${t.name}.${f.name} refers to an invalid user type $index (last valid is ${userTypeIndexMap.size})"
-                )
-            }
-          })
-        })
-
-        (raw, refl)
-      }) >> { arg ⇒
-        typeChunks(arg._1) ^^ {
-          case () ⇒
-            val raw = arg._1;
-            // create storage pools
-            var i = 0
-            arg._2.foreach({ t ⇒
-              σ.pools.put(t.name, makePool(σ, t.name, t, t.superName match {
-                case Some(s: String) ⇒ σ.pools.get(s)
-                case None            ⇒ None
-              }, raw(i).count, raw(i).lbpsi));
-              i += 1
-            })
-        }
+      // set super and base types of new user types
+      // note: this requires another pass, because super types may be defined after a type
+      def mkBase(t: UserType): Unit = if (null == t.baseType) {
+        val s = userTypeNameMap(t.superName.get)
+        mkBase(s)
+        t.superType = s
+        t.baseType = s.baseType
+        s.subTypes += t
       }
+      // note rather inefficient @see issue #9
+      raw.foreach({ d ⇒ mkBase(d.userType) })
+
+      raw.foreach({ t ⇒
+        val u = t.userType
+        // add local block info
+        u.addBlockInfo(new BlockInfo(t.count, localBlockBaseTypeStartIndices(u.baseType.name) + t.lbpsi), blockCounter)
+
+        // eliminate preliminary user types in field declarations
+        u.fields.foreach(f ⇒ {
+          if (f.t.isInstanceOf[PreliminaryUserType]) {
+            val index = f.t.asInstanceOf[PreliminaryUserType].index
+            if (userTypeIndexMap.contains(index))
+              f.t = userTypeIndexMap(index)
+            else
+              throw new SkillException(
+                s"${t.name}.${f.name} refers to an invalid user type $index (user types: ${
+                  userTypeIndexMap.mkString(", ")
+                })"
+              )
+          }
+        })
+      })
+
+      raw
+    }) >> typeChunks
   )("type block parsing failed")
 
   /**
    * reads type chunks using the raw information from the type block
    */
-  private def typeChunks(declarations: Array[TypeDeclaration]) = new Parser[Unit] {
+  private def typeChunks(declarations: Array[TypeDeclaration]) = new Parser[Array[TypeDeclaration]] {
     def apply(in: Input) = try {
 
       var lastOffset = 0L;
@@ -180,6 +233,7 @@
       declarations.foreach({ d ⇒
         d.fieldDeclarations.foreach({ f ⇒
           // the stream is at $lastOffset; we want to read until the fields offset
+          // TODO even if the field had not yet existed but instances had?
           f.dataChunks ++= List(ChunkInfo(in.position, f.end - lastOffset, d.count))
           lastOffset = f.end
 
@@ -191,7 +245,7 @@
       // jump over the data chunk, it might be processed in the future
       in.drop(lastOffset.toInt)
 
-      Success((), in)
+      Success(declarations, in)
     } catch { case e: SkillException ⇒ SkillException("type chunk parsing failed", e) }
   }
 
@@ -200,41 +254,45 @@
    */
   private[this] def typeDeclaration: Parser[TypeDeclaration] = tryCatch(
     (v64 ^^ { i ⇒ σ(i) }) >> { name ⇒
-      // check if we append to an existing type
-      if (σ.pools.contains(name)) {
-        val t = σ.pools(name)
-        var s: Option[String] = None
+      tryCatch(
+        // check if we append to an existing type
+        if (userTypeNameMap.contains(name)) {
+          val t = userTypeNameMap(name)
+          var s: Option[String] = None
 
-        tryCatch((t.superPool match {
-          case Some(sup) ⇒
-            s = Some(sup.name); v64
-          case _ ⇒ success(0L)
-        }) ~ v64 ~ v64 ^^ {
-          case lbpsi ~ count ~ fields ⇒
-            new TypeDeclaration(name, s, lbpsi, count, fields)
-        })(s"failed to parse type $name")
+          tryCatch(
+            superInfo(t.superName) ~ v64 ~ v64 ^^ {
+              case lbpsi ~ count ~ fields ⇒
+                new TypeDeclaration(name, s, lbpsi, count, fields, t)
+            })(s"failed to parse type $name")
 
-      } else {
-        tryCatch(((v64 >> superInformation) ~
-          v64 ~
-          restrictions ~
-          v64
-        ) ^^ {
-            case sup ~ count ~ restrictions ~ fields ⇒
-              new TypeDeclaration(name, sup._1, sup._2, count, fields)
-          })(s"failed to parse new type $name")
-      }
+        } else {
+          tryCatch(
+            (v64 >> superInfo) ~ v64 ~ restrictions ~ v64 ^^ {
+              case (sup, lbpsi) ~ count ~ restrictions ~ fields ⇒
+                new TypeDeclaration(name, sup, lbpsi, count, fields, null)
+            })(s"failed to parse new type $name")
+        }
+      )(s"type: $name")
     } >> { _.parseFieldDeclarations }
   )("type declaration parsing failed")
 
   /**
    *  @return a tuple with (super name, super index)
    */
-  private[this] def superInformation(index: Long) = {
+  private[this] def superInfo(index: Long) = {
     if (index != 0)
-      v64 ^^ { i ⇒ (Some(σ(i)), index) }
+      v64 ^^ { lbpsi ⇒ (Some(σ(index)), lbpsi) }
     else
-      success((None, 0L))
+      success((None, 1L))
+  }
+
+  /**
+   * return a parser parsing local base pool start index, if necessary
+   */
+  private[this] def superInfo(superName: Option[String]) = superName match {
+    case Some(_) ⇒ v64
+    case None    ⇒ success(1L)
   }
 
   /**

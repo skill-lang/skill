@@ -48,7 +48,6 @@ import ${packagePrefix}internal.types._
    * adds a new $name to the $name pool
    */
   def add$Name($addArgs) = pools("$sName").asInstanceOf[${Name}StoragePool].add$Name(new _root_.${packagePrefix}internal.types.$name($addArgs))
-
 """)
 
     })
