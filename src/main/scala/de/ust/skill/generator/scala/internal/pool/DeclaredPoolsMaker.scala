@@ -6,6 +6,9 @@ import de.ust.skill.generator.scala.GeneralOutputMaker
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
 import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.CompoundType
 
 /**
  * Creates storage pools for declared types.
@@ -36,10 +39,13 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
       case "string"     ⇒ "f.t.isInstanceOf[StringInfo]"
       case s            ⇒ throw new Error(s"not yet implemented: $s")
     }
-    // TODO maps & co
+    // compound types use the string representation to check the type; note that this depends on IR.toString-methods
+    case t: CompoundType ⇒ s"""f.t.toString.equals("$t")"""
 
-    case t: Declaration ⇒ s"""f.t.isInstanceOf[UserType] && f.t.asInstanceOf[UserType].name.equals("${t.getTypeName().toLowerCase()}")"""
-    case t              ⇒ throw new Error(s"not yet implemented: ${t.getTypeName()}")
+    case t: Declaration  ⇒ s"""f.t.isInstanceOf[UserType] && f.t.asInstanceOf[UserType].name.equals("${t.getTypeName().toLowerCase()}")"""
+
+    // this should be unreachable; it might be reachable if IR changed
+    case t               ⇒ throw new Error(s"not yet implemented: ${t.getTypeName()}")
   }
 
   /**

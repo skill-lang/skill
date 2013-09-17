@@ -131,7 +131,7 @@ class SetInfo(var groundType: TypeInfo) extends CompoundTypeInfo {
 }
 class MapInfo(var groundType: List[TypeInfo]) extends CompoundTypeInfo {
 
-  override def toString(): String = "map<"+groundType.tail.fold(groundType.head.toString)(_+","+_.toString)+">"
+  override def toString(): String = groundType.mkString("map<",", ",">")
 
   def typeId: Long = 20
 }
