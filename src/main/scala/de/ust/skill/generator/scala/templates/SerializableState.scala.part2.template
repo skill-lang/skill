@@ -16,11 +16,10 @@
     println("StoragePools:")
     pools.values.foreach({ s ⇒
       println(s.name+": "+s.sizeCount);
-      val it = s.getIterator.asInstanceOf[PoolIterator[_]]
-      if (it.get.isInstanceOf[KnownType])
-        println(it.map(_.asInstanceOf[KnownType].prettyString).mkString("  ", "\n  ", "\n"))
+      if (s.isInstanceOf[KnownPool])
+        println(s.getIterator.map(_.asInstanceOf[KnownType].prettyString).mkString("  ", "\n  ", "\n"))
       else
-        println("<< some generic data >>")
+        println("<< some generic dat >>")
     })
     println("")
 
