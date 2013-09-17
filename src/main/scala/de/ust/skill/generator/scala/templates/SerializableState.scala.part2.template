@@ -19,7 +19,7 @@
       if (s.isInstanceOf[KnownPool])
         println(s.getIterator.map(_.asInstanceOf[KnownType].prettyString).mkString("  ", "\n  ", "\n"))
       else
-        println("<< some generic dat >>")
+        println("<< some generic data >>")
     })
     println("")
 
