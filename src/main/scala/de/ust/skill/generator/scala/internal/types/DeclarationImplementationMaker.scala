@@ -6,6 +6,7 @@ import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Type
 import de.ust.skill.generator.scala.GeneralOutputMaker
 import de.ust.skill.ir.Field
+import de.ust.skill.ir.Data
 
 trait DeclarationImplementationMaker extends GeneralOutputMaker {
   override def make {
@@ -17,7 +18,7 @@ trait DeclarationImplementationMaker extends GeneralOutputMaker {
 
   private def makeDeclaration(out: PrintWriter, d: Declaration) {
     val name = d.getName()
-    val fields = d.getAllFields
+    val fields = d.getAllFields.filter(_.isInstanceOf[Data])
 
     // head
     out.write(s"""package ${packagePrefix}internal.types
@@ -31,7 +32,7 @@ final class $name(
     out.write(s""")
     extends _root_.${packagePrefix}$name {
   def this() {
-    this(${d.getAllFields().map(defaultValue(_)).mkString(", ")})
+    this(${fields.map(defaultValue(_)).mkString(", ")})
   }
 """)
 

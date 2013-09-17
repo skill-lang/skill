@@ -1,10 +1,10 @@
 package de.ust.skill.generator.scala
 
 import java.io.PrintWriter
-
 import scala.collection.JavaConversions.asScalaBuffer
-
 import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.Constant
+import de.ust.skill.ir.Data
 
 trait DeclarationInterfaceMaker extends GeneralOutputMaker {
   override def make {
@@ -33,8 +33,19 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
     d.getFields().foreach({ f ⇒
       val name = f.getName.capitalize
 
-      out.write(s"\n  def get$name(): ${_T(f.getType())}\n")
-      out.write(s"  def set$name($name: ${_T(f.getType())}): Unit\n")
+      if (f.isInstanceOf[Constant]) {
+        // constants do not have a setter
+        val c = f.asInstanceOf[Constant]
+        out.write(s"\n  def get$name(): ${_T(f.getType())} = ${c.value}\n")
+      } else {
+        // add a warning to auto fields
+        if (f.asInstanceOf[Data].isAuto)
+          out.write("\n  /** auto aka not serialized */")
+
+        // standard field data interface
+        out.write(s"\n  def get$name(): ${_T(f.getType())}\n")
+        out.write(s"  def set$name($name: ${_T(f.getType())}): Unit\n")
+      }
     })
 
     out.write("}");

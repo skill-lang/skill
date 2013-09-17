@@ -9,6 +9,8 @@ import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.CompoundType
+import de.ust.skill.ir.Constant
+import de.ust.skill.ir.Data
 
 /**
  * Creates storage pools for declared types.
@@ -115,9 +117,32 @@ ${
     // parse known fields
     fields.foreach({ f ⇒
       val name = f.getName()
-      val scalaType = _T(f.getType())
+      if (f.isInstanceOf[Constant]) {
+        // constant fields are not directly deserialized, but they need to be checked for the right value
+        out.write(s"""
+    // ${f.getType().getTypeName()} $name
+    userType.fields.filter({ f ⇒ "${f.getCanonicalName()}".equals(f.name) }).foreach(_ match {
+      // correct field type
+      case f if ${checkType(f)} ⇒ if(f.t.asInstanceOf[ConstantIntegerInfo[_]].value != ${f.asInstanceOf[Constant].value}) throw new ParseException("Constant value differed.")
 
-      out.write(s"""
+      // incompatible field type
+      case f ⇒ TypeMissmatchError(f.t, "${f.getType().getTypeName().toLowerCase()}", "$name")
+    })
+""")
+
+      } else if (f.asInstanceOf[Data].isAuto) {
+        // auto fields must not be part of the serialized data
+        out.write(s"""
+    // auto ${f.getType().getTypeName()} $name
+    if(!userType.fields.filter({ f ⇒ "${f.getCanonicalName()}".equals(f.name) }).isEmpty)
+      ParseException("Found field data for auto field ${d.getName()}.$name")
+""")
+
+      } else {
+        // the ordinary field case
+        val scalaType = _T(f.getType())
+
+        out.write(s"""
     // ${f.getType().getTypeName()} $name
     {
       var fieldData = new ArrayBuffer[$scalaType]
@@ -135,6 +160,7 @@ ${
       σ.get${d.getName().capitalize}s.foreach { o ⇒ o.asInstanceOf[T].set${f.getName().capitalize}(fieldData(off)); off += 1 }
     }
 """)
+      }
     })
 
     // we are done reading fields; now we can get fields
