@@ -4,7 +4,7 @@
  *
  * @author Timm Felden
  */
-class SerializableState {
+final class SerializableState extends SkillState {
   import SerializableState._
 
   /**

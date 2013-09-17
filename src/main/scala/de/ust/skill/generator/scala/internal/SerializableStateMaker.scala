@@ -21,7 +21,7 @@ import java.nio.file.StandardOpenOption
 
 import scala.collection.mutable.HashMap
 
-import ${packagePrefix}api.KnownType
+import ${packagePrefix}api._
 import ${packagePrefix}internal.parsers._
 import ${packagePrefix}internal.pool._
 import ${packagePrefix}internal.types._

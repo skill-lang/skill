@@ -33,7 +33,7 @@ object SerializableState {
   /**
    * Creates a new and empty serializable state.
    */
-  def create(): SerializableState = null
+  def create(): SerializableState = throw new NoSuchMethodError("not yet implemnted, sorry")
 
   /**
    * Reads a skill file and turns it into a serializable state.

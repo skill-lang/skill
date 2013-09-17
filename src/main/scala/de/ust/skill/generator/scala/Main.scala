@@ -2,11 +2,9 @@ package de.ust.skill.generator.scala
 
 import java.io.File
 import java.io.PrintWriter
-
 import scala.Boolean
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.io.Source
-
 import de.ust.skill.generator.scala.api.KnownTypeMaker
 import de.ust.skill.generator.scala.internal.BlockInfoMaker
 import de.ust.skill.generator.scala.internal.FieldDeclarationMaker
@@ -32,6 +30,7 @@ import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.parser.Parser
+import de.ust.skill.generator.scala.api.SkillStateMaker
 
 /**
  * Entry point of the scala generator.
@@ -79,6 +78,7 @@ class Main
     with PoolIteratorMaker
     with BlockInfoMaker
     with KnownTypeMaker
+    with SkillStateMaker
     with SkillExceptionMaker
     with TypeInfoMaker
     with FieldDeclarationMaker
