@@ -45,7 +45,7 @@ trait SkillState {
       val name = t.getName()
       val Name = name.capitalize
       val sName = name.toLowerCase()
-      val tName = packagePrefix + name
+      val tName = "_root_."+packagePrefix + name
 
       val addArgs = t.getAllFields().map({ f ⇒ s"${f.getName()}: ${_T(f.getType())}" }).mkString(", ")
 
