@@ -51,7 +51,9 @@
       // if we have new instances and the type existed and there are new fields, we get into special cases
       if (null != userType && count > 0) {
         val knownFields = userType.fields.size
-        assert(knownFields > 0, s"The block contains lacks $knownFields field declarations.")
+        if (0 > fieldCount - knownFields)
+          ParseException(s"Block ${blockCounter + 1} in type $name: There are only $fieldCount fields but $knownFields are required.")
+          
         var fieldIndex = 0
 
         tryCatch(repN(knownFields.toInt,
@@ -180,6 +182,10 @@
           td.superName,
           new ArrayBuffer[FieldDeclaration] ++= td.fieldDeclarations
         )
+        // check for duplicate definitions
+        if (userTypeNameMap.contains(u.name))
+          ParseException(s"In Block ${blockCounter + 1}: Duplicate definition of type ${u.name}")
+
         userTypeIndexMap.put(u.index, u)
         userTypeNameMap.put(u.name, u)
         td.userType = u
@@ -199,6 +205,10 @@
 
       raw.foreach({ t ⇒
         val u = t.userType
+        // check for duplicate definition of type in this block
+        if (u.blockInfos.contains(blockCounter))
+          throw new ParseException(s"In block ${blockCounter + 1}: Duplicate redefinition of type ${u.name}")
+
         // add local block info
         u.addBlockInfo(new BlockInfo(t.count, localBlockBaseTypeStartIndices(u.baseType.name) + t.lbpsi), blockCounter)
 

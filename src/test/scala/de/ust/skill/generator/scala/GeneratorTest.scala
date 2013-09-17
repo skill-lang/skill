@@ -12,4 +12,5 @@ class GeneratorTest extends AssertionsForJUnit {
   @Test def pamm = check("air-pamm.skill", "pamm")
   @Test def blocks = check("blocks.skill", "block")
   @Test def subtypes = check("subtypesExample.skill", "subtypes")
+  @Test def subtypesUnknown = check("subtypesUnknown.skill", "unknown")
 }
