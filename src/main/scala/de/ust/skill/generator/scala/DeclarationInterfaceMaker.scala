@@ -1,10 +1,10 @@
 package de.ust.skill.generator.scala
 
-import de.ust.skill.ir.Declaration
 import java.io.PrintWriter
+
 import scala.collection.JavaConversions.asScalaBuffer
-import de.ust.skill.ir.Type
-import scala.collection.mutable.Buffer
+
+import de.ust.skill.ir.Declaration
 
 trait DeclarationInterfaceMaker extends GeneralOutputMaker {
   override def make {
@@ -20,38 +20,22 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
       out.write(s"package ${packagePrefix.substring(0, packagePrefix.length - 1)}\n\n")
 
     //imports
+    if (null == d.getSuperType())
+      out.write("import subtypes.api.KnownType\n\n")
 
     //class prefix
     out.write(s"trait ${d.getName()} ${
       if (null != d.getSuperType()) s"extends ${d.getSuperType().getTypeName()}"
-      else ""
+      else "extends KnownType"
     } {\n")
 
     //body
-    out.write("  //////// FIELD INTERACTION ////////\n\n")
     d.getFields().foreach({ f ⇒
       val name = f.getName.capitalize
 
-      out.write(s"  def get$name(): ${_T(f.getType())}\n")
-      out.write(s"  def set$name($name: ${_T(f.getType())}): Unit\n\n")
+      out.write(s"\n  def get$name(): ${_T(f.getType())}\n")
+      out.write(s"  def set$name($name: ${_T(f.getType())}): Unit\n")
     })
-
-    //class postfix
-    out.write("  //////// OBJECT CREATION AND DESTRUCTION ////////\n\n")
-
-    out.write("  //////// UTILS ////////\n\n")
-
-    //nice toString
-    {
-      val ts = d.getAllFields.map({ f ⇒ s""""${f.getName()}: "+get${f.getName().capitalize}""" })
-      if (null != d.getSuperType())
-        out.write("  override\n")
-      out.write(ts.mkString(
-        // TODO maybe we should add a this:this.toString; we have to check toString first
-        s"""  def prettyString(): String = "${d.getName()}("+""",
-        "+\", \"+",
-        "+\")\"\n"))
-    }
 
     out.write("}");
 

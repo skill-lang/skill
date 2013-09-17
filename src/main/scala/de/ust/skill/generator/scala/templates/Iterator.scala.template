@@ -4,7 +4,7 @@
  * @param T is in fact the API type of the objects stored in the static type storage pool
  * @author Timm Felden
  */
-class Iterator[T <: AnyRef] private[internal] (val staticType: StoragePool) extends Traversable[T] {
+class PoolIterator[T] private[internal] (val staticType: StoragePool) extends Iterator[T] {
 
   // pools are usually separated into several blocks and new instances
   private var currentBlock = 0
@@ -26,14 +26,16 @@ class Iterator[T <: AnyRef] private[internal] (val staticType: StoragePool) exte
    * @return the current element
    */
   implicit def get(): T = {
-    require(valid)
+    require(hasNext)
     return staticType.getByCurrentIndex(index).asInstanceOf[T]
   }
 
   /**
    * move to the next valid element, if any exists; invalidate the iterator otherwise
    */
-  def next() {
+  override def next():T = {
+    val result = get 
+    
     // assume the next position is the next index
     index += 1
 
@@ -41,14 +43,14 @@ class Iterator[T <: AnyRef] private[internal] (val staticType: StoragePool) exte
     if (blocks.contains(currentBlock)) {
       // check if there is another instance in the current block
       if (blocks(currentBlock).bpsi + blocks(currentBlock).count > index)
-        return
+        return result
       else {
         // check if there is another instane in a block
         for (i ← currentBlock + 1 until staticType.blockCount) {
           if (blocks.contains(i) && blocks(i).count > 0) {
             index = blocks(i).bpsi
             currentBlock = i
-            return
+            return result
           }
         }
       }
@@ -58,14 +60,14 @@ class Iterator[T <: AnyRef] private[internal] (val staticType: StoragePool) exte
 
     // TODO iterate over new instances
     index = 0
-    return
+    return result
   }
 
   /**
    * check if the iterator is still valid; the obvious way of invalidating an iterator is to walk over all iterable
    *  elemnts.
    */
-  def valid = 0 != index
+  def hasNext = 0 != index
 
   /**
    * resets the cursor to the first valid position, if any
@@ -81,13 +83,4 @@ class Iterator[T <: AnyRef] private[internal] (val staticType: StoragePool) exte
       }
     }
   }
-
-  def foreach[U](f: T ⇒ U) = while (valid) { f(get); next }
-
-  /**
-   * like foreach, but provides an index as well
-   * @note index starts from 1
-   * @note invalidates the iterator
-   */
-  def indexedForeach(f: (T, Long) ⇒ Unit) = while (valid) { f(get, index); next }
 }

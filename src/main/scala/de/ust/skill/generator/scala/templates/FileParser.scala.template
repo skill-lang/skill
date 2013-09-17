@@ -234,7 +234,7 @@
         d.fieldDeclarations.foreach({ f ⇒
           // the stream is at $lastOffset; we want to read until the fields offset
           // TODO even if the field had not yet existed but instances had?
-          f.dataChunks ++= List(ChunkInfo(in.position, f.end - lastOffset, d.count))
+          f.dataChunks ++= List(ChunkInfo(in.position + lastOffset, f.end - lastOffset, d.count))
           lastOffset = f.end
 
           //invalidate end for security reasons

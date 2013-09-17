@@ -21,6 +21,7 @@ import java.nio.file.StandardOpenOption
 
 import scala.collection.mutable.HashMap
 
+import ${packagePrefix}api.KnownType
 import ${packagePrefix}internal.parsers._
 import ${packagePrefix}internal.pool._
 import ${packagePrefix}internal.types._
@@ -42,7 +43,7 @@ import ${packagePrefix}internal.types._
   /**
    * returns a $name iterator
    */
-  def get${Name}s(): Iterator[$tName] = new Iterator[$tName](pools("$sName"))
+  def get${Name}s(): Iterator[$tName] = new PoolIterator[$tName](pools("$sName"))
 
   /**
    * adds a new $name to the $name pool

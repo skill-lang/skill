@@ -93,14 +93,17 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
         if (null == data(i.toInt))
           data(i.toInt) = new _root_.${packagePrefix}internal.types.$name
     })
-
+${
+      if (null == d.getSuperType()) """
     // parse fields; note that this will set fields of lower types first
-    readFields
-  }
+    readFields(new FieldParser(σ))
+"""
+      else ""
+    }  }
 
   // set eager fields of data instances
-  override def readFields() {
-    val fieldParser = new FieldParser(σ);
+  override def readFields(fieldParser: FieldParser) {
+    subPools.filter(_.isInstanceOf[KnownPool]).foreach(_.asInstanceOf[KnownPool].readFields(fieldParser))
 """)
 
     // parse known fields
@@ -131,7 +134,9 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     // we are done reading fields; now we can get fields
     out.write(s"""  }
 
-  override def getByID(index: Long): T = data(index.toInt - 1).asInstanceOf[T]
+  override def getByID(index: Long): T = try { data(index.toInt - 1).asInstanceOf[T] } catch {
+    case e: ClassCastException ⇒ SkillException("tried to access a \\"$name\\" at index "+index+", but it was actually a "+data(index.toInt - 1).getClass().getName(), e)
+  }
 """)
 
     // create code to add new instances to the pool

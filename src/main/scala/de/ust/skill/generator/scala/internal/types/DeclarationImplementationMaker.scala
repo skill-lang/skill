@@ -44,7 +44,12 @@ final class $name(
   final def set$Name($Name: ${_T(f.getType())}) = _$name = $Name
 
 """)
-    })
+    });
+
+    // pretty string
+    out.write(s"""  override def prettyString(): String = "${d.getName()}(this: "+this""")
+    d.getAllFields.foreach({ f ⇒ out.write(s"""+", ${f.getName()}: "+get${f.getName().capitalize}""") })
+    out.write("+\")\"\n")
 
     out.write("}")
     out.close()

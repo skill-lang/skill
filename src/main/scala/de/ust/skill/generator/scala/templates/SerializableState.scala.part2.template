@@ -16,10 +16,11 @@
     println("StoragePools:")
     pools.values.foreach({ s ⇒
       println(s.name+": "+s.sizeCount);
-      // TODO use interface for prettyString!
-      try {
-        println(s.getIterator.mkString("  ", "\n  ", "\n"))
-      } catch { case _: NoSuchMethodError ⇒ println("<< some generic data >>") }
+      val it = s.getIterator.asInstanceOf[PoolIterator[_]]
+      if (it.get.isInstanceOf[KnownType])
+        println(it.map(_.asInstanceOf[KnownType].prettyString).mkString("  ", "\n  ", "\n"))
+      else
+        println("<< some generic data >>")
     })
     println("")
 

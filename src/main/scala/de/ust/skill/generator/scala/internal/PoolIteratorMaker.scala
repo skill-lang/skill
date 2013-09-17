@@ -2,13 +2,14 @@ package de.ust.skill.generator.scala.internal
 
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait IteratorMaker extends GeneralOutputMaker{
+trait PoolIteratorMaker extends GeneralOutputMaker{
   override def make {
     super.make
-    val out = open("internal/Iterator.scala")
+    val out = open("internal/PoolIterator.scala")
     //package & imports
     out.write(s"""package ${packagePrefix}internal
 
+import ${packagePrefix}api.KnownType
 import ${packagePrefix}internal.pool.StoragePool
 
 """)

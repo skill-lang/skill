@@ -2,36 +2,36 @@ package de.ust.skill.generator.scala
 
 import java.io.File
 import java.io.PrintWriter
+
+import scala.Boolean
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.io.Source
+
+import de.ust.skill.generator.scala.api.KnownTypeMaker
+import de.ust.skill.generator.scala.internal.BlockInfoMaker
 import de.ust.skill.generator.scala.internal.FieldDeclarationMaker
-import de.ust.skill.generator.scala.internal.IteratorMaker
+import de.ust.skill.generator.scala.internal.PoolIteratorMaker
 import de.ust.skill.generator.scala.internal.SerializableStateMaker
+import de.ust.skill.generator.scala.internal.SkillExceptionMaker
 import de.ust.skill.generator.scala.internal.TypeInfoMaker
+import de.ust.skill.generator.scala.internal.parsers.ByteReaderMaker
 import de.ust.skill.generator.scala.internal.parsers.ByteStreamParsersMaker
+import de.ust.skill.generator.scala.internal.parsers.FieldParserMaker
 import de.ust.skill.generator.scala.internal.parsers.FileParserMaker
+import de.ust.skill.generator.scala.internal.pool.DeclaredPoolsMaker
 import de.ust.skill.generator.scala.internal.pool.StoragePoolMaker
 import de.ust.skill.generator.scala.internal.pool.StringPoolMaker
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.Type
-import de.ust.skill.parser.Parser
-import de.ust.skill.generator.scala.internal.parsers.ByteReaderMaker
-import de.ust.skill.generator.scala.internal.parsers.FieldParserMaker
-import de.ust.skill.generator.scala.internal.SkillExceptionMaker
 import de.ust.skill.generator.scala.internal.types.DeclarationImplementationMaker
-import de.ust.skill.generator.scala.internal.pool.DeclaredPoolsMaker
-import de.ust.skill.ir.CompoundType
 import de.ust.skill.ir.ConstantLengthArrayType
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.ListType
 import de.ust.skill.ir.MapType
-import scala.Boolean
-import de.ust.skill.ir.Field
-import de.ust.skill.generator.scala.internal.IteratorMaker
-import de.ust.skill.generator.scala.internal.BlockInfoMaker
-import de.ust.skill.generator.scala.internal.IteratorMaker
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.parser.Parser
 
 /**
  * Entry point of the scala generator.
@@ -76,8 +76,9 @@ class Main
     with DeclarationInterfaceMaker
     with DeclarationImplementationMaker
     with DeclaredPoolsMaker
-    with IteratorMaker
+    with PoolIteratorMaker
     with BlockInfoMaker
+    with KnownTypeMaker
     with SkillExceptionMaker
     with TypeInfoMaker
     with FieldDeclarationMaker

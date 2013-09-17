@@ -13,7 +13,7 @@ trait KnownPool {
   /**
    * Reads all fields required by the generation time specification.
    */
-  private[internal] def readFields(): Unit
+  private[internal] def readFields(fieldParser: FieldParser): Unit
 }
 
 /**
@@ -91,7 +91,7 @@ class StoragePool(
     userType.instanceCount
   }
 
-  def getIterator(): Iterator[T] = new Iterator[T](this)
+  def getIterator(): PoolIterator[T] = new PoolIterator[T](this)
 
   /**
    * Retrieves an element based on its current index.

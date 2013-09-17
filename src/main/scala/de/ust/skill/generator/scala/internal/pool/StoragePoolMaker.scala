@@ -17,6 +17,7 @@ import scala.collection.mutable.HashMap
 import scala.language.postfixOps
 
 import ${packagePrefix}internal._
+import ${packagePrefix}internal.parsers.FieldParser
 """)
 
     //the body itself is always the same
