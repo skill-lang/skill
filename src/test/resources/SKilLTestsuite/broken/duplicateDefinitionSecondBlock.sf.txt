@@ -1,0 +1,3 @@
+The second block contains two append operetions to the type "a", which is propperly defined in the first block.
+This behaviour is not legal inside of a single block.
+Type definitions for a type may occur at most once per type block.

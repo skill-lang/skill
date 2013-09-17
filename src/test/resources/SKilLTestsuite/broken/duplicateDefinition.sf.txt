@@ -1,0 +1,1 @@
+contains two type definitions for type "a"

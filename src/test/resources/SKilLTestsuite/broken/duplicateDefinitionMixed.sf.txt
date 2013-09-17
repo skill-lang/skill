@@ -1,0 +1,3 @@
+contains two type definitions for type "a", but the second one works, as if the type had already been declared in a previous block.
+This behaviour is not legal inside of a single block.
+Type definitions for a type may occur at most once per type block.
