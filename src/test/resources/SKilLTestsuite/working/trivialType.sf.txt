@@ -1,0 +1,1 @@
+Contains instances of a type, which has no fields.
