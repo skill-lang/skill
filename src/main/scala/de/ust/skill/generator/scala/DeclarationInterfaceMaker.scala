@@ -21,7 +21,7 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
 
     //imports
     if (null == d.getSuperType())
-      out.write("import subtypes.api.KnownType\n\n")
+      out.write(s"import ${packagePrefix}api.KnownType\n\n")
 
     //class prefix
     out.write(s"trait ${d.getName()} ${
