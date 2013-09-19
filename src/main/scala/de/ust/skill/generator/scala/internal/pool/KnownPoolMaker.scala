@@ -26,8 +26,7 @@ import ${packagePrefix}internal.parsers.FieldParser
  */
 abstract class KnownPool[T <: B, B <: KnownType](
   userType: UserType,
-  // FIXME shouldn't this be [_ >: T <: B, B]?
-  superPool: ⇒ Option[KnownPool[B, B]],
+  superPool: ⇒ Option[KnownPool[_ >: T <: B, B]],
   blockCount: Int)
     extends AbstractPool(userType, superPool, blockCount)
     with Seq[T] {

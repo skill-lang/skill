@@ -20,7 +20,7 @@ import ${packagePrefix}internal.{ SkillException, UserType, SerializableState }
  */
 abstract class SubPool[T <: B, B <: KnownType](
   userType: UserType,
-  superPool: KnownPool[B, B],
+  superPool: KnownPool[_ >: T <: B, B],
   σ: SerializableState,
   blockCount: Int)
     extends KnownPool[T, B](userType, Some(superPool), blockCount) {

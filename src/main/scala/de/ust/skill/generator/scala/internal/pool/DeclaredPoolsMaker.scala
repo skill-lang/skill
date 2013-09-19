@@ -75,7 +75,10 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     extends ${
       d.getSuperType() match {
         case null ⇒ s"""BasePool[_root_.$packagePrefix$name](userType.ensuring(_.name.equals("$sName")), σ, blockCount)"""
-        case s    ⇒ ???
+        case s ⇒ {
+          val base = s"_root_.$packagePrefix${d.getBaseType().getName()}"
+          s"""SubPool[_root_.$packagePrefix$name, $base](userType, σ.pools("${d.getSuperType().getName().toLowerCase()}").asInstanceOf[KnownPool[_root_.$packagePrefix${d.getSuperType().getTypeName()}, $base]], σ, blockCount)"""
+        }
       }
     } {
 

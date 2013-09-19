@@ -32,7 +32,11 @@ class AbstractPool(
   /**
    * the sub pools are constructed during construction of all storage pools of a state
    */
-  protected var subPools = new ArrayBuffer[AbstractPool]
+  protected var subPools = new ArrayBuffer[AbstractPool];
+  // update sub-pool relation
+  if (superPool.isDefined) {
+    superPool.get.subPools += this
+  }
 
   /**
    * the number of instances of exactly this type, excluding sub-types
