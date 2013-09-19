@@ -62,56 +62,28 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
     out.write(s"""package ${packagePrefix}internal.pool
 
 import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
 
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 
 import ${packagePrefix}internal._
 import ${packagePrefix}internal.parsers.FieldParser
-import ${packagePrefix}internal.SerializableState.v64
 import ${packagePrefix}internal.types._
 
 final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockCount: Int)
-    extends StoragePool(userType.ensuring(_.name.equals("$sName")), ${
+    extends ${
       d.getSuperType() match {
-        case null ⇒ "None";
-        case s    ⇒ s"""σ.pools.get("${s.getName().toLowerCase()}")"""
+        case null ⇒ s"""BasePool[_root_.$packagePrefix$name](userType.ensuring(_.name.equals("$sName")), σ, blockCount)"""
+        case s    ⇒ ???
       }
-    }, blockCount)
-    with KnownPool {
+    } {
 
-  import SerializableState.v64
-  override type T = _root_.$packagePrefix$name
-
-  /**
-   * the base type data store
-   */
-  var data = ${
-      d.getSuperType() match {
-        case null ⇒ "new Array[T](userType.instanceCount.toInt)"
-        case _    ⇒ s"basePool.asInstanceOf[${d.getBaseType().getName()}StoragePool].data"
-      }
-    }
-
-  override def constructPool() {
-    // construct data in a bottom up order
-    subPools.filter(_.isInstanceOf[KnownPool]).foreach(_.asInstanceOf[KnownPool].constructPool)
-    userType.blockInfos.values.foreach({ b ⇒
-      for (i ← b.bpsi - 1 until b.bpsi + b.count - 1)
-        if (null == data(i.toInt))
-          data(i.toInt) = new _root_.${packagePrefix}internal.types.$name
-    })
-${
-      if (null == d.getSuperType()) """
-    // parse fields; note that this will set fields of lower types first
-    readFields(new FieldParser(σ))
-"""
-      else ""
-    }  }
+  @inline override def newInstance = new _root_.${packagePrefix}internal.types.$name
 
   // set eager fields of data instances
   override def readFields(fieldParser: FieldParser) {
-    subPools.filter(_.isInstanceOf[KnownPool]).foreach(_.asInstanceOf[KnownPool].readFields(fieldParser))
+    subPools.collect { case p: KnownPool[_, _] ⇒ p }.foreach(_.readFields(fieldParser))
 """)
 
     // parse known fields
@@ -157,22 +129,15 @@ ${
 
       // map field data to instances
       var off = 0
-      σ.get${d.getName().capitalize}s.foreach { o ⇒ o.asInstanceOf[T].set${f.getName().capitalize}(fieldData(off)); off += 1 }
+      σ.get${d.getName().capitalize}s.foreach { o ⇒ o.set${f.getName().capitalize}(fieldData(off)); off += 1 }
     }
 """)
       }
     })
 
-    // we are done reading fields; now we can get fields
+    // some dummy code, which has not yet been implemented correctly
     out.write(s"""  }
 
-  override def getByID(index: Long): T = try { data(index.toInt - 1).asInstanceOf[T] } catch {
-    case e: ClassCastException ⇒ SkillException("tried to access a \\"$name\\" at index "+index+", but it was actually a "+data(index.toInt - 1).getClass().getName(), e)
-  }
-""")
-
-    // create code to add new instances to the pool
-    out.write(s"""
   private[internal] def add$name(obj: ${packagePrefix}internal.types.$name): $packagePrefix$name = {
     // TODO requires a "newObjects" ArrayBuffer
     //    dirty = true
@@ -181,29 +146,16 @@ ${
     //    return obj
     null
   }
+
+  override def prepareSerialization(σ: SerializableState) {
+
+  }
 """)
 
     // write field data
     out.write(s"""
-  override def writeFieldData(out: ByteArrayOutputStream, σ: SerializableState) {
-
-    userType.fields.foreach({ f ⇒
-      f.name match {""")
-
-    fields.foreach({ f ⇒
-      val name = f.getName()
-      //TODO write(v64 ... this has to be replaced by something more generic and faster which takes f.t and an accessor to f.data
-      out.write(s"""
-        case "${f.getCanonicalName()}" ⇒ {
-          data.foreach { o ⇒ /** TODO write o.$name */ }
-          endOffsets.put(f, out.size())
-        }
-""")
-    })
-    out.write(s"""
-        case _ ⇒ // writeFieldData(out, σ, f)
-      }
-    })
+  override def write(head: FileChannel, out: ByteArrayOutputStream, σ: SerializableState) {
+        // TODO
   }
 """)
 

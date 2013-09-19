@@ -1,5 +1,5 @@
 
-        case _ ⇒ new StoragePool(t, t.superName match {
+        case _ ⇒ new AbstractPool(t, t.superName match {
           case Some(name) ⇒ σ.pools.get(name).ensuring(_.isDefined)
           case None       ⇒ None
         }, blockCounter)
@@ -10,13 +10,14 @@
     }
 
     // make base pools; the makePool function makes sub pools
-    userTypeIndexMap.values.filter(_.superName.isEmpty).foreach({ b ⇒
-      val p = makePool(b)
-      if (p.isInstanceOf[KnownPool])
-        p.asInstanceOf[KnownPool].constructPool
-      else
-        println(s"unknown pool $p")
+    userTypeIndexMap.values.filter(_.superName.isEmpty).foreach(makePool(_) match {
+      case p: KnownPool[_, _] ⇒ p.constructPool
+      case p                  ⇒ println(s"unknown pool $p")
     })
+
+    // read eager fields
+    val fp = new FieldParser(σ)
+    σ.knownPools.foreach(_.readFields(fp))
   }
 
   /**
@@ -53,7 +54,7 @@
         val knownFields = userType.fields.size
         if (0 > fieldCount - knownFields)
           ParseException(s"Block ${blockCounter + 1} in type $name: There are only $fieldCount fields but $knownFields are required.")
-          
+
         var fieldIndex = 0
 
         tryCatch(repN(knownFields.toInt,

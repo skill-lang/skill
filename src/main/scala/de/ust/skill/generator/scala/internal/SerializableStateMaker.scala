@@ -37,13 +37,15 @@ import ${packagePrefix}internal.types._
       val sName = name.toLowerCase()
       val tName = packagePrefix + name
 
-      val addArgs = t.getAllFields().filter(_.isInstanceOf[Data]).map({ f ⇒ s"${f.getName()}: ${_T(f.getType())}" }).mkString(", ")
+      val addArgs = t.getAllFields().filter(_.isInstanceOf[Data]).map({
+        f ⇒ s"${f.getName()}: ${_T(f.getType())}"
+      }).mkString(", ")
 
       out.write(s"""
   /**
    * returns a $name iterator
    */
-  def get${Name}s(): Iterator[$tName] = new PoolIterator[$tName](pools("$sName"))
+  def get${Name}s(): Iterator[$tName] = new PoolIterator[$tName](pools("$sName").asInstanceOf[${Name}StoragePool])
 
   /**
    * adds a new $name to the $name pool
