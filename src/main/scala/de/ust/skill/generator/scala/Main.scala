@@ -1,36 +1,15 @@
 package de.ust.skill.generator.scala
 
-import java.io.File
-import java.io.PrintWriter
-import scala.Boolean
+import java.io.{ File, PrintWriter }
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.io.Source
-import de.ust.skill.generator.scala.api.KnownTypeMaker
-import de.ust.skill.generator.scala.internal.BlockInfoMaker
-import de.ust.skill.generator.scala.internal.FieldDeclarationMaker
-import de.ust.skill.generator.scala.internal.PoolIteratorMaker
-import de.ust.skill.generator.scala.internal.SerializableStateMaker
-import de.ust.skill.generator.scala.internal.SkillExceptionMaker
-import de.ust.skill.generator.scala.internal.TypeInfoMaker
-import de.ust.skill.generator.scala.internal.parsers.ByteReaderMaker
-import de.ust.skill.generator.scala.internal.parsers.ByteStreamParsersMaker
-import de.ust.skill.generator.scala.internal.parsers.FieldParserMaker
-import de.ust.skill.generator.scala.internal.parsers.FileParserMaker
-import de.ust.skill.generator.scala.internal.pool.DeclaredPoolsMaker
-import de.ust.skill.generator.scala.internal.pool.StoragePoolMaker
-import de.ust.skill.generator.scala.internal.pool.StringPoolMaker
+import de.ust.skill.generator.scala.api.{ KnownTypeMaker, SkillStateMaker }
+import de.ust.skill.generator.scala.internal._
+import de.ust.skill.generator.scala.internal.parsers._
+import de.ust.skill.generator.scala.internal.pool._
 import de.ust.skill.generator.scala.internal.types.DeclarationImplementationMaker
-import de.ust.skill.ir.ConstantLengthArrayType
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.Field
-import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.ListType
-import de.ust.skill.ir.MapType
-import de.ust.skill.ir.SetType
-import de.ust.skill.ir.Type
-import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir._
 import de.ust.skill.parser.Parser
-import de.ust.skill.generator.scala.api.SkillStateMaker
 
 /**
  * Entry point of the scala generator.
@@ -78,6 +57,9 @@ class Main
     with PoolIteratorMaker
     with BlockInfoMaker
     with KnownTypeMaker
+    with KnownPoolMaker
+    with BasePoolMaker
+    with SubPoolMaker
     with SkillStateMaker
     with SkillExceptionMaker
     with TypeInfoMaker
@@ -87,7 +69,7 @@ class Main
     with FieldParserMaker
     with StringPoolMaker
     with ByteReaderMaker
-    with StoragePoolMaker {
+    with AbstractPoolMaker {
 
   var outPath: String = null
   var IR: List[Declaration] = null
@@ -97,7 +79,7 @@ class Main
    */
   override protected def _T(t: Type): String = t match {
     case t: GroundType ⇒ t.getName() match {
-      // BUG #2
+      // TODO BUG #2
       case "annotation" ⇒ "AnyRef"
 
       case "bool"       ⇒ "Boolean"

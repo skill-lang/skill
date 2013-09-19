@@ -34,7 +34,9 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
       _ match {
         case 0 ⇒ null
         case index ⇒ σ.pools.get(d.name).getOrElse(
-          throw new IllegalStateException("Found a nonnull reference to missing usertype "+d.name)).getByID(index)
+          throw new IllegalStateException("Found a nonnull reference to missing usertype "+d.name)
+        // note: the cast is safe, because the generator requires us to have a declaration for a used user type
+        ).asInstanceOf[KnownPool[_,_]].getByID(index)
       }
 
     }

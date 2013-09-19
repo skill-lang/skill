@@ -34,7 +34,7 @@ final private class FileParser extends ByteStreamParsers {
    * creates storage pools in type order
    */
   private def makeState() {
-    def makePool(t: UserType): StoragePool = {
+    def makePool(t: UserType): AbstractPool = {
       val result = t.name match {
 """)
 

@@ -4,7 +4,7 @@
  * @param T is in fact the API type of the objects stored in the static type storage pool
  * @author Timm Felden
  */
-class PoolIterator[T] private[internal] (val staticType: StoragePool) extends Iterator[T] {
+class PoolIterator[T<:KnownType] private[internal] (val staticType: KnownPool[T,_]) extends Iterator[T] {
 
   // pools are usually separated into several blocks and new instances
   private var currentBlock = 0
@@ -27,15 +27,15 @@ class PoolIterator[T] private[internal] (val staticType: StoragePool) extends It
    */
   implicit def get(): T = {
     require(hasNext)
-    return staticType.getByCurrentIndex(index).asInstanceOf[T]
+    return staticType(index.toInt)
   }
 
   /**
    * move to the next valid element, if any exists; invalidate the iterator otherwise
    */
-  override def next():T = {
-    val result = get 
-    
+  override def next(): T = {
+    val result = get
+
     // assume the next position is the next index
     index += 1
 

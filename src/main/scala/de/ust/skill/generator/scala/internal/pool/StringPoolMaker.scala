@@ -10,14 +10,15 @@ trait StringPoolMaker extends GeneralOutputMaker{
     
     out.write(s"""package ${packagePrefix}internal.pool
 
+import java.io.ByteArrayOutputStream
 import java.io.OutputStream
+import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
+
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
+
 import ${packagePrefix}internal.SerializableState
-import ${packagePrefix}internal.SerializableState.v64
-import java.nio.ByteBuffer
-import java.io.ByteArrayOutputStream
 
 final class StringPool {
   import SerializableState.v64;
@@ -70,6 +71,14 @@ final class StringPool {
 
     // TODO this solution is not correct if strings are not used anymore, i.e. it may produce garbage
 
+  }
+
+  /**
+   * helper for the implementation of serialization of strings, which returns a ByteBuffer containing an index refering
+   * to the argument string
+   */
+  private[internal] def serializedStringReference(s: String): ByteBuffer = {
+    ByteBuffer.wrap(SerializableState.v64(serializationIDs(s)))
   }
 
   /**

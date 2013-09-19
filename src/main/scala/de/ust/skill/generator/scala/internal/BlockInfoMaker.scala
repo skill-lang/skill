@@ -9,7 +9,6 @@ trait BlockInfoMaker extends GeneralOutputMaker{
     //package & imports
     out.write(s"""package ${packagePrefix}internal
 
-import ${packagePrefix}internal.pool.StoragePool
 /**
  * This data contains information about the logical layout of indices found in the deserialized file.
  * The BlockInfo structure is created by the file parser and used by iterators and during pool creation.

@@ -14,12 +14,9 @@
     pools.values.foreach(s ⇒ println(s.userType.getDeclaration))
     println("")
     println("StoragePools:")
-    pools.values.foreach({ s ⇒
-      println(s.name+": "+s.sizeCount);
-      if (s.isInstanceOf[KnownPool])
-        println(s.getIterator.map(_.asInstanceOf[KnownType].prettyString).mkString("  ", "\n  ", "\n"))
-      else
-        println("<< some generic data >>")
+    knownPools.foreach({ s ⇒
+      println(s.name+": "+s.length);
+      println(s.iterator.map(_.asInstanceOf[KnownType].prettyString).mkString("  ", "\n  ", "\n"))
     })
     println("")
 

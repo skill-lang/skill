@@ -10,7 +10,7 @@ trait PoolIteratorMaker extends GeneralOutputMaker{
     out.write(s"""package ${packagePrefix}internal
 
 import ${packagePrefix}api.KnownType
-import ${packagePrefix}internal.pool.StoragePool
+import ${packagePrefix}internal.pool.KnownPool
 
 """)
 
