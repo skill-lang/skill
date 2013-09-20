@@ -2,28 +2,76 @@ package de.ust.skill.parser
 
 import java.io.File
 import java.lang.AssertionError
-import org.junit.Test
-import org.scalatest.junit.AssertionsForJUnit
 import java.net.URL
+import org.junit.runner.RunWith
+import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 /**
  * Contains a lot of tests, which should not pass the type checker.
  * @author Timm Felden
  */
-class TypeCheckerTest extends AssertionsForJUnit {
+@RunWith(classOf[JUnitRunner])
+class TypeCheckerTest extends FunSuite {
+
   private def check(filename: String) {
-    val p = new Parser
+    val parser = new Parser
     val url: URL = getClass.getResource(filename)
-    p.parseAll(new File(url.getPath()))
+    parser.parseAll(new File(url.getPath()))
   }
 
-  @Test(expected = classOf[AssertionError]) def dupDefs = check("/failures/duplicateDefinition.skill")
-  @Test(expected = classOf[AssertionError]) def dupField = check("/failures/duplicateField.skill")
-  @Test(expected = classOf[AssertionError]) def halfFloat = check("/failures/halfFloat.skill")
-  @Test(expected = classOf[AssertionError]) def constFloat = check("/failures/floatConstant.skill")
-  @Test(expected = classOf[AssertionError]) def constSelf = check("/failures/selfConst.skill")
-  @Test(expected = classOf[AssertionError]) def unkownType = check("/failures/unknownType.skill")
-  @Test(expected = classOf[AssertionError]) def unkownFile = check("/failures/unknownFile.skill")
-  @Test(expected = classOf[AssertionError]) def empty = check("/failures/empty.skill")
-  @Test(expected = classOf[AssertionError]) def anyType = check("/failures/anyType.skill")
+  test("duplicateDefinition") {
+    intercept[AssertionError] {
+      check("/failures/duplicateDefinition.skill")
+    }
+  }
+
+  test("duplicateField") {
+    intercept[AssertionError] {
+      check("/failures/duplicateField.skill")
+    }
+  }
+
+  test("halfFloat") {
+    intercept[AssertionError] {
+      check("/failures/halfFloat.skill")
+    }
+  }
+
+  test("floatConstant") {
+    intercept[AssertionError] {
+      check("/failures/floatConstant.skill")
+    }
+  }
+
+  test("selfConst") {
+    intercept[AssertionError] {
+      check("/failures/selfConst.skill")
+    }
+  }
+
+  test("unknownType") {
+    intercept[AssertionError] {
+      check("/failures/unknownType.skill")
+    }
+  }
+
+  test("unknownFile") {
+    intercept[AssertionError] {
+      check("/failures/unknownFile.skill")
+    }
+  }
+
+  test("empty") {
+    intercept[AssertionError] {
+      check("/failures/empty.skill")
+    }
+  }
+
+  test("anyType") {
+    intercept[AssertionError] {
+      check("/failures/anyType.skill")
+    }
+  }
+
 }

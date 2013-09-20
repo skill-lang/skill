@@ -1,16 +1,20 @@
 package de.ust.skill.generator.scala
 
-import org.junit.Test
-import org.scalatest.junit.AssertionsForJUnit
+import org.junit.runner.RunWith
+import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
-class GeneratorTest extends AssertionsForJUnit {
+@RunWith(classOf[JUnitRunner])
+class GeneratorTest extends FunSuite {
+
   def check(src: String, out: String) {
-    Main.main(Array[String]("-p", out, "src/test/resources/scala/"+src, "tmp/scala/src/"))
+    Main.main(Array[String]("-p", out, "src/test/resources/scala/" + src, "tmp/scala/src/"))
   }
 
-  @Test def date = check("date.skill", "expected")
-  @Test def pamm = check("air-pamm.skill", "pamm")
-  @Test def blocks = check("blocks.skill", "block")
-  @Test def subtypes = check("subtypesExample.skill", "subtypes")
-  @Test def subtypesUnknown = check("subtypesUnknown.skill", "unknown")
+  test("date")(check("date.skill", "expected"))
+  test("pamm")(check("air-pamm.skill", "pamm"))
+  test("blocks")(check("blocks.skill", "block"))
+  test("subtypes")(check("subtypesExample.skill", "subtypes"))
+  test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
+
 }
