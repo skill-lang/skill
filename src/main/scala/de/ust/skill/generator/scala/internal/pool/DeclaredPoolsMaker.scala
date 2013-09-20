@@ -138,16 +138,12 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
       }
     })
 
-    // some dummy code, which has not yet been implemented correctly
+    // note: the add method will get more complex as soon as restrictions are added, e.g. in the context of @unique
     out.write(s"""  }
 
   private[internal] def add$name(obj: ${packagePrefix}internal.types.$name): $packagePrefix$name = {
-    // TODO requires a "newObjects" ArrayBuffer
-    //    dirty = true
-    //
-    //    data += obj
-    //    return obj
-    null
+    newObjects.append(obj);
+    obj
   }
 
   override def prepareSerialization(σ: SerializableState) {

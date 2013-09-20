@@ -15,7 +15,7 @@ import ${packagePrefix}internal.pool.KnownPool
 """)
 
     //the body itself is always the same
-    copyFromTemplate(out, "Iterator.scala.template")
+    copyFromTemplate(out, "PoolIterator.scala.template")
 
     //class prefix
     out.close()

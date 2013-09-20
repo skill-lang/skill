@@ -16,7 +16,7 @@ import java.nio.channels.FileChannel
 import scala.collection.mutable.ArrayBuffer
 
 import ${packagePrefix}api.KnownType
-import ${packagePrefix}internal.{PoolIterator,SerializableState,UserType}
+import ${packagePrefix}internal.{ PoolIterator, SerializableState, UserType }
 import ${packagePrefix}internal.parsers.FieldParser
 
 /**
@@ -57,6 +57,14 @@ abstract class KnownPool[T <: B, B <: KnownType](
    *  respective fields can be retrieved using the fieldTypes map.
    */
   private[internal] final var newObjects = ArrayBuffer[T]()
+  /**
+   * the number of static instances loaded from the file
+   */
+  protected var staticData = 0
+  /**
+   * the static size is thus the number of static instances plus the number of new objects
+   */
+  override final def staticSize = staticData + newObjects.length
 
   /**
    * Can be used on known pools to construct instances of the pool, AFTER the sub pool relation has been constructed.
