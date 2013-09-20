@@ -30,6 +30,16 @@ class AbstractPool(
   private[internal] def superPool: Option[AbstractPool] = _superPool
 
   /**
+   * the next pool regarding type order; for example A<:B, B<:D, A<:C may lead to A⇀B⇀D⇀C or A⇀C⇀B⇀D.
+   */
+  private[internal] var next: AbstractPool = _superPool match {
+    case None    ⇒ null
+    case Some(p) ⇒ p.next
+  }
+  // we stole super's next, so we have to set ourselves as next 
+  _superPool.foreach(_.next = this)
+
+  /**
    * the sub pools are constructed during construction of all storage pools of a state
    */
   protected var subPools = new ArrayBuffer[AbstractPool];

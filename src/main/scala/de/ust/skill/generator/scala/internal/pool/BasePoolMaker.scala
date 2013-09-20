@@ -39,8 +39,10 @@ abstract class BasePool[T <: KnownType: Manifest](userType: UserType, σ: Serial
     subPools.collect { case p: KnownPool[_, _] ⇒ p }.foreach(_.constructPool)
     userType.blockInfos.values.foreach({ b ⇒
       for (i ← b.bpsi - 1 until b.bpsi + b.count - 1)
-        if (null == data(i.toInt))
+        if (null == data(i.toInt)) {
+          staticData += 1
           data(i.toInt) = newInstance
+        }
     })
   }
 
