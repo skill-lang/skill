@@ -1,10 +1,12 @@
 package de.ust.skill.generator.scala
 
-import org.junit.Test
-import org.scalatest.junit.AssertionsForJUnit
+import org.junit.runner.RunWith
+import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
-class DateTest extends AssertionsForJUnit {
-  @Test def test {
-    Main.main(Array[String]("src/test/resources/scala/date.skill", "tmp/scala/src/"))
-  }
+@RunWith(classOf[JUnitRunner])
+class DateTest extends FunSuite {
+
+  test("test")(Main.main(Array[String]("src/test/resources/scala/date.skill", "tmp/scala/src/")))
+
 }
