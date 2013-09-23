@@ -36,7 +36,7 @@ class AbstractPool(
     case None    ⇒ null
     case Some(p) ⇒ p.next
   }
-  // we stole super's next, so we have to set ourselves as next 
+  // we stole super's next, so we have to set ourselves as next
   _superPool.foreach(_.next = this)
 
   /**

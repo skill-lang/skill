@@ -117,19 +117,19 @@ class Parser {
      * require the introduction of declarations, which essentially rename another more complex type. This has also an
      * impact on the way, data is and can be stored.
      */
-    def Type = ((("map" | "set" | "list") ~! ("<" ~> repsep(BaseType, ",") <~ ">")) ^^ {
+    def Type = ((("map" | "set" | "list") ~! ("<" ~> repsep(baseType, ",") <~ ">")) ^^ {
       case "map" ~ l  ⇒ new de.ust.skill.parser.MapType(l)
       case "set" ~ l  ⇒ { assert(1 == l.size); new de.ust.skill.parser.SetType(l.head) }
       case "list" ~ l ⇒ { assert(1 == l.size); new de.ust.skill.parser.ListType(l.head) }
     }
       // we use a backtracking approach here, because it simplifies the AST generation
-      | ArrayType
-      | BaseType)
+      | arrayType
+      | baseType)
 
-    def ArrayType = ((BaseType ~ ("[" ~> int <~ "]")) ^^ { case n ~ arr ⇒ new ConstantArrayType(n, arr) }
-      | (BaseType <~ ("[" ~ "]")) ^^ { n ⇒ new ArrayType(n) })
+    def arrayType = ((baseType ~ ("[" ~> int <~ "]")) ^^ { case n ~ arr ⇒ new ConstantArrayType(n, arr) }
+      | (baseType <~ ("[" ~ "]")) ^^ { n ⇒ new ArrayType(n) })
 
-    def BaseType = id ^^ { new BaseType(_) }
+    def baseType = id ^^ { new BaseType(_) }
 
     /**
      * The <b>main</b> function of the parser, which turn a string into a list of includes and declarations.
@@ -179,7 +179,7 @@ class Parser {
       }
     }
     TypeChecker.check(rval.toList)
-    return rval;
+    rval;
   }
 
   private def mkType(s: Type, decls: Map[String, Declaration]): de.ust.skill.ir.Type = s match {
@@ -218,6 +218,6 @@ class Parser {
         rval.get(n).get.setFields(fields.asJava)
     })
 
-    return rval.values.toList.asJava
+    rval.values.toList.asJava
   }
 }

@@ -20,7 +20,7 @@ import ${packagePrefix}internal.SkillException
 import ${packagePrefix}internal.UnexpectedEOF
 """)
 
-    //(imports are part of the template) 
+    //(imports are part of the template)
     //the body itself is always the same
     copyFromTemplate(out, "ByteStreamParsers.scala.template")
 

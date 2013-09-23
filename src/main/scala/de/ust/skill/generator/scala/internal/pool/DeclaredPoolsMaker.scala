@@ -29,7 +29,7 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
   /**
    * This method creates a type check for deserialization.
    */
-  def checkType(f: Field) = f.getType() match {
+  protected def checkType(f: Field) = f.getType() match {
     case t: GroundType ⇒ t.getTypeName() match {
       case "annotation" ⇒ "f.t.isInstanceOf[AnnotationInfo]"
       case "bool"       ⇒ "f.t.isInstanceOf[BoolInfo]"
@@ -77,7 +77,14 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
         case null ⇒ s"""BasePool[_root_.$packagePrefix$name](userType.ensuring(_.name.equals("$sName")), σ, blockCount)"""
         case s ⇒ {
           val base = s"_root_.$packagePrefix${d.getBaseType().getName()}"
-          s"""SubPool[_root_.$packagePrefix$name, $base](userType, σ.pools("${d.getSuperType().getName().toLowerCase()}").asInstanceOf[KnownPool[_root_.$packagePrefix${d.getSuperType().getTypeName()}, $base]], σ, blockCount)"""
+          val superName = d.getSuperType().getName().toLowerCase()
+          val superType = d.getSuperType().getTypeName()
+          s"""SubPool[_root_.$packagePrefix$name, $base](
+      userType,
+      σ.pools("$superName").asInstanceOf[KnownPool[_root_.$packagePrefix$superType, $base]],
+      σ,
+      blockCount
+    )"""
         }
       }
     } {
@@ -98,7 +105,9 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     // ${f.getType().getTypeName()} $name
     userType.fields.filter({ f ⇒ "${f.getCanonicalName()}".equals(f.name) }).foreach(_ match {
       // correct field type
-      case f if ${checkType(f)} ⇒ if(f.t.asInstanceOf[ConstantIntegerInfo[_]].value != ${f.asInstanceOf[Constant].value}) throw new ParseException("Constant value differed.")
+      case f if ${checkType(f)} ⇒
+        if(f.t.asInstanceOf[ConstantIntegerInfo[_]].value != ${f.asInstanceOf[Constant].value})
+          throw new ParseException("Constant value differed.")
 
       // incompatible field type
       case f ⇒ TypeMissmatchError(f.t, "${f.getType().getTypeName().toLowerCase()}", "$name")

@@ -7,7 +7,7 @@ trait StringPoolMaker extends GeneralOutputMaker{
   override def make{
     super.make
     val out = open("internal/pool/StringPool.scala")
-    
+
     out.write(s"""package ${packagePrefix}internal.pool
 
 import java.io.ByteArrayOutputStream

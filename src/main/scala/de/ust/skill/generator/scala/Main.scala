@@ -15,10 +15,13 @@ import de.ust.skill.parser.Parser
  * Entry point of the scala generator.
  */
 object Main {
-  def printHelp {
-    println("usage:")
-    println("[options] skillPath outPath")
-  }
+  private def printHelp: Unit = println("""
+usage:
+  [options] skillPath outPath
+
+Opitions:
+  -p packageName   set a package name used by all emitted code.
+""")
 
   /**
    * Takes an argument skill file name and generates a scala binding.
@@ -29,17 +32,18 @@ object Main {
     //processing command line arguments
     if (2 > args.length) {
       printHelp
-      return
+    } else {
+
+      m.setOptions(args.slice(0, args.length - 2))
+      val skillPath = args(args.length - 2)
+      m.outPath = args(args.length - 1)
+
+      //parse argument code
+      m.IR = (new Parser).process(new File(skillPath)).toList
+
+      // create output using maker chain
+      m.make;
     }
-    m.setOptions(args.slice(0, args.length - 2))
-    val skillPath = args(args.length - 2)
-    m.outPath = args(args.length - 1)
-
-    //parse argument code
-    m.IR = (new Parser).process(new File(skillPath)).toList
-
-    // create output using maker chain
-    m.make;
   }
 }
 
