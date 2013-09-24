@@ -1,68 +1,60 @@
 package de.ust.skill.ir;
 
-import java.util.HashMap;
-import java.util.Set;
-
+/**
+ * Implementation of all Ground Types, i.e. strings, integers....
+ * 
+ * @author Timm Felden
+ */
 public class GroundType extends Type {
-	private static final HashMap<String, GroundType> types = new HashMap<>();
 	static {
 		// two v64
-		new GroundType("annotation", -1);
+		new GroundType("annotation");
 
-		new GroundType("bool", 1);
+		new GroundType("bool");
 
-		new GroundType("i1", 1);
-		new GroundType("i8", 1);
-		new GroundType("i16", 2);
-		new GroundType("i32", 4);
-		new GroundType("i64", 8);
+		new GroundType("i8");
+		new GroundType("i16");
+		new GroundType("i32");
+		new GroundType("i64");
 
-		new GroundType("v64", -1);
+		new GroundType("v64");
 
-		new GroundType("f32", 4);
-		new GroundType("f64", 8);
+		new GroundType("f32");
+		new GroundType("f64");
 
-		new GroundType("string", -1);
+		new GroundType("string");
 	}
 
 	/**
 	 * String representation of the type.
 	 */
 	private final String name;
-	/**
-	 * Size in bytes or -1 if this can not be determined in general.
-	 */
-	private final int size;
 
-	private GroundType(String name, int size) {
+	private GroundType(String name) {
 		this.name = name;
-		this.size = size;
-		types.put(name, this);
+		unifyType(this);
 	}
 
-	public static GroundType get(String name) {
-		return types.get(name);
+	public boolean isInteger() {
+		return name.charAt(0) == 'i' || name.charAt(0) == 'v';
 	}
 
-	public static Set<String> allTypeNames() {
-		return types.keySet();
+	public boolean isFloat() {
+		return name.charAt(0) == 'f';
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
-	public int getSize() {
-		return size;
-	}
-
 	@Override
-	public String toString() {
+	public String getSkillName() {
 		return name;
 	}
 
 	@Override
-	public String getTypeName() {
-		return name;
+	public String getCapitalName() {
+		throw new NoSuchMethodError("capital names of ground types shall not be used");
 	}
 }

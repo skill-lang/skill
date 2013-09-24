@@ -1,56 +1,74 @@
 package de.ust.skill.ir;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-public class Declaration extends Type {
+/**
+ * A declared user type.
+ * 
+ * @author Timm Felden
+ */
+final public class Declaration extends Type {
 
+	// names
 	private final String name;
+	private final String skillName;
+	private final String capitalName;
 
+	/**
+	 * super type is the type above this type. base type is the base type of the
+	 * formed type tree. This can even be <i>this</i>.
+	 */
 	private Declaration superType = null, baseType = null;
-	private List<Declaration> children = new ArrayList<>();
-	/** once */
+	private final List<Declaration> children = new ArrayList<>();
+
+	// TODO restrictions
+	// TODO hints
+	// TODO comments
+
+	// fields
 	private List<Field> fields = null;
 
+	/**
+	 * Creates a declaration of type name.
+	 * 
+	 * @note the declaration has to be completed, i.e. it has to be evaluated in
+	 *       pre-order over the type hierarchy.
+	 */
 	public Declaration(String name) {
 		this.name = name;
+		this.skillName = name.toLowerCase();
+		{
+			char[] ch = name.toCharArray();
+			ch[0] = Character.toUpperCase(ch[0]);
+			this.capitalName = new String(ch);
+		}
+
 		superType = baseType = null;
 	}
 
-	public String getName() {
-		return name;
-	}
+	/**
+	 * Initializes the type declaration with data obtained from parsing the
+	 * declarations body.
+	 * 
+	 * @param superType
+	 * @param fields
+	 */
+	@SuppressWarnings("hiding")
+	public void initialize(Declaration superType, List<Field> fields) {
+		assert null == this.fields : "multiple initialization";
 
-	public void setParentType(Declaration p) {
-		if (null == p)
-			return;
+		if (null != superType) {
+			assert null != superType.baseType : "types have to be initialized in pre-order";
 
-		assert null == superType : "parent type already set";
-		baseType = p.getBaseType();
-		if (null == baseType)
-			baseType = p;
-		superType = p;
-		superType.addChild(this);
-
-		if (null == baseType)
+			this.superType = superType;
+			this.baseType = superType.baseType;
+			superType.children.add(this);
+		} else {
 			baseType = this;
-		// update base type of all my children
-		for (Declaration c : children)
-			updateBaseType(c);
+		}
 
-		if (this == baseType)
-			baseType = null;
-	}
-
-	private static void updateBaseType(Declaration d) {
-		d.baseType = d.superType.baseType;
-		for (Declaration c : d.children)
-			updateBaseType(c);
-	}
-
-	private void addChild(Declaration c) {
-		children.add(c);
+		this.fields = fields;
 	}
 
 	public Declaration getBaseType() {
@@ -59,15 +77,6 @@ public class Declaration extends Type {
 
 	public Declaration getSuperType() {
 		return superType;
-	}
-
-	/**
-	 * can only be called once
-	 */
-	public void setFields(List<Field> fields) {
-		assert null == this.fields : "Fields have already been assigned.";
-		Collections.sort(fields);
-		this.fields = Collections.unmodifiableList(fields);
 	}
 
 	/**
@@ -82,7 +91,7 @@ public class Declaration extends Type {
 	 *         in super types
 	 */
 	public List<Field> getAllFields() {
-		if(null!=superType){
+		if (null != superType) {
 			List<Field> f = superType.getAllFields();
 			f.addAll(fields);
 			return f;
@@ -90,8 +99,10 @@ public class Declaration extends Type {
 		return new ArrayList<>(fields);
 	}
 
-	@Override
-	public String toString() {
+	/**
+	 * @return pretty parsable representation of this type
+	 */
+	public String prettyPrint() {
 		StringBuilder sb = new StringBuilder(name);
 		if (null != superType) {
 			sb.append(":").append(superType.name);
@@ -105,7 +116,17 @@ public class Declaration extends Type {
 	}
 
 	@Override
-	public String getTypeName() {
+	public String getSkillName() {
+		return skillName;
+	}
+
+	@Override
+	public String getCapitalName() {
+		return capitalName;
+	}
+
+	@Override
+	public String getName() {
 		return name;
 	}
 }

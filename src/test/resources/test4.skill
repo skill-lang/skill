@@ -1,4 +1,4 @@
 A { }
-B { A a }
-C { A a B b}
-D { A a B b C c}
+B { a a; }
+C { A a; B b; }
+D { A a; b b; C c; }

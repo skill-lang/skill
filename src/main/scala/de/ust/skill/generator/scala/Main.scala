@@ -1,9 +1,11 @@
 package de.ust.skill.generator.scala
 
-import java.io.{ File, PrintWriter }
-import scala.collection.JavaConversions.asScalaBuffer
+import java.io.{File, PrintWriter}
+
+import scala.collection.JavaConversions._
 import scala.io.Source
-import de.ust.skill.generator.scala.api.{ KnownTypeMaker, SkillStateMaker }
+
+import de.ust.skill.generator.scala.api.{KnownTypeMaker, SkillStateMaker}
 import de.ust.skill.generator.scala.internal._
 import de.ust.skill.generator.scala.internal.parsers._
 import de.ust.skill.generator.scala.internal.pool._
@@ -105,7 +107,7 @@ class Main
     case t: ListType                ⇒ s"List[${_T(t.getBaseType())}]"
     case t: SetType                 ⇒ s"Set[${_T(t.getBaseType())}]"
     case t: MapType ⇒ {
-      val types = t.getBaseType().reverse.map(_T(_))
+      val types = t.getBaseTypes().reverse.map(_T(_))
       types.tail.fold(types.head)({ (U, t) ⇒ s"Map[$t, $U]" });
     }
 
@@ -137,7 +139,7 @@ class Main
   }
 
   override protected def defaultValue(f: Field) = f.getType() match {
-    case t: GroundType ⇒ t.getTypeName() match {
+    case t: GroundType ⇒ t.getSkillName() match {
       case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
       case "f32" | "f64"                        ⇒ "0.0f"
       case "bool"                               ⇒ "false"

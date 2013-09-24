@@ -1,17 +1,48 @@
 package de.ust.skill.ir;
 
-public abstract class Field implements Comparable<Field> {
-	protected final String name, canonicalName;
+final public class Field {
+	private final boolean auto;
+	private final boolean isConstant;
+	private final long constantValue;
+
+	protected final String name, skillName;
 	protected final Type type;
 
-	protected Field(Type type, String name) {
-		if (null == type)
-			throw new IllegalArgumentException("type is null");
-		if (null == name)
-			throw new IllegalArgumentException("name is null");
+	/**
+	 * Constructor for constant fields.
+	 * 
+	 * @param type
+	 * @param name
+	 * @param value
+	 */
+	public Field(Type type, String name, long value) {
+		assert (null != type);
+		assert (null != name);
 
+		auto = false;
+		isConstant = true;
+		constantValue = value;
 		this.name = name;
-		this.canonicalName = name.toLowerCase();
+		skillName = name.toLowerCase();
+		this.type = type;
+	}
+
+	/**
+	 * Constructor for auto and data fields.
+	 * 
+	 * @param type
+	 * @param name
+	 * @param isAuto
+	 */
+	public Field(Type type, String name, boolean isAuto) {
+		assert (null != type);
+		assert (null != name);
+
+		isConstant = false;
+		constantValue = 0;
+		auto = isAuto;
+		this.name = name;
+		this.skillName = name.toLowerCase();
 		this.type = type;
 	}
 
@@ -19,28 +50,38 @@ public abstract class Field implements Comparable<Field> {
 		return name;
 	}
 
-	public String getCanonicalName() {
-		return canonicalName;
+	public String getSkillName() {
+		return skillName;
 	}
 
 	public Type getType() {
 		return type;
 	}
 
-	/**
-	 * implements canonical field order
-	 */
-	@Override
-	public int compareTo(Field f) {
-		int rval = type.compareTo(f.type);
-		if (0 == rval)
-			return canonicalName.compareTo(f.canonicalName);
-		return rval;
+	public boolean isAuto() {
+		return auto;
+	}
+
+	public boolean isConstant() {
+		return isConstant;
+	}
+
+	public long constantValue() {
+		assert isConstant : "only constants have a constant value";
+		return constantValue;
 	}
 
 	@Override
 	public String toString() {
-		return type.getTypeName() + " " + canonicalName;
+		StringBuilder sb = new StringBuilder();
+		if (isConstant)
+			sb.append("const ");
+		if (auto)
+			sb.append("auto ");
+		sb.append(type.getSkillName()).append(" ").append(skillName);
+		if (isConstant)
+			sb.append(" = ").append(constantValue);
 
+		return sb.toString();
 	}
 }

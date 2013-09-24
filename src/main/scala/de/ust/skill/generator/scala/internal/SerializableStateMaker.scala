@@ -1,8 +1,10 @@
 package de.ust.skill.generator.scala.internal
 
 import scala.collection.JavaConversions._
+
 import de.ust.skill.generator.scala.GeneralOutputMaker
-import de.ust.skill.ir.Data
+
+
 
 trait SerializableStateMaker extends GeneralOutputMaker {
   override def make {
@@ -37,7 +39,7 @@ import ${packagePrefix}internal.types._
       val sName = name.toLowerCase()
       val tName = packagePrefix + name
 
-      val addArgs = t.getAllFields().filter(_.isInstanceOf[Data]).map({
+      val addArgs = t.getAllFields().filter(!_.isConstant).map({
         f ⇒ s"${f.getName()}: ${_T(f.getType())}"
       }).mkString(", ")
 

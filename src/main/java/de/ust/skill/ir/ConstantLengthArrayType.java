@@ -5,7 +5,7 @@ package de.ust.skill.ir;
  * 
  * @author Timm Felden
  */
-public class ConstantLengthArrayType extends ArrayType {
+public class ConstantLengthArrayType extends ContainerType {
 	private final Type baseType;
 	private final long length;
 
@@ -23,12 +23,7 @@ public class ConstantLengthArrayType extends ArrayType {
 	}
 
 	@Override
-	public String toString() {
-		return baseType.getTypeName() + "[" + length + "]";
-	}
-
-	@Override
-	public String getTypeName() {
-		return toString();
+	public String getSkillName() {
+		return baseType.getSkillName() + "[" + length + "]";
 	}
 }

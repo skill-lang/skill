@@ -1,8 +1,10 @@
 package de.ust.skill.generator.scala.api
 
 import scala.collection.JavaConversions._
+
 import de.ust.skill.generator.scala.GeneralOutputMaker
-import de.ust.skill.ir.Data
+
+
 
 trait SkillStateMaker extends GeneralOutputMaker {
   override def make {
@@ -47,7 +49,7 @@ trait SkillState {
       val sName = name.toLowerCase()
       val tName = "_root_."+packagePrefix + name
 
-      val addArgs = t.getAllFields().filter(_.isInstanceOf[Data]).map({ f ⇒ s"${f.getName()}: ${_T(f.getType())}" }).mkString(", ")
+      val addArgs = t.getAllFields().filter(!_.isConstant).map({ f ⇒ s"${f.getName()}: ${_T(f.getType())}" }).mkString(", ")
 
       out.write(s"""
   /**

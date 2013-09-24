@@ -1,16 +1,14 @@
 package de.ust.skill.generator.scala.internal.pool
 
 import java.io.PrintWriter
+
 import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.scala.GeneralOutputMaker
+import de.ust.skill.ir.ContainerType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
 import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.MapType
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.CompoundType
-import de.ust.skill.ir.Constant
-import de.ust.skill.ir.Data
 
 /**
  * Creates storage pools for declared types.
@@ -30,7 +28,7 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
    * This method creates a type check for deserialization.
    */
   protected def checkType(f: Field) = f.getType() match {
-    case t: GroundType ⇒ t.getTypeName() match {
+    case t: GroundType ⇒ t.getSkillName() match {
       case "annotation" ⇒ "f.t.isInstanceOf[AnnotationInfo]"
       case "bool"       ⇒ "f.t.isInstanceOf[BoolInfo]"
       case "i8"         ⇒ "f.t.isInstanceOf[I8Info]"
@@ -42,12 +40,12 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
       case s            ⇒ throw new Error(s"not yet implemented: $s")
     }
     // compound types use the string representation to check the type; note that this depends on IR.toString-methods
-    case t: CompoundType ⇒ s"""f.t.toString.equals("$t")"""
+    case t: ContainerType ⇒ s"""f.t.toString.equals("$t")"""
 
-    case t: Declaration  ⇒ s"""f.t.isInstanceOf[UserType] && f.t.asInstanceOf[UserType].name.equals("${t.getTypeName().toLowerCase()}")"""
+    case t: Declaration   ⇒ s"""f.t.isInstanceOf[UserType] && f.t.asInstanceOf[UserType].name.equals("${t.getSkillName()}")"""
 
     // this should be unreachable; it might be reachable if IR changed
-    case t               ⇒ throw new Error(s"not yet implemented: ${t.getTypeName()}")
+    case t                ⇒ throw new Error(s"not yet implemented: ${t.getName()}")
   }
 
   /**
@@ -77,8 +75,8 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
         case null ⇒ s"""BasePool[_root_.$packagePrefix$name](userType.ensuring(_.name.equals("$sName")), σ, blockCount)"""
         case s ⇒ {
           val base = s"_root_.$packagePrefix${d.getBaseType().getName()}"
-          val superName = d.getSuperType().getName().toLowerCase()
-          val superType = d.getSuperType().getTypeName()
+          val superName = d.getSuperType().getSkillName()
+          val superType = d.getSuperType().getName()
           s"""SubPool[_root_.$packagePrefix$name, $base](
       userType,
       σ.pools("$superName").asInstanceOf[KnownPool[_root_.$packagePrefix$superType, $base]],
@@ -99,26 +97,26 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     // parse known fields
     fields.foreach({ f ⇒
       val name = f.getName()
-      if (f.isInstanceOf[Constant]) {
+      if (f.isConstant) {
         // constant fields are not directly deserialized, but they need to be checked for the right value
         out.write(s"""
-    // ${f.getType().getTypeName()} $name
-    userType.fields.filter({ f ⇒ "${f.getCanonicalName()}".equals(f.name) }).foreach(_ match {
+    // ${f.getType().getSkillName()} $name
+    userType.fields.filter({ f ⇒ "${f.getSkillName()}".equals(f.name) }).foreach(_ match {
       // correct field type
       case f if ${checkType(f)} ⇒
-        if(f.t.asInstanceOf[ConstantIntegerInfo[_]].value != ${f.asInstanceOf[Constant].value})
+        if(f.t.asInstanceOf[ConstantIntegerInfo[_]].value != ${f.constantValue})
           throw new ParseException("Constant value differed.")
 
       // incompatible field type
-      case f ⇒ TypeMissmatchError(f.t, "${f.getType().getTypeName().toLowerCase()}", "$name")
+      case f ⇒ TypeMissmatchError(f.t, "${f.getType().getSkillName()}", "$name")
     })
 """)
 
-      } else if (f.asInstanceOf[Data].isAuto) {
+      } else if (f.isAuto) {
         // auto fields must not be part of the serialized data
         out.write(s"""
-    // auto ${f.getType().getTypeName()} $name
-    if(!userType.fields.filter({ f ⇒ "${f.getCanonicalName()}".equals(f.name) }).isEmpty)
+    // auto ${f.getType().getSkillName()} $name
+    if(!userType.fields.filter({ f ⇒ "${f.getSkillName()}".equals(f.name) }).isEmpty)
       ParseException("Found field data for auto field ${d.getName()}.$name")
 """)
 
@@ -127,16 +125,16 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
         val scalaType = _T(f.getType())
 
         out.write(s"""
-    // ${f.getType().getTypeName()} $name
+    // ${f.getType().getSkillName()} $name
     {
       var fieldData = new ArrayBuffer[$scalaType]
-      userType.fields.filter({ f ⇒ "${f.getCanonicalName()}".equals(f.name) }).foreach(_ match {
+      userType.fields.filter({ f ⇒ "${f.getSkillName()}".equals(f.name) }).foreach(_ match {
         // correct field type
         case f if ${checkType(f)} ⇒
           fieldData ++= fieldParser.readField(userType.instanceCount, f.t, f.dataChunks).asInstanceOf[List[$scalaType]]
 
         // incompatible field type
-        case f ⇒ TypeMissmatchError(f.t, "${f.getType().getTypeName().toLowerCase()}", "$name")
+        case f ⇒ TypeMissmatchError(f.t, "${f.getType().getSkillName()}", "$name")
       })
 
       // map field data to instances

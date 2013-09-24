@@ -1,12 +1,15 @@
 package de.ust.skill.generator.scala.internal.types
 
 import java.io.PrintWriter
+
 import scala.collection.JavaConversions.asScalaBuffer
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.Type
+
 import de.ust.skill.generator.scala.GeneralOutputMaker
+import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
-import de.ust.skill.ir.Data
+import de.ust.skill.ir.Type
+
+
 
 trait DeclarationImplementationMaker extends GeneralOutputMaker {
   override def make {
@@ -18,7 +21,7 @@ trait DeclarationImplementationMaker extends GeneralOutputMaker {
 
   private def makeDeclaration(out: PrintWriter, d: Declaration) {
     val name = d.getName()
-    val fields = d.getAllFields.filter(_.isInstanceOf[Data])
+    val fields = d.getAllFields.filter(!_.isConstant)
 
     // head
     out.write(s"""package ${packagePrefix}internal.types
