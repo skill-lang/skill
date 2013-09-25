@@ -4,8 +4,6 @@ import scala.collection.JavaConversions._
 
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
-
-
 trait SerializableStateMaker extends GeneralOutputMaker {
   override def make {
     super.make
@@ -35,12 +33,12 @@ import ${packagePrefix}internal.types._
     //access to declared types
     IR.foreach({ t ⇒
       val name = t.getName()
-      val Name = name.capitalize
-      val sName = name.toLowerCase()
+      val Name = t.getCapitalName()
+      val sName = t.getSkillName()
       val tName = packagePrefix + name
 
       val addArgs = t.getAllFields().filter(!_.isConstant).map({
-        f ⇒ s"${f.getName()}: ${mapType(f.getType())}"
+        f ⇒ s"${f.getName().capitalize}: ${mapType(f.getType())}"
       }).mkString(", ")
 
       out.write(s"""
