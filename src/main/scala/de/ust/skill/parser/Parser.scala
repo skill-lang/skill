@@ -130,7 +130,7 @@ final class Parser {
      */
     def process(in: String): (List[String], List[Definition]) = parseAll(file, in) match {
       case Success(rval, _) ⇒ rval
-      case f                ⇒ println(f); throw new Exception("parsing failed: "+f);
+      case f                ⇒ ParseException("parsing failed: "+f);
     }
   }
 
@@ -178,9 +178,16 @@ final class Parser {
    * Turns the AST into IR.
    */
   private def buildIR(defs: LinkedList[Definition]): java.util.List[ir.Declaration] = {
-    // create declarations && build subtype relation
+    // create declarations
     var subtypes = new HashMap[String, LinkedList[Definition]]
     val definitionNames = defs.map(f ⇒ (f.name, f)).toMap
+    if (defs.size != definitionNames.size) {
+      ParseException(s"I got ${defs.size - definitionNames.size} duplicate definition${
+        if(1==defs.size - definitionNames.size)""else"s"
+          }.")
+    }
+
+    // build sub-type relation
     definitionNames.values.filter(_.parent.isDefined).foreach { d ⇒
       if (!subtypes.contains(d.parent.get)) {
         subtypes.put(d.parent.get, LinkedList())
@@ -200,15 +207,21 @@ final class Parser {
       // base types are something special, because they have already been created
       case t: BaseType                ⇒ tc.get(t.name.toLowerCase())
     }
-    def mkField(node: Field): ir.Field = node match {
-      case f: Data     ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto)
-      case f: Constant ⇒ new ir.Field(mkType(f.t), f.name, f.value)
+    def mkField(node: Field): ir.Field = try {
+      node match {
+        case f: Data     ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto)
+        case f: Constant ⇒ new ir.Field(mkType(f.t), f.name, f.value)
+      }
+    } catch {
+      case e: ir.ParseException ⇒ ParseException(s"${node.name}: ${e.getMessage()}")
     }
     def initialize(name: String) {
       val definition = definitionNames(name)
       rval(name).initialize(
         rval.getOrElse(definition.parent.getOrElse(null), null),
-        definition.body.map(mkField(_))
+        try { definition.body.map(mkField(_)) } catch {
+          case e: ir.ParseException ⇒ ParseException(s"In $name.${e.getMessage}")
+        }
       )
     }
     definitionNames.values.filter(_.parent.isEmpty).foreach { d ⇒ initialize(d.name) }

@@ -11,8 +11,6 @@ import org.scalatest.junit.JUnitRunner
 
 import de.ust.skill.ir
 
-
-
 /**
  * Contains a lot of tests, which should not pass the type checker.
  * @author Timm Felden
@@ -28,9 +26,9 @@ class TypeCheckerTest extends FunSuite {
     fail(s"expected ${manifest.runtimeClass.getName()}, but no exception was thrown");
   } catch {
     case e: TestFailedException ⇒ throw e
-    case e: E                   ⇒
+    case e: E ⇒
       println(e.getMessage()); e
-    case e: Throwable           ⇒ e.printStackTrace(); assert(e.getClass() === manifest.runtimeClass); null.asInstanceOf[E]
+    case e: Throwable ⇒ e.printStackTrace(); assert(e.getClass() === manifest.runtimeClass); null.asInstanceOf[E]
   }
 
   test("duplicateDefinition") {
@@ -75,15 +73,21 @@ class TypeCheckerTest extends FunSuite {
     }
   }
 
-  test("empty") {
-    fail[ir.ParseException] {
-      check("/failures/empty.skill")
-    }
-  }
-
   test("anyType") {
     fail[ir.ParseException] {
       check("/failures/anyType.skill")
+    }
+  }
+
+  test("negative array size") {
+    fail[ir.ParseException] {
+      check("/failures/negativeArrayLength.skill")
+    }
+  }
+
+  test("nesting is illegal") {
+    fail[ir.ParseException] {
+      check("/failures/compound.skill")
     }
   }
 

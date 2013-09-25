@@ -14,10 +14,16 @@ final public class Field {
 	 * @param type
 	 * @param name
 	 * @param value
+	 * @throws ParseException
+	 *             if the argument type is not an integer
 	 */
-	public Field(Type type, String name, long value) {
+	public Field(Type type, String name, long value) throws ParseException {
 		assert (null != type);
 		assert (null != name);
+		if (!(type instanceof GroundType))
+			throw new ParseException("Can not create a constant of non-integer type " + type);
+		if (!((GroundType) type).isInteger())
+			throw new ParseException("Can not create a constant of non-integer type " + type);
 
 		auto = false;
 		isConstant = true;

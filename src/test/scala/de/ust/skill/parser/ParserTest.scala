@@ -31,6 +31,7 @@ class ParserTest extends FunSuite {
   test("air-top")(check("/air-top.skill"))
   test("air-pamm")(check("/air-pamm.skill"))
   test("air-pamm-heap")(check("/air-pamm-heap.skill"))
+  test("empty")(assert(0 === Parser.process("/empty.skill").size))
 
   test("process") {
     val parser = new Parser

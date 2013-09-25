@@ -1,7 +1,9 @@
 package de.ust.skill.ir;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A declared user type.
@@ -69,10 +71,19 @@ final public class Declaration extends Type {
 	 * 
 	 * @param superType
 	 * @param fields
+	 * @throws ParseException
 	 */
 	@SuppressWarnings("hiding")
-	public void initialize(Declaration superType, List<Field> fields) {
+	public void initialize(Declaration superType, List<Field> fields) throws ParseException {
 		assert null == this.fields : "multiple initialization";
+		// check for duplicate fields
+		{
+			Set<String> names = new HashSet<>();
+			for (Field f : fields)
+				names.add(f.name);
+			if (names.size() != fields.size())
+				throw new ParseException("Type " + name + " contains duplicate field definitions.");
+		}
 
 		if (null != superType) {
 			assert null != superType.baseType : "types have to be initialized in pre-order";
