@@ -65,6 +65,10 @@ final public class Declaration extends Type {
 		return rval;
 	}
 
+	public boolean isInitialized() {
+		return null != baseType;
+	}
+
 	/**
 	 * Initializes the type declaration with data obtained from parsing the
 	 * declarations body.
@@ -75,7 +79,8 @@ final public class Declaration extends Type {
 	 */
 	@SuppressWarnings("hiding")
 	public void initialize(Declaration superType, List<Field> fields) throws ParseException {
-		assert null == this.fields : "multiple initialization";
+		assert !isInitialized() : "multiple initialization";
+		assert null != fields : "no fields supplied";
 		// check for duplicate fields
 		{
 			Set<String> names = new HashSet<>();
@@ -110,6 +115,7 @@ final public class Declaration extends Type {
 	 * @return the fields added in this type
 	 */
 	public List<Field> getFields() {
+		assert isInitialized() : this.name + " has not been initialized";
 		return fields;
 	}
 

@@ -189,10 +189,10 @@ final class Parser {
 
     // build sub-type relation
     definitionNames.values.filter(_.parent.isDefined).foreach { d ⇒
-      if (!subtypes.contains(d.parent.get)) {
-        subtypes.put(d.parent.get, LinkedList())
+      if (!subtypes.contains(d.parent.get.toLowerCase)) {
+        subtypes.put(d.parent.get.toLowerCase, LinkedList[Definition]())
       }
-      subtypes(d.parent.get).append(LinkedList(d))
+      subtypes(d.parent.get.toLowerCase) ++=  LinkedList[Definition](d)
     }
     val rval = definitionNames.map({ case (n, f) ⇒ (n, ir.Declaration.newDeclaration(tc, n)) })
 
@@ -223,9 +223,13 @@ final class Parser {
           case e: ir.ParseException ⇒ ParseException(s"In $name.${e.getMessage}")
         }
       )
+      //initialize children
+      subtypes.getOrElse(name.toLowerCase, LinkedList()).foreach { d ⇒ initialize(d.name) }
     }
     definitionNames.values.filter(_.parent.isEmpty).foreach { d ⇒ initialize(d.name) }
 
+    assume(definitionNames.size == rval.values.size, "we lost some definitions")
+    assume(rval.values.forall{_.isInitialized}, s"we missed some initializations: ${rval.values.filter(!_.isInitialized).mkString(", ")}")
     rval.values.toSeq
   }
 }

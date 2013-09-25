@@ -132,7 +132,7 @@ Instruction{
 Fake instructions are inserted to represent constant values and are not directly part of basic blocks.
 */
 FakeInstruction with Instruction {
-	Type Type;
+	Type type;
 }
 
 ConstIntegerInstruction with FakeInstruction {
@@ -274,7 +274,7 @@ Variable {
 /** aka Lock */
 Permission {
 	/* TODO state?!? */
-	Type Type;
+	Type type;
 }
 
 PermissionSet {
