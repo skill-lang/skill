@@ -20,6 +20,25 @@ import java.util.Stack;
 public abstract class Type implements Comparable<Type> {
 	protected static final Map<String, Type> types = new HashMap<>();
 
+	static {
+		// two v64
+		new GroundType("annotation");
+
+		new GroundType("bool");
+
+		new GroundType("i8");
+		new GroundType("i16");
+		new GroundType("i32");
+		new GroundType("i64");
+
+		new GroundType("v64");
+
+		new GroundType("f32");
+		new GroundType("f64");
+
+		new GroundType("string");
+	}
+
 	/**
 	 * unification has to be done in the constructor or a factory method and
 	 * must not be made visible to a client

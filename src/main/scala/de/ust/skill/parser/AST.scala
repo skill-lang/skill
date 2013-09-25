@@ -18,14 +18,14 @@ final class Description(val comment: Option[String], val restrictions: List[Rest
 
 sealed abstract class Type extends Node;
 
-final class MapType(val args: List[BaseType]) extends Type;
+final class MapType(val baseTypes: List[BaseType]) extends Type;
 
 final class SetType(val baseType: BaseType) extends Type;
 
 final class ListType(val baseType: BaseType) extends Type;
 
 sealed class ArrayType(val baseType: BaseType) extends Type;
-final class ConstantArrayType(baseType: BaseType, val length: Long) extends ArrayType(baseType);
+final class ConstantLengthArrayType(baseType: BaseType, val length: Long) extends ArrayType(baseType);
 
 final class BaseType(val name: String) extends Type {
   override def toString: String = name

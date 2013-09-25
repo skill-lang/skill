@@ -15,9 +15,8 @@ import org.scalatest.junit.JUnitRunner
 class TypeCheckerTest extends FunSuite {
 
   private def check(filename: String) {
-    val parser = new Parser
     val url: URL = getClass.getResource(filename)
-    parser.parseAll(new File(url.getPath()))
+    Parser.process(new File(url.getPath()))
   }
 
   test("duplicateDefinition") {

@@ -16,11 +16,11 @@ object ASTEqualityChecker {
           checkOrderedList(n.hints, o.asInstanceOf[Description].hints) &&
           checkOrderedList(n.restrictions, o.asInstanceOf[Description].restrictions)
 
-        case n: MapType  ⇒ checkOrderedList(n.args, o.asInstanceOf[MapType].args)
+        case n: MapType  ⇒ checkOrderedList(n.baseTypes, o.asInstanceOf[MapType].baseTypes)
         case n: SetType  ⇒ n.baseType.equals(o.asInstanceOf[SetType].baseType)
         case n: ListType ⇒ n.baseType.equals(o.asInstanceOf[ListType].baseType)
-        case n: ConstantArrayType ⇒ n.baseType.equals(o.asInstanceOf[ConstantArrayType].baseType) &&
-          n.length == o.asInstanceOf[ConstantArrayType].length
+        case n: ConstantLengthArrayType ⇒ n.baseType.equals(o.asInstanceOf[ConstantLengthArrayType].baseType) &&
+          n.length == o.asInstanceOf[ConstantLengthArrayType].length
         case n: ArrayType ⇒ n.baseType.equals(o.asInstanceOf[ArrayType].baseType)
         case n: BaseType  ⇒ n.name.equals(o.asInstanceOf[BaseType].name)
 

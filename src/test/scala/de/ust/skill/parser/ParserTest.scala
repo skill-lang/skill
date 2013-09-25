@@ -2,24 +2,25 @@ package de.ust.skill.parser
 
 import java.io.File
 import java.net.URL
+import scala.collection.JavaConversions._
+import scala.language.implicitConversions
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import scala.collection.JavaConversions._
 
 @RunWith(classOf[JUnitRunner])
 class ParserTest extends FunSuite {
 
+  implicit private def basePath(path: String): File = new File("src/test/resources"+path);
+
   private def check(filename: String) = {
-    val parser = new Parser
-    val url: URL = getClass.getResource(filename)
-    assert(0 != parser.parseAll(new File(url.getPath())).size)
+    assert(0 != Parser.process(filename).size)
   }
 
   test("hints")(check("/hints.skill"))
   test("restrictions")(check("/restrictions.skill"))
 
-  test("skill")(check("/test.skill"))
+  test("test")(check("/test.skill"))
   test("test2")(check("/test2.skill"))
   test("test3")(check("/test3.skill"))
   test("test4")(check("/test4.skill"))
@@ -31,21 +32,10 @@ class ParserTest extends FunSuite {
   test("air-pamm")(check("/air-pamm.skill"))
   test("air-pamm-heap")(check("/air-pamm-heap.skill"))
 
-  test("properIncludes") {
-    val parser = new Parser
-    val url1: URL = getClass.getResource("/air-top.skill")
-    val url2: URL = getClass.getResource("/air-pamm.skill")
-    val list1: List[Definition] = parser.parseAll(new File(url1.getPath())).toList
-    val list2: List[Definition] = parser.parseAll(new File(url2.getPath())).toList
-    assert(ASTEqualityChecker.checkDefinitionList(list1, list2))
-  }
-
   test("process") {
     val parser = new Parser
-    val url1: URL = getClass.getResource("/air-top.skill")
-    val url2: URL = getClass.getResource("/air-pamm.skill")
-    val array1: Array[Object] = parser.process(new File(url1.getPath())).map(_.toString()).toArray
-    val array2: Array[Object] = parser.process(new File(url2.getPath())).map(_.toString()).toArray
+    val array1: Array[Object] = Parser.process("/air-top.skill").map(_.toString()).toArray
+    val array2: Array[Object] = Parser.process("/air-pamm.skill").map(_.toString()).toArray
     assert(array1 != array2)
   }
 

@@ -13,10 +13,10 @@ object ASTPrettyPrinter {
     case n: Description => (n.restrictions.map(printNode) ++ n.hints.map(printNode))
       .fold(n.comment.getOrElse(""))(_ + "\n" + _)
 
-    case n: MapType => "map<" + printList(n.args) + ">"
+    case n: MapType => "map<" + printList(n.baseTypes) + ">"
     case n: SetType => "set<" + n.baseType + ">"
     case n: ListType => "list<" + n.baseType + ">"
-    case n: ConstantArrayType => n.baseType + "[" + n.length + "]"
+    case n: ConstantLengthArrayType => n.baseType + "[" + n.length + "]"
     case n: ArrayType => n.baseType + "[]"
     case n: BaseType => n.name
 

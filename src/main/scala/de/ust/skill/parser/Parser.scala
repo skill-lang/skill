@@ -5,12 +5,13 @@ import java.io.FileNotFoundException
 import java.lang.Long
 import java.nio.file.FileSystems
 
-import scala.collection.JavaConversions
+import scala.collection.JavaConversions._
+import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.LinkedList
 import scala.util.parsing.combinator.RegexParsers
 
-import de.ust.skill.ir.Declaration
+import de.ust.skill.ir
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -93,7 +94,7 @@ final class Parser {
     /**
      * A field is either a constant or a real data field.
      */
-    private def field = description ~ ((constant | data) <~ ";" ) ^^ { case d ~ f ⇒ { f.description = d; f } }
+    private def field = description ~ ((constant | data) <~ ";") ^^ { case d ~ f ⇒ { f.description = d; f } }
 
     /**
      * Constants a recognized by the keyword "const" and are required to have a value.
@@ -120,7 +121,7 @@ final class Parser {
       | arrayType
       | baseType)
 
-    private def arrayType = ((baseType ~ ("[" ~> int <~ "]")) ^^ { case n ~ arr ⇒ new ConstantArrayType(n, arr) }
+    private def arrayType = ((baseType ~ ("[" ~> int <~ "]")) ^^ { case n ~ arr ⇒ new ConstantLengthArrayType(n, arr) }
       | (baseType <~ ("[" ~ "]")) ^^ { n ⇒ new ArrayType(n) })
 
     private def baseType = id ^^ { new BaseType(_) }
@@ -128,22 +129,17 @@ final class Parser {
     /**
      * The <b>main</b> function of the parser, which turn a string into a list of includes and declarations.
      */
-    def process(in: String):(List[String], List[Definition]) = parseAll(file, in) match {
+    def process(in: String): (List[String], List[Definition]) = parseAll(file, in) match {
       case Success(rval, _) ⇒ rval
       case f                ⇒ println(f); throw new Exception("parsing failed: "+f);
     }
   }
 
   /**
-   * returns an unsorted list of declarations
-   */
-  def process(input: File): java.util.List[Declaration] = buildIR(parseAll(input))
-
-  /**
    * Parses a file and all related files and passes back a List of definitions. The returned definitions are also type
    * checked.
    */
-  private[parser] def parseAll(input: File): LinkedList[Definition] = {
+  private def parseAll(input: File): LinkedList[Definition] = {
     val parser = new FileParser();
     val base = input.getParentFile();
     val todo = new HashSet[String]();
@@ -172,46 +168,65 @@ final class Parser {
         }
       }
     }
-    TypeChecker.check(rval.toList)
+//    TypeChecker.check(rval.toList)
     rval;
   }
-
-  //  private def mkType(s: Type, decls: Map[String, Declaration]): de.ust.skill.ir.Type = s match {
-  //    case t: ListType          ⇒ new de.ust.skill.ir.ListType(mkType(t.baseType, decls))
-  //    case t: SetType           ⇒ new de.ust.skill.ir.SetType(mkType(t.baseType, decls))
-  //    case t: MapType           ⇒ new de.ust.skill.ir.MapType(t.args.map(mkType(_, decls)).asJava)
-  //
-  //    case t: ConstantArrayType ⇒ new ConstantLengthArrayType(mkType(t.baseType, decls), t.length)
-  //    case t: ArrayType         ⇒ new VariableLengthArrayType(mkType(t.baseType, decls))
-  //
-  //    case t: BaseType ⇒ decls.get(t.name).getOrElse(GroundType.get(t.name)).ensuring({
-  //      r ⇒ if (null == r) throw new IllegalStateException("unknown declaration name "+t.name); true
-  //    })
-  //  }
 
   /**
    * Turns the AST into IR.
    */
-  private def buildIR(defs: LinkedList[Definition]): java.util.List[Declaration] = {
-    // create declarations
-    var parents = defs.map(f ⇒ (f.name, f)).toMap
-    val rval = parents.map({ case (n, f) ⇒ (n, new Declaration(n)) })
-    //    rval.foreach({
-    //      case (n, f) ⇒ f.setParentType(
-    //        rval.get(parents.get(n).get.parent.getOrElse(null)).getOrElse(null))
-    //    })
-    //
-    //    // fill field information into declarations
-    //    parents.foreach({
-    //      case (n, f) ⇒
-    //        val fields = new ListBuffer[de.ust.skill.ir.Field]()
-    //        f.body.foreach({
-    //          case x: Data     ⇒ fields += new de.ust.skill.ir.Data(x.isAuto, mkType(x.t, rval), x.name)
-    //          case x: Constant ⇒ fields += new de.ust.skill.ir.Constant(mkType(x.t, rval), x.name, x.value)
-    //        })
-    //        rval.get(n).get.setFields(fields.asJava)
-    //    })
+  private def buildIR(defs: LinkedList[Definition]): java.util.List[ir.Declaration] = {
+    // create declarations && build subtype relation
+    var subtypes = new HashMap[String, LinkedList[Definition]]
+    val definitionNames = defs.map(f ⇒ (f.name, f)).toMap
+    definitionNames.values.filter(_.parent.isDefined).foreach { d ⇒
+      if (!subtypes.contains(d.parent.get)) {
+        subtypes.put(d.parent.get, LinkedList())
+      }
+      subtypes(d.parent.get).append(LinkedList(d))
+    }
+    val rval = definitionNames.map({ case (n, f) ⇒ (n, ir.Declaration.newDeclaration(n)) })
 
-    JavaConversions.seqAsJavaList(rval.values.toSeq)
+    // type order initialization of types
+    def mkType(t: Type): ir.Type = t match {
+      case t: ConstantLengthArrayType ⇒ ir.ConstantLengthArrayType.make(mkType(t.baseType), t.length)
+      case t: ArrayType               ⇒ ir.VariableLengthArrayType.make(mkType(t.baseType))
+      case t: ListType                ⇒ ir.ListType.make(mkType(t.baseType))
+      case t: SetType                 ⇒ ir.SetType.make(mkType(t.baseType))
+      case t: MapType                 ⇒ ir.MapType.make(t.baseTypes.map { mkType(_) })
+
+      // base types are something special, because they have already been created
+      case t: BaseType ⇒ ir.Type.get(t.name.toLowerCase()) match {
+        case null ⇒ throw new Exception(s"type ${t.name} has not been defined in the supplied specification")
+        case t    ⇒ t
+      }
+    }
+    def mkField(node: Field): ir.Field = node match {
+      case f: Data     ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto)
+      case f: Constant ⇒ new ir.Field(mkType(f.t), f.name, f.value)
+    }
+    def initialize(name: String) {
+      val definition = definitionNames(name)
+      rval(name).initialize(
+        rval.getOrElse(definition.parent.getOrElse(null), null),
+        definition.body.map(mkField(_))
+      )
+    }
+    definitionNames.values.filter(_.parent.isEmpty).foreach { d ⇒ initialize(d.name) }
+
+    rval.values.toSeq
   }
+}
+
+object Parser {
+  import Parser._
+
+  /**
+   * returns an unsorted list of declarations
+   */
+  def process(input: File): java.util.List[ir.Declaration] = {
+    val p = new Parser
+    p.buildIR(p.parseAll(input))
+  }
+
 }

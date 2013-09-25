@@ -26,7 +26,7 @@ object TypeChecker {
       d.body.foreach(f ⇒ {
         // ensure that all field types are known
         f.t match {
-          case t: MapType ⇒ t.args.foreach(t ⇒ assert(knownTypes.contains(t.name)))
+          case t: MapType ⇒ t.baseTypes.foreach(t ⇒ assert(knownTypes.contains(t.name)))
           case t: SetType ⇒ assert(knownTypes.contains(t.baseType.name),
             "in "+d.name+"::"+f.name+":> unknown base type "+t.baseType)
           case t: ListType ⇒ assert(knownTypes.contains(t.baseType.name),
@@ -41,7 +41,7 @@ object TypeChecker {
 
         // ensure that array types are well-formed
         f.t match {
-          case t: ConstantArrayType ⇒ assert(t.length > 0)
+          case t: ConstantLengthArrayType ⇒ assert(t.length > 0)
           case _                    ⇒ ()
         }
         // ensure that constants are well-formed

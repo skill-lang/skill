@@ -41,7 +41,7 @@ Opitions:
       m.outPath = args(args.length - 1)
 
       //parse argument code
-      m.IR = (new Parser).process(new File(skillPath)).toList
+      m.IR = Parser.process(new File(skillPath)).toList
 
       // create output using maker chain
       m.make;

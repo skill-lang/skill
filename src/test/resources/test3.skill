@@ -1,6 +1,6 @@
 /** A source code location. */
 SLoc {
-	set<i16> line
+	set<i16> line;
 	i16 column;
 	string path;
 }

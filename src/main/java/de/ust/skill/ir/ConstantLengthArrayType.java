@@ -9,7 +9,11 @@ public class ConstantLengthArrayType extends ContainerType {
 	private final Type baseType;
 	private final long length;
 
-	public ConstantLengthArrayType(Type baseType, long length) {
+	public static Type make(Type baseType, long length) {
+		return unifyType(new ConstantLengthArrayType(baseType, length));
+	}
+
+	private ConstantLengthArrayType(Type baseType, long length) {
 		this.baseType = baseType;
 		this.length = length;
 	}

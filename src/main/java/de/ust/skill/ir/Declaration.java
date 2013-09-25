@@ -35,7 +35,7 @@ final public class Declaration extends Type {
 	 * @note the declaration has to be completed, i.e. it has to be evaluated in
 	 *       pre-order over the type hierarchy.
 	 */
-	public Declaration(String name) {
+	private Declaration(String name) {
 		this.name = name;
 		this.skillName = name.toLowerCase();
 		{
@@ -45,6 +45,16 @@ final public class Declaration extends Type {
 		}
 
 		superType = baseType = null;
+	}
+
+	public static Declaration newDeclaration(String name) {
+		String skillName = name.toLowerCase();
+		if (types.containsKey(skillName))
+			return (Declaration) types.get(skillName);
+
+		Declaration rval = new Declaration(name);
+		types.put(skillName, rval);
+		return rval;
 	}
 
 	/**
