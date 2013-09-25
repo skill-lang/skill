@@ -31,7 +31,7 @@ trait GeneralOutputMaker {
   /**
    * Creates the correct PrintWriter for the argument file.
    */
-  def open(path: String) = {
+  protected def open(path: String) = {
     val f = new File(s"$outPath$packagePath$path")
     f.getParentFile.mkdirs
     f.createNewFile
@@ -41,7 +41,7 @@ trait GeneralOutputMaker {
   /**
    * Assume the existence of a translation function for types.
    */
-  protected def _T(t: Type): String
+  protected def mapType(t: Type): String
 
   /**
    * Assume template copy functionality.

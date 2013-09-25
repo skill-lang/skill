@@ -30,7 +30,7 @@ final class $name(
   """)
 
     // data
-    out.write(fields.map({ f ⇒ s"private var _${f.getName()}: ${_T(f.getType())}" }).toArray.mkString("", ",\n  ", ""))
+    out.write(fields.map({ f ⇒ s"private var _${f.getName()}: ${mapType(f.getType())}" }).toArray.mkString("", ",\n  ", ""))
 
     out.write(s""")
     extends _root_.${packagePrefix}$name {
@@ -45,7 +45,7 @@ final class $name(
       val Name = name.capitalize
       out.write(s"""
   final def get$Name = _$name
-  final def set$Name($Name: ${_T(f.getType())}) = _$name = $Name
+  final def set$Name($Name: ${mapType(f.getType())}) = _$name = $Name
 
 """)
     });

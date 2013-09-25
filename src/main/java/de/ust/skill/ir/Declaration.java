@@ -47,13 +47,19 @@ final public class Declaration extends Type {
 		superType = baseType = null;
 	}
 
-	public static Declaration newDeclaration(String name) {
+	/**
+	 * @param name
+	 * @return a new declaration which is registered at types.
+	 * @throws ParseException
+	 *             if the declaration is already present
+	 */
+	public static Declaration newDeclaration(TypeContext tc, String name) throws ParseException {
 		String skillName = name.toLowerCase();
-		if (types.containsKey(skillName))
-			return (Declaration) types.get(skillName);
+		if (tc.types.containsKey(skillName))
+			throw new ParseException("Duplicate declaration of type " + name);
 
 		Declaration rval = new Declaration(name);
-		types.put(skillName, rval);
+		tc.types.put(skillName, rval);
 		return rval;
 	}
 

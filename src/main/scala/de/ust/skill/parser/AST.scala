@@ -6,7 +6,9 @@ package de.ust.skill.parser
  * @author Timm Felden
  */
 sealed abstract class Node {
-  override def equals(obj: Any):Boolean = ASTEqualityChecker.check(this, obj)
+  private lazy val _hashCode = toString.hashCode()
+  override def equals(obj: Any): Boolean = ASTEqualityChecker.check(this, obj)
+  override def hashCode(): Int = _hashCode
 }
 
 final class Restriction(val name: String, val args: List[Any]) extends Node;

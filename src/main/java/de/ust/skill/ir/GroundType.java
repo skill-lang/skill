@@ -12,9 +12,9 @@ public class GroundType extends Type {
 	 */
 	private final String name;
 
-	GroundType(String name) {
+	GroundType(TypeContext tc, String name) {
 		this.name = name;
-		unifyType(this);
+		tc.unifyType(this);
 	}
 
 	public boolean isInteger() {

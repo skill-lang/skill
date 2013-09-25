@@ -3,15 +3,13 @@ package de.ust.skill.parser
 import java.io.File
 import java.io.FileNotFoundException
 import java.lang.Long
-import java.nio.file.FileSystems
-
 import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.LinkedList
 import scala.util.parsing.combinator.RegexParsers
-
 import de.ust.skill.ir
+import java.nio.file.FileSystems
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -19,6 +17,7 @@ import de.ust.skill.ir
  * @author Timm Felden
  */
 final class Parser {
+  val tc = new ir.TypeContext
 
   /**
    * Converts a character stream into an AST using parser combinators.
@@ -163,12 +162,15 @@ final class Parser {
           // add definitions
           rval = rval ++ result._2
         } catch {
-          case e: FileNotFoundException ⇒ assert(false, "The include "+file+
-            "could not be resolved to an existing file: "+e.getMessage()+"\nWD:"+FileSystems.getDefault().getPath(".").toAbsolutePath().toString())
+          case e: FileNotFoundException ⇒ ParseException(
+            s"The include $file could not be resolved to an existing file: ${e.getMessage()} \nWD: ${
+              FileSystems.getDefault().getPath(".").toAbsolutePath().toString()
+            }"
+          )
         }
       }
     }
-//    TypeChecker.check(rval.toList)
+    //    TypeChecker.check(rval.toList)
     rval;
   }
 
@@ -185,21 +187,18 @@ final class Parser {
       }
       subtypes(d.parent.get).append(LinkedList(d))
     }
-    val rval = definitionNames.map({ case (n, f) ⇒ (n, ir.Declaration.newDeclaration(n)) })
+    val rval = definitionNames.map({ case (n, f) ⇒ (n, ir.Declaration.newDeclaration(tc, n)) })
 
     // type order initialization of types
     def mkType(t: Type): ir.Type = t match {
-      case t: ConstantLengthArrayType ⇒ ir.ConstantLengthArrayType.make(mkType(t.baseType), t.length)
-      case t: ArrayType               ⇒ ir.VariableLengthArrayType.make(mkType(t.baseType))
-      case t: ListType                ⇒ ir.ListType.make(mkType(t.baseType))
-      case t: SetType                 ⇒ ir.SetType.make(mkType(t.baseType))
-      case t: MapType                 ⇒ ir.MapType.make(t.baseTypes.map { mkType(_) })
+      case t: ConstantLengthArrayType ⇒ ir.ConstantLengthArrayType.make(tc, mkType(t.baseType), t.length)
+      case t: ArrayType               ⇒ ir.VariableLengthArrayType.make(tc, mkType(t.baseType))
+      case t: ListType                ⇒ ir.ListType.make(tc, mkType(t.baseType))
+      case t: SetType                 ⇒ ir.SetType.make(tc, mkType(t.baseType))
+      case t: MapType                 ⇒ ir.MapType.make(tc, t.baseTypes.map { mkType(_) })
 
       // base types are something special, because they have already been created
-      case t: BaseType ⇒ ir.Type.get(t.name.toLowerCase()) match {
-        case null ⇒ throw new Exception(s"type ${t.name} has not been defined in the supplied specification")
-        case t    ⇒ t
-      }
+      case t: BaseType                ⇒ tc.get(t.name.toLowerCase())
     }
     def mkField(node: Field): ir.Field = node match {
       case f: Data     ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto)

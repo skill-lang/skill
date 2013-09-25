@@ -83,7 +83,7 @@ class Main
   /**
    * Translates types into scala type names.
    */
-  override protected def _T(t: Type): String = t match {
+  override protected def mapType(t: Type): String = t match {
     case t: GroundType ⇒ t.getName() match {
       // TODO BUG #2
       case "annotation" ⇒ "AnyRef"
@@ -102,12 +102,12 @@ class Main
       case "string"     ⇒ "String"
     }
 
-    case t: ConstantLengthArrayType ⇒ s"Array[${_T(t.getBaseType())}]"
-    case t: VariableLengthArrayType ⇒ s"Array[${_T(t.getBaseType())}]"
-    case t: ListType                ⇒ s"List[${_T(t.getBaseType())}]"
-    case t: SetType                 ⇒ s"Set[${_T(t.getBaseType())}]"
+    case t: ConstantLengthArrayType ⇒ s"Array[${mapType(t.getBaseType())}]"
+    case t: VariableLengthArrayType ⇒ s"Array[${mapType(t.getBaseType())}]"
+    case t: ListType                ⇒ s"List[${mapType(t.getBaseType())}]"
+    case t: SetType                 ⇒ s"Set[${mapType(t.getBaseType())}]"
     case t: MapType ⇒ {
-      val types = t.getBaseTypes().reverse.map(_T(_))
+      val types = t.getBaseTypes().reverse.map(mapType(_))
       types.tail.fold(types.head)({ (U, t) ⇒ s"Map[$t, $U]" });
     }
 

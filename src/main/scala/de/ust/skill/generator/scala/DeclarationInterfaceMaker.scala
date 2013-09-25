@@ -37,7 +37,7 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
 
       if (f.isConstant) {
         // constants do not have a setter
-        out.write(s"\n  def get$name(): ${_T(f.getType())} = ${f.constantValue}\n")
+        out.write(s"\n  def get$name(): ${mapType(f.getType())} = ${f.constantValue}\n")
       } else {
         // add a warning to auto fields
         if (f.isAuto) {
@@ -45,8 +45,8 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
         }
 
         // standard field data interface
-        out.write(s"\n  def get$name(): ${_T(f.getType())}\n")
-        out.write(s"  def set$name($name: ${_T(f.getType())}): Unit\n")
+        out.write(s"\n  def get$name(): ${mapType(f.getType())}\n")
+        out.write(s"  def set$name($name: ${mapType(f.getType())}): Unit\n")
       }
     })
 

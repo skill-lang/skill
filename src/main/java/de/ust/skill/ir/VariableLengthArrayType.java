@@ -8,8 +8,8 @@ package de.ust.skill.ir;
 public class VariableLengthArrayType extends ContainerType {
 	private final Type baseType;
 
-	public static Type make(Type baseType) {
-		return unifyType(new VariableLengthArrayType(baseType));
+	public static Type make(TypeContext tc, Type baseType) {
+		return tc.unifyType(new VariableLengthArrayType(baseType));
 	}
 
 	private VariableLengthArrayType(Type baseType) {

@@ -6,8 +6,8 @@ package de.ust.skill.ir;
 public class SetType extends ContainerType {
 	private final Type baseType;
 
-	public static Type make(Type baseType) {
-		return unifyType(new SetType(baseType));
+	public static Type make(TypeContext tc, Type baseType) {
+		return tc.unifyType(new SetType(baseType));
 	}
 
 	private SetType(Type baseType) {

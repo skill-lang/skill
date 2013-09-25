@@ -8,7 +8,7 @@ import java.io.PrintWriter
  * @author Timm Felden
  */
 object Writer {
-  def apply(path: String) = {
+  private[scala] def apply(path: String) = {
     val f = new File(path)
     f.getParentFile.mkdirs
     f.createNewFile

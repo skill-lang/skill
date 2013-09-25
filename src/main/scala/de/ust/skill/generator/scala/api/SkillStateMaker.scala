@@ -49,7 +49,7 @@ trait SkillState {
       val sName = name.toLowerCase()
       val tName = "_root_."+packagePrefix + name
 
-      val addArgs = t.getAllFields().filter(!_.isConstant).map({ f ⇒ s"${f.getName()}: ${_T(f.getType())}" }).mkString(", ")
+      val addArgs = t.getAllFields().filter(!_.isConstant).map({ f ⇒ s"${f.getName()}: ${mapType(f.getType())}" }).mkString(", ")
 
       out.write(s"""
   /**

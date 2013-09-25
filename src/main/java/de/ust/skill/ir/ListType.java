@@ -6,8 +6,8 @@ package de.ust.skill.ir;
 public class ListType extends ContainerType {
 	private final Type baseType;
 
-	public static Type make(Type baseType) {
-		return unifyType(new ListType(baseType));
+	public static Type make(TypeContext tc, Type baseType) {
+		return tc.unifyType(new ListType(baseType));
 	}
 
 	private ListType(Type baseType) {

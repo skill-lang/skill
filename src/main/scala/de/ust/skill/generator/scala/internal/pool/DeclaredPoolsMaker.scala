@@ -122,7 +122,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
 
       } else {
         // the ordinary field case
-        val scalaType = _T(f.getType())
+        val scalaType = mapType(f.getType())
 
         out.write(s"""
     // ${f.getType().getSkillName()} $name

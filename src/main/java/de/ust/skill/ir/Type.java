@@ -1,15 +1,12 @@
 package de.ust.skill.ir;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 import java.util.Stack;
 
 /**
  * Base of the Type hierarchy.
  * 
- * Types are comparable and unique. Uniqueness is achieved using a hash tree
- * over the skill name.
+ * Types are comparable and unique. Uniqueness is guaranteed by the type
+ * context.
  * 
  * The order on types uses type order, i.e. super types are *lower* then sub
  * types. Other parts of the order are left under specified, although the
@@ -18,59 +15,6 @@ import java.util.Stack;
  * @author Timm Felden
  */
 public abstract class Type implements Comparable<Type> {
-	protected static final Map<String, Type> types = new HashMap<>();
-
-	static {
-		// two v64
-		new GroundType("annotation");
-
-		new GroundType("bool");
-
-		new GroundType("i8");
-		new GroundType("i16");
-		new GroundType("i32");
-		new GroundType("i64");
-
-		new GroundType("v64");
-
-		new GroundType("f32");
-		new GroundType("f64");
-
-		new GroundType("string");
-	}
-
-	/**
-	 * unification has to be done in the constructor or a factory method and
-	 * must not be made visible to a client
-	 * 
-	 * @param t
-	 *            the type to be unified
-	 * @return t, if t does not yet exist or the existing instance of the type
-	 */
-	protected static final Type unifyType(Type t) {
-		if (types.containsKey(t.getSkillName()))
-			return types.get(t.getSkillName());
-
-		types.put(t.getSkillName(), t);
-		return t;
-	}
-
-	/**
-	 * @param skillName
-	 *            the skill name of the type, i.e. no whitespace, only lowercase
-	 *            letters
-	 * @return the respective type, if it exists, null otherwise
-	 */
-	public static Type get(String skillName) {
-		return types.get(skillName);
-	}
-
-	/**
-	 * @return the set of all known (skill) type names
-	 */
-	public static Set<String> allTypeNames() {
-		return types.keySet();
-	}
 
 	/**
 	 * Implements the type order as defined in the paper.

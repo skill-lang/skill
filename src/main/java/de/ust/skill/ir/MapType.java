@@ -8,8 +8,8 @@ import java.util.List;
 public class MapType extends ContainerType {
 	private final List<Type> baseTypes;
 
-	public static Type make(List<Type> baseTypes) {
-		return unifyType(new MapType(baseTypes));
+	public static Type make(TypeContext tc, List<Type> baseTypes) {
+		return tc.unifyType(new MapType(baseTypes));
 	}
 
 	private MapType(List<Type> baseTypes) {

@@ -51,33 +51,25 @@ object ASTEqualityChecker {
     checkOrderedList(l, r)
   }
 
-  private def checkFieldList(a: List[Field], b: List[Field]): Boolean = {
-    if (a.size != b.size)
-      return false
+  private def checkFieldList(a: List[Field], b: List[Field]): Boolean =
+    if (a.size != b.size) {
+      false
+    } else {
 
-    val lt = ((a: Field, b: Field) ⇒ (a, b) match {
-      case (a: Data, b: Data)         ⇒ a.name.compareTo(b.name) < 0
-      case (a: Constant, b: Constant) ⇒ a.name.compareTo(b.name) < 0
-      case _                          ⇒ false
-    })
+      val lt = ((a: Field, b: Field) ⇒ (a, b) match {
+        case (a: Data, b: Data)         ⇒ a.name.compareTo(b.name) < 0
+        case (a: Constant, b: Constant) ⇒ a.name.compareTo(b.name) < 0
+        case _                          ⇒ false
+      })
 
-    val l = a.sortWith(lt)
-    val r = b.sortWith(lt)
+      val l = a.sortWith(lt)
+      val r = b.sortWith(lt)
 
-    return checkOrderedList(l, r)
-  }
+      checkOrderedList(l, r)
+    }
 
   /**
    * assume list do not contain nulls
    */
-  private def checkOrderedList(a: List[Any], b: List[Any]): Boolean = {
-    if (a.size != b.size)
-      return false
-
-    for (i ← 0 until a.size)
-      if (!a(i).equals(b(i)))
-        return false
-
-    return true
-  }
+  private def checkOrderedList(a: List[Any], b: List[Any]): Boolean = a.sameElements(b)
 }
