@@ -26,12 +26,9 @@ import ${packagePrefix}internal.parsers.FieldParser
  */
 abstract class KnownPool[T <: B, B <: KnownType](
   userType: UserType,
-  superPool: ⇒ Option[KnownPool[_ >: T <: B, B]],
   blockCount: Int)
-    extends AbstractPool(userType, superPool, blockCount)
+    extends AbstractPool(userType, blockCount)
     with Seq[T] {
-  // override the super pool, because we know, that all our super types are known as well
-  override private[internal] def superPool: Option[KnownPool[B, B]] = super.superPool.asInstanceOf[Option[KnownPool[B, B]]]
 
   private[internal] def basePool: BasePool[B]
 
@@ -95,7 +92,8 @@ abstract class KnownPool[T <: B, B <: KnownType](
    * and can be written to disk
    */
   private[internal] def prepareSerialization(σ: SerializableState): Unit
-}""")
+}
+""")
 
     //class prefix
     out.close()

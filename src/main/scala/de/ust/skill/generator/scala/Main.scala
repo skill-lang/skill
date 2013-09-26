@@ -1,11 +1,13 @@
 package de.ust.skill.generator.scala
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import scala.collection.JavaConversions._
 import scala.io.Source
 
-import de.ust.skill.generator.scala.api.{KnownTypeMaker, SkillStateMaker}
+import de.ust.skill.generator.scala.api.{ KnownTypeMaker, SkillStateMaker }
+import de.ust.skill.generator.scala.api.GenericTypeMaker
+import de.ust.skill.generator.scala.api.SkillTypeMaker
 import de.ust.skill.generator.scala.internal._
 import de.ust.skill.generator.scala.internal.parsers._
 import de.ust.skill.generator.scala.internal.pool._
@@ -63,6 +65,9 @@ class Main
     with PoolIteratorMaker
     with BlockInfoMaker
     with KnownTypeMaker
+    with GenericTypeMaker
+    with GenericPoolMaker
+    with SkillTypeMaker
     with KnownPoolMaker
     with BasePoolMaker
     with SubPoolMaker
@@ -85,8 +90,7 @@ class Main
    */
   override protected def mapType(t: Type): String = t match {
     case t: GroundType ⇒ t.getName() match {
-      // TODO BUG #2
-      case "annotation" ⇒ "AnyRef"
+      case "annotation" ⇒ "SkillType"
 
       case "bool"       ⇒ "Boolean"
 

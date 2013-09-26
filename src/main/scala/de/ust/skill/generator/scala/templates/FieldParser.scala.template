@@ -3,6 +3,10 @@
  * The field parser is able to turn field data from a type block data chunk into an array of field entries
  */
 final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
+
+  //! @note can not be specialized with T; needs to be split into several methods
+  //! @note further some of the implementations, e.g. i*, should use the ByteBuffer directly, because the parser
+  //        combinator creates unnecessary overhead
   private def readSingleField(t: TypeInfo): Parser[Any] = t match {
     case d: ConstantI8Info          ⇒ success()
     case d: ConstantI16Info         ⇒ success()
@@ -36,7 +40,7 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
         case index ⇒ σ.pools.get(d.name).getOrElse(
           throw new IllegalStateException("Found a nonnull reference to missing usertype "+d.name)
         // note: the cast is safe, because the generator requires us to have a declaration for a used user type
-        ).asInstanceOf[KnownPool[_,_]].getByID(index)
+        ).asInstanceOf[KnownPool[_, _]].getByID(index)
       }
 
     }

@@ -19,7 +19,9 @@ import ${packagePrefix}internal.{ UserType, SerializableState }
  * @author Timm Felden
  */
 abstract class BasePool[T <: KnownType: Manifest](userType: UserType, σ: SerializableState, blockCount: Int)
-    extends KnownPool[T, T](userType, None, blockCount) {
+    extends KnownPool[T, T](userType, blockCount) {
+
+  final override private[internal] def superPool = None
 
   /**
    * We are the base pool.
@@ -52,7 +54,8 @@ abstract class BasePool[T <: KnownType: Manifest](userType: UserType, σ: Serial
    * @note base pool data access can not fail, because this would yeald an arary store exception at an earlier stage
    */
   final def getByID(index: Long): T = data(index.toInt - 1)
-}""")
+}
+""")
 
     //class prefix
     out.close()

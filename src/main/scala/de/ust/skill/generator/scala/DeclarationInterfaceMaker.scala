@@ -22,7 +22,7 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
 
     //imports
     if (null == d.getSuperType()) {
-      out.write(s"import ${packagePrefix}api.KnownType\n\n")
+      out.write(s"import ${packagePrefix}api._\n\n")
     }
 
     //class prefix
@@ -45,8 +45,13 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
         }
 
         // standard field data interface
-        out.write(s"\n  def get$name(): ${mapType(f.getType())}\n")
-        out.write(s"  def set$name($name: ${mapType(f.getType())}): Unit\n")
+        if ("annotation".equals(f.getType().getName())) {
+          out.write(s"\n  def get$name[T <: SkillType](): T\n")
+          out.write(s"  def set$name[T <: SkillType]($name: T): Unit\n")
+        } else {
+          out.write(s"\n  def get$name(): ${mapType(f.getType())}\n")
+          out.write(s"  def set$name($name: ${mapType(f.getType())}): Unit\n")
+        }
       }
     })
 

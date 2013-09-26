@@ -65,6 +65,7 @@ import java.nio.channels.FileChannel
 
 import scala.collection.mutable.ArrayBuffer
 
+import ${packagePrefix}api._
 import ${packagePrefix}internal._
 import ${packagePrefix}internal.parsers.FieldParser
 import ${packagePrefix}internal.types._
@@ -165,7 +166,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
   }
 """)
 
-    out.write("}")
+    out.write("}\n")
     out.close()
   }
 

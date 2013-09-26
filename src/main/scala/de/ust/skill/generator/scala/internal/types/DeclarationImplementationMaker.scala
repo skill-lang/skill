@@ -9,8 +9,6 @@ import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
 import de.ust.skill.ir.Type
 
-
-
 trait DeclarationImplementationMaker extends GeneralOutputMaker {
   override def make {
     super.make
@@ -25,6 +23,8 @@ trait DeclarationImplementationMaker extends GeneralOutputMaker {
 
     // head
     out.write(s"""package ${packagePrefix}internal.types
+
+import ${packagePrefix}api._
 
 final class $name(
   """)
@@ -43,16 +43,22 @@ final class $name(
     fields.foreach({ f ⇒
       val name = f.getName()
       val Name = name.capitalize
-      out.write(s"""
-  final def get$Name = _$name
-  final def set$Name($Name: ${mapType(f.getType())}) = _$name = $Name
-
+      if ("annotation".equals(f.getType().getName())) {
+        out.write(s"""
+  override final def get$Name[T <: SkillType](): T = _$name.asInstanceOf[T]
+  override final def set$Name[T <: SkillType]($Name: T): Unit = _$name = $Name
 """)
+      } else {
+        out.write(s"""
+  override final def get$Name = _$name
+  override final def set$Name($Name: ${mapType(f.getType())}) = _$name = $Name
+""")
+      }
     });
 
     // pretty string
     out.write(s"""  override def prettyString(): String = "${d.getName()}(this: "+this""")
-    d.getAllFields.foreach({ f ⇒ out.write(s"""+", ${f.getName()}: "+get${f.getName().capitalize}""") })
+    d.getAllFields.foreach({ f ⇒ out.write(s"""+", ${f.getName()}: "+_${f.getName()}""") })
     out.write("+\")\"\n")
 
     out.write("}")

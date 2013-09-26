@@ -2,19 +2,25 @@ package de.ust.skill.generator.scala.api
 
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait KnownTypeMaker extends GeneralOutputMaker {
+trait SkillTypeMaker extends GeneralOutputMaker {
   override def make {
     super.make
-    val out = open("api/KnownType.scala")
+    val out = open("api/SkillType.scala")
     //package & imports
     out.write(s"""package ${packagePrefix}api
 
 /**
- * The top of the known types hierarchy.
- *
+ * The top of the skill type hierarchy.
  * @author Timm Felden
  */
-trait KnownType extends SkillType;
+trait SkillType {
+
+  /**
+   * provides a pretty representation of this
+   */
+  def prettyString: String
+
+}
 """)
 
     out.close()

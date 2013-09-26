@@ -22,22 +22,21 @@ import ${packagePrefix}internal.UserType
  *
  *  TODO needs to be abstract, requires generic pools
  */
-class AbstractPool(
+abstract class AbstractPool(
     val userType: UserType,
-    _superPool: ⇒ Option[AbstractPool],
     val blockCount: Int) {
   val name = userType.name
-  private[internal] def superPool: Option[AbstractPool] = _superPool
+  private[internal] def superPool: Option[AbstractPool];
 
   /**
    * the next pool regarding type order; for example A<:B, B<:D, A<:C may lead to A⇀B⇀D⇀C or A⇀C⇀B⇀D.
    */
-  private[internal] var next: AbstractPool = _superPool match {
+  private[internal] var next: AbstractPool = superPool match {
     case None    ⇒ null
     case Some(p) ⇒ p.next
   }
   // we stole super's next, so we have to set ourselves as next
-  _superPool.foreach(_.next = this)
+  superPool.foreach(_.next = this)
 
   /**
    * the sub pools are constructed during construction of all storage pools of a state
@@ -57,7 +56,8 @@ class AbstractPool(
    * @note this is an O(t) operation, where t is the number of sub-types
    */
   final def dynamicSize: Long = subPools.map(_.dynamicSize).fold(staticSize)(_ + _)
-}""")
+}
+""")
 
     //class prefix
     out.close()

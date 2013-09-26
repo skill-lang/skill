@@ -1,5 +1,5 @@
 
-        case _ ⇒ new AbstractPool(t, t.superName match {
+        case _ ⇒ new GenericPool(t, t.superName match {
           case Some(name) ⇒ σ.pools.get(name).ensuring(_.isDefined)
           case None       ⇒ None
         }, blockCounter)
