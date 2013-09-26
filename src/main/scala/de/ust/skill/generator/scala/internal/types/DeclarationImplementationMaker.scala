@@ -24,7 +24,10 @@ trait DeclarationImplementationMaker extends GeneralOutputMaker {
     // head
     out.write(s"""package ${packagePrefix}internal.types
 
+import scala.reflect.ClassTag
+
 import ${packagePrefix}api._
+import ${packagePrefix}internal.AnnotationTypeCastException
 
 final class $name(
   """)
@@ -45,7 +48,11 @@ final class $name(
       val Name = name.capitalize
       if ("annotation".equals(f.getType().getName())) {
         out.write(s"""
-  override final def get$Name[T <: SkillType](): T = _$name.asInstanceOf[T]
+  override final def get$Name[T <: SkillType]()(implicit m: ClassTag[T]): T = {
+    if (!m.runtimeClass.isAssignableFrom(_$name.getClass()))
+      AnnotationTypeCastException(s"annotation access: $${m.runtimeClass} vs. $${_f.getClass}", null)
+    _$name.asInstanceOf[T]
+  }
   override final def set$Name[T <: SkillType]($Name: T): Unit = _$name = $Name
 """)
       } else {

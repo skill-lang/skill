@@ -77,7 +77,6 @@ final public class Declaration extends Type {
 	 * @param fields
 	 * @throws ParseException
 	 */
-	@SuppressWarnings("hiding")
 	public void initialize(Declaration superType, List<Field> fields) throws ParseException {
 		assert !isInitialized() : "multiple initialization";
 		assert null != fields : "no fields supplied";

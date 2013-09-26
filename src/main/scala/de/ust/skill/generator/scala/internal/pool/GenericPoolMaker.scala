@@ -3,7 +3,7 @@ package de.ust.skill.generator.scala.internal.pool
 import java.io.PrintWriter
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait GenericPoolMaker extends GeneralOutputMaker{
+trait GenericPoolMaker extends GeneralOutputMaker {
   override def make {
     super.make
     val out = open("internal/pool/GenericPool.scala")
@@ -25,6 +25,8 @@ final class GenericPool(
     blockCount: Int) extends AbstractPool(userType, blockCount) {
 
   private[internal] def superPool: Option[AbstractPool] = _superPool
+
+  override def getByID(index: Long) = ???
 }
 """)
 

@@ -3,7 +3,7 @@ package de.ust.skill.generator.scala.internal.pool
 import java.io.PrintWriter
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait AbstractPoolMaker extends GeneralOutputMaker{
+trait AbstractPoolMaker extends GeneralOutputMaker {
   override def make {
     super.make
     val out = open("internal/pool/AbstractPool.scala")
@@ -12,6 +12,7 @@ trait AbstractPoolMaker extends GeneralOutputMaker{
 
 import scala.collection.mutable.ArrayBuffer
 
+import ${packagePrefix}api.SkillType
 import ${packagePrefix}internal.UserType
 
 /**
@@ -46,6 +47,11 @@ abstract class AbstractPool(
   if (superPool.isDefined) {
     superPool.get.subPools += this
   }
+
+  /**
+   * returns the skill object at position index
+   */
+  def getByID(index: Long): SkillType
 
   /**
    * the number of instances of exactly this type, excluding sub-types

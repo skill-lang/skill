@@ -17,7 +17,11 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
   private def makeDeclarationInterface(out: PrintWriter, d: Declaration) {
     //package
     if (packagePrefix.length > 0) {
-      out.write(s"package ${packagePrefix.substring(0, packagePrefix.length - 1)}\n\n")
+      out.write(s"""package ${packagePrefix.substring(0, packagePrefix.length - 1)}
+
+import scala.reflect.ClassTag
+
+""")
     }
 
     //imports
@@ -46,7 +50,7 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
 
         // standard field data interface
         if ("annotation".equals(f.getType().getName())) {
-          out.write(s"\n  def get$name[T <: SkillType](): T\n")
+          out.write(s"\n  def get$name[T <: SkillType: ClassTag](): T\n")
           out.write(s"  def set$name[T <: SkillType]($name: T): Unit\n")
         } else {
           out.write(s"\n  def get$name(): ${mapType(f.getType())}\n")
@@ -55,7 +59,7 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
       }
     })
 
-    out.write("}");
+    out.write("}\n");
 
     out.close()
   }
