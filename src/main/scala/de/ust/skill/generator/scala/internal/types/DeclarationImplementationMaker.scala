@@ -58,7 +58,10 @@ final class $name(
 
     // pretty string
     out.write(s"""  override def prettyString(): String = "${d.getName()}(this: "+this""")
-    d.getAllFields.foreach({ f ⇒ out.write(s"""+", ${f.getName()}: "+_${f.getName()}""") })
+    d.getAllFields.foreach({ f ⇒
+      if (!f.isConstant()) out.write(s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+_${f.getName()}""")
+      else out.write(s"""+", const ${f.getName()}: ${f.constantValue()}"""")
+    })
     out.write("+\")\"\n")
 
     out.write("}")
