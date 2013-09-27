@@ -1,13 +1,13 @@
 package de.ust.skill.parser
 
+import de.ust.skill.ir.Restriction
+
 /**
  * The AST is used to turn skill definitions into source code.
  *
  * @author Timm Felden
  */
 sealed abstract class Node;
-
-final class Restriction(val name: String, val args: List[Any]) extends Node;
 
 final class Hint(val name: String) extends Node;
 

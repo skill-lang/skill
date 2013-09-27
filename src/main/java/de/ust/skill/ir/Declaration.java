@@ -24,7 +24,10 @@ final public class Declaration extends Type {
 	private Declaration superType = null, baseType = null;
 	private final List<Declaration> children = new ArrayList<>();
 
-	// TODO restrictions
+	/**
+	 * The restrictions applying to this declaration.
+	 */
+	private final List<Restriction> restrictions;
 	// TODO hints
 	/**
 	 * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
@@ -40,7 +43,7 @@ final public class Declaration extends Type {
 	 * @note the declaration has to be completed, i.e. it has to be evaluated in
 	 *       pre-order over the type hierarchy.
 	 */
-	private Declaration(String name, String comment) {
+	private Declaration(String name, String comment, List<Restriction> restrictions) {
 		this.name = name;
 		this.skillName = name.toLowerCase();
 		{
@@ -49,6 +52,7 @@ final public class Declaration extends Type {
 			this.capitalName = new String(ch);
 		}
 		skillCommentImage = null == comment ? "" : comment;
+		this.restrictions = restrictions;
 
 		superType = baseType = null;
 	}
@@ -59,12 +63,13 @@ final public class Declaration extends Type {
 	 * @throws ParseException
 	 *             if the declaration is already present
 	 */
-	public static Declaration newDeclaration(TypeContext tc, String name, String comment) throws ParseException {
+	public static Declaration newDeclaration(TypeContext tc, String name, String comment, List<Restriction> restrictions)
+			throws ParseException {
 		String skillName = name.toLowerCase();
 		if (tc.types.containsKey(skillName))
 			throw new ParseException("Duplicate declaration of type " + name);
 
-		Declaration rval = new Declaration(name, comment);
+		Declaration rval = new Declaration(name, comment, restrictions);
 		tc.types.put(skillName, rval);
 		return rval;
 	}
@@ -175,5 +180,9 @@ final public class Declaration extends Type {
 	 */
 	public String getSkillComment() {
 		return skillCommentImage;
+	}
+
+	public List<Restriction> getRestrictions() {
+		return restrictions;
 	}
 }

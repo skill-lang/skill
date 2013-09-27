@@ -1,5 +1,7 @@
 package de.ust.skill.ir;
 
+import java.util.List;
+
 final public class Field {
 	private final boolean auto;
 	private final boolean isConstant;
@@ -8,7 +10,10 @@ final public class Field {
 	protected final String name, skillName;
 	protected final Type type;
 
-	// TODO restrictions
+	/**
+	 * The restrictions applying to this field.
+	 */
+	private final List<Restriction> restrictions;
 	// TODO hints
 	/**
 	 * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
@@ -24,7 +29,8 @@ final public class Field {
 	 * @throws ParseException
 	 *             if the argument type is not an integer
 	 */
-	public Field(Type type, String name, long value, String comment) throws ParseException {
+	public Field(Type type, String name, long value, String comment, List<Restriction> restrictions)
+			throws ParseException {
 		assert (null != type);
 		assert (null != name);
 		if (!(type instanceof GroundType))
@@ -39,6 +45,7 @@ final public class Field {
 		skillName = name.toLowerCase();
 		this.type = type;
 		skillCommentImage = null == comment ? "" : comment;
+		this.restrictions = restrictions;
 	}
 
 	/**
@@ -48,7 +55,7 @@ final public class Field {
 	 * @param name
 	 * @param isAuto
 	 */
-	public Field(Type type, String name, boolean isAuto, String comment) {
+	public Field(Type type, String name, boolean isAuto, String comment, List<Restriction> restrictions) {
 		assert (null != type);
 		assert (null != name);
 
@@ -59,6 +66,7 @@ final public class Field {
 		this.skillName = name.toLowerCase();
 		this.type = type;
 		skillCommentImage = null == comment ? "" : comment;
+		this.restrictions = restrictions;
 	}
 
 	public String getName() {
@@ -109,5 +117,9 @@ final public class Field {
 	 */
 	public String getSkillComment() {
 		return skillCommentImage;
+	}
+
+	public List<Restriction> getRestrictions() {
+		return restrictions;
 	}
 }

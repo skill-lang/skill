@@ -3,13 +3,17 @@ package de.ust.skill.parser
 import java.io.File
 import java.io.FileNotFoundException
 import java.lang.Long
+import java.nio.file.FileSystems
+
 import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.LinkedList
 import scala.util.parsing.combinator.RegexParsers
+
 import de.ust.skill.ir
-import java.nio.file.FileSystems
+import de.ust.skill.ir.Restriction
+import de.ust.skill.ir.restriction.NullableRestriction
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -31,8 +35,16 @@ final class Parser {
     private def id = """[a-zA-Z_\u007f-\uffff][\w\u007f-\uffff]*""".r
     /**
      * Skill only has hex literals.
+     * 
+     * TODO SKilL in its current revisions does allow for any c-style integer literals!
      */
     private def int = "0x" ~> ("""[0-9a-fA-F]*""".r ^^ { i ⇒ Long.parseLong(i, 16) })
+    
+    /**
+     * Floating point literal, as taken from the JavaTokenParsers definition.s
+     */
+    def floatingPointNumber: Parser[Double] = """-?(\d+(\.\d*)?|\d*\.\d+)([eE][+-]?\d+)?[fFdD]?""".r ^^ {_.toDouble}
+  
     /**
      * We use string literals to encode paths. If someone really calls a file ", someone should beat him hard.
      */
@@ -59,9 +71,11 @@ final class Parser {
 
     /**
      * restrictions as defined in the paper.
+     * 
+     * @note the implementation is more liberal then the specification of the specification language, because some illegal arguments are dropped
      */
-    private def restriction = "@" ~> id ~ opt("(" ~> repsep((int | string), ",") <~ ")") ^^ {
-      case s ~ arg ⇒ new Restriction(s, arg.getOrElse(List[Any]()))
+    private def restriction:Parser[Restriction] = "@" ~> id ~ opt("(" ~> repsep((int | string | floatingPointNumber), ",") <~ ")") ^^ {
+      case "nullable" ~ arg ⇒ new NullableRestriction()
     }
     /**
      * hints as defined in the paper. Because hints can be ignored by the generator, it is safe to allow arbitrary
@@ -73,10 +87,7 @@ final class Parser {
      * Description of a declration or field.
      */
     private def description = opt(comment) ~ rep(restriction | hint) ^^ {
-      case c ~ specs ⇒ {
-        new Description(c, specs.filter(p ⇒ p.isInstanceOf[Restriction]).asInstanceOf[List[Restriction]],
-          specs.filter(p ⇒ p.isInstanceOf[Hint]).asInstanceOf[List[Hint]])
-      }
+      case c ~ specs ⇒ new Description(c, specs.collect{case r:Restriction⇒r}, specs.collect{case h:Hint⇒h})
     }
 
     /**
@@ -196,7 +207,7 @@ final class Parser {
       }
       subtypes(d.parent.get.toLowerCase) ++=  LinkedList[Definition](d)
     }
-    val rval = definitionNames.map({ case (n, f) ⇒ (n, ir.Declaration.newDeclaration(tc, n, f.description.comment.getOrElse(""))) })
+    val rval = definitionNames.map({ case (n, f) ⇒ (n, ir.Declaration.newDeclaration(tc, n, f.description.comment.getOrElse(""), f.description.restrictions)) })
 
     // type order initialization of types
     def mkType(t: Type): ir.Type = t match {
@@ -211,8 +222,8 @@ final class Parser {
     }
     def mkField(node: Field): ir.Field = try {
       node match {
-        case f: Data     ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto, f.description.comment.getOrElse(""))
-        case f: Constant ⇒ new ir.Field(mkType(f.t), f.name, f.value, f.description.comment.getOrElse(""))
+        case f: Data     ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto, f.description.comment.getOrElse(""), f.description.restrictions)
+        case f: Constant ⇒ new ir.Field(mkType(f.t), f.name, f.value, f.description.comment.getOrElse(""), f.description.restrictions)
       }
     } catch {
       case e: ir.ParseException ⇒ ParseException(s"${node.name}: ${e.getMessage()}")
