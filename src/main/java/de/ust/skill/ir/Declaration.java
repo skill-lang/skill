@@ -73,33 +73,33 @@ final public class Declaration extends Type {
 	 * Initializes the type declaration with data obtained from parsing the
 	 * declarations body.
 	 * 
-	 * @param superType
-	 * @param fields
+	 * @param SuperType
+	 * @param Fields
 	 * @throws ParseException
 	 */
-	public void initialize(Declaration superType, List<Field> fields) throws ParseException {
+	public void initialize(Declaration SuperType, List<Field> Fields) throws ParseException {
 		assert !isInitialized() : "multiple initialization";
-		assert null != fields : "no fields supplied";
+		assert null != Fields : "no fields supplied";
 		// check for duplicate fields
 		{
 			Set<String> names = new HashSet<>();
-			for (Field f : fields)
+			for (Field f : Fields)
 				names.add(f.name);
-			if (names.size() != fields.size())
+			if (names.size() != Fields.size())
 				throw new ParseException("Type " + name + " contains duplicate field definitions.");
 		}
 
-		if (null != superType) {
-			assert null != superType.baseType : "types have to be initialized in pre-order";
+		if (null != SuperType) {
+			assert null != SuperType.baseType : "types have to be initialized in pre-order";
 
-			this.superType = superType;
-			this.baseType = superType.baseType;
-			superType.children.add(this);
+			this.superType = SuperType;
+			this.baseType = SuperType.baseType;
+			SuperType.children.add(this);
 		} else {
 			baseType = this;
 		}
 
-		this.fields = fields;
+		this.fields = Fields;
 	}
 
 	public Declaration getBaseType() {
