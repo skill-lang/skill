@@ -29,6 +29,9 @@ import scala.reflect.ClassTag
       out.write(s"import ${packagePrefix}api._\n\n")
     }
 
+    //class comment
+    out.write(s"/*${d.getSkillComment()}*/\n")
+
     //class prefix
     out.write(s"trait ${d.getName()} ${
       if (null != d.getSuperType()) { s"extends ${d.getSuperType().getName()}" }
@@ -50,11 +53,19 @@ import scala.reflect.ClassTag
 
         // standard field data interface
         if ("annotation".equals(f.getType().getName())) {
-          out.write(s"\n  def get$name[T <: SkillType: ClassTag](): T\n")
-          out.write(s"  def set$name[T <: SkillType]($name: T): Unit\n")
+          out.write(s"""
+  /*${f.getSkillComment()}*/
+  def get$name[T <: SkillType: ClassTag](): T
+  /*${f.getSkillComment()}*/
+  def set$name[T <: SkillType]($name: T): Unit
+""")
         } else {
-          out.write(s"\n  def get$name(): ${mapType(f.getType())}\n")
-          out.write(s"  def set$name($name: ${mapType(f.getType())}): Unit\n")
+          out.write(s"""
+  /*${f.getSkillComment()}*/
+  def get$name(): ${mapType(f.getType())}
+  /*${f.getSkillComment()}*/
+  def set$name($name: ${mapType(f.getType())}): Unit
+""")
         }
       }
     })

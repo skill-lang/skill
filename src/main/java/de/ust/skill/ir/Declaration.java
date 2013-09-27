@@ -26,7 +26,10 @@ final public class Declaration extends Type {
 
 	// TODO restrictions
 	// TODO hints
-	// TODO comments
+	/**
+	 * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
+	 */
+	private final String skillCommentImage;
 
 	// fields
 	private List<Field> fields = null;
@@ -37,7 +40,7 @@ final public class Declaration extends Type {
 	 * @note the declaration has to be completed, i.e. it has to be evaluated in
 	 *       pre-order over the type hierarchy.
 	 */
-	private Declaration(String name) {
+	private Declaration(String name, String comment) {
 		this.name = name;
 		this.skillName = name.toLowerCase();
 		{
@@ -45,6 +48,7 @@ final public class Declaration extends Type {
 			ch[0] = Character.toUpperCase(ch[0]);
 			this.capitalName = new String(ch);
 		}
+		skillCommentImage = null == comment ? "" : comment;
 
 		superType = baseType = null;
 	}
@@ -55,12 +59,12 @@ final public class Declaration extends Type {
 	 * @throws ParseException
 	 *             if the declaration is already present
 	 */
-	public static Declaration newDeclaration(TypeContext tc, String name) throws ParseException {
+	public static Declaration newDeclaration(TypeContext tc, String name, String comment) throws ParseException {
 		String skillName = name.toLowerCase();
 		if (tc.types.containsKey(skillName))
 			throw new ParseException("Duplicate declaration of type " + name);
 
-		Declaration rval = new Declaration(name);
+		Declaration rval = new Declaration(name, comment);
 		tc.types.put(skillName, rval);
 		return rval;
 	}
@@ -160,5 +164,16 @@ final public class Declaration extends Type {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	/**
+	 * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
+	 * 
+	 * This may require further transformation depending on the target language.
+	 * 
+	 * @note can contain newline characters!!!
+	 */
+	public String getSkillComment() {
+		return skillCommentImage;
 	}
 }

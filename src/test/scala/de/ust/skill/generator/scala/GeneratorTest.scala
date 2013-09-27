@@ -13,7 +13,7 @@ class GeneratorTest extends FunSuite {
 
   test("annotation")(check("annotation.skill", "annotation"))
   test("date")(check("date.skill", "date"))
-  test("pamm")(check("air-pamm.skill", "pamm"))
+  test("pamm")(check("air-pamm-heap.skill", "pamm"))
   test("blocks")(check("blocks.skill", "block"))
   test("subtypes")(check("subtypesExample.skill", "subtypes"))
   test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))

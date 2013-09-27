@@ -52,8 +52,10 @@ final class Parser {
 
     /**
      * Comments are first class citizens of our language, because we want to emit them in the output binding.
+     * 
+     * The intermediate representation is without the leading "/°" and trailing "°/" (where °=*)
      */
-    private def comment = """/\*([^\*/]|/|\*+[^\*/])*\*+/""".r
+    private def comment = """/\*([^\*/]|/|\*+[^\*/])*\*+/""".r ^^ { s ⇒ s.substring(2, s.size-2)}
 
     /**
      * restrictions as defined in the paper.
@@ -194,7 +196,7 @@ final class Parser {
       }
       subtypes(d.parent.get.toLowerCase) ++=  LinkedList[Definition](d)
     }
-    val rval = definitionNames.map({ case (n, f) ⇒ (n, ir.Declaration.newDeclaration(tc, n)) })
+    val rval = definitionNames.map({ case (n, f) ⇒ (n, ir.Declaration.newDeclaration(tc, n, f.description.comment.getOrElse(""))) })
 
     // type order initialization of types
     def mkType(t: Type): ir.Type = t match {
@@ -209,8 +211,8 @@ final class Parser {
     }
     def mkField(node: Field): ir.Field = try {
       node match {
-        case f: Data     ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto)
-        case f: Constant ⇒ new ir.Field(mkType(f.t), f.name, f.value)
+        case f: Data     ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto, f.description.comment.getOrElse(""))
+        case f: Constant ⇒ new ir.Field(mkType(f.t), f.name, f.value, f.description.comment.getOrElse(""))
       }
     } catch {
       case e: ir.ParseException ⇒ ParseException(s"${node.name}: ${e.getMessage()}")

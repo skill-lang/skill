@@ -8,6 +8,13 @@ final public class Field {
 	protected final String name, skillName;
 	protected final Type type;
 
+	// TODO restrictions
+	// TODO hints
+	/**
+	 * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
+	 */
+	private final String skillCommentImage;
+
 	/**
 	 * Constructor for constant fields.
 	 * 
@@ -17,7 +24,7 @@ final public class Field {
 	 * @throws ParseException
 	 *             if the argument type is not an integer
 	 */
-	public Field(Type type, String name, long value) throws ParseException {
+	public Field(Type type, String name, long value, String comment) throws ParseException {
 		assert (null != type);
 		assert (null != name);
 		if (!(type instanceof GroundType))
@@ -31,6 +38,7 @@ final public class Field {
 		this.name = name;
 		skillName = name.toLowerCase();
 		this.type = type;
+		skillCommentImage = null == comment ? "" : comment;
 	}
 
 	/**
@@ -40,7 +48,7 @@ final public class Field {
 	 * @param name
 	 * @param isAuto
 	 */
-	public Field(Type type, String name, boolean isAuto) {
+	public Field(Type type, String name, boolean isAuto, String comment) {
 		assert (null != type);
 		assert (null != name);
 
@@ -50,6 +58,7 @@ final public class Field {
 		this.name = name;
 		this.skillName = name.toLowerCase();
 		this.type = type;
+		skillCommentImage = null == comment ? "" : comment;
 	}
 
 	public String getName() {
@@ -89,5 +98,16 @@ final public class Field {
 			sb.append(" = ").append(constantValue);
 
 		return sb.toString();
+	}
+
+	/**
+	 * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
+	 * 
+	 * This may require further transformation depending on the target language.
+	 * 
+	 * @note can contain newline characters!!!
+	 */
+	public String getSkillComment() {
+		return skillCommentImage;
 	}
 }
