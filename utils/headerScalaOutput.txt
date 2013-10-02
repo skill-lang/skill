@@ -1,0 +1,5 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       Your SKilL Scala Binding                            **
+** \__ \ ' <| | | |__     generated: $date                                    **
+** |___/_|\_\_|_|____|    by: $userName                                       **
+\*                                                                            */

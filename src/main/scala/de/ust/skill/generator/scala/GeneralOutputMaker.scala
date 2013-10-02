@@ -10,6 +10,7 @@ import java.io.PrintWriter
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.Field
+import java.util.Date
 
 /**
  * The parent class for all output makers.
@@ -40,7 +41,18 @@ trait GeneralOutputMaker {
     val f = new File(s"$outPath$packagePath$path")
     f.getParentFile.mkdirs
     f.createNewFile
-    new PrintWriter(f)
+    val rval = new PrintWriter(f)
+    // make header
+    val date = (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
+    val userImageLength = 47
+    val userName = System.getProperty("user.name").padTo(userImageLength, " ").mkString
+    rval.write(s"""/*  ___ _  ___ _ _                                                            *\\
+** / __| |/ (_) | |       Your SKilL Scala Binding                            **
+** \\__ \\ ' <| | | |__     generated: $date                               **
+** |___/_|\\_\\_|_|____|    by: $userName **
+\\*                                                                            */
+""")
+    rval
   }
 
   /**
