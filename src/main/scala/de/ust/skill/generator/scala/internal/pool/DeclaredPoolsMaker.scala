@@ -93,7 +93,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
       }
     } {
 
-  @inline override def newInstance = new _root_.${packagePrefix}internal.types.$name
+  override def newInstance = new _root_.${packagePrefix}internal.types.$name
 
   // set eager fields of data instances
   override def readFields(fieldParser: FieldParser) {
@@ -107,7 +107,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
         // constant fields are not directly deserialized, but they need to be checked for the right value
         out.write(s"""
     // ${f.getType().getSkillName()} $name
-    userType.fields.filter({ f ⇒ "${f.getSkillName()}".equals(f.name) }).foreach(_ match {
+    userType.fields.get("${f.getSkillName()}").foreach(_ match {
       // correct field type
       case f if ${checkType(f)} ⇒
         if(f.t.asInstanceOf[ConstantIntegerInfo[_]].value != ${f.constantValue})
@@ -122,7 +122,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
         // auto fields must not be part of the serialized data
         out.write(s"""
     // auto ${f.getType().getSkillName()} $name
-    if(!userType.fields.filter({ f ⇒ "${f.getSkillName()}".equals(f.name) }).isEmpty)
+    if(!userType.fields.get("${f.getSkillName()}").isEmpty)
       ParseException("Found field data for auto field ${d.getName()}.$name")
 """)
 
@@ -134,7 +134,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     // ${f.getType().getSkillName()} $name
     {
       var fieldData = new ArrayBuffer[$scalaType]
-      userType.fields.filter({ f ⇒ "${f.getSkillName()}".equals(f.name) }).foreach(_ match {
+      userType.fields.get("${f.getSkillName()}").foreach(_ match {
         // correct field type
         case f if ${checkType(f)} ⇒
           fieldData ++= fieldParser.readField(userType.instanceCount, f.t, f.dataChunks).asInstanceOf[List[$scalaType]]
@@ -167,7 +167,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     // write field data
     out.write(s"""
   override def write(head: FileChannel, out: ByteArrayOutputStream, σ: SerializableState) {
-        // TODO
+    // TODO
   }
 """)
 
