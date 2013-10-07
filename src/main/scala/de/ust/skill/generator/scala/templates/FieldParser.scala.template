@@ -18,7 +18,10 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     case d: I32Info                 ⇒ i32
     case d: I64Info                 ⇒ i64
     case d: V64Info                 ⇒ v64
-    case d: AnnotationInfo          ⇒ (v64 ~ v64) ^^ { case t ~ i ⇒ σ.pools(σ.getString(t)).getByID(i) }
+    case d: AnnotationInfo          ⇒ (v64 ~ v64) ^^ {
+      case 0L ~ 0L ⇒ null
+      case t ~ i   ⇒ σ.pools(σ.getString(t)).getByID(i)
+    }
     case d: BoolInfo                ⇒ i8 ^^ { _ != 0 }
     case d: F32Info                 ⇒ f32
     case d: F64Info                 ⇒ f64
