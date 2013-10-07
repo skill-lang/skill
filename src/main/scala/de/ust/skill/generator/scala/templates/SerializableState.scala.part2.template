@@ -29,7 +29,11 @@ object SerializableState {
   /**
    * Creates a new and empty serializable state.
    */
-  def create(): SerializableState = throw new NoSuchMethodError("not yet implemnted, sorry")
+  def create(): SerializableState = {
+    val result = new SerializableState;
+    result.finishInitialization
+    result
+  }
 
   /**
    * Reads a skill file and turns it into a serializable state.
