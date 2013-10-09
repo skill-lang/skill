@@ -1,3 +1,8 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.generator.scala.internal.pool
 
 import java.io.PrintWriter
@@ -7,7 +12,7 @@ trait StringPoolMaker extends GeneralOutputMaker{
   override def make{
     super.make
     val out = open("internal/pool/StringPool.scala")
-    
+
     out.write(s"""package ${packagePrefix}internal.pool
 
 import java.io.ByteArrayOutputStream

@@ -5,11 +5,18 @@ package de.ust.skill.ir;
  * 
  * @author Timm Felden
  */
-public class ConstantLengthArrayType extends ArrayType {
+public class ConstantLengthArrayType extends ContainerType {
 	private final Type baseType;
 	private final long length;
 
-	public ConstantLengthArrayType(Type baseType, long length) {
+	public static Type make(TypeContext tc, Type baseType, long length) throws ParseException {
+		if (length < 0)
+			throw new ParseException("Constant array length can not be negative.");
+
+		return tc.unifyType(new ConstantLengthArrayType(baseType, length));
+	}
+
+	private ConstantLengthArrayType(Type baseType, long length) {
 		this.baseType = baseType;
 		this.length = length;
 	}
@@ -23,12 +30,7 @@ public class ConstantLengthArrayType extends ArrayType {
 	}
 
 	@Override
-	public String toString() {
-		return baseType.getTypeName() + "[" + length + "]";
-	}
-
-	@Override
-	public String getTypeName() {
-		return toString();
+	public String getSkillName() {
+		return baseType.getSkillName() + "[" + length + "]";
 	}
 }

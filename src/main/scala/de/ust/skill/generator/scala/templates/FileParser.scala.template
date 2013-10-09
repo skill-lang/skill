@@ -1,5 +1,5 @@
 
-        case _ ⇒ new AbstractPool(t, t.superName match {
+        case _ ⇒ new GenericPool(t, t.superName match {
           case Some(name) ⇒ σ.pools.get(name).ensuring(_.isDefined)
           case None       ⇒ None
         }, blockCounter)
@@ -18,6 +18,9 @@
     // read eager fields
     val fp = new FieldParser(σ)
     σ.knownPools.foreach(_.readFields(fp))
+
+    // ensure presence of the specified types
+    σ.finishInitialization
   }
 
   /**
@@ -59,7 +62,7 @@
 
         tryCatch(repN(knownFields.toInt,
           v64 ^^ { end ⇒
-            var result = userType.fields(fieldIndex)
+            var result = userType.fieldByIndex(fieldIndex)
             result.end = end
 
             result
@@ -68,7 +71,8 @@
             repN((fieldCount - knownFields).toInt, restrictions ~ fieldTypeDeclaration ~ v64 ~ v64 ^^ {
               case r ~ t ~ n ~ end ⇒
                 val result = new FieldDeclaration(t, σ(n), end)
-                userType.fields.append(result)
+                // TODO maybe we have to access the block list here
+                userType.addField(result)
                 result
             }) ^^ { newFields ⇒
               fields ++ newFields
@@ -181,7 +185,7 @@
           userTypeIndexMap.size,
           td.name,
           td.superName,
-          new ArrayBuffer[FieldDeclaration] ++= td.fieldDeclarations
+          new HashMap() ++= td.fieldDeclarations.map{f ⇒ (f.name, f)}
         )
         // check for duplicate definitions
         if (userTypeNameMap.contains(u.name))
@@ -214,7 +218,7 @@
         u.addBlockInfo(new BlockInfo(t.count, localBlockBaseTypeStartIndices(u.baseType.name) + t.lbpsi), blockCounter)
 
         // eliminate preliminary user types in field declarations
-        u.fields.foreach(f ⇒ {
+        u.fields.values.foreach(f ⇒ {
           if (f.t.isInstanceOf[PreliminaryUserType]) {
             val index = f.t.asInstanceOf[PreliminaryUserType].index
             if (userTypeIndexMap.contains(index))

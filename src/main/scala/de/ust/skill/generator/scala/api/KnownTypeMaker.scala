@@ -1,3 +1,8 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.generator.scala.api
 
 import de.ust.skill.generator.scala.GeneralOutputMaker
@@ -10,18 +15,12 @@ trait KnownTypeMaker extends GeneralOutputMaker {
     out.write(s"""package ${packagePrefix}api
 
 /**
- * A virtual head of the generated type hierarchy.
- * This type is used to make the interface a bit more usable.
+ * The top of the known types hierarchy.
  *
  * @author Timm Felden
  */
-trait KnownType {
-
-  /**
-   * provides a pretty representation of this
-   */
-  def prettyString: String
-}""")
+trait KnownType extends SkillType;
+""")
 
     out.close()
   }

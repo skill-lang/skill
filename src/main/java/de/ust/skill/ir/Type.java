@@ -2,13 +2,25 @@ package de.ust.skill.ir;
 
 import java.util.Stack;
 
+/**
+ * Base of the Type hierarchy.
+ * 
+ * Types are comparable and unique. Uniqueness is guaranteed by the type
+ * context.
+ * 
+ * The order on types uses type order, i.e. super types are *lower* then sub
+ * types. Other parts of the order are left under specified, although the
+ * implemented order is total.
+ * 
+ * @author Timm Felden
+ */
 public abstract class Type implements Comparable<Type> {
 
 	/**
 	 * Implements the type order as defined in the paper.
 	 */
 	@Override
-	public int compareTo(Type o) {
+	final public int compareTo(Type o) {
 		// it is necessary, that we can assume this!=o later on
 		if (this == o)
 			return 0;
@@ -19,7 +31,7 @@ public abstract class Type implements Comparable<Type> {
 			return l == r ? 0 : (l ? -1 : 1);
 		}
 		// check for compound types
-		if ((l = (this instanceof CompoundType)) | (r = (o instanceof CompoundType))) {
+		if ((l = (this instanceof ContainerType)) | (r = (o instanceof ContainerType))) {
 			return l == r ? 0 : (l ? -1 : 1);
 		}
 
@@ -61,10 +73,26 @@ public abstract class Type implements Comparable<Type> {
 	}
 
 	@Override
-	abstract public String toString();
+	final public String toString() {
+		return getSkillName();
+	}
 
 	/**
-	 * @return the type name, as used in a field declaration
+	 * @return the types name, as used in a binary skill file; if the type is
+	 *         not serialized using strings, this result is the lower case
+	 *         space-free representation as it may occur in a skill
+	 *         specification file.
 	 */
-	abstract public String getTypeName();
+	abstract public String getSkillName();
+
+	/**
+	 * @return the name of the type as it occurred in the declaration; for
+	 *         built-in types, this is equal to the skill name
+	 */
+	abstract public String getName();
+
+	/**
+	 * @return returns the type with a capitalized first letter
+	 */
+	abstract public String getCapitalName();
 }

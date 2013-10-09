@@ -1,9 +1,18 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.generator.scala
 
 import java.io.{ File, PrintWriter }
-import scala.collection.JavaConversions.asScalaBuffer
+
+import scala.collection.JavaConversions._
 import scala.io.Source
+
 import de.ust.skill.generator.scala.api.{ KnownTypeMaker, SkillStateMaker }
+import de.ust.skill.generator.scala.api.GenericTypeMaker
+import de.ust.skill.generator.scala.api.SkillTypeMaker
 import de.ust.skill.generator.scala.internal._
 import de.ust.skill.generator.scala.internal.parsers._
 import de.ust.skill.generator.scala.internal.pool._
@@ -15,10 +24,13 @@ import de.ust.skill.parser.Parser
  * Entry point of the scala generator.
  */
 object Main {
-  def printHelp {
-    println("usage:")
-    println("[options] skillPath outPath")
-  }
+  private def printHelp: Unit = println("""
+usage:
+  [options] skillPath outPath
+
+Opitions:
+  -p packageName   set a package name used by all emitted code.
+""")
 
   /**
    * Takes an argument skill file name and generates a scala binding.
@@ -29,17 +41,18 @@ object Main {
     //processing command line arguments
     if (2 > args.length) {
       printHelp
-      return
+    } else {
+
+      m.setOptions(args.slice(0, args.length - 2))
+      val skillPath = args(args.length - 2)
+      m.outPath = args(args.length - 1)
+
+      //parse argument code
+      m.IR = Parser.process(new File(skillPath)).toList
+
+      // create output using maker chain
+      m.make;
     }
-    m.setOptions(args.slice(0, args.length - 2))
-    val skillPath = args(args.length - 2)
-    m.outPath = args(args.length - 1)
-
-    //parse argument code
-    m.IR = (new Parser).process(new File(skillPath)).toList
-
-    // create output using maker chain
-    m.make;
   }
 }
 
@@ -57,6 +70,9 @@ class Main
     with PoolIteratorMaker
     with BlockInfoMaker
     with KnownTypeMaker
+    with GenericTypeMaker
+    with GenericPoolMaker
+    with SkillTypeMaker
     with KnownPoolMaker
     with BasePoolMaker
     with SubPoolMaker
@@ -77,10 +93,9 @@ class Main
   /**
    * Translates types into scala type names.
    */
-  override protected def _T(t: Type): String = t match {
+  override protected def mapType(t: Type): String = t match {
     case t: GroundType ⇒ t.getName() match {
-      // TODO BUG #2
-      case "annotation" ⇒ "AnyRef"
+      case "annotation" ⇒ "SkillType"
 
       case "bool"       ⇒ "Boolean"
 
@@ -96,12 +111,12 @@ class Main
       case "string"     ⇒ "String"
     }
 
-    case t: ConstantLengthArrayType ⇒ s"Array[${_T(t.getBaseType())}]"
-    case t: VariableLengthArrayType ⇒ s"Array[${_T(t.getBaseType())}]"
-    case t: ListType                ⇒ s"List[${_T(t.getBaseType())}]"
-    case t: SetType                 ⇒ s"Set[${_T(t.getBaseType())}]"
+    case t: ConstantLengthArrayType ⇒ s"Array[${mapType(t.getBaseType())}]"
+    case t: VariableLengthArrayType ⇒ s"Array[${mapType(t.getBaseType())}]"
+    case t: ListType                ⇒ s"List[${mapType(t.getBaseType())}]"
+    case t: SetType                 ⇒ s"Set[${mapType(t.getBaseType())}]"
     case t: MapType ⇒ {
-      val types = t.getBaseType().reverse.map(_T(_))
+      val types = t.getBaseTypes().reverse.map(mapType(_))
       types.tail.fold(types.head)({ (U, t) ⇒ s"Map[$t, $U]" });
     }
 
@@ -133,7 +148,7 @@ class Main
   }
 
   override protected def defaultValue(f: Field) = f.getType() match {
-    case t: GroundType ⇒ t.getTypeName() match {
+    case t: GroundType ⇒ t.getSkillName() match {
       case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
       case "f32" | "f64"                        ⇒ "0.0f"
       case "bool"                               ⇒ "false"

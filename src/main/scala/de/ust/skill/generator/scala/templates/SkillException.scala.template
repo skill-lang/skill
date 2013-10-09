@@ -13,7 +13,7 @@ object SkillException {
 
 /**
  * Exception implementing this trait are expectable, when reading or writing skill files. They correspond to §Appendix.B
- * 
+ *
  * @author Timm Felden
  */
 trait ExpectableSkillException {}
@@ -88,4 +88,16 @@ for field $fieldName in constarcution of DateStoragePool.""")
 object TypeMissmatchError {
   def apply(t: TypeInfo, expected: String, fieldName: String) =
     throw new TypeMissmatchError(t: TypeInfo, expected: String, fieldName: String)
+}
+
+/**
+ * Thrown in case of a type miss-match on an annotation access.
+ *
+ * @author Timm Felden
+ */
+class AnnotationTypeCastException(expected: String, actual: String)
+  extends SkillException(s"""Tried to access annotation of type $actual expecting a type $expected.""")
+  with ExpectableSkillException;
+object AnnotationTypeCastException {
+  def apply(expected: String, actual: String) = throw new AnnotationTypeCastException(expected: String, actual: String)
 }

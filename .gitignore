@@ -1,3 +1,6 @@
+#skill-test subprojects
+testsuites/*
+
 *.pydevproject
 .project
 .metadata

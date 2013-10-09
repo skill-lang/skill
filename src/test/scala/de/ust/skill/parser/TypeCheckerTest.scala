@@ -1,11 +1,20 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.parser
 
 import java.io.File
-import java.lang.AssertionError
-import java.net.URL
+
+import scala.language.implicitConversions
+
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.exceptions.TestFailedException
 import org.scalatest.junit.JUnitRunner
+
+import de.ust.skill.ir
 
 /**
  * Contains a lot of tests, which should not pass the type checker.
@@ -14,63 +23,76 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TypeCheckerTest extends FunSuite {
 
-  private def check(filename: String) {
-    val parser = new Parser
-    val url: URL = getClass.getResource(filename)
-    parser.parseAll(new File(url.getPath()))
+  implicit private def basePath(path: String): File = new File("src/test/resources"+path);
+  private def check(filename: String) = Parser.process(filename)
+
+  def fail[E <: Exception](f: ⇒ Unit)(implicit manifest: scala.reflect.Manifest[E]): E = try {
+    f;
+    fail(s"expected ${manifest.runtimeClass.getName()}, but no exception was thrown");
+  } catch {
+    case e: TestFailedException ⇒ throw e
+    case e: E ⇒
+      println(e.getMessage()); e
+    case e: Throwable ⇒ e.printStackTrace(); assert(e.getClass() === manifest.runtimeClass); null.asInstanceOf[E]
   }
 
   test("duplicateDefinition") {
-    intercept[AssertionError] {
+    fail[ir.ParseException] {
       check("/failures/duplicateDefinition.skill")
     }
   }
 
   test("duplicateField") {
-    intercept[AssertionError] {
+    fail[ir.ParseException] {
       check("/failures/duplicateField.skill")
     }
   }
 
   test("halfFloat") {
-    intercept[AssertionError] {
+    fail[ir.ParseException] {
       check("/failures/halfFloat.skill")
     }
   }
 
   test("floatConstant") {
-    intercept[AssertionError] {
+    fail[ir.ParseException] {
       check("/failures/floatConstant.skill")
     }
   }
 
   test("selfConst") {
-    intercept[AssertionError] {
+    fail[ir.ParseException] {
       check("/failures/selfConst.skill")
     }
   }
 
   test("unknownType") {
-    intercept[AssertionError] {
+    fail[ir.ParseException] {
       check("/failures/unknownType.skill")
     }
   }
 
   test("unknownFile") {
-    intercept[AssertionError] {
+    fail[ir.ParseException] {
       check("/failures/unknownFile.skill")
     }
   }
 
-  test("empty") {
-    intercept[AssertionError] {
-      check("/failures/empty.skill")
+  test("anyType") {
+    fail[ir.ParseException] {
+      check("/failures/anyType.skill")
     }
   }
 
-  test("anyType") {
-    intercept[AssertionError] {
-      check("/failures/anyType.skill")
+  test("negative array size") {
+    fail[ir.ParseException] {
+      check("/failures/negativeArrayLength.skill")
+    }
+  }
+
+  test("nesting is illegal") {
+    fail[ir.ParseException] {
+      check("/failures/compound.skill")
     }
   }
 

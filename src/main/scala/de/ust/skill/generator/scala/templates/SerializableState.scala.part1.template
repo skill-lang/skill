@@ -15,7 +15,7 @@ final class SerializableState extends SkillState {
   private[internal] var fromReader: ByteReader = null
 
   private[internal] var pools = new HashMap[String, AbstractPool]
-  @inline def knownPools = pools.values.collect({ case p: KnownPool[_,_] ⇒ p });
+  @inline def knownPools = pools.values.collect({ case p: KnownPool[_, _] ⇒ p });
 
   private[internal] val strings = new StringPool
 

@@ -5,33 +5,32 @@ import java.util.List;
 /**
  * @author Timm Felden
  */
-public class MapType extends CompoundType {
-	private final List<Type> baseType;
+public class MapType extends ContainerType {
+	private final List<Type> baseTypes;
 
-	public MapType(List<Type> baseType) {
-		this.baseType = baseType;
+	public static Type make(TypeContext tc, List<Type> baseTypes) {
+		return tc.unifyType(new MapType(baseTypes));
 	}
 
-	public List<Type> getBaseType() {
-		return baseType;
+	private MapType(List<Type> baseTypes) {
+		this.baseTypes = baseTypes;
+	}
+
+	public List<Type> getBaseTypes() {
+		return baseTypes;
 	}
 
 	@Override
-	public String toString() {
+	public String getSkillName() {
 		StringBuilder sb = new StringBuilder("map<");
 		boolean comma = false;
-		for (Type t : baseType) {
+		for (Type t : baseTypes) {
 			if (comma)
-				sb.append(", ");
-			sb.append(t.getTypeName());
+				sb.append(",");
+			sb.append(t.getSkillName());
 			comma = true;
 		}
 		sb.append(">");
 		return sb.toString();
-	}
-
-	@Override
-	public String getTypeName() {
-		return toString();
 	}
 }

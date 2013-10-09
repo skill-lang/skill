@@ -1,3 +1,8 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.generator.scala.internal.pool
 
 import java.io.PrintWriter
@@ -20,14 +25,16 @@ import ${packagePrefix}internal.{ SkillException, UserType, SerializableState }
  */
 abstract class SubPool[T <: B, B <: KnownType](
   userType: UserType,
-  superPool: KnownPool[_ >: T <: B, B],
+  val _superPool: KnownPool[_ >: T <: B, B],
   σ: SerializableState,
   blockCount: Int)
-    extends KnownPool[T, B](userType, Some(superPool), blockCount) {
+    extends KnownPool[T, B](userType, blockCount) {
+  final override private[internal] def superPool: Option[KnownPool[_ >: T <: B, B]] = Some(_superPool)
+
   /**
    * the super base pool; note that this requires construction of pools in a top-down order
    */
-  final override def basePool = superPool.basePool
+  final override def basePool = _superPool.basePool
 
   /**
    * get is deferred to the base pool
@@ -55,7 +62,8 @@ abstract class SubPool[T <: B, B <: KnownType](
         }
     })
   }
-}""")
+}
+""")
 
     //class prefix
     out.close()
