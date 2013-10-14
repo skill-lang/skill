@@ -40,7 +40,7 @@ abstract class SubPool[T <: B, B <: KnownType](
    * get is deferred to the base pool
    */
   def getByID(index: Long): T = try { basePool.getByID(index).asInstanceOf[T] } catch {
-    case e: ClassCastException ⇒ SkillException(
+    case e: ClassCastException ⇒ throw new SkillException(
       s""\"tried to access a "$$name" at index $$index, but it was actually a $${
         basePool.data(index.toInt - 1).getClass().getName()
       }""\", e

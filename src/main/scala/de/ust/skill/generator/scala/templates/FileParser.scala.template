@@ -261,7 +261,7 @@
       in.drop(lastOffset.toInt)
 
       Success(declarations, in)
-    } catch { case e: SkillException ⇒ SkillException("type chunk parsing failed", e) }
+    } catch { case e: SkillException ⇒ throw new SkillException("type chunk parsing failed", e) }
   }
 
   /**
@@ -318,7 +318,7 @@
     v64 >> { i ⇒
       i match {
         case 0 ⇒ try { v64 ~ v64 ~ v64 ^^ { case l ~ r ~ b ⇒ s"range(${σ(l)}, ${σ(r)}, ${σ(b)})" } }
-        catch { case e: Exception ⇒ SkillException("malformed range extension", e) }
+        catch { case e: Exception ⇒ throw new SkillException("malformed range extension", e) }
 
         case 1  ⇒ success("nullable")
         case 2  ⇒ success("unique")
@@ -358,10 +358,10 @@
         case 19           ⇒ baseTypeInfo ^^ { new SetInfo(_) }
         case 20           ⇒ v64 >> { n ⇒ repN(n.toInt, baseTypeInfo) } ^^ { new MapInfo(_) }
         case i if i >= 32 ⇒ success(new PreliminaryUserType(i - 32))
-        case id           ⇒ ParseException(s"invalid type ID: $id")
+        case id           ⇒ throw ParseException(s"invalid type ID: $id")
       }
     }
-  } catch { case e: SkillException ⇒ SkillException("field type parsing failed", e) }
+  } catch { case e: SkillException ⇒ throw new SkillException("field type parsing failed", e) }
 
   /**
    * matches only types which are legal arguments to ADTs

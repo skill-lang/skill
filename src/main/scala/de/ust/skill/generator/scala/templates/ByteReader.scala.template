@@ -39,7 +39,7 @@ final class ByteReader(val stream: FileChannel) extends Reader[Byte] {
     if (has(n))
       stream.position(stream.position + n);
     else
-      UnexpectedEOF(s"while dropping $n bytes")
+      throw UnexpectedEOF(s"while dropping $n bytes", null)
     this
   }
   /**
@@ -69,5 +69,22 @@ final class ByteReader(val stream: FileChannel) extends Reader[Byte] {
   def has(n: Int): Boolean = stream.size() >= (n + stream.position())
   def next: Byte = try {
     take(1).get
-  } catch { case e: Exception ⇒ UnexpectedEOF("there's no next byte", e) }
+  } catch { case e: Exception ⇒ throw UnexpectedEOF("there's no next byte", e) }
+
+  def v64: Long = {
+    var count: Long = 0
+    var rval: Long = 0
+    var r: Long = next
+    while (count < 8 && 0 != (r & 0x80)) {
+      rval |= (r & 0x7f) << (7 * count);
+
+      count += 1;
+      r = next
+    }
+    rval = (rval | (count match {
+      case 8 ⇒ r
+      case _ ⇒ (r & 0x7f)
+    }) << (7 * count));
+    rval
+  }
 }
