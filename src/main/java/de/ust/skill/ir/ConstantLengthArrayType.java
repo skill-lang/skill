@@ -5,7 +5,7 @@ package de.ust.skill.ir;
  * 
  * @author Timm Felden
  */
-public class ConstantLengthArrayType extends ContainerType {
+public class ConstantLengthArrayType extends ContainerType  implements SingleBaseTypeContainer{
 	private final Type baseType;
 	private final long length;
 
@@ -21,6 +21,7 @@ public class ConstantLengthArrayType extends ContainerType {
 		this.length = length;
 	}
 
+	@Override
 	public Type getBaseType() {
 		return baseType;
 	}
