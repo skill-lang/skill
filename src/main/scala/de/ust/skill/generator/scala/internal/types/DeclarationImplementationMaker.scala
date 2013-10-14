@@ -24,6 +24,7 @@ trait DeclarationImplementationMaker extends GeneralOutputMaker {
     // head
     out.write(s"""package ${packagePrefix}internal.types
 
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
 import ${packagePrefix}api._

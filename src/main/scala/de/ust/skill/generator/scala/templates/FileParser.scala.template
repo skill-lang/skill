@@ -185,7 +185,7 @@
           userTypeIndexMap.size,
           td.name,
           td.superName,
-          new HashMap() ++= td.fieldDeclarations.map{f ⇒ (f.name, f)}
+          new HashMap() ++= td.fieldDeclarations.map { f ⇒ (f.name, f) }
         )
         // check for duplicate definitions
         if (userTypeNameMap.contains(u.name))

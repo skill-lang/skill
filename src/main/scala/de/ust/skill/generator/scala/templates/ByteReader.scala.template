@@ -57,6 +57,13 @@ final class ByteReader(val stream: FileChannel) extends Reader[Byte] {
     }
   }
   /**
+   * fills the argument buffer with input from the stream
+   *
+   * @note does not rewind the buffer
+   */
+  private[parsers] def fill(buffer: ByteBuffer): Unit = stream.read(buffer)
+
+  /**
    * like take, but creates a copy of the taken bytes to ensure correct usage
    */
   private[internal] def bytes(n: Int): Array[Byte] = {

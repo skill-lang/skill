@@ -112,7 +112,7 @@ class Main
     }
 
     case t: ConstantLengthArrayType ⇒ s"Array[${mapType(t.getBaseType())}]"
-    case t: VariableLengthArrayType ⇒ s"Array[${mapType(t.getBaseType())}]"
+    case t: VariableLengthArrayType ⇒ s"ArrayBuffer[${mapType(t.getBaseType())}]"
     case t: ListType                ⇒ s"List[${mapType(t.getBaseType())}]"
     case t: SetType                 ⇒ s"Set[${mapType(t.getBaseType())}]"
     case t: MapType ⇒ {

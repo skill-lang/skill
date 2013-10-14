@@ -6,19 +6,19 @@
 package de.ust.skill.generator.scala.internal.pool
 
 import java.io.PrintWriter
-
 import scala.collection.JavaConversions.asScalaBuffer
-
-import de.ust.skill.generator.scala.GeneralOutputMaker
 import de.ust.skill.ir.ContainerType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
 import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.Type
+import de.ust.skill.generator.scala.GeneralOutputMaker
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.SingleBaseTypeContainer
 
 /**
  * Creates storage pools for declared types.
  *
- * TODO parsing works only if there is just one field
  * @author Timm Felden
  */
 trait DeclaredPoolsMaker extends GeneralOutputMaker {
@@ -32,7 +32,7 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
   /**
    * This method creates a type check for deserialization.
    */
-  protected def checkType(f: Field) = f.getType() match {
+  private def checkType(f: Field) = f.getType() match {
     case t: GroundType ⇒ t.getSkillName() match {
       case "annotation" ⇒ "f.t.isInstanceOf[AnnotationInfo]"
       case "bool"       ⇒ "f.t.isInstanceOf[BoolInfo]"
@@ -51,6 +51,26 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
 
     // this should be unreachable; it might be reachable if IR changed
     case t                ⇒ throw new Error(s"not yet implemented: ${t.getName()}")
+  }
+
+  private def makeReadFunctionCall(t: Type): String = t match {
+    case t: GroundType ⇒ s"val it = fieldParser.read${t.getSkillName().capitalize}s(userType.instanceCount, f.dataChunks)"
+
+    case t: Declaration ⇒ s"""val d = new Array[${t.getCapitalName()}](userType.instanceCount.toInt)
+        fieldParser.readUserRefs("${t.getSkillName()}", d, f.dataChunks)
+        val it = d.iterator"""
+
+    case t: MapType ⇒ s"""val it = fieldParser.readMaps[${mapType(t)}](
+          f.t.asInstanceOf[MapInfo],
+          userType.instanceCount,
+          f.dataChunks
+        )"""
+
+    case t: SingleBaseTypeContainer ⇒ s"""val it = fieldParser.read${t.getClass().getSimpleName().replace("Type", "")}s[${mapType(t.getBaseType())}](
+          f.t.asInstanceOf[${t.getClass().getSimpleName().replace("Type", "Info")}],
+          userType.instanceCount,
+          f.dataChunks
+        )"""
   }
 
   /**
@@ -123,30 +143,25 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
         out.write(s"""
     // auto ${f.getType().getSkillName()} $name
     if(!userType.fields.get("${f.getSkillName()}").isEmpty)
-      ParseException("Found field data for auto field ${d.getName()}.$name")
+      throw ParseException("Found field data for auto field ${d.getName()}.$name")
 """)
 
       } else {
+        val t = f.getType()
         // the ordinary field case
-        val scalaType = mapType(f.getType())
-
         out.write(s"""
-    // ${f.getType().getSkillName()} $name
-    {
-      var fieldData = new ArrayBuffer[$scalaType]
-      userType.fields.get("${f.getSkillName()}").foreach(_ match {
-        // correct field type
-        case f if ${checkType(f)} ⇒
-          fieldData ++= fieldParser.readField(userType.instanceCount, f.t, f.dataChunks).asInstanceOf[List[$scalaType]]
+    // ${t.getSkillName()} $name
+    userType.fields.get("${f.getSkillName()}").foreach(_ match {
+      // correct field type
+      case f if ${checkType(f)} ⇒ {
+        ${makeReadFunctionCall(t)}
 
-        // incompatible field type
-        case f ⇒ TypeMissmatchError(f.t, "${f.getType().getSkillName()}", "$name")
-      })
+        iterator.foreach(_.set${f.getName().capitalize}(it.next))
+      }
 
-      // map field data to instances
-      var off = 0
-      σ.get${d.getName().capitalize}s.foreach { o ⇒ o.set${f.getName().capitalize}(fieldData(off)); off += 1 }
-    }
+      // incompatible field type
+      case f ⇒ throw TypeMissmatchError(f.t, "${f.getType().getSkillName()}", "$name")
+    })
 """)
       }
     })

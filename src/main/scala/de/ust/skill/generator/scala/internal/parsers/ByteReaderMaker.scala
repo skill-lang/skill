@@ -16,15 +16,15 @@ trait ByteReaderMaker extends GeneralOutputMaker{
     out.write(s"""package ${packagePrefix}internal.parsers
 
 import java.nio.ByteBuffer
-import java.nio.file.Files
 import java.nio.channels.FileChannel
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.util.Arrays
 
+import scala.collection.mutable.Stack
 import scala.util.parsing.input.Position
 import scala.util.parsing.input.Reader
-import scala.collection.mutable.Stack
 
 import ${packagePrefix}internal.UnexpectedEOF
 """)

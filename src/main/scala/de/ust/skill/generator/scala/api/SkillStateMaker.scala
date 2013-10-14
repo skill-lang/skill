@@ -19,6 +19,8 @@ trait SkillStateMaker extends GeneralOutputMaker {
 
 import java.nio.file.Path
 
+import scala.collection.mutable.ArrayBuffer
+
 import ${packagePrefix}internal.SerializableState
 
 /**
