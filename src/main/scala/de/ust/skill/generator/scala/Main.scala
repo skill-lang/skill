@@ -64,28 +64,28 @@ Opitions:
  */
 class Main
     extends FileParserMaker
+    with AbstractPoolMaker
+    with BasePoolMaker
+    with BlockInfoMaker
+    with ByteReaderMaker
+    with ByteStreamParsersMaker
     with DeclarationInterfaceMaker
     with DeclarationImplementationMaker
     with DeclaredPoolsMaker
-    with PoolIteratorMaker
-    with BlockInfoMaker
-    with KnownTypeMaker
-    with GenericTypeMaker
-    with GenericPoolMaker
-    with SkillTypeMaker
-    with KnownPoolMaker
-    with BasePoolMaker
-    with SubPoolMaker
-    with SkillStateMaker
-    with SkillExceptionMaker
-    with TypeInfoMaker
-    with FieldDeclarationMaker
-    with SerializableStateMaker
-    with ByteStreamParsersMaker
     with FieldParserMaker
+    with FieldDeclarationMaker
+    with GenericPoolMaker
+    with GenericTypeMaker
+    with KnownPoolMaker
+    with KnownTypeMaker
+    with PoolIteratorMaker
+    with SerializableStateMaker
+    with SkillExceptionMaker
+    with SkillStateMaker
+    with SkillTypeMaker
     with StringPoolMaker
-    with ByteReaderMaker
-    with AbstractPoolMaker {
+    with SubPoolMaker
+    with TypeInfoMaker {
 
   var outPath: String = null
   var IR: List[Declaration] = null
