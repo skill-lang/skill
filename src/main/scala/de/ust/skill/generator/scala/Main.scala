@@ -132,8 +132,6 @@ class Main
 
   /**
    * provides the package prefix
-   *
-   * TODO provide a mechanism to actually set this
    */
   override protected def packagePrefix(): String = _packagePrefix
   private var _packagePrefix = ""
