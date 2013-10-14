@@ -5,8 +5,6 @@ testsuites/*
 .project
 .metadata
 bin/**
-tmp/**
-tmp/**/*
 *.tmp
 *.bak
 *.swp
