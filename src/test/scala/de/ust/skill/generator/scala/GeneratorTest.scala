@@ -13,7 +13,7 @@ import org.scalatest.junit.JUnitRunner
 class GeneratorTest extends FunSuite {
 
   def check(src: String, out: String) {
-    Main.main(Array[String]("-p", out, "src/test/resources/scala/"+src, "testsuites/scala/src/main/scala/"))
+    Main.main(Array[String]("-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/scala/"+src, "testsuites/scala/src/main/scala/"))
   }
 
   test("annotation")(check("annotation.skill", "annotation"))

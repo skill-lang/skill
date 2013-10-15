@@ -34,6 +34,8 @@ trait GeneralOutputMaker {
    */
   protected def make {}
 
+  private[scala] def header: String
+
   /**
    * Creates the correct PrintWriter for the argument file.
    */
@@ -42,16 +44,7 @@ trait GeneralOutputMaker {
     f.getParentFile.mkdirs
     f.createNewFile
     val rval = new PrintWriter(f)
-    // make header
-    val date = (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
-    val userImageLength = 47
-    val userName = System.getProperty("user.name").padTo(userImageLength, " ").mkString
-    rval.write(s"""/*  ___ _  ___ _ _                                                            *\\
-** / __| |/ (_) | |       Your SKilL Scala Binding                            **
-** \\__ \\ ' <| | | |__     generated: $date                               **
-** |___/_|\\_\\_|_|____|    by: $userName **
-\\*                                                                            */
-""")
+    rval.write(header)
     rval
   }
 

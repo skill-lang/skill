@@ -6,6 +6,7 @@
 package de.ust.skill.generator.scala
 
 import java.io.{ File, PrintWriter }
+import java.util.Date
 
 import scala.collection.JavaConversions._
 import scala.io.Source
@@ -29,7 +30,10 @@ usage:
   [options] skillPath outPath
 
 Opitions:
-  -p packageName   set a package name used by all emitted code.
+  -p packageName      set a package name used by all emitted code.
+  -h1|h2|h3 content   overrides the content of the respective header line
+  -u userName         set a user name
+  -date date          set a custom date
 """)
 
   /**
@@ -136,13 +140,55 @@ class Main
   override protected def packagePrefix(): String = _packagePrefix
   private var _packagePrefix = ""
 
+  override private[scala] def header: String = _header
+  private var _header = ""
+
   private def setOptions(args: Array[String]) {
     var index = 0
+    var headerLine1: Option[String] = None
+    var headerLine2: Option[String] = None
+    var headerLine3: Option[String] = None
+    var userName: Option[String] = None
+    var date: Option[String] = None
+
     while (index < args.length) args(index) match {
       case "-p"    ⇒ _packagePrefix = args(index + 1)+"."; index += 2;
+      case "-u"    ⇒ userName = Some(args(index + 1)); index += 2;
+      case "-date" ⇒ date = Some(args(index + 1)); index += 2;
+      case "-h1"   ⇒ headerLine1 = Some(args(index + 1)); index += 2;
+      case "-h2"   ⇒ headerLine2 = Some(args(index + 1)); index += 2;
+      case "-h3"   ⇒ headerLine3 = Some(args(index + 1)); index += 2;
 
       case unknown ⇒ sys.error(s"unkown Argument: $unknown")
     }
+
+    // create header from options
+    val headerLineLength = 51
+    headerLine1 = Some((headerLine1 match {
+      case Some(s) ⇒ s
+      case None    ⇒ "Your SKilL Scala Binding"
+    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
+    headerLine2 = Some((headerLine2 match {
+      case Some(s) ⇒ s
+      case None ⇒ "generated: "+(date match {
+        case Some(s) ⇒ s
+        case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
+      })
+    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
+    headerLine3 = Some((headerLine3 match {
+      case Some(s) ⇒ s
+      case None ⇒ "by: "+(userName match {
+        case Some(s) ⇒ s
+        case None    ⇒ System.getProperty("user.name")
+      })
+    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
+
+    _header = s"""/*  ___ _  ___ _ _                                                            *\\
+** / __| |/ (_) | |       ${headerLine1.get} **
+** \\__ \\ ' <| | | |__     ${headerLine2.get} **
+** |___/_|\\_\\_|_|____|    ${headerLine3.get} **
+\\*                                                                            */
+"""
   }
 
   override protected def defaultValue(f: Field) = f.getType() match {
