@@ -33,22 +33,14 @@ abstract class KnownPool[T <: B, B <: KnownType](
   userType: UserType,
   blockCount: Int)
     extends AbstractPool(userType, blockCount)
-    with Seq[T] {
+    with Iterable[T] {
 
   private[internal] def basePool: BasePool[B]
 
   /**
-   * the default size is the one including the sub-types
-   */
-  final override def length = dynamicSize.toInt
-  /**
    * @return a new pool iterator
    */
-  override def iterator(): PoolIterator[T] = new PoolIterator[T](this)
-  /**
-   * implementation of the Seq[T] contract
-   */
-  final override def apply(index: Int) = getByID(index);
+  override def iterator(): Iterator[T] = new PoolIterator[T](this)
   /**
    * we wan to get objects by a long ID, because we might have up to 2^64 instances (at least somewhere in the future)
    */

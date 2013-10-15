@@ -15,7 +15,7 @@
     println("")
     println("StoragePools:")
     knownPools.foreach({ s ⇒
-      println(s.name+": "+s.length);
+      println(s.name+": "+s.dynamicSize);
       println(s.iterator.map(_.asInstanceOf[KnownType].prettyString).mkString("  ", "\n  ", "\n"))
     })
     println("")

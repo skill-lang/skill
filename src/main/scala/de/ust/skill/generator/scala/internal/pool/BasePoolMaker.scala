@@ -16,7 +16,7 @@ trait BasePoolMaker extends GeneralOutputMaker{
     out.write(s"""package ${packagePrefix}internal.pool
 
 import ${packagePrefix}api.KnownType
-import ${packagePrefix}internal.{ UserType, SerializableState }
+import ${packagePrefix}internal.{ UserType, SerializableState, PoolIterator }
 
 /**
  * provides common functionality for base type storage pools
@@ -24,9 +24,28 @@ import ${packagePrefix}internal.{ UserType, SerializableState }
  * @author Timm Felden
  */
 abstract class BasePool[T <: KnownType: Manifest](userType: UserType, σ: SerializableState, blockCount: Int)
-    extends KnownPool[T, T](userType, blockCount) {
+    extends KnownPool[T, T](userType, blockCount) with IndexedSeq[T] {
 
   final override private[internal] def superPool = None
+
+  /**
+   * @return a new pool iterator
+   */
+  final override def iterator(): PoolIterator[T] = new PoolIterator[T](this)
+
+  /**
+   * Implements the contract of indexed seq.
+   *
+   * @note  that this will use an index range starting by 0 and not the ID range, which starts by 1.
+   * @note the implementation makes use of the fact, that there are no other pools above this pool
+   */
+  final override def apply(index: Int) = getByID(index + 1L)
+  /**
+   * Implements the contract of indexed seq.
+   *
+   * @note the implementation makes use of the fact, that there are no other pools above this pool
+   */
+  final override def length: Int = staticSize.toInt
 
   /**
    * We are the base pool.
