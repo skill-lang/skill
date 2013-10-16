@@ -173,7 +173,7 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
       // ensure the data chunk had the expected size
       if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "v64")
+        throw PoolSizeMissmatchError(in.position - chunk.position, chunk.length, "v64")
 
       in.pop
     }
