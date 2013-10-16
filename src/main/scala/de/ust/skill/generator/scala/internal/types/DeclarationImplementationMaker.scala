@@ -7,6 +7,7 @@ import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.restriction.NullableRestriction
+import de.ust.skill.ir.ReferenceType
 
 trait DeclarationImplementationMaker extends GeneralOutputMaker {
   override def make {
@@ -56,7 +57,7 @@ final class $name(
   override final def set$Name[T <: SkillType]($Name: T): Unit = _$name = $Name
 """)
       } else {
-        if(f.getRestrictions().collect({case r:NullableRestriction⇒r}).isEmpty){
+        if(f.getType().isInstanceOf[ReferenceType] && f.getRestrictions().collect({case r:NullableRestriction⇒r}).isEmpty){
           // the setter shall check the non-null property
           out.write(s"""
   override final def get$Name = _$name

@@ -11,11 +11,21 @@ import java.util.Set;
  * @author Timm Felden
  */
 public class TypeContext {
+	/**
+	 * Mark ground types which create reference like fields.
+	 * 
+	 * @author Timm Felden
+	 */
+	private static final class PointerType extends GroundType implements ReferenceType {
+		PointerType(TypeContext tc, String name) {
+			super(tc, name);
+		}
+	}
+
 	protected final Map<String, Type> types = new HashMap<>();
 
 	public TypeContext() {
-		// two v64
-		new GroundType(this, "annotation");
+		new PointerType(this, "annotation");
 
 		new GroundType(this, "bool");
 
@@ -29,7 +39,7 @@ public class TypeContext {
 		new GroundType(this, "f32");
 		new GroundType(this, "f64");
 
-		new GroundType(this, "string");
+		new PointerType(this, "string");
 	}
 
 	/**

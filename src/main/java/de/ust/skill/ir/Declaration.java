@@ -10,7 +10,7 @@ import java.util.Set;
  * 
  * @author Timm Felden
  */
-final public class Declaration extends Type {
+final public class Declaration extends Type implements ReferenceType {
 
 	// names
 	private final String name;
