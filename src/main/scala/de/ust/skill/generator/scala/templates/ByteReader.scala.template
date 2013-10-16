@@ -39,7 +39,7 @@ final class ByteReader(val stream: FileChannel) extends Reader[Byte] {
     if (has(n))
       stream.position(stream.position + n);
     else
-      throw UnexpectedEOF(s"while dropping $n bytes", null)
+      throw UnexpectedEOF(s"@$position while dropping $n bytes", null)
     this
   }
   /**

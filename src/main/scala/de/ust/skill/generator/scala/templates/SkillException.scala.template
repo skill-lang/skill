@@ -20,7 +20,9 @@ trait ExpectableSkillException {}
  *
  * @author Timm Felden
  */
-case class ParseException(msg: String) extends SkillException(msg) {}
+case class ParseException(in: ByteReader, block: Int, msg: String) extends SkillException(
+  s"In block ${block + 1} @${in.position}: $msg"
+) {}
 
 /**
  * This exception is used if byte stream related errors occur.
@@ -61,9 +63,8 @@ case class PoolSizeMissmatchError(expected: Long, actual: Long, t: String)
  *
  * @author Timm Felden
  */
-case class TypeMissmatchError(t: TypeInfo, expected: String, fieldName: String)
-  extends SkillException(s"""Encountered incompatible type "$t" (expected: $expected)
-for field $fieldName in constarcution of DateStoragePool.""")
+case class TypeMissmatchError(t: TypeInfo, expected: String, fieldName: String, poolName: String)
+  extends SkillException(s"""During construction of $poolName.$fieldName: Encountered incompatible type "$t" (expected: $expected)""")
   with ExpectableSkillException {}
 
 /**

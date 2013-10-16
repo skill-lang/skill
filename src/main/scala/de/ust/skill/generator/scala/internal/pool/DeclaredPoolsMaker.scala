@@ -131,10 +131,10 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
       // correct field type
       case f if ${checkType(f)} ⇒
         if(f.t.asInstanceOf[ConstantIntegerInfo[_]].value != ${f.constantValue})
-          throw new ParseException("Constant value differed.")
+          throw new SkillException("Constant value differed.")
 
       // incompatible field type
-      case f ⇒ TypeMissmatchError(f.t, "${f.getType().getSkillName()}", "$name")
+      case f ⇒ TypeMissmatchError(f.t, "${f.getType().getSkillName()}", "$name", "${d.getName()}StoragePool")
     })
 """)
 
@@ -143,7 +143,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
         out.write(s"""
     // auto ${f.getType().getSkillName()} $name
     if(!userType.fields.get("${f.getSkillName()}").isEmpty)
-      throw ParseException("Found field data for auto field ${d.getName()}.$name")
+      throw new SkillException("Found field data for auto field ${d.getName()}.$name")
 """)
 
       } else {
@@ -160,7 +160,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
       }
 
       // incompatible field type
-      case f ⇒ throw TypeMissmatchError(f.t, "${f.getType().getSkillName()}", "$name")
+      case f ⇒ throw TypeMissmatchError(f.t, "${f.getType().getSkillName()}", "$name", "${d.getName()}StoragePool")
     })
 """)
       }

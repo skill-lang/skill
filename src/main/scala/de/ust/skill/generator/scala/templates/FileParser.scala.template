@@ -52,7 +52,7 @@
     def mkUserType() {
       // check for duplicate definitions
       if (userTypeNameMap.contains(name))
-        throw ParseException(s"In block ${blockCounter + 1}: Duplicate definition of type ${name}")
+        throw ParseException(σ.fromReader, blockCounter, s"Duplicate definition of type $name")
 
       // create a new user type
       userType = new UserType(
@@ -76,7 +76,7 @@
       if (null != userType && count > 0) {
         val knownFields = userType.fields.size
         if (0 > fieldCount - knownFields)
-          throw ParseException(s"Block ${blockCounter + 1} in type $name: There are only $fieldCount fields but $knownFields are required.")
+          throw ParseException(σ.fromReader, blockCounter, s"Type $name has $fieldCount fields (requires $knownFields)")
 
         var fieldIndex = 0
 
@@ -209,7 +209,7 @@
       val u = t.userType
       // check for duplicate definition of type in this block
       if (u.blockInfos.contains(blockCounter))
-        throw ParseException(s"In block ${blockCounter + 1}: Duplicate redefinition of type ${u.name}")
+        throw ParseException(σ.fromReader, blockCounter, s"Duplicate redefinition of type ${u.name}")
 
       // add local block info
       u.addBlockInfo(new BlockInfo(t.count, localBlockBaseTypeStartIndices(u.baseType.name) + t.lbpsi), blockCounter)
@@ -221,8 +221,8 @@
           if (userTypeIndexMap.contains(index))
             f.t = userTypeIndexMap(index)
           else
-            throw new SkillException(
-              s"${t.name}.${f.name} refers to an invalid user type $index (user types: ${
+            throw ParseException(σ.fromReader, blockCounter,
+              s"${t.name}.${f.name} refers to inexistent user type $index (user types: ${
                 userTypeIndexMap.mkString(", ")
               })"
             )
@@ -345,7 +345,7 @@
       case 19           ⇒ baseTypeInfo ^^ { new SetInfo(_) }
       case 20           ⇒ v64 >> { n ⇒ repN(n.toInt, baseTypeInfo) } ^^ { new MapInfo(_) }
       case i if i >= 32 ⇒ success(new PreliminaryUserType(i - 32))
-      case id           ⇒ throw ParseException(s"invalid type ID: $id")
+      case id           ⇒ throw ParseException(σ.fromReader, blockCounter, s"Invalid type ID: $id")
     }
   }
 

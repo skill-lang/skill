@@ -14,6 +14,8 @@ trait SkillExceptionMaker extends GeneralOutputMaker{
     //package & imports
     out.write(s"""package ${packagePrefix}internal
 
+import ${packagePrefix}internal.parsers.ByteReader
+
 """)
 
     //the body itself is always the same
