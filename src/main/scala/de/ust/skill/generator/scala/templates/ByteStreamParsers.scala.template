@@ -92,11 +92,4 @@ class ByteStreamParsers extends Parsers {
       case i ⇒ σ.getString(i)
     }
   }
-
-  /**
-   * Inserts a try/catch block emitting a useful message into the parser.
-   */
-  def tryCatch[U](p: Parser[U])(msg: String) = new Parser[U] {
-    def apply(in: Input) = try { p.apply(in) } catch { case e: SkillException ⇒ throw new SkillException(msg, e) }
-  }
 }
