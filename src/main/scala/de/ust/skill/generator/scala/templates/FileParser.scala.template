@@ -324,27 +324,27 @@
    */
   private def fieldTypeDeclaration: Parser[TypeInfo] = v64 >> { i ⇒
     i match {
-      case 0            ⇒ i8 ^^ { new ConstantI8Info(_) }
-      case 1            ⇒ i16 ^^ { new ConstantI16Info(_) }
-      case 2            ⇒ i32 ^^ { new ConstantI32Info(_) }
-      case 3            ⇒ i64 ^^ { new ConstantI64Info(_) }
-      case 4            ⇒ v64 ^^ { new ConstantV64Info(_) }
-      case 5            ⇒ success(new AnnotationInfo())
-      case 6            ⇒ success(new BoolInfo())
-      case 7            ⇒ success(new I8Info())
-      case 8            ⇒ success(new I16Info())
-      case 9            ⇒ success(new I32Info())
-      case 10           ⇒ success(new I64Info())
-      case 11           ⇒ success(new V64Info())
-      case 12           ⇒ success(new F32Info())
-      case 13           ⇒ success(new F64Info())
-      case 14           ⇒ success(new StringInfo())
+      case 0            ⇒ i8 ^^ { ConstantI8Info(_) }
+      case 1            ⇒ i16 ^^ { ConstantI16Info(_) }
+      case 2            ⇒ i32 ^^ { ConstantI32Info(_) }
+      case 3            ⇒ i64 ^^ { ConstantI64Info(_) }
+      case 4            ⇒ v64 ^^ { ConstantV64Info(_) }
+      case 5            ⇒ success(AnnotationInfo)
+      case 6            ⇒ success(BoolInfo)
+      case 7            ⇒ success(I8Info)
+      case 8            ⇒ success(I16Info)
+      case 9            ⇒ success(I32Info)
+      case 10           ⇒ success(I64Info)
+      case 11           ⇒ success(V64Info)
+      case 12           ⇒ success(F32Info)
+      case 13           ⇒ success(F64Info)
+      case 14           ⇒ success(StringInfo)
       case 15           ⇒ v64 ~ baseTypeInfo ^^ { case i ~ t ⇒ new ConstantLengthArrayInfo(i.toInt, t) }
       case 17           ⇒ baseTypeInfo ^^ { new VariableLengthArrayInfo(_) }
       case 18           ⇒ baseTypeInfo ^^ { new ListInfo(_) }
       case 19           ⇒ baseTypeInfo ^^ { new SetInfo(_) }
       case 20           ⇒ v64 >> { n ⇒ repN(n.toInt, baseTypeInfo) } ^^ { new MapInfo(_) }
-      case i if i >= 32 ⇒ success(new PreliminaryUserType(i - 32))
+      case i if i >= 32 ⇒ success(PreliminaryUserType(i - 32))
       case id           ⇒ throw ParseException(σ.fromReader, blockCounter, s"Invalid type ID: $id")
     }
   }
@@ -354,17 +354,17 @@
    */
   private def baseTypeInfo: Parser[TypeInfo] = v64 ^^ { i ⇒
     i match {
-      case 5            ⇒ new AnnotationInfo()
-      case 6            ⇒ new BoolInfo()
-      case 7            ⇒ new I8Info()
-      case 8            ⇒ new I16Info()
-      case 9            ⇒ new I32Info()
-      case 10           ⇒ new I64Info()
-      case 11           ⇒ new V64Info()
-      case 12           ⇒ new F32Info()
-      case 13           ⇒ new F64Info()
-      case 14           ⇒ new StringInfo()
-      case i if i >= 32 ⇒ new PreliminaryUserType(i - 32)
+      case 5            ⇒ AnnotationInfo
+      case 6            ⇒ BoolInfo
+      case 7            ⇒ I8Info
+      case 8            ⇒ I16Info
+      case 9            ⇒ I32Info
+      case 10           ⇒ I64Info
+      case 11           ⇒ V64Info
+      case 12           ⇒ F32Info
+      case 13           ⇒ F64Info
+      case 14           ⇒ StringInfo
+      case i if i >= 32 ⇒ PreliminaryUserType(i - 32)
     }
   }
 

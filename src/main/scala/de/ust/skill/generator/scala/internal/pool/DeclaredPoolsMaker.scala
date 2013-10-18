@@ -34,14 +34,14 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
    */
   private def checkType(f: Field) = f.getType() match {
     case t: GroundType ⇒ t.getSkillName() match {
-      case "annotation" ⇒ "f.t.isInstanceOf[AnnotationInfo]"
-      case "bool"       ⇒ "f.t.isInstanceOf[BoolInfo]"
-      case "i8"         ⇒ "f.t.isInstanceOf[I8Info]"
-      case "i16"        ⇒ "f.t.isInstanceOf[I16Info]"
-      case "i32"        ⇒ "f.t.isInstanceOf[I32Info]"
-      case "i64"        ⇒ "f.t.isInstanceOf[I64Info]"
-      case "v64"        ⇒ "f.t.isInstanceOf[V64Info]"
-      case "string"     ⇒ "f.t.isInstanceOf[StringInfo]"
+      case "annotation" ⇒ "f.t == AnnotationInfo"
+      case "bool"       ⇒ "f.t == BoolInfo"
+      case "i8"         ⇒ "f.t == I8Info"
+      case "i16"        ⇒ "f.t == I16Info"
+      case "i32"        ⇒ "f.t == I32Info"
+      case "i64"        ⇒ "f.t == I64Info"
+      case "v64"        ⇒ "f.t == V64Info"
+      case "string"     ⇒ "f.t == StringInfo"
       case s            ⇒ throw new Error(s"not yet implemented: $s")
     }
     // compound types use the string representation to check the type; note that this depends on IR.toString-methods
