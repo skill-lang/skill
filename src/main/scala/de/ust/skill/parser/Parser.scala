@@ -35,8 +35,6 @@ final class Parser {
     private def id = """[a-zA-Z_\u007f-\uffff][\w\u007f-\uffff]*""".r
     /**
      * Skill only has hex literals.
-     * 
-     * TODO SKilL in its current revisions does allow for any c-style integer literals!
      */
     private def int = "0x" ~> ("""[0-9a-fA-F]*""".r ^^ { i ⇒ Long.parseLong(i, 16) })
     

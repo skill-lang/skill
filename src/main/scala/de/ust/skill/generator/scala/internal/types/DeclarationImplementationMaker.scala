@@ -1,13 +1,13 @@
 package de.ust.skill.generator.scala.internal.types
 
 import java.io.PrintWriter
-
 import scala.collection.JavaConversions.asScalaBuffer
-
 import de.ust.skill.generator.scala.GeneralOutputMaker
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
 import de.ust.skill.ir.Type
+import de.ust.skill.ir.restriction.NullableRestriction
+import de.ust.skill.ir.ReferenceType
 
 trait DeclarationImplementationMaker extends GeneralOutputMaker {
   override def make {
@@ -24,6 +24,7 @@ trait DeclarationImplementationMaker extends GeneralOutputMaker {
     // head
     out.write(s"""package ${packagePrefix}internal.types
 
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
 import ${packagePrefix}api._
@@ -56,10 +57,18 @@ final class $name(
   override final def set$Name[T <: SkillType]($Name: T): Unit = _$name = $Name
 """)
       } else {
-        out.write(s"""
+        if(f.getType().isInstanceOf[ReferenceType] && f.getRestrictions().collect({case r:NullableRestriction⇒r}).isEmpty){
+          // the setter shall check the non-null property
+          out.write(s"""
+  override final def get$Name = _$name
+  override final def set$Name($Name: ${mapType(f.getType())}) = { require($Name != null, "$name is specified to be nonnull!"); _$name = $Name }
+""")
+        } else {      
+          out.write(s"""
   override final def get$Name = _$name
   override final def set$Name($Name: ${mapType(f.getType())}) = _$name = $Name
 """)
+        }
       }
     });
 

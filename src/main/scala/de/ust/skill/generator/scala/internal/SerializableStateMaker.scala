@@ -31,6 +31,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import ${packagePrefix}api._
@@ -114,7 +115,7 @@ ${
         case (n, f) ⇒
           if (t.fields.contains(n)) {
             if (t.fields(n) != f)
-              TypeMissmatchError(t, f.toString, n)
+              TypeMissmatchError(t, f.toString, n, t.name)
           } else {
             t.fields.put(n, f)
           }
@@ -139,24 +140,14 @@ ${
   }
 
   private def fieldType(t: Type): String = t match {
-    case t: Declaration ⇒ s"""userTypes("${t.getSkillName}")"""
+    case t: Declaration             ⇒ s"""userTypes("${t.getSkillName}")"""
 
-    case t: GroundType ⇒ t.getSkillName match {
-      case "annotation" ⇒ "new AnnotationInfo"
-      case "bool"       ⇒ "new BoolInfo"
-      case "i8"         ⇒ "new I8Info"
-      case "i16"        ⇒ "new I16Info"
-      case "i32"        ⇒ "new I32Info"
-      case "i64"        ⇒ "new I64Info"
-      case "v64"        ⇒ "new V64Info"
-      case "string"     ⇒ "new StringInfo"
-      case s            ⇒ throw new Error(s"not yet implemented: $s")
-    }
+    case t: GroundType              ⇒ t.getSkillName.capitalize+"Info"
 
     case t: ConstantLengthArrayType ⇒ s"new ConstantLengthArrayInfo(${t.getLength}, ${fieldType(t.getBaseType)})"
     case t: VariableLengthArrayType ⇒ s"new VariableLengthArrayInfo(${fieldType(t.getBaseType)})"
-    case t: ListType ⇒ s"new ListInfo(${fieldType(t.getBaseType)})"
-    case t: SetType ⇒ s"new SetInfo(${fieldType(t.getBaseType)})"
-    case t: MapType ⇒ s"new MapInfo(${t.getBaseTypes.map(fieldType(_)).mkString("List(",",",")")})"
+    case t: ListType                ⇒ s"new ListInfo(${fieldType(t.getBaseType)})"
+    case t: SetType                 ⇒ s"new SetInfo(${fieldType(t.getBaseType)})"
+    case t: MapType                 ⇒ s"new MapInfo(${t.getBaseTypes.map(fieldType(_)).mkString("List(", ",", ")")})"
   }
 }

@@ -3,7 +3,7 @@ package de.ust.skill.ir;
 /**
  * @author Timm Felden
  */
-public class SetType extends ContainerType {
+public class SetType extends ContainerType implements SingleBaseTypeContainer {
 	private final Type baseType;
 
 	public static Type make(TypeContext tc, Type baseType) {
@@ -14,6 +14,7 @@ public class SetType extends ContainerType {
 		this.baseType = baseType;
 	}
 
+	@Override
 	public Type getBaseType() {
 		return baseType;
 	}

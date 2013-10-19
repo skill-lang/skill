@@ -17,33 +17,33 @@ sealed abstract class TypeInfo {
   override def hashCode = typeId.toInt
 }
 
-sealed abstract class ConstantIntegerInfo[T](private val _value: T) extends TypeInfo {
-  def value = _value
+sealed abstract class ConstantIntegerInfo[T] extends TypeInfo {
+  def value: T
 
   def expect(arg: T) = assert(arg == value)
 }
 
-class ConstantI8Info(value: Byte) extends ConstantIntegerInfo[Byte](value) {
+case class ConstantI8Info(value: Byte) extends ConstantIntegerInfo[Byte] {
   override def toString(): String = "const i8 = "+("%02X" format value)
 
   def typeId: Long = 0
 }
-class ConstantI16Info(value: Short) extends ConstantIntegerInfo[Short](value) {
+case class ConstantI16Info(value: Short) extends ConstantIntegerInfo[Short] {
   override def toString(): String = "const i16 = "+("%04X" format value)
 
   def typeId: Long = 1
 }
-class ConstantI32Info(value: Int) extends ConstantIntegerInfo[Int](value) {
+case class ConstantI32Info(value: Int) extends ConstantIntegerInfo[Int] {
   override def toString(): String = "const i32 = "+value.toHexString
 
   def typeId: Long = 2
 }
-class ConstantI64Info(value: Long) extends ConstantIntegerInfo[Long](value) {
+case class ConstantI64Info(value: Long) extends ConstantIntegerInfo[Long] {
   override def toString(): String = "const i64 = "+value.toHexString
 
   def typeId: Long = 3
 }
-class ConstantV64Info(value: Long) extends ConstantIntegerInfo[Long](value) {
+case class ConstantV64Info(value: Long) extends ConstantIntegerInfo[Long] {
   override def toString(): String = "const v64 = "+value.toHexString
 
   def typeId: Long = 4
@@ -51,55 +51,55 @@ class ConstantV64Info(value: Long) extends ConstantIntegerInfo[Long](value) {
 
 sealed abstract class IntegerInfo extends TypeInfo {}
 
-class I8Info extends IntegerInfo {
+case object I8Info extends IntegerInfo {
   override def toString(): String = "i8"
 
   def typeId: Long = 7
 }
-class I16Info extends IntegerInfo {
+case object I16Info extends IntegerInfo {
   override def toString(): String = "i16"
 
   def typeId: Long = 8
 }
-class I32Info extends IntegerInfo {
+case object I32Info extends IntegerInfo {
   override def toString(): String = "i32"
 
   def typeId: Long = 9
 }
-class I64Info extends IntegerInfo {
+case object I64Info extends IntegerInfo {
   override def toString(): String = "i64"
 
   def typeId: Long = 10
 }
-class V64Info extends IntegerInfo {
+case object V64Info extends IntegerInfo {
   override def toString(): String = "v64"
 
   def typeId: Long = 11
 }
 
-class AnnotationInfo extends TypeInfo {
+case object AnnotationInfo extends TypeInfo {
   override def toString(): String = "annotation"
 
   def typeId: Long = 5
 }
 
-class BoolInfo extends TypeInfo {
+case object BoolInfo extends TypeInfo {
   override def toString(): String = "bool"
 
   def typeId: Long = 6
 }
-class F32Info extends TypeInfo {
+case object F32Info extends TypeInfo {
   override def toString(): String = "f32"
 
   def typeId: Long = 12
 }
-class F64Info extends TypeInfo {
+case object F64Info extends TypeInfo {
   override def toString(): String = "f64"
 
   def typeId: Long = 13
 }
 
-class StringInfo extends TypeInfo {
+case object StringInfo extends TypeInfo {
   override def toString = "string"
 
   def typeId: Long = 14
@@ -143,7 +143,7 @@ class MapInfo(var groundType: List[TypeInfo]) extends CompoundTypeInfo {
  * This type is used to ease deserialization a lot. There must not be any instances of this class in a usable reflection
  *  pool.
  */
-class PreliminaryUserType(val index: Long) extends TypeInfo {
+case class PreliminaryUserType(index: Long) extends TypeInfo {
   override def toString(): String = "<preliminary usertype: "+index+">"
 
   def typeId: Long = 32 + index
@@ -204,6 +204,5 @@ class UserType(
 
   override def toString = name
 
-  // TODO provide an actual implementation, which allows for calculating the correct type IDs in the preparation phase
   def typeId: Long = 32 + index
 }

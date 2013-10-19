@@ -24,6 +24,7 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
     if (packagePrefix.length > 0) {
       out.write(s"""package ${packagePrefix.substring(0, packagePrefix.length - 1)}
 
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
 """)
