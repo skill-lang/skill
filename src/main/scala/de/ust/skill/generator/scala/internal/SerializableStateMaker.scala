@@ -129,6 +129,11 @@ ${
         s"""    if (!pools.contains("$name")) pools.put("$name", new ${d.getCapitalName}StoragePool(userTypes("$name"), this, 0))"""
       }.mkString("\n")
     }
+
+    userTypes.keys.foreach { t ⇒
+      requiredFields(t).keys.foreach(addString(_))
+      addString(t)
+    }
   }
 
 """)
