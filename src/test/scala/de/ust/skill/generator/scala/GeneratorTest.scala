@@ -26,5 +26,4 @@ class GeneratorTest extends FunSuite {
   test("blocks")(check("blocks.skill", "block"))
   test("subtypes")(check("subtypesExample.skill", "subtypes"))
   test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
-
 }
