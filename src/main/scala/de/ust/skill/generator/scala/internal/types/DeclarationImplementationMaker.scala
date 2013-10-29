@@ -10,7 +10,7 @@ import de.ust.skill.ir.restriction.NullableRestriction
 import de.ust.skill.ir.ReferenceType
 
 trait DeclarationImplementationMaker extends GeneralOutputMaker {
-  override def make {
+  abstract override def make {
     super.make
     IR.foreach({ d ⇒
       makeDeclaration(open("internal/types/"+d.getName()+".scala"), d)

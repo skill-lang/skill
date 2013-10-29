@@ -9,7 +9,7 @@ import java.io.PrintWriter
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
 trait KnownPoolMaker extends GeneralOutputMaker{
-  override def make {
+  abstract override def make {
     super.make
     val out = open("internal/pool/KnownPool.scala")
     //package & imports

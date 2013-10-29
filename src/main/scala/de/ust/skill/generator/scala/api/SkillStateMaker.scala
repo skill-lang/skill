@@ -10,7 +10,7 @@ import scala.collection.JavaConversions._
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
 trait SkillStateMaker extends GeneralOutputMaker {
-  override def make {
+  abstract override def make {
     super.make
     val out = open("api/SkillState.scala")
 

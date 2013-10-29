@@ -61,13 +61,18 @@ Opitions:
 }
 
 /**
+ * Fake Main implementation required to make trait stacking work.
+ */
+abstract class FakeMain extends GeneralOutputMaker { def make {} }
+
+/**
  * A generator turns a set of skill declarations into a scala interface providing means of manipulating skill files
  * containing instances of the respective definitions.
  *
  * @author Timm Felden
  */
-class Main
-    extends FileParserMaker
+class Main extends FakeMain
+    with FileParserMaker
     with AbstractPoolMaker
     with BasePoolMaker
     with BlockInfoMaker

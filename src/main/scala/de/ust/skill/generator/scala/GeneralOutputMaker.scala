@@ -32,7 +32,7 @@ trait GeneralOutputMaker {
   /**
    * Makes the output; has to invoke super.make!!!
    */
-  protected def make {}
+  def make:Unit;
 
   private[scala] def header: String
 

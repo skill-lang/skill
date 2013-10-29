@@ -8,7 +8,7 @@ package de.ust.skill.generator.scala.internal
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
 trait BlockInfoMaker extends GeneralOutputMaker{
-  override def make {
+  abstract override def make {
     super.make
     val out = open("internal/BlockInfo.scala")
     //package & imports

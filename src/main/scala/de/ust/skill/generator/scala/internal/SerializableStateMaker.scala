@@ -17,7 +17,7 @@ import de.ust.skill.ir.MapType
 import de.ust.skill.ir.ListType
 
 trait SerializableStateMaker extends GeneralOutputMaker {
-  override def make {
+  abstract override def make {
     super.make
     val out = open("internal/SerializableState.scala")
 
