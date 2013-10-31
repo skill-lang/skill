@@ -74,6 +74,7 @@ final class Parser {
      */
     private def restriction:Parser[Restriction] = "@" ~> id ~ opt("(" ~> repsep((int | string | floatingPointNumber), ",") <~ ")") ^^ {
       case "nullable" ~ arg ⇒ new NullableRestriction()
+      case unknown ~ arg ⇒ ParseException(s"$unknown${arg.mkString("(", ", ", ")")} is either not yet supported or an invalid restriction name")
     }
     /**
      * hints as defined in the paper. Because hints can be ignored by the generator, it is safe to allow arbitrary

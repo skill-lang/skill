@@ -6,7 +6,6 @@
 package de.ust.skill.parser
 
 import java.io.File
-import java.net.URL
 import scala.collection.JavaConversions._
 import scala.language.implicitConversions
 import org.junit.runner.RunWith
@@ -23,7 +22,10 @@ class ParserTest extends FunSuite {
   }
 
   test("hints")(check("/hints.skill"))
-  test("restrictions")(check("/restrictions.skill"))
+  test("restrictions") {
+    val e = intercept[de.ust.skill.ir.ParseException] { check("/restrictions.skill") }
+    assert("notAHint() is either not yet supported or an invalid restriction name" === e.getMessage())
+  }
 
   test("test")(check("/test.skill"))
   test("test2")(check("/test2.skill"))

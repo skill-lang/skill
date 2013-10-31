@@ -9,7 +9,7 @@ import java.io.PrintWriter
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
 trait StringPoolMaker extends GeneralOutputMaker{
-  override def make{
+  abstract override def make{
     super.make
     val out = open("internal/pool/StringPool.scala")
 
@@ -63,6 +63,8 @@ final class StringPool {
 
   /**
    * prepares serialization of the string pool by adding new strings to the idMap
+   *
+   * @note TODO this solution is not correct if strings are not used anymore, i.e. it may produce garbage
    */
   private[internal] def prepareSerialization(σ: SerializableState) {
     // ensure all strings are present
@@ -71,11 +73,12 @@ final class StringPool {
     // create inverse map
     idMap.foreach({ case (k, v) ⇒ serializationIDs.put(v, k) })
 
-    // append strings to the maps
-    newStrings.foreach({ s ⇒ idMap.put(idMap.size + 1, s); serializationIDs.put(s, idMap.size) })
-
-    // TODO this solution is not correct if strings are not used anymore, i.e. it may produce garbage
-
+    // instert new strings to the map;
+    //  this is the place where duplications with lazy strings will be detected and eliminated
+    newStrings.foreach({ s ⇒
+      if (!serializationIDs.contains(s))
+        idMap.put(idMap.size + 1, s); serializationIDs.put(s, idMap.size)
+    })
   }
 
   /**

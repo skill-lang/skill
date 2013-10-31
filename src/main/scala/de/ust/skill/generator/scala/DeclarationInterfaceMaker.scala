@@ -12,7 +12,7 @@ import scala.collection.JavaConversions.asScalaBuffer
 import de.ust.skill.ir.Declaration
 
 trait DeclarationInterfaceMaker extends GeneralOutputMaker {
-  override def make {
+  abstract override def make {
     super.make
     IR.foreach({ d ⇒
       makeDeclarationInterface(open(d.getName()+".scala"), d)

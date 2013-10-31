@@ -17,7 +17,7 @@ import de.ust.skill.ir.MapType
 import de.ust.skill.ir.ListType
 
 trait SerializableStateMaker extends GeneralOutputMaker {
-  override def make {
+  abstract override def make {
     super.make
     val out = open("internal/SerializableState.scala")
 
@@ -128,6 +128,11 @@ ${
         val name = d.getSkillName
         s"""    if (!pools.contains("$name")) pools.put("$name", new ${d.getCapitalName}StoragePool(userTypes("$name"), this, 0))"""
       }.mkString("\n")
+    }
+
+    userTypes.keys.foreach { t ⇒
+      requiredFields(t).keys.foreach(addString(_))
+      addString(t)
     }
   }
 

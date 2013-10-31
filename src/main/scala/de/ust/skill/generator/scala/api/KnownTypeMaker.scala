@@ -8,7 +8,7 @@ package de.ust.skill.generator.scala.api
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
 trait KnownTypeMaker extends GeneralOutputMaker {
-  override def make {
+  abstract override def make {
     super.make
     val out = open("api/KnownType.scala")
     //package & imports

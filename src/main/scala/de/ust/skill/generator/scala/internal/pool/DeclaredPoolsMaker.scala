@@ -22,7 +22,7 @@ import de.ust.skill.ir.SingleBaseTypeContainer
  * @author Timm Felden
  */
 trait DeclaredPoolsMaker extends GeneralOutputMaker {
-  override def make {
+  abstract override def make {
     super.make
     IR.foreach({ d ⇒
       makePool(open("internal/pool/"+d.getName()+"StoragePool.scala"), d)
