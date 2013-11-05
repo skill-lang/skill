@@ -20,8 +20,7 @@ File {
 
 /** The header ensures usage of correct versions and file type. */
 Header {
-	/* Looks like 00ATLAS0 in a hex editor. */
-	const i32 guard = 0x00A5710A;
+	const i32 guard = 0x00A71A50;
 	const i16 major = 0x0;
 	const i16 minor = 0x1;
 	time lastModified;
