@@ -114,5 +114,7 @@ class PoolIterator[T <: KnownType] private[internal] (val staticType: KnownPool[
         return
       }
     }
+    // there are no instances inside the part that is read from file
+    currentBlock = if (staticType.dynamicSize > 0) -1 else -2
   }
 }
