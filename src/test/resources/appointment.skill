@@ -1,0 +1,10 @@
+Appointment {
+  /** seconds since 1.1.1970 0:00 UTC. */
+  i64 time;
+  
+  /** A topic, such as "team meeting". */
+  string topic;
+  
+  /** the name of the room. */
+  string room;
+}
