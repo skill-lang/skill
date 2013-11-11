@@ -50,9 +50,10 @@ final class $name(
       if ("annotation".equals(f.getType().getName())) {
         out.write(s"""
   override final def get$Name[T <: SkillType]()(implicit m: ClassTag[T]): T = {
-    if (!m.runtimeClass.isAssignableFrom(_$name.getClass()))
-      AnnotationTypeCastException(s"annotation access: $${m.runtimeClass} vs. $${_$name.getClass}", null)
-    _$name.asInstanceOf[T]
+    if (m.runtimeClass.isAssignableFrom(_$name.getClass()))
+      _$name.asInstanceOf[T]
+    else
+      throw AnnotationTypeCastException(s"annotation access: $${m.runtimeClass} vs. $${_$name.getClass}", null)
   }
   override final def set$Name[T <: SkillType]($Name: T): Unit = _$name = $Name
 """)
