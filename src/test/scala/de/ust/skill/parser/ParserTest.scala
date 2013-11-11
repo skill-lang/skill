@@ -21,7 +21,8 @@ class ParserTest extends FunSuite {
     assert(0 != Parser.process(filename).size)
   }
 
-  test("hints")(check("/hints.skill"))
+  test("good hints") { check("/hints.skill") }
+  test("bad hints") { intercept[IllegalArgumentException] { check("/badHints.skill") } }
   test("restrictions") {
     val e = intercept[de.ust.skill.ir.ParseException] { check("/restrictions.skill") }
     assert("notAHint() is either not yet supported or an invalid restriction name" === e.getMessage())

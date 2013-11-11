@@ -1,0 +1,12 @@
+/**
+Testing hints.
+1: illegal
+2,3: legal, but can not be combined and does not apply to declarations
+*/
+!notAHint
+!access
+!modification
+hint {
+	!lazy
+	i64 data;	
+}
