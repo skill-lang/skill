@@ -47,7 +47,14 @@ final class $name(
     fields.foreach({ f ⇒
       val name = f.getName()
       val Name = name.capitalize
+      
       if ("annotation".equals(f.getType().getName())) {
+        if(f.isIgnored)
+          out.write(s"""
+  override final def get$Name[T <: SkillType]()(implicit m: ClassTag[T]): T = throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")
+  override final def set$Name[T <: SkillType]($Name: T): Unit = throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")
+""")
+        else 
         out.write(s"""
   override final def get$Name[T <: SkillType]()(implicit m: ClassTag[T]): T = {
     if (m.runtimeClass.isAssignableFrom(_$name.getClass()))
@@ -57,8 +64,15 @@ final class $name(
   }
   override final def set$Name[T <: SkillType]($Name: T): Unit = _$name = $Name
 """)
+
       } else {
-        if(f.getType().isInstanceOf[ReferenceType] && f.getRestrictions().collect({case r:NullableRestriction⇒r}).isEmpty){
+        
+        if(f.isIgnored){
+          out.write(s"""
+  override final def get$Name = throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")
+  override final def set$Name($Name: ${mapType(f.getType())}) = throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")
+""")
+      } else if(f.getType().isInstanceOf[ReferenceType] && f.getRestrictions().collect({case r:NullableRestriction⇒r}).isEmpty){
           // the setter shall check the non-null property
           out.write(s"""
   override final def get$Name = _$name

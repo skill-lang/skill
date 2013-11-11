@@ -162,6 +162,15 @@ final public class Field {
 	}
 
 	public boolean isIgnored() {
-		return hints.contains(Hint.ignore);
+		return hints.contains(Hint.ignore) || hasIgnoredType();
+	}
+
+	/**
+	 * @return true, iff the field's type has an ignore hint
+	 */
+	public boolean hasIgnoredType() {
+		if (type instanceof Declaration)
+			return ((Declaration) type).isIgnored();
+		return false;
 	}
 }
