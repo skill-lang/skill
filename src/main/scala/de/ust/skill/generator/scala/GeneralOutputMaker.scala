@@ -32,7 +32,7 @@ trait GeneralOutputMaker {
   /**
    * Makes the output; has to invoke super.make!!!
    */
-  def make:Unit;
+  def make: Unit;
 
   private[scala] def header: String
 
@@ -67,6 +67,11 @@ trait GeneralOutputMaker {
    * Provides a string representation of the default value of f.
    */
   protected def defaultValue(f: Field): String
+
+  /**
+   * Tries to escape a string without decreasing the usability of the generated identifier.
+   */
+  protected def escaped(target: String): String
 
   private lazy val packagePath = if (packagePrefix.length > 0) {
     packagePrefix.replace(".", "/")

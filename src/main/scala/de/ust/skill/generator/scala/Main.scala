@@ -208,4 +208,18 @@ class Main extends FakeMain
 
     case _ ⇒ "null"
   }
+
+  /**
+   * Tries to escape a string without decreasing the usability of the generated identifier.
+   */
+  protected def escaped(target: String): String = target match {
+    //keywords get a suffix "_", because that way at least auto-completion will work as expected
+    case "abstract" | "case" | "catch" | "class" | "def" | "do" | "else" | "extends" | "false" | "final" | "finally" |
+      "for" | "forSome" | "if" | "implicit" | "import" | "lazy" | "match" | "new" | "null" | "object" | "override" |
+      "package" | "private" | "protected" | "return" | "sealed" | "super" | "this" | "throw" | "trait" | "true" |
+      "try" | "type" | "var" | "while" | "with" | "yield" | "val" ⇒ target+"_"
+
+    //the string is fine anyway
+    case _ ⇒ target
+  }
 }
