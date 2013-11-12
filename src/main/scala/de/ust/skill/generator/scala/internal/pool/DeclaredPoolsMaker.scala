@@ -183,7 +183,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
 
     // write field data
     out.write(s"""
-  override def write(head: FileChannel, out: ByteArrayOutputStream, state: SerializableState) {
+  override def write(head: FileChannel, out: ByteArrayOutputStream, state: SerializableState, ws: WriteState) {
     val serializationFunction = state.serializationFunction
     import serializationFunction._
     import SerializationFunctions._
@@ -205,7 +205,15 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
       put(v64(f.t.typeId))
       put(string("${f.getSkillName()}"))
 
-      this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.get${f.getSkillName().capitalize})) }
+      this.foreach { instance ⇒ out.write(${
+        f.getType match {
+          case t: GroundType if ("annotation" == t.getSkillName()) ⇒ s"""v64(ws.getByRef(instance.get${f.getName().capitalize}.getClass.getSimpleName.toLowerCase, instance.get${f.getName().capitalize}))"""
+          case t: Declaration ⇒ s"""v64(ws.getByRef("${t.getSkillName}", instance.get${f.getName().capitalize}))"""
+          // TODO implementation for container types
+          case t: ContainerType ⇒ "???"
+          case _ ⇒ s"${f.getType().getSkillName()}(instance.get${f.getName().capitalize})"
+        }
+      }) }
       put(v64(out.size))
     }
 """)

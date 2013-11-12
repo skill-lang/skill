@@ -33,8 +33,8 @@ final class SerializableState extends SkillState {
       StandardOpenOption.TRUNCATE_EXISTING).asInstanceOf[FileChannel]
 
     // collect all known objects
-    // TODO implementation
     strings.prepareSerialization(this)
+    val ws = new WriteState(this)
 
     // prepare pools, i.e. ensure that all objects get IDs which can be turned into logic pointers
     knownPools.foreach(_.prepareSerialization(this))
@@ -49,7 +49,7 @@ final class SerializableState extends SkillState {
     val out = new ByteArrayOutputStream
 
     // write header
-    knownPools.foreach(_.write(file, out, this))
+    knownPools.foreach(_.write(file, out, this, ws))
 
     // write data
     file.write(ByteBuffer.wrap(out.toByteArray()))
