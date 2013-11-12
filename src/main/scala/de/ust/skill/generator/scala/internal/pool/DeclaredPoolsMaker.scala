@@ -57,7 +57,7 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
   private def makeReadFunctionCall(t: Type): String = t match {
     case t: GroundType ⇒ s"val it = fieldParser.read${t.getSkillName().capitalize}s(userType.instanceCount, f.dataChunks)"
 
-    case t: Declaration ⇒ s"""val d = new Array[${t.getCapitalName()}](userType.instanceCount.toInt)
+    case t: Declaration ⇒ s"""val d = new Array[_root_.${packagePrefix}${t.getCapitalName()}](userType.instanceCount.toInt)
         fieldParser.readUserRefs("${t.getSkillName()}", d, f.dataChunks)
         val it = d.iterator"""
 
