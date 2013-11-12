@@ -19,9 +19,11 @@ import java.io.ByteArrayOutputStream
 import java.nio.channels.FileChannel
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
 
 import ${packagePrefix}api.KnownType
-import ${packagePrefix}internal.{ PoolIterator, SerializableState, UserType }
+import ${packagePrefix}api.SkillType
+import ${packagePrefix}internal.{ PoolIterator, SerializableState, UserType, WriteState }
 import ${packagePrefix}internal.parsers.FieldParser
 
 /**
@@ -82,13 +84,34 @@ abstract class KnownPool[T <: B, B <: KnownType](
   /**
    * write the type definition into head and field data into out; the offset of field data has to be out.size
    */
-  private[internal] def write(head: FileChannel, out: ByteArrayOutputStream, σ: SerializableState): Unit
+  private[internal] def write(head: FileChannel, out: ByteArrayOutputStream, σ: SerializableState, ws: WriteState): Unit
 
   /**
    * prepares serialization, i.e. ensures that all objects get IDs, which can be used as logic pointers,
    * and can be written to disk
    */
   private[internal] def prepareSerialization(σ: SerializableState): Unit
+
+  /**
+   * creates an lbpsi map by recursively adding the local base pool start index to the map and adding all sub pools
+   *  afterwards
+   */
+  final def makeLBPSIMap(lbpsiMap: HashMap[String, Long], next: Long, size: String ⇒ Long): Long = {
+    lbpsiMap.put(userType.name, next);
+    var result = next + size(userType.name)
+    subPools.foreach {
+      case sub: SubPool[_, B] ⇒ result = sub.makeLBPSIMap(lbpsiMap, result, size)
+    }
+    result
+  }
+
+  /**
+   * concatenates array buffers in the d-map. This will in fact turn the d-map from a map pointing from names to static
+   *  instances into a map pointing from names to dynamic instances.
+   */
+  final def concatenateDMap(d: HashMap[String, ArrayBuffer[SkillType]]): Unit = subPools.foreach {
+    case sub: SubPool[_, B] ⇒ d(basePool.name) ++= d(sub.name); d(sub.name) = d(basePool.name); sub.concatenateDMap(d)
+  }
 }
 """)
 
