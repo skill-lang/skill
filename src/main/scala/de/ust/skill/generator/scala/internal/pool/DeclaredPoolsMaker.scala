@@ -186,6 +186,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
   override def write(head: FileChannel, out: ByteArrayOutputStream, state: SerializableState) {
     val serializationFunction = state.serializationFunction
     import serializationFunction._
+    import SerializationFunctions._
 
     @inline def put(b: Array[Byte]) = head.write(ByteBuffer.wrap(b));
 

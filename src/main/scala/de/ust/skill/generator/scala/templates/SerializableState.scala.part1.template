@@ -25,7 +25,8 @@ final class SerializableState extends SkillState {
    * Creates a new SKilL file at target.
    */
   def write(target: Path) {
-    import serializationFunction._
+    import SerializationFunctions._
+
     val file = Files.newByteChannel(target,
       StandardOpenOption.CREATE,
       StandardOpenOption.WRITE,
