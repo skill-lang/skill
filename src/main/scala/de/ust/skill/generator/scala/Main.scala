@@ -7,10 +7,8 @@ package de.ust.skill.generator.scala
 
 import java.io.{ File, PrintWriter }
 import java.util.Date
-
 import scala.collection.JavaConversions._
 import scala.io.Source
-
 import de.ust.skill.generator.scala.api.{ KnownTypeMaker, SkillStateMaker }
 import de.ust.skill.generator.scala.api.GenericTypeMaker
 import de.ust.skill.generator.scala.api.SkillTypeMaker
@@ -89,6 +87,7 @@ class Main extends FakeMain
     with KnownTypeMaker
     with PoolIteratorMaker
     with SerializableStateMaker
+    with SerializationFunctionsMaker
     with SkillExceptionMaker
     with SkillStateMaker
     with SkillTypeMaker

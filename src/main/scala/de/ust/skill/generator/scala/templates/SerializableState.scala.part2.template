@@ -40,38 +40,6 @@ object SerializableState {
    */
   def read(target: Path): SerializableState = FileParser.read(target)
 
-  /**
-   *  encode a v64 value into a stream
-   */
-  def v64(v: Long): Array[Byte] = {
-    // calculate effective size
-    var size = 0;
-    {
-      var q = v;
-      while (q != 0) {
-        q >>>= 7;
-        size += 1;
-      }
-    }
-    if (0 == size) {
-      val rval = new Array[Byte](1);
-      rval(0) = 0;
-      return rval;
-    } else if (10 == size)
-      size = 9;
-
-    // split
-    val rval = new Array[Byte](size);
-    var count = 0;
-    while (count < 8 && count < size - 1) {
-      rval(count) = (v >> (7 * count)).asInstanceOf[Byte];
-      rval(count) = (rval(count) | 0x80).asInstanceOf[Byte];
-      count += 1;
-    }
-    rval(count) = (v >> (7 * count)).asInstanceOf[Byte];
-    return rval;
-  }
-
   def v64(in: Array[Byte]): Long = {
     var next = 0
     var count = 0

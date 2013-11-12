@@ -183,8 +183,34 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
 
     // write field data
     out.write(s"""
-  override def write(head: FileChannel, out: ByteArrayOutputStream, σ: SerializableState) {
-    // TODO
+  override def write(head: FileChannel, out: ByteArrayOutputStream, state: SerializableState) {
+    val serializationFunction = state.serializationFunction
+    import serializationFunction._
+
+    @inline def put(b: Array[Byte]) = head.write(ByteBuffer.wrap(b));
+
+    put(string("$sName"))
+    put(v64(0)) // TODO
+    put(v64(this.dynamicSize))
+    put(v64(0)) // restrictions not implemented yet
+
+    put(v64(userType.fields.size))
+""")
+
+    fields.foreach({ f ⇒
+      out.write(s"""
+    userType.fields.get("${f.getSkillName()}").foreach { f ⇒
+      put(v64(0)) // field restrictions not implemented yet
+      put(v64(f.t.typeId))
+      put(string("${f.getSkillName()}"))
+
+      this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.get${f.getSkillName().capitalize})) }
+      put(v64(out.size))
+    }
+""")
+    })
+
+    out.write(s"""
   }
 """)
 
