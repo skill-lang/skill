@@ -20,11 +20,12 @@ class GeneratorTest extends FunSuite {
   }
 
   test("annotation")(check("annotation.skill", "annotation"))
+  test("blocks")(check("blocks.skill", "block"))
   test("date")(check("date.skill", "date"))
   test("hints: ignore")(check("hintIgnore.skill", "hints.ignore"))
   test("node")(check("node.skill", "node"))
+  test("number")(check("number.skill", "number"))
   test("pamm")(check("air-pamm-heap.skill", "pamm"))
-  test("blocks")(check("blocks.skill", "block"))
   test("subtypes")(check("subtypesExample.skill", "subtypes"))
   test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
 }
