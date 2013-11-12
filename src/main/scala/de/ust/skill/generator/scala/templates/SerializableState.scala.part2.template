@@ -39,25 +39,4 @@ object SerializableState {
    * Reads a skill file and turns it into a serializable state.
    */
   def read(target: Path): SerializableState = FileParser.read(target)
-
-  def v64(in: Array[Byte]): Long = {
-    var next = 0
-    var count = 0
-    var rval: Long = 0
-    var r: Long = in(next)
-    next += 1
-    while (count < 8 && 0 != (r & 0x80)) {
-      rval |= (r & 0x7f) << (7 * count);
-
-      count += 1;
-      r = in(next)
-      next += 1
-    }
-    rval = (rval | (count match {
-      case 8 ⇒ r
-      case _ ⇒ (r & 0x7f)
-    }) << (7 * count));
-
-    return rval
-  }
 }

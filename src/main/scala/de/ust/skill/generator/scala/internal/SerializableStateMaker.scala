@@ -115,7 +115,7 @@ ${
         case (n, f) ⇒
           if (t.fields.contains(n)) {
             if (t.fields(n) != f)
-              TypeMissmatchError(t, f.toString, n, t.name)
+              throw TypeMissmatchError(t, f.toString, n, t.name)
           } else {
             t.fields.put(n, f)
           }
