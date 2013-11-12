@@ -1,10 +1,27 @@
+import java.nio.ByteBuffer
+
 /**
  * Provides serialization functions;
  *
  * @see SKilL §6.4
  * @author Timm Felden
  */
-class SerializationFunctions(state:SerializableState) {
+class SerializationFunctions(state: SerializableState) {
+  import SerializationFunctions._
+
+  def string(v: String): Array[Byte] = v64(state.strings.serializationIDs.apply(v))
+}
+
+object SerializationFunctions {
+
+  def bool(v: Boolean): Array[Byte] = new Array(if (v) 0xFF else 0x00)
+
+  def i8(v: Byte): Array[Byte] = new Array(v)
+
+  def i16(v: Short): Array[Byte] = ByteBuffer.allocate(2).putShort(v).array
+  def i32(v: Int): Array[Byte] = ByteBuffer.allocate(4).putInt(v).array
+  def i64(v: Long): Array[Byte] = ByteBuffer.allocate(8).putLong(v).array
+
   /**
    *  encode a v64 value into a stream
    */
@@ -37,5 +54,6 @@ class SerializationFunctions(state:SerializableState) {
     return rval;
   }
 
-  def string(v:String):Array[Byte] = v64(state.strings.serializationIDs.apply(v))
+  def f32(v: Float): Array[Byte] = ByteBuffer.allocate(4).putFloat(v).array
+  def f64(v: Double): Array[Byte] = ByteBuffer.allocate(8).putDouble(v).array
 }

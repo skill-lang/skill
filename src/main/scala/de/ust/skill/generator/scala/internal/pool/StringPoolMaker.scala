@@ -24,9 +24,10 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
 import ${packagePrefix}internal.SerializableState
+import ${packagePrefix}internal.SerializationFunctions
 
 final class StringPool {
-  import SerializableState.v64;
+  import SerializationFunctions.v64
 
   /**
    * the set of new strings, i.e. strings which do not have an ID
@@ -86,7 +87,7 @@ final class StringPool {
    * to the argument string
    */
   private[internal] def serializedStringReference(s: String): ByteBuffer = {
-    ByteBuffer.wrap(SerializableState.v64(serializationIDs(s)))
+    ByteBuffer.wrap(v64(serializationIDs(s)))
   }
 
   /**
