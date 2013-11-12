@@ -1,6 +1,9 @@
 package de.ust.skill.ir;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 final public class Field {
 	private final boolean auto;
@@ -14,7 +17,10 @@ final public class Field {
 	 * The restrictions applying to this field.
 	 */
 	private final List<Restriction> restrictions;
-	// TODO hints
+	/**
+	 * The restrictions applying to this field.
+	 */
+	private final Set<Hint> hints;
 	/**
 	 * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
 	 */
@@ -27,9 +33,10 @@ final public class Field {
 	 * @param name
 	 * @param value
 	 * @throws ParseException
-	 *             if the argument type is not an integer
+	 *             if the argument type is not an integer or if illegal hints
+	 *             are used
 	 */
-	public Field(Type type, String name, long value, String comment, List<Restriction> restrictions)
+	public Field(Type type, String name, long value, String comment, List<Restriction> restrictions, List<Hint> hints)
 			throws ParseException {
 		assert (null != type);
 		assert (null != name);
@@ -46,6 +53,8 @@ final public class Field {
 		this.type = type;
 		skillCommentImage = null == comment ? "" : comment;
 		this.restrictions = restrictions;
+		this.hints = Collections.unmodifiableSet(new HashSet<Hint>(hints));
+		Hint.checkField(this, this.hints);
 	}
 
 	/**
@@ -54,8 +63,11 @@ final public class Field {
 	 * @param type
 	 * @param name
 	 * @param isAuto
+	 * @throws ParseException
+	 *             if illegal hints are used
 	 */
-	public Field(Type type, String name, boolean isAuto, String comment, List<Restriction> restrictions) {
+	public Field(Type type, String name, boolean isAuto, String comment, List<Restriction> restrictions,
+			List<Hint> hints) throws ParseException {
 		assert (null != type);
 		assert (null != name);
 
@@ -67,6 +79,8 @@ final public class Field {
 		this.type = type;
 		skillCommentImage = null == comment ? "" : comment;
 		this.restrictions = restrictions;
+		this.hints = Collections.unmodifiableSet(new HashSet<Hint>(hints));
+		Hint.checkField(this, this.hints);
 	}
 
 	public String getName() {
@@ -121,5 +135,42 @@ final public class Field {
 
 	public List<Restriction> getRestrictions() {
 		return restrictions;
+	}
+
+	public boolean hasAccessHint() {
+		return hints.contains(Hint.access);
+	}
+
+	public boolean hasModificationHint() {
+		return hints.contains(Hint.modification);
+	}
+
+	public boolean isUnique() {
+		return hints.contains(Hint.unique);
+	}
+
+	public boolean isPure() {
+		return hints.contains(Hint.pure);
+	}
+
+	public boolean isDistributed() {
+		return hints.contains(Hint.distributed) || isLazy();
+	}
+
+	public boolean isLazy() {
+		return hints.contains(Hint.lazy);
+	}
+
+	public boolean isIgnored() {
+		return hints.contains(Hint.ignore) || hasIgnoredType();
+	}
+
+	/**
+	 * @return true, iff the field's type has an ignore hint
+	 */
+	public boolean hasIgnoredType() {
+		if (type instanceof Declaration)
+			return ((Declaration) type).isIgnored();
+		return false;
 	}
 }

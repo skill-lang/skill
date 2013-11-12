@@ -7,10 +7,8 @@ package de.ust.skill.generator.scala
 
 import java.io.{ File, PrintWriter }
 import java.util.Date
-
 import scala.collection.JavaConversions._
 import scala.io.Source
-
 import de.ust.skill.generator.scala.api.{ KnownTypeMaker, SkillStateMaker }
 import de.ust.skill.generator.scala.api.GenericTypeMaker
 import de.ust.skill.generator.scala.api.SkillTypeMaker
@@ -89,6 +87,7 @@ class Main extends FakeMain
     with KnownTypeMaker
     with PoolIteratorMaker
     with SerializableStateMaker
+    with SerializationFunctionsMaker
     with SkillExceptionMaker
     with SkillStateMaker
     with SkillTypeMaker
@@ -207,5 +206,19 @@ class Main extends FakeMain
     // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
 
     case _ ⇒ "null"
+  }
+
+  /**
+   * Tries to escape a string without decreasing the usability of the generated identifier.
+   */
+  protected def escaped(target: String): String = target match {
+    //keywords get a suffix "_", because that way at least auto-completion will work as expected
+    case "abstract" | "case" | "catch" | "class" | "def" | "do" | "else" | "extends" | "false" | "final" | "finally" |
+      "for" | "forSome" | "if" | "implicit" | "import" | "lazy" | "match" | "new" | "null" | "object" | "override" |
+      "package" | "private" | "protected" | "return" | "sealed" | "super" | "this" | "throw" | "trait" | "true" |
+      "try" | "type" | "var" | "while" | "with" | "yield" | "val" ⇒ target+"_"
+
+    //the string is fine anyway
+    case _ ⇒ target
   }
 }

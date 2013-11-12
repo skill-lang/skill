@@ -46,11 +46,12 @@ import scala.reflect.ClassTag
 
     //body
     d.getFields().foreach({ f ⇒
-      val name = f.getName.capitalize
+      val name_ = escaped(f.getName)
+      val Name = f.getName.capitalize
 
       if (f.isConstant) {
         // constants do not have a setter
-        out.write(s"\n  def get$name(): ${mapType(f.getType())} = ${f.constantValue}\n")
+        out.write(s"\n  def get$Name(): ${mapType(f.getType())} = ${f.constantValue}\n@inline def $name_ = get$Name\n")
       } else {
         // add a warning to auto fields
         if (f.isAuto) {
@@ -61,16 +62,19 @@ import scala.reflect.ClassTag
         if ("annotation".equals(f.getType().getName())) {
           out.write(s"""
   /*${f.getSkillComment()}*/
-  def get$name[T <: SkillType: ClassTag](): T
+  def get$Name[T <: SkillType: ClassTag](): T
   /*${f.getSkillComment()}*/
-  def set$name[T <: SkillType]($name: T): Unit
+  def set$Name[T <: SkillType]($Name: T): Unit
 """)
         } else {
+          val argumentType = mapType(f.getType())
           out.write(s"""
   /*${f.getSkillComment()}*/
-  def get$name(): ${mapType(f.getType())}
+  def get$Name(): $argumentType
+  @inline def $name_ = get$Name
   /*${f.getSkillComment()}*/
-  def set$name($name: ${mapType(f.getType())}): Unit
+  def set$Name($Name: $argumentType): Unit
+  @inline def ${name_}_=($Name: $argumentType) = set$Name($Name)
 """)
         }
       }

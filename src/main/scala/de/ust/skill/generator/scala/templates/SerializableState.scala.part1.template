@@ -14,6 +14,8 @@ final class SerializableState extends SkillState {
    */
   private[internal] var fromReader: ByteReader = null
 
+  private[internal] lazy val serializationFunction = new SerializationFunctions(this)
+
   private[internal] var pools = new HashMap[String, AbstractPool]
   @inline def knownPools = pools.values.collect({ case p: KnownPool[_, _] ⇒ p });
 
@@ -23,6 +25,7 @@ final class SerializableState extends SkillState {
    * Creates a new SKilL file at target.
    */
   def write(target: Path) {
+    import serializationFunction._
     val file = Files.newByteChannel(target,
       StandardOpenOption.CREATE,
       StandardOpenOption.WRITE,

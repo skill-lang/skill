@@ -4,16 +4,15 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.lang.Long
 import java.nio.file.FileSystems
-
 import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.LinkedList
 import scala.util.parsing.combinator.RegexParsers
-
 import de.ust.skill.ir
 import de.ust.skill.ir.Restriction
 import de.ust.skill.ir.restriction.NullableRestriction
+import de.ust.skill.ir.Hint
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -80,7 +79,7 @@ final class Parser {
      * hints as defined in the paper. Because hints can be ignored by the generator, it is safe to allow arbitrary
      * identifiers and to warn if the identifier is not a known hint.
      */
-    private def hint = "!" ~> id ^^ { new Hint(_) }
+    private def hint = "!" ~> id ^^ { n ⇒ Hint.valueOf(n.toLowerCase) }
 
     /**
      * Description of a declration or field.
@@ -206,7 +205,13 @@ final class Parser {
       }
       subtypes(d.parent.get.toLowerCase) ++=  LinkedList[Definition](d)
     }
-    val rval = definitionNames.map({ case (n, f) ⇒ (n, ir.Declaration.newDeclaration(tc, n, f.description.comment.getOrElse(""), f.description.restrictions)) })
+    val rval = definitionNames.map({ case (n, f) ⇒ (n, ir.Declaration.newDeclaration(
+        tc,
+        n,
+        f.description.comment.getOrElse(""), 
+        f.description.restrictions,
+        f.description.hints
+        )) })
 
     // type order initialization of types
     def mkType(t: Type): ir.Type = t match {
@@ -221,8 +226,10 @@ final class Parser {
     }
     def mkField(node: Field): ir.Field = try {
       node match {
-        case f: Data     ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto, f.description.comment.getOrElse(""), f.description.restrictions)
-        case f: Constant ⇒ new ir.Field(mkType(f.t), f.name, f.value, f.description.comment.getOrElse(""), f.description.restrictions)
+        case f: Data     ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto, 
+            f.description.comment.getOrElse(""), f.description.restrictions, f.description.hints)
+        case f: Constant ⇒ new ir.Field(mkType(f.t), f.name, f.value,
+            f.description.comment.getOrElse(""), f.description.restrictions, f.description.hints)
       }
     } catch {
       case e: ir.ParseException ⇒ ParseException(s"${node.name}: ${e.getMessage()}")

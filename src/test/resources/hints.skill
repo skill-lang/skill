@@ -1,12 +1,15 @@
 /**
 Testing hints.
-1: illegal
-2,3: legal, but can not be combined
+Not a useful input, but demonstrating some properties of hints.
 */
-!notAHint
-!access
-!modification
+!unique
+!pure
+!monotone
+!readonly
+!IgNoRe
+!ignore
+!IgnorE
 hint {
-	!lazy
-	i64 data;	
+  !lazy !distributed !lazy !ignore
+  i64 data;	
 }

@@ -1,6 +1,7 @@
 package de.ust.skill.ir;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,7 +29,10 @@ final public class Declaration extends Type implements ReferenceType {
 	 * The restrictions applying to this declaration.
 	 */
 	private final List<Restriction> restrictions;
-	// TODO hints
+	/**
+	 * The restrictions applying to this declaration.
+	 */
+	private final Set<Hint> hints;
 	/**
 	 * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
 	 */
@@ -40,10 +44,15 @@ final public class Declaration extends Type implements ReferenceType {
 	/**
 	 * Creates a declaration of type name.
 	 * 
+	 * @throws ParseException
+	 *             thrown, if the declaration to be constructed is in fact
+	 *             illegal
+	 * 
 	 * @note the declaration has to be completed, i.e. it has to be evaluated in
 	 *       pre-order over the type hierarchy.
 	 */
-	private Declaration(String name, String comment, List<Restriction> restrictions) {
+	private Declaration(String name, String comment, List<Restriction> restrictions, List<Hint> hints)
+			throws ParseException {
 		this.name = name;
 		this.skillName = name.toLowerCase();
 		{
@@ -53,6 +62,7 @@ final public class Declaration extends Type implements ReferenceType {
 		}
 		skillCommentImage = null == comment ? "" : comment;
 		this.restrictions = restrictions;
+		this.hints = Collections.unmodifiableSet(new HashSet<Hint>(hints));
 
 		superType = baseType = null;
 	}
@@ -63,13 +73,13 @@ final public class Declaration extends Type implements ReferenceType {
 	 * @throws ParseException
 	 *             if the declaration is already present
 	 */
-	public static Declaration newDeclaration(TypeContext tc, String name, String comment, List<Restriction> restrictions)
-			throws ParseException {
+	public static Declaration newDeclaration(TypeContext tc, String name, String comment,
+			List<Restriction> restrictions, List<Hint> hints) throws ParseException {
 		String skillName = name.toLowerCase();
 		if (tc.types.containsKey(skillName))
 			throw new ParseException("Duplicate declaration of type " + name);
 
-		Declaration rval = new Declaration(name, comment, restrictions);
+		Declaration rval = new Declaration(name, comment, restrictions, hints);
 		tc.types.put(skillName, rval);
 		return rval;
 	}
@@ -85,6 +95,8 @@ final public class Declaration extends Type implements ReferenceType {
 	 * @param SuperType
 	 * @param Fields
 	 * @throws ParseException
+	 *             thrown if the declaration is illegal, e.g. because it
+	 *             contains illegal hints
 	 */
 	public void initialize(Declaration SuperType, List<Field> Fields) throws ParseException {
 		assert !isInitialized() : "multiple initialization";
@@ -109,6 +121,9 @@ final public class Declaration extends Type implements ReferenceType {
 		}
 
 		this.fields = Fields;
+
+		// check hints
+		Hint.checkDeclaration(this, this.hints);
 	}
 
 	public Declaration getBaseType() {
@@ -184,5 +199,29 @@ final public class Declaration extends Type implements ReferenceType {
 
 	public List<Restriction> getRestrictions() {
 		return restrictions;
+	}
+
+	public boolean isUnique() {
+		return hints.contains(Hint.unique);
+	}
+
+	public boolean isPure() {
+		return hints.contains(Hint.pure);
+	}
+
+	public boolean isMonotone() {
+		if (this == baseType)
+			return hints.contains(Hint.monotone) || hints.contains(Hint.readonly);
+		return baseType.isMonotone();
+	}
+
+	public boolean isReadOnly() {
+		if (this == baseType)
+			return hints.contains(Hint.readonly);
+		return baseType.isReadOnly();
+	}
+
+	public boolean isIgnored() {
+		return hints.contains(Hint.ignore);
 	}
 }

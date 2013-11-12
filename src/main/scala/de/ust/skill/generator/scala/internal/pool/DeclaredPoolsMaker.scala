@@ -122,10 +122,11 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
 
     // parse known fields
     fields.foreach({ f ⇒
-      val name = f.getName()
-      if (f.isConstant) {
-        // constant fields are not directly deserialized, but they need to be checked for the right value
-        out.write(s"""
+      if (!f.isIgnored()) {
+        val name = f.getName()
+        if (f.isConstant) {
+          // constant fields are not directly deserialized, but they need to be checked for the right value
+          out.write(s"""
     // ${f.getType().getSkillName()} $name
     userType.fields.get("${f.getSkillName()}").foreach(_ match {
       // correct field type
@@ -138,18 +139,18 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     })
 """)
 
-      } else if (f.isAuto) {
-        // auto fields must not be part of the serialized data
-        out.write(s"""
+        } else if (f.isAuto) {
+          // auto fields must not be part of the serialized data
+          out.write(s"""
     // auto ${f.getType().getSkillName()} $name
     if(!userType.fields.get("${f.getSkillName()}").isEmpty)
       throw new SkillException("Found field data for auto field ${d.getName()}.$name")
 """)
 
-      } else {
-        val t = f.getType()
-        // the ordinary field case
-        out.write(s"""
+        } else {
+          val t = f.getType()
+          // the ordinary field case
+          out.write(s"""
     // ${t.getSkillName()} $name
     userType.fields.get("${f.getSkillName()}").foreach(_ match {
       // correct field type
@@ -163,6 +164,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
       case f ⇒ throw TypeMissmatchError(f.t, "${f.getType().getSkillName()}", "$name", "${d.getName()}StoragePool")
     })
 """)
+        }
       }
     })
 
@@ -181,8 +183,34 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
 
     // write field data
     out.write(s"""
-  override def write(head: FileChannel, out: ByteArrayOutputStream, σ: SerializableState) {
-    // TODO
+  override def write(head: FileChannel, out: ByteArrayOutputStream, state: SerializableState) {
+    val serializationFunction = state.serializationFunction
+    import serializationFunction._
+
+    @inline def put(b: Array[Byte]) = head.write(ByteBuffer.wrap(b));
+
+    put(string("$sName"))
+    put(v64(0)) // TODO
+    put(v64(this.dynamicSize))
+    put(v64(0)) // restrictions not implemented yet
+
+    put(v64(userType.fields.size))
+""")
+
+    fields.foreach({ f ⇒
+      out.write(s"""
+    userType.fields.get("${f.getSkillName()}").foreach { f ⇒
+      put(v64(0)) // field restrictions not implemented yet
+      put(v64(f.t.typeId))
+      put(string("${f.getSkillName()}"))
+
+      this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.get${f.getSkillName().capitalize})) }
+      put(v64(out.size))
+    }
+""")
+    })
+
+    out.write(s"""
   }
 """)
 
