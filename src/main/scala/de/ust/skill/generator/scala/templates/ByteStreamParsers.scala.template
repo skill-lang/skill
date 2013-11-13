@@ -19,45 +19,40 @@ class ByteStreamParsers extends Parsers {
   }
 
   def bytes(n: Int): Parser[Array[Byte]] = new Parser[Array[Byte]] {
-    def apply(in: Input) = {
-      if (in has n)
-        Success(Arrays.copyOf((in take n).array, n), in)
-      else
-        throw UnexpectedEOF(s"while taking $n bytes", null)
+    def apply(in: Input) = try {
+      Success(in take n, in)
+    } catch {
+      case e: Exception ⇒ throw UnexpectedEOF(s"while taking $n bytes", e)
     }
   }
-  def bytes(n: Long): Parser[Array[Byte]] = bytes(n.asInstanceOf[Int])
+  def bytes(n: Long): Parser[Array[Byte]] = bytes(n.toInt)
 
   def i8 = new Parser[Byte] {
-    def apply(in: Input) = {
-      if (in has 1)
-        Success(in.next, in)
-      else
-        throw UnexpectedEOF("while reading i8", null)
+    def apply(in: Input) = try {
+      Success(in.next, in)
+    } catch {
+      case e: Exception ⇒ throw UnexpectedEOF("while reading i8", e)
     }
   }
   def i16 = new Parser[Short] {
-    def apply(in: Input) = {
-      if (in has 2)
-        Success((in take 2).getShort, in)
-      else
-        throw UnexpectedEOF("while reading i16", null)
+    def apply(in: Input) = try {
+      Success(in.i16, in)
+    } catch {
+      case e: Exception ⇒ throw UnexpectedEOF("while reading i16", e)
     }
   }
   def i32 = new Parser[Int] {
-    def apply(in: Input) = {
-      if (in has 4)
-        Success((in take 4).getInt, in)
-      else
-        throw UnexpectedEOF("while reading i32", null)
+    def apply(in: Input) = try {
+      Success(in.i32, in)
+    } catch {
+      case e: Exception ⇒ throw UnexpectedEOF("while reading i32", e)
     }
   }
   def i64 = new Parser[Long] {
-    def apply(in: Input) = {
-      if (in has 8)
-        Success((in take 8).getLong, in)
-      else
-        throw UnexpectedEOF("while reading i64", null)
+    def apply(in: Input) = try {
+      Success(in.i64, in)
+    } catch {
+      case e: Exception ⇒ throw UnexpectedEOF("while reading i64", e)
     }
   }
 
@@ -70,19 +65,17 @@ class ByteStreamParsers extends Parsers {
   }
 
   def f32 = new Parser[Float] {
-    def apply(in: Input) = {
-      if (in has 4)
-        Success((in take 4).getFloat, in)
-      else
-        throw UnexpectedEOF("while reading f32", null)
+    def apply(in: Input) = try {
+      Success(in.f32, in)
+    } catch {
+      case e: Exception ⇒ throw UnexpectedEOF("while reading f32", e)
     }
   }
   def f64 = new Parser[Double] {
-    def apply(in: Input) = {
-      if (in has 8)
-        Success((in take 8).getDouble, in)
-      else
-        throw UnexpectedEOF("while reading f64", null)
+    def apply(in: Input) = try {
+      Success(in.f64, in)
+    } catch {
+      case e: Exception ⇒ throw UnexpectedEOF("while reading f64", e)
     }
   }
 

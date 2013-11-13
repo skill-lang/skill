@@ -17,6 +17,7 @@ trait ByteReaderMaker extends GeneralOutputMaker{
 
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
+import java.nio.channels.FileChannel.MapMode
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption

@@ -11,17 +11,17 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
   private[this] def readSingleField(t: TypeInfo): Any = t match {
 
     case I8Info  ⇒ in.next
-    case I16Info ⇒ in.take(2).asShortBuffer.get
-    case I32Info ⇒ in.take(4).asIntBuffer.get
-    case I64Info ⇒ in.take(8).asLongBuffer.get
+    case I16Info ⇒ in.i16
+    case I32Info ⇒ in.i32
+    case I64Info ⇒ in.i64
     case V64Info ⇒ in.v64
     case AnnotationInfo ⇒ (in.v64, in.v64) match {
       case (0L, _) ⇒ null
       case (t, i)  ⇒ σ.pools(σ.getString(t)).getByID(i)
     }
     case BoolInfo ⇒ in.next != 0
-    case F32Info  ⇒ in.take(4).asFloatBuffer.get
-    case F64Info  ⇒ in.take(8).asDoubleBuffer.get
+    case F32Info  ⇒ in.f32
+    case F64Info  ⇒ in.f64
     case StringInfo ⇒ in.v64 match {
       case 0 ⇒ null
       case i ⇒ σ.getString(i)

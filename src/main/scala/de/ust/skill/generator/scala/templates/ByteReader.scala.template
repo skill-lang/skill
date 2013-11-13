@@ -11,57 +11,59 @@ case class ByteOffsetPosition(offset: Int) extends Position {
  *
  * @author Timm Felden
  */
-final class ByteReader(val stream: FileChannel) extends Reader[Byte] {
+final class ByteReader(file: FileChannel) extends Reader[Byte] {
   def this(path: Path) = this(Files.newByteChannel(path, StandardOpenOption.READ).asInstanceOf[FileChannel])
+
+  /**
+   * The memory mapped input buffer used to perform parse operations.
+   */
+  val input = file.map(MapMode.READ_ONLY, 0, file.size)
+
   // this buffer is reused for any allocation below 64bytes
   private val smallBuf = ByteBuffer.allocate(64)
 
-  private var positions = new Stack[Long]
+  private var positions = new Stack[Int]
   /**
    * saves the current position onto a stack and jumps to the argument position
    */
-  def push(next: Long) { positions.push(stream.position); stream.position(next) }
+  def push(next: Long) { positions.push(input.position); input.position(next.toInt) }
   /**
    * returns to the last position saved
    */
-  def pop: Unit = stream.position(positions.pop)
+  def pop: Unit = input.position(positions.pop)
 
-  override def offset = stream.position().toInt
-  def position = stream.position()
+  override def offset = input.position
+  def position = input.position
 
   override def first: Byte = throw new NoSuchMethodError("unsupported operation")
   override def rest: ByteReader = throw new NoSuchMethodError("unsupported operation")
   def pos: Position = ByteOffsetPosition(offset)
-  def atEnd = stream.size() == stream.position()
-  def minimumBytesToGo = stream.size() - stream.position()
+  def atEnd = input.limit == input.position
+  def has(n: Int): Boolean = input.limit >= (n + input.position)
+  def minimumBytesToGo = input.limit - input.position
 
   override def drop(n: Int): ByteReader = {
     if (has(n))
-      stream.position(stream.position + n);
+      input.position(input.position + n);
     else
       throw UnexpectedEOF(s"@$position while dropping $n bytes", null)
     this
   }
   /**
-   * takes n bytes from the stream; the buffer may be invalid after the next call of this function
+   * takes n bytes from the stream; and returns them as an array, which has to be managed by the caller
    */
-  private[parsers] def take(n: Int): ByteBuffer = {
-    if (n < 64) {
-      smallBuf.clear(); smallBuf.limit(n)
-      stream.read(smallBuf); smallBuf.position(0)
-      smallBuf
-    } else {
-      val r = ByteBuffer.allocate(n);
-      stream.read(r); r.rewind();
-      r
-    }
+  private[parsers] def take(n: Int): Array[Byte] = {
+    val rval = new Array[Byte](n)
+    input.get(rval)
+    rval
   }
   /**
    * fills the argument buffer with input from the stream
    *
    * @note does not rewind the buffer
+   * @requires buffer needs to be array backed!
    */
-  private[parsers] def fill(buffer: ByteBuffer): Unit = stream.read(buffer)
+  private[parsers] def fill(buffer: ByteBuffer): Unit = input.get(buffer.array)
 
   /**
    * like take, but creates a copy of the taken bytes to ensure correct usage
@@ -73,9 +75,13 @@ final class ByteReader(val stream: FileChannel) extends Reader[Byte] {
       take(n).array
   }
 
-  def has(n: Int): Boolean = stream.size() >= (n + stream.position())
+  def i8 = input.get
+  def i16 = input.getShort
+  def i32 = input.getInt
+  def i64 = input.getLong
+
   def next: Byte = try {
-    take(1).get
+    input.get
   } catch { case e: Exception ⇒ throw UnexpectedEOF("there's no next byte", e) }
 
   def v64: Long = {
@@ -94,4 +100,7 @@ final class ByteReader(val stream: FileChannel) extends Reader[Byte] {
     }) << (7 * count));
     rval
   }
+
+  def f32 = input.getFloat
+  def f64 = input.getDouble
 }
