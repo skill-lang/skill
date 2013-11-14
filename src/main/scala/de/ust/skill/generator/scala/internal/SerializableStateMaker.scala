@@ -38,10 +38,100 @@ import ${packagePrefix}api._
 import ${packagePrefix}internal.parsers._
 import ${packagePrefix}internal.pool._
 import ${packagePrefix}internal.types._
-""")
 
-    // first part: exceptions, internal structure, file writing
-    copyFromTemplate(out, "SerializableState.scala.part1.template")
+/**
+ * This class is used to handle objects in a serializable state.
+ *
+ * @author Timm Felden
+ */
+final class SerializableState extends SkillState {
+  import SerializableState._
+
+  /**
+   * path of the file, the serializable state has been created from; this is required for lazy evaluation and appending
+   *
+   * null iff the state has not been created from a file
+   */
+  private[internal] var fromReader: ByteReader = null
+
+  private[internal] lazy val serializationFunction = new SerializationFunctions(this)
+
+  private[internal] var pools = new HashMap[String, AbstractPool]
+  @inline def knownPools = pools.values.collect({ case p: KnownPool[_, _] ⇒ p });
+
+  private[internal] val strings = new StringPool
+
+  /**
+   * Creates a new SKilL file at target.
+   */
+  def write(target: Path) {
+    import SerializationFunctions._
+
+    val file = Files.newByteChannel(target,
+      StandardOpenOption.CREATE,
+      StandardOpenOption.WRITE,
+      StandardOpenOption.TRUNCATE_EXISTING).asInstanceOf[FileChannel]
+
+    // collect all known objects
+    strings.prepareSerialization(this)
+    val ws = new WriteState(this)
+
+    // prepare pools, i.e. ensure that all objects get IDs which can be turned into logic pointers
+    knownPools.foreach(_.prepareSerialization(this))
+
+    // write string pool
+    strings.write(file, this)
+
+    // write count of the type block
+    file.write(ByteBuffer.wrap(v64(pools.size)))
+
+    // write fields back to their buffers
+    val out = new ByteArrayOutputStream
+
+    // write header
+    knownPools.foreach(_.write(file, out, this, ws))
+
+    // write data
+    file.write(ByteBuffer.wrap(out.toByteArray()))
+
+    // done:)
+    file.close()
+  }
+
+  /**
+   * retrieves a string from the known strings; this can cause disk access, due to the lazy nature of the implementation
+   *
+   * @throws ArrayOutOfBoundsException if index is not valid
+   */
+  def getString(index: Long): String = {
+    if (0 == index)
+      return null
+
+    strings.idMap.get(index) match {
+      case Some(s) ⇒ s
+      case None ⇒ {
+        if (index > strings.stringPositions.size)
+          InvalidPoolIndex(index, strings.stringPositions.size, "string")
+
+        val off = strings.stringPositions(index)
+        fromReader.push(off._1)
+        var chars = fromReader.bytes(off._2)
+        fromReader.pop
+
+        val result = new String(chars, "UTF-8")
+        strings.idMap.put(index, result)
+        result
+      }
+    }
+  }
+
+  /**
+   * adds a string to the state
+   */
+  def addString(string: String) {
+    strings.newStrings += string
+  }
+""")
 
     //access to declared types
     IR.foreach({ t ⇒
@@ -136,10 +226,50 @@ ${
     }
   }
 
-""")
+  /**
+   * prints some debug information onto stdout
+   */
+  def dumpDebugInfo = {
+    println("DEBUG INFO START")
+    println(s"StringPool ($${strings.size}):")
+    for (i ← 1 to strings.stringPositions.size) {
+      if (!strings.idMap.contains(i))
+        print("lazy ⇒ ")
+      println(getString(i))
+    }
+    strings.newStrings.foreach(println(_))
+    println("")
+    println("ReflectionPool:")
+    pools.values.foreach(s ⇒ println(s.userType.getDeclaration))
+    println("")
+    println("StoragePools:")
+    knownPools.foreach({ s ⇒
+      println(s.name+": "+s.dynamicSize);
+      println(s.iterator.map(_.asInstanceOf[KnownType].prettyString).mkString("  ", "\\n  ", "\\n"))
+    })
+    println("")
 
-    // second part: debug stuff; reading of files
-    copyFromTemplate(out, "SerializableState.scala.part2.template")
+    println("DEBUG INFO END")
+  }
+}
+
+object SerializableState {
+
+  /**
+   * Creates a new and empty serializable state.
+   */
+  def create(): SerializableState = {
+    val result = new SerializableState;
+    result.finishInitialization
+    result
+  }
+
+  /**
+   * Reads a skill file and turns it into a serializable state.
+   */
+  def read(target: Path): SerializableState = FileParser.read(target)
+}
+""")
 
     out.close()
   }

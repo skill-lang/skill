@@ -54,11 +54,6 @@ trait GeneralOutputMaker {
   protected def mapType(t: Type): String
 
   /**
-   * Assume template copy functionality.
-   */
-  protected def copyFromTemplate(out: PrintWriter, template: String): Unit
-
-  /**
    * Assume a package prefix provider.
    */
   protected def packagePrefix(): String

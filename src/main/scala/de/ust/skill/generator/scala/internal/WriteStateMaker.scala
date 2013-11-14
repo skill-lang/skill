@@ -15,13 +15,48 @@ trait WriteStateMaker extends GeneralOutputMaker {
     //package
     out.write(s"""package ${packagePrefix}internal
 
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.ArrayBuffer
+
 import ${packagePrefix}api.SkillType
 import ${packagePrefix}api.SkillState
-import ${packagePrefix}internal.pool.BasePool""")
+import ${packagePrefix}internal.pool.BasePool
 
-    //(imports are part of the template)
-    //the body itself is always the same
-    copyFromTemplate(out, "WriteState.scala.template")
+/**
+ * holds state of a write operation
+ * @author Timm Felden
+ */
+private[internal] final class WriteState(state: SerializableState) {
+  import state._
+
+  def getByID[T <: SkillType](typeName: String, id: Long): T = d(typeName)(id.toInt).asInstanceOf[T]
+  def getByRef[T <: SkillType](typeName: String, ref: T): Long = d(typeName).indexOf(ref)
+
+  /**
+   * prepares a state, i.e. calculates d-map and lpbsi-map
+   */
+  val d = new HashMap[String, ArrayBuffer[SkillType]]
+  // store static instances in d
+  knownPools.foreach { p ⇒
+    d.put(p.name, new ArrayBuffer[SkillType])
+  }
+  knownPools.foreach {
+    case p: BasePool[_] ⇒ p.foreach { i ⇒
+      d(i.getClass.getSimpleName.toLowerCase) += i
+    }
+    case _ ⇒
+  }
+
+  // make lbpsi map and update d-maps
+  val lbpsiMap = new HashMap[String, Long]
+  pools.values.foreach {
+    case p: BasePool[_] ⇒
+      p.makeLBPSIMap(lbpsiMap, 0, { s ⇒ d(s).size })
+      p.concatenateDMap(d)
+    case _ ⇒
+  }
+}
+""")
 
     //class prefix
     out.close()

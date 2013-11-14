@@ -133,13 +133,6 @@ class Main extends FakeMain
   }
 
   /**
-   * Reads a template file and copies the input to out.
-   */
-  override protected def copyFromTemplate(out: PrintWriter, template: String) {
-    Source.fromFile("src/main/scala/de/ust/skill/generator/scala/templates/"+template).getLines.foreach({ s ⇒ out.write(s+"\n") })
-  }
-
-  /**
    * provides the package prefix
    */
   override protected def packagePrefix(): String = _packagePrefix
