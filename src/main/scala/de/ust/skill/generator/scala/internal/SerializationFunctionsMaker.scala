@@ -17,6 +17,9 @@ trait SerializationFunctionsMaker extends GeneralOutputMaker {
 
 import java.nio.ByteBuffer
 
+import ${packagePrefix}api.SkillType
+import ${packagePrefix}internal.pool.KnownPool
+
 /**
  * Provides serialization functions;
  *
@@ -26,7 +29,14 @@ import java.nio.ByteBuffer
 class SerializationFunctions(state: SerializableState) {
   import SerializationFunctions._
 
-  def string(v: String): Array[Byte] = v64(state.strings.serializationIDs.apply(v))
+  def annotation(ref: SkillType, ws: WriteState): List[Array[Byte]] = {
+    val baseName = state.pools(ref.getClass.getSimpleName.toLowerCase).asInstanceOf[KnownPool[_, _]].basePool.name
+    val refID = ws.getByRef(baseName, ref)
+
+    List(v64(state.strings.serializationIDs(baseName)), v64(refID))
+  }
+
+  def string(v: String): Array[Byte] = v64(state.strings.serializationIDs(v))
 }
 
 object SerializationFunctions {

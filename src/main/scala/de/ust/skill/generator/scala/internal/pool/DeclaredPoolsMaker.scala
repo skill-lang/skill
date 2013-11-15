@@ -48,16 +48,19 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
     // compound types use the string representation to check the type; note that this depends on IR.toString-methods
     case t: ContainerType ⇒ s"""f.t.toString.equals("$t")"""
 
-    case t: Declaration   ⇒ s"""f.t.isInstanceOf[UserType] && f.t.asInstanceOf[UserType].name.equals("${t.getSkillName()}")"""
+    case t: Declaration ⇒
+      s"""f.t.isInstanceOf[UserType] && f.t.asInstanceOf[UserType].name.equals("${t.getSkillName()}")"""
 
     // this should be unreachable; it might be reachable if IR changed
-    case t                ⇒ throw new Error(s"not yet implemented: ${t.getName()}")
+    case t ⇒ throw new Error(s"not yet implemented: ${t.getName()}")
   }
 
   private def makeReadFunctionCall(t: Type): String = t match {
-    case t: GroundType ⇒ s"val it = fieldParser.read${t.getSkillName().capitalize}s(userType.instanceCount, f.dataChunks)"
+    case t: GroundType ⇒
+      s"val it = fieldParser.read${t.getSkillName().capitalize}s(userType.instanceCount, f.dataChunks)"
 
-    case t: Declaration ⇒ s"""val d = new Array[_root_.${packagePrefix}${t.getCapitalName()}](userType.instanceCount.toInt)
+    case t: Declaration ⇒
+      s"""val d = new Array[_root_.${packagePrefix}${t.getCapitalName()}](userType.instanceCount.toInt)
         fieldParser.readUserRefs("${t.getSkillName()}", d, f.dataChunks)
         val it = d.iterator"""
 
@@ -67,7 +70,8 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
           f.dataChunks
         )"""
 
-    case t: SingleBaseTypeContainer ⇒ s"""val it = fieldParser.read${t.getClass().getSimpleName().replace("Type", "")}s[${mapType(t.getBaseType())}](
+    case t: SingleBaseTypeContainer ⇒
+      s"""val it = fieldParser.read${t.getClass().getSimpleName().replace("Type", "")}s[${mapType(t.getBaseType())}](
           f.t.asInstanceOf[${t.getClass().getSimpleName().replace("Type", "Info")}],
           userType.instanceCount,
           f.dataChunks
@@ -99,7 +103,8 @@ import ${packagePrefix}internal.types._
 final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockCount: Int)
     extends ${
       d.getSuperType() match {
-        case null ⇒ s"""BasePool[_root_.$packagePrefix$name](userType.ensuring(_.name.equals("$sName")), σ, blockCount)"""
+        case null ⇒
+          s"""BasePool[_root_.$packagePrefix$name](userType.ensuring(_.name.equals("$sName")), σ, blockCount)"""
         case s ⇒ {
           val base = s"_root_.$packagePrefix${d.getBaseType().getName()}"
           val superName = d.getSuperType().getSkillName()
@@ -221,11 +226,13 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
   }
 
   def writeSingleField(f: Field): String = f.getType match {
-    case t: GroundType if ("annotation" == t.getSkillName()) ⇒ s"""out.write(v64(ws.getByRef(instance.get${f.getName().capitalize}.getClass.getSimpleName.toLowerCase, instance.get${f.getName().capitalize})))"""
-    case t: Declaration ⇒ s"""out.write(v64(ws.getByRef("${t.getSkillName}", instance.get${f.getName().capitalize})))"""
+    case t: GroundType if ("annotation" == t.getSkillName()) ⇒
+      s"""annotation(instance.get${f.getName().capitalize}[SkillType], ws).foreach(out.write _)"""
+    case t: Declaration ⇒
+      s"""out.write(v64(ws.getByRef("${t.getSkillName}", instance.get${f.getName().capitalize})))"""
     // TODO implementation for container types
     case t: ContainerType ⇒ "???"
-    case _ ⇒ s"out.write(${f.getType().getSkillName()}(instance.get${f.getName().capitalize}))"
+    case _                ⇒ s"out.write(${f.getType().getSkillName()}(instance.get${f.getName().capitalize}))"
   }
 
 }
