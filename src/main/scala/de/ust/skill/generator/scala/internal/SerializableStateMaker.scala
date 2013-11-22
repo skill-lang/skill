@@ -54,8 +54,6 @@ final class SerializableState extends SkillState {
    */
   private[internal] var fromReader: ByteReader = null
 
-  private[internal] lazy val serializationFunction = new SerializationFunctions(this)
-
   private[internal] var pools = new HashMap[String, AbstractPool]
   @inline def knownPools = pools.values.collect({ case p: KnownPool[_, _] ⇒ p });
 
@@ -89,7 +87,7 @@ final class SerializableState extends SkillState {
     val out = new ByteArrayOutputStream
 
     // write header
-    knownPools.foreach(_.write(file, out, this, ws))
+    knownPools.foreach(_.write(file, out, ws))
 
     // write data
     file.write(ByteBuffer.wrap(out.toByteArray()))
@@ -148,7 +146,7 @@ final class SerializableState extends SkillState {
   /**
    * returns a $name iterator
    */
-  def get${Name}s(): Iterator[$tName] = new PoolIterator[$tName](pools("$sName").asInstanceOf[${Name}StoragePool])
+  def get${Name}s(): Iterator[$tName] = pools("$sName").asInstanceOf[${Name}StoragePool].iterator
 
   /**
    * adds a new $name to the $name pool

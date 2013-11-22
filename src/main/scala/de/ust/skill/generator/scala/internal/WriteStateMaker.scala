@@ -21,16 +21,17 @@ import scala.collection.mutable.ArrayBuffer
 import ${packagePrefix}api.SkillType
 import ${packagePrefix}api.SkillState
 import ${packagePrefix}internal.pool.BasePool
+import ${packagePrefix}internal.pool.KnownPool
 
 /**
  * holds state of a write operation
  * @author Timm Felden
  */
-private[internal] final class WriteState(state: SerializableState) {
+private[internal] final class WriteState(state: SerializableState) extends SerializationFunctions(state) {
+  import SerializationFunctions._
   import state._
 
   def getByID[T <: SkillType](typeName: String, id: Long): T = d(typeName)(id.toInt).asInstanceOf[T]
-  def getByRef[T <: SkillType](typeName: String, ref: T): Long = d(typeName).indexOf(ref)
 
   /**
    * prepares a state, i.e. calculates d-map and lpbsi-map
@@ -38,13 +39,12 @@ private[internal] final class WriteState(state: SerializableState) {
   val d = new HashMap[String, ArrayBuffer[SkillType]]
   // store static instances in d
   knownPools.foreach { p ⇒
-    d.put(p.name, new ArrayBuffer[SkillType])
-  }
-  knownPools.foreach {
-    case p: BasePool[_] ⇒ p.foreach { i ⇒
-      d(i.getClass.getSimpleName.toLowerCase) += i
+    val ab = new ArrayBuffer[SkillType](p.staticSize.toInt);
+    p.staticInstances.foreach { i ⇒
+      ab += i
+      // TODO i.setID(ab.size)
     }
-    case _ ⇒
+    d.put(p.name, ab)
   }
 
   // make lbpsi map and update d-maps
@@ -54,6 +54,12 @@ private[internal] final class WriteState(state: SerializableState) {
       p.makeLBPSIMap(lbpsiMap, 0, { s ⇒ d(s).size })
       p.concatenateDMap(d)
     case _ ⇒
+  }
+
+  override def annotation(ref: SkillType): List[Array[Byte]] = {
+    val baseName = state.pools(ref.getClass.getSimpleName.toLowerCase).asInstanceOf[KnownPool[_, _]].basePool.name
+
+    List(v64(state.strings.serializationIDs(baseName)), v64(ref.getID))
   }
 }
 """)

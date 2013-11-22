@@ -96,7 +96,7 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     result
   }
 
-  def readI8s(length: Long, data: List[ChunkInfo]): Iterator[Byte] = {
+  def readI8s(length: Long, data: List[ChunkInfo]): Array[Byte] = {
     val buff = ByteBuffer.allocate(length.toInt);
 
     data.foreach { chunk ⇒
@@ -110,10 +110,10 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
       in.pop
     }
-    buff.array.iterator
+    buff.array
   }
 
-  def readI16s(length: Long, data: List[ChunkInfo]): Iterator[Short] = {
+  def readI16s(length: Long, data: List[ChunkInfo]): Array[Short] = {
     val buff = ByteBuffer.allocate(2 * length.toInt)
 
     data.foreach { chunk ⇒
@@ -127,17 +127,12 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
       in.pop
     }
-
-    buff.rewind()
-
-    new Iterator[Short] {
-      val data = buff.asShortBuffer()
-      override def hasNext = data.hasRemaining
-      override def next = data.get
-    }
+    val result = new Array[Short](length.toInt)
+    buff.asShortBuffer().get(result)
+    result
   }
 
-  def readI32s(length: Long, data: List[ChunkInfo]): Iterator[Int] = {
+  def readI32s(length: Long, data: List[ChunkInfo]): Array[Int] = {
     val buff = ByteBuffer.allocate(4 * length.toInt)
 
     data.foreach { chunk ⇒
@@ -151,17 +146,12 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
       in.pop
     }
-
-    buff.rewind()
-
-    new Iterator[Int] {
-      val data = buff.asIntBuffer()
-      override def hasNext = data.hasRemaining
-      override def next = data.get
-    }
+    val result = new Array[Int](length.toInt)
+    buff.asIntBuffer().get(result)
+    result
   }
 
-  def readI64s(length: Long, data: List[ChunkInfo]): Iterator[Long] = {
+  def readI64s(length: Long, data: List[ChunkInfo]): Array[Long] = {
     val buff = ByteBuffer.allocate(8 * length.toInt)
 
     data.foreach { chunk ⇒
@@ -175,17 +165,12 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
       in.pop
     }
-
-    buff.rewind()
-
-    new Iterator[Long] {
-      val data = buff.asLongBuffer()
-      override def hasNext = data.hasRemaining
-      override def next = data.get
-    }
+    val result = new Array[Long](length.toInt)
+    buff.asLongBuffer().get(result)
+    result
   }
 
-  def readV64s(length: Long, data: List[ChunkInfo]): Iterator[Long] = {
+  def readV64s(length: Long, data: List[ChunkInfo]): Array[Long] = {
     val result = new Array[Long](length.toInt)
     var index = 0
 
@@ -203,7 +188,7 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
       in.pop
     }
-    result.iterator
+    result
   }
 
   def readAnnotations(length: Long, data: List[ChunkInfo]): Iterator[SkillType] = {

@@ -55,6 +55,16 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
     case t ⇒ throw new Error(s"not yet implemented: ${t.getName()}")
   }
 
+  private def makeReadCode(f: Field): String = f.getType match {
+    case t: GroundType if t.isInteger() ⇒ s"""val fieldData = fieldParser.read${t.getSkillName().capitalize}s(userType.instanceCount, f.dataChunks)
+        val fields = iterator
+        for (i ← 0 until fieldData.size)
+          fields.next.set${f.getName.capitalize}(fieldData(i))"""
+    case t ⇒ s"""${makeReadFunctionCall(t)}
+
+        iterator.foreach(_.set${f.getName().capitalize}(it.next))"""
+  }
+
   private def makeReadFunctionCall(t: Type): String = t match {
     case t: GroundType ⇒
       s"val it = fieldParser.read${t.getSkillName().capitalize}s(userType.instanceCount, f.dataChunks)"
@@ -86,7 +96,10 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
     val sName = name.toLowerCase()
     val fields = d.getFields().toList
 
-    // head
+    ////////////
+    // HEADER //
+    ////////////
+
     out.write(s"""package ${packagePrefix}internal.pool
 
 import java.io.ByteArrayOutputStream
@@ -119,7 +132,52 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
       }
     } {
 
-  override def newInstance = new _root_.${packagePrefix}internal.types.$name
+  @inline override def newInstance = new _root_.${packagePrefix}internal.types.$name
+""")
+
+    ///////////////
+    // ITERATORS //
+    ///////////////
+
+    out.write(s"""
+  override def iterator = subPools.collect {
+    case p: KnownPool[_, $name] ⇒ p
+  }.foldLeft(staticInstances)(_ ++ _.staticInstances)
+
+  override def indexOrderIterator = data.iterator ++ subPools.collect {
+    case p: KnownPool[_, $name] ⇒ p
+  }.foldLeft(newObjects.iterator)(_ ++ _.newObjects.iterator)
+
+  override def staticInstances = staticData.iterator ++ newObjects.iterator
+
+  /**
+   * the number of static instances loaded from the file
+   */
+  private var staticData = Array[$name]();
+  /**
+   * the static size is thus the number of static instances plus the number of new objects
+   */
+  override def staticSize:Long = staticData.size + newObjects.length
+
+  /**
+   * construct instances of the pool in post-order, i.e. bottom-up
+   */
+  final override def constructPool() {
+    // construct data in a bottom up order
+    subPools.collect { case p: KnownPool[_, _] ⇒ p }.foreach(_.constructPool)
+    val staticDataConstructor = new ArrayBuffer[_root_.date.internal.types.Date]
+    for (b ← userType.blockInfos.values) {
+      val from: Int = b.bpsi.toInt - 1
+      val until: Int = b.bpsi.toInt + b.count.toInt - 1
+      for (i ← from until until)
+        if (null == data(i)) {
+          val next = new _root_.date.internal.types.Date
+          staticDataConstructor += next
+          data(i) = next
+        }
+    }
+    staticData = staticDataConstructor.toArray
+  }
 
   // set eager fields of data instances
   override def readFields(fieldParser: FieldParser) {
@@ -154,16 +212,13 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
 """)
 
         } else {
-          val t = f.getType()
           // the ordinary field case
           out.write(s"""
-    // ${t.getSkillName()} $name
+    // ${f.getType.getSkillName} $name
     userType.fields.get("${f.getSkillName()}").foreach(_ match {
       // correct field type
-      case f if ${checkType(f)} ⇒ {
-        ${makeReadFunctionCall(t)}
-
-        iterator.foreach(_.set${f.getName().capitalize}(it.next))
+      case f if ${checkType(f)} ⇒ locally {
+        ${makeReadCode(f)}
       }
 
       // incompatible field type
@@ -189,9 +244,8 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
 
     // write field data
     out.write(s"""
-  override def write(head: FileChannel, out: ByteArrayOutputStream, state: SerializableState, ws: WriteState) {
-    val serializationFunction = state.serializationFunction
-    import serializationFunction._
+  override def write(head: FileChannel, out: ByteArrayOutputStream, ws: WriteState) {
+    import ws._
     import SerializationFunctions._
 
     @inline def put(b: Array[Byte]) = head.write(ByteBuffer.wrap(b));
@@ -211,7 +265,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
       put(v64(f.t.typeId))
       put(string("${f.getSkillName()}"))
 
-      this.foreach { instance ⇒ ${writeSingleField(f)} }
+      ${writeField(f)}
       put(v64(out.size))
     }
 """)
@@ -225,14 +279,25 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     out.close()
   }
 
-  def writeSingleField(f: Field): String = f.getType match {
-    case t: GroundType if ("annotation" == t.getSkillName()) ⇒
-      s"""annotation(instance.get${f.getName().capitalize}[SkillType], ws).foreach(out.write _)"""
+  def writeField(f: Field): String = f.getType match {
+    case t: GroundType if ("annotation" == t.getSkillName) ⇒
+      s"""this.foreach { instance ⇒ annotation(instance.get${f.getName().capitalize}[SkillType], ws).foreach(out.write _) }"""
+    case t: GroundType if ("v64" == t.getSkillName) ⇒
+      s"""locally {
+        val target = new Array[Byte](9 * size)
+        var offset = 0
+
+        val it = iterator
+        while (it.hasNext)
+          offset += v64(it.next.getDate, target, offset)
+
+        out.write(target, 0, offset)
+      }"""
     case t: Declaration ⇒
-      s"""out.write(v64(ws.getByRef("${t.getSkillName}", instance.get${f.getName().capitalize})))"""
+      s"""this.foreach { instance ⇒ out.write(v64(ws.getByRef("${t.getSkillName}", instance.get${f.getName().capitalize}))) }"""
     // TODO implementation for container types
     case t: ContainerType ⇒ "???"
-    case _                ⇒ s"out.write(${f.getType().getSkillName()}(instance.get${f.getName().capitalize}))"
+    case _                ⇒ s"this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.get${f.getName().capitalize})) }"
   }
 
 }

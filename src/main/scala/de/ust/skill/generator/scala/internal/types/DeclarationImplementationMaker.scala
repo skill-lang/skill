@@ -30,24 +30,26 @@ import scala.reflect.ClassTag
 import ${packagePrefix}api._
 import ${packagePrefix}internal.AnnotationTypeCastException
 
-final class $name(
-  """)
+final class $name extends _root_.${packagePrefix}$name {
+  @inline def this(""")
 
     // data
-    out.write(fields.map({ f ⇒ s"private var _${f.getName()}: ${mapType(f.getType())}" }).toArray.mkString("", ",\n  ", ""))
+    out.write(fields.map({ f ⇒ s"${escaped(f.getName)}: ${mapType(f.getType())}" }).mkString(", "))
 
-    out.write(s""")
-    extends _root_.${packagePrefix}$name {
-  def this() {
-    this(${fields.map(defaultValue(_)).mkString(", ")})
+    out.write(s""") {
+    this()
+    ${fields.map{f ⇒ s"_${f.getName()} = ${escaped(f.getName)}"}.mkString("\n    ")}
   }
+
+  private[internal] var ID = -1L
+  override final def getID = ID
+  private[internal] def setID(newID: Long) = ID = newID
 """)
 
     // getters & setters
     fields.foreach({ f ⇒
       val name = f.getName()
       val Name = name.capitalize
-      
       if ("annotation".equals(f.getType().getName())) {
         if(f.isIgnored)
           out.write(s"""
@@ -56,6 +58,7 @@ final class $name(
 """)
         else 
         out.write(s"""
+  private var _${f.getName}: ${mapType(f.getType())} = ${defaultValue(f)}
   override final def get$Name[T <: SkillType]()(implicit m: ClassTag[T]): T = {
     if (m.runtimeClass.isAssignableFrom(_$name.getClass()))
       _$name.asInstanceOf[T]
@@ -75,11 +78,13 @@ final class $name(
       } else if(f.getType().isInstanceOf[ReferenceType] && f.getRestrictions().collect({case r:NullableRestriction⇒r}).isEmpty){
           // the setter shall check the non-null property
           out.write(s"""
+  private var _${f.getName}: ${mapType(f.getType())} = ${defaultValue(f)}
   override final def get$Name = _$name
   override final def set$Name($Name: ${mapType(f.getType())}) = { require($Name != null, "$name is specified to be nonnull!"); _$name = $Name }
 """)
         } else {      
           out.write(s"""
+  private var _${f.getName}: ${mapType(f.getType())} = ${defaultValue(f)}
   override final def get$Name = _$name
   override final def set$Name($Name: ${mapType(f.getType())}) = _$name = $Name
 """)

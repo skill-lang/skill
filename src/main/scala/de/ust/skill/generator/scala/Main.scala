@@ -85,7 +85,7 @@ class Main extends FakeMain
     with GenericTypeMaker
     with KnownPoolMaker
     with KnownTypeMaker
-    with PoolIteratorMaker
+    with SubPoolIndexedIteratorMaker
     with SerializableStateMaker
     with SerializationFunctionsMaker
     with SkillExceptionMaker

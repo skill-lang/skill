@@ -14,12 +14,14 @@ trait KnownTypeMaker extends GeneralOutputMaker {
     //package & imports
     out.write(s"""package ${packagePrefix}api
 
+import ${packagePrefix}internal.InternalInstanceProperties
+
 /**
  * The top of the known types hierarchy.
  *
  * @author Timm Felden
  */
-trait KnownType extends SkillType;
+trait KnownType extends SkillType with InternalInstanceProperties;
 """)
 
     out.close()

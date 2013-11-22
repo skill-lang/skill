@@ -21,6 +21,11 @@ trait SkillTypeMaker extends GeneralOutputMaker {
 trait SkillType {
 
   /**
+   * @return the ID of the instance; if -1, no ID has been assigned yet, if 0, the object will not be written to disk
+   */
+  def getID: Long
+
+  /**
    * provides a pretty representation of this
    */
   def prettyString: String

@@ -7,23 +7,24 @@ package de.ust.skill.generator.scala.internal
 
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait PoolIteratorMaker extends GeneralOutputMaker{
+trait SubPoolIndexedIteratorMaker extends GeneralOutputMaker{
   abstract override def make {
     super.make
-    val out = open("internal/PoolIterator.scala")
+    val out = open("internal/SubPoolIndexIterator.scala")
     //package & imports
     out.write(s"""package ${packagePrefix}internal
 
 import ${packagePrefix}api.KnownType
-import ${packagePrefix}internal.pool.KnownPool
+import ${packagePrefix}internal.pool.SubPool
 
 /**
- * Implements iteration over members of a storage pool.
+ * Implements iteration over members of a storage pool. This class is restricted to sub pools, because base pools
+ * have a simple and more efficient implementation.
  *
  * @param T is the API type of the objects stored in the static type storage pool
  * @author Timm Felden
  */
-class PoolIterator[T <: KnownType] private[internal] (val staticType: KnownPool[T, _]) extends Iterator[T] {
+final class SubPoolIndexIterator[T <: KnownType] private[internal] (val staticType: SubPool[T, _]) extends Iterator[T] {
 
   // pools are usually separated into several blocks and new instances; block -2 means the iterator is invalid
   private var currentBlock = -2
@@ -34,7 +35,7 @@ class PoolIterator[T <: KnownType] private[internal] (val staticType: KnownPool[
   reset
 
   // the current type we are looking into
-  private var dynamicType: KnownPool[_ <: T, _] = staticType
+  private var dynamicType: SubPool[_ <: T, _] = staticType
 
   /**
    * note that this iterator is based on the current index, therefore it might behave in an unexpected way in case of
@@ -43,8 +44,7 @@ class PoolIterator[T <: KnownType] private[internal] (val staticType: KnownPool[
    * @pre valid
    * @return the current element
    */
-  private def get(): T = {
-    require(hasNext)
+  @inline private def get(): T = {
     if (-1 == currentBlock)
       dynamicType.newObjects(index.toInt)
     else
@@ -54,7 +54,7 @@ class PoolIterator[T <: KnownType] private[internal] (val staticType: KnownPool[
   /**
    * move to the next valid element, if any exists; invalidate the iterator otherwise
    */
-  override def next(): T = {
+  @inline override def next(): T = {
     val result = get
 
     // are we still in the block part?
@@ -94,8 +94,8 @@ class PoolIterator[T <: KnownType] private[internal] (val staticType: KnownPool[
       index = 0
       while (null != next && 0 == index) {
 
-        if (next.isInstanceOf[KnownPool[_ <: T, _]]) {
-          dynamicType = next.asInstanceOf[KnownPool[_ <: T, _]]
+        if (next.isInstanceOf[SubPool[_ <: T, _]]) {
+          dynamicType = next.asInstanceOf[SubPool[_ <: T, _]]
           if (0 != dynamicType.newObjects.length) {
             index = 0
             return result
@@ -115,7 +115,7 @@ class PoolIterator[T <: KnownType] private[internal] (val staticType: KnownPool[
    * check if the iterator is still valid; the obvious way of invalidating an iterator is to walk over all iterable
    *  elemnts.
    */
-  def hasNext = -2 != currentBlock
+  @inline def hasNext = -2 != currentBlock
 
   /**
    * resets the cursor to the first valid position, if any

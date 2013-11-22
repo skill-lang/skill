@@ -46,22 +46,6 @@ abstract class SubPool[T <: B, B <: KnownType](
       }""\", e
     )
   }
-
-  /**
-   * construct instances of the pool in post-order, i.e. bottom-up
-   */
-  final override def constructPool() {
-    val data = basePool.data
-    // construct data in a bottom up order
-    subPools.collect { case p: KnownPool[_, _] ⇒ p }.foreach(_.constructPool)
-    userType.blockInfos.values.foreach({ b ⇒
-      for (i ← b.bpsi - 1 until b.bpsi + b.count - 1)
-        if (null == data(i.toInt)) {
-          staticData += 1
-          data(i.toInt) = newInstance
-        }
-    })
-  }
 }
 """)
 

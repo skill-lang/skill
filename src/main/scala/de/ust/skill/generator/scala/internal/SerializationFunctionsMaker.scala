@@ -26,15 +26,10 @@ import ${packagePrefix}internal.pool.KnownPool
  * @see SKilL §6.4
  * @author Timm Felden
  */
-class SerializationFunctions(state: SerializableState) {
+abstract class SerializationFunctions(state: SerializableState) {
   import SerializationFunctions._
 
-  def annotation(ref: SkillType, ws: WriteState): List[Array[Byte]] = {
-    val baseName = state.pools(ref.getClass.getSimpleName.toLowerCase).asInstanceOf[KnownPool[_, _]].basePool.name
-    val refID = ws.getByRef(baseName, ref)
-
-    List(v64(state.strings.serializationIDs(baseName)), v64(refID))
-  }
+  def annotation(ref: SkillType): List[Array[Byte]]
 
   def string(v: String): Array[Byte] = v64(state.strings.serializationIDs(v))
 }
@@ -47,38 +42,162 @@ object SerializationFunctions {
 
   def i16(v: Short): Array[Byte] = ByteBuffer.allocate(2).putShort(v).array
   def i32(v: Int): Array[Byte] = ByteBuffer.allocate(4).putInt(v).array
-  def i64(v: Long): Array[Byte] = ByteBuffer.allocate(8).putLong(v).array
+  @inline def i64(v: Long): Array[Byte] = ByteBuffer.allocate(8).putLong(v).array
 
   /**
    *  encode a v64 value into a stream
+   *  @param v the value to be encoded
+   *  @param out the array, where the encoded value is stored
+   *  @param offset the first index to be used to encode v
+   *  @result the number of bytes used to encode v
+   *  @note usage: "∀ v. offset += (v, out, offset)"
+   */
+  @inline def v64(v: Long, out: Array[Byte], offset: Int): Int = {
+    if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
+      out(offset) = v.toByte;
+      return 1;
+    } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
+      out(offset + 0) = (0x80L | v).toByte
+      out(offset + 1) = (v >> 7).toByte
+      return 2;
+    } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
+      out(offset + 0) = (0x80L | v).toByte
+      out(offset + 1) = (0x80L | v >> 7).toByte
+      out(offset + 2) = (v >> 14).toByte
+      return 3;
+    } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
+      out(offset + 0) = (0x80L | v).toByte
+      out(offset + 1) = (0x80L | v >> 7).toByte
+      out(offset + 2) = (0x80L | v >> 14).toByte
+      out(offset + 3) = (v >> 21).toByte
+      return 4;
+    } else if (0L == (v & 0xFFFFFFF800000000L)) {
+      out(offset + 0) = (0x80L | v).toByte
+      out(offset + 1) = (0x80L | v >> 7).toByte
+      out(offset + 2) = (0x80L | v >> 14).toByte
+      out(offset + 3) = (0x80L | v >> 21).toByte
+      out(offset + 4) = (v >> 28).toByte
+      return 5;
+    } else if (0L == (v & 0xFFFFFC0000000000L)) {
+      out(offset + 0) = (0x80L | v).toByte
+      out(offset + 1) = (0x80L | v >> 7).toByte
+      out(offset + 2) = (0x80L | v >> 14).toByte
+      out(offset + 3) = (0x80L | v >> 21).toByte
+      out(offset + 4) = (0x80L | v >> 28).toByte
+      out(offset + 5) = (v >> 35).toByte
+      return 6;
+    } else if (0L == (v & 0xFFFE000000000000L)) {
+      out(offset + 0) = (0x80L | v).toByte
+      out(offset + 1) = (0x80L | v >> 7).toByte
+      out(offset + 2) = (0x80L | v >> 14).toByte
+      out(offset + 3) = (0x80L | v >> 21).toByte
+      out(offset + 4) = (0x80L | v >> 28).toByte
+      out(offset + 5) = (0x80L | v >> 35).toByte
+      out(offset + 6) = (v >> 42).toByte
+      return 7;
+    } else if (0L == (v & 0xFF00000000000000L)) {
+      out(offset + 0) = (0x80L | v).toByte
+      out(offset + 1) = (0x80L | v >> 7).toByte
+      out(offset + 2) = (0x80L | v >> 14).toByte
+      out(offset + 3) = (0x80L | v >> 21).toByte
+      out(offset + 4) = (0x80L | v >> 28).toByte
+      out(offset + 5) = (0x80L | v >> 35).toByte
+      out(offset + 6) = (0x80L | v >> 42).toByte
+      out(offset + 7) = (v >> 49).toByte
+      return 8;
+    } else {
+      out(offset + 0) = (0x80L | v).toByte
+      out(offset + 1) = (0x80L | v >> 7).toByte
+      out(offset + 2) = (0x80L | v >> 14).toByte
+      out(offset + 3) = (0x80L | v >> 21).toByte
+      out(offset + 4) = (0x80L | v >> 28).toByte
+      out(offset + 5) = (0x80L | v >> 35).toByte
+      out(offset + 6) = (0x80L | v >> 42).toByte
+      out(offset + 7) = (0x80L | v >> 49).toByte
+      out(offset + 8) = (v >> 56).toByte
+      return 9;
+    }
+  }
+
+  /**
+   * @param v the value to be encoded
+   * @result returns the encoded value as new array
+   * @note do not use this method for encoding of field data!
    */
   def v64(v: Long): Array[Byte] = {
-    // calculate effective size
-    var size = 0;
-    {
-      var q = v;
-      while (q != 0) {
-        q >>>= 7;
-        size += 1;
-      }
+    if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
+      val r = new Array[Byte](1)
+      r(0) = v.toByte
+      r
+    } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
+      val r = new Array[Byte](2)
+      r(0) = (0x80L | v).toByte
+      r(1) = (v >> 7).toByte
+      r
+    } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
+      val r = new Array[Byte](3)
+      r(0) = (0x80L | v).toByte
+      r(1) = (0x80L | v >> 7).toByte
+      r(2) = (v >> 14).toByte
+      r
+    } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
+      val r = new Array[Byte](4)
+      r(0) = (0x80L | v).toByte
+      r(1) = (0x80L | v >> 7).toByte
+      r(2) = (0x80L | v >> 14).toByte
+      r(3) = (v >> 21).toByte
+      r
+    } else if (0L == (v & 0xFFFFFFF800000000L)) {
+      val r = new Array[Byte](5)
+      r(0) = (0x80L | v).toByte
+      r(1) = (0x80L | v >> 7).toByte
+      r(2) = (0x80L | v >> 14).toByte
+      r(3) = (0x80L | v >> 21).toByte
+      r(4) = (v >> 28).toByte
+      r
+    } else if (0L == (v & 0xFFFFFC0000000000L)) {
+      val r = new Array[Byte](6)
+      r(0) = (0x80L | v).toByte
+      r(1) = (0x80L | v >> 7).toByte
+      r(2) = (0x80L | v >> 14).toByte
+      r(3) = (0x80L | v >> 21).toByte
+      r(4) = (0x80L | v >> 28).toByte
+      r(5) = (v >> 35).toByte
+      r
+    } else if (0L == (v & 0xFFFE000000000000L)) {
+      val r = new Array[Byte](7)
+      r(0) = (0x80L | v).toByte
+      r(1) = (0x80L | v >> 7).toByte
+      r(2) = (0x80L | v >> 14).toByte
+      r(3) = (0x80L | v >> 21).toByte
+      r(4) = (0x80L | v >> 28).toByte
+      r(5) = (0x80L | v >> 35).toByte
+      r(6) = (v >> 42).toByte
+      r
+    } else if (0L == (v & 0xFF00000000000000L)) {
+      val r = new Array[Byte](8)
+      r(0) = (0x80L | v).toByte
+      r(1) = (0x80L | v >> 7).toByte
+      r(2) = (0x80L | v >> 14).toByte
+      r(3) = (0x80L | v >> 21).toByte
+      r(4) = (0x80L | v >> 28).toByte
+      r(5) = (0x80L | v >> 35).toByte
+      r(6) = (0x80L | v >> 42).toByte
+      r(7) = (v >> 49).toByte
+      r
+    } else {
+      val r = new Array[Byte](9)
+      r(0) = (0x80L | v).toByte
+      r(1) = (0x80L | v >> 7).toByte
+      r(2) = (0x80L | v >> 14).toByte
+      r(3) = (0x80L | v >> 21).toByte
+      r(4) = (0x80L | v >> 28).toByte
+      r(5) = (0x80L | v >> 35).toByte
+      r(6) = (0x80L | v >> 42).toByte
+      r(7) = (0x80L | v >> 49).toByte
+      r(8) = (v >> 56).toByte
+      r
     }
-    if (0 == size) {
-      val rval = new Array[Byte](1);
-      rval(0) = 0;
-      return rval;
-    } else if (10 == size)
-      size = 9;
-
-    // split
-    val rval = new Array[Byte](size);
-    var count = 0;
-    while (count < 8 && count < size - 1) {
-      rval(count) = (v >> (7 * count)).asInstanceOf[Byte];
-      rval(count) = (rval(count) | 0x80).asInstanceOf[Byte];
-      count += 1;
-    }
-    rval(count) = (v >> (7 * count)).asInstanceOf[Byte];
-    return rval;
   }
 
   def f32(v: Float): Array[Byte] = ByteBuffer.allocate(4).putFloat(v).array
