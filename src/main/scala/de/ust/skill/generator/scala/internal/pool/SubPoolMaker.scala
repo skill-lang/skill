@@ -8,7 +8,7 @@ package de.ust.skill.generator.scala.internal.pool
 import java.io.PrintWriter
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait SubPoolMaker extends GeneralOutputMaker{
+trait SubPoolMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
     val out = open("internal/pool/SubPool.scala")
@@ -35,6 +35,11 @@ abstract class SubPool[T <: B, B <: KnownType](
    * the super base pool; note that this requires construction of pools in a top-down order
    */
   final override def basePool = _superPool.basePool
+
+  /**
+   * the base type data store
+   */
+  private[pool] var data:Array[B] = basePool.data
 
   /**
    * get is deferred to the base pool

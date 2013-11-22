@@ -34,16 +34,16 @@ final class $name extends _root_.${packagePrefix}$name {
   @inline def this(""")
 
     // data
-    out.write(fields.map({ f ⇒ s"${escaped(f.getName)}: ${mapType(f.getType())}" }).mkString(", "))
+    out.write(fields.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", "))
 
     out.write(s""") {
     this()
     ${fields.map{f ⇒ s"_${f.getName()} = ${escaped(f.getName)}"}.mkString("\n    ")}
   }
 
-  private[internal] var ID = -1L
-  override final def getID = ID
-  private[internal] def setID(newID: Long) = ID = newID
+  private[internal] var skillID = -1L
+  override final def getSkillID = skillID
+  private[internal] def setSkillID(newID: Long) = skillID = newID
 """)
 
     // getters & setters

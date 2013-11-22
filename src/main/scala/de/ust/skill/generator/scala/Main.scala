@@ -83,6 +83,7 @@ class Main extends FakeMain
     with FieldDeclarationMaker
     with GenericPoolMaker
     with GenericTypeMaker
+    with InternalInstancePropertiesMaker
     with KnownPoolMaker
     with KnownTypeMaker
     with SubPoolIndexedIteratorMaker

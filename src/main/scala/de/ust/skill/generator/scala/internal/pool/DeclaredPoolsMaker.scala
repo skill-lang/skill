@@ -144,16 +144,19 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     case p: KnownPool[_, $name] ⇒ p
   }.foldLeft(staticInstances)(_ ++ _.staticInstances)
 
-  override def indexOrderIterator = data.iterator ++ subPools.collect {
+  override def indexOrderIterator = ${
+      if (null == d.getSuperType) s"""data.iterator ++ subPools.collect {
     case p: KnownPool[_, $name] ⇒ p
-  }.foldLeft(newObjects.iterator)(_ ++ _.newObjects.iterator)
+  }.foldLeft(newObjects.iterator)(_ ++ _.newObjects.iterator)"""
+      else "new SubPoolIndexIterator(this)"
+    }
 
   override def staticInstances = staticData.iterator ++ newObjects.iterator
 
   /**
    * the number of static instances loaded from the file
    */
-  private var staticData = Array[$name]();
+  private var staticData = Array[_root_.${packagePrefix}internal.types.$name]();
   /**
    * the static size is thus the number of static instances plus the number of new objects
    */
@@ -165,13 +168,13 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
   final override def constructPool() {
     // construct data in a bottom up order
     subPools.collect { case p: KnownPool[_, _] ⇒ p }.foreach(_.constructPool)
-    val staticDataConstructor = new ArrayBuffer[_root_.date.internal.types.Date]
+    val staticDataConstructor = new ArrayBuffer[_root_.${packagePrefix}internal.types.$name]
     for (b ← userType.blockInfos.values) {
       val from: Int = b.bpsi.toInt - 1
       val until: Int = b.bpsi.toInt + b.count.toInt - 1
       for (i ← from until until)
         if (null == data(i)) {
-          val next = new _root_.date.internal.types.Date
+          val next = new _root_.${packagePrefix}internal.types.$name
           staticDataConstructor += next
           data(i) = next
         }
@@ -281,7 +284,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
 
   def writeField(f: Field): String = f.getType match {
     case t: GroundType if ("annotation" == t.getSkillName) ⇒
-      s"""this.foreach { instance ⇒ annotation(instance.get${f.getName().capitalize}[SkillType], ws).foreach(out.write _) }"""
+      s"""this.foreach { instance ⇒ annotation(instance.get${f.getName().capitalize}[SkillType]).foreach(out.write _) }"""
     case t: GroundType if ("v64" == t.getSkillName) ⇒
       s"""locally {
         val target = new Array[Byte](9 * size)
@@ -289,12 +292,12 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
 
         val it = iterator
         while (it.hasNext)
-          offset += v64(it.next.getDate, target, offset)
+          offset += v64(it.next.get${f.getName.capitalize}, target, offset)
 
         out.write(target, 0, offset)
       }"""
     case t: Declaration ⇒
-      s"""this.foreach { instance ⇒ out.write(v64(ws.getByRef("${t.getSkillName}", instance.get${f.getName().capitalize}))) }"""
+      s"""this.foreach { instance ⇒ out.write(v64(instance.get${f.getName().capitalize}.getSkillID)) }"""
     // TODO implementation for container types
     case t: ContainerType ⇒ "???"
     case _                ⇒ s"this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.get${f.getName().capitalize})) }"

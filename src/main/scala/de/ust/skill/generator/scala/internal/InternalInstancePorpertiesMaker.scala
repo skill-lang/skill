@@ -3,36 +3,29 @@
 ** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
-package de.ust.skill.generator.scala.api
+package de.ust.skill.generator.scala.internal
 
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait SkillTypeMaker extends GeneralOutputMaker {
+trait InternalInstancePropertiesMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("api/SkillType.scala")
-    //package & imports
-    out.write(s"""package ${packagePrefix}api
+    val out = open("internal/InternalInstanceProperties.scala")
+    //package
+    out.write(s"""package ${packagePrefix}internal""")
+    out.write("""
 
 /**
- * The top of the skill type hierarchy.
+ * properties that are required on each instance, but are not exported through the interface
+ * 
  * @author Timm Felden
  */
-trait SkillType {
-
-  /**
-   * @return the ID of the instance; if -1, no ID has been assigned yet, if 0, the object will not be written to disk
-   */
-  def getSkillID: Long
-
-  /**
-   * provides a pretty representation of this
-   */
-  def prettyString: String
-
+trait InternalInstanceProperties {
+  private[internal] def setSkillID(newID: Long): Unit
 }
 """)
 
+    //class prefix
     out.close()
   }
 }

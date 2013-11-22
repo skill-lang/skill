@@ -59,7 +59,7 @@ private[internal] final class WriteState(state: SerializableState) extends Seria
   override def annotation(ref: SkillType): List[Array[Byte]] = {
     val baseName = state.pools(ref.getClass.getSimpleName.toLowerCase).asInstanceOf[KnownPool[_, _]].basePool.name
 
-    List(v64(state.strings.serializationIDs(baseName)), v64(ref.getID))
+    List(v64(state.strings.serializationIDs(baseName)), v64(ref.getSkillID))
   }
 }
 """)
