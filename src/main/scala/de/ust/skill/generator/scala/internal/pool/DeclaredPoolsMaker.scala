@@ -285,10 +285,11 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
   }
 
   def writeField(f: Field): String = f.getType match {
-    case t: GroundType if ("annotation" == t.getSkillName) ⇒
-      s"""this.foreach { instance ⇒ annotation(instance.get${f.getName().capitalize}[SkillType]).foreach(out.write _) }"""
-    case t: GroundType if ("v64" == t.getSkillName) ⇒
-      s"""locally {
+    case t: GroundType ⇒ t.getSkillName match {
+      case "annotation" ⇒
+        s"""this.foreach { instance ⇒ annotation(instance.get${f.getName().capitalize}[SkillType]).foreach(out.write _) }"""
+      case "v64" ⇒
+        s"""locally {
         val target = new Array[Byte](9 * size)
         var offset = 0
 
@@ -298,6 +299,16 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
 
         out.write(target, 0, offset)
       }"""
+      case "i64" ⇒
+        s"""locally {
+        val target = ByteBuffer.allocate(8 * size)
+        val it = iterator
+        while (it.hasNext)
+          target.putLong(it.next.get${f.getName.capitalize})
+        out.write(target.array)
+      }"""
+      case _ ⇒ s"this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.get${f.getName().capitalize})) }"
+    }
     case t: Declaration ⇒
       s"""this.foreach { instance ⇒ out.write(v64(instance.get${f.getName().capitalize}.getSkillID)) }"""
     // TODO implementation for container types
