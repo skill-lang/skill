@@ -141,12 +141,14 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
 
     out.write(s"""
   override def iterator = subPools.collect {
-    case p: KnownPool[_, $name] ⇒ p
+    // @note: you can ignore the type erasure warning, because the generators invariants guarantee type safety
+    case p: KnownPool[_, $name] @unchecked ⇒ p
   }.foldLeft(staticInstances)(_ ++ _.staticInstances)
 
   override def indexOrderIterator = ${
       if (null == d.getSuperType) s"""data.iterator ++ subPools.collect {
-    case p: KnownPool[_, $name] ⇒ p
+    // @note: you can ignore the type erasure warning, because the generators invariants guarantee type safety
+    case p: KnownPool[_, $name] @unchecked ⇒ p
   }.foldLeft(newObjects.iterator)(_ ++ _.newObjects.iterator)"""
       else "new SubPoolIndexIterator(this)"
     }
