@@ -104,9 +104,13 @@ final class $name extends _root_.${packagePrefix}$name {""")
       else if (!f.isConstant) out.write(s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+_${f.getName()}""")
       else out.write(s"""+", const ${f.getName()}: ${f.constantValue()}"""")
     })
-    out.write("+\")\"\n")
+    out.write("+\")\"")
 
-    out.write("}")
+    // toString
+    out.write(s"""
+  override def toString = "$name#" + skillID
+}
+""")
     out.close()
   }
 }
