@@ -138,7 +138,7 @@ final class SerializableState extends SkillState {
       val sName = t.getSkillName()
       val tName = packagePrefix + name
 
-      val addArgs = t.getAllFields().filter(!_.isConstant).map({
+      val addArgs = t.getAllFields().filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
         f ⇒ s"${f.getName().capitalize}: ${mapType(f.getType())}"
       }).mkString(", ")
 

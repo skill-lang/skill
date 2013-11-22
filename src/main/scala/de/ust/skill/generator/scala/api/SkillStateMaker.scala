@@ -54,7 +54,9 @@ trait SkillState {
       val sName = name.toLowerCase()
       val tName = "_root_."+packagePrefix + name
 
-      val addArgs = t.getAllFields().filter(!_.isConstant).map({ f ⇒ s"${f.getName().capitalize}: ${mapType(f.getType())}" }).mkString(", ")
+      val addArgs = t.getAllFields().filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
+        f ⇒ s"${f.getName().capitalize}: ${mapType(f.getType())}"
+      }).mkString(", ")
 
       out.write(s"""
   /**

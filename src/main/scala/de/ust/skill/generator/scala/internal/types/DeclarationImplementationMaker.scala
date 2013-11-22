@@ -20,6 +20,7 @@ trait DeclarationImplementationMaker extends GeneralOutputMaker {
   private def makeDeclaration(out: PrintWriter, d: Declaration) {
     val name = d.getName()
     val fields = d.getAllFields.filter(!_.isConstant)
+    val relevantFields = fields.filter(!_.isIgnored)
 
     // head
     out.write(s"""package ${packagePrefix}internal.types
@@ -30,17 +31,21 @@ import scala.reflect.ClassTag
 import ${packagePrefix}api._
 import ${packagePrefix}internal.AnnotationTypeCastException
 
-final class $name extends _root_.${packagePrefix}$name {
+final class $name extends _root_.${packagePrefix}$name {""")
+
+	if(!relevantFields.isEmpty){
+		out.write("""
   @inline def this(""")
 
-    // data
-    out.write(fields.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", "))
+  		// data
+    	out.write(relevantFields.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", "))
 
-    out.write(s""") {
+    	out.write(s""") {
     this()
-    ${fields.map{f ⇒ s"_${f.getName()} = ${escaped(f.getName)}"}.mkString("\n    ")}
-  }
-
+    ${relevantFields.map{f ⇒ s"_${f.getName()} = ${escaped(f.getName)}"}.mkString("\n    ")}
+  }""")
+	}
+    out.write("""
   private[internal] var skillID = -1L
   override final def getSkillID = skillID
   private[internal] def setSkillID(newID: Long) = skillID = newID
@@ -95,7 +100,8 @@ final class $name extends _root_.${packagePrefix}$name {
     // pretty string
     out.write(s"""  override def prettyString(): String = "${d.getName()}(this: "+this""")
     d.getAllFields.foreach({ f ⇒
-      if (!f.isConstant()) out.write(s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+_${f.getName()}""")
+      if(f.isIgnored) out.write(s"""+", ${f.getName()}: <<ignored>>" """)
+      else if (!f.isConstant) out.write(s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+_${f.getName()}""")
       else out.write(s"""+", const ${f.getName()}: ${f.constantValue()}"""")
     })
     out.write("+\")\"\n")
