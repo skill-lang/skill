@@ -87,13 +87,12 @@ final class SubPoolIndexIterator[T <: KnownType] private[internal] (val staticTy
         return result
       }
 
-      // TODO check if next points to a type above staticType
-
       //advance to next pool
       var next = dynamicType.next
       index = 0
       while (null != next && 0 == index) {
-
+        //! automagically returns null, if the next pool is not a subtype of T
+        //! @note this might be broken due to type erasure?
         if (next.isInstanceOf[SubPool[_ <: T, _]]) {
           dynamicType = next.asInstanceOf[SubPool[_ <: T, _]]
           if (0 != dynamicType.newObjects.length) {
