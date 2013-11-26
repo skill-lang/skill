@@ -63,7 +63,7 @@ final private class FileParser extends ByteStreamParsers {
     // make base pools; the makePool function makes sub pools
     userTypeIndexMap.values.filter(_.superName.isEmpty).foreach(makePool(_) match {
       case p: KnownPool[_, _] ⇒ p.constructPool
-      case p                  ⇒ println(s"unknown pool $p")
+      case _                  ⇒
     })
 
     // read eager fields
