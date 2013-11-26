@@ -71,10 +71,10 @@ import scala.reflect.ClassTag
           out.write(s"""
   /*${f.getSkillComment()}*/
   def get$Name(): $argumentType
-  @inline def $name_ = get$Name
+  @inline final def $name_ = get$Name
   /*${f.getSkillComment()}*/
   def set$Name($Name: $argumentType): Unit
-  @inline def ${name_}_=($Name: $argumentType) = set$Name($Name)
+  @inline final def ${name_}_=($Name: $argumentType) = set$Name($Name)
 """)
         }
       }
