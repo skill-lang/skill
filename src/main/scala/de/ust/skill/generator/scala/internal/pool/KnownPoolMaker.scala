@@ -8,7 +8,7 @@ package de.ust.skill.generator.scala.internal.pool
 import java.io.PrintWriter
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait KnownPoolMaker extends GeneralOutputMaker{
+trait KnownPoolMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
     val out = open("internal/pool/KnownPool.scala")
@@ -40,14 +40,14 @@ abstract class KnownPool[T <: B, B <: KnownType](
   private[internal] def basePool: BasePool[B]
 
   /**
-   * @return a new iterator over all dynamic instances of a type in type order
+   * @return a new iterator over all dynamic instances of a type in index ascending order, followed by new instances in type order
    */
   override def iterator: Iterator[T]
 
   /**
-   * @return a new iterator over all dynamic instances of a type in index ascending order, followed by new instances in type order
+   * @return a new iterator over all dynamic instances of a type in type order
    */
-  def indexOrderIterator: Iterator[T]
+  def typeOrderIterator: Iterator[T]
 
   /**
    * @return a new iterator over all static instances of a type in type order
