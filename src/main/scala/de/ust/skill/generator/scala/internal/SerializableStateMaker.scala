@@ -149,6 +149,11 @@ final class SerializableState extends SkillState {
   def get${Name}s(): Iterator[$tName] = pools("$sName").asInstanceOf[${Name}StoragePool].iterator
 
   /**
+   * returns a $name iterator which iterates over known instances in type order
+   */
+  def get${Name}sInTypeOrder(): Iterator[$tName] = pools("$sName").asInstanceOf[${Name}StoragePool].typeOrderIterator
+
+  /**
    * adds a new $name to the $name pool
    */
   def add$Name($addArgs) = pools("$sName").asInstanceOf[${Name}StoragePool].add$Name(new _root_.${packagePrefix}internal.types.$name($addArgs))

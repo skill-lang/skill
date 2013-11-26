@@ -64,6 +64,10 @@ trait SkillState {
    */
   def get${Name}s(): Iterator[$tName]
   /**
+   * returns a $name iterator which iterates over known instances in type order
+   */
+  def get${Name}sInTypeOrder(): Iterator[$tName]
+  /**
    * adds a new $name to the $name pool
    */
   def add$Name($addArgs): $tName
