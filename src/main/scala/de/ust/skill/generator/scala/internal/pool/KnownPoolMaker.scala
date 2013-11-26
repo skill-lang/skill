@@ -22,8 +22,9 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import ${packagePrefix}api.KnownType
-import ${packagePrefix}api.SkillType
-import ${packagePrefix}internal.{ SubPoolIndexIterator, SerializableState, UserType, WriteState }
+import ${packagePrefix}internal.SerializableState
+import ${packagePrefix}internal.UserType
+import ${packagePrefix}internal.WriteState
 import ${packagePrefix}internal.parsers.FieldParser
 
 /**
@@ -112,7 +113,7 @@ abstract class KnownPool[T <: B, B <: KnownType](
    * concatenates array buffers in the d-map. This will in fact turn the d-map from a map pointing from names to static
    *  instances into a map pointing from names to dynamic instances.
    */
-  final def concatenateDMap(d: HashMap[String, ArrayBuffer[SkillType]]): Unit = subPools.foreach {
+  final def concatenateDMap(d: HashMap[String, ArrayBuffer[KnownType]]): Unit = subPools.foreach {
     case sub: SubPool[_, B] ⇒ d(basePool.name) ++= d(sub.name); d(sub.name) = d(basePool.name); sub.concatenateDMap(d)
   }
 }

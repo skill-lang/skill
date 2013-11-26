@@ -87,13 +87,27 @@ final class SerializableState extends SkillState {
     val out = new ByteArrayOutputStream
 
     // write header
-    knownPools.foreach(_.write(file, out, ws))
+    def writeSubPools(p: KnownPool[_, _]) {
+      p.write(file, out, ws)
+      for (p ← p.getSubPools)
+        if (p.isInstanceOf[KnownPool[_, _]])
+          writeSubPools(p.asInstanceOf[KnownPool[_, _]])
+    }
+    for (p ← knownPools)
+      if (p.isInstanceOf[BasePool[_]])
+        writeSubPools(p)
 
     // write data
     file.write(ByteBuffer.wrap(out.toByteArray()))
 
     // done:)
     file.close()
+
+    // reset skill IDs
+    knownPools.foreach {
+      case p: BasePool[_] ⇒ p.restoreIndices
+      case _              ⇒
+    }
   }
 
   /**

@@ -59,6 +59,14 @@ abstract class BasePool[T <: KnownType: Manifest](userType: UserType, σ: Serial
    * @note base pool data access can not fail, because this would yeald an arary store exception at an earlier stage
    */
   final def getByID(index: Long): T = data(index.toInt - 1)
+
+  /**
+   * this function can be used to restore indices after a write operation; this is required to allow for appending after
+   * write operations.
+   * // TODO maybe it is also required to set nonzero indices of new objects to -1
+   * @note it is not possible to append to the written file; maybe write should in fact return a state
+   */
+  final def restoreIndices = for ((inst, idx) ← data.zipWithIndex if inst.getSkillID != 0) inst.setSkillID(idx+1)
 }
 """)
 

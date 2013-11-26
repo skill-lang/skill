@@ -76,10 +76,11 @@ final class StringPool {
 
     // instert new strings to the map;
     //  this is the place where duplications with lazy strings will be detected and eliminated
-    newStrings.foreach({ s ⇒
-      if (!serializationIDs.contains(s))
-        idMap.put(idMap.size + 1, s); serializationIDs.put(s, idMap.size)
-    })
+    for (s ← newStrings)
+      if (!serializationIDs.contains(s)) {
+        idMap.put(idMap.size + 1, s)
+        serializationIDs.put(s, idMap.size)
+      }
   }
 
   /**
@@ -114,7 +115,8 @@ final class StringPool {
     out.write(end)
     out.write(ByteBuffer.wrap(data.toByteArray()))
   }
-}""")
+}
+""")
     out.close()
   }
 }

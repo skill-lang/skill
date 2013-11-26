@@ -52,6 +52,7 @@ abstract class AbstractPool(
   if (superPool.isDefined) {
     superPool.get.subPools += this
   }
+  def getSubPools = subPools
 
   /**
    * returns the skill object at position index

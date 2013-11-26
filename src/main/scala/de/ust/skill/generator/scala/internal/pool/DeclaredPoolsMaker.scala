@@ -162,7 +162,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
   /**
    * the static size is thus the number of static instances plus the number of new objects
    */
-  override def staticSize:Long = staticData.size + newObjects.length
+  override def staticSize: Long = staticData.size + newObjects.length
 
   /**
    * construct instances of the pool in post-order, i.e. bottom-up
@@ -177,7 +177,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
       for (i ← from until until)
         if (null == data(i)) {
           val next = new _root_.${packagePrefix}internal.types.$name
-          next.setSkillID(i+1)
+          next.setSkillID(i + 1)
           staticDataConstructor += next
           data(i) = next
         }
@@ -248,7 +248,44 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
   }
 """)
 
-    // write field data
+    ///////////
+    // write //
+    ///////////
+
+    def writeField(f: Field): String = f.getType match {
+      case t: GroundType ⇒ t.getSkillName match {
+        case "annotation" ⇒
+          s"""this.foreach { instance ⇒ annotation(instance.get${f.getName().capitalize}[SkillType]).foreach(out.write _) }"""
+
+        case "v64" ⇒
+          s"""val target = new Array[Byte](9 * size)
+      var offset = 0
+
+      val it = iterator
+      while (it.hasNext)
+        offset += v64(it.next.get${f.getName.capitalize}, target, offset)
+
+      out.write(target, 0, offset)"""
+
+        case "i64" ⇒
+          s"""val target = ByteBuffer.allocate(8 * size)
+      val it = iterator
+      while (it.hasNext)
+        target.putLong(it.next.get${f.getName.capitalize})
+      out.write(target.array)"""
+
+        case _ ⇒ s"this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.get${f.getName().capitalize})) }"
+      }
+      case t: Declaration ⇒
+        s"""@inline def putField(i:$packagePrefix${d.getName}) { out.write(v64(i.get${f.getName().capitalize}.getSkillID)) }
+      ws.foreachOf("${t.getSkillName}", putField)"""
+
+      // TODO implementation for container types
+      case t: ContainerType ⇒ "???"
+
+      case _                ⇒ s"this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.get${f.getName().capitalize})) }"
+    }
+
     out.write(s"""
   override def write(head: FileChannel, out: ByteArrayOutputStream, ws: WriteState) {
     import ws._
@@ -257,7 +294,13 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     @inline def put(b: Array[Byte]) = head.write(ByteBuffer.wrap(b));
 
     put(string("$sName"))
-    put(v64(0)) // TODO
+    ${
+      if (null == d.getSuperType)
+        "put(Array[Byte](0))"
+      else
+        s"""put(string("${d.getSuperType.getSkillName}"))
+    put(v64(ws.lbpsiMap("$sName")))"""
+    }
     put(v64(this.dynamicSize))
     put(v64(0)) // restrictions not implemented yet
 
@@ -268,7 +311,12 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
       out.write(s"""
     userType.fields.get("${f.getSkillName()}").foreach { f ⇒
       put(v64(0)) // field restrictions not implemented yet
-      put(v64(f.t.typeId))
+      put(v64(${
+        f.getType match {
+          case t: Declaration ⇒ s"""ws.typeID("${t.getSkillName}")"""
+          case _              ⇒ "f.t.typeId"
+        }
+      }))
       put(string("${f.getSkillName()}"))
 
       ${writeField(f)}
@@ -284,37 +332,4 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     out.write("}\n")
     out.close()
   }
-
-  def writeField(f: Field): String = f.getType match {
-    case t: GroundType ⇒ t.getSkillName match {
-      case "annotation" ⇒
-        s"""this.foreach { instance ⇒ annotation(instance.get${f.getName().capitalize}[SkillType]).foreach(out.write _) }"""
-      case "v64" ⇒
-        s"""locally {
-        val target = new Array[Byte](9 * size)
-        var offset = 0
-
-        val it = iterator
-        while (it.hasNext)
-          offset += v64(it.next.get${f.getName.capitalize}, target, offset)
-
-        out.write(target, 0, offset)
-      }"""
-      case "i64" ⇒
-        s"""locally {
-        val target = ByteBuffer.allocate(8 * size)
-        val it = iterator
-        while (it.hasNext)
-          target.putLong(it.next.get${f.getName.capitalize})
-        out.write(target.array)
-      }"""
-      case _ ⇒ s"this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.get${f.getName().capitalize})) }"
-    }
-    case t: Declaration ⇒
-      s"""this.foreach { instance ⇒ out.write(v64(instance.get${f.getName().capitalize}.getSkillID)) }"""
-    // TODO implementation for container types
-    case t: ContainerType ⇒ "???"
-    case _                ⇒ s"this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.get${f.getName().capitalize})) }"
-  }
-
 }
