@@ -42,6 +42,8 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
       case "i32"        ⇒ "f.t == I32Info"
       case "i64"        ⇒ "f.t == I64Info"
       case "v64"        ⇒ "f.t == V64Info"
+      case "f32"        ⇒ "f.t == F32Info"
+      case "f64"        ⇒ "f.t == F64Info"
       case "string"     ⇒ "f.t == StringInfo"
       case s            ⇒ throw new Error(s"not yet implemented: $s")
     }
