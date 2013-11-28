@@ -21,6 +21,7 @@ import java.nio.file.Path
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
 import scala.language.implicitConversions
 
 import ${packagePrefix}internal._
@@ -101,10 +102,6 @@ final private class FileParser extends ByteStreamParsers {
      * creates a user type, if non exists
      */
     def mkUserType() {
-      // check for duplicate definitions
-      if (userTypeNameMap.contains(name))
-        throw ParseException(σ.fromReader, blockCounter, s"Duplicate definition of type $name")
-
       // create a new user type
       userType = new UserType(
         userTypeIndexMap.size,
@@ -178,6 +175,8 @@ final private class FileParser extends ByteStreamParsers {
   private var userTypeIndexMap = new HashMap[Long, UserType]
   private var userTypeNameMap = new HashMap[String, UserType]
   private var blockCounter = 0;
+  // required for duplicate definition detection
+  private val newTypeNames = new HashSet[String]
 
   /**
    * The map contains start indices of base types, which are required at the end of the type header processing phase to
@@ -204,6 +203,7 @@ final private class FileParser extends ByteStreamParsers {
         localBlockBaseTypeStartIndices.put(d.name, d.userType.instanceCount)
       })
 
+      newTypeNames.clear
       blockCounter += 1
       ()
     })
@@ -258,9 +258,6 @@ final private class FileParser extends ByteStreamParsers {
 
     raw.foreach({ t ⇒
       val u = t.userType
-      // check for duplicate definition of type in this block
-      if (u.blockInfos.contains(blockCounter))
-        throw ParseException(σ.fromReader, blockCounter, s"Duplicate redefinition of type ${u.name}")
 
       // add local block info
       u.addBlockInfo(new BlockInfo(t.count, localBlockBaseTypeStartIndices(u.baseType.name) + t.lbpsi), blockCounter)
@@ -315,6 +312,12 @@ final private class FileParser extends ByteStreamParsers {
    * see skill ref man §6.2
    */
   private[this] def typeDeclaration: Parser[TypeDeclaration] = (v64 ^^ { i ⇒ σ(i) }) >> { name ⇒
+    // check for duplicate definition inside of the same block
+    if(newTypeNames.contains(name))
+      throw new ParseException(σ.fromReader, blockCounter, s"Duplicate definition of type $name")
+
+    newTypeNames.add(name)
+
     // check if we append to an existing type
     if (userTypeNameMap.contains(name)) {
       val t = userTypeNameMap(name)

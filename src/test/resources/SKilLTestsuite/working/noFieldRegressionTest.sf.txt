@@ -1,0 +1,4 @@
+This file is the result of a regression, where types without fields can not be
+parsed correctly.
+Contains a type a, with an instance and no fields in the first block.
+In the second block a is appended with another instance.
