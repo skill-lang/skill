@@ -7,7 +7,7 @@ package de.ust.skill.ir.restriction;
  *       excluding "-0.0"
  * @author Timm Felden
  */
-public class FloatRangeRestriction extends RangeRestriction {
+final public class FloatRangeRestriction extends RangeRestriction {
 
 	private final double low, high;
 	private final boolean inclusiveLow, inclusiveHigh;

@@ -10,11 +10,15 @@ import scala.collection.mutable.HashSet
 import scala.collection.mutable.LinkedList
 import scala.util.parsing.combinator.RegexParsers
 import de.ust.skill.ir
-import de.ust.skill.ir.Restriction
-import de.ust.skill.ir.restriction.NullableRestriction
 import de.ust.skill.ir.Hint
-import de.ust.skill.ir.restriction.IntRangeRestriction
+import de.ust.skill.ir.Restriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
+import de.ust.skill.ir.restriction.IntRangeRestriction
+import de.ust.skill.ir.restriction.NullableRestriction
+import de.ust.skill.ir.restriction.SingletonRestriction
+import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
+import de.ust.skill.ir.restriction.MonotoneRestriction
+import de.ust.skill.ir.restriction.UniqueRestriction
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -124,7 +128,15 @@ final class Parser {
           }
           ) <~ ")"
 
-      case "nullable" ⇒ opt("(" ~ ")") ^^{_ ⇒ new NullableRestriction()}
+      case "nullable" ⇒ opt("(" ~ ")") ^^{_ ⇒ new NullableRestriction}
+
+      case "unique" ⇒ opt("(" ~ ")") ^^{_ ⇒ new UniqueRestriction}
+
+      case "singleton" ⇒ opt("(" ~ ")") ^^{_ ⇒ new SingletonRestriction}
+
+      case "monotone" ⇒ opt("(" ~ ")") ^^{_ ⇒ new MonotoneRestriction}
+
+      case "constantLengthPointer" ⇒ opt("(" ~ ")") ^^{_ ⇒ new ConstantLengthPointerRestriction}
 
       case unknown ⇒ opt("(" ~> repsep((int | string | floatingPointNumber), ",") <~ ")") ^^ {arg ⇒
         ParseException(s"$unknown${

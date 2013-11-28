@@ -3,7 +3,7 @@ package de.ust.skill.ir.restriction;
 /**
  * @author Timm Felden
  */
-public class IntRangeRestriction extends RangeRestriction {
+final public class IntRangeRestriction extends RangeRestriction {
 
 	private final long low, high;
 
