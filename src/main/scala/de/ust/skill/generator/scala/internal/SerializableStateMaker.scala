@@ -15,6 +15,8 @@ import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.SetType
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.ListType
+import de.ust.skill.ir.restriction.MonotoneRestriction
+import de.ust.skill.ir.restriction.SingletonRestriction
 
 trait SerializableStateMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -156,7 +158,22 @@ final class SerializableState extends SkillState {
         f ⇒ s"${f.getName().capitalize}: ${mapType(f.getType())}"
       }).mkString(", ")
 
-      out.write(s"""
+      if (!t.getRestrictions.collect { case r: SingletonRestriction ⇒ r }.isEmpty) {
+        // singleton instance access
+        out.write(s"""
+  /**
+   * returns the $name instance
+   */
+  def get$Name: $tName = {
+    val p = pools("$sName").asInstanceOf[${Name}StoragePool]
+    try{ p.iterator.next } catch {
+      case e:Exception ⇒ p.add$Name(p.newInstance)
+    }
+  }
+""")
+      } else {
+        // regular instance access
+        out.write(s"""
   /**
    * returns a $name iterator
    */
@@ -172,6 +189,7 @@ final class SerializableState extends SkillState {
    */
   def add$Name($addArgs) = pools("$sName").asInstanceOf[${Name}StoragePool].add$Name(new _root_.${packagePrefix}internal.types.$name($addArgs))
 """)
+      }
     })
 
     // state initialization

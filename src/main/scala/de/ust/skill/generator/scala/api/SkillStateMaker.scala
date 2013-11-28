@@ -6,8 +6,9 @@
 package de.ust.skill.generator.scala.api
 
 import scala.collection.JavaConversions._
-
 import de.ust.skill.generator.scala.GeneralOutputMaker
+import de.ust.skill.ir.restriction.MonotoneRestriction
+import de.ust.skill.ir.restriction.SingletonRestriction
 
 trait SkillStateMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -58,7 +59,16 @@ trait SkillState {
         f ⇒ s"${f.getName().capitalize}: ${mapType(f.getType())}"
       }).mkString(", ")
 
-      out.write(s"""
+      // singletons get a get$Name function, which returns the single instance
+      if (!t.getRestrictions.collect { case r: SingletonRestriction ⇒ r }.isEmpty) {
+        out.write(s"""
+  /**
+   * returns the $name instance
+   */
+  def get$Name: $tName
+""")
+      } else {
+        out.write(s"""
   /**
    * returns a $name iterator
    */
@@ -72,7 +82,7 @@ trait SkillState {
    */
   def add$Name($addArgs): $tName
 """)
-
+      }
     })
 
     // second part: reading of files
