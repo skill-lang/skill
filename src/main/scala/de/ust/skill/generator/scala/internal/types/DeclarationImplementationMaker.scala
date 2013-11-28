@@ -11,6 +11,7 @@ import de.ust.skill.ir.ReferenceType
 import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
+import de.ust.skill.ir.restriction.MonotoneRestriction
 
 trait DeclarationImplementationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -48,10 +49,15 @@ final class $name extends _root_.${packagePrefix}$name {""")
     ${relevantFields.map{f ⇒ s"_${f.getName()} = ${escaped(f.getName)}"}.mkString("\n    ")}
   }""")
 	}
-    out.write("""
+    out.write(s"""
   private[internal] var skillID = -1L
   override final def getSkillID = skillID
-  private[internal] def setSkillID(newID: Long) = skillID = newID
+  private[internal] def setSkillID(newID: Long) = {${// @monotone delete-check
+      if(!d.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty)
+        s"""require(newID != 0L || newID != -1L || skillID == -1L || skillID == 0L, "${d.getName} is specified to be monotone and this instance has already been subject to serialization!"); """
+      else
+        ""
+    }skillID = newID}
 """)
 
 	///////////////////////
@@ -92,18 +98,25 @@ final class $name extends _root_.${packagePrefix}$name {""")
             s"""require($Name != null, "$name is specified to be nonnull!"); """
           else
             ""
-        }${ //range check
-          if(f.getType().isInstanceOf[GroundType]){
-            if(f.getType().asInstanceOf[GroundType].isInteger)
-              f.getRestrictions.collect{case r:IntRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLow}L <= $Name && $Name <= ${r.getHigh}L, "$name has to be in range [${r.getLow};${r.getHigh}]"); """}.mkString("")
-            else if("f32".equals(f.getType.getName))
-              f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowFloat}f <= $Name && $Name <= ${r.getHighFloat}f, "$name has to be in range [${r.getLowFloat};${r.getHighFloat}]"); """}.mkString("")
-            else if("f64".equals(f.getType.getName))
-              f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowDouble} <= $Name && $Name <= ${r.getHighDouble}, "$name has to be in range [${r.getLowDouble};${r.getHighDouble}]"); """}.mkString("")
+          }${ //@range check
+            if(f.getType().isInstanceOf[GroundType]){
+              if(f.getType().asInstanceOf[GroundType].isInteger)
+                f.getRestrictions.collect{case r:IntRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLow}L <= $Name && $Name <= ${r.getHigh}L, "$name has to be in range [${r.getLow};${r.getHigh}]"); """}.mkString("")
+              else if("f32".equals(f.getType.getName))
+                f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowFloat}f <= $Name && $Name <= ${r.getHighFloat}f, "$name has to be in range [${r.getLowFloat};${r.getHighFloat}]"); """}.mkString("")
+              else if("f64".equals(f.getType.getName))
+               f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowDouble} <= $Name && $Name <= ${r.getHighDouble}, "$name has to be in range [${r.getLowDouble};${r.getHighDouble}]"); """}.mkString("")
+              else
+                ""
+            }
             else
               ""
-          }else
-            ""
+          }${//@monotone modification check
+            if(!d.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty){
+              s"""require(skillID == -1L, "${d.getName} is specified to be monotone and this instance has already been subject to serialization!"); """
+            }
+            else
+              ""
         }_$name = $Name }"
       }
 
