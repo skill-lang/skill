@@ -2,7 +2,7 @@ name := "skill"
 
 version := "0.1"
 
-scalaVersion := "2.10.2"
+scalaVersion := "2.10.3"
 
 libraryDependencies ++= Seq(
 	"junit" % "junit" % "4.10" % "test",
@@ -10,3 +10,9 @@ libraryDependencies ++= Seq(
 )
 
 org.scalastyle.sbt.ScalastylePlugin.Settings
+
+seq(com.github.retronym.SbtOneJar.oneJarSettings: _*)
+
+libraryDependencies += "commons-lang" % "commons-lang" % "2.6"
+
+mainClass in oneJar := Some("de.ust.skill.generator.scala.Main")

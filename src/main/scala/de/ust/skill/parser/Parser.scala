@@ -10,9 +10,15 @@ import scala.collection.mutable.HashSet
 import scala.collection.mutable.LinkedList
 import scala.util.parsing.combinator.RegexParsers
 import de.ust.skill.ir
-import de.ust.skill.ir.Restriction
-import de.ust.skill.ir.restriction.NullableRestriction
 import de.ust.skill.ir.Hint
+import de.ust.skill.ir.Restriction
+import de.ust.skill.ir.restriction.FloatRangeRestriction
+import de.ust.skill.ir.restriction.IntRangeRestriction
+import de.ust.skill.ir.restriction.NullableRestriction
+import de.ust.skill.ir.restriction.SingletonRestriction
+import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
+import de.ust.skill.ir.restriction.MonotoneRestriction
+import de.ust.skill.ir.restriction.UniqueRestriction
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -33,15 +39,25 @@ final class Parser {
      */
     private def id = """[a-zA-Z_\u007f-\uffff][\w\u007f-\uffff]*""".r
     /**
-     * Skill only has hex literals.
+     * Skill integer literals
      */
-    private def int = "0x" ~> ("""[0-9a-fA-F]*""".r ^^ { i ⇒ Long.parseLong(i, 16) })
-    
+    private def int:Parser[Long] = HexInt | GeneralInt
+    private def HexInt:Parser[Long] = "0x" ~> ("""[0-9a-fA-F]*""".r ^^ { i ⇒ Long.parseLong(i, 16) })
+    private def GeneralInt:Parser[Long] = """[0-9]*\.*""".r >> { i ⇒
+              try{
+                success(Long.parseLong(i, 10))
+              }catch{
+                case e:Exception ⇒ failure("not an int")
+              }
+            }
+
     /**
-     * Floating point literal, as taken from the JavaTokenParsers definition.s
+     * Floating point literal, as taken from the JavaTokenParsers definition.
+     *
+     * @note if the target can be an integer as well, the integer check has to come first
      */
     def floatingPointNumber: Parser[Double] = """-?(\d+(\.\d*)?|\d*\.\d+)([eE][+-]?\d+)?[fFdD]?""".r ^^ {_.toDouble}
-  
+
     /**
      * We use string literals to encode paths. If someone really calls a file ", someone should beat him hard.
      */
@@ -71,9 +87,62 @@ final class Parser {
      * 
      * @note the implementation is more liberal then the specification of the specification language, because some illegal arguments are dropped
      */
-    private def restriction:Parser[Restriction] = "@" ~> id ~ opt("(" ~> repsep((int | string | floatingPointNumber), ",") <~ ")") ^^ {
-      case "nullable" ~ arg ⇒ new NullableRestriction()
-      case unknown ~ arg ⇒ ParseException(s"$unknown${arg.mkString("(", ", ", ")")} is either not yet supported or an invalid restriction name")
+    private def restriction:Parser[Restriction] = "@" ~> id >> {
+      case "min" ⇒ "(" ~> (
+          int ~ opt("," ~> string) ^^ {
+            case low ~ None ⇒ new IntRangeRestriction(low, Long.MAX_VALUE, true, true)
+            case low ~ Some("inclusive") ⇒ new IntRangeRestriction(low, Long.MAX_VALUE, true, true)
+            case low ~ Some("exclusive") ⇒ new IntRangeRestriction(low, Long.MAX_VALUE, false, true)
+            }
+          |
+          floatingPointNumber ~ opt("," ~> string) ^^ {
+            case low ~ None ⇒ new FloatRangeRestriction(low, Double.MaxValue, true, true)
+            case low ~ Some("inclusive") ⇒ new FloatRangeRestriction(low, Double.MaxValue, true, true)
+            case low ~ Some("exclusive") ⇒ new FloatRangeRestriction(low, Double.MaxValue, false, true)
+            }
+          ) <~ ")"
+
+      case "max" ⇒ "(" ~> (
+          int ~ opt("," ~> string) ^^ {
+            case high ~ None ⇒ new IntRangeRestriction(Long.MIN_VALUE, high, true, true)
+            case high ~ Some("inclusive") ⇒ new IntRangeRestriction(Long.MIN_VALUE, high, true, true)
+            case high ~ Some("exclusive") ⇒ new IntRangeRestriction(Long.MIN_VALUE, high, true, false)
+            }
+          |
+          floatingPointNumber ~ opt("," ~> string) ^^ {
+            case high ~ None ⇒ new FloatRangeRestriction(Double.MinValue, high, true, true)
+            case high ~ Some("inclusive") ⇒ new FloatRangeRestriction(Double.MinValue, high, true, true)
+            case high ~ Some("exclusive") ⇒ new FloatRangeRestriction(Double.MinValue, high, true, false)
+            }
+          ) <~ ")"
+
+      case "range" ⇒ "(" ~> (
+          int ~ ("," ~> int) ~ opt("," ~> string ~ ("," ~> string)) ^^ {
+            case low ~ high ~ None ⇒ new IntRangeRestriction(low, high, true, true)
+            case low ~ high ~ Some(l ~ h) ⇒ new IntRangeRestriction(low, high, "inclusive"==l, "inclusive"==h)
+          }
+          |
+          floatingPointNumber ~ ("," ~> floatingPointNumber) ~ opt("," ~> string ~ ("," ~> string)) ^^ {
+            case low ~ high ~ None ⇒ new FloatRangeRestriction(low, high, true, true)
+            case low ~ high ~ Some(l ~ h) ⇒ new FloatRangeRestriction(low, high, "inclusive"==l, "inclusive"==h)
+          }
+          ) <~ ")"
+
+      case "nullable" ⇒ opt("(" ~ ")") ^^{_ ⇒ new NullableRestriction}
+
+      case "unique" ⇒ opt("(" ~ ")") ^^{_ ⇒ new UniqueRestriction}
+
+      case "singleton" ⇒ opt("(" ~ ")") ^^{_ ⇒ new SingletonRestriction}
+
+      case "monotone" ⇒ opt("(" ~ ")") ^^{_ ⇒ new MonotoneRestriction}
+
+      case "constantLengthPointer" ⇒ opt("(" ~ ")") ^^{_ ⇒ new ConstantLengthPointerRestriction}
+
+      case unknown ⇒ opt("(" ~> repsep((int | string | floatingPointNumber), ",") <~ ")") ^^ {arg ⇒
+        ParseException(s"$unknown${
+          arg.mkString("(", ", ", ")")
+        } is either not supported or an invalid restriction name")
+      }
     }
     /**
      * hints as defined in the paper. Because hints can be ignored by the generator, it is safe to allow arbitrary

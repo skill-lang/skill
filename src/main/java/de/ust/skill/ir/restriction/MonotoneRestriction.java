@@ -3,18 +3,16 @@ package de.ust.skill.ir.restriction;
 import de.ust.skill.ir.Restriction;
 
 /**
- * Base class for range restrictions.
- *
- * @see IntRangeRestriction
- * @see FloatRangeRestriction
- *
+ * Instances of monotone classes can not be deleted or modified, once they have
+ * been (de-)serialized.
+ * 
  * @author Timm Felden
  */
-abstract public class RangeRestriction extends Restriction {
+final public class MonotoneRestriction extends Restriction {
 
 	@Override
 	public String getName() {
-		return "range";
+		return "monotone";
 	}
 
 	@Override

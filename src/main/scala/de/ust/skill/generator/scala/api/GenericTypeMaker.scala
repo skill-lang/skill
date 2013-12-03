@@ -23,6 +23,8 @@ trait GenericTypeMaker extends GeneralOutputMaker {
  */
 class GenericType extends SkillType {
 
+  def getSkillID = 0L
+
   def prettyString: String = "<<some generic objcet>>"
 
 }

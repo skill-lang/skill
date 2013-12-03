@@ -8,7 +8,7 @@ package de.ust.skill.generator.scala.internal.pool
 import java.io.PrintWriter
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait SubPoolMaker extends GeneralOutputMaker{
+trait SubPoolMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
     val out = open("internal/pool/SubPool.scala")
@@ -37,6 +37,11 @@ abstract class SubPool[T <: B, B <: KnownType](
   final override def basePool = _superPool.basePool
 
   /**
+   * the base type data store
+   */
+  private[pool] var data:Array[B] = basePool.data
+
+  /**
    * get is deferred to the base pool
    */
   def getByID(index: Long): T = try { basePool.getByID(index).asInstanceOf[T] } catch {
@@ -45,22 +50,6 @@ abstract class SubPool[T <: B, B <: KnownType](
         basePool.data(index.toInt - 1).getClass().getName()
       }""\", e
     )
-  }
-
-  /**
-   * construct instances of the pool in post-order, i.e. bottom-up
-   */
-  final override def constructPool() {
-    val data = basePool.data
-    // construct data in a bottom up order
-    subPools.collect { case p: KnownPool[_, _] ⇒ p }.foreach(_.constructPool)
-    userType.blockInfos.values.foreach({ b ⇒
-      for (i ← b.bpsi - 1 until b.bpsi + b.count - 1)
-        if (null == data(i.toInt)) {
-          staticData += 1
-          data(i.toInt) = newInstance
-        }
-    })
   }
 }
 """)

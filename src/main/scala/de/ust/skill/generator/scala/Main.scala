@@ -83,9 +83,10 @@ class Main extends FakeMain
     with FieldDeclarationMaker
     with GenericPoolMaker
     with GenericTypeMaker
+    with InternalInstancePropertiesMaker
     with KnownPoolMaker
     with KnownTypeMaker
-    with PoolIteratorMaker
+    with SubPoolIndexedIteratorMaker
     with SerializableStateMaker
     with SerializationFunctionsMaker
     with SkillExceptionMaker
@@ -93,8 +94,7 @@ class Main extends FakeMain
     with SkillTypeMaker
     with StringPoolMaker
     with SubPoolMaker
-    with TypeInfoMaker
-    with WriteStateMaker {
+    with TypeInfoMaker {
 
   var outPath: String = null
   var IR: List[Declaration] = null
@@ -130,13 +130,6 @@ class Main extends FakeMain
     }
 
     case t: Declaration ⇒ "_root_."+packagePrefix + t.getName()
-  }
-
-  /**
-   * Reads a template file and copies the input to out.
-   */
-  override protected def copyFromTemplate(out: PrintWriter, template: String) {
-    Source.fromFile("src/main/scala/de/ust/skill/generator/scala/templates/"+template).getLines.foreach({ s ⇒ out.write(s+"\n") })
   }
 
   /**

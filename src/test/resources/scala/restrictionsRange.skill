@@ -1,0 +1,22 @@
+/**
+@see SKilL 13/06 Listing 12
+
+extended by negative numbers
+*/
+
+RangeRestricted{
+  @min(0)
+  v64 natural;
+
+  @min(1)
+  v64 positive;
+
+  @min(0, "exclusive")
+  v64 positiveAlt;
+
+  @range(0.0, 360.0, "inclusive", "exclusive")
+  f32 angle;
+
+  @max(0, "exclusive")
+  i32 negative;
+}

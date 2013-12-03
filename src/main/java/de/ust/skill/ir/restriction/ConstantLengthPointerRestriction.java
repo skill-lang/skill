@@ -3,18 +3,16 @@ package de.ust.skill.ir.restriction;
 import de.ust.skill.ir.Restriction;
 
 /**
- * Base class for range restrictions.
- *
- * @see IntRangeRestriction
- * @see FloatRangeRestriction
- *
+ * Makes pointers use i64 instead of v64, which is useful for lazy
+ * deserialization of individual objects.
+ * 
  * @author Timm Felden
  */
-abstract public class RangeRestriction extends Restriction {
+final public class ConstantLengthPointerRestriction extends Restriction {
 
 	@Override
 	public String getName() {
-		return "range";
+		return "constantLengthPointer";
 	}
 
 	@Override

@@ -7,20 +7,23 @@ package de.ust.skill.generator.scala.internal
 
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait PoolIteratorMaker extends GeneralOutputMaker{
+trait InternalInstancePropertiesMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("internal/PoolIterator.scala")
-    //package & imports
-    out.write(s"""package ${packagePrefix}internal
+    val out = open("internal/InternalInstanceProperties.scala")
+    //package
+    out.write(s"""package ${packagePrefix}internal""")
+    out.write("""
 
-import ${packagePrefix}api.KnownType
-import ${packagePrefix}internal.pool.KnownPool
-
+/**
+ * properties that are required on each instance, but are not exported through the interface
+ * 
+ * @author Timm Felden
+ */
+trait InternalInstanceProperties {
+  private[internal] def setSkillID(newID: Long): Unit
+}
 """)
-
-    //the body itself is always the same
-    copyFromTemplate(out, "PoolIterator.scala.template")
 
     //class prefix
     out.close()

@@ -6,8 +6,9 @@
 package de.ust.skill.generator.scala.api
 
 import scala.collection.JavaConversions._
-
 import de.ust.skill.generator.scala.GeneralOutputMaker
+import de.ust.skill.ir.restriction.MonotoneRestriction
+import de.ust.skill.ir.restriction.SingletonRestriction
 
 trait SkillStateMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -36,6 +37,19 @@ trait SkillState {
   def write(target: Path): Unit
 
   /**
+   * Appends new content to the read SKilL file.
+   *
+   * @pre canAppend
+   */
+  def append: Unit
+
+  /**
+   * Checks, if the changes made to a state can be appended to the read file. This will also return false, if the state
+   * has been created and not read from a file.
+   */
+  def canAppend: Boolean
+
+  /**
    * retrieves a string from the known strings; this can cause disk access, due to the lazy nature of the implementation
    *
    * @throws ArrayOutOfBoundsException if index is not valid
@@ -54,19 +68,34 @@ trait SkillState {
       val sName = name.toLowerCase()
       val tName = "_root_."+packagePrefix + name
 
-      val addArgs = t.getAllFields().filter(!_.isConstant).map({ f ⇒ s"${f.getName().capitalize}: ${mapType(f.getType())}" }).mkString(", ")
+      val addArgs = t.getAllFields().filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
+        f ⇒ s"${f.getName().capitalize}: ${mapType(f.getType())}"
+      }).mkString(", ")
 
-      out.write(s"""
+      // singletons get a get$Name function, which returns the single instance
+      if (!t.getRestrictions.collect { case r: SingletonRestriction ⇒ r }.isEmpty) {
+        out.write(s"""
+  /**
+   * returns the $name instance
+   */
+  def get$Name: $tName
+""")
+      } else {
+        out.write(s"""
   /**
    * returns a $name iterator
    */
   def get${Name}s(): Iterator[$tName]
   /**
+   * returns a $name iterator which iterates over known instances in type order
+   */
+  def get${Name}sInTypeOrder(): Iterator[$tName]
+  /**
    * adds a new $name to the $name pool
    */
   def add$Name($addArgs): $tName
 """)
-
+      }
     })
 
     // second part: reading of files

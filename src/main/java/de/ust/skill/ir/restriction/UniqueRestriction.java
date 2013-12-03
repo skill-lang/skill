@@ -3,20 +3,20 @@ package de.ust.skill.ir.restriction;
 import de.ust.skill.ir.Restriction;
 
 /**
- * Allows the argument field to contain NULL.
+ * Instances of unique types are pair-wise distinct.
  * 
  * @author Timm Felden
  */
-final public class NullableRestriction extends Restriction {
+final public class UniqueRestriction extends Restriction {
 
 	@Override
 	public String getName() {
-		return "nullable";
+		return "unique";
 	}
 
 	@Override
 	public String toString() {
-		return "@nullable";
+		throw new NoSuchMethodError("not yet implemented");
 	}
 
 }
