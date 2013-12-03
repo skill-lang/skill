@@ -23,8 +23,10 @@ import java.nio.channels.FileChannel
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
+import ${packagePrefix}internal.AppendState
 import ${packagePrefix}internal.SerializableState
 import ${packagePrefix}internal.SerializationFunctions
+import ${packagePrefix}internal.WriteState
 
 final class StringPool {
   import SerializationFunctions.v64
@@ -46,11 +48,6 @@ final class StringPool {
    */
   private[internal] var idMap = new HashMap[Long, String]
 
-  /**
-   * only used during serialization!!!
-   */
-  private[internal] var serializationIDs = new HashMap[String, Long]
-
   def write(out: OutputStream) {
 
     newStrings.foreach(s ⇒ {
@@ -67,9 +64,11 @@ final class StringPool {
    *
    * @note TODO this solution is not correct if strings are not used anymore, i.e. it may produce garbage
    */
-  private[internal] def prepareSerialization(σ: SerializableState) {
+  private[internal] def prepareAndWrite(out: FileChannel, ws: WriteState) {
+    val serializationIDs = ws.serializationIDs
+
     // ensure all strings are present
-    stringPositions.keySet.foreach(σ.getString(_))
+    stringPositions.keySet.foreach(ws.state.getString(_))
 
     // create inverse map
     idMap.foreach({ case (k, v) ⇒ serializationIDs.put(v, k) })
@@ -81,20 +80,7 @@ final class StringPool {
         idMap.put(idMap.size + 1, s)
         serializationIDs.put(s, idMap.size)
       }
-  }
 
-  /**
-   * helper for the implementation of serialization of strings, which returns a ByteBuffer containing an index refering
-   * to the argument string
-   */
-  private[internal] def serializedStringReference(s: String): ByteBuffer = {
-    ByteBuffer.wrap(v64(serializationIDs(s)))
-  }
-
-  /**
-   * writes the contents of the pool to the stream
-   */
-  private[internal] def write(out: FileChannel, σ: SerializableState) {
     //count
     out.write(ByteBuffer.wrap(v64(idMap.size)))
 
@@ -109,6 +95,46 @@ final class StringPool {
       end.putInt(off)
       data.write(s)
     }
+
+    //write back
+    end.rewind()
+    out.write(end)
+    out.write(ByteBuffer.wrap(data.toByteArray()))
+  }
+
+  /**
+   * prepares serialization of the string pool and appends new Strings to the output stream.
+   */
+  private[internal] def prepareAndAppend(out: FileChannel, as: AppendState) {
+    val serializationIDs = as.serializationIDs
+
+    // ensure all strings are present
+    stringPositions.keySet.foreach(as.state.getString(_))
+
+    // create inverse map
+    idMap.foreach({ case (k, v) ⇒ serializationIDs.put(v, k) })
+
+    val data = new ByteArrayOutputStream
+    var offsets = List[Int]()
+
+    // instert new strings to the map;
+    //  this is the place where duplications with lazy strings will be detected and eliminated
+    //  this is also the place, where new instances are appended to the output file
+    for (s ← newStrings)
+      if (!serializationIDs.contains(s)) {
+        idMap.put(idMap.size + 1, s)
+        serializationIDs.put(s, idMap.size)
+        data.write(s.getBytes)
+        offsets ::= data.size
+      }
+
+    //count
+    val count = offsets.size
+    out.write(ByteBuffer.wrap(v64(count)))
+
+    //end & data
+    val end = ByteBuffer.allocate(4 * count)
+    offsets.foreach(end.putInt(_))
 
     //write back
     end.rewind()

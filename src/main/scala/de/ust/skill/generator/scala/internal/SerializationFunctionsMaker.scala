@@ -17,7 +17,12 @@ trait SerializationFunctionsMaker extends GeneralOutputMaker {
 
 import java.nio.ByteBuffer
 
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+
+import ${packagePrefix}api.KnownType
 import ${packagePrefix}api.SkillType
+import ${packagePrefix}internal.pool.BasePool
 import ${packagePrefix}internal.pool.KnownPool
 
 /**
@@ -26,12 +31,14 @@ import ${packagePrefix}internal.pool.KnownPool
  * @see SKilL §6.4
  * @author Timm Felden
  */
-abstract class SerializationFunctions(state: SerializableState) {
+sealed abstract class SerializationFunctions(state: SerializableState) {
   import SerializationFunctions._
+
+  val serializationIDs = new HashMap[String, Long]
 
   def annotation(ref: SkillType): List[Array[Byte]]
 
-  def string(v: String): Array[Byte] = v64(state.strings.serializationIDs(v))
+  def string(v: String): Array[Byte] = v64(serializationIDs(v))
 }
 
 object SerializationFunctions {
@@ -202,6 +209,117 @@ object SerializationFunctions {
 
   def f32(v: Float): Array[Byte] = ByteBuffer.allocate(4).putFloat(v).array
   def f64(v: Double): Array[Byte] = ByteBuffer.allocate(8).putDouble(v).array
+}
+
+/**
+ * holds state of an append operation
+ * @author Timm Felden
+ */
+private[internal] final class AppendState(val state: SerializableState) extends SerializationFunctions(state) {
+  import SerializationFunctions._
+  import state._
+
+  def getByID[T <: SkillType](typeName: String, id: Long): T = d(typeName)(id.toInt).asInstanceOf[T]
+
+  /**
+   * typeIDs used in the stored file
+   * type IDs are constructed together with the lbpsi map
+   */
+  val typeID = new HashMap[String, Int]
+
+  /**
+   * prepares a state, i.e. calculates d-map and lpbsi-map
+   */
+  val d = new HashMap[String, ArrayBuffer[KnownType]]
+  // store static instances in d
+  knownPools.foreach { p ⇒
+    d.put(p.name, p.newObjects.asInstanceOf[ArrayBuffer[KnownType]]: @unchecked)
+  }
+
+  // make lbpsi map and update d-maps
+  val lbpsiMap = new HashMap[String, Long]
+  pools.values.foreach {
+    case p: BasePool[_] ⇒
+      p.makeLBPSIMap(lbpsiMap, 1, { s ⇒ typeID.put(s, typeID.size + 32); d(s).size })
+      p.concatenateDMap(d)
+      var id = 1L
+      for (i ← d(p.name)) {
+        i.setSkillID(id)
+        id += 1
+      }
+    case _ ⇒
+  }
+
+  def foreachOf[T <: SkillType](name: String, f: T ⇒ Unit) = {
+    val low = lbpsiMap(name) - 1
+    val r = low.toInt until (low + state.pools(name).dynamicSize).toInt
+    val ab = d(name)
+    for (i ← r)
+      f(ab(i).asInstanceOf[T])
+  }
+
+  override def annotation(ref: SkillType): List[Array[Byte]] = {
+    val baseName = state.pools(ref.getClass.getSimpleName.toLowerCase).asInstanceOf[KnownPool[_, _]].basePool.name
+
+    List(v64(serializationIDs(baseName)), v64(ref.getSkillID))
+  }
+}
+
+/**
+ * holds state of a write operation
+ * @author Timm Felden
+ */
+private[internal] final class WriteState(val state: SerializableState) extends SerializationFunctions(state) {
+  import SerializationFunctions._
+  import state._
+
+  def getByID[T <: SkillType](typeName: String, id: Long): T = d(typeName)(id.toInt).asInstanceOf[T]
+
+  /**
+   * typeIDs used in the stored file
+   * type IDs are constructed together with the lbpsi map
+   */
+  val typeID = new HashMap[String, Int]
+
+  /**
+   * prepares a state, i.e. calculates d-map and lpbsi-map
+   */
+  val d = new HashMap[String, ArrayBuffer[KnownType]]
+  // store static instances in d
+  knownPools.foreach { p ⇒
+    val ab = new ArrayBuffer[KnownType](p.staticSize.toInt);
+    for (i ← p.staticInstances)
+      ab.append(i)
+    d.put(p.name, ab)
+  }
+
+  // make lbpsi map and update d-maps
+  val lbpsiMap = new HashMap[String, Long]
+  pools.values.foreach {
+    case p: BasePool[_] ⇒
+      p.makeLBPSIMap(lbpsiMap, 1, { s ⇒ typeID.put(s, typeID.size + 32); d(s).size })
+      p.concatenateDMap(d)
+      var id = 1L
+      for (i ← d(p.name)) {
+        i.setSkillID(id)
+        id += 1
+      }
+    case _ ⇒
+  }
+
+  def foreachOf[T <: SkillType](name: String, f: T ⇒ Unit) = {
+    val low = lbpsiMap(name) - 1
+    val r = low.toInt until (low + state.pools(name).dynamicSize).toInt
+    val ab = d(name)
+    for (i ← r)
+      f(ab(i).asInstanceOf[T])
+  }
+
+  override def annotation(ref: SkillType): List[Array[Byte]] = {
+    val baseName = state.pools(ref.getClass.getSimpleName.toLowerCase).asInstanceOf[KnownPool[_, _]].basePool.name
+
+    List(v64(serializationIDs(baseName)), v64(ref.getSkillID))
+  }
 }
 """)
 

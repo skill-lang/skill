@@ -37,6 +37,19 @@ trait SkillState {
   def write(target: Path): Unit
 
   /**
+   * Appends new content to the read SKilL file.
+   *
+   * @pre canAppend
+   */
+  def append: Unit
+
+  /**
+   * Checks, if the changes made to a state can be appended to the read file. This will also return false, if the state
+   * has been created and not read from a file.
+   */
+  def canAppend: Boolean
+
+  /**
    * retrieves a string from the known strings; this can cause disk access, due to the lazy nature of the implementation
    *
    * @throws ArrayOutOfBoundsException if index is not valid

@@ -54,6 +54,10 @@ final class SerializableState extends SkillState {
    *
    * null iff the state has not been created from a file
    */
+  private[internal] var path: Path = null
+  /**
+   * reader for the input file, which is used for lazy evaluation and error reporting
+   */
   private[internal] var fromReader: ByteReader = null
 
   private[internal] var pools = new HashMap[String, AbstractPool]
@@ -72,15 +76,13 @@ final class SerializableState extends SkillState {
       StandardOpenOption.WRITE,
       StandardOpenOption.TRUNCATE_EXISTING).asInstanceOf[FileChannel]
 
-    // collect all known objects
-    strings.prepareSerialization(this)
     val ws = new WriteState(this)
+    // write string pool
+    strings.prepareAndWrite(file, ws)
 
+    // collect all known objects
     // prepare pools, i.e. ensure that all objects get IDs which can be turned into logic pointers
     knownPools.foreach(_.prepareSerialization(this))
-
-    // write string pool
-    strings.write(file, this)
 
     // write count of the type block
     file.write(ByteBuffer.wrap(v64(pools.size)))
@@ -111,6 +113,52 @@ final class SerializableState extends SkillState {
       case _              ⇒
     }
   }
+
+  /**
+   * Appends to an existing SKilL file.
+   */
+  def append {
+    require(canAppend)
+    import SerializationFunctions._
+
+    val file = Files.newByteChannel(path,
+      StandardOpenOption.APPEND,
+      StandardOpenOption.WRITE).asInstanceOf[FileChannel]
+
+    val as = new AppendState(this)
+
+    // collect all known objects
+    strings.prepareAndAppend(file, as)
+
+    // prepare pools, i.e. ensure that all objects get IDs which can be turned into logic pointers
+    knownPools.foreach(_.prepareSerialization(this))
+
+    // write count of the type block
+    file.write(ByteBuffer.wrap(v64(pools.size)))
+
+    // write fields back to their buffers
+    val out = new ByteArrayOutputStream
+
+    // write header
+    def writeSubPools(p: KnownPool[_, _]) {
+      p.append(file, out, as)
+      for (p ← p.getSubPools)
+        if (p.isInstanceOf[KnownPool[_, _]])
+          writeSubPools(p.asInstanceOf[KnownPool[_, _]])
+    }
+    for (p ← knownPools)
+      if (p.isInstanceOf[BasePool[_]])
+        writeSubPools(p)
+
+    // write data
+    file.write(ByteBuffer.wrap(out.toByteArray()))
+
+    // done:)
+    file.close()
+  }
+
+  // TODO check if state can be appended
+  def canAppend: Boolean = null != path
 
   /**
    * retrieves a string from the known strings; this can cause disk access, due to the lazy nature of the implementation

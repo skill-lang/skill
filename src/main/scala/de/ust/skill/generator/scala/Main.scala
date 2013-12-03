@@ -94,8 +94,7 @@ class Main extends FakeMain
     with SkillTypeMaker
     with StringPoolMaker
     with SubPoolMaker
-    with TypeInfoMaker
-    with WriteStateMaker {
+    with TypeInfoMaker {
 
   var outPath: String = null
   var IR: List[Declaration] = null

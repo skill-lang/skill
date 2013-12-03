@@ -49,9 +49,6 @@ final class ByteReader(file: FileChannel) extends Reader[Byte] {
    */
   val input = file.map(MapMode.READ_ONLY, 0, file.size)
 
-  // this buffer is reused for any allocation below 64bytes
-  private val smallBuf = ByteBuffer.allocate(64)
-
   private var positions = new Stack[Int]
   /**
    * saves the current position onto a stack and jumps to the argument position

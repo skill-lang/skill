@@ -260,20 +260,20 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
           s"""this.foreach { instance ⇒ annotation(instance.get${f.getName().capitalize}[SkillType]).foreach(out.write _) }"""
 
         case "v64" ⇒
-          s"""val target = new Array[Byte](9 * size)
+          s"""val target = new Array[Byte](9 * outData.size)
       var offset = 0
 
-      val it = iterator
+      val it = outData.iterator
       while (it.hasNext)
-        offset += v64(it.next.get${f.getName.capitalize}, target, offset)
+        offset += v64(it.next.asInstanceOf[Date].get${f.getName.capitalize}, target, offset)
 
       out.write(target, 0, offset)"""
 
         case "i64" ⇒
           s"""val target = ByteBuffer.allocate(8 * size)
-      val it = iterator
+      val it = outData.iterator
       while (it.hasNext)
-        target.putLong(it.next.get${f.getName.capitalize})
+        target.putLong(it.next.asInstanceOf[Date].get${f.getName.capitalize})
       out.write(target.array)"""
 
         case _ ⇒ s"this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.get${f.getName().capitalize})) }"
@@ -295,6 +295,8 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
 
     @inline def put(b: Array[Byte]) = head.write(ByteBuffer.wrap(b));
 
+    val outData = this
+
     put(string("$sName"))
     ${
       if (null == d.getSuperType)
@@ -303,7 +305,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
         s"""put(string("${d.getSuperType.getSkillName}"))
     put(v64(ws.lbpsiMap("$sName")))"""
     }
-    put(v64(this.dynamicSize))
+    put(v64(outData.size))
     put(v64(0)) // restrictions not implemented yet
 
     put(v64(userType.fields.size))
@@ -327,8 +329,62 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
 """)
     })
 
+    out.write(s"""  }
+""")
+
+    ////////////
+    // append //
+    ////////////
+
     out.write(s"""
-  }
+  override def append(head: FileChannel, out: ByteArrayOutputStream, as: AppendState) {
+    import as._
+    import SerializationFunctions._
+
+    @inline def put(b: Array[Byte]) = head.write(ByteBuffer.wrap(b));
+
+    val outData = as.d("$sName")
+
+    // check the kind of header we have to write
+    if (staticSize > newObjects.size) {
+      // the type is known, thus we only have to write {name, ?lbpsi, count, fieldCount}
+      put(string("$sName"))
+      put(v64(outData.size)) // the append state known how many instances we will write
+
+      put(v64(userType.fields.size))
+
+    } else {
+      // the type is yet unknown, thus we will write all information
+      put(string("$sName"))
+      put(Array[Byte](0))
+      put(v64(outData.size))
+      put(v64(0)) // restrictions not implemented yet
+
+      put(v64(userType.fields.size))
+    }
+""")
+    fields.foreach({ f ⇒
+      val sName = f.getSkillName
+      out.write(s"""
+    userType.fields.get("$sName").foreach { f ⇒
+      // TODO append new fields
+
+//      put(v64(0)) // field restrictions not implemented yet
+//      put(v64(${
+        f.getType match {
+          case t: Declaration ⇒ s"""ws.typeID("${t.getSkillName}")"""
+          case _              ⇒ "f.t.typeId"
+        }
+      }))
+//      put(string("${f.getSkillName()}"))
+
+      ${writeField(f)}
+      put(v64(out.size))
+    }
+""")
+    })
+
+    out.write(s"""  }
 """)
 
     out.write("}\n")

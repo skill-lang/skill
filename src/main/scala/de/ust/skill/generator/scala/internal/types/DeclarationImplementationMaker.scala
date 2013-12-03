@@ -42,7 +42,7 @@ final class $name extends _root_.${packagePrefix}$name {""")
   @inline def this(""")
 
   		// data
-    	out.write(relevantFields.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", "))
+    	out.write(relevantFields.map({ f ⇒ s"${escaped(f.getName)}: ${mapType(f.getType())}" }).mkString(", "))
 
     	out.write(s""") {
     this()
@@ -52,12 +52,12 @@ final class $name extends _root_.${packagePrefix}$name {""")
     out.write(s"""
   private[internal] var skillID = -1L
   override final def getSkillID = skillID
-  private[internal] def setSkillID(newID: Long) = {${// @monotone delete-check
+  private[internal] def setSkillID(newID: Long) = { ${// @monotone delete-check
       if(!d.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty)
         s"""require(newID != 0L || newID != -1L || skillID == -1L || skillID == 0L, "${d.getName} is specified to be monotone and this instance has already been subject to serialization!"); """
       else
         ""
-    }skillID = newID}
+    }skillID = newID }
 """)
 
 	///////////////////////
@@ -144,7 +144,7 @@ final class $name extends _root_.${packagePrefix}$name {""")
 
     // toString
     out.write(s"""
-  override def toString = "$name#" + skillID
+  override def toString = "$name#"+skillID
 }
 """)
     out.close()

@@ -423,6 +423,7 @@ final private class FileParser extends ByteStreamParsers {
   }
 
   def readFile(path: Path): SerializableState = {
+    σ.path = path
     σ.fromReader = new ByteReader(Files.newByteChannel(path).asInstanceOf[FileChannel])
     val in = σ.fromReader
     file(in) match {

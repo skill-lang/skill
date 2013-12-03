@@ -22,6 +22,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import ${packagePrefix}api.KnownType
+import ${packagePrefix}internal.AppendState
 import ${packagePrefix}internal.SerializableState
 import ${packagePrefix}internal.UserType
 import ${packagePrefix}internal.WriteState
@@ -84,6 +85,11 @@ abstract class KnownPool[T <: B, B <: KnownType](
    * Fields are read after creation of the pools in an arbitrary order.
    */
   private[internal] def readFields(fieldParser: FieldParser): Unit
+
+  /**
+   * write the type definition into head and field data into out; the offset of field data has to be out.size
+   */
+  private[internal] def append(head: FileChannel, out: ByteArrayOutputStream, as: AppendState): Unit
 
   /**
    * write the type definition into head and field data into out; the offset of field data has to be out.size
