@@ -42,7 +42,7 @@ final class $name extends _root_.${packagePrefix}$name {""")
   @inline def this(""")
 
   		// data
-    	out.write(relevantFields.map({ f ⇒ s"${escaped(f.getName)}: ${mapType(f.getType())}" }).mkString(", "))
+    	out.write(relevantFields.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", "))
 
     	out.write(s""") {
     this()
