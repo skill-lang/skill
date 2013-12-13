@@ -16,6 +16,7 @@ import de.ust.skill.generator.scala.GeneralOutputMaker
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.SingleBaseTypeContainer
 import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.restriction.SingletonRestriction
 
 /**
  * Creates storage pools for declared types.
@@ -82,7 +83,7 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
             fields.next.${escaped(f.getName)}_=(fieldData(i))"""
     case t ⇒ s"""${makeReadFunctionCall(t)}
 
-          iterator.foreach(_.${escaped(f.getName)} = it.next)"""
+          iterator.foreach(_.${escaped(f.getName)}_=(it.next))"""
   }
 
   private def makeReadFunctionCall(t: Type): String = t match {
@@ -157,7 +158,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
   "${d.getSkillName}",
   HashMap[String, FieldDeclaration](
   ),
-  state.$s
+  state.${name.capitalize}
 )"""
         }
       }
@@ -166,22 +167,37 @@ final class ${name}StoragePool(state: SerializableState) extends ${
   @inline override def newInstance = new _root_.${packagePrefix}internal.types.$name
 """)
 
+    ////////////
+    // ACCESS //
+    ////////////
+
+    if (!d.getRestrictions.collect { case r: SingletonRestriction ⇒ r }.isEmpty) {
+      // this is a singleton
+      out.write(s"""
+  // @note: the implementation will eventually come in form of a SingletonStoragePool[T]
+  override def get:$name = ???""")
+
+    } else {
+      val applyCallArguments = d.getAllFields().filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
+        f ⇒ s"${f.getName().capitalize}: ${mapType(f.getType())}"
+      }).mkString(", ")
+
+      out.write(s"""
+  override def all = iterator
+  override def allInTypeOrder = typeOrderIterator
+  override def apply($applyCallArguments) = add$name(new _root_.${packagePrefix}internal.types.$name($applyCallArguments))
+  """)
+    }
+
     ///////////////
     // ITERATORS //
     ///////////////
 
-    val applyCallArguments = d.getAllFields().filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
-      f ⇒ s"${f.getName().capitalize}: ${mapType(f.getType())}"
-    }).mkString(", ")
-
     out.write(s"""
-  override def all = iterator
-  override def allInTypeOrder = typeOrderIterator
-  override def apply($applyCallArguments) = addDate(new _root_.${packagePrefix}internal.types.$name($applyCallArguments))
 
   override def iterator = ${
       if (null == d.getSuperType) s"""data.iterator ++ newDynamicInstances"""
-      else "blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).iterator ++ iter }"
+      else s"blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).asInstanceOf[Iterable[$name]].iterator ++ iter }"
     }
 
   override def typeOrderIterator = subPools.collect {
@@ -192,7 +208,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
   override def staticInstances = staticData.iterator ++ newObjects.iterator
   override def newDynamicInstances = subPools.collect {
     // @note: you can ignore the type erasure warning, because the generators invariants guarantee type safety
-    case p: KnownPool[_, Date] @unchecked ⇒ p
+    case p: KnownPool[_, $name] @unchecked ⇒ p
   }.foldLeft(newObjects.iterator)(_ ++ _.newObjects.iterator)
 
   /**
@@ -243,14 +259,13 @@ final class ${name}StoragePool(state: SerializableState) extends ${
         case "${f.getSkillName()}" ⇒
          if(f.t.asInstanceOf[ConstantIntegerInfo[_]].value != ${f.constantValue})
             throw new SkillException("Constant value differed.")
-    })
 """)
 
         } else if (f.isAuto) {
           // auto fields must not be part of the serialized data
           out.write(s"""
         // auto ${f.getType.getSkillName} $name
-        case "${f.getSkillName()}" ⇒ if(!f.dateChunks.isEmpty)
+        case "${f.getSkillName()}" ⇒ if(!f.dataChunks.isEmpty)
           throw new SkillException("Found field data for auto field ${d.getName()}.$name")
 """)
 
@@ -291,7 +306,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
     def writeField(f: Field): String = f.getType match {
       case t: GroundType ⇒ t.getSkillName match {
         case "annotation" ⇒
-          s"""this.foreach { instance ⇒ annotation(instance.${escaped(f.getName)}[SkillType]).foreach(out.write _) }"""
+          s"""this.foreach { instance ⇒ annotation(instance.${escaped(f.getName)}).foreach(out.write _) }"""
 
         case "v64" ⇒
           s"""val target = new Array[Byte](9 * outData.size)
@@ -419,7 +434,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
       }))
           // put(string("${f.getSkillName()}"))
 
-          ${writeField(f)}
+          /* ${writeField(f)} */
           put(v64(out.size))
         }""")
     })

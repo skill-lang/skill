@@ -89,7 +89,7 @@ object SkillState {
     /**
      * returns the $name instance
      */
-    get: $tName
+    def get: $tName
   }
 """)
       } else {
