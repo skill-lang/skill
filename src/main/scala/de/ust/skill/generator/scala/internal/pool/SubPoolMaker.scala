@@ -41,7 +41,7 @@ abstract class SubPool[T <: B, B <: KnownType](
   /**
    * the base type data store
    */
-  private[pool] var data: Array[B] = basePool.data
+  private[internal] var data: Array[B] = basePool.data
 
   /**
    * get is deferred to the base pool

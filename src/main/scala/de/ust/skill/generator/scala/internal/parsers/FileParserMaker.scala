@@ -43,12 +43,19 @@ final private class FileParser extends ByteStreamParsers {
     def makePool(t: UserType): AbstractPool = {
       val result = t.name match {""")
 
-    // make pool (depends on IR)
-    for(d <- IR){
+    // make pool (depends on IR) @note: the created code is correct, because it will be executed in type-order :)
+    for (d ← IR) {
       val name = d.getName
-      out.write(s"""
+      if (null == d.getSuperType)
+        out.write(s"""
         case "${d.getSkillName}" ⇒
           σ.$name.data = new Array[_root_.${packagePrefix}${name.capitalize}](t.instanceCount.toInt)
+          σ.$name
+""")
+      else
+        out.write(s"""
+        case "${d.getSkillName}" ⇒
+          σ.$name.data = σ.$name.basePool.data
           σ.$name
 """)
     }
