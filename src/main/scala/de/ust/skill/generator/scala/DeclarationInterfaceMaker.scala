@@ -62,7 +62,7 @@ import scala.reflect.ClassTag
         if ("annotation".equals(f.getType().getName())) {
           out.write(s"""
   /*${f.getSkillComment()}*/
-  def $name_[T <: SkillType: ClassTag](): T
+  def $name_[T <: SkillType: ClassTag] : T
   /*${f.getSkillComment()}*/
   def ${name_}_=[T <: SkillType]($Name: T): Unit
 """)
@@ -70,7 +70,7 @@ import scala.reflect.ClassTag
           val argumentType = mapType(f.getType())
           out.write(s"""
   /*${f.getSkillComment()}*/
-  def $name_(): $argumentType
+  def $name_ : $argumentType
   /*${f.getSkillComment()}*/
   def ${name_}_=($Name: $argumentType): Unit
 """)
