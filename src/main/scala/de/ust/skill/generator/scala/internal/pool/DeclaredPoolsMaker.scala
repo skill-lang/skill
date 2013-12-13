@@ -382,7 +382,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
 
     @inline def put(b: Array[Byte]) = head.write(ByteBuffer.wrap(b));
 
-    val outData = as.d("$sName")
+    val outData = as.d("$sName").asInstanceOf[Iterable[$name]]
 
     // check the kind of header we have to write
     if (staticSize > newObjects.size) {
