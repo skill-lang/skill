@@ -65,6 +65,7 @@ final class $name extends _root_.${packagePrefix}$name {""")
 	///////////////////////
 	fields.foreach({ f ⇒
       val name = f.getName()
+      val name_ = escaped(name)
       val Name = name.capitalize
 
       def makeField:String = {
@@ -122,13 +123,13 @@ final class $name extends _root_.${packagePrefix}$name {""")
 
       if ("annotation".equals(f.getType().getName())) { 
         out.write(s"""$makeField
-  override final def get$Name[T <: SkillType]()(implicit m: ClassTag[T]): T = $makeGetterImplementation
-  override final def set$Name[T <: SkillType]($Name: T): Unit = $makeSetterImplementation
+  override final def $name_[T <: SkillType]()(implicit m: ClassTag[T]): T = $makeGetterImplementation
+  override final def ${name_}_=[T <: SkillType]($Name: T): Unit = $makeSetterImplementation
 """)
       } else {
         out.write(s"""$makeField
-  override final def get$Name = $makeGetterImplementation
-  override final def set$Name($Name: ${mapType(f.getType())}) = $makeSetterImplementation
+  override final def $name_ = $makeGetterImplementation
+  override final def ${name_}_=($Name: ${mapType(f.getType())}) = $makeSetterImplementation
 """)
       }
     });

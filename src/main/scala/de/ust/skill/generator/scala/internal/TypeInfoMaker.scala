@@ -17,12 +17,13 @@ trait TypeInfoMaker extends GeneralOutputMaker {
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.ListBuffer
 
 /**
  * The type info objects are used to reflect the type information stored in a skill file. They are required for
  *  the deserialization of objects into storage pools.
  */
-sealed abstract class TypeInfo {
+abstract class TypeInfo {
   def toString(): String
 
   /**
@@ -166,37 +167,37 @@ case class PreliminaryUserType(index: Long) extends TypeInfo {
   def typeId: Long = 32 + index
 }
 
+case class NamedUserType(name: String) extends TypeInfo {
+  override def toString(): String = "<named usertype: "+name+">"
+
+  def typeId: Long = -1L
+}
+
+/**
+ * Representation of user types in the *read* world. The modify/write world will use storage pools.
+ */
 class UserType(
-  val index: Int,
+  val index: Long,
   val name: String,
   val superName: Option[String])
     extends TypeInfo {
-  // convenience constructor to create a usertype from a map of fields
-  def this(index: Int, name: String, superName: Option[String], fields: HashMap[String, FieldDeclaration]) = {
-    this(index, name, superName)
-    fields.foreach { case (_, f) ⇒ addField(f) }
-  }
 
   // Total number of instances seen until now.
   var instanceCount = 0L;
 
   private final var _fields = new HashMap[String, FieldDeclaration]
-  private final var _fieldByIndex = new HashMap[Int, FieldDeclaration]
+  private final var _fieldByIndex = new ArrayBuffer[FieldDeclaration]
   def fields = _fields
   def fieldByIndex(i: Int) = _fieldByIndex(i)
   def addField(f: FieldDeclaration) {
     _fields.put(f.name, f)
-    _fieldByIndex.put(_fieldByIndex.size, f)
+    _fieldByIndex += f
   }
 
-  /**
-   *  Block information gathered until now. Can contain NULL-pointers, iff the respective block did not contain any
-   *   instances of this type.
-   */
-  var blockInfos = new HashMap[Int, BlockInfo]
-  private[internal] def addBlockInfo(info: BlockInfo, blockCounter: Int) = {
-    instanceCount += info.count
-    blockInfos.put(blockCounter, info)
+  private[internal] var blockInfos = new ListBuffer[BlockInfo]()
+  def addBlockInfo(b: BlockInfo) {
+    instanceCount += b.count
+    blockInfos.append(b)
   }
 
   // various links between types

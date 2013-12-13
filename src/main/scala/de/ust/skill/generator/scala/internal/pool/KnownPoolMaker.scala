@@ -22,10 +22,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import ${packagePrefix}api.KnownType
-import ${packagePrefix}internal.AppendState
-import ${packagePrefix}internal.SerializableState
-import ${packagePrefix}internal.UserType
-import ${packagePrefix}internal.WriteState
+import ${packagePrefix}internal._
 import ${packagePrefix}internal.parsers.FieldParser
 
 /**
@@ -33,10 +30,8 @@ import ${packagePrefix}internal.parsers.FieldParser
  *
  * @author Timm Felden
  */
-abstract class KnownPool[T <: B, B <: KnownType](
-  userType: UserType,
-  blockCount: Int)
-    extends AbstractPool(userType, blockCount)
+abstract class KnownPool[T <: B, B <: KnownType](name: String, fields: HashMap[String, FieldDeclaration])
+    extends AbstractPool(name, fields)
     with Iterable[T] {
 
   private[internal] def basePool: BasePool[B]
@@ -55,6 +50,11 @@ abstract class KnownPool[T <: B, B <: KnownType](
    * @return a new iterator over all static instances of a type in type order
    */
   def staticInstances: Iterator[T]
+
+  /**
+   * @return a new iterator over all new objects of dynamic type T
+   */
+  private[internal] def newDynamicInstances: Iterator[T]
 
   /**
    * we wan to get objects by a long ID, because we might have up to 2^64 instances (at least somewhere in the future)
@@ -107,8 +107,8 @@ abstract class KnownPool[T <: B, B <: KnownType](
    *  afterwards
    */
   final def makeLBPSIMap(lbpsiMap: HashMap[String, Long], next: Long, size: String ⇒ Long): Long = {
-    lbpsiMap.put(userType.name, next);
-    var result = next + size(userType.name)
+    lbpsiMap.put(name, next);
+    var result = next + size(name)
     subPools.foreach {
       case sub: SubPool[_, B] ⇒ result = sub.makeLBPSIMap(lbpsiMap, result, size)
     }

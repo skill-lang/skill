@@ -15,13 +15,30 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
     //package
     out.write(s"""package ${packagePrefix}internal
 
+import scala.collection.mutable.ListBuffer
+
 /**
- * @param position the position of the chunk inside the file
- * @param length the length of the chunk in bytes
- * @param count the number of instances stored in the chunk
+ * Chunks contain information on where some field data can be found.
+ *
+ * @param begin position of the first byte of the first instance's data
+ * @param end position of the last byte, i.e. the first byte that is not read
+ * @param bpsi the index of the first instance
+ * @param count the number of instances in this chunk
+ *
+ * @note indices of recipient of the field data is not necessarily continuous; make use of staticInstances!
+ *
  * @author Timm Felden
  */
-case class ChunkInfo(position: Long, length: Long, count: Long) {}
+case class ChunkInfo(begin: Long, end: Long, bpsi: Long, count: Long);
+
+/**
+ * Blocks contain information about the type of an index range.
+ *
+ * @param bpsi the index of the first instance
+ * @param count the number of instances in this chunk
+ * @author Timm Felden
+ */
+case class BlockInfo(bpsi: Long, count: Long);
 
 /**
  * A field decalariation, as it occurs during parsing of a type blocks header.
@@ -29,19 +46,17 @@ case class ChunkInfo(position: Long, length: Long, count: Long) {}
  * @author Timm Felden
  * @param t the actual type of the field; can be an intermediate type, while parsing a block
  * @param name the name of the field
- * @param end the end offset inside of the last block encountered; this field has no meaning after a block has been
- *            processed; the information is required, because the absolute offset can not be known until processing the
- *            whole header of a type chunk; can be used during serialization to store end offsets of new data
+ * @param index the index of this field, starting from 0; required for append operations
  */
 class FieldDeclaration(
     var t: TypeInfo,
     val name: String,
-    var end: Long) {
+    var index: Long) {
 
   /**
    *  Data chunk information, as it is required for later parsing.
    */
-  var dataChunks = List[ChunkInfo]();
+  val dataChunks = ListBuffer[ChunkInfo]();
 
   override def toString = t.toString+" "+name
   override def equals(obj: Any) = obj match {

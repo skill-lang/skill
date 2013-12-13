@@ -28,12 +28,12 @@ import ${packagePrefix}internal._
 import ${packagePrefix}internal.pool._
 
 /**
- * see skill ref man §6.2.
- *
- * The file parser reads a file and gathers type declarations.
+ * The file parser reads the whole type information of a file.
  * It creates a new SerializableState which contains types for these type declaration.
+ * The state will handle deserialization of field data.
  *
  * @author Timm Felden
+ * @see SKilL TR13 §6.2.
  */
 final private class FileParser extends ByteStreamParsers {
   /**
@@ -41,20 +41,34 @@ final private class FileParser extends ByteStreamParsers {
    */
   private def makeState() {
     def makePool(t: UserType): AbstractPool = {
-      val result = t.name match {
-""")
+      val result = t.name match {""")
 
     // make pool (depends on IR)
-    IR.foreach({ d ⇒
-      out.write(s"""        case "${d.getName().toLowerCase()}" ⇒ new ${d.getName()}StoragePool(t, σ, blockCounter)
+    for(d <- IR){
+      val name = d.getName
+      out.write(s"""
+        case "${d.getSkillName}" ⇒
+          σ.$name.data = new Array[_root_.${packagePrefix}${name.capitalize}](t.instanceCount.toInt)
+          σ.$name
 """)
-    })
+    }
 
     out.write("""
-        case _ ⇒ new GenericPool(t, t.superName match {
-          case Some(name) ⇒ σ.pools.get(name).ensuring(_.isDefined)
-          case None       ⇒ None
-        }, blockCounter)
+        case name ⇒ new GenericPool(name, t.superName.map(σ.pools(_)), t.fields)
+      }
+      result.blockInfos.appendAll(t.blockInfos)
+      for ((n, f) ← t.fields) {
+        if (result.fields.contains(n)) {
+          // Type-check
+          if (result.fields(n).t != f.t)
+            throw new TypeMissmatchError(t, result.fields(n).t.toString, f.name, result.name)
+
+          // copy data-chunks
+          result.fields(n).dataChunks.appendAll(f.dataChunks)
+        } else {
+          // add unknownfield
+          result.fields.put(n, f)
+        }
       }
       σ.pools.put(t.name, result)
       t.subTypes.foreach(makePool(_))
@@ -62,10 +76,11 @@ final private class FileParser extends ByteStreamParsers {
     }
 
     // make base pools; the makePool function makes sub pools
-    userTypeIndexMap.values.filter(_.superName.isEmpty).foreach(makePool(_) match {
-      case p: KnownPool[_, _] ⇒ p.constructPool
-      case _                  ⇒
-    })
+    for (t ← userTypeIndexMap.values if t.superName.isEmpty)
+      makePool(t) match {
+        case p: KnownPool[_, _] ⇒ p.constructPool
+        case _                  ⇒
+      }
 
     // read eager fields
     val fp = new FieldParser(σ)
@@ -103,12 +118,8 @@ final private class FileParser extends ByteStreamParsers {
      */
     def mkUserType() {
       // create a new user type
-      userType = new UserType(
-        userTypeIndexMap.size,
-        name,
-        superName,
-        new HashMap() ++= fieldDeclarations.map { f ⇒ (f.name, f) }
-      )
+      userType = new UserType(userTypeIndexMap.size, name, superName)
+      fieldDeclarations.foreach(userType.addField(_))
 
       userTypeIndexMap.put(userType.index, userType)
       userTypeNameMap.put(userType.name, userType)
@@ -130,15 +141,22 @@ final private class FileParser extends ByteStreamParsers {
 
         repN(knownFields.toInt,
           v64 ^^ { end ⇒
-            var result = userType.fieldByIndex(fieldIndex)
-            result.end = end
+            val result = userType.fieldByIndex(fieldIndex)
+            val pos = σ.fromReader.position
+            result.dataChunks.append(ChunkInfo(pos + lastOffset, pos + end, lbpsi, count))
+            lastOffset = end
+            fieldIndex += 1
 
             result
           }
         ) >> { fields ⇒
             repN((fieldCount - knownFields).toInt, restrictions ~ fieldTypeDeclaration ~ v64 ~ v64 ^^ {
               case r ~ t ~ n ~ end ⇒
-                val result = new FieldDeclaration(t, σ(n), end)
+                val result = new FieldDeclaration(t, σ(n), fieldIndex)
+                val pos = σ.fromReader.position
+                result.dataChunks.append(ChunkInfo(pos + lastOffset, pos + end, userType.blockInfos(0).bpsi, userType.instanceCount))
+                lastOffset = end
+                fieldIndex += 1
                 // TODO maybe we have to access the block list here
                 userType.addField(result)
                 result
@@ -149,12 +167,18 @@ final private class FileParser extends ByteStreamParsers {
       } else {
         // we append only fields to the type; it is not important whether or not it existed before;
         //  all fields contain all decalrations
+        var fieldIndex = 0
 
         repN(fieldCount.toInt,
           restrictions ~ fieldTypeDeclaration ~ v64 ~ v64 ^^ {
             case r ~ t ~ n ~ end ⇒
               val name = σ(n)
-              new FieldDeclaration(t, name, end)
+              val result = new FieldDeclaration(t, name, fieldIndex)
+              val pos = σ.fromReader.position
+              result.dataChunks.append(ChunkInfo(pos + lastOffset, pos + end, lbpsi, count))
+              lastOffset = end
+              fieldIndex += 1
+              result
           })
 
       }
@@ -162,7 +186,6 @@ final private class FileParser extends ByteStreamParsers {
       fieldDeclarations = r;
       this
     }
-
   }
 
   /**
@@ -175,6 +198,8 @@ final private class FileParser extends ByteStreamParsers {
   private var userTypeIndexMap = new HashMap[Long, UserType]
   private var userTypeNameMap = new HashMap[String, UserType]
   private var blockCounter = 0;
+  // last seen offset value
+  private var lastOffset = 0L;
   // required for duplicate definition detection
   private val newTypeNames = new HashSet[String]
 
@@ -188,7 +213,7 @@ final private class FileParser extends ByteStreamParsers {
    * @param σ the processed serializable state
    * @return a function that maps logical indices to the corresponding strings
    */
-  private[this] implicit def poolAccess(σ: SerializableState): (Long ⇒ String) = σ.getString(_)
+  private[this] implicit def poolAccess(σ: SerializableState): (Long ⇒ String) = σ.String.get(_)
 
   /**
    * turns a file into a raw serializable state
@@ -205,6 +230,7 @@ final private class FileParser extends ByteStreamParsers {
 
       newTypeNames.clear
       blockCounter += 1
+      lastOffset = 0L
       ()
     })
   ) ^^ { _ ⇒ makeState; σ }
@@ -220,7 +246,7 @@ final private class FileParser extends ByteStreamParsers {
       var it = offsets.iterator
       var last = 0
       val off = in.position
-      val map = σ.strings.stringPositions
+      val map = σ.String.stringPositions
 
       while (it.hasNext) {
         val next = it.next()
@@ -260,7 +286,7 @@ final private class FileParser extends ByteStreamParsers {
       val u = t.userType
 
       // add local block info
-      u.addBlockInfo(new BlockInfo(t.count, localBlockBaseTypeStartIndices(u.baseType.name) + t.lbpsi), blockCounter)
+      u.addBlockInfo(BlockInfo(localBlockBaseTypeStartIndices(u.baseType.name) + t.lbpsi, t.count))
 
       // eliminate preliminary user types in field declarations
       u.fields.values.foreach(f ⇒ {
@@ -279,33 +305,14 @@ final private class FileParser extends ByteStreamParsers {
     })
 
     raw
-  }) >> typeChunks
+  }) >> dropData
 
-  /**
-   * reads type chunks using the raw information from the type block
-   */
-  private def typeChunks(declarations: Array[TypeDeclaration]) = new Parser[Array[TypeDeclaration]] {
-    def apply(in: Input) = try {
-
-      var lastOffset = 0L;
-
-      declarations.foreach({ d ⇒
-        d.fieldDeclarations.foreach({ f ⇒
-          // the stream is at $lastOffset; we want to read until the fields offset
-          // TODO even if the field had not yet existed but instances had?
-          f.dataChunks ++= List(ChunkInfo(in.position + lastOffset, f.end - lastOffset, d.count))
-          lastOffset = f.end
-
-          //invalidate end for security reasons
-          f.end = -1
-        })
-      })
-
-      // jump over the data chunk, it might be processed in the future
+  // drop actual data
+  private[this] def dropData(raw: Array[TypeDeclaration]) = new Parser[Array[TypeDeclaration]] {
+    def apply(in: Input) = {
       in.drop(lastOffset.toInt)
-
-      Success(declarations, in)
-    } catch { case e: SkillException ⇒ throw new SkillException("type chunk parsing failed", e) }
+      Success(raw, in)
+    }
   }
 
   /**
@@ -313,7 +320,7 @@ final private class FileParser extends ByteStreamParsers {
    */
   private[this] def typeDeclaration: Parser[TypeDeclaration] = (v64 ^^ { i ⇒ σ(i) }) >> { name ⇒
     // check for duplicate definition inside of the same block
-    if(newTypeNames.contains(name))
+    if (newTypeNames.contains(name))
       throw new ParseException(σ.fromReader, blockCounter, s"Duplicate definition of type $name")
 
     newTypeNames.add(name)
@@ -423,7 +430,7 @@ final private class FileParser extends ByteStreamParsers {
   }
 
   def readFile(path: Path): SerializableState = {
-    σ.path = path
+    σ.fromPath = path
     σ.fromReader = new ByteReader(Files.newByteChannel(path).asInstanceOf[FileChannel])
     val in = σ.fromReader
     file(in) match {

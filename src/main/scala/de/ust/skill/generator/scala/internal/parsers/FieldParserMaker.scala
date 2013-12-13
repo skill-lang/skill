@@ -19,7 +19,7 @@ import java.nio.ByteBuffer
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import scala.collection.mutable.LinkedList
+import scala.collection.mutable.ListBuffer
 
 import ${packagePrefix}api.SkillType
 import ${packagePrefix}internal._
@@ -43,14 +43,14 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     case V64Info ⇒ in.v64
     case AnnotationInfo ⇒ (in.v64, in.v64) match {
       case (0L, _) ⇒ null
-      case (t, i)  ⇒ σ.pools(σ.getString(t)).getByID(i)
+      case (t, i)  ⇒ σ.pools(σ.String.get(t)).getByID(i)
     }
     case BoolInfo ⇒ in.next != 0
     case F32Info  ⇒ in.f32
     case F64Info  ⇒ in.f64
     case StringInfo ⇒ in.v64 match {
       case 0 ⇒ null
-      case i ⇒ σ.getString(i)
+      case i ⇒ σ.String.get(i)
     }
 
     //maps are rather complicated
@@ -96,34 +96,34 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     result
   }
 
-  def readI8s(length: Long, data: List[ChunkInfo]): Array[Byte] = {
+  def readI8s(length: Long, data: ListBuffer[ChunkInfo]): Array[Byte] = {
     val buff = ByteBuffer.allocate(length.toInt);
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
-      buff.limit(buff.position + chunk.length.toInt)
+      in.push(chunk.begin)
+      buff.limit(chunk.end.toInt)
       in.fill(buff)
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "i8")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "i8")
 
       in.pop
     }
     buff.array
   }
 
-  def readI16s(length: Long, data: List[ChunkInfo]): Array[Short] = {
+  def readI16s(length: Long, data: ListBuffer[ChunkInfo]): Array[Short] = {
     val buff = ByteBuffer.allocate(2 * length.toInt)
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
-      buff.limit(buff.position + chunk.length.toInt)
+      in.push(chunk.begin)
+      buff.limit(chunk.end.toInt)
       in.fill(buff)
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "i16")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "i16")
 
       in.pop
     }
@@ -132,17 +132,17 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     result
   }
 
-  def readI32s(length: Long, data: List[ChunkInfo]): Array[Int] = {
+  def readI32s(length: Long, data: ListBuffer[ChunkInfo]): Array[Int] = {
     val buff = ByteBuffer.allocate(4 * length.toInt)
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
-      buff.limit(buff.position + chunk.length.toInt)
+      in.push(chunk.begin)
+      buff.limit(chunk.end.toInt)
       in.fill(buff)
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "i32")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "i32")
 
       in.pop
     }
@@ -151,17 +151,17 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     result
   }
 
-  def readI64s(length: Long, data: List[ChunkInfo]): Array[Long] = {
+  def readI64s(length: Long, data: ListBuffer[ChunkInfo]): Array[Long] = {
     val buff = ByteBuffer.allocate(8 * length.toInt)
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
-      buff.limit(buff.position + chunk.length.toInt)
+      in.push(chunk.begin)
+      buff.limit(chunk.end.toInt)
       in.fill(buff)
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "i64")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "i64")
 
       in.pop
     }
@@ -170,12 +170,12 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     result
   }
 
-  def readV64s(length: Long, data: List[ChunkInfo]): Array[Long] = {
+  def readV64s(length: Long, data: ListBuffer[ChunkInfo]): Array[Long] = {
     val result = new Array[Long](length.toInt)
     var index = 0
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
+      in.push(chunk.begin)
 
       for (i ← index until index + chunk.count.toInt) {
         result(i) = in.v64
@@ -183,49 +183,49 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
       index += chunk.count.toInt
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position - chunk.position, chunk.length, "v64")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "v64")
 
       in.pop
     }
     result
   }
 
-  def readAnnotations(length: Long, data: List[ChunkInfo]): Iterator[SkillType] = {
+  def readAnnotations(length: Long, data: ListBuffer[ChunkInfo]): Iterator[SkillType] = {
     val result = new Array[SkillType](length.toInt)
     var index = 0
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
+      in.push(chunk.begin)
 
       for (i ← index until index + chunk.count.toInt) {
         result(i) = (in.v64, in.v64) match {
           case (0L, _) ⇒ null
-          case (t, i)  ⇒ σ.pools(σ.getString(t)).getByID(i)
+          case (t, i)  ⇒ σ.pools(σ.String.get(t)).getByID(i)
         }
       }
       index += chunk.count.toInt
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "annotation")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "annotation")
 
       in.pop
     }
     result.iterator
   }
 
-  def readBools(length: Long, data: List[ChunkInfo]): Iterator[Boolean] = {
+  def readBools(length: Long, data: ListBuffer[ChunkInfo]): Iterator[Boolean] = {
     val buff = ByteBuffer.allocate(length.toInt)
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
-      buff.limit(buff.position + chunk.length.toInt)
+      in.push(chunk.begin)
+      buff.limit(chunk.end.toInt)
       in.fill(buff)
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "bool")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "bool")
 
       in.pop
     }
@@ -239,17 +239,17 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     }
   }
 
-  def readF32s(length: Long, data: List[ChunkInfo]): Iterator[Float] = {
+  def readF32s(length: Long, data: ListBuffer[ChunkInfo]): Iterator[Float] = {
     val buff = ByteBuffer.allocate(4 * length.toInt)
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
-      buff.limit(buff.position + chunk.length.toInt)
+      in.push(chunk.begin)
+      buff.limit(chunk.end.toInt)
       in.fill(buff)
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "f32")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "f32")
 
       in.pop
     }
@@ -263,17 +263,17 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     }
   }
 
-  def readF64s(length: Long, data: List[ChunkInfo]): Iterator[Double] = {
+  def readF64s(length: Long, data: ListBuffer[ChunkInfo]): Iterator[Double] = {
     val buff = ByteBuffer.allocate(8 * length.toInt)
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
-      buff.limit(buff.position + chunk.length.toInt)
+      in.push(chunk.begin)
+      buff.limit(chunk.end.toInt)
       in.fill(buff)
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "f64")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "f64")
 
       in.pop
     }
@@ -287,31 +287,31 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     }
   }
 
-  def readStrings(length: Long, data: List[ChunkInfo]): Iterator[String] = {
+  def readStrings(length: Long, data: ListBuffer[ChunkInfo]): Iterator[String] = {
     val result = new Array[String](length.toInt)
     var index = 0
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
+      in.push(chunk.begin)
 
       for (i ← index until index + chunk.count.toInt) {
         result(i) = in.v64 match {
           case 0     ⇒ null
-          case index ⇒ σ.getString(index)
+          case index ⇒ σ.String.get(index)
         }
       }
       index += chunk.count.toInt
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "annotation")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "annotation")
 
       in.pop
     }
     result.iterator
   }
 
-  def readUserRefs[T <: SkillType](name: String, result: Array[T], data: List[ChunkInfo]) {
+  def readUserRefs[T <: SkillType](name: String, result: Array[T], data: ListBuffer[ChunkInfo]) {
     var index = 0
     val pool = σ.pools.get(name).getOrElse(
       throw new IllegalStateException("Found a nonnull reference to missing usertype "+name)
@@ -319,7 +319,7 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     ).asInstanceOf[KnownPool[T, _]]
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
+      in.push(chunk.begin)
 
       for (i ← index until index + chunk.count.toInt) {
         result(i) = in.v64 match {
@@ -330,19 +330,19 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
       index += chunk.count.toInt
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "annotation")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "annotation")
 
       in.pop
     }
   }
 
-  def readConstantLengthArrays[T](t: ConstantLengthArrayInfo, length: Long, data: List[ChunkInfo]): Iterator[ArrayBuffer[T]] = {
+  def readConstantLengthArrays[T](t: ConstantLengthArrayInfo, length: Long, data: ListBuffer[ChunkInfo]): Iterator[ArrayBuffer[T]] = {
     val result = new ArrayBuffer[ArrayBuffer[T]](length.toInt)
     var index = 0
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
+      in.push(chunk.begin)
 
       for (i ← index until index + chunk.count.toInt) {
         result(i) = readArray(t.length, t.groundType)
@@ -350,20 +350,20 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
       index += chunk.count.toInt
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "annotation")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "annotation")
 
       in.pop
     }
     result.iterator
   }
 
-  def readVariableLengthArrays[T](t: VariableLengthArrayInfo, length: Long, data: List[ChunkInfo]): Iterator[ArrayBuffer[T]] = {
+  def readVariableLengthArrays[T](t: VariableLengthArrayInfo, length: Long, data: ListBuffer[ChunkInfo]): Iterator[ArrayBuffer[T]] = {
     val result = new ArrayBuffer[ArrayBuffer[T]](length.toInt)
     var index = 0
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
+      in.push(chunk.begin)
 
       for (i ← index until index + chunk.count.toInt) {
         result(i) = readArray(in.v64, t.groundType)
@@ -371,20 +371,20 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
       index += chunk.count.toInt
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "annotation")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "annotation")
 
       in.pop
     }
     result.iterator
   }
 
-  def readLists[T](t: ListInfo, length: Long, data: List[ChunkInfo]): Iterator[List[T]] = {
+  def readLists[T](t: ListInfo, length: Long, data: ListBuffer[ChunkInfo]): Iterator[List[T]] = {
     val result = new ArrayBuffer[List[T]](length.toInt)
     var index = 0
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
+      in.push(chunk.begin)
 
       for (i ← index until index + chunk.count.toInt) {
         result(i) = readArray(in.v64, t.groundType).toList
@@ -392,20 +392,20 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
       index += chunk.count.toInt
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "annotation")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "annotation")
 
       in.pop
     }
     result.iterator
   }
 
-  def readSets[T](t: SetInfo, length: Long, data: List[ChunkInfo]): Iterator[Set[T]] = {
+  def readSets[T](t: SetInfo, length: Long, data: ListBuffer[ChunkInfo]): Iterator[Set[T]] = {
     val result = new ArrayBuffer[Set[T]](length.toInt)
     var index = 0
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
+      in.push(chunk.begin)
 
       for (i ← index until index + chunk.count.toInt) {
         result(i) = readArray(in.v64, t.groundType).toSet
@@ -413,20 +413,20 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
       index += chunk.count.toInt
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "annotation")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "annotation")
 
       in.pop
     }
     result.iterator
   }
 
-  def readMaps[T](t: MapInfo, length: Long, data: List[ChunkInfo]): Iterator[T] = {
+  def readMaps[T](t: MapInfo, length: Long, data: ListBuffer[ChunkInfo]): Iterator[T] = {
     val result = new ArrayBuffer[T](length.toInt)
     var index = 0
 
     data.foreach { chunk ⇒
-      in.push(chunk.position)
+      in.push(chunk.begin)
 
       for (i ← index until index + chunk.count.toInt) {
         result(i) = readSingleField(t).asInstanceOf[T]
@@ -434,8 +434,8 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
       index += chunk.count.toInt
 
       // ensure the data chunk had the expected size
-      if (in.position != (chunk.position + chunk.length))
-        throw PoolSizeMissmatchError(in.position, chunk.position + chunk.length, "annotation")
+      if (in.position != chunk.end)
+        throw PoolSizeMissmatchError(in.position, chunk.end, "annotation")
 
       in.pop
     }

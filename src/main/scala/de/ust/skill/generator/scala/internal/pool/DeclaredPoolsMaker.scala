@@ -31,6 +31,24 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
   }
 
   /**
+   * Maps types to their "TypeInfo" correspondents.
+   */
+  private def mapTypeInfo(t: Type): String = t.getSkillName() match {
+    case "annotation" ⇒ "AnnotationInfo"
+    case "bool"       ⇒ "BoolInfo"
+    case "i8"         ⇒ "I8Info"
+    case "i16"        ⇒ "I16Info"
+    case "i32"        ⇒ "I32Info"
+    case "i64"        ⇒ "I64Info"
+    case "v64"        ⇒ "V64Info"
+    case "f32"        ⇒ "F32Info"
+    case "f64"        ⇒ "F64Info"
+    case "string"     ⇒ "StringInfo"
+    // TODO not that simple in fact
+    case s            ⇒ s"""NamedUserType("$s")"""
+  }
+
+  /**
    * This method creates a type check for deserialization.
    */
   private def checkType(f: Field) = f.getType() match {
@@ -58,43 +76,43 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
   }
 
   private def makeReadCode(f: Field): String = f.getType match {
-    case t: GroundType if t.isInteger() ⇒ s"""val fieldData = fieldParser.read${t.getSkillName().capitalize}s(userType.instanceCount, f.dataChunks)
-        val fields = iterator
-        for (i ← 0 until fieldData.size)
-          fields.next.set${f.getName.capitalize}(fieldData(i))"""
+    case t: GroundType if t.isInteger() ⇒ s"""val fieldData = fieldParser.read${t.getSkillName().capitalize}s(dynamicSize, f.dataChunks)
+          val fields = iterator
+          for (i ← 0 until fieldData.size)
+            fields.next.${escaped(f.getName)}_=(fieldData(i))"""
     case t ⇒ s"""${makeReadFunctionCall(t)}
 
-        iterator.foreach(_.set${f.getName().capitalize}(it.next))"""
+          iterator.foreach(_.${escaped(f.getName)} = it.next)"""
   }
 
   private def makeReadFunctionCall(t: Type): String = t match {
     case t: GroundType ⇒
-      s"val it = fieldParser.read${t.getSkillName().capitalize}s(userType.instanceCount, f.dataChunks)"
+      s"val it = fieldParser.read${t.getSkillName().capitalize}s(dynamicSize, f.dataChunks)"
 
     case t: Declaration ⇒
-      s"""val d = new Array[_root_.${packagePrefix}${t.getCapitalName()}](userType.instanceCount.toInt)
-        fieldParser.readUserRefs("${t.getSkillName()}", d, f.dataChunks)
-        val it = d.iterator"""
+      s"""val d = new Array[_root_.${packagePrefix}${t.getCapitalName()}](dynamicSize.toInt)
+          fieldParser.readUserRefs("${t.getSkillName()}", d, f.dataChunks)
+          val it = d.iterator"""
 
     case t: MapType ⇒ s"""val it = fieldParser.readMaps[${mapType(t)}](
-          f.t.asInstanceOf[MapInfo],
-          userType.instanceCount,
-          f.dataChunks
-        )"""
+            f.t.asInstanceOf[MapInfo],
+            dynamicSize,
+            f.dataChunks
+          )"""
 
     case t: SingleBaseTypeContainer ⇒
       s"""val it = fieldParser.read${t.getClass().getSimpleName().replace("Type", "")}s[${mapType(t.getBaseType())}](
-          f.t.asInstanceOf[${t.getClass().getSimpleName().replace("Type", "Info")}],
-          userType.instanceCount,
-          f.dataChunks
-        )"""
+            f.t.asInstanceOf[${t.getClass().getSimpleName().replace("Type", "Info")}],
+            dynamicSize,
+            f.dataChunks
+          )"""
   }
 
   /**
    * Make a pool for d.
    */
   private def makePool(out: PrintWriter, d: Declaration) {
-    val name = d.getName()
+    val name = d.getName
     val sName = name.toLowerCase()
     val fields = d.getFields().toList
 
@@ -108,31 +126,42 @@ import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 
+import scala.annotation.switch
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
 
 import ${packagePrefix}api._
 import ${packagePrefix}internal._
 import ${packagePrefix}internal.parsers.FieldParser
 import ${packagePrefix}internal.types._
 
-final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockCount: Int)
-    extends ${
+final class ${name}StoragePool(state: SerializableState) extends ${
       d.getSuperType() match {
         case null ⇒
-          s"""BasePool[_root_.$packagePrefix$name](userType.ensuring(_.name.equals("$sName")), σ, blockCount)"""
+          s"""BasePool[_root_.$packagePrefix$name](
+  "${d.getSkillName}",
+  HashMap[String, FieldDeclaration](
+    ${
+            (
+              for (f ← d.getFields())
+                yield s""""${f.getSkillName()}" -> new FieldDeclaration(${mapTypeInfo(f.getType)}, "${f.getSkillName()}", -1)"""
+            ).mkString("", ",\n    ", "")
+          }
+  ),
+  Array[_root_.$packagePrefix$name]()
+)"""
+
         case s ⇒ {
           val base = s"_root_.$packagePrefix${d.getBaseType().getName()}"
-          val superName = d.getSuperType().getSkillName()
-          val superType = d.getSuperType().getName()
           s"""SubPool[_root_.$packagePrefix$name, $base](
-      userType,
-      σ.pools("$superName").asInstanceOf[KnownPool[_root_.$packagePrefix$superType, $base]],
-      σ,
-      blockCount
-    )"""
+  "${d.getSkillName}",
+  HashMap[String, FieldDeclaration](
+  ),
+  state.$s
+)"""
         }
       }
-    } {
+    } with SkillState.${name}Access {
 
   @inline override def newInstance = new _root_.${packagePrefix}internal.types.$name
 """)
@@ -141,13 +170,18 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     // ITERATORS //
     ///////////////
 
+    val applyCallArguments = d.getAllFields().filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
+      f ⇒ s"${f.getName().capitalize}: ${mapType(f.getType())}"
+    }).mkString(", ")
+
     out.write(s"""
+  override def all = iterator
+  override def allInTypeOrder = typeOrderIterator
+  override def apply($applyCallArguments) = addDate(new _root_.${packagePrefix}internal.types.$name($applyCallArguments))
+
   override def iterator = ${
-      if (null == d.getSuperType) s"""data.iterator ++ subPools.collect {
-    // @note: you can ignore the type erasure warning, because the generators invariants guarantee type safety
-    case p: KnownPool[_, $name] @unchecked ⇒ p
-  }.foldLeft(newObjects.iterator)(_ ++ _.newObjects.iterator)"""
-      else "new SubPoolIndexIterator(this)"
+      if (null == d.getSuperType) s"""data.iterator ++ newDynamicInstances"""
+      else "blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).iterator ++ iter }"
     }
 
   override def typeOrderIterator = subPools.collect {
@@ -156,6 +190,10 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
   }.foldLeft(staticInstances)(_ ++ _.staticInstances)
 
   override def staticInstances = staticData.iterator ++ newObjects.iterator
+  override def newDynamicInstances = subPools.collect {
+    // @note: you can ignore the type erasure warning, because the generators invariants guarantee type safety
+    case p: KnownPool[_, Date] @unchecked ⇒ p
+  }.foldLeft(newObjects.iterator)(_ ++ _.newObjects.iterator)
 
   /**
    * the number of static instances loaded from the file
@@ -173,7 +211,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     // construct data in a bottom up order
     subPools.collect { case p: KnownPool[_, _] ⇒ p }.foreach(_.constructPool)
     val staticDataConstructor = new ArrayBuffer[_root_.${packagePrefix}internal.types.$name]
-    for (b ← userType.blockInfos.values) {
+    for (b ← blockInfos) {
       val from: Int = b.bpsi.toInt - 1
       val until: Int = b.bpsi.toInt + b.count.toInt - 1
       for (i ← from until until)
@@ -190,7 +228,9 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
   // set eager fields of data instances
   override def readFields(fieldParser: FieldParser) {
     subPools.collect { case p: KnownPool[_, _] ⇒ p }.foreach(_.readFields(fieldParser))
-""")
+
+    for ((name, f) ← fields) {
+      (name: @switch) match {""")
 
     // parse known fields
     fields.foreach({ f ⇒
@@ -199,46 +239,40 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
         if (f.isConstant) {
           // constant fields are not directly deserialized, but they need to be checked for the right value
           out.write(s"""
-    // ${f.getType().getSkillName()} $name
-    userType.fields.get("${f.getSkillName()}").foreach(_ match {
-      // correct field type
-      case f if ${checkType(f)} ⇒
-        if(f.t.asInstanceOf[ConstantIntegerInfo[_]].value != ${f.constantValue})
-          throw new SkillException("Constant value differed.")
-
-      // incompatible field type
-      case f ⇒ TypeMissmatchError(f.t, "${f.getType().getSkillName()}", "$name", "${d.getName()}StoragePool")
+        // const ${f.getType().getSkillName()} $name
+        case "${f.getSkillName()}" ⇒
+         if(f.t.asInstanceOf[ConstantIntegerInfo[_]].value != ${f.constantValue})
+            throw new SkillException("Constant value differed.")
     })
 """)
 
         } else if (f.isAuto) {
           // auto fields must not be part of the serialized data
           out.write(s"""
-    // auto ${f.getType().getSkillName()} $name
-    if(!userType.fields.get("${f.getSkillName()}").isEmpty)
-      throw new SkillException("Found field data for auto field ${d.getName()}.$name")
+        // auto ${f.getType.getSkillName} $name
+        case "${f.getSkillName()}" ⇒ if(!f.dateChunks.isEmpty)
+          throw new SkillException("Found field data for auto field ${d.getName()}.$name")
 """)
 
         } else {
           // the ordinary field case
           out.write(s"""
-    // ${f.getType.getSkillName} $name
-    userType.fields.get("${f.getSkillName()}").foreach(_ match {
-      // correct field type
-      case f if ${checkType(f)} ⇒ locally {
-        ${makeReadCode(f)}
-      }
-
-      // incompatible field type
-      case f ⇒ throw TypeMissmatchError(f.t, "${f.getType().getSkillName()}", "$name", "${d.getName()}StoragePool")
-    })
+        // ${f.getType.getSkillName} $name
+        case "${f.getSkillName()}" ⇒ locally {
+          ${makeReadCode(f)}
+        }
 """)
         }
       }
     })
 
     // note: the add method will get more complex as soon as restrictions are added, e.g. in the context of @unique
-    out.write(s"""  }
+    out.write(s"""
+        // TODO delegate type error detection to the field parser
+        case _ ⇒ // TODO generic fields
+      }
+    }
+  }
 
   private[internal] def add$name(obj: ${packagePrefix}internal.types.$name): $packagePrefix$name = {
     newObjects.append(obj);
@@ -257,35 +291,36 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     def writeField(f: Field): String = f.getType match {
       case t: GroundType ⇒ t.getSkillName match {
         case "annotation" ⇒
-          s"""this.foreach { instance ⇒ annotation(instance.get${f.getName().capitalize}[SkillType]).foreach(out.write _) }"""
+          s"""this.foreach { instance ⇒ annotation(instance.${escaped(f.getName)}[SkillType]).foreach(out.write _) }"""
 
         case "v64" ⇒
           s"""val target = new Array[Byte](9 * outData.size)
-      var offset = 0
+          var offset = 0
 
-      val it = outData.iterator
-      while (it.hasNext)
-        offset += v64(it.next.asInstanceOf[Date].get${f.getName.capitalize}, target, offset)
+          val it = outData.iterator
+          while (it.hasNext)
+            offset += v64(it.next.${escaped(f.getName)}, target, offset)
 
-      out.write(target, 0, offset)"""
+          out.write(target, 0, offset)"""
 
         case "i64" ⇒
           s"""val target = ByteBuffer.allocate(8 * size)
-      val it = outData.iterator
-      while (it.hasNext)
-        target.putLong(it.next.asInstanceOf[Date].get${f.getName.capitalize})
-      out.write(target.array)"""
+          val it = outData.iterator
+          while (it.hasNext)
+            target.putLong(it.next.${escaped(f.getName)})
 
-        case _ ⇒ s"this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.get${f.getName().capitalize})) }"
+          out.write(target.array)"""
+
+        case _ ⇒ s"this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.${escaped(f.getName)})) }"
       }
       case t: Declaration ⇒
-        s"""@inline def putField(i:$packagePrefix${d.getName}) { out.write(v64(i.get${f.getName().capitalize}.getSkillID)) }
-      ws.foreachOf("${t.getSkillName}", putField)"""
+        s"""@inline def putField(i:$packagePrefix${d.getName}) { out.write(v64(i.${escaped(f.getName)}.getSkillID)) }
+          ws.foreachOf("${t.getSkillName}", putField)"""
 
       // TODO implementation for container types
       case t: ContainerType ⇒ "???"
 
-      case _                ⇒ s"this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.get${f.getName().capitalize})) }"
+      case _                ⇒ s"this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.${escaped(f.getName)})) }"
     }
 
     out.write(s"""
@@ -308,28 +343,32 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
     put(v64(outData.size))
     put(v64(0)) // restrictions not implemented yet
 
-    put(v64(userType.fields.size))
-""")
+    put(v64(fields.size))
 
-    fields.foreach({ f ⇒
+    for ((name, f) ← fields) {
+      (name: @switch) match {""")
+
+    for (f ← fields) {
       out.write(s"""
-    userType.fields.get("${f.getSkillName()}").foreach { f ⇒
-      put(v64(0)) // field restrictions not implemented yet
-      put(v64(${
+        case "${f.getSkillName()}" ⇒ locally {
+          put(v64(0)) // field restrictions not implemented yet
+          put(v64(${
         f.getType match {
           case t: Declaration ⇒ s"""ws.typeID("${t.getSkillName}")"""
           case _              ⇒ "f.t.typeId"
         }
       }))
-      put(string("${f.getSkillName()}"))
+          put(string("${f.getSkillName()}"))
 
-      ${writeField(f)}
-      put(v64(out.size))
+          ${writeField(f)}
+          put(v64(out.size))
+        }""")
     }
-""")
-    })
 
-    out.write(s"""  }
+    out.write(s"""
+      }
+    }
+  }
 """)
 
     ////////////
@@ -351,7 +390,7 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
       put(string("$sName"))
       put(v64(outData.size)) // the append state known how many instances we will write
 
-      put(v64(userType.fields.size))
+      put(v64(fields.size))
 
     } else {
       // the type is yet unknown, thus we will write all information
@@ -360,34 +399,37 @@ final class ${name}StoragePool(userType: UserType, σ: SerializableState, blockC
       put(v64(outData.size))
       put(v64(0)) // restrictions not implemented yet
 
-      put(v64(userType.fields.size))
+      put(v64(fields.size))
     }
-""")
+
+    for ((name, f) ← fields) {
+      (name: @switch) match {""")
     fields.foreach({ f ⇒
       val sName = f.getSkillName
       out.write(s"""
-    userType.fields.get("$sName").foreach { f ⇒
-      // TODO append new fields
+        case "$sName" ⇒ locally {
+          // TODO append new fields
 
-//      put(v64(0)) // field restrictions not implemented yet
-//      put(v64(${
+          // put(v64(0)) // field restrictions not implemented yet
+          // put(v64(${
         f.getType match {
           case t: Declaration ⇒ s"""ws.typeID("${t.getSkillName}")"""
           case _              ⇒ "f.t.typeId"
         }
       }))
-//      put(string("${f.getSkillName()}"))
+          // put(string("${f.getSkillName()}"))
 
-      ${writeField(f)}
-      put(v64(out.size))
-    }
-""")
+          ${writeField(f)}
+          put(v64(out.size))
+        }""")
     })
 
-    out.write(s"""  }
+    out.write("""
+      }
+    }
+  }
+}
 """)
-
-    out.write("}\n")
     out.close()
   }
 }
