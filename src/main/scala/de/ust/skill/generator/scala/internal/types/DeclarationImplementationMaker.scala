@@ -32,7 +32,6 @@ trait DeclarationImplementationMaker extends GeneralOutputMaker {
 import scala.collection.mutable.ArrayBuffer
 
 import ${packagePrefix}api._
-import ${packagePrefix}internal.AnnotationTypeCastException
 
 final class $name extends _root_.${packagePrefix}$name {""")
 
