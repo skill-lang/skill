@@ -82,6 +82,14 @@ abstract class AbstractPool(val name: String, private[internal] val fields: Hash
    */
   private[internal] var typeIndex: Long = -33L // results in typeID -1
   final override def typeId = 32L + typeIndex
+
+  final override def hashCode = name.hashCode
+  final override def equals(obj: Any) = obj match {
+    case NamedUserType(n) ⇒ n == name
+    case t: UserType      ⇒ t.name == name
+    case t: AbstractPool  ⇒ t.name == name
+    case _ ⇒ false
+  }
 }
 """)
 

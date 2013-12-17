@@ -29,23 +29,9 @@ import ${packagePrefix}internal.UserType
  * @author Timm Felden
  */
 abstract class BasePool[T <: KnownType](name: String, fields: HashMap[String, FieldDeclaration], initialData:Array[T])
-    extends KnownPool[T, T](name, fields) with IndexedSeq[T] {
+    extends KnownPool[T, T](name, fields) {
 
   final override private[internal] def superPool = None
-
-  /**
-   * Implements the contract of indexed seq.
-   *
-   * @note  that this will use an index range starting by 0 and not the ID range, which starts by 1.
-   * @note the implementation makes use of the fact, that there are no other pools above this pool
-   */
-  final override def apply(index: Int) = getByID(index + 1L)
-  /**
-   * Implements the contract of indexed seq.
-   *
-   * @note the implementation makes use of the fact, that there are no other pools above this pool
-   */
-  final override def length: Int = staticSize.toInt
 
   /**
    * We are the base pool.

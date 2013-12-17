@@ -13,12 +13,15 @@ trait TypeInfoMaker extends GeneralOutputMaker {
     val out = open("internal/TypeInfo.scala")
     //package
     out.write(s"""package ${packagePrefix}internal""")
-    out.write("""
+    out.write(s"""
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 
+import ${packagePrefix}internal.pool.AbstractPool
+""")
+    out.write("""
 /**
  * The type info objects are used to reflect the type information stored in a skill file. They are required for
  *  the deserialization of objects into storage pools.
@@ -165,12 +168,31 @@ case class PreliminaryUserType(index: Long) extends TypeInfo {
   override def toString(): String = "<preliminary usertype: "+index+">"
 
   def typeId: Long = 32 + index
+
+  /**
+   * there is no hashcode for preliminary usertypes. They must not be used as keys!
+   */
+  override def hashCode = ???
+  override def equals(obj: Any) = obj match {
+    case PreliminaryUserType(idx) ⇒ idx == index
+    case t: UserType              ⇒ typeId == t.typeId
+    case t: AbstractPool          ⇒ t.typeId == index
+    case _                        ⇒ false
+  }
 }
 
 case class NamedUserType(name: String) extends TypeInfo {
   override def toString(): String = "<named usertype: "+name+">"
 
   def typeId: Long = -1L
+
+  override def hashCode = name.hashCode
+  override def equals(obj: Any) = obj match {
+    case NamedUserType(n) ⇒ n == name
+    case t: UserType      ⇒ t.name == name
+    case t: AbstractPool  ⇒ t.name == name
+    case _ ⇒ false
+  }
 }
 
 /**
@@ -223,6 +245,14 @@ class UserType(
   override def toString = name
 
   def typeId: Long = 32 + index
+
+  override def hashCode = name.hashCode
+  override def equals(obj: Any) = obj match {
+    case NamedUserType(n) ⇒ n == name
+    case t: UserType      ⇒ t.name == name
+    case t: AbstractPool  ⇒ t.name == name
+    case _ ⇒ false
+  }
 }
 """)
 
