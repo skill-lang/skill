@@ -149,8 +149,7 @@ final private class FileParser extends ByteStreamParsers {
         repN(knownFields.toInt,
           v64 ^^ { end ⇒
             val result = userType.fieldByIndex(fieldIndex)
-            val pos = σ.fromReader.position
-            result.dataChunks.append(ChunkInfo(pos + lastOffset, pos + end, lbpsi, count))
+            result.dataChunks.append(ChunkInfo(lastOffset, end, lbpsi, count))
             lastOffset = end
             fieldIndex += 1
 
@@ -160,8 +159,7 @@ final private class FileParser extends ByteStreamParsers {
             repN((fieldCount - knownFields).toInt, restrictions ~ fieldTypeDeclaration ~ v64 ~ v64 ^^ {
               case r ~ t ~ n ~ end ⇒
                 val result = new FieldDeclaration(t, σ(n), fieldIndex)
-                val pos = σ.fromReader.position
-                result.dataChunks.append(ChunkInfo(pos + lastOffset, pos + end, userType.blockInfos(0).bpsi, userType.instanceCount))
+                result.dataChunks.append(ChunkInfo(lastOffset, end, userType.blockInfos(0).bpsi, userType.instanceCount))
                 lastOffset = end
                 fieldIndex += 1
                 // TODO maybe we have to access the block list here
@@ -181,8 +179,7 @@ final private class FileParser extends ByteStreamParsers {
             case r ~ t ~ n ~ end ⇒
               val name = σ(n)
               val result = new FieldDeclaration(t, name, fieldIndex)
-              val pos = σ.fromReader.position
-              result.dataChunks.append(ChunkInfo(pos + lastOffset, pos + end, lbpsi, count))
+              result.dataChunks.append(ChunkInfo(lastOffset, end, lbpsi, count))
               lastOffset = end
               fieldIndex += 1
               result
@@ -190,6 +187,7 @@ final private class FileParser extends ByteStreamParsers {
 
       }
     } ^^ { r ⇒
+      fieldsWithNewChunks :::= r
       fieldDeclarations = r;
       this
     }
@@ -207,6 +205,8 @@ final private class FileParser extends ByteStreamParsers {
   private var blockCounter = 0;
   // last seen offset value
   private var lastOffset = 0L;
+  // chunks in this list need their offsets to be adjusted by in.position
+  private var fieldsWithNewChunks = List[FieldDeclaration]()
   // required for duplicate definition detection
   private val newTypeNames = new HashSet[String]
 
@@ -238,6 +238,7 @@ final private class FileParser extends ByteStreamParsers {
       newTypeNames.clear
       blockCounter += 1
       lastOffset = 0L
+      fieldsWithNewChunks = List[FieldDeclaration]()
       ()
     })
   ) ^^ { _ ⇒ makeState; σ }
@@ -312,11 +313,20 @@ final private class FileParser extends ByteStreamParsers {
     })
 
     raw
-  }) >> dropData
+  }) >> treatData
 
-  // drop actual data
-  private[this] def dropData(raw: Array[TypeDeclaration]) = new Parser[Array[TypeDeclaration]] {
+  // fix offsets drop actual data
+  private[this] def treatData(raw: Array[TypeDeclaration]) = new Parser[Array[TypeDeclaration]] {
     def apply(in: Input) = {
+      // add in.position to all new chunks
+      val pos: Long = in.position
+      for (f ← fieldsWithNewChunks) {
+        val c = f.dataChunks.last
+        c.begin += pos
+        c.end += pos
+      }
+
+      // drop the actual data
       in.drop(lastOffset.toInt)
       Success(raw, in)
     }

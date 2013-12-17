@@ -49,9 +49,10 @@ abstract class SubPool[T <: B, B <: KnownType](
   def getByID(index: Long): T = try { basePool.getByID(index).asInstanceOf[T] } catch {
     case e: ClassCastException ⇒ throw new SkillException(
       s""${""}"tried to access a "$$name" at index $$index, but it was actually a $${
-        basePool.data(index.toInt - 1).getClass().getName()
-      }""${""}", e
+        basePool.getByID(index).getClass().getName()
+      }"${""}"", e
     )
+    case e: ArrayIndexOutOfBoundsException ⇒ throw new InvalidPoolIndex(index, basePool.dynamicSize, name)
   }
 }
 """)

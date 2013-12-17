@@ -158,7 +158,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
   "${d.getSkillName}",
   HashMap[String, FieldDeclaration](
   ),
-  state.${name.capitalize}
+  state.${s.getName.capitalize}
 )"""
         }
       }
@@ -197,7 +197,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
 
   override def iterator = ${
       if (null == d.getSuperType) s"""data.iterator ++ newDynamicInstances"""
-      else s"blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).asInstanceOf[Iterable[$name]].iterator ++ iter }"
+      else s"blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt-1, (block.bpsi + block.count).toInt-1).asInstanceOf[Iterable[$name]].iterator ++ iter }"
     }
 
   override def typeOrderIterator = subPools.collect {

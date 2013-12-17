@@ -26,10 +26,11 @@ import scala.collection.mutable.ListBuffer
  * @param count the number of instances in this chunk
  *
  * @note indices of recipient of the field data is not necessarily continuous; make use of staticInstances!
+ * @note begin and end are vars, because they will contain relative offsets while parsing a type block
  *
  * @author Timm Felden
  */
-case class ChunkInfo(begin: Long, end: Long, bpsi: Long, count: Long);
+case class ChunkInfo(var begin: Long, var end: Long, bpsi: Long, count: Long);
 
 /**
  * Blocks contain information about the type of an index range.

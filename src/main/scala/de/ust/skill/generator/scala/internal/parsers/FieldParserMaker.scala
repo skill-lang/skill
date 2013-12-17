@@ -101,12 +101,12 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
     data.foreach { chunk ⇒
       in.push(chunk.begin)
-      buff.limit(chunk.end.toInt)
+      buff.limit(buff.position + chunk.count.toInt)
       in.fill(buff)
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "i8")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "i8")
 
       in.pop
     }
@@ -118,12 +118,12 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
     data.foreach { chunk ⇒
       in.push(chunk.begin)
-      buff.limit(chunk.end.toInt)
+      buff.limit(buff.position + 2 * chunk.count.toInt)
       in.fill(buff)
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "i16")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "i16")
 
       in.pop
     }
@@ -137,12 +137,12 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
     data.foreach { chunk ⇒
       in.push(chunk.begin)
-      buff.limit(chunk.end.toInt)
+      buff.limit(buff.position + 4 * chunk.count.toInt)
       in.fill(buff)
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "i32")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "i32")
 
       in.pop
     }
@@ -156,12 +156,12 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
     data.foreach { chunk ⇒
       in.push(chunk.begin)
-      buff.limit(chunk.end.toInt)
+      buff.limit(buff.position + 8 * chunk.count.toInt)
       in.fill(buff)
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "i64")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "i64")
 
       in.pop
     }
@@ -184,7 +184,7 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "v64")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "v64")
 
       in.pop
     }
@@ -208,7 +208,7 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "annotation")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "annotation")
 
       in.pop
     }
@@ -220,12 +220,12 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
     data.foreach { chunk ⇒
       in.push(chunk.begin)
-      buff.limit(chunk.end.toInt)
+      buff.limit(buff.position + chunk.count.toInt)
       in.fill(buff)
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "bool")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "bool")
 
       in.pop
     }
@@ -244,12 +244,12 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
     data.foreach { chunk ⇒
       in.push(chunk.begin)
-      buff.limit(chunk.end.toInt)
+      buff.limit(buff.position + 4 * chunk.count.toInt)
       in.fill(buff)
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "f32")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "f32")
 
       in.pop
     }
@@ -268,12 +268,12 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
     data.foreach { chunk ⇒
       in.push(chunk.begin)
-      buff.limit(chunk.end.toInt)
+      buff.limit(buff.position + 8 * chunk.count.toInt)
       in.fill(buff)
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "f64")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "f64")
 
       in.pop
     }
@@ -304,7 +304,7 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "annotation")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "annotation")
 
       in.pop
     }
@@ -320,18 +320,22 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
     data.foreach { chunk ⇒
       in.push(chunk.begin)
-
-      for (i ← index until index + chunk.count.toInt) {
-        result(i) = in.v64 match {
-          case 0     ⇒ null.asInstanceOf[T]
-          case index ⇒ pool.getByID(index)
+      try {
+        for (i ← index until index + chunk.count.toInt) {
+          result(i) = in.v64 match {
+            case 0     ⇒ null.asInstanceOf[T]
+            case index ⇒ pool.getByID(index)
+          }
         }
+        index += chunk.count.toInt
+
+      } catch {
+        case e: SkillException ⇒ throw new SkillException(s"failed to read user refs in chunk $$chunk @$${in.position}", e)
       }
-      index += chunk.count.toInt
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "annotation")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "annotation")
 
       in.pop
     }
@@ -351,7 +355,7 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "annotation")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "annotation")
 
       in.pop
     }
@@ -372,7 +376,7 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "annotation")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "annotation")
 
       in.pop
     }
@@ -393,7 +397,7 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "annotation")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "annotation")
 
       in.pop
     }
@@ -414,7 +418,7 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "annotation")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "annotation")
 
       in.pop
     }
@@ -435,7 +439,7 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
 
       // ensure the data chunk had the expected size
       if (in.position != chunk.end)
-        throw PoolSizeMissmatchError(in.position-chunk.begin, chunk.end-chunk.begin, "annotation")
+        throw PoolSizeMissmatchError(in.position - chunk.begin, chunk.end - chunk.begin, "annotation")
 
       in.pop
     }
