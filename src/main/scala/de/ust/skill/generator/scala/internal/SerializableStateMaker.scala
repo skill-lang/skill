@@ -180,8 +180,12 @@ final class SerializableState extends SkillState {
    * replace user types with pools and read required field data
    */
   def finishInitialization {
+
+    // remove proxy types and add names to the string pool
     for (p ← pools.values) {
+      String.add(p.name)
       for (f ← p.fields.values) {
+        String.add(f.name)
         f.t match {
           case t: NamedUserType ⇒ f.t = pools(t.name)
           case t: UserType      ⇒ f.t = pools(t.name)
