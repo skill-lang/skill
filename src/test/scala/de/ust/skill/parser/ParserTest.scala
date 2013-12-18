@@ -36,16 +36,6 @@ class ParserTest extends FunSuite {
   test("example2a")(check("/example2a.skill"))
   test("example2b")(check("/example2b.skill"))
   test("unicode")(check("/unicode.skill"))
-  test("air-top")(check("/air-top.skill"))
-  test("air-pamm")(check("/air-pamm.skill"))
-  test("air-pamm-heap")(check("/air-pamm-heap.skill"))
   test("empty")(assert(0 === Parser.process("/empty.skill").size))
-
-  test("process") {
-    val parser = new Parser
-    val array1: Array[Object] = Parser.process("/air-top.skill").map(_.toString()).toArray
-    val array2: Array[Object] = Parser.process("/air-pamm.skill").map(_.toString()).toArray
-    assert(array1 != array2)
-  }
 
 }

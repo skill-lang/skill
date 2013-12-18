@@ -29,7 +29,6 @@ class GeneratorTest extends FunSuite {
 
   test("node")(check("node.skill", "node"))
   test("number")(check("number.skill", "number"))
-  test("pamm")(check("air-pamm-heap.skill", "pamm"))
   test("subtypes")(check("subtypesExample.skill", "subtypes"))
   test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
 }
