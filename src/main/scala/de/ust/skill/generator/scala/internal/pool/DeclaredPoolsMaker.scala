@@ -186,7 +186,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
   override def all = iterator
   override def allInTypeOrder = typeOrderIterator
   override def apply($applyCallArguments) = add$name(new _root_.${packagePrefix}internal.types.$name($applyCallArguments))
-  """)
+""")
     }
 
     ///////////////
@@ -194,7 +194,6 @@ final class ${name}StoragePool(state: SerializableState) extends ${
     ///////////////
 
     out.write(s"""
-
   override def iterator = ${
       if (null == d.getSuperType) s"""data.iterator ++ newDynamicInstances"""
       else s"blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt-1, (block.bpsi + block.count).toInt-1).asInstanceOf[Iterable[$name]].iterator ++ iter }"
@@ -273,8 +272,10 @@ final class ${name}StoragePool(state: SerializableState) extends ${
           // the ordinary field case
           out.write(s"""
         // ${f.getType.getSkillName} $name
-        case "${f.getSkillName()}" ⇒ locally {
+        case "${f.getSkillName()}" ⇒ try {
           ${makeReadCode(f)}
+        } catch {
+          case e: UnexpectedEOF ⇒ throw new UnexpectedEOF("Failed to parse field data of (${f.getType().getSkillName()}) ${d.getName()}.$name", e)
         }
 """)
         }
