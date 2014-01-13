@@ -244,7 +244,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
   override def readFields(fieldParser: FieldParser) {
     subPools.collect { case p: KnownPool[_, _] ⇒ p }.foreach(_.readFields(fieldParser))
 
-    for ((name, f) ← fields) {
+    for ((name, f) ← fields  if !f.dataChunks.isEmpty) {
       (name: @switch) match {""")
 
     // parse known fields
