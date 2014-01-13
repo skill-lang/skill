@@ -331,7 +331,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
       }
       case t: Declaration ⇒
         s"""@inline def putField(i:$packagePrefix${d.getName}) { out.write(v64(i.${escaped(f.getName)}.getSkillID)) }
-          ws.foreachOf("${t.getSkillName}", putField)"""
+          foreachOf("${t.getSkillName}", putField)"""
 
       // TODO implementation for container types
       case t: ContainerType ⇒ "???"
@@ -424,18 +424,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
       val sName = f.getSkillName
       out.write(s"""
         case "$sName" ⇒ locally {
-          // TODO append new fields
-
-          // put(v64(0)) // field restrictions not implemented yet
-          // put(v64(${
-        f.getType match {
-          case t: Declaration ⇒ s"""ws.typeID("${t.getSkillName}")"""
-          case _              ⇒ "f.t.typeId"
-        }
-      }))
-          // put(string("${f.getSkillName()}"))
-
-          /* ${writeField(f)} */
+          ${writeField(f)}
           put(v64(out.size))
         }""")
     })
