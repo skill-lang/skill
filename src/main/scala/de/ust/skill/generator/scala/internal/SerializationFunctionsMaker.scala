@@ -43,9 +43,9 @@ sealed abstract class SerializationFunctions(state: SerializableState) {
 
 object SerializationFunctions {
 
-  def bool(v: Boolean): Array[Byte] = new Array(if (v) 0xFF else 0x00)
+  def bool(v: Boolean): Array[Byte] = Array[Byte](if (v) -1 else 0)
 
-  def i8(v: Byte): Array[Byte] = new Array(v)
+  def i8(v: Byte): Array[Byte] = Array(v)
 
   def i16(v: Short): Array[Byte] = ByteBuffer.allocate(2).putShort(v).array
   def i32(v: Int): Array[Byte] = ByteBuffer.allocate(4).putInt(v).array
