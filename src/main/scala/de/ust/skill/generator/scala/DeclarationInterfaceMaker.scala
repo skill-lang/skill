@@ -39,7 +39,8 @@ import scala.reflect.ClassTag
     out.write(s"/*${d.getSkillComment()}*/\n")
 
     //class prefix
-    out.write(s"trait ${d.getName()} ${
+    val name = d.getName();
+    out.write(s"trait $name ${
       if (null != d.getSuperType()) { s"extends ${d.getSuperType().getName()}" }
       else { "extends KnownType" }
     } {\n")
@@ -78,7 +79,12 @@ import scala.reflect.ClassTag
       }
     })
 
-    out.write("}\n");
+    out.write(s"""}
+
+object $name {
+  def unapply(self:$name) = ${(for (f ← d.getFields) yield "self."+f.getName).mkString("Some(", ", ", ")")}
+}
+""");
 
     out.close()
   }
