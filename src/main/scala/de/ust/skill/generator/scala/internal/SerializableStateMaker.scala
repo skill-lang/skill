@@ -27,6 +27,7 @@ trait SerializableStateMaker extends GeneralOutputMaker {
     out.write(s"""package ${packagePrefix}internal
 
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Files
@@ -78,10 +79,19 @@ final class SerializableState extends SkillState {
   override def write(target: Path) {
     import SerializationFunctions._
 
+    // create the output channel
     val file = Files.newByteChannel(target,
       StandardOpenOption.CREATE,
       StandardOpenOption.WRITE,
       StandardOpenOption.TRUNCATE_EXISTING).asInstanceOf[FileChannel]
+
+    // update from path, if it did not exist before allowing for future append operations
+    if (null == fromPath) try {
+      fromPath = target
+      fromReader = new ByteReader(Files.newByteChannel(fromPath).asInstanceOf[FileChannel])
+    } catch {
+      case e: IOException ⇒ // we don't care, because this means we do not have right permissions Oo
+    }
 
     val ws = new WriteState(this)
     // write string pool

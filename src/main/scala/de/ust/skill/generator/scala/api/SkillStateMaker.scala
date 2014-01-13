@@ -36,6 +36,8 @@ trait SkillState {
 
   /**
    * Creates a new SKilL file at target. The recommended file extension is ".sf".
+   *
+   * @note Updates fromPath iff fromPath==null, i.e. if the state has been created out of thin air.
    */
   def write(target: Path): Unit
 
