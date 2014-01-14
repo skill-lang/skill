@@ -1,8 +1,9 @@
 /** @see TR13§6.2.3 */
 Node { 
-  i8 ID;
   /** the viewer known colors ... */
   string color;
+  /** .. ID .. */
+  i8 ID;
   /** ... and descriptions */
   string description;
 }
