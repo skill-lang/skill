@@ -244,7 +244,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
   override def readFields(fieldParser: FieldParser) {
     subPools.collect { case p: KnownPool[_, _] ⇒ p }.foreach(_.readFields(fieldParser))
 
-    for ((name, f) ← fields  if !f.dataChunks.isEmpty) {
+    for ((name, f) ← fields if !f.dataChunks.isEmpty) {
       (name: @switch) match {""")
 
     // parse known fields
@@ -304,10 +304,10 @@ final class ${name}StoragePool(state: SerializableState) extends ${
     // write //
     ///////////
 
-    def writeField(f: Field): String = f.getType match {
+    def writeField(f: Field, iteratorName: String): String = f.getType match {
       case t: GroundType ⇒ t.getSkillName match {
         case "annotation" ⇒
-          s"""this.foreach { instance ⇒ annotation(instance.${escaped(f.getName)}).foreach(out.write _) }"""
+          s"""$iteratorName.foreach { instance ⇒ annotation(instance.${escaped(f.getName)}).foreach(out.write _) }"""
 
         case "v64" ⇒
           s"""val target = new Array[Byte](9 * outData.size)
@@ -327,7 +327,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
 
           out.write(target.array)"""
 
-        case _ ⇒ s"this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.${escaped(f.getName)})) }"
+        case _ ⇒ s"$iteratorName.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.${escaped(f.getName)})) }"
       }
       case t: Declaration ⇒
         s"""@inline def putField(i:$packagePrefix${d.getName}) { out.write(v64(i.${escaped(f.getName)}.getSkillID)) }
@@ -336,7 +336,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
       // TODO implementation for container types
       case t: ContainerType ⇒ "???"
 
-      case _                ⇒ s"this.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.${escaped(f.getName)})) }"
+      case _                ⇒ s"$iteratorName.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.${escaped(f.getName)})) }"
     }
 
     out.write(s"""
@@ -376,7 +376,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
       }))
           put(string("${f.getSkillName()}"))
 
-          ${writeField(f)}
+          ${writeField(f, "this")}
           put(v64(out.size))
         }""")
     }
@@ -406,7 +406,10 @@ final class ${name}StoragePool(state: SerializableState) extends ${
       put(string("$sName"))
       put(v64(outData.size)) // the append state known how many instances we will write
 
-      put(v64(fields.size))
+      if (0 == outData.size)
+        put(v64(fields.filter { case (n, f) ⇒ f.dataChunks.isEmpty }.size))
+      else
+        put(v64(fields.size))
 
     } else {
       // the type is yet unknown, thus we will write all information
@@ -424,8 +427,16 @@ final class ${name}StoragePool(state: SerializableState) extends ${
       val sName = f.getSkillName
       out.write(s"""
         case "$sName" ⇒ locally {
-          ${writeField(f)}
-          put(v64(out.size))
+          if (f.dataChunks.isEmpty) {
+            put(v64(0)) // field restrictions not implemented yet
+            put(v64(f.t.typeId))
+            put(string("$sName"))
+            ${writeField(f, "this")}
+            put(v64(out.size))
+          } else if (0 != outData.size) {
+            ${writeField(f, "newDynamicInstances")}
+            put(v64(out.size))
+          }
         }""")
     })
 

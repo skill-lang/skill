@@ -19,6 +19,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
@@ -128,7 +129,7 @@ final class StringPool(state: SerializableState) extends SkillState.StringAccess
     idMap.foreach({ case (k, v) ⇒ serializationIDs.put(v, k) })
 
     val data = new ByteArrayOutputStream
-    var offsets = List[Int]()
+    var offsets = ArrayBuffer[Int]()
 
     // instert new strings to the map;
     //  this is the place where duplications with lazy strings will be detected and eliminated
@@ -138,7 +139,7 @@ final class StringPool(state: SerializableState) extends SkillState.StringAccess
         idMap.put(idMap.size + 1, s)
         serializationIDs.put(s, idMap.size)
         data.write(s.getBytes)
-        offsets ::= data.size
+        offsets += data.size
       }
 
     //count
