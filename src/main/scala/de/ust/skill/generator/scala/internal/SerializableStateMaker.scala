@@ -224,8 +224,8 @@ ${(for (d ← IR) yield s"""    ${d.getName}.readFields(fieldParser)""").mkStrin
     println("")
     println("ReflectionPool:")
     for (s ← pools.values) {
-      println(s.name);
-      println(s.fields.map { f ⇒ f.toString }.mkString("{\\n", ";\\n", "\\n}\\n"))
+      println(s.name + s.blockInfos.mkString("[", ", ", "] "))
+      println(s.fields.values.map { f ⇒ f.toString ++ f.dataChunks.mkString(" = {", ", ", "}") }.mkString("{\\n", ";\\n", "\\n}\\n"))
     }
     println("")
     println("StoragePools:")
