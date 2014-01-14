@@ -162,7 +162,6 @@ final private class FileParser extends ByteStreamParsers {
                 result.dataChunks.append(ChunkInfo(lastOffset, end, userType.blockInfos(0).bpsi, userType.instanceCount))
                 lastOffset = end
                 fieldIndex += 1
-                // TODO maybe we have to access the block list here
                 userType.addField(result)
                 result
             }) ^^ { newFields ⇒
@@ -170,21 +169,38 @@ final private class FileParser extends ByteStreamParsers {
             }
           }
       } else {
-        // we append only fields to the type; it is not important whether or not it existed before;
-        //  all fields contain all decalrations
-        var fieldIndex = 0
+        if (null == userType) {
+          // we append new fields and create a new type
+          var fieldIndex = 0
 
-        repN(fieldCount.toInt,
-          restrictions ~ fieldTypeDeclaration ~ v64 ~ v64 ^^ {
-            case r ~ t ~ n ~ end ⇒
-              val name = σ(n)
-              val result = new FieldDeclaration(t, name, fieldIndex)
-              result.dataChunks.append(ChunkInfo(lastOffset, end, lbpsi, count))
-              lastOffset = end
-              fieldIndex += 1
-              result
-          })
+          repN(fieldCount.toInt,
+            restrictions ~ fieldTypeDeclaration ~ v64 ~ v64 ^^ {
+              case r ~ t ~ n ~ end ⇒
+                val name = σ(n)
+                val result = new FieldDeclaration(t, name, fieldIndex)
+                result.dataChunks.append(ChunkInfo(lastOffset, end, lbpsi, count))
+                lastOffset = end
+                fieldIndex += 1
+                result
+            })
 
+        } else {
+          // we append new fields to an existing type, but no new instances
+          var fieldIndex = userType.fields.size
+          val count = userType.instanceCount
+
+          repN(fieldCount.toInt,
+            restrictions ~ fieldTypeDeclaration ~ v64 ~ v64 ^^ {
+              case r ~ t ~ n ~ end ⇒
+                val name = σ(n)
+                val result = new FieldDeclaration(t, name, fieldIndex)
+                result.dataChunks.append(ChunkInfo(lastOffset, end, lbpsi, count))
+                lastOffset = end
+                fieldIndex += 1
+                userType.addField(result)
+                result
+            })
+        }
       }
     } ^^ { r ⇒
       fieldsWithNewChunks :::= r
