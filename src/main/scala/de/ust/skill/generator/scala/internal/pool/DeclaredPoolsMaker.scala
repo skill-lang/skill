@@ -441,6 +441,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
     })
 
     out.write("""
+        case _ ⇒ assert(0==newDynamicInstances.size, "adding instances with an unknown field is currently not supported")
       }
     }
   }
