@@ -95,12 +95,7 @@ final class ByteReader(file: FileChannel) extends Reader[Byte] {
   /**
    * like take, but creates a copy of the taken bytes to ensure correct usage
    */
-  private[internal] def bytes(n: Int): Array[Byte] = {
-    if (n < 64)
-      Arrays.copyOf(take(n).array, n)
-    else
-      take(n).array
-  }
+  private[internal] def bytes(n: Int): Array[Byte] = take(n)
 
   def i8 = input.get
   def i16 = input.getShort
