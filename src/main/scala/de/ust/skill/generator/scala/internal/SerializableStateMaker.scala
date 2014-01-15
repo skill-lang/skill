@@ -105,13 +105,13 @@ final class SerializableState extends SkillState {
     knownPools.foreach(_.prepareSerialization(this))
 
     // write count of the type block
-    file.write(ByteBuffer.wrap(v64(pools.size)))
+    file.write(ByteBuffer.wrap(v64(knownPools.filter { p ⇒ p.dynamicSize > 0 }.size)))
 
     // write fields back to their buffers
     val out = new ByteArrayOutputStream
 
     // write header
-    def writeSubPools(p: KnownPool[_, _]) {
+    def writeSubPools(p: KnownPool[_, _]): Unit = if (p.dynamicSize > 0) {
       p.write(file, out, ws)
       for (p ← p.getSubPools)
         if (p.isInstanceOf[KnownPool[_, _]])
@@ -160,13 +160,13 @@ final class SerializableState extends SkillState {
     knownPools.foreach(_.prepareSerialization(this))
 
     // write count of the type block
-    file.write(ByteBuffer.wrap(v64(pools.size)))
+    file.write(ByteBuffer.wrap(v64(knownPools.filter { p ⇒ p.dynamicSize > 0 }.size)))
 
     // write fields back to their buffers
     val out = new ByteArrayOutputStream
 
     // write header
-    def writeSubPools(p: KnownPool[_, _]) {
+    def writeSubPools(p: KnownPool[_, _]): Unit = if (p.dynamicSize > 0) {
       p.append(file, out, as)
       for (p ← p.getSubPools)
         if (p.isInstanceOf[KnownPool[_, _]])
