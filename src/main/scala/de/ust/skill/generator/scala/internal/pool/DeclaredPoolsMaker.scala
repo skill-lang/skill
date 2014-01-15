@@ -382,6 +382,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
     }
 
     out.write(s"""
+        case n ⇒ System.err.println(s"dropped unknown field Node.$$n during write operation!")
       }
     }
   }
