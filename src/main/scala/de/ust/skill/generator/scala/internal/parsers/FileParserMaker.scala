@@ -15,6 +15,7 @@ trait FileParserMaker extends GeneralOutputMaker {
     //package & imports
     out.write(s"""package ${packagePrefix}internal.parsers
 
+import java.io.IOException
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
@@ -463,6 +464,9 @@ final private class FileParser extends ByteStreamParsers {
   }
 
   def readFile(path: Path): SerializableState = {
+    if (Files.notExists(path))
+      throw new IOException(s"The file $path does not exist.")
+
     σ.fromPath = path
     σ.fromReader = new ByteReader(Files.newByteChannel(path).asInstanceOf[FileChannel])
     val in = σ.fromReader
