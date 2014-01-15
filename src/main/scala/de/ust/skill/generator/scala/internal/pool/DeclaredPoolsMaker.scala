@@ -402,7 +402,15 @@ final class ${name}StoragePool(state: SerializableState) extends ${
     val outData = as.d("$sName").asInstanceOf[Iterable[$name]]
 
     // check the kind of header we have to write
-    if (staticSize > newObjects.size) {
+    if (blockInfos.isEmpty) {
+      // the type is yet unknown, thus we will write all information
+      put(string("$sName"))
+      put(Array[Byte](0))
+      put(v64(outData.size))
+      put(v64(0)) // restrictions not implemented yet
+
+      put(v64(fields.size))
+    } else {
       // the type is known, thus we only have to write {name, ?lbpsi, count, fieldCount}
       put(string("$sName"))
       put(v64(outData.size)) // the append state known how many instances we will write
@@ -411,15 +419,6 @@ final class ${name}StoragePool(state: SerializableState) extends ${
         put(v64(fields.filter { case (n, f) ⇒ f.dataChunks.isEmpty }.size))
       else
         put(v64(fields.size))
-
-    } else {
-      // the type is yet unknown, thus we will write all information
-      put(string("$sName"))
-      put(Array[Byte](0))
-      put(v64(outData.size))
-      put(v64(0)) // restrictions not implemented yet
-
-      put(v64(fields.size))
     }
 
     for ((name, f) ← fields) {
@@ -442,7 +441,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
     })
 
     out.write("""
-        case _ ⇒ assert(0==newDynamicInstances.size, "adding instances with an unknown field is currently not supported")
+        case _ ⇒ assert(0 == newDynamicInstances.size, "adding instances with an unknown field is currently not supported")
       }
     }
   }
