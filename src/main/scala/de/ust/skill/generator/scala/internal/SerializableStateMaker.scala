@@ -79,6 +79,9 @@ final class SerializableState extends SkillState {
   override def write(target: Path) {
     import SerializationFunctions._
 
+    // ensure the file does not exist; workaround for a JVM bug
+    Files.deleteIfExists(target)
+
     // create the output channel
     val file = Files.newByteChannel(target,
       StandardOpenOption.CREATE,
