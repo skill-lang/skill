@@ -359,7 +359,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
     put(v64(outData.size))
     put(v64(0)) // restrictions not implemented yet
 
-    put(v64(fields.size))
+    put(v64(${fields.size})) // number of known fields
 
     for ((name, f) ← fields) {
       (name: @switch) match {""")
