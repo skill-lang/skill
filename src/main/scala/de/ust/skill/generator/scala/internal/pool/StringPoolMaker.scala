@@ -69,6 +69,7 @@ final class StringPool(state: SerializableState) extends SkillState.StringAccess
     }
   }
   override def add(string: String) = newStrings += string
+  override def all:Iterator[String] = (1 to stringPositions.size).map(get(_)).iterator ++ newStrings.iterator
   override def size = stringPositions.size + newStrings.size
 
   /**

@@ -72,6 +72,7 @@ object SkillState {
   trait StringAccess {
     def get(index: Long): String
     def add(string: String)
+    def all:Iterator[String]
     def size: Int
   }""")
 
