@@ -331,7 +331,7 @@ private[internal] final class AppendState(val state: SerializableState) extends 
                 put(v64(0)) // field restrictions not implemented yet
                 put(v64(f.t.typeId))
                 put(string("$sName"))
-                ${writeField(d, f, "this")}
+                ${writeField(d, f, "p")}
                 put(v64(out.size))
               } else if (0 != outData.size) {
                 ${writeField(d, f, "p.newDynamicInstances")}
@@ -462,7 +462,7 @@ private[internal] final class WriteState(val state: SerializableState) extends S
             }
           }))
                 put(string("${f.getSkillName()}"))
-                ${writeField(d, f, "this")}
+                ${writeField(d, f, "outData")}
                 put(v64(out.size))
               }""").mkString("")
         }
