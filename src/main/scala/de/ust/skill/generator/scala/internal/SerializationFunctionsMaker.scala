@@ -331,10 +331,10 @@ private[internal] final class AppendState(val state: SerializableState) extends 
                 put(v64(0)) // field restrictions not implemented yet
                 put(v64(f.t.typeId))
                 put(string("$sName"))
-                ${writeField(d, f, "p")}
+                ${writeField(d, f, "outData")}
                 put(v64(out.size))
               } else if (0 != outData.size) {
-                ${writeField(d, f, "p.newDynamicInstances")}
+                ${writeField(d, f, s"p.asInstanceOf[${name}StoragePool].newDynamicInstances")}
                 put(v64(out.size))
               }"""
           }).mkString("")
@@ -436,14 +436,14 @@ private[internal] final class WriteState(val state: SerializableState) extends S
         val fields = d.getFields
         s"""
         case "$sName" ⇒ locally {
-          val outData = d("$sName")
+          val outData = d("$sName").asInstanceOf[Iterable[${d.getName}]]
           val fields = p.fields
 
           put(string("$sName"))
           ${
           if (null == d.getSuperType) "put(Array[Byte](0))"
           else s"""put(string("${d.getSuperType.getSkillName}"))
-          put(v64(ws.lbpsiMap("$sName")))"""
+          put(v64(lbpsiMap("$sName")))"""
         }
           put(v64(outData.size))
           put(v64(0)) // restrictions not implemented yet
@@ -457,7 +457,7 @@ private[internal] final class WriteState(val state: SerializableState) extends S
                 put(v64(0)) // field restrictions not implemented yet
                 put(v64(${
             f.getType match {
-              case t: Declaration ⇒ s"""ws.typeID("${t.getSkillName}")"""
+              case t: Declaration ⇒ s"""typeID("${t.getSkillName}")"""
               case _              ⇒ "f.t.typeId"
             }
           }))
@@ -512,7 +512,7 @@ private[internal] final class WriteState(val state: SerializableState) extends S
                 out.write(target, 0, offset)"""
 
       case "i64" ⇒
-        s"""val target = ByteBuffer.allocate(8 * size)
+        s"""val target = ByteBuffer.allocate(8 * outData.size)
                 val it = outData.iterator.asInstanceOf[Iterator[${d.getName}]]
                 while (it.hasNext)
                   target.putLong(it.next.${escaped(f.getName)})
