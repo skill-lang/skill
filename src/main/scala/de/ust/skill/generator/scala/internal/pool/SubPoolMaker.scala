@@ -30,8 +30,7 @@ abstract class SubPool[T <: B, B <: KnownType](
   name: String,
   fields: HashMap[String, FieldDeclaration],
   val _superPool: KnownPool[_ >: T <: B, B])
-    extends KnownPool[T, B](name, fields) {
-  final override private[internal] def superPool: Option[KnownPool[_ >: T <: B, B]] = Some(_superPool)
+    extends KnownPool[T, B](name, fields, Some(_superPool)) {
 
   /**
    * the super base pool; note that this requires construction of pools in a top-down order

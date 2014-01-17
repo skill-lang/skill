@@ -33,9 +33,8 @@ import ${packagePrefix}internal._
  *  @param name the name of the type represented by this pool
  *  @param fields the known fields of this type
  */
-abstract class AbstractPool(val name: String, private[internal] val fields: HashMap[String, FieldDeclaration])
+abstract class AbstractPool(val name: String, private[internal] val fields: HashMap[String, FieldDeclaration], private[internal] val superPool: Option[AbstractPool])
     extends TypeInfo {
-  private[internal] def superPool: Option[AbstractPool];
 
   /**
    * the next pool regarding type order; for example A<:B, B<:D, A<:C may lead to A⇀B⇀D⇀C or A⇀C⇀B⇀D.
@@ -88,7 +87,7 @@ abstract class AbstractPool(val name: String, private[internal] val fields: Hash
     case NamedUserType(n) ⇒ n == name
     case t: UserType      ⇒ t.name == name
     case t: AbstractPool  ⇒ t.name == name
-    case _ ⇒ false
+    case _                ⇒ false
   }
 }
 """)

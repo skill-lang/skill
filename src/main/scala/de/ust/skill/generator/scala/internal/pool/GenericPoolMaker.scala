@@ -30,9 +30,7 @@ import ${packagePrefix}internal.UserType
 final class GenericPool(
     name: String,
     _superPool: Option[AbstractPool],
-    fields: HashMap[String, FieldDeclaration]) extends AbstractPool(name, fields) {
-
-  private[internal] def superPool: Option[AbstractPool] = _superPool
+    fields: HashMap[String, FieldDeclaration]) extends AbstractPool(name, fields, _superPool) {
 
   override def getByID(index: Long) = ???
   override def toString = name

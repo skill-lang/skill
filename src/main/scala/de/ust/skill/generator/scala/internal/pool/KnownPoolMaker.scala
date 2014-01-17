@@ -30,8 +30,8 @@ import ${packagePrefix}internal.parsers.FieldParser
  *
  * @author Timm Felden
  */
-abstract class KnownPool[T <: B, B <: KnownType](name: String, fields: HashMap[String, FieldDeclaration])
-    extends AbstractPool(name, fields)
+abstract class KnownPool[T <: B, B <: KnownType](name: String, fields: HashMap[String, FieldDeclaration], _superPool: Option[AbstractPool])
+    extends AbstractPool(name, fields, _superPool)
     with Iterable[T] {
 
   private[internal] def basePool: BasePool[B]

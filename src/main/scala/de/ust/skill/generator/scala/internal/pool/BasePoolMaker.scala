@@ -29,9 +29,7 @@ import ${packagePrefix}internal.UserType
  * @author Timm Felden
  */
 abstract class BasePool[T <: KnownType](name: String, fields: HashMap[String, FieldDeclaration], initialData:Array[T])
-    extends KnownPool[T, T](name, fields) {
-
-  final override private[internal] def superPool = None
+    extends KnownPool[T, T](name, fields, None) {
 
   /**
    * We are the base pool.
