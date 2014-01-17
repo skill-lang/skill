@@ -331,7 +331,7 @@ private[internal] final class AppendState(val state: SerializableState) extends 
                 put(v64(0)) // field restrictions not implemented yet
                 put(v64(f.t.typeId))
                 put(string("$sName"))
-                ${writeField(d, f, "outData")}
+                ${writeField(d, f, s"p.asInstanceOf[${name}StoragePool]")}
                 put(v64(out.size))
               } else if (0 != outData.size) {
                 ${writeField(d, f, s"p.asInstanceOf[${name}StoragePool].newDynamicInstances")}
