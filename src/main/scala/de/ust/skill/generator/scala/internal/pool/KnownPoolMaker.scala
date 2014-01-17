@@ -87,16 +87,6 @@ abstract class KnownPool[T <: B, B <: KnownType](name: String, fields: HashMap[S
   private[internal] def readFields(fieldParser: FieldParser): Unit
 
   /**
-   * write the type definition into head and field data into out; the offset of field data has to be out.size
-   */
-  private[internal] def append(head: FileChannel, out: ByteArrayOutputStream, as: AppendState): Unit
-
-  /**
-   * write the type definition into head and field data into out; the offset of field data has to be out.size
-   */
-  private[internal] def write(head: FileChannel, out: ByteArrayOutputStream, ws: WriteState): Unit
-
-  /**
    * prepares serialization, i.e. ensures that all objects get IDs, which can be used as logic pointers,
    * and can be written to disk
    */

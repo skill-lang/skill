@@ -23,7 +23,6 @@ trait SerializableStateMaker extends GeneralOutputMaker {
     super.make
     val out = open("internal/SerializableState.scala")
 
-    //package & imports
     out.write(s"""package ${packagePrefix}internal
 
 import java.io.ByteArrayOutputStream
@@ -79,16 +78,13 @@ final class SerializableState extends SkillState {
   override def write(target: Path) {
     import SerializationFunctions._
 
-    // ensure the file does not exist; workaround for a JVM bug
     Files.deleteIfExists(target)
 
-    // create the output channel
     val file = Files.newByteChannel(target,
       StandardOpenOption.CREATE,
       StandardOpenOption.WRITE,
       StandardOpenOption.TRUNCATE_EXISTING).asInstanceOf[FileChannel]
 
-    // update from path, if it did not exist before allowing for future append operations
     if (null == fromPath) try {
       fromPath = target
       fromReader = new ByteReader(Files.newByteChannel(fromPath).asInstanceOf[FileChannel])
@@ -97,34 +93,12 @@ final class SerializableState extends SkillState {
     }
 
     val ws = new WriteState(this)
-    // write string pool
-    String.prepareAndWrite(file, ws)
 
-    // collect all known objects
-    // prepare pools, i.e. ensure that all objects get IDs which can be turned into logic pointers
+    String.prepareAndWrite(file, ws)
     knownPools.foreach(_.prepareSerialization(this))
 
-    // write count of the type block
-    file.write(ByteBuffer.wrap(v64(knownPools.filter { p ⇒ p.dynamicSize > 0 }.size)))
+    ws.writeTypeBlock(file)
 
-    // write fields back to their buffers
-    val out = new ByteArrayOutputStream
-
-    // write header
-    def writeSubPools(p: KnownPool[_, _]): Unit = if (p.dynamicSize > 0) {
-      p.write(file, out, ws)
-      for (p ← p.getSubPools)
-        if (p.isInstanceOf[KnownPool[_, _]])
-          writeSubPools(p.asInstanceOf[KnownPool[_, _]])
-    }
-    for (p ← knownPools)
-      if (p.isInstanceOf[BasePool[_]])
-        writeSubPools(p)
-
-    // write data
-    file.write(ByteBuffer.wrap(out.toByteArray()))
-
-    // done:)
     file.close()
 
     // reset skill IDs
@@ -153,42 +127,16 @@ final class SerializableState extends SkillState {
 
     val as = new AppendState(this)
 
-    // collect all known objects
     String.prepareAndAppend(file, as)
-
-    // prepare pools, i.e. ensure that all objects get IDs which can be turned into logic pointers
     knownPools.foreach(_.prepareSerialization(this))
 
-    // write count of the type block
-    file.write(ByteBuffer.wrap(v64(knownPools.filter { p ⇒ p.dynamicSize > 0 }.size)))
-
-    // write fields back to their buffers
-    val out = new ByteArrayOutputStream
-
-    // write header
-    def writeSubPools(p: KnownPool[_, _]): Unit = if (p.dynamicSize > 0) {
-      p.append(file, out, as)
-      for (p ← p.getSubPools)
-        if (p.isInstanceOf[KnownPool[_, _]])
-          writeSubPools(p.asInstanceOf[KnownPool[_, _]])
-    }
-    for (p ← knownPools)
-      if (p.isInstanceOf[BasePool[_]])
-        writeSubPools(p)
-
-    // write data
-    file.write(ByteBuffer.wrap(out.toByteArray()))
-
-    // done:)
+    as.writeTypeBlock(file)
     file.close()
   }
 
   // TODO check if state can be appended
   def canAppend: Boolean = null != fromPath
-""")
 
-    // state initialization
-    out.write(s"""
   /**
    * replace user types with pools and read required field data
    */

@@ -7,7 +7,12 @@ package de.ust.skill.generator.scala.internal
 
 import java.io.PrintWriter
 import de.ust.skill.generator.scala.GeneralOutputMaker
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.ContainerType
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.Field
 
+import scala.collection.JavaConversions.asScalaBuffer
 trait SerializationFunctionsMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
@@ -15,15 +20,18 @@ trait SerializationFunctionsMaker extends GeneralOutputMaker {
     //package
     out.write(s"""package ${packagePrefix}internal
 
+import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
 
+import scala.annotation.switch
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
+import ${packagePrefix}_
 import ${packagePrefix}api.KnownType
 import ${packagePrefix}api.SkillType
-import ${packagePrefix}internal.pool.BasePool
-import ${packagePrefix}internal.pool.KnownPool
+import ${packagePrefix}internal.pool._
 
 /**
  * Provides serialization functions;
@@ -34,6 +42,16 @@ import ${packagePrefix}internal.pool.KnownPool
 sealed abstract class SerializationFunctions(state: SerializableState) {
   import SerializationFunctions._
 
+  //collect String instances from known string types; this is needed, because strings are something special on the jvm
+${
+      (for (
+        d ← IR;
+        f ← d.getFields;
+        if ("string" == f.getType.getSkillName)
+      ) yield {
+        s"""  for(i ← state.${d.getName}.all) state.String.add(i.${f.getName})"""
+      }).mkString("\n")
+    }
   val serializationIDs = new HashMap[String, Long]
 
   def annotation(ref: SkillType): List[Array[Byte]]
@@ -263,6 +281,88 @@ private[internal] final class AppendState(val state: SerializableState) extends 
 
     List(v64(serializationIDs(baseName)), v64(ref.getSkillID))
   }
+
+  def writeTypeBlock(file: FileChannel) {
+    // write count of the type block
+    file.write(ByteBuffer.wrap(v64(knownPools.filter { p ⇒ p.dynamicSize > 0 }.size)))
+
+    // write fields back to their buffers
+    val out = new ByteArrayOutputStream
+
+    @inline def put(b: Array[Byte]) = file.write(ByteBuffer.wrap(b));
+    @inline def write(p: KnownPool[_, _]) {
+      (p.name: @switch) match {${
+      (for (d ← IR) yield {
+        val name = d.getName
+        val sName = d.getSkillName
+        val fields = d.getFields
+        s"""
+        case "$sName" ⇒ locally {
+          val outData = d("$sName").asInstanceOf[Iterable[$name]]
+          val fields = p.fields
+          val blockInfos = p.blockInfos
+
+          // check the kind of header we have to write
+          if (blockInfos.isEmpty) {
+            // the type is yet unknown, thus we will write all information
+            put(string("$sName"))
+            put(Array[Byte](0))
+            put(v64(outData.size))
+            put(v64(0)) // restrictions not implemented yet
+
+            put(v64(fields.size))
+          } else {
+            // the type is known, thus we only have to write {name, ?lbpsi, count, fieldCount}
+            put(string("$sName"))
+            put(v64(outData.size)) // the append state known how many instances we will write
+
+            if (0 == outData.size)
+              put(v64(fields.filter { case (n, f) ⇒ f.dataChunks.isEmpty }.size))
+            else
+              put(v64(fields.size))
+          }
+
+          for ((name, f) ← fields) {
+            (name: @switch) match {${
+          (for (f ← fields) yield {
+            val sName = f.getSkillName
+            s"""
+              case "$sName" ⇒ if (f.dataChunks.isEmpty) {
+                put(v64(0)) // field restrictions not implemented yet
+                put(v64(f.t.typeId))
+                put(string("$sName"))
+                ${writeField(d, f, "this")}
+                put(v64(out.size))
+              } else if (0 != outData.size) {
+                ${writeField(d, f, "p.newDynamicInstances")}
+                put(v64(out.size))
+              }"""
+          }).mkString("")
+        }
+              case _ ⇒ assert(0 == p.newDynamicInstances.size, "adding instances with an unknown field is currently not supported")
+            }
+          }
+        }"""
+      }).mkString("")
+    }
+        case _ ⇒ // nothing to do
+      }
+    }
+
+    // write header
+    def writeSubPools(p: KnownPool[_, _]): Unit = if (p.dynamicSize > 0) {
+      write(p)
+      for (p ← p.getSubPools)
+        if (p.isInstanceOf[KnownPool[_, _]])
+          writeSubPools(p.asInstanceOf[KnownPool[_, _]])
+    }
+    for (p ← knownPools)
+      if (p.isInstanceOf[BasePool[_]])
+        writeSubPools(p)
+
+    // write data
+    file.write(ByteBuffer.wrap(out.toByteArray()))
+  }
 }
 
 /**
@@ -320,10 +420,114 @@ private[internal] final class WriteState(val state: SerializableState) extends S
 
     List(v64(serializationIDs(baseName)), v64(ref.getSkillID))
   }
+
+  def writeTypeBlock(file: FileChannel) {
+    // write count of the type block
+    file.write(ByteBuffer.wrap(v64(knownPools.filter { p ⇒ p.dynamicSize > 0 }.size)))
+
+    // write fields back to their buffers
+    val out = new ByteArrayOutputStream
+
+    @inline def put(b: Array[Byte]) = file.write(ByteBuffer.wrap(b));
+    @inline def write(p: KnownPool[_, _]) {
+      (p.name: @switch) match {${
+      (for (d ← IR) yield {
+        val sName = d.getSkillName
+        val fields = d.getFields
+        s"""
+        case "$sName" ⇒ locally {
+          val outData = d("$sName")
+          val fields = p.fields
+
+          put(string("$sName"))
+          ${
+          if (null == d.getSuperType) "put(Array[Byte](0))"
+          else s"""put(string("${d.getSuperType.getSkillName}"))
+          put(v64(ws.lbpsiMap("$sName")))"""
+        }
+          put(v64(outData.size))
+          put(v64(0)) // restrictions not implemented yet
+
+          put(v64(${fields.size})) // number of known fields
+
+          for ((name, f) ← fields) {
+            (name: @switch) match {${
+          (for (f ← fields) yield s"""
+              case "${f.getSkillName()}" ⇒ locally {
+                put(v64(0)) // field restrictions not implemented yet
+                put(v64(${
+            f.getType match {
+              case t: Declaration ⇒ s"""ws.typeID("${t.getSkillName}")"""
+              case _              ⇒ "f.t.typeId"
+            }
+          }))
+                put(string("${f.getSkillName()}"))
+                ${writeField(d, f, "this")}
+                put(v64(out.size))
+              }""").mkString("")
+        }
+              case n ⇒ System.err.println(s"dropped unknown field Node.$$n during write operation!")
+            }
+          }
+        }"""
+      }
+      ).mkString("")
+    }
+        case t ⇒ System.err.println(s"dropped unknown type $$t")
+      }
+    }
+    @inline def writeSubPools(p: KnownPool[_, _]): Unit = if (p.dynamicSize > 0) {
+      write(p)
+      for (p ← p.getSubPools)
+        if (p.isInstanceOf[KnownPool[_, _]])
+          writeSubPools(p.asInstanceOf[KnownPool[_, _]])
+    }
+    for (p ← knownPools)
+      if (p.isInstanceOf[BasePool[_]])
+        writeSubPools(p)
+
+    file.write(ByteBuffer.wrap(out.toByteArray()))
+  }
 }
 """)
 
     //class prefix
     out.close()
+  }
+
+  // field writing helper functions
+  def writeField(d: Declaration, f: Field, iteratorName: String): String = f.getType match {
+    case t: GroundType ⇒ t.getSkillName match {
+      case "annotation" ⇒
+        s"""$iteratorName.foreach { instance ⇒ annotation(instance.${escaped(f.getName)}).foreach(out.write _) }"""
+
+      case "v64" ⇒
+        s"""val target = new Array[Byte](9 * outData.size)
+                var offset = 0
+
+                val it = outData.iterator.asInstanceOf[Iterator[${d.getName}]]
+                while (it.hasNext)
+                  offset += v64(it.next.${escaped(f.getName)}, target, offset)
+
+                out.write(target, 0, offset)"""
+
+      case "i64" ⇒
+        s"""val target = ByteBuffer.allocate(8 * size)
+                val it = outData.iterator.asInstanceOf[Iterator[${d.getName}]]
+                while (it.hasNext)
+                  target.putLong(it.next.${escaped(f.getName)})
+
+                out.write(target.array)"""
+
+      case _ ⇒ s"$iteratorName.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.${escaped(f.getName)})) }"
+    }
+    case t: Declaration ⇒
+      s"""@inline def putField(i:$packagePrefix${d.getName}) { out.write(v64(i.${escaped(f.getName)}.getSkillID)) }
+                foreachOf("${t.getSkillName}", putField)"""
+
+    // TODO implementation for container types
+    case t: ContainerType ⇒ "???"
+
+    case _                ⇒ s"$iteratorName.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.${escaped(f.getName)})) }"
   }
 }
