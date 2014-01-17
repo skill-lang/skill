@@ -445,7 +445,7 @@ private[internal] final class WriteState(val state: SerializableState) extends S
           else s"""put(string("${d.getSuperType.getSkillName}"))
           put(v64(lbpsiMap("$sName")))"""
         }
-          put(v64(outData.size))
+          put(v64(p.size))
           put(v64(0)) // restrictions not implemented yet
 
           put(v64(${fields.size})) // number of known fields
