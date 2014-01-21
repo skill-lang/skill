@@ -227,6 +227,30 @@ object SerializationFunctions {
 
   def f32(v: Float): Array[Byte] = ByteBuffer.allocate(4).putFloat(v).array
   def f64(v: Double): Array[Byte] = ByteBuffer.allocate(8).putDouble(v).array
+
+  /**
+   * creates an lbpsi map by recursively adding the local base pool start index to the map and adding all sub pools
+   *  afterwards
+   */
+  final def makeLBPSIMap[T <: B, B <: KnownType](pool: KnownPool[T, B], lbpsiMap: HashMap[String, Long], next: Long, size: String ⇒ Long): Long = {
+    lbpsiMap.put(pool.name, next);
+    var result = next + size(pool.name)
+    pool.getSubPools.foreach {
+      case sub: SubPool[_, B] ⇒ result = makeLBPSIMap(sub, lbpsiMap, result, size)
+    }
+    result
+  }
+
+  /**
+   * concatenates array buffers in the d-map. This will in fact turn the d-map from a map pointing from names to static
+   *  instances into a map pointing from names to dynamic instances.
+   */
+  final def concatenateDMap[T <: B, B <: KnownType](pool: KnownPool[T, B], d: HashMap[String, ArrayBuffer[KnownType]]): Unit = pool.getSubPools.foreach {
+    case sub: SubPool[_, B] ⇒
+      d(pool.basePool.name) ++= d(sub.name)
+      d(sub.name) = d(pool.basePool.name)
+      concatenateDMap(sub, d)
+  }
 }
 
 /**
@@ -258,8 +282,8 @@ private[internal] final class AppendState(val state: SerializableState) extends 
   val lbpsiMap = new HashMap[String, Long]
   pools.values.foreach {
     case p: BasePool[_] ⇒
-      p.makeLBPSIMap(lbpsiMap, 1, { s ⇒ typeID.put(s, typeID.size + 32); d(s).size })
-      p.concatenateDMap(d)
+      makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ typeID.put(s, typeID.size + 32); d(s).size })
+      concatenateDMap(p, d)
       var id = 1L
       for (i ← d(p.name)) {
         i.setSkillID(id)
@@ -397,8 +421,8 @@ private[internal] final class WriteState(val state: SerializableState) extends S
   val lbpsiMap = new HashMap[String, Long]
   pools.values.foreach {
     case p: BasePool[_] ⇒
-      p.makeLBPSIMap(lbpsiMap, 1, { s ⇒ typeID.put(s, typeID.size + 32); d(s).size })
-      p.concatenateDMap(d)
+      makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ typeID.put(s, typeID.size + 32); d(s).size })
+      concatenateDMap(p, d)
       var id = 1L
       for (i ← d(p.name)) {
         i.setSkillID(id)
@@ -522,7 +546,7 @@ private[internal] final class WriteState(val state: SerializableState) extends S
       case _ ⇒ s"$iteratorName.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.${escaped(f.getName)})) }"
     }
     case t: Declaration ⇒
-      s"""@inline def putField(i:$packagePrefix${d.getName}) { out.write(v64(i.${escaped(f.getName)}.getSkillID)) }
+      s"""@inline def putField(i: $packagePrefix${d.getName}) { out.write(v64(i.${escaped(f.getName)}.getSkillID)) }
                 foreachOf("${t.getSkillName}", putField)"""
 
     // TODO implementation for container types

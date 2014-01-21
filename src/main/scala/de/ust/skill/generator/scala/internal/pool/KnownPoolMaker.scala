@@ -91,27 +91,6 @@ abstract class KnownPool[T <: B, B <: KnownType](name: String, fields: HashMap[S
    * and can be written to disk
    */
   private[internal] def prepareSerialization(σ: SerializableState): Unit
-
-  /**
-   * creates an lbpsi map by recursively adding the local base pool start index to the map and adding all sub pools
-   *  afterwards
-   */
-  final def makeLBPSIMap(lbpsiMap: HashMap[String, Long], next: Long, size: String ⇒ Long): Long = {
-    lbpsiMap.put(name, next);
-    var result = next + size(name)
-    subPools.foreach {
-      case sub: SubPool[_, B] ⇒ result = sub.makeLBPSIMap(lbpsiMap, result, size)
-    }
-    result
-  }
-
-  /**
-   * concatenates array buffers in the d-map. This will in fact turn the d-map from a map pointing from names to static
-   *  instances into a map pointing from names to dynamic instances.
-   */
-  final def concatenateDMap(d: HashMap[String, ArrayBuffer[KnownType]]): Unit = subPools.foreach {
-    case sub: SubPool[_, B] ⇒ d(basePool.name) ++= d(sub.name); d(sub.name) = d(basePool.name); sub.concatenateDMap(d)
-  }
 }
 """)
 
