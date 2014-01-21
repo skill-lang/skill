@@ -1,0 +1,6 @@
+D : B { D d; }
+/** the specification is not in typer order, but the emitted IR should be! */
+A { A a; }
+C : A { C c; }
+B : A { B b; }
+

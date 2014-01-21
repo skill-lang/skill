@@ -318,7 +318,16 @@ final class Parser {
 
     assume(definitionNames.size == rval.values.size, "we lost some definitions")
     assume(rval.values.forall{_.isInitialized}, s"we missed some initializations: ${rval.values.filter(!_.isInitialized).mkString(", ")}")
-    rval.values.toSeq
+
+    // create type ordered sequence
+    def getInTypeOrder(d:ir.Declaration):Seq[ir.Declaration] = if(subtypes.contains(d.getSkillName)){
+      subtypes(d.getSkillName).map{s ⇒ getInTypeOrder(rval(s.name))}.foldLeft(Seq(d))(_++_)
+    }else{ 
+      Seq(d)
+    }
+
+    (for(d <- rval.values; if null == d.getSuperType)
+      yield getInTypeOrder(d)).toSeq.fold(Seq())(_++_)
   }
 }
 

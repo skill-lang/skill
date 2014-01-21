@@ -37,4 +37,10 @@ class ParserTest extends FunSuite {
   test("example2b")(check("/example2b.skill"))
   test("unicode")(check("/unicode.skill"))
   test("empty")(assert(0 === Parser.process("/empty.skill").size))
+
+  test("type ordered IR") {
+    val IR = Parser.process("/typeOrderIR.skill")
+    val order = IR.map(_.getSkillName).mkString("")
+    assert(order == "abdc" || order == "acbd")
+  }
 }
