@@ -69,7 +69,7 @@ Opitions:
       printHelp
     } else {
 
-      m.setOptions(args.slice(0, args.length - 2))
+      m.setOptions(args.slice(0, args.length - 2)).ensuring(m._packagePrefix != "", "You have to specify a non-empty package name!")
       val skillPath = args(args.length - 2)
       m.outPath = args(args.length - 1)
 

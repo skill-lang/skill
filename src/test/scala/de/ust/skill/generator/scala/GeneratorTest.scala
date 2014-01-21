@@ -43,4 +43,10 @@ class GeneratorTest extends FunSuite {
     check("nodeExample.tool3.skill", "toolchains.node.tool3")
     check("nodeExample.viewer.skill", "toolchains.node.viewer")
   }
+
+  test("check _root_ bug")(
+    assert(intercept[AssertionError] {
+      Main.main(Array[String]("-u", "<<some developer>>", "-h2", "<<debug>>", "src/test/resources/scala/date.skill", "testsuites/scala/src/main/scala/"))
+    }.getMessage === "assertion failed: You have to specify a non-empty package name!")
+  )
 }
