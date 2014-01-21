@@ -14,22 +14,17 @@ trait SkillTypeMaker extends GeneralOutputMaker {
     //package & imports
     out.write(s"""package ${packagePrefix}api
 
+import ${packagePrefix}internal.InternalInstanceProperties
+
 /**
  * The top of the skill type hierarchy.
  * @author Timm Felden
  */
-trait SkillType {
-
-  /**
-   * @return the ID of the instance; if -1, no ID has been assigned yet, if 0, the object will not be written to disk
-   */
-  def getSkillID: Long
-
+trait SkillType extends InternalInstanceProperties {
   /**
    * provides a pretty representation of this
    */
   def prettyString: String
-
 }
 """)
 

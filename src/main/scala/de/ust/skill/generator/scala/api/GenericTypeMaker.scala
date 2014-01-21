@@ -23,7 +23,9 @@ trait GenericTypeMaker extends GeneralOutputMaker {
  */
 class GenericType extends SkillType {
 
-  def getSkillID = 0L
+  override def getSkillID = 0L
+
+  override def setSkillID(id: Long) = throw new NoSuchMethodError("you can not set the SKilL ID of a generic instance")
 
   def prettyString: String = "<<some generic objcet>>"
 
