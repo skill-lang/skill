@@ -214,7 +214,7 @@ final private class FileParser extends ByteStreamParsers {
    * the state to be created is shared across a file parser instance; file parser instances are used to turn a file into
    * a new state anyway.
    */
-  private val σ = new SerializableState;
+  private var σ = new SerializableState;
 
   // helper structures required to build user types
   private var userTypeIndexMap = new HashMap[Long, UserType]
@@ -471,10 +471,13 @@ final private class FileParser extends ByteStreamParsers {
     σ.fromReader = new ByteReader(Files.newByteChannel(path).asInstanceOf[FileChannel])
     val in = σ.fromReader
     file(in) match {
-      case Success(r, i) ⇒ r
+      case Success(r, i) ⇒
       case NoSuccess(msg, i) ⇒ throw new SkillException(
         s"Failed to parse ${path}:\n  Message: $msg\n  Got stuck at byte ${in.pos.column} with at least ${in.minimumBytesToGo} bytes to go.\n  The next Byte is a ${try { in.next.toHexString } catch { case _: Exception ⇒ "EOF" }}.\n        ")
     }
+    val result = σ
+    σ = null
+    return result
   }
 }
 
