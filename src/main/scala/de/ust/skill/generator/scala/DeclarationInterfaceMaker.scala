@@ -39,7 +39,8 @@ import scala.reflect.ClassTag
     out.write(s"/*${d.getSkillComment()}*/\n")
 
     //class prefix
-    out.write(s"trait ${d.getName()} ${
+    val name = d.getName();
+    out.write(s"trait $name ${
       if (null != d.getSuperType()) { s"extends ${d.getSuperType().getName()}" }
       else { "extends KnownType" }
     } {\n")
@@ -62,25 +63,28 @@ import scala.reflect.ClassTag
         if ("annotation".equals(f.getType().getName())) {
           out.write(s"""
   /*${f.getSkillComment()}*/
-  def get$Name[T <: SkillType: ClassTag](): T
+  def $name_ : SkillType
   /*${f.getSkillComment()}*/
-  def set$Name[T <: SkillType]($Name: T): Unit
+  def ${name_}_=($Name: SkillType): Unit
 """)
         } else {
           val argumentType = mapType(f.getType())
           out.write(s"""
   /*${f.getSkillComment()}*/
-  def get$Name(): $argumentType
-  @inline final def $name_ = get$Name
+  def $name_ : $argumentType
   /*${f.getSkillComment()}*/
-  def set$Name($Name: $argumentType): Unit
-  @inline final def ${name_}_=($Name: $argumentType) = set$Name($Name)
+  def ${name_}_=($Name: $argumentType): Unit
 """)
         }
       }
     })
 
-    out.write("}\n");
+    out.write(s"""}
+
+object $name {
+  def unapply(self:$name) = ${(for (f ← d.getFields) yield "self."+f.getName).mkString("Some(", ", ", ")")}
+}
+""");
 
     out.close()
   }

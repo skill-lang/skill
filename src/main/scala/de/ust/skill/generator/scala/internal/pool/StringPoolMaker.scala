@@ -16,19 +16,17 @@ trait StringPoolMaker extends GeneralOutputMaker{
     out.write(s"""package ${packagePrefix}internal.pool
 
 import java.io.ByteArrayOutputStream
-import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
-import ${packagePrefix}internal.AppendState
-import ${packagePrefix}internal.SerializableState
-import ${packagePrefix}internal.SerializationFunctions
-import ${packagePrefix}internal.WriteState
+import ${packagePrefix}api.SkillState
+import ${packagePrefix}internal._
 
-final class StringPool {
+final class StringPool(state: SerializableState) extends SkillState.StringAccess {
   import SerializationFunctions.v64
 
   /**
@@ -48,16 +46,31 @@ final class StringPool {
    */
   private[internal] var idMap = new HashMap[Long, String]
 
-  def write(out: OutputStream) {
+  override def get(index: Long): String = {
+    if (0 == index)
+      return null
 
-    newStrings.foreach(s ⇒ {
-      val b = s.getBytes("UTF-8")
-      out.write(v64(b.length));
-      out.write(b)
-    });
+    idMap.get(index) match {
+      case Some(s) ⇒ s
+      case None ⇒ {
+        if (index > stringPositions.size)
+          throw InvalidPoolIndex(index, stringPositions.size, "string")
+
+        val off = stringPositions(index)
+        val fromReader = state.fromReader
+        fromReader.push(off._1)
+        var chars = fromReader.bytes(off._2)
+        fromReader.pop
+
+        val result = new String(chars, "UTF-8")
+        idMap.put(index, result)
+        result
+      }
+    }
   }
-
-  def size = stringPositions.size + newStrings.size
+  override def add(string: String) = newStrings += string
+  override def all:Iterator[String] = (1 to stringPositions.size).map(get(_)).iterator ++ newStrings.iterator
+  override def size = stringPositions.size + newStrings.size
 
   /**
    * prepares serialization of the string pool by adding new strings to the idMap
@@ -68,7 +81,8 @@ final class StringPool {
     val serializationIDs = ws.serializationIDs
 
     // ensure all strings are present
-    stringPositions.keySet.foreach(ws.state.getString(_))
+    for (k ← stringPositions.keySet)
+      get(k)
 
     // create inverse map
     idMap.foreach({ case (k, v) ⇒ serializationIDs.put(v, k) })
@@ -109,13 +123,14 @@ final class StringPool {
     val serializationIDs = as.serializationIDs
 
     // ensure all strings are present
-    stringPositions.keySet.foreach(as.state.getString(_))
+    for (k ← stringPositions.keySet)
+      get(k)
 
     // create inverse map
     idMap.foreach({ case (k, v) ⇒ serializationIDs.put(v, k) })
 
     val data = new ByteArrayOutputStream
-    var offsets = List[Int]()
+    var offsets = ArrayBuffer[Int]()
 
     // instert new strings to the map;
     //  this is the place where duplications with lazy strings will be detected and eliminated
@@ -125,7 +140,7 @@ final class StringPool {
         idMap.put(idMap.size + 1, s)
         serializationIDs.put(s, idMap.size)
         data.write(s.getBytes)
-        offsets ::= data.size
+        offsets += data.size
       }
 
     //count

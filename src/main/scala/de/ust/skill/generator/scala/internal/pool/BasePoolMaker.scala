@@ -15,7 +15,11 @@ trait BasePoolMaker extends GeneralOutputMaker{
     //package & imports
     out.write(s"""package ${packagePrefix}internal.pool
 
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+
 import ${packagePrefix}api.KnownType
+import ${packagePrefix}internal.FieldDeclaration
 import ${packagePrefix}internal.SerializableState
 import ${packagePrefix}internal.UserType
 
@@ -24,24 +28,8 @@ import ${packagePrefix}internal.UserType
  *
  * @author Timm Felden
  */
-abstract class BasePool[T <: KnownType: Manifest](userType: UserType, σ: SerializableState, blockCount: Int)
-    extends KnownPool[T, T](userType, blockCount) with IndexedSeq[T] {
-
-  final override private[internal] def superPool = None
-
-  /**
-   * Implements the contract of indexed seq.
-   *
-   * @note  that this will use an index range starting by 0 and not the ID range, which starts by 1.
-   * @note the implementation makes use of the fact, that there are no other pools above this pool
-   */
-  final override def apply(index: Int) = getByID(index + 1L)
-  /**
-   * Implements the contract of indexed seq.
-   *
-   * @note the implementation makes use of the fact, that there are no other pools above this pool
-   */
-  final override def length: Int = staticSize.toInt
+abstract class BasePool[T <: KnownType](name: String, fields: HashMap[String, FieldDeclaration], initialData:Array[T])
+    extends KnownPool[T, T](name, fields, None) {
 
   /**
    * We are the base pool.
@@ -51,7 +39,7 @@ abstract class BasePool[T <: KnownType: Manifest](userType: UserType, σ: Serial
   /**
    * the base type data store
    */
-  private[pool] var data = new Array[T](userType.instanceCount.toInt)
+  private[internal] var data = initialData
 
   /**
    * returns instances directly from the data store
@@ -66,7 +54,7 @@ abstract class BasePool[T <: KnownType: Manifest](userType: UserType, σ: Serial
    * // TODO maybe it is also required to set nonzero indices of new objects to -1
    * @note it is not possible to append to the written file; maybe write should in fact return a state
    */
-  final def restoreIndices = for ((inst, idx) ← data.zipWithIndex if inst.getSkillID != 0) inst.setSkillID(idx+1)
+  final def restoreIndices = for ((inst, idx) ← data.zipWithIndex if inst.getSkillID != 0) inst.setSkillID(idx + 1)
 }
 """)
 

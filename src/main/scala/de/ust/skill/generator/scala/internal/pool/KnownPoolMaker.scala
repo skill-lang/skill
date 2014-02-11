@@ -22,10 +22,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import ${packagePrefix}api.KnownType
-import ${packagePrefix}internal.AppendState
-import ${packagePrefix}internal.SerializableState
-import ${packagePrefix}internal.UserType
-import ${packagePrefix}internal.WriteState
+import ${packagePrefix}internal._
 import ${packagePrefix}internal.parsers.FieldParser
 
 /**
@@ -33,10 +30,8 @@ import ${packagePrefix}internal.parsers.FieldParser
  *
  * @author Timm Felden
  */
-abstract class KnownPool[T <: B, B <: KnownType](
-  userType: UserType,
-  blockCount: Int)
-    extends AbstractPool(userType, blockCount)
+abstract class KnownPool[T <: B, B <: KnownType](name: String, fields: HashMap[String, FieldDeclaration], _superPool: Option[AbstractPool])
+    extends AbstractPool(name, fields, _superPool)
     with Iterable[T] {
 
   private[internal] def basePool: BasePool[B]
@@ -55,6 +50,11 @@ abstract class KnownPool[T <: B, B <: KnownType](
    * @return a new iterator over all static instances of a type in type order
    */
   def staticInstances: Iterator[T]
+
+  /**
+   * @return a new iterator over all new objects of dynamic type T
+   */
+  private[internal] def newDynamicInstances: Iterator[T]
 
   /**
    * we wan to get objects by a long ID, because we might have up to 2^64 instances (at least somewhere in the future)
@@ -87,41 +87,10 @@ abstract class KnownPool[T <: B, B <: KnownType](
   private[internal] def readFields(fieldParser: FieldParser): Unit
 
   /**
-   * write the type definition into head and field data into out; the offset of field data has to be out.size
-   */
-  private[internal] def append(head: FileChannel, out: ByteArrayOutputStream, as: AppendState): Unit
-
-  /**
-   * write the type definition into head and field data into out; the offset of field data has to be out.size
-   */
-  private[internal] def write(head: FileChannel, out: ByteArrayOutputStream, ws: WriteState): Unit
-
-  /**
    * prepares serialization, i.e. ensures that all objects get IDs, which can be used as logic pointers,
    * and can be written to disk
    */
   private[internal] def prepareSerialization(σ: SerializableState): Unit
-
-  /**
-   * creates an lbpsi map by recursively adding the local base pool start index to the map and adding all sub pools
-   *  afterwards
-   */
-  final def makeLBPSIMap(lbpsiMap: HashMap[String, Long], next: Long, size: String ⇒ Long): Long = {
-    lbpsiMap.put(userType.name, next);
-    var result = next + size(userType.name)
-    subPools.foreach {
-      case sub: SubPool[_, B] ⇒ result = sub.makeLBPSIMap(lbpsiMap, result, size)
-    }
-    result
-  }
-
-  /**
-   * concatenates array buffers in the d-map. This will in fact turn the d-map from a map pointing from names to static
-   *  instances into a map pointing from names to dynamic instances.
-   */
-  final def concatenateDMap(d: HashMap[String, ArrayBuffer[KnownType]]): Unit = subPools.foreach {
-    case sub: SubPool[_, B] ⇒ d(basePool.name) ++= d(sub.name); d(sub.name) = d(basePool.name); sub.concatenateDMap(d)
-  }
 }
 """)
 

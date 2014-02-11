@@ -15,6 +15,9 @@ trait GenericPoolMaker extends GeneralOutputMaker {
     //package & imports
     out.write(s"""package ${packagePrefix}internal.pool
 
+import scala.collection.mutable.HashMap
+
+import ${packagePrefix}internal.FieldDeclaration
 import ${packagePrefix}internal.UserType
 
 /**
@@ -25,13 +28,12 @@ import ${packagePrefix}internal.UserType
  * @author Timm Felden
  */
 final class GenericPool(
-    userType: UserType,
+    name: String,
     _superPool: Option[AbstractPool],
-    blockCount: Int) extends AbstractPool(userType, blockCount) {
-
-  private[internal] def superPool: Option[AbstractPool] = _superPool
+    fields: HashMap[String, FieldDeclaration]) extends AbstractPool(name, fields, _superPool) {
 
   override def getByID(index: Long) = ???
+  override def toString = name
 }
 """)
 

@@ -30,10 +30,8 @@ trait DeclarationImplementationMaker extends GeneralOutputMaker {
     out.write(s"""package ${packagePrefix}internal.types
 
 import scala.collection.mutable.ArrayBuffer
-import scala.reflect.ClassTag
 
 import ${packagePrefix}api._
-import ${packagePrefix}internal.AnnotationTypeCastException
 
 final class $name extends _root_.${packagePrefix}$name {""")
 
@@ -42,7 +40,7 @@ final class $name extends _root_.${packagePrefix}$name {""")
   @inline def this(""")
 
   		// data
-    	out.write(relevantFields.map({ f ⇒ s"${escaped(f.getName)}: ${mapType(f.getType())}" }).mkString(", "))
+    	out.write(relevantFields.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", "))
 
     	out.write(s""") {
     this()
@@ -65,6 +63,7 @@ final class $name extends _root_.${packagePrefix}$name {""")
 	///////////////////////
 	fields.foreach({ f ⇒
       val name = f.getName()
+      val name_ = escaped(name)
       val Name = name.capitalize
 
       def makeField:String = {
@@ -78,13 +77,6 @@ final class $name extends _root_.${packagePrefix}$name {""")
       def makeGetterImplementation:String = {
         if(f.isIgnored)
           s"""throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
-        else if("annotation".equals(f.getType().getName()))
-          s"""{
-    if (m.runtimeClass.isAssignableFrom(_$name.getClass()))
-      _$name.asInstanceOf[T]
-    else
-      throw AnnotationTypeCastException(s"annotation access: $${m.runtimeClass} vs. $${_$name.getClass}", null)
-  }"""
         else
           s"_$name"
       }
@@ -122,13 +114,13 @@ final class $name extends _root_.${packagePrefix}$name {""")
 
       if ("annotation".equals(f.getType().getName())) { 
         out.write(s"""$makeField
-  override final def get$Name[T <: SkillType]()(implicit m: ClassTag[T]): T = $makeGetterImplementation
-  override final def set$Name[T <: SkillType]($Name: T): Unit = $makeSetterImplementation
+  override final def $name_ : SkillType = $makeGetterImplementation
+  override final def ${name_}_=($Name: SkillType): Unit = $makeSetterImplementation
 """)
       } else {
         out.write(s"""$makeField
-  override final def get$Name = $makeGetterImplementation
-  override final def set$Name($Name: ${mapType(f.getType())}) = $makeSetterImplementation
+  override final def $name_ = $makeGetterImplementation
+  override final def ${name_}_=($Name: ${mapType(f.getType())}) = $makeSetterImplementation
 """)
       }
     });

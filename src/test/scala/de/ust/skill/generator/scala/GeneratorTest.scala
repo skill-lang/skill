@@ -29,7 +29,24 @@ class GeneratorTest extends FunSuite {
 
   test("node")(check("node.skill", "node"))
   test("number")(check("number.skill", "number"))
-  test("pamm")(check("air-pamm-heap.skill", "pamm"))
   test("subtypes")(check("subtypesExample.skill", "subtypes"))
   test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
+
+  /**
+   * generate code for a more complex example that makes use of a set of tools to modify very simple nodes.
+   * these tools enrich nodes with custom fields.
+   * the related tests should also serve as a demonstration on the boundaries of format-change.
+   */
+  test("node tool chain example") {
+    check("nodeExample.tool1.skill", "toolchains.node.tool1")
+    check("nodeExample.tool2.skill", "toolchains.node.tool2")
+    check("nodeExample.tool3.skill", "toolchains.node.tool3")
+    check("nodeExample.viewer.skill", "toolchains.node.viewer")
+  }
+
+  test("check _root_ bug")(
+    assert(intercept[AssertionError] {
+      Main.main(Array[String]("-u", "<<some developer>>", "-h2", "<<debug>>", "src/test/resources/scala/date.skill", "testsuites/scala/src/main/scala/"))
+    }.getMessage === "assertion failed: You have to specify a non-empty package name!")
+  )
 }

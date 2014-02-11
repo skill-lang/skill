@@ -23,6 +23,7 @@ import java.nio.file.Path
 import scala.collection.mutable.ArrayBuffer
 
 import ${packagePrefix}internal.SerializableState
+import ${packagePrefix}internal.pool.StringPool
 
 /**
  * The public interface to the SKilL state, which keeps track of serializable objects and provides (de)serialization
@@ -31,8 +32,12 @@ import ${packagePrefix}internal.SerializableState
  * @author Timm Felden
  */
 trait SkillState {
+  import SkillState._
+
   /**
    * Creates a new SKilL file at target. The recommended file extension is ".sf".
+   *
+   * @note Updates fromPath iff fromPath==null, i.e. if the state has been created out of thin air.
    */
   def write(target: Path): Unit
 
@@ -41,31 +46,39 @@ trait SkillState {
    *
    * @pre canAppend
    */
-  def append: Unit
+  def append(): Unit
 
   /**
-   * Checks, if the changes made to a state can be appended to the read file. This will also return false, if the state
-   * has been created and not read from a file.
-   */
-  def canAppend: Boolean
-
-  /**
-   * retrieves a string from the known strings; this can cause disk access, due to the lazy nature of the implementation
+   * Appends new content to the read SKilL file and stores the result in target.
    *
-   * @throws ArrayOutOfBoundsException if index is not valid
+   * @pre canAppend
    */
-  def getString(index: Long): String
-  /**
-   * adds a string to the state
-   */
-  def addString(string: String): Unit
+  def append(target: Path): Unit
+
+  val String: StringAccess
 """)
 
     //access to declared types
-    IR.foreach({ t ⇒
-      val name = t.getName()
-      val Name = name.capitalize
-      val sName = name.toLowerCase()
+    for (t ← IR) {
+      val name = t.getName
+      out.write(s"""  val ${name}: ${name}Access
+""")
+    }
+
+    // second part: reading of files
+    out.write("""}
+
+object SkillState {
+  trait StringAccess {
+    def get(index: Long): String
+    def add(string: String)
+    def all:Iterator[String]
+    def size: Int
+  }""")
+
+    for (t ← IR) {
+
+      val name = t.getName
       val tName = "_root_."+packagePrefix + name
 
       val addArgs = t.getAllFields().filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
@@ -75,33 +88,42 @@ trait SkillState {
       // singletons get a get$Name function, which returns the single instance
       if (!t.getRestrictions.collect { case r: SingletonRestriction ⇒ r }.isEmpty) {
         out.write(s"""
-  /**
-   * returns the $name instance
-   */
-  def get$Name: $tName
+  trait ${name}Access {
+    /**
+     * returns the $name instance
+     */
+    def get: $tName
+  }
 """)
       } else {
         out.write(s"""
-  /**
-   * returns a $name iterator
-   */
-  def get${Name}s(): Iterator[$tName]
-  /**
-   * returns a $name iterator which iterates over known instances in type order
-   */
-  def get${Name}sInTypeOrder(): Iterator[$tName]
-  /**
-   * adds a new $name to the $name pool
-   */
-  def add$Name($addArgs): $tName
+  trait ${name}Access {
+    /**
+     * returns a fast $name iterator
+     */
+    def all: Iterator[$tName]
+    /**
+     * returns a type ordered $name iterator
+     */
+    def allInTypeOrder: Iterator[$tName]
+    /**
+     * adds a new $name to the $name pool
+     */
+    def apply($addArgs): $tName
+    /**
+     * returns a fast $name iterator
+     */
+    def iterator: Iterator[$tName]
+    /**
+     * returns the number of dynimc instances of this type, i.e. including subtypes
+     */
+    def size: Int
+  }
 """)
       }
-    })
+    }
 
-    // second part: reading of files
-    out.write("""}
-
-object SkillState {
+    out.write("""
   /**
    * Creates a new and empty SKilL state.
    */

@@ -86,15 +86,6 @@ case class PoolSizeMissmatchError(expected: Long, actual: Long, t: String)
 case class TypeMissmatchError(t: TypeInfo, expected: String, fieldName: String, poolName: String)
   extends SkillException(s"""+"\"\"\""+"""During construction of $poolName.$fieldName: Encountered incompatible type "$t" (expected: $expected)"""+"\"\"\""+""")
   with ExpectableSkillException {}
-
-/**
- * Thrown in case of a type miss-match on an annotation access.
- *
- * @author Timm Felden
- */
-case class AnnotationTypeCastException(expected: String, actual: String)
-  extends SkillException(s"Tried to access annotation of type $actual expecting a type $expected.")
-  with ExpectableSkillException;
 """)
 
     //class prefix

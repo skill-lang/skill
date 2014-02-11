@@ -107,7 +107,7 @@ class ByteStreamParsers extends Parsers {
   def string(σ: SerializableState) = v64 ^^ {
     _ match {
       case 0 ⇒ null
-      case i ⇒ σ.getString(i)
+      case i ⇒ σ.String.get(i)
     }
   }
 }

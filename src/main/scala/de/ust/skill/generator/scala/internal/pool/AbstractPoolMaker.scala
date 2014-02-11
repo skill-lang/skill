@@ -16,9 +16,11 @@ trait AbstractPoolMaker extends GeneralOutputMaker {
     out.write(s"""package ${packagePrefix}internal.pool
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.ListBuffer
 
 import ${packagePrefix}api.SkillType
-import ${packagePrefix}internal.UserType
+import ${packagePrefix}internal._
 
 /**
  * The super type of all storage pools. This type is necessary in order to have invariant type parameters at storage
@@ -27,12 +29,12 @@ import ${packagePrefix}internal.UserType
  *  @note pool interfaces are called just "XPool" instead of "XStoragePool" in order to avoid name clashes
  *
  *  TODO needs to be abstract, requires generic pools
+ *
+ *  @param name the name of the type represented by this pool
+ *  @param fields the known fields of this type
  */
-abstract class AbstractPool(
-    val userType: UserType,
-    val blockCount: Int) {
-  val name = userType.name
-  private[internal] def superPool: Option[AbstractPool];
+abstract class AbstractPool(val name: String, private[internal] val fields: HashMap[String, FieldDeclaration], private[internal] val superPool: Option[AbstractPool])
+    extends TypeInfo {
 
   /**
    * the next pool regarding type order; for example A<:B, B<:D, A<:C may lead to A⇀B⇀D⇀C or A⇀C⇀B⇀D.
@@ -68,6 +70,25 @@ abstract class AbstractPool(
    * @note this is an O(t) operation, where t is the number of sub-types
    */
   final def dynamicSize: Long = subPools.map(_.dynamicSize).fold(staticSize)(_ + _)
+
+  /**
+   * The block layout of data.
+   */
+  private[internal] val blockInfos = new ListBuffer[BlockInfo]()
+
+  /**
+   * implementation of the TypeInfo interface
+   */
+  private[internal] var typeIndex: Long = -33L // results in typeID -1
+  final override def typeId = 32L + typeIndex
+
+  final override def hashCode = name.hashCode
+  final override def equals(obj: Any) = obj match {
+    case NamedUserType(n) ⇒ n == name
+    case t: UserType      ⇒ t.name == name
+    case t: AbstractPool  ⇒ t.name == name
+    case _                ⇒ false
+  }
 }
 """)
 

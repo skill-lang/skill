@@ -1,0 +1,6 @@
+/** @see TR13§6.2.3 */
+Node { 
+  i8 ID;
+  /** this tool adds descriptions */
+  string description;
+}

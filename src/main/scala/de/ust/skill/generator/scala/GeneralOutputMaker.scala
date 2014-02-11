@@ -11,6 +11,9 @@ import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.Field
 import java.util.Date
+import java.io.BufferedWriter
+import java.io.OutputStreamWriter
+import java.io.FileOutputStream
 
 /**
  * The parent class for all output makers.
@@ -43,7 +46,8 @@ trait GeneralOutputMaker {
     val f = new File(s"$outPath$packagePath$path")
     f.getParentFile.mkdirs
     f.createNewFile
-    val rval = new PrintWriter(f)
+    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
+    new FileOutputStream(f), "UTF-8")))
     rval.write(header)
     rval
   }

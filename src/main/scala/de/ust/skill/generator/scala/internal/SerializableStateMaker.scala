@@ -23,10 +23,10 @@ trait SerializableStateMaker extends GeneralOutputMaker {
     super.make
     val out = open("internal/SerializableState.scala")
 
-    //package & imports
     out.write(s"""package ${packagePrefix}internal
 
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Files
@@ -37,9 +37,9 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import ${packagePrefix}api._
+import ${packagePrefix}internal.SerializationFunctions.v64
 import ${packagePrefix}internal.parsers._
 import ${packagePrefix}internal.pool._
-import ${packagePrefix}internal.types._
 
 /**
  * This class is used to handle objects in a serializable state.
@@ -54,57 +54,51 @@ final class SerializableState extends SkillState {
    *
    * null iff the state has not been created from a file
    */
-  private[internal] var path: Path = null
+  private[internal] var fromPath: Path = null
   /**
    * reader for the input file, which is used for lazy evaluation and error reporting
    */
   private[internal] var fromReader: ByteReader = null
 
   private[internal] var pools = new HashMap[String, AbstractPool]
-  @inline def knownPools = pools.values.collect({ case p: KnownPool[_, _] ⇒ p });
+  @inline def knownPools = pools.values.collect({ case p: KnownPool[_, _] ⇒ p }).toArray
 
-  private[internal] val strings = new StringPool
+  override val String = new StringPool(this)
+  ${
+      (
+        for (d ← IR; name = d.getName)
+          yield s"""override val $name = new ${name}StoragePool(this)
+  pools.put("${d.getSkillName}", $name)"""
+      ).mkString("", "\n  ", "")
+    }
 
   /**
    * Creates a new SKilL file at target.
    */
-  def write(target: Path) {
+  override def write(target: Path) {
     import SerializationFunctions._
+
+    Files.deleteIfExists(target)
 
     val file = Files.newByteChannel(target,
       StandardOpenOption.CREATE,
       StandardOpenOption.WRITE,
       StandardOpenOption.TRUNCATE_EXISTING).asInstanceOf[FileChannel]
 
-    val ws = new WriteState(this)
-    // write string pool
-    strings.prepareAndWrite(file, ws)
+    if (null == fromPath) try {
+      fromPath = target
+      fromReader = new ByteReader(Files.newByteChannel(fromPath).asInstanceOf[FileChannel])
+    } catch {
+      case e: IOException ⇒ // we don't care, because this means we do not have right permissions Oo
+    }
 
-    // collect all known objects
-    // prepare pools, i.e. ensure that all objects get IDs which can be turned into logic pointers
+    val ws = new WriteState(this)
+
+    String.prepareAndWrite(file, ws)
     knownPools.foreach(_.prepareSerialization(this))
 
-    // write count of the type block
-    file.write(ByteBuffer.wrap(v64(pools.size)))
+    ws.writeTypeBlock(file)
 
-    // write fields back to their buffers
-    val out = new ByteArrayOutputStream
-
-    // write header
-    def writeSubPools(p: KnownPool[_, _]) {
-      p.write(file, out, ws)
-      for (p ← p.getSubPools)
-        if (p.isInstanceOf[KnownPool[_, _]])
-          writeSubPools(p.asInstanceOf[KnownPool[_, _]])
-    }
-    for (p ← knownPools)
-      if (p.isInstanceOf[BasePool[_]])
-        writeSubPools(p)
-
-    // write data
-    file.write(ByteBuffer.wrap(out.toByteArray()))
-
-    // done:)
     file.close()
 
     // reset skill IDs
@@ -115,198 +109,55 @@ final class SerializableState extends SkillState {
   }
 
   /**
+   * Appends to the SKilL file we read.
+   */
+  override def append = append(fromPath.ensuring(_ != null))
+  /**
    * Appends to an existing SKilL file.
    */
-  def append {
+  override def append(target: Path) {
     require(canAppend)
     import SerializationFunctions._
 
-    val file = Files.newByteChannel(path,
+    val file = Files.newByteChannel(target,
       StandardOpenOption.APPEND,
       StandardOpenOption.WRITE).asInstanceOf[FileChannel]
 
+    assert(target == fromPath, "we still have to implement copy in this case!!!")
+
     val as = new AppendState(this)
 
-    // collect all known objects
-    strings.prepareAndAppend(file, as)
-
-    // prepare pools, i.e. ensure that all objects get IDs which can be turned into logic pointers
+    String.prepareAndAppend(file, as)
     knownPools.foreach(_.prepareSerialization(this))
 
-    // write count of the type block
-    file.write(ByteBuffer.wrap(v64(pools.size)))
-
-    // write fields back to their buffers
-    val out = new ByteArrayOutputStream
-
-    // write header
-    def writeSubPools(p: KnownPool[_, _]) {
-      p.append(file, out, as)
-      for (p ← p.getSubPools)
-        if (p.isInstanceOf[KnownPool[_, _]])
-          writeSubPools(p.asInstanceOf[KnownPool[_, _]])
-    }
-    for (p ← knownPools)
-      if (p.isInstanceOf[BasePool[_]])
-        writeSubPools(p)
-
-    // write data
-    file.write(ByteBuffer.wrap(out.toByteArray()))
-
-    // done:)
+    as.writeTypeBlock(file)
     file.close()
   }
 
   // TODO check if state can be appended
-  def canAppend: Boolean = null != path
+  def canAppend: Boolean = null != fromPath
 
   /**
-   * retrieves a string from the known strings; this can cause disk access, due to the lazy nature of the implementation
-   *
-   * @throws ArrayOutOfBoundsException if index is not valid
-   */
-  def getString(index: Long): String = {
-    if (0 == index)
-      return null
-
-    strings.idMap.get(index) match {
-      case Some(s) ⇒ s
-      case None ⇒ {
-        if (index > strings.stringPositions.size)
-          InvalidPoolIndex(index, strings.stringPositions.size, "string")
-
-        val off = strings.stringPositions(index)
-        fromReader.push(off._1)
-        var chars = fromReader.bytes(off._2)
-        fromReader.pop
-
-        val result = new String(chars, "UTF-8")
-        strings.idMap.put(index, result)
-        result
-      }
-    }
-  }
-
-  /**
-   * adds a string to the state
-   */
-  def addString(string: String) {
-    strings.newStrings += string
-  }
-""")
-
-    //access to declared types
-    IR.foreach({ t ⇒
-      val name = t.getName()
-      val Name = t.getCapitalName()
-      val sName = t.getSkillName()
-      val tName = packagePrefix + name
-
-      val addArgs = t.getAllFields().filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
-        f ⇒ s"${f.getName().capitalize}: ${mapType(f.getType())}"
-      }).mkString(", ")
-
-      if (!t.getRestrictions.collect { case r: SingletonRestriction ⇒ r }.isEmpty) {
-        // singleton instance access
-        out.write(s"""
-  /**
-   * returns the $name instance
-   */
-  def get$Name: $tName = {
-    val p = pools("$sName").asInstanceOf[${Name}StoragePool]
-    try{ p.iterator.next } catch {
-      case e:Exception ⇒ p.add$Name(p.newInstance)
-    }
-  }
-""")
-      } else {
-        // regular instance access
-        out.write(s"""
-  /**
-   * returns a $name iterator
-   */
-  def get${Name}s(): Iterator[$tName] = pools("$sName").asInstanceOf[${Name}StoragePool].iterator
-
-  /**
-   * returns a $name iterator which iterates over known instances in type order
-   */
-  def get${Name}sInTypeOrder(): Iterator[$tName] = pools("$sName").asInstanceOf[${Name}StoragePool].typeOrderIterator
-
-  /**
-   * adds a new $name to the $name pool
-   */
-  def add$Name($addArgs) = pools("$sName").asInstanceOf[${Name}StoragePool].add$Name(new _root_.${packagePrefix}internal.types.$name($addArgs))
-""")
-      }
-    })
-
-    // state initialization
-    out.write(s"""
-  /**
-   * ensures that all declared types have pools
+   * replace user types with pools and read required field data
    */
   def finishInitialization {
-    // create a user type map containing all known user types
-    var index = pools.size
-    def nextIndex: Int = { val rval = index; index += 1; rval }
-    def mkUserType(name: String) = new UserType(nextIndex, name, name match {
-${
-      IR.map { d ⇒
-        s"""      case "${d.getSkillName}" ⇒ ${
-          if (null == d.getSuperType()) "None" else s"""Some("${d.getSuperType.getSkillName}")"""
-        }"""
-      }.mkString("\n")
-    }
-    })
-    val userTypes = Map(
-${
-      IR.map { d ⇒
-        val name = d.getSkillName
-        s"""      "$name" -> (if (pools.contains("$name")) pools("$name").userType else mkUserType("$name"))"""
-      }.mkString(",\n")
-    }
-    )
 
-    // create fields
-    val requiredFields = Map(
-${
-      IR.map { d ⇒
-        val name = d.getSkillName
-        s"""      "$name" -> HashMap(${
-          d.getFields().map { f ⇒
-            val fName = f.getSkillName
-            s"""        "$fName" -> new FieldDeclaration(${fieldType(f.getType)}, "$fName", 0)"""
-          }.mkString("\n", ",\n", "\n      ")
-        })"""
-      }.mkString(",\n")
-    }
-    )
-
-    // add required fields
-    userTypes.values.foreach { t ⇒
-      requiredFields(t.name).foreach {
-        case (n, f) ⇒
-          if (t.fields.contains(n)) {
-            if (t.fields(n) != f)
-              throw TypeMissmatchError(t, f.toString, n, t.name)
-          } else {
-            t.fields.put(n, f)
-          }
+    // remove proxy types and add names to the string pool
+    for (p ← pools.values) {
+      String.add(p.name)
+      for (f ← p.fields.values) {
+        String.add(f.name)
+        f.t match {
+          case t: NamedUserType ⇒ f.t = pools(t.name)
+          case t: UserType      ⇒ f.t = pools(t.name)
+          case _                ⇒
+        }
       }
     }
 
-    // create pool in pre-order
-${
-      IR.map { d ⇒
-        val name = d.getSkillName
-        s"""    if (!pools.contains("$name")) pools.put("$name", new ${d.getCapitalName}StoragePool(userTypes("$name"), this, 0))"""
-      }.mkString("\n")
-    }
-
-    userTypes.keys.foreach { t ⇒
-      requiredFields(t).keys.foreach(addString(_))
-      addString(t)
-    }
+    // read required fields
+    val fieldParser = new FieldParser(this)
+${(for (d ← IR) yield s"""    ${d.getName}.readFields(fieldParser)""").mkString("\n")}
   }
 
   /**
@@ -314,16 +165,19 @@ ${
    */
   def dumpDebugInfo = {
     println("DEBUG INFO START")
-    println(s"StringPool ($${strings.size}):")
-    for (i ← 1 to strings.stringPositions.size) {
-      if (!strings.idMap.contains(i))
+    println(s"StringPool ($${String.size}):")
+    for (i ← 1 to String.stringPositions.size) {
+      if (!String.idMap.contains(i))
         print("lazy ⇒ ")
-      println(getString(i))
+      println(String.get(i))
     }
-    strings.newStrings.foreach(println(_))
+    String.newStrings.foreach(println(_))
     println("")
     println("ReflectionPool:")
-    pools.values.foreach(s ⇒ println(s.userType.getDeclaration))
+    for (s ← pools.values) {
+      println(s.name + s.blockInfos.mkString("[", ", ", "] "))
+      println(s.fields.values.map { f ⇒ f.toString ++ f.dataChunks.mkString(" = {", ", ", "}") }.mkString("{\\n", ";\\n", "\\n}\\n"))
+    }
     println("")
     println("StoragePools:")
     knownPools.foreach({ s ⇒
