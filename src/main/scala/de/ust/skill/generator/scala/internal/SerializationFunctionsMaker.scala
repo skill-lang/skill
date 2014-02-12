@@ -11,8 +11,8 @@ import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.ContainerType
 import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.Field
-
 import scala.collection.JavaConversions.asScalaBuffer
+import de.ust.skill.ir.restriction.SingletonRestriction
 trait SerializationFunctionsMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
@@ -49,7 +49,10 @@ ${
         f ← d.getFields;
         if ("string" == f.getType.getSkillName)
       ) yield {
-        s"""  for(i ← state.${d.getName}.all) state.String.add(i.${f.getName})"""
+        if (d.getRestrictions().collect({ case r: SingletonRestriction ⇒ r }).isEmpty)
+          s"""  for(i ← state.${d.getName}.all) state.String.add(i.${f.getName})"""
+        else 
+          s"""  state.String.add(state.${d.getName}.get.${f.getName})"""
       }).mkString("\n")
     }
   val serializationIDs = new HashMap[String, Long]
