@@ -1,0 +1,11 @@
+/**
+@see SKilL 13/06
+
+check usability of generated singleton code
+*/
+@singleton
+LifeUniverseAndEverything{
+
+  /** size of life, the universe and everything, I would expect it to be NaN */
+  f64 size;
+}
