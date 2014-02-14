@@ -236,7 +236,7 @@ object SerializationFunctions {
   def f32(v: Float): Array[Byte] = ByteBuffer.allocate(4).putFloat(v).array
   def f64(v: Double): Array[Byte] = ByteBuffer.allocate(8).putDouble(v).array
 
-  def userRef(ref: SkillType) = v64(ref.getSkillID)
+  def userRef[T <: SkillType](ref: T) = v64(ref.getSkillID)
 
   // wraps translation functions to stream users
   implicit def wrap[T](f: T ⇒ Array[Byte]): (T, ByteArrayOutputStream) ⇒ Unit = { (v: T, out: ByteArrayOutputStream) ⇒ out.write(f(v)) }
@@ -682,35 +682,35 @@ private[internal] final class WriteState(val state: SerializableState) extends S
       s"""@inline def putField(i: $packagePrefix${d.getName}) { out.write(v64(i.${escaped(f.getName)}.getSkillID)) }
                 foreachOf("${t.getSkillName}", putField)"""
 
-    case t: ConstantLengthArrayType ⇒ s"$iteratorName.map(_.${f.getName}).foreach { instance ⇒ writeConstArray(${
+    case t: ConstantLengthArrayType ⇒ s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ writeConstArray(${
       t.getBaseType() match {
-        case t: Declaration ⇒ "userRef"
+        case t: Declaration ⇒ s"userRef[${mapType(t)}]"
         case b              ⇒ b.getSkillName()
       }
     })(instance, out) }"
-    case t: VariableLengthArrayType ⇒ s"$iteratorName.map(_.${f.getName}).foreach { instance ⇒ writeVarArray(${
+    case t: VariableLengthArrayType ⇒ s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ writeVarArray(${
       t.getBaseType() match {
-        case t: Declaration ⇒ "userRef"
+        case t: Declaration ⇒ s"userRef[${mapType(t)}]"
         case b              ⇒ b.getSkillName()
       }
     })(instance, out) }"
-    case t: SetType ⇒ s"$iteratorName.map(_.${f.getName}).foreach { instance ⇒ writeSet(${
+    case t: SetType ⇒ s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ writeSet(${
       t.getBaseType() match {
-        case t: Declaration ⇒ "userRef"
+        case t: Declaration ⇒ s"userRef[${mapType(t)}]"
         case b              ⇒ b.getSkillName()
       }
     })(instance, out) }"
-    case t: ListType ⇒ s"$iteratorName.map(_.${f.getName}).foreach { instance ⇒ writeList(${
+    case t: ListType ⇒ s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ writeList(${
       t.getBaseType() match {
-        case t: Declaration ⇒ "userRef"
+        case t: Declaration ⇒ s"userRef[${mapType(t)}]"
         case b              ⇒ b.getSkillName()
       }
     })(instance, out) }"
 
     case t: MapType ⇒ locally {
-      s"$iteratorName.map(_.${f.getName}).foreach { instance ⇒ ${
+      s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ ${
         t.getBaseTypes().map {
-          case t: Declaration ⇒ "userRef"
+          case t: Declaration ⇒ s"userRef[${mapType(t)}]"
           case b              ⇒ b.getSkillName()
         }.reduceRight { (t, v) ⇒
           s"writeMap($t, $v)"
