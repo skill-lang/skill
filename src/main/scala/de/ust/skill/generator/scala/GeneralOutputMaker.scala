@@ -22,6 +22,12 @@ import java.io.FileOutputStream
  */
 trait GeneralOutputMaker {
 
+  val ArrayTypeName = "scala.collection.mutable.ArrayBuffer"
+  val VarArrayTypeName = "scala.collection.mutable.ArrayBuffer"
+  val ListTypeName = "scala.collection.mutable.ListBuffer"
+  val SetTypeName = "scala.collection.mutable.HashSet"
+  val MapTypeName = "scala.collection.mutable.HashMap"
+
   /**
    * The base path of the output.
    */
@@ -47,7 +53,7 @@ trait GeneralOutputMaker {
     f.getParentFile.mkdirs
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-    new FileOutputStream(f), "UTF-8")))
+      new FileOutputStream(f), "UTF-8")))
     rval.write(header)
     rval
   }

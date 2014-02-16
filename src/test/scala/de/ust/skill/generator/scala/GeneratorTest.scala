@@ -21,9 +21,11 @@ class GeneratorTest extends FunSuite {
 
   test("annotation")(check("annotation.skill", "annotation"))
   test("blocks")(check("blocks.skill", "block"))
+  test("container")(check("container.skill", "container"))
   test("date")(check("date.skill", "date"))
 
-  test("restrictions: range")(check("restrictionsRange.skill", "restrictions.range"))
+  test("restrictions: range")(check("restrictions.range.skill", "restrictions.range"))
+  test("restrictions: singleton")(check("restrictions.singleton.skill", "restrictions.singleton"))
 
   test("hints: ignore")(check("hintIgnore.skill", "hints.ignore"))
 

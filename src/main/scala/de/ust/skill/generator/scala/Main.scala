@@ -142,13 +142,13 @@ class Main extends FakeMain
       case "string"     ⇒ "String"
     }
 
-    case t: ConstantLengthArrayType ⇒ s"Array[${mapType(t.getBaseType())}]"
-    case t: VariableLengthArrayType ⇒ s"ArrayBuffer[${mapType(t.getBaseType())}]"
-    case t: ListType                ⇒ s"List[${mapType(t.getBaseType())}]"
-    case t: SetType                 ⇒ s"Set[${mapType(t.getBaseType())}]"
+    case t: ConstantLengthArrayType ⇒ s"$ArrayTypeName[${mapType(t.getBaseType())}]"
+    case t: VariableLengthArrayType ⇒ s"$VarArrayTypeName[${mapType(t.getBaseType())}]"
+    case t: ListType                ⇒ s"$ListTypeName[${mapType(t.getBaseType())}]"
+    case t: SetType                 ⇒ s"$SetTypeName[${mapType(t.getBaseType())}]"
     case t: MapType ⇒ {
       val types = t.getBaseTypes().reverse.map(mapType(_))
-      types.tail.fold(types.head)({ (U, t) ⇒ s"Map[$t, $U]" });
+      types.tail.fold(types.head)({ (U, t) ⇒ s"$MapTypeName[$t, $U]" });
     }
 
     case t: Declaration ⇒ "_root_."+packagePrefix + t.getName()

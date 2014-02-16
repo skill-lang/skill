@@ -17,6 +17,9 @@ import de.ust.skill.ir.MapType
 import de.ust.skill.ir.SingleBaseTypeContainer
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.restriction.SingletonRestriction
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.SetType
 
 /**
  * Creates storage pools for declared types.
@@ -34,19 +37,31 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
   /**
    * Maps types to their "TypeInfo" correspondents.
    */
-  private def mapTypeInfo(t: Type): String = t.getSkillName() match {
-    case "annotation" ⇒ "AnnotationInfo"
-    case "bool"       ⇒ "BoolInfo"
-    case "i8"         ⇒ "I8Info"
-    case "i16"        ⇒ "I16Info"
-    case "i32"        ⇒ "I32Info"
-    case "i64"        ⇒ "I64Info"
-    case "v64"        ⇒ "V64Info"
-    case "f32"        ⇒ "F32Info"
-    case "f64"        ⇒ "F64Info"
-    case "string"     ⇒ "StringInfo"
-    // TODO not that simple in fact
-    case s            ⇒ s"""NamedUserType("$s")"""
+  private def mapTypeInfo(t: Type): String = {
+    def mapGroundType(t: Type) = t.getSkillName() match {
+      case "annotation" ⇒ "AnnotationInfo"
+      case "bool"       ⇒ "BoolInfo"
+      case "i8"         ⇒ "I8Info"
+      case "i16"        ⇒ "I16Info"
+      case "i32"        ⇒ "I32Info"
+      case "i64"        ⇒ "I64Info"
+      case "v64"        ⇒ "V64Info"
+      case "f32"        ⇒ "F32Info"
+      case "f64"        ⇒ "F64Info"
+      case "string"     ⇒ "StringInfo"
+
+      case s            ⇒ s"""NamedUserType("$s")"""
+    }
+
+    t match {
+      case t: GroundType              ⇒ mapGroundType(t)
+      case t: ConstantLengthArrayType ⇒ s"new ConstantLengthArrayInfo(${t.getLength}, ${mapGroundType(t.getBaseType)})"
+      case t: VariableLengthArrayType ⇒ s"new VariableLengthArrayInfo(${mapGroundType(t.getBaseType)})"
+      case t: ListType                ⇒ s"new ListInfo(${mapGroundType(t.getBaseType)})"
+      case t: SetType                 ⇒ s"new SetInfo(${mapGroundType(t.getBaseType)})"
+      case t: MapType                 ⇒ s"new MapInfo(List[TypeInfo](${t.getBaseTypes().map(mapGroundType).mkString(",")}))"
+      case t: Declaration             ⇒ s"""NamedUserType("${t.getSkillName}")"""
+    }
   }
 
   /**
@@ -116,6 +131,7 @@ trait DeclaredPoolsMaker extends GeneralOutputMaker {
     val name = d.getName
     val sName = name.toLowerCase()
     val fields = d.getFields().toList
+    val isSingleton = !d.getRestrictions.collect { case r: SingletonRestriction ⇒ r }.isEmpty
 
     ////////////
     // HEADER //
@@ -171,11 +187,10 @@ final class ${name}StoragePool(state: SerializableState) extends ${
     // ACCESS //
     ////////////
 
-    if (!d.getRestrictions.collect { case r: SingletonRestriction ⇒ r }.isEmpty) {
+    if (isSingleton) {
       // this is a singleton
       out.write(s"""
-  // @note: the implementation will eventually come in form of a SingletonStoragePool[T]
-  override def get:$name = ???""")
+  override def get: $name = staticData(0)""")
 
     } else {
       val applyCallArguments = d.getAllFields().filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
@@ -213,7 +228,10 @@ final class ${name}StoragePool(state: SerializableState) extends ${
   /**
    * the number of static instances loaded from the file
    */
-  private var staticData = Array[_root_.${packagePrefix}internal.types.$name]();
+  ${
+      if (isSingleton) s"""private val staticData = Array[_root_.${packagePrefix}internal.types.$name](newInstance);"""
+      else s"""private var staticData = Array[_root_.${packagePrefix}internal.types.$name]();"""
+    }
   /**
    * the static size is thus the number of static instances plus the number of new objects
    */
@@ -223,7 +241,9 @@ final class ${name}StoragePool(state: SerializableState) extends ${
    * construct instances of the pool in post-order, i.e. bottom-up
    */
   final override def constructPool() {
-    // construct data in a bottom up order
+    ${
+      if (isSingleton) "// the singleton instance is always present"
+      else s"""// construct data in a bottom up order
     subPools.collect { case p: KnownPool[_, _] ⇒ p }.foreach(_.constructPool)
     val staticDataConstructor = new ArrayBuffer[_root_.${packagePrefix}internal.types.$name]
     for (b ← blockInfos) {
@@ -237,7 +257,8 @@ final class ${name}StoragePool(state: SerializableState) extends ${
           data(i) = next
         }
     }
-    staticData = staticDataConstructor.toArray
+    staticData = staticDataConstructor.toArray"""
+    }
   }
 
   // set eager fields of data instances

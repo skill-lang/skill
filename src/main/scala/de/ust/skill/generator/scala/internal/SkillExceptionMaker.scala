@@ -41,7 +41,7 @@ trait ExpectableSkillException {}
  * @author Timm Felden
  */
 case class ParseException(in: ByteReader, block: Int, msg: String) extends SkillException(
-  s"In block ${block + 1} @${in.position}: $msg"
+  s"In block ${block + 1} @0x${in.position.toHexString}: $msg"
 ) {}
 
 /**

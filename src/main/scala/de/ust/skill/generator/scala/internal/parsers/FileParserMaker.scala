@@ -460,6 +460,7 @@ final private class FileParser extends ByteStreamParsers {
       case 13           ⇒ F64Info
       case 14           ⇒ StringInfo
       case i if i >= 32 ⇒ PreliminaryUserType(i - 32)
+      case id           ⇒ throw ParseException(σ.fromReader, blockCounter, s"Invalid base type ID: $id")
     }
   }
 

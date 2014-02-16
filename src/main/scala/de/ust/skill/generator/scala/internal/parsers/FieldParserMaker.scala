@@ -90,8 +90,8 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
    */
   private[this] def readArray[T](size: Long, t: TypeInfo): ArrayBuffer[T] = {
     val result = new ArrayBuffer[T](size.toInt)
-    for (i ← 0 until result.length) {
-      result(i) = readSingleField(t).asInstanceOf[T]
+    for (i ← 0 until size.toInt) {
+      result += readSingleField(t).asInstanceOf[T]
     }
     result
   }
@@ -341,15 +341,15 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     }
   }
 
-  def readConstantLengthArrays[T](t: ConstantLengthArrayInfo, length: Long, data: ListBuffer[ChunkInfo]): Iterator[ArrayBuffer[T]] = {
-    val result = new ArrayBuffer[ArrayBuffer[T]](length.toInt)
+  def readConstantLengthArrays[T](t: ConstantLengthArrayInfo, length: Long, data: ListBuffer[ChunkInfo]): Iterator[$ArrayTypeName[T]] = {
+    val result = new Array[$ArrayTypeName[T]](length.toInt)
     var index = 0
 
     data.foreach { chunk ⇒
       in.push(chunk.begin)
 
       for (i ← index until index + chunk.count.toInt) {
-        result(i) = readArray(t.length, t.groundType)
+        result(i) = readArray(t.length, t.groundType).to
       }
       index += chunk.count.toInt
 
@@ -362,15 +362,15 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     result.iterator
   }
 
-  def readVariableLengthArrays[T](t: VariableLengthArrayInfo, length: Long, data: ListBuffer[ChunkInfo]): Iterator[ArrayBuffer[T]] = {
-    val result = new ArrayBuffer[ArrayBuffer[T]](length.toInt)
+  def readVariableLengthArrays[T](t: VariableLengthArrayInfo, length: Long, data: ListBuffer[ChunkInfo]): Iterator[$VarArrayTypeName[T]] = {
+    val result = new Array[$VarArrayTypeName[T]](length.toInt)
     var index = 0
 
     data.foreach { chunk ⇒
       in.push(chunk.begin)
 
       for (i ← index until index + chunk.count.toInt) {
-        result(i) = readArray(in.v64, t.groundType)
+        result(i) = readArray(in.v64, t.groundType).to
       }
       index += chunk.count.toInt
 
@@ -383,15 +383,15 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     result.iterator
   }
 
-  def readLists[T](t: ListInfo, length: Long, data: ListBuffer[ChunkInfo]): Iterator[List[T]] = {
-    val result = new ArrayBuffer[List[T]](length.toInt)
+  def readLists[T](t: ListInfo, length: Long, data: ListBuffer[ChunkInfo]): Iterator[$ListTypeName[T]] = {
+    val result = new Array[$ListTypeName[T]](length.toInt)
     var index = 0
 
     data.foreach { chunk ⇒
       in.push(chunk.begin)
 
       for (i ← index until index + chunk.count.toInt) {
-        result(i) = readArray(in.v64, t.groundType).toList
+        result(i) = readArray(in.v64, t.groundType).to
       }
       index += chunk.count.toInt
 
@@ -404,15 +404,15 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     result.iterator
   }
 
-  def readSets[T](t: SetInfo, length: Long, data: ListBuffer[ChunkInfo]): Iterator[Set[T]] = {
-    val result = new ArrayBuffer[Set[T]](length.toInt)
+  def readSets[T](t: SetInfo, length: Long, data: ListBuffer[ChunkInfo]): Iterator[$SetTypeName[T]] = {
+    val result = new Array[$SetTypeName[T]](length.toInt)
     var index = 0
 
     data.foreach { chunk ⇒
       in.push(chunk.begin)
 
       for (i ← index until index + chunk.count.toInt) {
-        result(i) = readArray(in.v64, t.groundType).toSet
+        result(i) = readArray(in.v64, t.groundType).to
       }
       index += chunk.count.toInt
 
@@ -433,7 +433,7 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
       in.push(chunk.begin)
 
       for (i ← index until index + chunk.count.toInt) {
-        result(i) = readSingleField(t).asInstanceOf[T]
+        result += readSingleField(t).asInstanceOf[T]
       }
       index += chunk.count.toInt
 

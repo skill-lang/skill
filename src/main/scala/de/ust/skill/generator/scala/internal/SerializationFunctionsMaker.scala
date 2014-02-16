@@ -6,13 +6,18 @@
 package de.ust.skill.generator.scala.internal
 
 import java.io.PrintWriter
+import scala.collection.JavaConversions.asScalaBuffer
 import de.ust.skill.generator.scala.GeneralOutputMaker
 import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.ContainerType
-import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.Field
-
-import scala.collection.JavaConversions.asScalaBuffer
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.restriction.SingletonRestriction
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.Type
 trait SerializationFunctionsMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
@@ -49,7 +54,10 @@ ${
         f ← d.getFields;
         if ("string" == f.getType.getSkillName)
       ) yield {
-        s"""  for(i ← state.${d.getName}.all) state.String.add(i.${f.getName})"""
+        if (d.getRestrictions().collect({ case r: SingletonRestriction ⇒ r }).isEmpty)
+          s"""  for(i ← state.${d.getName}.all) state.String.add(i.${f.getName})"""
+        else
+          s"""  state.String.add(state.${d.getName}.get.${f.getName})"""
       }).mkString("\n")
     }
   val serializationIDs = new HashMap[String, Long]
@@ -228,6 +236,38 @@ object SerializationFunctions {
   def f32(v: Float): Array[Byte] = ByteBuffer.allocate(4).putFloat(v).array
   def f64(v: Double): Array[Byte] = ByteBuffer.allocate(8).putDouble(v).array
 
+  def userRef[T <: SkillType](ref: T) = v64(ref.getSkillID)
+
+  // wraps translation functions to stream users
+  implicit def wrap[T](f: T ⇒ Array[Byte]): (T, ByteArrayOutputStream) ⇒ Unit = { (v: T, out: ByteArrayOutputStream) ⇒ out.write(f(v)) }
+
+  def writeConstArray[T, S >: T](trans: S ⇒ Array[Byte])(elements: $ArrayTypeName[T], out: ByteArrayOutputStream) {
+    for (e ← elements)
+      out.write(trans(e))
+  }
+  def writeVarArray[T, S >: T](trans: S ⇒ Array[Byte])(elements: $VarArrayTypeName[T], out: ByteArrayOutputStream) {
+    out.write(v64(elements.size))
+    for (e ← elements)
+      out.write(trans(e))
+  }
+  def writeList[T, S >: T](trans: S ⇒ Array[Byte])(elements: $ListTypeName[T], out: ByteArrayOutputStream) {
+    out.write(v64(elements.size))
+    for (e ← elements)
+      out.write(trans(e))
+  }
+  def writeSet[T, S >: T](trans: S ⇒ Array[Byte])(elements: $SetTypeName[T], out: ByteArrayOutputStream) {
+    out.write(v64(elements.size))
+    for (e ← elements)
+      out.write(trans(e))
+  }
+  def writeMap[T, U](keys: (T, ByteArrayOutputStream) ⇒ Unit, vals: (U, ByteArrayOutputStream) ⇒ Unit)(elements: $MapTypeName[T, U], out: ByteArrayOutputStream) {
+    out.write(v64(elements.size))
+    for ((k, v) ← elements) {
+      keys(k, out)
+      vals(v, out)
+    }
+  }
+
   /**
    * creates an lbpsi map by recursively adding the local base pool start index to the map and adding all sub pools
    *  afterwards
@@ -314,6 +354,50 @@ private[internal] final class AppendState(val state: SerializableState) extends 
     val out = new ByteArrayOutputStream
 
     @inline def put(b: Array[Byte]) = file.write(ByteBuffer.wrap(b));
+    @inline def putType(t: TypeInfo): Unit = t match {
+      case t: ConstantI8Info ⇒
+        put(v64(t.typeId));
+        put(i8(t.value))
+
+      case t: ConstantI16Info ⇒
+        put(v64(t.typeId));
+        put(i16(t.value))
+
+      case t: ConstantI32Info ⇒
+        put(v64(t.typeId));
+        put(i32(t.value))
+
+      case t: ConstantI64Info ⇒
+        put(v64(t.typeId));
+        put(i64(t.value))
+
+      case t: ConstantV64Info ⇒
+        put(v64(t.typeId));
+        put(v64(t.value))
+
+      case t: ConstantLengthArrayInfo ⇒
+        put(v64(t.typeId));
+        put(v64(t.length));
+        putType(t.groundType)
+
+      case t: VariableLengthArrayInfo ⇒
+        put(v64(t.typeId));
+        putType(t.groundType)
+      case t: ListInfo ⇒
+        put(v64(t.typeId));
+        putType(t.groundType)
+      case t: SetInfo ⇒
+        put(v64(t.typeId));
+        putType(t.groundType)
+
+      case t: MapInfo ⇒
+        put(v64(t.typeId));
+        put(v64(t.groundType.size));
+        t.groundType.foreach(putType)
+
+      case _ ⇒
+        put(v64(t.typeId))
+    }
     @inline def write(p: KnownPool[_, _]) {
       (p.name: @switch) match {${
       (for (d ← IR) yield {
@@ -353,7 +437,12 @@ private[internal] final class AppendState(val state: SerializableState) extends 
             s"""
               case "$sName" ⇒ if (f.dataChunks.isEmpty) {
                 put(v64(0)) // field restrictions not implemented yet
-                put(v64(f.t.typeId))
+                ${
+            f.getType match {
+              case t: Declaration ⇒ s"""put(v64(typeID("${t.getSkillName}")))"""
+              case _              ⇒ "putType(f.t)"
+            }
+          }
                 put(string("$sName"))
                 ${writeField(d, f, s"p.asInstanceOf[${name}StoragePool]")}
                 put(v64(out.size))
@@ -453,6 +542,50 @@ private[internal] final class WriteState(val state: SerializableState) extends S
     val out = new ByteArrayOutputStream
 
     @inline def put(b: Array[Byte]) = file.write(ByteBuffer.wrap(b));
+    @inline def putType(t: TypeInfo): Unit = t match {
+      case t: ConstantI8Info ⇒
+        put(v64(t.typeId));
+        put(i8(t.value))
+
+      case t: ConstantI16Info ⇒
+        put(v64(t.typeId));
+        put(i16(t.value))
+
+      case t: ConstantI32Info ⇒
+        put(v64(t.typeId));
+        put(i32(t.value))
+
+      case t: ConstantI64Info ⇒
+        put(v64(t.typeId));
+        put(i64(t.value))
+
+      case t: ConstantV64Info ⇒
+        put(v64(t.typeId));
+        put(v64(t.value))
+
+      case t: ConstantLengthArrayInfo ⇒
+        put(v64(t.typeId));
+        put(v64(t.length));
+        putType(t.groundType)
+
+      case t: VariableLengthArrayInfo ⇒
+        put(v64(t.typeId));
+        putType(t.groundType)
+      case t: ListInfo ⇒
+        put(v64(t.typeId));
+        putType(t.groundType)
+      case t: SetInfo ⇒
+        put(v64(t.typeId));
+        putType(t.groundType)
+
+      case t: MapInfo ⇒
+        put(v64(t.typeId));
+        put(v64(t.groundType.size));
+        t.groundType.foreach(putType)
+
+      case _ ⇒
+        put(v64(t.typeId))
+    }
     @inline def write(p: KnownPool[_, _]) {
       (p.name: @switch) match {${
       (for (d ← IR) yield {
@@ -479,12 +612,12 @@ private[internal] final class WriteState(val state: SerializableState) extends S
           (for (f ← fields) yield s"""
               case "${f.getSkillName()}" ⇒ locally {
                 put(v64(0)) // field restrictions not implemented yet
-                put(v64(${
+                ${
             f.getType match {
-              case t: Declaration ⇒ s"""typeID("${t.getSkillName}")"""
-              case _              ⇒ "f.t.typeId"
+              case t: Declaration ⇒ s"""put(v64(typeID("${t.getSkillName}")))"""
+              case _              ⇒ "putType(f.t)"
             }
-          }))
+          }
                 put(string("${f.getSkillName()}"))
                 ${writeField(d, f, "outData")}
                 put(v64(out.size))
@@ -549,9 +682,42 @@ private[internal] final class WriteState(val state: SerializableState) extends S
       s"""@inline def putField(i: $packagePrefix${d.getName}) { out.write(v64(i.${escaped(f.getName)}.getSkillID)) }
                 foreachOf("${t.getSkillName}", putField)"""
 
-    // TODO implementation for container types
-    case t: ContainerType ⇒ "???"
+    case t: ConstantLengthArrayType ⇒ s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ writeConstArray(${
+      t.getBaseType() match {
+        case t: Declaration ⇒ s"userRef[${mapType(t)}]"
+        case b              ⇒ b.getSkillName()
+      }
+    })(instance, out) }"
+    case t: VariableLengthArrayType ⇒ s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ writeVarArray(${
+      t.getBaseType() match {
+        case t: Declaration ⇒ s"userRef[${mapType(t)}]"
+        case b              ⇒ b.getSkillName()
+      }
+    })(instance, out) }"
+    case t: SetType ⇒ s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ writeSet(${
+      t.getBaseType() match {
+        case t: Declaration ⇒ s"userRef[${mapType(t)}]"
+        case b              ⇒ b.getSkillName()
+      }
+    })(instance, out) }"
+    case t: ListType ⇒ s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ writeList(${
+      t.getBaseType() match {
+        case t: Declaration ⇒ s"userRef[${mapType(t)}]"
+        case b              ⇒ b.getSkillName()
+      }
+    })(instance, out) }"
 
-    case _                ⇒ s"$iteratorName.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.${escaped(f.getName)})) }"
+    case t: MapType ⇒ locally {
+      s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ ${
+        t.getBaseTypes().map {
+          case t: Declaration ⇒ s"userRef[${mapType(t)}]"
+          case b              ⇒ b.getSkillName()
+        }.reduceRight { (t, v) ⇒
+          s"writeMap($t, $v)"
+        }
+      }(instance, out) }"
+    }
+
+    // does this case even exist?   case _: ⇒ s"$iteratorName.foreach { instance ⇒ out.write(${f.getType().getSkillName()}(instance.${escaped(f.getName)})) }"
   }
 }
