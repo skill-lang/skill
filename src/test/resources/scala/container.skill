@@ -4,4 +4,10 @@ Container {
   list<v64> l;
   set<v64> s;
   map<string, v64, v64> f;
+
+  set<SomethingElse> someSet;
+}
+
+/** no instance of this is required */
+SomethingElse{
 }

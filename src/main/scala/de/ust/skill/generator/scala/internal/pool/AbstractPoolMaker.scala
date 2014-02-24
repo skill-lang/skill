@@ -33,7 +33,7 @@ import ${packagePrefix}internal._
  *  @param name the name of the type represented by this pool
  *  @param fields the known fields of this type
  */
-abstract class AbstractPool(val name: String, private[internal] val fields: HashMap[String, FieldDeclaration], private[internal] val superPool: Option[AbstractPool])
+abstract class AbstractPool(private[internal] val poolIndex:Long, val name: String, private[internal] val fields: HashMap[String, FieldDeclaration], private[internal] val superPool: Option[AbstractPool])
     extends TypeInfo {
 
   /**
@@ -79,8 +79,7 @@ abstract class AbstractPool(val name: String, private[internal] val fields: Hash
   /**
    * implementation of the TypeInfo interface
    */
-  private[internal] var typeIndex: Long = -33L // results in typeID -1
-  final override def typeId = 32L + typeIndex
+  final override def typeId = 32L + poolIndex
 
   final override def hashCode = name.hashCode
   final override def equals(obj: Any) = obj match {

@@ -28,8 +28,8 @@ import ${packagePrefix}internal.UserType
  *
  * @author Timm Felden
  */
-abstract class BasePool[T <: KnownType](name: String, fields: HashMap[String, FieldDeclaration], initialData:Array[T])
-    extends KnownPool[T, T](name, fields, None) {
+abstract class BasePool[T <: KnownType](poolIndex:Long, name: String, fields: HashMap[String, FieldDeclaration], initialData:Array[T])
+    extends KnownPool[T, T](poolIndex, name, fields, None) {
 
   /**
    * We are the base pool.
