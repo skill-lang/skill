@@ -13,7 +13,7 @@ import org.scalatest.junit.JUnitRunner
 class GeneratorTest extends FunSuite {
 
   def check(src: String, out: String) {
-    Main.main(Array[String]("-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/scala/"+src, "testsuites/ada/src/"))
+    Main.main(Array[String]("-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/ada/"+src, "testsuites/ada/src/"))
   }
 
   test("date")(check("date.skill", "date"))
