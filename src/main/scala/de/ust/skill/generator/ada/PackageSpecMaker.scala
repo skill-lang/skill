@@ -17,10 +17,13 @@ trait PackageSpecMaker extends GeneralOutputMaker {
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Strings.Hash;
+with Ada.Strings.Unbounded;
 
 with Ada.Text_IO;
 
 package ${packagePrefix.capitalize} is
+
+   package SU renames Ada.Strings.Unbounded;
 
    -------------
    --  TYPES  --
@@ -63,14 +66,13 @@ ${
 	  val iterator = declaration.getAllFields.iterator;
 	  while (iterator.hasNext) {
 	    val field = iterator.next
-	    fields += s"""         ${field.getSkillName} : ${field.getType};"""
+	    fields += s"""         ${field.getSkillName} : ${mapType(field.getType)};"""
 	  }
 	  output += fields.mkString(s"""\r\n""")
-	  output += s"""\r\n      end record;"""
+	  output += s"""\r\n      end record;\r\n\r\n"""
 	}
-	output
+	output.stripSuffix(s"""\r\n""")
    }
-
 private
 
    ------------------

@@ -99,28 +99,36 @@ class Main extends FakeMain
 
       case "bool"       ⇒ "Boolean"
 
-      case "i8"         ⇒ "Short_Short_Integer"
-      case "i16"        ⇒ "Short"
-      case "i32"        ⇒ "Integer"
-      case "i64"        ⇒ "Long"
-      case "v64"        ⇒ "Long"
+      case "i8"         ⇒ "i8"
+      case "i16"        ⇒ "i16"
+      case "i32"        ⇒ "i32"
+      case "i64"        ⇒ "i64"
+      case "v64"        ⇒ "v64"
 
       case "f32"        ⇒ "Float"
       case "f64"        ⇒ "Double"
 
-      case "string"     ⇒ "String"
+      case "string"     ⇒ "SU.Unbounded_String"
     }
+  }
 
-    case t: ConstantLengthArrayType ⇒ s"$ArrayTypeName[${mapType(t.getBaseType())}]"
-    case t: VariableLengthArrayType ⇒ s"$VarArrayTypeName[${mapType(t.getBaseType())}]"
-    case t: ListType                ⇒ s"$ListTypeName[${mapType(t.getBaseType())}]"
-    case t: SetType                 ⇒ s"$SetTypeName[${mapType(t.getBaseType())}]"
-    case t: MapType ⇒ {
-      val types = t.getBaseTypes().reverse.map(mapType(_))
-      types.tail.fold(types.head)({ (U, t) ⇒ s"$MapTypeName[$t, $U]" });
+  protected def mapTypeForFieldParser(t: Type): String = t match {
+    case t: GroundType ⇒ t.getName() match {
+      case "annotation" ⇒ "SkillType"
+
+      case "bool"       ⇒ "Byte_Reader.Read_Boolean"
+
+      case "i8"         ⇒ "Byte_Reader.Read_i8"
+      case "i16"        ⇒ "Byte_Reader.Read_i16"
+      case "i32"        ⇒ "Byte_Reader.Read_i32"
+      case "i64"        ⇒ "Byte_Reader.Read_i64"
+      case "v64"        ⇒ "Byte_Reader.Read_v64"
+
+      case "f32"        ⇒ "ERROR"
+      case "f64"        ⇒ "ERROR"
+
+      case "string"     ⇒ "SU.To_Unbounded_String (State.Get_String (Byte_Reader.Read_v64))"
     }
-
-    case t: Declaration ⇒ "_root_."+packagePrefix + t.getName()
   }
 
   /**
@@ -184,8 +192,8 @@ class Main extends FakeMain
     case t: GroundType ⇒ t.getSkillName() match {
       case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
       case "f32" | "f64"                        ⇒ "0.0f"
-      case "bool"                               ⇒ "false"
-      case _                                    ⇒ "null"
+      case "bool"                               ⇒ "False"
+      case _                                    ⇒ s"""SU.To_Unbounded_String ("")"""
     }
 
     // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null

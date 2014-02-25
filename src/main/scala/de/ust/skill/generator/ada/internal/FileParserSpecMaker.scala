@@ -14,7 +14,7 @@ trait FileParserSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}-internal-file_parser.ads""")
 
     out.write(s"""
-with ${packagePrefix}.Internal.Byte_Reader;
+with ${packagePrefix.capitalize}.Internal.Byte_Reader;
 
 generic
 package ${packagePrefix.capitalize}.Internal.File_Parser is

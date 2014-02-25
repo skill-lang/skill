@@ -17,7 +17,7 @@ trait FileParserBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Internal.File_Parser is
 
-   package Byte_Reader renames ${packagePrefix}.Internal.Byte_Reader;
+   package Byte_Reader renames ${packagePrefix.capitalize}.Internal.Byte_Reader;
 
    State : access Skill_State;
 
@@ -159,17 +159,27 @@ ${
 	for (declaration ← IR) {
 	  val name = declaration.getName
 	  val skillName = declaration.getSkillName
+
+	  var fields = ListBuffer[String]()
+	  val iterator = declaration.getAllFields.iterator;
+	  while (iterator.hasNext) {
+	    val field = iterator.next
+	    fields += s"""                  ${field.getSkillName} => ${defaultValue(field)}"""
+	  }
+
 	  output += s"""      if "${skillName}" = Type_Name then
          for I in 1 .. Instance_Count loop
             declare
-               Object : ${name}_Instance;
+               Object : ${name}_Instance := (
+${fields.mkString(s""",\r\n""")}
+               );
             begin
                State.Put_Instance (Type_Name, Object);
             end;
          end loop;
-      end if;"""
+      end if;\r\n"""
 	}
-	output
+	output.stripSuffix(s"""\r\n""")
    }
    end Create_Instances;
 
@@ -192,17 +202,17 @@ ${
             declare
                Object : ${name}_Instance := ${name}_Instance (State.Get_Instance (Chunk.Type_Name, I));
             begin
-               Object.${field.getSkillName} := Byte_Reader.Read_${field.getType};
+               Object.${field.getSkillName} := ${mapTypeForFieldParser(field.getType)};
                State.Replace_Instance (Chunk.Type_Name, I, Object);
             end;
          end loop;
          Skip_Bytes := False;
-      end if;"""
+      end if;
+"""
 	  }
 	}
 	output
    }
-
       if True = Skip_Bytes then
          Byte_Reader.Skip_Bytes (Chunk.Data_Length);
       end if;

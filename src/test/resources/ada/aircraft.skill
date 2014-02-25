@@ -1,0 +1,11 @@
+Airplane {
+	i16 id;
+	string name;
+	bool operational;
+}
+
+Helicopter {
+	i8 id;
+	string name;
+	bool operational;
+}

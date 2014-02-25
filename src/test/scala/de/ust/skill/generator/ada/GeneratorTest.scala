@@ -16,6 +16,7 @@ class GeneratorTest extends FunSuite {
     Main.main(Array[String]("-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/ada/"+src, "testsuites/ada/src/"))
   }
 
+  test("aircraft")(check("aircraft.skill", "aircraft"))
   test("date")(check("date.skill", "date"))
   test("node")(check("nodeExample.tool1.skill", "node"))
 }
