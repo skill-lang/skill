@@ -62,7 +62,7 @@ final private class FileParser extends ByteStreamParsers {
     }
 
     out.write("""
-        case name ⇒ new GenericPool(name, t.superName.map(σ.pools(_)), t.fields)
+        case name ⇒ new GenericPool(σ.pools.size, name, t.superName.map(σ.pools(_)), t.fields)
       }
       result.blockInfos.appendAll(t.blockInfos)
       for ((n, f) ← t.fields) {
@@ -307,27 +307,41 @@ final private class FileParser extends ByteStreamParsers {
     // note rather inefficient @see issue #9
     raw.foreach({ d ⇒ mkBase(d.userType) })
 
-    raw.foreach({ t ⇒
+    for (t ← raw) {
       val u = t.userType
 
       // add local block info
       u.addBlockInfo(BlockInfo(localBlockBaseTypeStartIndices(u.baseType.name) + t.lbpsi, t.count))
 
       // eliminate preliminary user types in field declarations
-      u.fields.values.foreach(f ⇒ {
-        if (f.t.isInstanceOf[PreliminaryUserType]) {
-          val index = f.t.asInstanceOf[PreliminaryUserType].index
-          if (userTypeIndexMap.contains(index))
-            f.t = userTypeIndexMap(index)
-          else
-            throw ParseException(σ.fromReader, blockCounter,
-              s"${t.name}.${f.name} refers to inexistent user type $index (user types: ${
-                userTypeIndexMap.mkString(", ")
-              })"
-            )
-        }
-      })
-    })
+      def eliminateInType(target: TypeInfo, f: FieldDeclaration): TypeInfo = target match {
+        case raw: PreliminaryUserType ⇒ userTypeIndexMap.get(raw.index).getOrElse(throw ParseException(σ.fromReader, blockCounter,
+          s"${t.name}.${f.name} refers to inexistent (indexed) user type ${raw.index} (user types: ${
+            userTypeIndexMap.mkString(", ")
+          })"
+        ))
+        case raw: NamedUserType ⇒ userTypeNameMap.get(raw.name).getOrElse(throw ParseException(σ.fromReader, blockCounter,
+          s"${t.name}.${f.name} refers to inexistent (named) user type ${raw.name} (user types: ${
+            userTypeIndexMap.mkString(", ")
+          })"
+        ))
+
+        case raw: ConstantLengthArrayInfo ⇒
+          raw.groundType = eliminateInType(raw.groundType, f); raw
+        case raw: VariableLengthArrayInfo ⇒
+          raw.groundType = eliminateInType(raw.groundType, f); raw
+        case raw: ListInfo ⇒
+          raw.groundType = eliminateInType(raw.groundType, f); raw
+        case raw: SetInfo ⇒
+          raw.groundType = eliminateInType(raw.groundType, f); raw
+        case raw: MapInfo ⇒
+          raw.groundType = raw.groundType.map(eliminateInType(_, f)); raw
+
+        case _ ⇒ target
+      }
+      for (f ← u.fields.values)
+        f.t = eliminateInType(f.t, f)
+    }
 
     raw
   }) >> treatData

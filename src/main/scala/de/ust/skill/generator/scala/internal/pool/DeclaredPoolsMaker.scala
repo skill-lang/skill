@@ -156,6 +156,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
       d.getSuperType() match {
         case null ⇒
           s"""BasePool[_root_.$packagePrefix$name](
+  state.pools.size,
   "${d.getSkillName}",
   HashMap[String, FieldDeclaration](
     ${
@@ -171,6 +172,7 @@ final class ${name}StoragePool(state: SerializableState) extends ${
         case s ⇒ {
           val base = s"_root_.$packagePrefix${d.getBaseType().getName()}"
           s"""SubPool[_root_.$packagePrefix$name, $base](
+  state.pools.size,
   "${d.getSkillName}",
   HashMap[String, FieldDeclaration](
   ),

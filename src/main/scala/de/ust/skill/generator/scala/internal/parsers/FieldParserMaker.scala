@@ -57,19 +57,28 @@ final class FieldParser(val σ: SerializableState) extends ByteStreamParsers {
     case d: MapInfo ⇒ parseMap(d.groundType)
 
     // user types are just references, easy pray
-    case d: UserType ⇒ v64 ^^ {
-      _ match {
-        case 0 ⇒ null
-        case index ⇒ σ.pools.get(d.name).getOrElse(
-          throw new IllegalStateException("Found a nonnull reference to missing usertype "+d.name)
-        // note: the cast is safe, because the generator requires us to have a declaration for a used user type
-        ).asInstanceOf[KnownPool[_, _]].getByID(index)
-      }
-
+    case d: UserType ⇒ in.v64 match {
+      case 0 ⇒ null
+      case index ⇒ σ.pools.get(d.name).getOrElse(
+        throw new IllegalStateException("Found a nonnull reference to missing usertype "+d.name)
+      // note: the cast is safe, because the generator requires us to have a declaration for a used user type
+      ).asInstanceOf[KnownPool[_, _]].getByID(index)
+    }
+    case d: NamedUserType ⇒ in.v64 match {
+      case 0 ⇒ null
+      case index ⇒ σ.pools.get(d.name).getOrElse(
+        throw new IllegalStateException("Found a nonnull reference to missing usertype "+d.name)
+      // note: the cast is safe, because the generator requires us to have a declaration for a used user type
+      ).asInstanceOf[KnownPool[_, _]].getByID(index)
+    }
+    // known pools are even simpler
+    case p: KnownPool[_, _] ⇒ in.v64 match {
+      case 0     ⇒ null
+      case index ⇒ p.getByID(index)
     }
 
-    case _ ⇒ throw new IllegalStateException(
-      "preliminary usertypes and constants should already have been eleminitad")
+    case unknown ⇒ throw new IllegalStateException(
+      "preliminary usertypes and constants should already have been eleminitad: we got "+unknown)
   }
 
   /**

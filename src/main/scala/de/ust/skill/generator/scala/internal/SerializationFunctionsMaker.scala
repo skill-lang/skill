@@ -395,8 +395,10 @@ private[internal] final class AppendState(val state: SerializableState) extends 
         put(v64(t.groundType.size));
         t.groundType.foreach(putType)
 
+      case t: NamedUserType ⇒
+        put(v64(typeID(t.name).ensuring(_ >= 0)))
       case _ ⇒
-        put(v64(t.typeId))
+        put(v64(t.typeId.ensuring(_ >= 0)))
     }
     @inline def write(p: KnownPool[_, _]) {
       (p.name: @switch) match {${
@@ -437,12 +439,7 @@ private[internal] final class AppendState(val state: SerializableState) extends 
             s"""
               case "$sName" ⇒ if (f.dataChunks.isEmpty) {
                 put(v64(0)) // field restrictions not implemented yet
-                ${
-            f.getType match {
-              case t: Declaration ⇒ s"""put(v64(typeID("${t.getSkillName}")))"""
-              case _              ⇒ "putType(f.t)"
-            }
-          }
+                putType(f.t)
                 put(string("$sName"))
                 ${writeField(d, f, s"p.asInstanceOf[${name}StoragePool]")}
                 put(v64(out.size))
@@ -583,8 +580,10 @@ private[internal] final class WriteState(val state: SerializableState) extends S
         put(v64(t.groundType.size));
         t.groundType.foreach(putType)
 
+      case t: NamedUserType ⇒
+        put(v64(typeID(t.name).ensuring(_ >= 0)))
       case _ ⇒
-        put(v64(t.typeId))
+        put(v64(t.typeId.ensuring(_ >= 0)))
     }
     @inline def write(p: KnownPool[_, _]) {
       (p.name: @switch) match {${
@@ -612,12 +611,7 @@ private[internal] final class WriteState(val state: SerializableState) extends S
           (for (f ← fields) yield s"""
               case "${f.getSkillName()}" ⇒ locally {
                 put(v64(0)) // field restrictions not implemented yet
-                ${
-            f.getType match {
-              case t: Declaration ⇒ s"""put(v64(typeID("${t.getSkillName}")))"""
-              case _              ⇒ "putType(f.t)"
-            }
-          }
+                putType(f.t)
                 put(string("${f.getSkillName()}"))
                 ${writeField(d, f, "outData")}
                 put(v64(out.size))
