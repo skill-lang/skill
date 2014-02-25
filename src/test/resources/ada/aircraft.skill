@@ -1,4 +1,5 @@
 Airplane {
+	const i64 x = 42;
 	i16 id;
 	string name;
 	bool operational;

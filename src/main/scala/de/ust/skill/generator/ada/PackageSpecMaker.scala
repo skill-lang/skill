@@ -5,8 +5,7 @@
 \*                                                                            */
 package de.ust.skill.generator.ada
 
-import java.io.PrintWriter
-import scala.collection.mutable.ListBuffer
+import scala.collection.JavaConversions._
 
 trait PackageSpecMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -57,22 +56,21 @@ package ${packagePrefix.capitalize} is
    type Instance is abstract tagged null record;
 
 ${
-    var output = "";
-	for (declaration ← IR) {
-	  val name = declaration.getName
+	var output = "";
+	for (t ← IR) {
+	  val name = t.getName
 	  output += s"""   type ${name}_Instance is new Instance with\r\n      record\r\n"""
-
-	  var fields = ListBuffer[String]()
-	  val iterator = declaration.getAllFields.iterator;
-	  while (iterator.hasNext) {
-	    val field = iterator.next
-	    fields += s"""         ${field.getSkillName} : ${mapType(field.getType)};"""
-	  }
-	  output += fields.mkString(s"""\r\n""")
-	  output += s"""\r\n      end record;\r\n\r\n"""
+	  output += t.getAllFields.filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
+        f ⇒ s"""         ${f.getName} : ${mapType(f.getType)};"""
+	  }).mkString("\r\n")
+	  output += s"""\r\n      end record;\r\n"""
+	  output += t.getAllFields.filter { f ⇒ f.isConstant && !f.isIgnored }.map({
+        f ⇒ s"""   function ${f.getName} (I : ${name}_Instance) return ${mapType(f.getType)};  --  constant\r\n"""
+	  }).mkString("\r\n")
+	  output += "\r\n"
 	}
-	output.stripSuffix(s"""\r\n""")
-   }
+	output.stripSuffix("\r\n")
+}
 private
 
    ------------------

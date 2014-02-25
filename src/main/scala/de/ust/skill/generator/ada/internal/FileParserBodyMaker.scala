@@ -5,9 +5,8 @@
 \*                                                                            */
 package de.ust.skill.generator.ada.internal
 
-import java.io.PrintWriter
 import de.ust.skill.generator.ada.GeneralOutputMaker
-import scala.collection.mutable.ListBuffer
+import scala.collection.JavaConversions._
 
 trait FileParserBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -155,23 +154,20 @@ package body ${packagePrefix.capitalize}.Internal.File_Parser is
    procedure Create_Instances (Type_Name : String; Instance_Count : Long) is
    begin
 ${
-    var output = "";
-	for (declaration ← IR) {
-	  val name = declaration.getName
-	  val skillName = declaration.getSkillName
-
-	  var fields = ListBuffer[String]()
-	  val iterator = declaration.getAllFields.iterator;
-	  while (iterator.hasNext) {
-	    val field = iterator.next
-	    fields += s"""                  ${field.getSkillName} => ${defaultValue(field)}"""
-	  }
+	var output = "";
+	for (t ← IR) {
+	  val name = t.getName
+	  val skillName = t.getSkillName
 
 	  output += s"""      if "${skillName}" = Type_Name then
          for I in 1 .. Instance_Count loop
             declare
                Object : ${name}_Instance := (
-${fields.mkString(s""",\r\n""")}
+"""
+	  output += t.getAllFields.filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
+        f ⇒ s"""                  ${f.getSkillName} => ${defaultValue(f)}"""
+	  }).mkString(",\r\n")
+	  output += s"""
                );
             begin
                State.Put_Instance (Type_Name, Object);
@@ -179,8 +175,8 @@ ${fields.mkString(s""",\r\n""")}
          end loop;
       end if;\r\n"""
 	}
-	output.stripSuffix(s"""\r\n""")
-   }
+	output.stripSuffix("\r\n")
+}
    end Create_Instances;
 
    procedure Data_Chunk_Vector_Iterator (Iterator : Data_Chunk_Vector.Cursor) is
@@ -189,30 +185,26 @@ ${fields.mkString(s""",\r\n""")}
    begin
 ${
     var output = "";
-	for (declaration ← IR) {
-	  val name = declaration.getName
-	  val skillName = declaration.getSkillName
+	for (t ← IR) {
+	  val name = t.getName
+	  val skillName = t.getSkillName
 
-	  var fields = ListBuffer[String]()
-	  val iterator = declaration.getAllFields.iterator;
-	  while (iterator.hasNext) {
-	    val field = iterator.next
-	    output += s"""      if "${skillName}" = Chunk.Type_Name and then "${field.getSkillName}" = Chunk.Field_Name then
+	  output += t.getAllFields.filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
+        f ⇒ s"""      if "${skillName}" = Chunk.Type_Name and then "${f.getSkillName}" = Chunk.Field_Name then
          for I in Chunk.Start_Index .. Chunk.End_Index loop
             declare
                Object : ${name}_Instance := ${name}_Instance (State.Get_Instance (Chunk.Type_Name, I));
             begin
-               Object.${field.getSkillName} := ${mapTypeForFieldParser(field.getType)};
+               Object.${f.getSkillName} := ${mapTypeForFieldParser(f.getType)};
                State.Replace_Instance (Chunk.Type_Name, I, Object);
             end;
          end loop;
          Skip_Bytes := False;
-      end if;
-"""
-	  }
+      end if;"""}).mkString("\r\n")
 	}
 	output
    }
+
       if True = Skip_Bytes then
          Byte_Reader.Skip_Bytes (Chunk.Data_Length);
       end if;

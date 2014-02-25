@@ -6,6 +6,7 @@
 package de.ust.skill.generator.ada
 
 import java.io.PrintWriter
+import scala.collection.JavaConversions._
 
 trait PackageBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -15,13 +16,22 @@ trait PackageBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize} is
 
+${
+	var output = "";
+	for (t ← IR) {
+	  val name = t.getName
+	  output += t.getAllFields.filter { f ⇒ f.isConstant && !f.isIgnored }.map({
+	    f ⇒ s"""   function ${f.getName} (I : ${name}_Instance) return ${mapType(f.getType)} is (${f.constantValue});\r\n"""
+	  }).mkString("\r\n")
+	}
+	output
+}
    protected body Skill_State is
 
       -------------------
       --  STRING POOL  --
       -------------------
-      function Get_String (Position : Long) return String is
-         (String_Pool.Element (Positive (Position)));
+      function Get_String (Position : Long) return String is (String_Pool.Element (Positive (Position)));
 
       procedure Put_String (Value : String) is
       begin
