@@ -64,6 +64,11 @@ trait GeneralOutputMaker {
   protected def mapType(t: Type): String
 
   /**
+   * creates argument list of a constructor call, not including potential skillID or braces
+   */
+  protected def makeConstructorArguments(t: Type): String
+
+  /**
    * Assume a package prefix provider.
    */
   protected def packagePrefix(): String

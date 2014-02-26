@@ -5,7 +5,17 @@
 \*                                                                            */
 package de.ust.skill.generator.scala.internal
 
+import scala.collection.JavaConversions._
+
 import de.ust.skill.generator.scala.GeneralOutputMaker
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.VariableLengthArrayType
 
 trait TypeInfoMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -19,244 +29,412 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 
-import ${packagePrefix}internal.pool.AbstractPool
-""")
-    out.write("""
+import ${packagePrefix}api._
+
 /**
- * The type info objects are used to reflect the type information stored in a skill file. They are required for
- *  the deserialization of objects into storage pools.
+ * @note representation of the type system relies on invariants and heavy abuse of type erasure
+ *
+ * @author Timm Felden
  */
-abstract class TypeInfo {
+sealed abstract class FieldType(val typeID: Long) {
   def toString(): String
 
-  /**
-   * serializable type ID according to skill §App.F
-   */
-  def typeId: Long
-
-  override def equals(obj: Any) = if (obj.isInstanceOf[TypeInfo]) typeId == obj.asInstanceOf[TypeInfo].typeId else false
-  override def hashCode = typeId.toInt
+  override def equals(obj: Any) = obj match {
+    case o: FieldType ⇒ o.typeID == typeID
+    case _            ⇒ false
+  }
+  override def hashCode = typeID.toInt
 }
 
-sealed abstract class ConstantIntegerInfo[T] extends TypeInfo {
+sealed abstract class ConstantInteger[T](typeID: Long) extends FieldType(typeID) {
   def value: T
 
   def expect(arg: T) = assert(arg == value)
 }
 
-case class ConstantI8Info(value: Byte) extends ConstantIntegerInfo[Byte] {
+case class ConstantI8(value: Byte) extends ConstantInteger[Byte](0) {
   override def toString(): String = "const i8 = "+("%02X" format value)
-
-  def typeId: Long = 0
+  override def equals(obj: Any) = obj match {
+    case ConstantI8(v) ⇒ v == value
+    case _             ⇒ false
+  }
 }
-case class ConstantI16Info(value: Short) extends ConstantIntegerInfo[Short] {
+case class ConstantI16(value: Short) extends ConstantInteger[Short](1) {
   override def toString(): String = "const i16 = "+("%04X" format value)
-
-  def typeId: Long = 1
+  override def equals(obj: Any) = obj match {
+    case ConstantI16(v) ⇒ v == value
+    case _              ⇒ false
+  }
 }
-case class ConstantI32Info(value: Int) extends ConstantIntegerInfo[Int] {
+case class ConstantI32(value: Int) extends ConstantInteger[Int](2) {
   override def toString(): String = "const i32 = "+value.toHexString
-
-  def typeId: Long = 2
+  override def equals(obj: Any) = obj match {
+    case ConstantI32(v) ⇒ v == value
+    case _              ⇒ false
+  }
 }
-case class ConstantI64Info(value: Long) extends ConstantIntegerInfo[Long] {
+case class ConstantI64(value: Long) extends ConstantInteger[Long](3) {
   override def toString(): String = "const i64 = "+value.toHexString
-
-  def typeId: Long = 3
+  override def equals(obj: Any) = obj match {
+    case ConstantI64(v) ⇒ v == value
+    case _              ⇒ false
+  }
 }
-case class ConstantV64Info(value: Long) extends ConstantIntegerInfo[Long] {
+case class ConstantV64(value: Long) extends ConstantInteger[Long](4) {
   override def toString(): String = "const v64 = "+value.toHexString
-
-  def typeId: Long = 4
+  override def equals(obj: Any) = obj match {
+    case ConstantV64(v) ⇒ v == value
+    case _              ⇒ false
+  }
 }
 
-sealed abstract class IntegerInfo extends TypeInfo {}
+sealed abstract class IntegerType(typeID: Long) extends FieldType(typeID);
 
-case object I8Info extends IntegerInfo {
+case object I8 extends IntegerType(7) {
   override def toString(): String = "i8"
-
-  def typeId: Long = 7
 }
-case object I16Info extends IntegerInfo {
+case object I16 extends IntegerType(8) {
   override def toString(): String = "i16"
-
-  def typeId: Long = 8
 }
-case object I32Info extends IntegerInfo {
+case object I32 extends IntegerType(9) {
   override def toString(): String = "i32"
-
-  def typeId: Long = 9
 }
-case object I64Info extends IntegerInfo {
+case object I64 extends IntegerType(10) {
   override def toString(): String = "i64"
-
-  def typeId: Long = 10
 }
-case object V64Info extends IntegerInfo {
+case object V64 extends IntegerType(11) {
   override def toString(): String = "v64"
-
-  def typeId: Long = 11
 }
 
-case object AnnotationInfo extends TypeInfo {
+case object Annotation extends FieldType(5) {
   override def toString(): String = "annotation"
-
-  def typeId: Long = 5
 }
 
-case object BoolInfo extends TypeInfo {
+case object BoolType extends FieldType(6) {
   override def toString(): String = "bool"
-
-  def typeId: Long = 6
 }
-case object F32Info extends TypeInfo {
+case object F32 extends FieldType(12) {
   override def toString(): String = "f32"
-
-  def typeId: Long = 12
 }
-case object F64Info extends TypeInfo {
+case object F64 extends FieldType(13) {
   override def toString(): String = "f64"
-
-  def typeId: Long = 13
 }
 
-case object StringInfo extends TypeInfo {
+case object StringType extends FieldType(14) {
   override def toString = "string"
-
-  def typeId: Long = 14
 }
 
-sealed abstract class CompoundTypeInfo extends TypeInfo {}
+sealed abstract class CompoundType(typeID: Long) extends FieldType(typeID);
 
-class ConstantLengthArrayInfo(val length: Int, var groundType: TypeInfo) extends CompoundTypeInfo {
-
+case class ConstantLengthArray(val length: Long, val groundType: FieldType) extends CompoundType(15) {
   override def toString(): String = groundType+"["+length+"]"
-
-  def typeId: Long = 15
+  override def equals(obj: Any) = obj match {
+    case ConstantLengthArray(l, g) ⇒ l == length && g == groundType
+    case _                         ⇒ false
+  }
 }
-class VariableLengthArrayInfo(var groundType: TypeInfo) extends CompoundTypeInfo {
 
+case class VariableLengthArray(val groundType: FieldType) extends CompoundType(17) {
   override def toString(): String = groundType+"[]"
-
-  def typeId: Long = 17
+  override def equals(obj: Any) = obj match {
+    case VariableLengthArray(g) ⇒ g == groundType
+    case _                      ⇒ false
+  }
 }
 
-class ListInfo(var groundType: TypeInfo) extends CompoundTypeInfo {
-
+case class ListType(val groundType: FieldType) extends CompoundType(18) {
   override def toString(): String = "list<"+groundType+">"
-
-  def typeId: Long = 18
+  override def equals(obj: Any) = obj match {
+    case ListType(g) ⇒ g == groundType
+    case _           ⇒ false
+  }
 }
-class SetInfo(var groundType: TypeInfo) extends CompoundTypeInfo {
-
+case class SetType(val groundType: FieldType) extends CompoundType(19) {
   override def toString(): String = "set<"+groundType+">"
-
-  def typeId: Long = 19
+  override def equals(obj: Any) = obj match {
+    case SetType(g) ⇒ g == groundType
+    case _          ⇒ false
+  }
 }
-class MapInfo(var groundType: List[TypeInfo]) extends CompoundTypeInfo {
-
+case class MapType(val groundType: Seq[FieldType]) extends CompoundType(20) {
   override def toString(): String = groundType.mkString("map<", ", ", ">")
-
-  def typeId: Long = 20
-}
-
-/**
- * This type is used to ease deserialization a lot. There must not be any instances of this class in a usable reflection
- *  pool.
- */
-case class PreliminaryUserType(index: Long) extends TypeInfo {
-  override def toString(): String = "<preliminary usertype: "+index+">"
-
-  def typeId: Long = 32 + index
-
-  /**
-   * there is no hashcode for preliminary usertypes. They must not be used as keys!
-   */
-  override def hashCode = ???
   override def equals(obj: Any) = obj match {
-    case PreliminaryUserType(idx) ⇒ idx == index
-    case t: UserType              ⇒ typeId == t.typeId
-    case t: AbstractPool          ⇒ t.typeId == index
-    case _                        ⇒ false
+    case MapType(g: Seq[_]) ⇒ groundType.sameElements(g)
+    case _                  ⇒ false
   }
 }
 
-case class NamedUserType(name: String) extends TypeInfo {
-  override def toString(): String = "<named usertype: "+name+">"
+case class TypeDefinitionIndex(index: Long) extends FieldType(32 + index) {
+  override def toString(): String = s"<type definition index: $$index>"
+}
 
-  def typeId: Long = -1L
-
-  override def hashCode = name.hashCode
+case class TypeDefinitionName(name: String) extends FieldType(-1) {
+  override def toString(): String = s"<type definition name: $$name>"
   override def equals(obj: Any) = obj match {
-    case NamedUserType(n) ⇒ n == name
-    case t: UserType      ⇒ t.name == name
-    case t: AbstractPool  ⇒ t.name == name
-    case _ ⇒ false
+    case TypeDefinitionName(n) ⇒ n.equals(name)
+    case _                     ⇒ false
   }
 }
 
 /**
- * Representation of user types in the *read* world. The modify/write world will use storage pools.
+ * Contains type information and instances of user defined types.
  */
-class UserType(
-  val index: Long,
-  val name: String,
-  val superName: Option[String])
-    extends TypeInfo {
+sealed abstract class StoragePool[T <: SkillType](
+    private[internal] val poolIndex: Long,
+    val name: String,
+    private[internal] val knownFields: HashMap[String, FieldType],
+    private[internal] val superPool: Option[StoragePool[_ <: SkillType]]) extends FieldType(32 + poolIndex) {
 
-  // Total number of instances seen until now.
-  var instanceCount = 0L;
-
-  private final var _fields = new HashMap[String, FieldDeclaration]
-  private final var _fieldByIndex = new ArrayBuffer[FieldDeclaration]
-  def fields = _fields
-  def fieldByIndex(i: Int) = _fieldByIndex(i)
-  def addField(f: FieldDeclaration) {
-    _fields.put(f.name, f)
-    _fieldByIndex += f
-  }
-
-  private[internal] var blockInfos = new ListBuffer[BlockInfo]()
-  def addBlockInfo(b: BlockInfo) {
-    instanceCount += b.count
-    blockInfos.append(b)
-  }
-
-  // various links between types
-  var baseType: UserType = superName match { case None ⇒ this; case _ ⇒ null }
-  var superType: UserType = null
-  var subTypes = new ArrayBuffer[UserType]
+  val superName = superPool.map(_.name)
 
   /**
-   * Pretty printed skill declaration of this user type.
+   * insert a new T with default values and the given skillID into the pool
+   *
+   * @note implementation relies on an ascending order of insertion
    */
-  def getDeclaration(): String = {
-    var r = new StringBuilder(name)
-    if (superName.isDefined)
-      r ++= ":" ++= superName.get
+  private[internal] def insertInstance(skillID: Long): Boolean
 
-    r ++= "{"
-    fields.values.foreach({ f ⇒ r.append(s" ${f.t.toString} ${f.name};") });
-    r ++= "}"
+  private[internal] val basePool: BasePool[_ <: SkillType]
 
-    return r.toString
+  /**
+   * the sub pools are constructed during construction of all storage pools of a state
+   */
+  private[internal] val subPools = new ArrayBuffer[StoragePool[_ <: T]];
+  // update sub-pool relation
+  if (superPool.isDefined) {
+    // @note: we drop the super type, because we can not know what it is in general
+    superPool.get.subPools.asInstanceOf[ArrayBuffer[StoragePool[_]]] += this
   }
 
-  override def toString = name
+  /**
+   * the actual field data; contains fields by index
+   */
+  private[internal] val fields = new ArrayBuffer[FieldDeclaration](knownFields.size);
 
-  def typeId: Long = 32 + index
+  /**
+   * Adds a new field, checks consistency and updates field data if required.
+   */
+  private[internal] def addField(f: FieldDeclaration) {
+    if (knownFields.contains(f.name)) {
+      if (!f.equals(knownFields(f.name)))
+        ???
 
-  override def hashCode = name.hashCode
-  override def equals(obj: Any) = obj match {
-    case NamedUserType(n) ⇒ n == name
-    case t: UserType      ⇒ t.name == name
-    case t: AbstractPool  ⇒ t.name == name
-    case _ ⇒ false
+    } else {
+      putFieldMap(f, new HashMap[SkillType, Any])
+    }
+
+    fields += f
   }
+  private def putFieldMap(f: FieldDeclaration, m: HashMap[SkillType, Any]) {
+    unknownFieldData.put(f, m)
+    subPools.foreach(_.putFieldMap(f, m))
+  }
+
+  final def allFields = fields.iterator
+
+  /**
+   * this map is used to store deserialized field data for each field and instance
+   */
+  private[internal] val unknownFieldData = new HashMap[FieldDeclaration, HashMap[SkillType, Any]];
+
+  /**
+   * All stored objects, which have exactly the type T. Objects are stored as arrays of field entries. The types of the
+   *  respective fields can be retrieved using the fieldTypes map.
+   */
+  private[internal] val newObjects = ArrayBuffer[T]()
+
+  /**
+   * returns the skill object at position index
+   */
+  def getByID(index: Long): SkillType;
+
+  /**
+   * the number of instances of exactly this type, excluding sub-types
+   */
+  def staticSize: Long;
+  def staticInstances: Iterator[T]
+
+  /**
+   * the number of instances of this type, including sub-types
+   * @note this is an O(t) operation, where t is the number of sub-types
+   */
+  final def dynamicSize: Long = subPools.map(_.dynamicSize).fold(staticSize)(_ + _);
+
+  /**
+   * The block layout of data.
+   */
+  private[internal] val blockInfos = new ListBuffer[BlockInfo]()
+
+  final override def toString = name
+  final override def equals(obj: Any) = obj match {
+    case TypeDefinitionName(n) ⇒ n == name
+    case t: FieldType          ⇒ t.typeID == typeID
+    case _                     ⇒ false
+  }
+}
+
+class BasePool[T <: SkillType](poolIndex: Long, name: String, knownFields: HashMap[String, FieldType])
+  extends StoragePool[T](poolIndex, name, knownFields, None)
+  with Access[T] {
+
+  /**
+   * We are the base pool.
+   */
+  override val basePool = this
+
+  /**
+   * increase size of data array
+   */
+  def resizeData(increase: Int) {
+    val d = data
+    data = new Array[SkillType](d.length + increase)
+    d.copyToArray(data)
+  }
+  override def insertInstance(skillID: Long) = {
+    val i = skillID.toInt - 1
+    if (null != data(i))
+      false
+    else {
+      val r = (new FullyGenericInstance(name, skillID)).asInstanceOf[T]
+      data(i) = r
+      staticData += r
+      true
+    }
+  }
+
+  /**
+   * the base type data store; use SkillType arrays, because we do not like the type system anyway:)
+   */
+  private[internal] var data = new Array[SkillType](0)
+
+  /**
+   * the number of static instances loaded from the file
+   */
+  protected val staticData = new ArrayBuffer[T]
+
+  override def all: Iterator[T] = data.iterator.asInstanceOf[Iterator[T]] ++ newDynamicInstances
+  def newDynamicInstances: Iterator[T] = subPools.foldLeft(newObjects.iterator)(_ ++ _.newObjects.iterator)
+
+  override def allInTypeOrder: Iterator[T] = subPools.foldLeft(staticInstances)(_ ++ _.staticInstances)
+  override def staticInstances: Iterator[T] = staticData.iterator ++ newObjects.iterator
+
+  /**
+   * returns instances directly from the data store
+   *
+   * @note base pool data access can not fail, because this would yeald an arary store exception at an earlier stage
+   */
+  override def getByID(index: Long): T = try { data(index.toInt - 1).asInstanceOf[T] } catch { case e: ArrayIndexOutOfBoundsException ⇒ throw new InvalidPoolIndex(index, data.size, name) }
+
+  override def staticSize: Long = staticData.size + newObjects.length
+}
+
+class SubPool[T <: SkillType](poolIndex: Long, name: String, knownFields: HashMap[String, FieldType], superPool: StoragePool[_ <: SkillType])
+  extends StoragePool[T](poolIndex, name, knownFields, Some(superPool))
+  with Access[T] {
+
+  override val basePool = superPool.basePool
+
+  override def insertInstance(skillID: Long) = {
+    val i = skillID.toInt - 1
+    if (null != data(i))
+      false
+    else {
+      val r = (new FullyGenericInstance(name, skillID)).asInstanceOf[T]
+      data(i) = r
+      staticData += r
+      true
+    }
+  }
+  /**
+   * the base type data store
+   */
+  private[internal] def data = basePool.data
+  /**
+   * the number of static instances loaded from the file
+   */
+  protected val staticData = new ArrayBuffer[T]
+
+  override def all: Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
+  def newDynamicInstances: Iterator[T] = subPools.foldLeft(newObjects.iterator)(_ ++ _.newObjects.iterator)
+
+  override def allInTypeOrder: Iterator[T] = subPools.foldLeft(staticInstances)(_ ++ _.staticInstances)
+  override def staticInstances = staticData.iterator ++ newObjects.iterator
+
+  override def getByID(index: Long): T = try { basePool.getByID(index).asInstanceOf[T] } catch {
+    case e: ClassCastException ⇒ throw new SkillException(
+      s""${""}"tried to access a "$$name" at index $$index, but it was actually a $${
+        basePool.getByID(index).getClass().getName()
+      }""${""}", e
+    )
+    case e: ArrayIndexOutOfBoundsException ⇒ throw new InvalidPoolIndex(index, basePool.dynamicSize, name)
+  }
+
+  override def staticSize: Long = staticData.size + newObjects.length
+}
+""")
+
+
+    for (t ← IR)
+      out.write(s"""
+final class ${t.getCapitalName}StoragePool(poolIndex: Long${if(t.getSuperType==null) ""
+        else s",\nsuperPool: ${t.getSuperType.getCapitalName}StoragePool"})
+    extends ${if(t.getSuperType==null)"Base"else"Sub"}Pool[${packagePrefix}${t.getCapitalName}](
+      poolIndex,
+      "${t.getSkillName}",
+      HashMap[String, FieldType](
+${(for(f <- t.getFields) yield s"        ${f.getSkillName} -> ${mapToFieldType(f.getType)}").mkString(",\n")}
+      )${
+        if(t.getSuperType==null) ""
+        else ",\nsuperPool"
+      }
+    )
+    with ${t.getCapitalName}Access {
+
+	override def insertInstance(skillID: Long) = {
+    val i = skillID.toInt - 1
+    if (null != data(i))
+      false
+    else {
+      val r = new types.${t.getCapitalName}(skillID)
+      data(i) = r
+      staticData += r
+      true
+    }
+  }
+
+  override def apply(args: Any*) = ???
+
 }
 """)
 
     //class prefix
     out.close()
+  }
+
+  private def mapToFieldType(t: Type):String = {
+    def mapGroundType(t: Type) = t.getSkillName match {
+      case "annotation" ⇒ "Annotation"
+      case "bool"       ⇒ "BoolType"
+      case "i8"         ⇒ "I8"
+      case "i16"        ⇒ "I16"
+      case "i32"        ⇒ "I32"
+      case "i64"        ⇒ "I64"
+      case "v64"        ⇒ "V64"
+      case "f32"        ⇒ "F32"
+      case "f64"        ⇒ "F64"
+      case "string"     ⇒ "StringType"
+
+      case s            ⇒ s"""TypeDefinitionName("$s")"""
+    }
+
+    t match {
+      case t: GroundType              ⇒ mapGroundType(t)
+      case t: ConstantLengthArrayType ⇒ s"ConstantLengthArrayInfo(${t.getLength}, ${mapGroundType(t.getBaseType)})"
+      case t: VariableLengthArrayType ⇒ s"VariableLengthArrayInfo(${mapGroundType(t.getBaseType)})"
+      case t: ListType                ⇒ s"ListInfo(${mapGroundType(t.getBaseType)})"
+      case t: SetType                 ⇒ s"SetInfo(${mapGroundType(t.getBaseType)})"
+      case t: MapType                 ⇒ s"MapInfo(List[TypeInfo](${t.getBaseTypes.map(mapGroundType).mkString(",")}))"
+      case t: Declaration             ⇒ s"""TypeDefinitionName("${t.getSkillName}")"""
+    }
   }
 }

@@ -7,30 +7,19 @@ package de.ust.skill.generator.scala
 
 import java.io.File
 import java.util.Date
-
 import scala.collection.JavaConversions.asScalaBuffer
-
-import de.ust.skill.generator.scala.api.GenericTypeMaker
-import de.ust.skill.generator.scala.api.KnownTypeMaker
+import de.ust.skill.generator.scala.api.AccessMaker
 import de.ust.skill.generator.scala.api.SkillStateMaker
 import de.ust.skill.generator.scala.api.SkillTypeMaker
-import de.ust.skill.generator.scala.internal.FieldDeclarationMaker
-import de.ust.skill.generator.scala.internal.InternalInstancePropertiesMaker
+import de.ust.skill.generator.scala.internal.ExceptionsMaker
+import de.ust.skill.generator.scala.internal.FieldParserMaker
+import de.ust.skill.generator.scala.internal.FileParserMaker
 import de.ust.skill.generator.scala.internal.SerializableStateMaker
 import de.ust.skill.generator.scala.internal.SerializationFunctionsMaker
-import de.ust.skill.generator.scala.internal.SkillExceptionMaker
 import de.ust.skill.generator.scala.internal.TypeInfoMaker
-import de.ust.skill.generator.scala.internal.parsers.ByteReaderMaker
-import de.ust.skill.generator.scala.internal.parsers.ByteStreamParsersMaker
-import de.ust.skill.generator.scala.internal.parsers.FieldParserMaker
-import de.ust.skill.generator.scala.internal.parsers.FileParserMaker
-import de.ust.skill.generator.scala.internal.pool.AbstractPoolMaker
-import de.ust.skill.generator.scala.internal.pool.BasePoolMaker
 import de.ust.skill.generator.scala.internal.pool.DeclaredPoolsMaker
-import de.ust.skill.generator.scala.internal.pool.GenericPoolMaker
-import de.ust.skill.generator.scala.internal.pool.KnownPoolMaker
-import de.ust.skill.generator.scala.internal.pool.StringPoolMaker
-import de.ust.skill.generator.scala.internal.pool.SubPoolMaker
+import de.ust.skill.generator.scala.internal.streams.FileInputStreamMaker
+import de.ust.skill.generator.scala.internal.streams.InStreamMaker
 import de.ust.skill.generator.scala.internal.types.DeclarationImplementationMaker
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
@@ -42,6 +31,8 @@ import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.parser.Parser
+import de.ust.skill.generator.scala.internal.FullyGenericInstanceMaker
+import de.ust.skill.generator.scala.internal.InternalInstancePropertiesMaker
 
 /**
  * Entry point of the scala generator.
@@ -94,28 +85,23 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * @author Timm Felden
  */
 class Main extends FakeMain
-    with FileParserMaker
-    with AbstractPoolMaker
-    with BasePoolMaker
-    with ByteReaderMaker
-    with ByteStreamParsersMaker
+    with AccessMaker
+    with api.FieldDeclarationMaker
     with DeclarationInterfaceMaker
     with DeclarationImplementationMaker
     with DeclaredPoolsMaker
+    with ExceptionsMaker
     with FieldParserMaker
-    with FieldDeclarationMaker
-    with GenericPoolMaker
-    with GenericTypeMaker
+    with FileInputStreamMaker
+    with FileParserMaker
+    with FullyGenericInstanceMaker
+    with InStreamMaker
     with InternalInstancePropertiesMaker
-    with KnownPoolMaker
-    with KnownTypeMaker
+    with internal.FieldDeclarationMaker
     with SerializableStateMaker
     with SerializationFunctionsMaker
-    with SkillExceptionMaker
     with SkillStateMaker
     with SkillTypeMaker
-    with StringPoolMaker
-    with SubPoolMaker
     with TypeInfoMaker {
 
   var outPath: String = null
@@ -153,6 +139,13 @@ class Main extends FakeMain
 
     case t: Declaration ⇒ "_root_."+packagePrefix + t.getName()
   }
+
+  /**
+   * creates argument list of a constructor call, not including potential skillID or braces
+   *
+   * TODO provide a real implementation
+   */
+  override protected def makeConstructorArguments(t: Type) = "args: Any*"
 
   /**
    * provides the package prefix

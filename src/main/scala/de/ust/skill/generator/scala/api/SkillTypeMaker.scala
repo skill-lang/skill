@@ -25,6 +25,16 @@ trait SkillType extends InternalInstanceProperties {
    * provides a pretty representation of this
    */
   def prettyString: String
+
+  /**
+   * reflective setter
+   */
+  def set(acc: Access[_<:SkillType], field: FieldDeclaration, value: Any)
+
+  /**
+   * reflective getter
+   */
+  def get(acc: Access[_<:SkillType], field: FieldDeclaration): Any
 }
 """)
 

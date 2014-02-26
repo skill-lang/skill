@@ -3,17 +3,15 @@
 ** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
-package de.ust.skill.generator.scala.internal.parsers
-
-import java.io.PrintWriter
+package de.ust.skill.generator.scala.internal
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
 trait FieldParserMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("internal/parsers/FieldParser.scala")
+    val out = open("internal/FieldParser.scala")
     //package & imports
-    out.write(s"""package ${packagePrefix}internal.parsers
+    out.write(s"""package ${packagePrefix}internal
 
 import java.nio.ByteBuffer
 

@@ -191,7 +191,6 @@ ${(for (d ← IR) yield s"""    ${d.getName}.readFields(fieldParser)""").mkStrin
 }
 
 object SerializableState {
-
   /**
    * Creates a new and empty serializable state.
    */
@@ -200,11 +199,6 @@ object SerializableState {
     result.finishInitialization
     result
   }
-
-  /**
-   * Reads a skill file and turns it into a serializable state.
-   */
-  def read(target: Path): SerializableState = FileParser.read(target)
 }
 """)
 

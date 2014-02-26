@@ -21,34 +21,31 @@ trait DeclarationInterfaceMaker extends GeneralOutputMaker {
 
   private def makeDeclarationInterface(out: PrintWriter, d: Declaration) {
     //package
-    if (packagePrefix.length > 0) {
-      out.write(s"""package ${packagePrefix.substring(0, packagePrefix.length - 1)}
+    if (packagePrefix.length > 0)
+      out.write(s"""package ${packagePrefix.substring(0, packagePrefix.length - 1)}""")
 
-import scala.collection.mutable.ArrayBuffer
-import scala.reflect.ClassTag
+    out.write(s"""
+
+import ${packagePrefix}api.SkillType
 
 """)
-    }
-
-    //imports
-    if (null == d.getSuperType()) {
-      out.write(s"import ${packagePrefix}api._\n\n")
-    }
 
     //class comment
-    out.write(s"/*${d.getSkillComment()}*/\n")
+    if (d.getSkillComment.size > 0)
+      out.write(s"/*${d.getSkillComment()}*/\n")
 
     //class prefix
-    val name = d.getName();
-    out.write(s"trait $name ${
-      if (null != d.getSuperType()) { s"extends ${d.getSuperType().getName()}" }
-      else { "extends KnownType" }
-    } {\n")
+    val Name = d.getCapitalName;
+    out.write(s"trait $Name ${
+      if (null != d.getSuperType()) { s"extends ${d.getSuperType().getCapitalName()}" }
+      else { "extends SkillType" }
+    } {")
 
     //body
     d.getFields().foreach({ f ⇒
       val name_ = escaped(f.getName)
-      val Name = f.getName.capitalize
+
+      @inline def mkComment = if (f.getSkillComment.size > 0) "  /*"+f.getSkillComment()+"*/\n" else ""
 
       if (f.isConstant) {
         // constants do not have a setter
@@ -62,18 +59,14 @@ import scala.reflect.ClassTag
         // standard field data interface
         if ("annotation".equals(f.getType().getName())) {
           out.write(s"""
-  /*${f.getSkillComment()}*/
-  def $name_ : SkillType
-  /*${f.getSkillComment()}*/
-  def ${name_}_=($Name: SkillType): Unit
+$mkComment  def $name_ : SkillType
+$mkComment  def ${name_}_=(${name_} : SkillType): Unit
 """)
         } else {
           val argumentType = mapType(f.getType())
           out.write(s"""
-  /*${f.getSkillComment()}*/
-  def $name_ : $argumentType
-  /*${f.getSkillComment()}*/
-  def ${name_}_=($Name: $argumentType): Unit
+$mkComment  def $name_ : $argumentType
+$mkComment  def ${name_}_=(${name_} : $argumentType): Unit
 """)
         }
       }
@@ -81,8 +74,8 @@ import scala.reflect.ClassTag
 
     out.write(s"""}
 
-object $name {
-  def unapply(self:$name) = ${(for (f ← d.getFields) yield "self."+f.getName).mkString("Some(", ", ", ")")}
+object $Name {
+  def unapply(self:$Name) = ${(for (f ← d.getFields) yield "self."+f.getName).mkString("Some(", ", ", ")")}
 }
 """);
 

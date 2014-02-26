@@ -29,26 +29,24 @@ trait DeclarationImplementationMaker extends GeneralOutputMaker {
     // head
     out.write(s"""package ${packagePrefix}internal.types
 
-import scala.collection.mutable.ArrayBuffer
-
 import ${packagePrefix}api._
+import ${packagePrefix}internal.StoragePool
 
-final class $name extends _root_.${packagePrefix}$name {""")
+final class $name(private var skillID: Long) extends _root_.${packagePrefix}$name {""")
 
 	if(!relevantFields.isEmpty){
 		out.write("""
-  @inline def this(""")
+  def this(skillID: Long""")
 
   		// data
-    	out.write(relevantFields.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", "))
+    	out.write(relevantFields.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", ",", ",""))
 
     	out.write(s""") {
-    this()
+    this(skillID)
     ${relevantFields.map{f ⇒ s"_${f.getName()} = ${escaped(f.getName)}"}.mkString("\n    ")}
   }""")
 	}
     out.write(s"""
-  private[internal] var skillID = -1L
   override final def getSkillID = skillID
   private[internal] def setSkillID(newID: Long) = { ${// @monotone delete-check
       if(!d.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty)
@@ -125,8 +123,41 @@ final class $name extends _root_.${packagePrefix}$name {""")
       }
     });
 
+    // generic get
+    out.write(s"""
+  override final def get(acc: Access[_ <: simple.api.SkillType], field: simple.internal.FieldDeclaration): Any = field.name match {
+${
+      (for(f <- d.getAllFields) yield s"""    case "${f.getSkillName}" ⇒ _${f.getName}""").mkString("\n")
+}
+    case _ ⇒
+      try {
+        acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field)(this)
+      } catch {
+        case e: Exception ⇒ this+" is not in:\\n"+acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field).mkString("\\n")
+      }
+  }
+""")
+
+    // generic set
+    out.write(s"""
+  override final def set(acc: Access[_ <: simple.api.SkillType], field: simple.internal.FieldDeclaration, value: Any): Unit = field.name match {
+${
+  (
+    for(f <- d.getAllFields) 
+      yield s"""    case "${f.getSkillName}" ⇒ _${f.getName} = value.asInstanceOf[${mapType(f.getType)}]"""
+  ).mkString("\n")
+}
+    case _ ⇒
+      try {
+        acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field).put(this, value)
+      } catch {
+        case e: Exception ⇒ this+" is not in:\\n"+acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field).mkString("\\n")
+      }
+  }
+""")
+
     // pretty string
-    out.write(s"""  override def prettyString(): String = "${d.getName()}(this: "+this""")
+    out.write(s"""  override def prettyString: String = "${d.getName()}(this: "+this""")
     d.getAllFields.foreach({ f ⇒
       if(f.isIgnored) out.write(s"""+", ${f.getName()}: <<ignored>>" """)
       else if (!f.isConstant) out.write(s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+_${f.getName()}""")

@@ -5,23 +5,22 @@
 \*                                                                            */
 package de.ust.skill.generator.scala.api
 
+import java.io.PrintWriter
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait KnownTypeMaker extends GeneralOutputMaker {
+trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("api/KnownType.scala")
-    //package & imports
+    val out = open("api/FieldDeclaration.scala")
+    //package
     out.write(s"""package ${packagePrefix}api
 
-import ${packagePrefix}internal.InternalInstanceProperties
-
-/**
- * @author Timm Felden
- */
-trait KnownType extends SkillType;
+trait FieldDeclaration{
+  val name: String
+}
 """)
 
+    //class prefix
     out.close()
   }
 }
