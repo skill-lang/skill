@@ -95,7 +95,7 @@ class Main extends FakeMain
    */
   override protected def mapType(t: Type): String = t match {
     case t: GroundType ⇒ t.getName() match {
-      case "annotation" ⇒ "SkillType"
+      case "annotation" ⇒ "Skill_Type_Access"
 
       case "bool"       ⇒ "Boolean"
 
@@ -112,22 +112,31 @@ class Main extends FakeMain
     }
   }
 
-  protected def mapTypeForFieldParser(t: Type): String = t match {
-    case t: GroundType ⇒ t.getName() match {
-      case "annotation" ⇒ "SkillType"
+  protected def mapFileParser(t: Type, f: Field): String = f.getType match {
+    case ft: GroundType ⇒ ft.getName() match {
+      case "annotation" ⇒ 
+      	s"""Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
+               X : v64 := Byte_Reader.Read_v64;
+               Y : v64 := Byte_Reader.Read_v64;
+            begin
+               if 0 = X then
+                  Object.${f.getSkillName} := null;
+               else
+                  Object.${f.getSkillName} := State.Get_Object (State.Get_String (X), Positive (Y));
+               end if;"""
 
-      case "bool"       ⇒ "Byte_Reader.Read_Boolean"
-
-      case "i8"         ⇒ "Byte_Reader.Read_i8"
-      case "i16"        ⇒ "Byte_Reader.Read_i16"
-      case "i32"        ⇒ "Byte_Reader.Read_i32"
-      case "i64"        ⇒ "Byte_Reader.Read_i64"
-      case "v64"        ⇒ "Byte_Reader.Read_v64"
+      case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
+      	s"""Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
+            begin
+               Object.${f.getSkillName} := Byte_Reader.Read_${mapType(f.getType)};"""
 
       case "f32"        ⇒ "ERROR"
       case "f64"        ⇒ "ERROR"
 
-      case "string"     ⇒ "SU.To_Unbounded_String (State.Get_String (Byte_Reader.Read_v64))"
+      case "string"     ⇒ 
+      	s"""Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
+            begin
+               Object.${f.getSkillName} := SU.To_Unbounded_String (State.Get_String (Byte_Reader.Read_v64));"""
     }
   }
 
@@ -193,7 +202,8 @@ class Main extends FakeMain
       case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
       case "f32" | "f64"                        ⇒ "0.0f"
       case "bool"                               ⇒ "False"
-      case _                                    ⇒ s"""SU.To_Unbounded_String ("")"""
+      case "string"                             ⇒ s"""SU.To_Unbounded_String("")"""
+      case _                                    ⇒ "null"
     }
 
     // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null

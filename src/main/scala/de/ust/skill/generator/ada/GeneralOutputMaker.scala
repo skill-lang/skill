@@ -64,9 +64,9 @@ trait GeneralOutputMaker {
   protected def mapType(t: Type): String
 
   /**
-   * Assume the existence of a translation function for types.
+   * Assume the existence of a translation function for fields.
    */
-  protected def mapTypeForFieldParser(t: Type): String
+  protected def mapFileParser(t: Type, f: Field): String
 
   /**
    * Assume a package prefix provider.

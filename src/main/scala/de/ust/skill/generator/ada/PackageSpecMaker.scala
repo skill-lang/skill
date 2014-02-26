@@ -53,19 +53,23 @@ package ${packagePrefix.capitalize} is
    --  SKILL  --
    -------------
    type Skill_State is limited private;
-   type Instance is abstract tagged null record;
+   type Skill_Type is abstract tagged null record;
+   type Skill_Type_Access is access all Skill_Type'Class;
 
 ${
 	var output = "";
 	for (t ← IR) {
-	  val name = t.getName
-	  output += s"""   type ${name}_Instance is new Instance with\r\n      record\r\n"""
-	  output += t.getAllFields.filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
-        f ⇒ s"""         ${f.getName} : ${mapType(f.getType)};"""
+	  output += s"""   type %s_Type is new Skill_Type with\r\n      record\r\n""".format(t.getName)
+	  output += t.getAllFields.filter { f ⇒ !f.isConstant && !f.isIgnored }.map({ f ⇒
+        var comment = "";
+	    if (f.isAuto()) comment = "  --  auto aka not serialized"
+        s"""         %s : %s;%s""".format(f.getName, mapType(f.getType), comment)
 	  }).mkString("\r\n")
 	  output += s"""\r\n      end record;\r\n"""
-	  output += t.getAllFields.filter { f ⇒ f.isConstant && !f.isIgnored }.map({
-        f ⇒ s"""   function ${f.getName} (I : ${name}_Instance) return ${mapType(f.getType)};  --  constant\r\n"""
+	  output += s"""   type %s_Type_Access is access all %s_Type;\r\n""".format(t.getName, t.getName)
+	  // fake constants as function
+	  output += t.getAllFields.filter { f ⇒ f.isConstant && !f.isIgnored }.map({ f ⇒
+        s"""   function %s (Object : %s_Type) return %s;  --  constant""".format(f.getName, t.getName, mapType(f.getType))
 	  }).mkString("\r\n")
 	  output += "\r\n"
 	}
@@ -81,7 +85,7 @@ private
    --------------------
    --  STORAGE POOL  --
    --------------------
-   package Storage_Pool_Vector is new Ada.Containers.Indefinite_Vectors (Positive, Instance'Class);
+   package Storage_Pool_Vector is new Ada.Containers.Indefinite_Vectors (Positive, Skill_Type_Access);
 
    --------------------------
    --  FIELD DECLARATIONS  --
@@ -136,10 +140,9 @@ private
       procedure Put_String (Value : String);
 
       --  storage pool
-      function Get_Instance (Type_Name : String; Position : Positive) return Instance'Class;
+      function Get_Object (Type_Name : String; Position : Positive) return Skill_Type_Access;
       function Storage_Size (Type_Name : String) return Natural;
-      procedure Put_Instance (Type_Name : String; New_Instance : Instance'Class);
-      procedure Replace_Instance (Type_Name : String; Position : Positive; New_Instance : Instance'Class);
+      procedure Put_Object (Type_Name : String; New_Object : Skill_Type_Access);
 
       --  field declarations
       function Known_Fields (Name : String) return Long;

@@ -17,15 +17,16 @@ trait PackageBodyMaker extends GeneralOutputMaker {
 package body ${packagePrefix.capitalize} is
 
 ${
-	var output = "";
-	for (t ← IR) {
-	  val name = t.getName
-	  output += t.getAllFields.filter { f ⇒ f.isConstant && !f.isIgnored }.map({
-	    f ⇒ s"""   function ${f.getName} (I : ${name}_Instance) return ${mapType(f.getType)} is (${f.constantValue});\r\n"""
-	  }).mkString("\r\n")
-	}
-	output
+  var output = "";
+  for (t ← IR) {
+    val name = t.getName
+    output += t.getAllFields.filter { f ⇒ f.isConstant && !f.isIgnored }.map({ f ⇒
+      s"""   function %s (Object : %s_Type) return %s is (%s);""".format(f.getName, name, mapType(f.getType), f.constantValue)
+    }).mkString("\r\n")
+  }
+  output;
 }
+
    protected body Skill_State is
 
       -------------------
@@ -41,29 +42,16 @@ ${
       --------------------
       --  STORAGE_POOL  --
       --------------------
-      function Get_Instance (Type_Name : String; Position : Positive) return Instance'Class is
-         A_Type : Type_Information := Get_Type (Type_Name);
-      begin
-         return A_Type.Storage_Pool.Element (Position);
-      end Get_Instance;
+      function Get_Object (Type_Name : String; Position : Positive) return Skill_Type_Access is
+         (Get_Type (Type_Name).Storage_Pool.Element (Position));
 
       function Storage_Size (Type_Name : String) return Natural is
-         A_Type : Type_Information := Get_Type (Type_Name);
-      begin
-         return Natural (A_Type.Storage_Pool.Length);
-      end;
+         (Natural (Get_Type (Type_Name).Storage_Pool.Length));
 
-      procedure Put_Instance (Type_Name : String; New_Instance : Instance'Class) is
-         A_Type : Type_Information := Get_Type (Type_Name);
+      procedure Put_Object (Type_Name : String; New_Object : Skill_Type_Access) is
       begin
-         A_Type.Storage_Pool.Append (New_Instance);
-      end Put_Instance;
-
-      procedure Replace_Instance (Type_Name : String; Position : Positive; New_Instance : Instance'Class) is
-         A_Type : Type_Information := Get_Type (Type_Name);
-      begin
-         A_Type.Storage_Pool.Replace_Element (Position, New_Instance);
-      end Replace_Instance;
+         Get_Type (Type_Name).Storage_Pool.Append (New_Object);
+      end Put_Object;
 
       --------------------------
       --  FIELD DECLARATIONS  --

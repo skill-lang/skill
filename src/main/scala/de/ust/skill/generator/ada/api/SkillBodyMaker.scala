@@ -27,12 +27,12 @@ ${
 	for (declaration ← IR) {
 	  val name = declaration.getName
 	  val skillName = declaration.getSkillName
-	  output += s"""   function Get_${name}s (State : access Skill_State) return ${name}_Instances is
+	  output += s"""   function Get_${name}s (State : access Skill_State) return ${name}_Type_Accesses is
       Length : Natural := State.Storage_Size ("${skillName}");
-      rval : ${name}_Instances (1 .. Length);
+      rval : ${name}_Type_Accesses (1 .. Length);
    begin
       for I in rval'Range loop
-         rval (I) := ${name}_Instance (State.Get_Instance ("${skillName}", I));
+         rval (I) := ${name}_Type_Access (State.Get_Object ("${skillName}", I));
       end loop;
 
       return rval;

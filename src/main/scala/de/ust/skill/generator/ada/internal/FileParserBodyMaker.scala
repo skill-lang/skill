@@ -109,7 +109,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Parser is
             Start_Index : Natural := State.Storage_Size (Type_Name) + 1;
             End_Index : Natural := Start_Index + Natural (Instance_Count) - 1;
          begin
-            Create_Instances (Type_Name, Instance_Count);
+            Create_Objects (Type_Name, Instance_Count);
 
             for I in 1 .. Field_Count loop
                if Field_Count > Known_Fields then
@@ -151,60 +151,53 @@ package body ${packagePrefix.capitalize}.Internal.File_Parser is
       Data_Chunks.Clear;
    end Read_Field_Data;
 
-   procedure Create_Instances (Type_Name : String; Instance_Count : Long) is
+   procedure Create_Objects (Type_Name : String; Instance_Count : Long) is
    begin
 ${
-	var output = "";
-	for (t ← IR) {
-	  val name = t.getName
-	  val skillName = t.getSkillName
+  var output = "";
+  for (t ← IR) {
+    val name = t.getName
+    val skillName = t.getSkillName
 
-	  output += s"""      if "${skillName}" = Type_Name then
+    output += s"""      if "%s" = Type_Name then
          for I in 1 .. Instance_Count loop
             declare
-               Object : ${name}_Instance := (
-"""
-	  output += t.getAllFields.filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
-        f ⇒ s"""                  ${f.getSkillName} => ${defaultValue(f)}"""
-	  }).mkString(",\r\n")
-	  output += s"""
+               Object : Skill_Type_Access := new %s_Type'(
+""".format(skillName, name)
+    output += t.getAllFields.filter { f ⇒ !f.isConstant && !f.isIgnored }.map({ f ⇒
+      s"""                  %s => %s""".format(f.getSkillName, defaultValue(f))
+    }).mkString(",\r\n")
+    output += s"""
                );
             begin
-               State.Put_Instance (Type_Name, Object);
+               State.Put_Object (Type_Name, Object);
             end;
          end loop;
       end if;\r\n"""
-	}
-	output.stripSuffix("\r\n")
+    }
+    output.stripSuffix("\r\n")
 }
-   end Create_Instances;
+   end Create_Objects;
 
    procedure Data_Chunk_Vector_Iterator (Iterator : Data_Chunk_Vector.Cursor) is
       Chunk : Data_Chunk := Data_Chunk_Vector.Element (Iterator);
       Skip_Bytes : Boolean := True;
    begin
 ${
-    var output = "";
-	for (t ← IR) {
-	  val name = t.getName
-	  val skillName = t.getSkillName
-
-	  output += t.getAllFields.filter { f ⇒ !f.isConstant && !f.isIgnored }.map({
-        f ⇒ s"""      if "${skillName}" = Chunk.Type_Name and then "${f.getSkillName}" = Chunk.Field_Name then
+  var output = "";
+  for (t ← IR) {
+    output += t.getAllFields.filter { f ⇒ !f.isAuto && !f.isConstant && !f.isIgnored }.map({ f ⇒
+      s"""      if "%s" = Chunk.Type_Name and then "%s" = Chunk.Field_Name then
          for I in Chunk.Start_Index .. Chunk.End_Index loop
             declare
-               Object : ${name}_Instance := ${name}_Instance (State.Get_Instance (Chunk.Type_Name, I));
-            begin
-               Object.${f.getSkillName} := ${mapTypeForFieldParser(f.getType)};
-               State.Replace_Instance (Chunk.Type_Name, I, Object);
+               ${mapFileParser(t, f)}
             end;
          end loop;
          Skip_Bytes := False;
-      end if;"""}).mkString("\r\n")
-	}
-	output
-   }
-
+      end if;\r\n""".format(t.getSkillName, f.getSkillName)}).mkString("")
+    }
+    output
+}
       if True = Skip_Bytes then
          Byte_Reader.Skip_Bytes (Chunk.Data_Length);
       end if;

@@ -29,7 +29,7 @@ private
    procedure Read_Field_Declaration (Type_Name : String);
    procedure Read_Field_Data;
 
-   procedure Create_Instances (Type_Name : String; Instance_Count : Long);
+   procedure Create_Objects (Type_Name : String; Instance_Count : Long);
    procedure Data_Chunk_Vector_Iterator (Iterator : Data_Chunk_Vector.Cursor);
    procedure Skip_Restrictions;
 
