@@ -13,494 +13,273 @@ trait FileParserMaker extends GeneralOutputMaker {
     //package & imports
     out.write(s"""package ${packagePrefix}internal
 
-import java.io.IOException
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import scala.collection.mutable.HashSet
-import scala.language.implicitConversions
+import scala.collection.mutable.Queue
+import scala.collection.mutable.Stack
 
-import ${packagePrefix}internal._
-import ${packagePrefix}internal.pool._
+import ${packagePrefix}api._
+import ${packagePrefix}internal.streams.FileInputStream
+import ${packagePrefix}internal.streams.InStream
 
 /**
- * The file parser reads the whole type information of a file.
- * It creates a new SerializableState which contains types for these type declaration.
- * The state will handle deserialization of field data.
+ * The parser object contains LL-1 style parsing methods to deal with a binary SKilL file.
  *
  * @author Timm Felden
- * @see SKilL TR13 §6.2.
  */
-final private class FileParser extends ByteStreamParsers {
-  /**
-   * creates storage pools in type order
-   */
-  private def makeState() {
-    def makePool(t: UserType): AbstractPool = {
-      val result = t.name match {""")
+object FileParser {
 
-    // make pool (depends on IR) @note: the created code is correct, because it will be executed in type-order :)
-    for (d ← IR) {
-      val name = d.getName
-      if (null == d.getSuperType)
-        out.write(s"""
-        case "${d.getSkillName}" ⇒
-          σ.$name.data = new Array[_root_.${packagePrefix}${name.capitalize}](t.instanceCount.toInt)
-          σ.$name
-""")
-      else
-        out.write(s"""
-        case "${d.getSkillName}" ⇒
-          σ.$name.data = σ.$name.basePool.data
-          σ.$name
-""")
+  def file(in: InStream): SkillState = {
+    // ERROR REPORTING
+    var blockCounter = 0;
+
+    // STRING POOL
+    val strings = ArrayBuffer[String](null);
+    @inline def getString(index: Long) = try { strings(index.toInt) } catch { case e: Exception ⇒ throw InvalidPoolIndex(index, strings.size - 1, "string") }
+
+    // STORAGE POOLS
+    val types = ArrayBuffer[StoragePool[_ <: SkillType]]();
+    val poolByName = HashMap[String, StoragePool[_ <: SkillType]]();
+    @inline def newPool(name: String, superName: String, restrictions: Array[Nothing]): StoragePool[_ <: SkillType] = {
+      val p = name match {
+${
+      (for (t ← IR) yield s"""        case "${t.getSkillName}" ⇒ new ${t.getCapitalName}StoragePool(types.size)""").mkString("\n")
+    }
+        case _ ⇒
+          if (null == superName) new BasePool[SkillType](types.size, name, HashMap())
+          else new SubPool[SkillType](types.size, name, HashMap(), poolByName(superName))
+      }
+      types += p
+      poolByName.put(name, p)
+      p
     }
 
-    out.write("""
-        case name ⇒ new GenericPool(σ.pools.size, name, t.superName.map(σ.pools(_)), t.fields)
-      }
-      result.blockInfos.appendAll(t.blockInfos)
-      for ((n, f) ← t.fields) {
-        if (result.fields.contains(n)) {
-          // Type-check
-          if (result.fields(n).t != f.t)
-            throw new TypeMissmatchError(t, result.fields(n).t.toString, f.name, result.name)
+    /**
+     * Turns a field type into a preliminary type information. In case of user types, the declaration of the respective
+     *  user type may follow after the field declaration.
+     */
+    @inline def fieldType: FieldType = in.v64 match {
+      case 0            ⇒ ConstantI8(in.i8)
+      case 1            ⇒ ConstantI16(in.i16)
+      case 2            ⇒ ConstantI32(in.i32)
+      case 3            ⇒ ConstantI64(in.i64)
+      case 4            ⇒ ConstantV64(in.v64)
+      case 5            ⇒ Annotation
+      case 6            ⇒ BoolType
+      case 7            ⇒ I8
+      case 8            ⇒ I16
+      case 9            ⇒ I32
+      case 10           ⇒ I64
+      case 11           ⇒ V64
+      case 12           ⇒ F32
+      case 13           ⇒ F64
+      case 14           ⇒ StringType
+      case 15           ⇒ ConstantLengthArray(in.v64, groundType)
+      case 17           ⇒ VariableLengthArray(groundType)
+      case 18           ⇒ ListType(groundType)
+      case 19           ⇒ SetType(groundType)
+      case 20           ⇒ MapType((0 until in.v64.toInt).map { n ⇒ groundType }.toSeq)
+      case i if i >= 32 ⇒ TypeDefinitionIndex(i - 32)
+      case id           ⇒ throw new ParseException(in, blockCounter, s"Invalid type ID: $$id")
+    }
 
-          // copy data-chunks
-          result.fields(n).dataChunks.appendAll(f.dataChunks)
-        } else {
-          // add unknownfield
-          result.fields.put(n, f)
+    /**
+     * matches only types which are legal arguments to ADTs
+     */
+    @inline def groundType: FieldType = in.v64 match {
+      case 5            ⇒ Annotation
+      case 6            ⇒ BoolType
+      case 7            ⇒ I8
+      case 8            ⇒ I16
+      case 9            ⇒ I32
+      case 10           ⇒ I64
+      case 11           ⇒ V64
+      case 12           ⇒ F32
+      case 13           ⇒ F64
+      case 14           ⇒ StringType
+      case i if i >= 32 ⇒ TypeDefinitionIndex(i - 32)
+      case id           ⇒ throw new ParseException(in, blockCounter, s"Invalid base type ID: $$id")
+    }
+
+    @inline def stringBlock {
+      try {
+        val count = in.v64.toInt
+        val offsets = new Array[Int](count);
+        for (i ← 0 until count) {
+          offsets(i) = in.i32;
         }
+        // TODO !lazy
+        strings.sizeHint(strings.size + count)
+        var last = 0L
+        for (i ← 0 until count) {
+          strings += new String(in.bytes(offsets(i) - last), "UTF-8")
+          last = offsets(i)
+        }
+      } catch {
+        case e: Exception ⇒ throw ParseException(in, blockCounter, "corrupted string block", e)
       }
-      σ.pools.put(t.name, result)
-      t.subTypes.foreach(makePool(_))
-      result
     }
 
-    // make base pools; the makePool function makes sub pools
-    for (t ← userTypeIndexMap.values if t.superName.isEmpty)
-      makePool(t) match {
-        case p: KnownPool[_, _] ⇒ p.constructPool
-        case _                  ⇒
-      }
+    @inline def typeBlock {
+      val resizeQueue = new Queue[StoragePool[_ <: SkillType]]
+      val fieldDataQueue = new Queue[(StoragePool[_ <: SkillType], FieldDeclaration)]
+      var offset = 0L
 
-    // read eager fields
-    val fp = new FieldParser(σ)
-    σ.knownPools.foreach(_.readFields(fp))
+      @inline def typeDefinition {
+        @inline def superDefinition: (String, Long) = {
+          val superName = in.v64;
+          if (0 == superName)
+            (null, 1L) // bpsi is 1 if the first legal index is one
+          else
+            (getString(superName), in.v64)
+        }
+        @inline def restrictions = {
+          in.v64.ensuring(_ == 0, "restriction parsing not implemented")
+          Array[Nothing]()
+        }
 
-    // ensure presence of the specified types
-    σ.finishInitialization
-  }
+        // read type part
+        val name = getString(in.v64)
+        try {
+          var definition: StoragePool[_ <: SkillType] = null
+          var count = 0L
+          var lbpsi = 1L
+          if (poolByName.contains(name)) {
+            definition = poolByName(name)
+            if (definition.superPool.isDefined)
+              lbpsi = in.v64
+            count = in.v64
+          } else {
+            val superDef = superDefinition
+            lbpsi = superDef._2
+            count = in.v64
+            val rest = restrictions
 
-  /**
-   * A type declaration, as it occurs during parsing of a type blocks header.
-   *
-   * @author Timm Felden
-   */
-  private class TypeDeclaration(
-      val name: String,
-      val superName: Option[String],
-      val lbpsi: Long,
-      val count: Long /*, restrictions*/ ,
-      val fieldCount: Long,
-      // null iff the type occurred first in this block
-      var userType: UserType) {
-
-    // ensure presence of lbpsi type start indices
-    if (superName.isEmpty && !localBlockBaseTypeStartIndices.contains(name))
-      localBlockBaseTypeStartIndices.put(name, 0L)
-
-    /**
-     * Field declarations obtained from the header.
-     */
-    var fieldDeclarations: List[FieldDeclaration] = null
-
-    /**
-     * creates a user type, if non exists
-     */
-    def mkUserType() {
-      // create a new user type
-      userType = new UserType(userTypeIndexMap.size, name, superName)
-      fieldDeclarations.foreach(userType.addField(_))
-
-      userTypeIndexMap.put(userType.index, userType)
-      userTypeNameMap.put(userType.name, userType)
-    }
-
-    /**
-     * Reads field declarations matching this type declaration from a stream, based on the state σ
-     *
-     * TODO treat restrictions
-     */
-    def parseFieldDeclarations: Parser[TypeDeclaration] = {
-      // if we have new instances and the type existed and there are new fields, we get into special cases
-      if (null != userType && count > 0) {
-        val knownFields = userType.fields.size
-        if (0 > fieldCount - knownFields)
-          throw ParseException(σ.fromReader, blockCounter, s"Type $name has $fieldCount fields (requires $knownFields)")
-
-        var fieldIndex = 0
-
-        repN(knownFields.toInt,
-          v64 ^^ { end ⇒
-            val result = userType.fieldByIndex(fieldIndex)
-            result.dataChunks.append(ChunkInfo(lastOffset, end, lbpsi, count))
-            lastOffset = end
-            fieldIndex += 1
-
-            result
+            definition = newPool(name, superDef._1, rest)
           }
-        ) >> { fields ⇒
-            repN((fieldCount - knownFields).toInt, restrictions ~ fieldTypeDeclaration ~ v64 ~ v64 ^^ {
-              case r ~ t ~ n ~ end ⇒
-                val result = new FieldDeclaration(t, σ(n), fieldIndex)
-                result.dataChunks.append(ChunkInfo(lastOffset, end, userType.blockInfos(0).bpsi, userType.instanceCount))
-                lastOffset = end
-                fieldIndex += 1
-                userType.addField(result)
-                result
-            }) ^^ { newFields ⇒
-              fields ++ newFields
+
+          // adjust lbpsi
+          // @note -1 is due to conversion between index<->array offset
+          lbpsi += definition.basePool.data.length - 1
+
+          // store block info and prepare resize
+          definition.blockInfos += BlockInfo(lbpsi, count)
+          resizeQueue += definition
+
+          // read field part
+          val fieldCount = in.v64.toInt
+          val fields = definition.fields
+          val knownFieldCount = fields.size
+          if (0 != count) {
+            for (fi ← 0 until knownFieldCount) {
+              val end = in.v64
+              fields(fi).dataChunks += new SimpleChunkInfo(offset, end, lbpsi, count)
+              offset = end
+              fieldDataQueue += ((definition, fields(fi)))
+            }
+
+            for (fi ← knownFieldCount until fieldCount) {
+              val rest = restrictions
+              val t = fieldType
+              val name = getString(in.v64)
+              val end = in.v64
+
+              definition.addField(new FieldDeclaration(t, name, fi))
+              fields(fi).dataChunks += new BulkChunkInfo(offset, end, count + definition.dynamicSize)
+              offset = end
+              fieldDataQueue += ((definition, fields(fi)))
+            }
+          } else {
+            for (fi ← knownFieldCount until knownFieldCount + fieldCount) {
+              val rest = restrictions
+              val t = fieldType
+              val name = getString(in.v64)
+              val end = in.v64
+
+              definition.addField(new FieldDeclaration(t, name, fi))
+              fields(fi).dataChunks += new BulkChunkInfo(offset, end, count + definition.dynamicSize)
+              offset = end
+              fieldDataQueue += ((definition, fields(fi)))
             }
           }
-      } else {
-        if (null == userType) {
-          // we append new fields and create a new type
-          var fieldIndex = 0
-
-          repN(fieldCount.toInt,
-            restrictions ~ fieldTypeDeclaration ~ v64 ~ v64 ^^ {
-              case r ~ t ~ n ~ end ⇒
-                val name = σ(n)
-                val result = new FieldDeclaration(t, name, fieldIndex)
-                result.dataChunks.append(ChunkInfo(lastOffset, end, lbpsi, count))
-                lastOffset = end
-                fieldIndex += 1
-                result
-            })
-
-        } else {
-          // we append new fields to an existing type, but no new instances
-          var fieldIndex = userType.fields.size
-          val count = userType.instanceCount
-
-          repN(fieldCount.toInt,
-            restrictions ~ fieldTypeDeclaration ~ v64 ~ v64 ^^ {
-              case r ~ t ~ n ~ end ⇒
-                val name = σ(n)
-                val result = new FieldDeclaration(t, name, fieldIndex)
-                result.dataChunks.append(ChunkInfo(lastOffset, end, lbpsi, count))
-                lastOffset = end
-                fieldIndex += 1
-                userType.addField(result)
-                result
-            })
+        } catch {
+          case e: Exception ⇒ throw new ParseException(in, blockCounter, e)
         }
       }
-    } ^^ { r ⇒
-      fieldsWithNewChunks :::= r
-      fieldDeclarations = r;
-      this
+      @inline def resizePools {
+        val resizeStack = new Stack[StoragePool[_]]
+        // resize base pools and push entries to stack
+        for (p ← resizeQueue) {
+          p match {
+            case p: BasePool[_] ⇒ p.resizeData(p.blockInfos.last.count.toInt)
+            case _              ⇒
+          }
+          resizeStack.push(p)
+        }
+
+        // create instances from stack
+        for (p ← resizeStack) {
+          val bi = p.blockInfos.last
+          var i = bi.bpsi
+          val high = bi.bpsi + bi.count
+          while (i < high && p.insertInstance(i + 1))
+            i += 1;
+        }
+      }
+      @inline def eliminatePreliminaryTypesIn(t: FieldType): FieldType = t match {
+        case TypeDefinitionIndex(i)    ⇒ types(i.toInt)
+        case TypeDefinitionName(n)     ⇒ poolByName(n)
+        case ConstantLengthArray(l, t) ⇒ ConstantLengthArray(l, eliminatePreliminaryTypesIn(t))
+        case VariableLengthArray(t)    ⇒ VariableLengthArray(eliminatePreliminaryTypesIn(t))
+        case ListType(t)               ⇒ ListType(eliminatePreliminaryTypesIn(t))
+        case SetType(t)                ⇒ SetType(eliminatePreliminaryTypesIn(t))
+        case MapType(ts)               ⇒ MapType(for (t ← ts) yield eliminatePreliminaryTypesIn(t))
+        case t                         ⇒ t
+      }
+      @inline def processFieldData {
+        // we have to add the file offset to all begins and ends we encounter
+        val fileOffset = in.position
+
+        //process field data declarations in order of appearance and update offsets to absolute positions
+        for ((t, f) ← fieldDataQueue) {
+          f.t = eliminatePreliminaryTypesIn(f.t)
+
+          val c = f.dataChunks.last
+          c.begin += fileOffset
+          c.end += fileOffset
+          FieldParser.parseThisField(in, t, f, poolByName, strings)
+        }
+      }
+
+      val count = in.v64.toInt
+      for (i ← 0 until count)
+        typeDefinition
+
+      resizePools
+      processFieldData
     }
-  }
 
-  /**
-   * the state to be created is shared across a file parser instance; file parser instances are used to turn a file into
-   * a new state anyway.
-   */
-  private var σ = new SerializableState;
+    while (!in.eof) {
+      stringBlock
+      typeBlock
 
-  // helper structures required to build user types
-  private var userTypeIndexMap = new HashMap[Long, UserType]
-  private var userTypeNameMap = new HashMap[String, UserType]
-  private var blockCounter = 0;
-  // last seen offset value
-  private var lastOffset = 0L;
-  // chunks in this list need their offsets to be adjusted by in.position
-  private var fieldsWithNewChunks = List[FieldDeclaration]()
-  // required for duplicate definition detection
-  private val newTypeNames = new HashSet[String]
-
-  /**
-   * The map contains start indices of base types, which are required at the end of the type header processing phase to
-   *  create absolute base pool indices from relative ones.
-   */
-  private var localBlockBaseTypeStartIndices = new HashMap[String, Long]
-
-  /**
-   * @param σ the processed serializable state
-   * @return a function that maps logical indices to the corresponding strings
-   */
-  private[this] implicit def poolAccess(σ: SerializableState): (Long ⇒ String) = σ.String.get(_)
-
-  /**
-   * turns a file into a raw serializable state
-   *
-   * @note hasMore is required for proper error reporting
-   */
-  private def file: Parser[SerializableState] = rep(hasMore ~>
-    stringBlock ~
-    (typeBlock ^^ { declarations ⇒
-      // update counters
-      declarations.filter(_.superName.isEmpty).foreach({ d ⇒
-        localBlockBaseTypeStartIndices.put(d.name, d.userType.instanceCount)
-      })
-
-      newTypeNames.clear
       blockCounter += 1
-      lastOffset = 0L
-      fieldsWithNewChunks = List[FieldDeclaration]()
-      ()
-    })
-  ) ^^ { _ ⇒ makeState; σ }
-
-  /**
-   * reads a string block
-   */
-  private def stringBlock: Parser[Unit] = v64 >> { count ⇒ repN(count.toInt, i32) } >> stringBlockData
-
-  private def stringBlockData(offsets: List[Int]) = new Parser[Unit] {
-    def apply(in: Input) = {
-      // add absolute offsets and lengths to the states position buffer
-      var it = offsets.iterator
-      var last = 0
-      val off = in.position
-      val map = σ.String.stringPositions
-
-      while (it.hasNext) {
-        val next = it.next()
-        map.put(map.size + 1, (off + last, next - last))
-        last = next
-      }
-
-      // jump over string data
-      Success((), in.drop(last.toInt))
-    }
-  }
-
-  /**
-   * reads a type block and adds the contained type information to the pool.
-   * At the moment, it will process fields as well, because we do not have a good random access file stream
-   *  implementation, yet.
-   */
-  private[this] def typeBlock: Parser[Array[TypeDeclaration]] = (v64 >> { count ⇒ repN(count.toInt, typeDeclaration) } ^^ { rawList: List[TypeDeclaration] ⇒
-    val raw = rawList.toArray
-
-    // create new user types for types that did not exist until now
-    raw.filter(null == _.userType).foreach(_.mkUserType)
-
-    // set super and base types of new user types
-    // note: this requires another pass, because super types may be defined after a type
-    def mkBase(t: UserType): Unit = if (null == t.baseType) {
-      val s = userTypeNameMap(t.superName.get)
-      mkBase(s)
-      t.superType = s
-      t.baseType = s.baseType
-      s.subTypes += t
-    }
-    // note rather inefficient @see issue #9
-    raw.foreach({ d ⇒ mkBase(d.userType) })
-
-    for (t ← raw) {
-      val u = t.userType
-
-      // add local block info
-      u.addBlockInfo(BlockInfo(localBlockBaseTypeStartIndices(u.baseType.name) + t.lbpsi, t.count))
-
-      // eliminate preliminary user types in field declarations
-      def eliminateInType(target: TypeInfo, f: FieldDeclaration): TypeInfo = target match {
-        case raw: PreliminaryUserType ⇒ userTypeIndexMap.get(raw.index).getOrElse(throw ParseException(σ.fromReader, blockCounter,
-          s"${t.name}.${f.name} refers to inexistent (indexed) user type ${raw.index} (user types: ${
-            userTypeIndexMap.mkString(", ")
-          })"
-        ))
-        case raw: NamedUserType ⇒ userTypeNameMap.get(raw.name).getOrElse(throw ParseException(σ.fromReader, blockCounter,
-          s"${t.name}.${f.name} refers to inexistent (named) user type ${raw.name} (user types: ${
-            userTypeIndexMap.mkString(", ")
-          })"
-        ))
-
-        case raw: ConstantLengthArrayInfo ⇒
-          raw.groundType = eliminateInType(raw.groundType, f); raw
-        case raw: VariableLengthArrayInfo ⇒
-          raw.groundType = eliminateInType(raw.groundType, f); raw
-        case raw: ListInfo ⇒
-          raw.groundType = eliminateInType(raw.groundType, f); raw
-        case raw: SetInfo ⇒
-          raw.groundType = eliminateInType(raw.groundType, f); raw
-        case raw: MapInfo ⇒
-          raw.groundType = raw.groundType.map(eliminateInType(_, f)); raw
-
-        case _ ⇒ target
-      }
-      for (f ← u.fields.values)
-        f.t = eliminateInType(f.t, f)
     }
 
-    raw
-  }) >> treatData
-
-  // fix offsets drop actual data
-  private[this] def treatData(raw: Array[TypeDeclaration]) = new Parser[Array[TypeDeclaration]] {
-    def apply(in: Input) = {
-      // add in.position to all new chunks
-      val pos: Long = in.position
-      for (f ← fieldsWithNewChunks) {
-        val c = f.dataChunks.last
-        c.begin += pos
-        c.end += pos
-      }
-
-      // drop the actual data
-      in.drop(lastOffset.toInt)
-      Success(raw, in)
-    }
-  }
-
-  /**
-   * see skill ref man §6.2
-   */
-  private[this] def typeDeclaration: Parser[TypeDeclaration] = (v64 ^^ { i ⇒ σ(i) }) >> { name ⇒
-    // check for duplicate definition inside of the same block
-    if (newTypeNames.contains(name))
-      throw new ParseException(σ.fromReader, blockCounter, s"Duplicate definition of type $name")
-
-    newTypeNames.add(name)
-
-    // check if we append to an existing type
-    if (userTypeNameMap.contains(name)) {
-      val t = userTypeNameMap(name)
-      var s: Option[String] = None
-
-      superInfo(t.superName) ~ v64 ~ v64 ^^ {
-        case lbpsi ~ count ~ fields ⇒
-          new TypeDeclaration(name, s, lbpsi, count, fields, t)
-      }
-
-    } else {
-      (v64 >> superInfo) ~ v64 ~ restrictions ~ v64 ^^ {
-        case (sup, lbpsi) ~ count ~ restrictions ~ fields ⇒
-          new TypeDeclaration(name, sup, lbpsi, count, fields, null)
-      }
-    }
-  } >> { _.parseFieldDeclarations }
-
-  /**
-   *  @return a tuple with (super name, super index)
-   */
-  private[this] def superInfo(index: Long) = {
-    if (index != 0)
-      v64 ^^ { lbpsi ⇒ (Some(σ(index)), lbpsi) }
-    else
-      success((None, 1L))
-  }
-
-  /**
-   * return a parser parsing local base pool start index, if necessary
-   */
-  private[this] def superInfo(superName: Option[String]) = superName match {
-    case Some(_) ⇒ v64
-    case None    ⇒ success(1L)
-  }
-
-  /**
-   * restrictions are currently restored to their textual representation
-   */
-  private[this] def restrictions: Parser[List[String]] = v64 >> { i ⇒ repN(i.toInt, restriction) }
-  private[this] def restriction = v64 >> { i ⇒
-    i match {
-      case 0 ⇒ try { v64 ~ v64 ~ v64 ^^ { case l ~ r ~ b ⇒ s"range(${σ(l)}, ${σ(r)}, ${σ(b)})" } }
-      catch { case e: Exception ⇒ throw new SkillException("malformed range extension", e) }
-
-      case 1  ⇒ success("nullable")
-      case 2  ⇒ success("unique")
-      case 3  ⇒ success("singleton")
-      case 4  ⇒ success("constantLengthPointer")
-      case 5  ⇒ success("monotone")
-      case id ⇒ throw new java.lang.Error(s"Restrictions ID $id not yet supported!")
-    }
-  }
-
-  /**
-   * Turns a field type into a preliminary type information. In case of user types, the declaration of the respective
-   *  user type may follow after the field declaration.
-   */
-  private def fieldTypeDeclaration: Parser[TypeInfo] = v64 >> { i ⇒
-    i match {
-      case 0            ⇒ i8 ^^ { ConstantI8Info(_) }
-      case 1            ⇒ i16 ^^ { ConstantI16Info(_) }
-      case 2            ⇒ i32 ^^ { ConstantI32Info(_) }
-      case 3            ⇒ i64 ^^ { ConstantI64Info(_) }
-      case 4            ⇒ v64 ^^ { ConstantV64Info(_) }
-      case 5            ⇒ success(AnnotationInfo)
-      case 6            ⇒ success(BoolInfo)
-      case 7            ⇒ success(I8Info)
-      case 8            ⇒ success(I16Info)
-      case 9            ⇒ success(I32Info)
-      case 10           ⇒ success(I64Info)
-      case 11           ⇒ success(V64Info)
-      case 12           ⇒ success(F32Info)
-      case 13           ⇒ success(F64Info)
-      case 14           ⇒ success(StringInfo)
-      case 15           ⇒ v64 ~ baseTypeInfo ^^ { case i ~ t ⇒ new ConstantLengthArrayInfo(i.toInt, t) }
-      case 17           ⇒ baseTypeInfo ^^ { new VariableLengthArrayInfo(_) }
-      case 18           ⇒ baseTypeInfo ^^ { new ListInfo(_) }
-      case 19           ⇒ baseTypeInfo ^^ { new SetInfo(_) }
-      case 20           ⇒ v64 >> { n ⇒ repN(n.toInt, baseTypeInfo) } ^^ { new MapInfo(_) }
-      case i if i >= 32 ⇒ success(PreliminaryUserType(i - 32))
-      case id           ⇒ throw ParseException(σ.fromReader, blockCounter, s"Invalid type ID: $id")
-    }
-  }
-
-  /**
-   * matches only types which are legal arguments to ADTs
-   */
-  private def baseTypeInfo: Parser[TypeInfo] = v64 ^^ { i ⇒
-    i match {
-      case 5            ⇒ AnnotationInfo
-      case 6            ⇒ BoolInfo
-      case 7            ⇒ I8Info
-      case 8            ⇒ I16Info
-      case 9            ⇒ I32Info
-      case 10           ⇒ I64Info
-      case 11           ⇒ V64Info
-      case 12           ⇒ F32Info
-      case 13           ⇒ F64Info
-      case 14           ⇒ StringInfo
-      case i if i >= 32 ⇒ PreliminaryUserType(i - 32)
-      case id           ⇒ throw ParseException(σ.fromReader, blockCounter, s"Invalid base type ID: $id")
-    }
-  }
-
-  def readFile(path: Path): SerializableState = {
-    if (Files.notExists(path))
-      throw new IOException(s"The file $path does not exist.")
-
-    σ.fromPath = path
-    σ.fromReader = new ByteReader(Files.newByteChannel(path).asInstanceOf[FileChannel])
-    val in = σ.fromReader
-    file(in) match {
-      case Success(r, i) ⇒
-      case NoSuccess(msg, i) ⇒ throw new SkillException(
-        s"Failed to parse ${path}:\n  Message: $msg\n  Got stuck at byte ${in.pos.column} with at least ${in.minimumBytesToGo} bytes to go.\n  The next Byte is a ${try { in.next.toHexString } catch { case _: Exception ⇒ "EOF" }}.\n        ")
-    }
-    val result = σ
-    σ = null
-    return result
-  }
+    new SerializableState(
+${
+  (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(newPool("${t.getSkillName}", null, null)).asInstanceOf[${t.getCapitalName}StoragePool],""").mkString("\n")
 }
+      types
+    )
+  }
 
-object FileParser extends ByteStreamParsers {
-  import FileParser._
-
-  /**
-   * reads the contents of a file, creating a new state
-   */
-  def read(path: Path): SerializableState = (new FileParser).readFile(path)
+  def read(path: Path) = file(new FileInputStream(Files.newByteChannel(path, StandardOpenOption.READ).asInstanceOf[FileChannel]))
 }
 """)
 

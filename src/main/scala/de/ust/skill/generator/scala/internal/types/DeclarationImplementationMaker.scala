@@ -125,22 +125,22 @@ final class $name(private var skillID: Long) extends _root_.${packagePrefix}$nam
 
     // generic get
     out.write(s"""
-  override final def get(acc: Access[_ <: simple.api.SkillType], field: simple.internal.FieldDeclaration): Any = field.name match {
+  override final def get(acc: Access[_ <: SkillType], field: FieldDeclaration): Any = field.name match {
 ${
       (for(f <- d.getAllFields) yield s"""    case "${f.getSkillName}" ⇒ _${f.getName}""").mkString("\n")
 }
     case _ ⇒
       try {
-        acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field)(this)
+        acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[_root_.${packagePrefix}internal.FieldDeclaration])(this)
       } catch {
-        case e: Exception ⇒ this+" is not in:\\n"+acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field).mkString("\\n")
+        case e: Exception ⇒ this+" is not in:\\n"+acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[_root_.${packagePrefix}internal.FieldDeclaration]).mkString("\\n")
       }
   }
 """)
 
     // generic set
     out.write(s"""
-  override final def set(acc: Access[_ <: simple.api.SkillType], field: simple.internal.FieldDeclaration, value: Any): Unit = field.name match {
+  override final def set(acc: Access[_ <: SkillType], field: FieldDeclaration, value: Any): Unit = field.name match {
 ${
   (
     for(f <- d.getAllFields) 
@@ -149,9 +149,9 @@ ${
 }
     case _ ⇒
       try {
-        acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field).put(this, value)
+        acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[_root_.${packagePrefix}internal.FieldDeclaration]).put(this, value)
       } catch {
-        case e: Exception ⇒ this+" is not in:\\n"+acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field).mkString("\\n")
+        case e: Exception ⇒ this+" is not in:\\n"+acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[_root_.${packagePrefix}internal.FieldDeclaration]).mkString("\\n")
       }
   }
 """)

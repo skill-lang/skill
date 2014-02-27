@@ -23,6 +23,9 @@ import java.io.File
 
 import scala.collection.mutable.ArrayBuffer
 
+import ${packagePrefix}internal.FileParser
+import ${packagePrefix}internal.SerializableState
+
 /**
  * The public interface to the SKilL state, which keeps track of serializable objects and provides (de)serialization
  *  capabilities.
@@ -69,12 +72,12 @@ object SkillState {
   /**
    * Creates a new and empty SKilL state.
    */
-  def create: SkillState = internal.SerializableState.create
+  def create: SkillState = SerializableState.create
 
   /**
    * Reads a binary SKilL file and turns it into a SKilL state.
    */
-  def read(path: Path): SkillState = internal.FileParser.read(path)
+  def read(path: Path): SkillState = FileParser.read(path)
   def read(file: File): SkillState = read(file.toPath)
   def read(path: String): SkillState = read(new File(path))
 }""")

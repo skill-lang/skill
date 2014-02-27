@@ -14,8 +14,6 @@ trait AccessMaker extends GeneralOutputMaker {
     //package & imports
     out.write(s"""package ${packagePrefix}api
 
-import ${packagePrefix}internal.FieldDeclaration
-
 /**
  * @author Timm Felden
  */

@@ -89,7 +89,6 @@ class Main extends FakeMain
     with api.FieldDeclarationMaker
     with DeclarationInterfaceMaker
     with DeclarationImplementationMaker
-    with DeclaredPoolsMaker
     with ExceptionsMaker
     with FieldParserMaker
     with FileInputStreamMaker

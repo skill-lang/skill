@@ -382,7 +382,7 @@ final class ${t.getCapitalName}StoragePool(poolIndex: Long${if(t.getSuperType==n
       poolIndex,
       "${t.getSkillName}",
       HashMap[String, FieldType](
-${(for(f <- t.getFields) yield s"        ${f.getSkillName} -> ${mapToFieldType(f.getType)}").mkString(",\n")}
+${(for(f <- t.getFields) yield s"""        "${f.getSkillName}" -> ${mapToFieldType(f.getType)}""").mkString(",\n")}
       )${
         if(t.getSuperType==null) ""
         else ",\nsuperPool"
@@ -429,11 +429,11 @@ ${(for(f <- t.getFields) yield s"        ${f.getSkillName} -> ${mapToFieldType(f
 
     t match {
       case t: GroundType              ⇒ mapGroundType(t)
-      case t: ConstantLengthArrayType ⇒ s"ConstantLengthArrayInfo(${t.getLength}, ${mapGroundType(t.getBaseType)})"
-      case t: VariableLengthArrayType ⇒ s"VariableLengthArrayInfo(${mapGroundType(t.getBaseType)})"
-      case t: ListType                ⇒ s"ListInfo(${mapGroundType(t.getBaseType)})"
-      case t: SetType                 ⇒ s"SetInfo(${mapGroundType(t.getBaseType)})"
-      case t: MapType                 ⇒ s"MapInfo(List[TypeInfo](${t.getBaseTypes.map(mapGroundType).mkString(",")}))"
+      case t: ConstantLengthArrayType ⇒ s"ConstantLengthArray(${t.getLength}, ${mapGroundType(t.getBaseType)})"
+      case t: VariableLengthArrayType ⇒ s"VariableLengthArray(${mapGroundType(t.getBaseType)})"
+      case t: ListType                ⇒ s"ListType(${mapGroundType(t.getBaseType)})"
+      case t: SetType                 ⇒ s"SetType(${mapGroundType(t.getBaseType)})"
+      case t: MapType                 ⇒ s"MapType(Seq[FieldType](${t.getBaseTypes.map(mapGroundType).mkString(",")}))"
       case t: Declaration             ⇒ s"""TypeDefinitionName("${t.getSkillName}")"""
     }
   }
