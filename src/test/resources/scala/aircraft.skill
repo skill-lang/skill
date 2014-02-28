@@ -1,7 +1,6 @@
 Airplane {
 	const i64 x = 42;
 	auto i32 y;
-	annotation f;
 	i16 id;
 	string name;
 	bool operational;

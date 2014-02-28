@@ -7,9 +7,7 @@ package de.ust.skill.generator.ada
 
 import java.io.File
 import java.util.Date
-
 import scala.collection.JavaConversions.asScalaBuffer
-
 import de.ust.skill.generator.ada.api._
 import de.ust.skill.generator.ada.internal._
 import de.ust.skill.ir._
@@ -22,6 +20,7 @@ import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.parser.Parser
+import scala.collection.mutable.MutableList
 
 /**
  * Entry point of the ada generator.
@@ -110,34 +109,55 @@ class Main extends FakeMain
 
       case "string"     ⇒ "SU.Unbounded_String"
     }
+
+    case t: Declaration ⇒ "Skill_Type_Access"
   }
 
   protected def mapFileParser(t: Type, f: Field): String = f.getType match {
     case ft: GroundType ⇒ ft.getName() match {
-      case "annotation" ⇒ 
-      	s"""Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
+      case "annotation" ⇒
+      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
                X : v64 := Byte_Reader.Read_v64;
                Y : v64 := Byte_Reader.Read_v64;
             begin
-               if 0 = X then
-                  Object.${f.getSkillName} := null;
-               else
+               if 0 /= X then
                   Object.${f.getSkillName} := State.Get_Object (State.Get_String (X), Positive (Y));
                end if;"""
 
       case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
-      	s"""Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
+        if (f.isConstant) {
+          s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
+            begin
+               if Object.${f.getSkillName} /= Byte_Reader.Read_${mapType(f.getType)} then
+                  raise Skill_Parse_Error;
+               end if;"""
+        } else {
+          s"""Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
             begin
                Object.${f.getSkillName} := Byte_Reader.Read_${mapType(f.getType)};"""
+        }
 
-      case "f32"        ⇒ "ERROR"
-      case "f64"        ⇒ "ERROR"
+      case "f32" ⇒ "ERROR"
+      case "f64" ⇒ "ERROR"
 
-      case "string"     ⇒ 
-      	s"""Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
+      case "string" ⇒
+      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
             begin
                Object.${f.getSkillName} := SU.To_Unbounded_String (State.Get_String (Byte_Reader.Read_v64));"""
     }
+
+    case d: Declaration ⇒
+       s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
+            begin
+               Object.${f.getSkillName} := State.Get_Object ("${
+                val superTypes = getSuperTypes(d).toList;
+                if (superTypes.length > 0) superTypes(0); else t.getSkillName
+              }", Positive (Byte_Reader.Read_v64));"""
+  }
+
+  protected def getSuperTypes(d: Declaration): MutableList[String] = {
+    if (null == d.getSuperType) MutableList[String]()
+    else getSuperTypes (d.getSuperType) += d.getSuperType.getSkillName
   }
 
   /**

@@ -25,11 +25,12 @@ private
 
    procedure Read_String_Block;
    procedure Read_Type_Block;
-   procedure Read_Type_Declaration;
+   procedure Read_Type_Declaration (Last_End : in out Long);
    procedure Read_Field_Declaration (Type_Name : String);
    procedure Read_Field_Data;
+   procedure Update_Base_Pool_Start_Index;
 
-   procedure Create_Objects (Type_Name : String; Instance_Count : Long);
+   procedure Create_Objects (Type_Name : String; Instance_Count : Natural);
    procedure Data_Chunk_Vector_Iterator (Iterator : Data_Chunk_Vector.Cursor);
    procedure Skip_Restrictions;
 

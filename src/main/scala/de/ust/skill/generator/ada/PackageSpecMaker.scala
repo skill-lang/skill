@@ -57,23 +57,24 @@ package ${packagePrefix.capitalize} is
    type Skill_Type_Access is access all Skill_Type'Class;
 
 ${
-	var output = "";
-	for (t ← IR) {
-	  output += s"""   type %s_Type is new Skill_Type with\r\n      record\r\n""".format(t.getName)
-	  output += t.getAllFields.filter { f ⇒ !f.isConstant && !f.isIgnored }.map({ f ⇒
-        var comment = "";
-	    if (f.isAuto()) comment = "  --  auto aka not serialized"
-        s"""         %s : %s;%s""".format(f.getName, mapType(f.getType), comment)
-	  }).mkString("\r\n")
-	  output += s"""\r\n      end record;\r\n"""
-	  output += s"""   type %s_Type_Access is access all %s_Type;\r\n""".format(t.getName, t.getName)
-	  // fake constants as function
-	  output += t.getAllFields.filter { f ⇒ f.isConstant && !f.isIgnored }.map({ f ⇒
-        s"""   function %s (Object : %s_Type) return %s;  --  constant""".format(f.getName, t.getName, mapType(f.getType))
-	  }).mkString("\r\n")
-	  output += "\r\n"
-	}
-	output.stripSuffix("\r\n")
+  var output = "";
+  for (t ← IR) {
+    val superType = if (t.getSuperType == null) "Skill" else t.getSuperType.getName
+    output += s"""   type %s_Type is new %s_Type with\r\n      record\r\n""".format(t.getName, superType)
+    output += t.getFields.filter { f ⇒ !f.isConstant && !f.isIgnored }.map({ f ⇒
+    var comment = "";
+    if (f.isAuto()) comment = "  --  auto aka not serialized"
+      s"""         %s : %s;%s""".format(f.getName, mapType(f.getType), comment)
+    }).mkString("\r\n")
+    output += s"""\r\n      end record;\r\n"""
+    output += s"""   type %s_Type_Access is access all %s_Type;\r\n""".format(t.getName, t.getName)
+    // fake constants as function
+    output += t.getAllFields.filter { f ⇒ f.isConstant && !f.isIgnored }.map({ f ⇒
+      s"""   function %s (Object : %s_Type) return %s;  --  constant""".format(f.getName, t.getName, mapType(f.getType))
+    }).mkString("\r\n")
+    output += "\r\n"
+  }
+  output.stripSuffix("\r\n")
 }
 private
 
@@ -107,6 +108,8 @@ private
       record
          Name : String (1 .. Size);
          Super_Name : Long;
+         bpsi : Positive;
+         lbpsi : Positive;
          Fields : Fields_Vector.Vector;
          Storage_Pool : Storage_Pool_Vector.Vector;
       end record;
@@ -143,6 +146,7 @@ private
       function Get_Object (Type_Name : String; Position : Positive) return Skill_Type_Access;
       function Storage_Size (Type_Name : String) return Natural;
       procedure Put_Object (Type_Name : String; New_Object : Skill_Type_Access);
+      procedure Replace_Object (Type_Name : String; Position : Positive; New_Object : Skill_Type_Access);
 
       --  field declarations
       function Known_Fields (Name : String) return Long;

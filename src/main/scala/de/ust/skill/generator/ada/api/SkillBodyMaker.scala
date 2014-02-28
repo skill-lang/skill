@@ -34,12 +34,10 @@ ${
       for I in rval'Range loop
          rval (I) := ${name}_Type_Access (State.Get_Object ("${skillName}", I));
       end loop;
-
       return rval;
-   end Get_${name}s;
-"""
+   end Get_${name}s;\r\n\r\n"""
 	}
-	output
+	output.stripSuffix("\r\n")
    }
 end ${packagePrefix.capitalize}.Api.Skill;
 """)

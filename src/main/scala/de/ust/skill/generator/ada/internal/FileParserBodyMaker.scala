@@ -7,6 +7,8 @@ package de.ust.skill.generator.ada.internal
 
 import de.ust.skill.generator.ada.GeneralOutputMaker
 import scala.collection.JavaConversions._
+import de.ust.skill.ir.Declaration
+import scala.collection.mutable.MutableList
 
 trait FileParserBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -31,6 +33,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Parser is
       while (not ASS_IO.End_Of_File (Input_File)) loop
          Read_String_Block;
          Read_Type_Block;
+         Update_Base_Pool_Start_Index;
       end loop;
 
       ASS_IO.Close (Input_File);
@@ -65,37 +68,52 @@ package body ${packagePrefix.capitalize}.Internal.File_Parser is
 
    procedure Read_Type_Block is
       Count : Long := Byte_Reader.Read_v64;
+      Last_End : Long := 0;
    begin
       for I in 1 .. Count loop
-         Read_Type_Declaration;
+         Read_Type_Declaration (Last_End);
       end loop;
 
       Read_Field_Data;
    end Read_Type_Block;
 
-   procedure Read_Type_Declaration is
+   procedure Read_Type_Declaration (Last_End : in out Long) is
       Type_Name : String := State.Get_String (Byte_Reader.Read_v64);
-      Instance_Count : Long;
+      Instance_Count : Natural;
       Field_Count : Long;
 
       Skill_Unsupported_File_Format : exception;
    begin
       if not State.Has_Type (Type_Name) then
          declare
-            Type_Super : Long := Byte_Reader.Read_v64;
+            Super_Name : Long := Byte_Reader.Read_v64;
 
             New_Type_Fields : Fields_Vector.Vector;
             New_Type_Storage_Pool : Storage_Pool_Vector.Vector;
             New_Type : Type_Information := new Type_Declaration'
-               (Type_Name'Length, Type_Name, Type_Super, New_Type_Fields, New_Type_Storage_Pool);
+              (Size => Type_Name'Length,
+               Name => Type_Name,
+               Super_Name => Super_Name,
+               bpsi => 1,
+               lbpsi => 1,
+               Fields => New_Type_Fields,
+               Storage_Pool => New_Type_Storage_Pool);
          begin
             State.Put_Type (New_Type);
          end;
 
-         Instance_Count := Byte_Reader.Read_v64;
+         if 0 /= State.Get_Type (Type_Name).Super_Name then
+            State.Get_Type (Type_Name).lbpsi := Positive (Byte_Reader.Read_v64);
+         end if;
+
+         Instance_Count := Natural (Byte_Reader.Read_v64);
          Skip_Restrictions;
       else
-         Instance_Count := Byte_Reader.Read_v64;
+         if 0 /= State.Get_Type (Type_Name).Super_Name then
+            State.Get_Type (Type_Name).lbpsi := Positive (Byte_Reader.Read_v64);
+         end if;
+
+         Instance_Count := Natural (Byte_Reader.Read_v64);
       end if;
 
       Field_Count := Byte_Reader.Read_v64;
@@ -105,9 +123,8 @@ package body ${packagePrefix.capitalize}.Internal.File_Parser is
       else
          declare
             Known_Fields : Long := State.Known_Fields (Type_Name);
-            Last_Offset : Long := 0;
             Start_Index : Natural := State.Storage_Size (Type_Name) + 1;
-            End_Index : Natural := Start_Index + Natural (Instance_Count) - 1;
+            End_Index : Natural := Start_Index + Instance_Count - 1;
          begin
             Create_Objects (Type_Name, Instance_Count);
 
@@ -117,13 +134,20 @@ package body ${packagePrefix.capitalize}.Internal.File_Parser is
                end if;
 
                declare
-                  Offset : Long := Byte_Reader.Read_v64;
-                  Data_Length : Long := Offset - Last_Offset;
+                  Field_End : Long := Byte_Reader.Read_v64;
+                  Data_Length : Long := Field_End - Last_End;
                   Field : Field_Information := State.Get_Field (Type_Name, I);
                   Chunk : Data_Chunk (Type_Name'Length, Field.Name'Length) :=
-                     (Type_Name'Length, Field.Name'Length, Type_Name, Start_Index, End_Index, Field.Name, Field.F_Type, Data_Length);
+                    (Type_Size => Type_Name'Length,
+                     Field_Size => Field.Name'Length,
+                     Type_Name => Type_Name,
+                     Start_Index => Start_Index,
+                     End_Index => End_Index,
+                     Field_Name => Field.Name,
+                     Field_Type => Field.F_Type,
+                     Data_Length => Data_Length);
                begin
-                  Last_Offset := Offset;
+                  Last_End := Field_End;
                   Data_Chunks.Append (Chunk);
                end;
             end loop;
@@ -139,7 +163,10 @@ package body ${packagePrefix.capitalize}.Internal.File_Parser is
          Field_Type : Short_Short_Integer := Byte_Reader.Read_i8;
          Field_Name : String := State.Get_String (Byte_Reader.Read_v64);
 
-         New_Field : Field_Information := new Field_Declaration'(Field_Name'Length, Field_Name, Field_Type);
+         New_Field : Field_Information := new Field_Declaration'
+           (Size => Field_Name'Length,
+            Name => Field_Name,
+            F_Type => Field_Type);
       begin
          State.Put_Field (Type_Name, New_Field);
       end;
@@ -151,52 +178,78 @@ package body ${packagePrefix.capitalize}.Internal.File_Parser is
       Data_Chunks.Clear;
    end Read_Field_Data;
 
-   procedure Create_Objects (Type_Name : String; Instance_Count : Long) is
+   procedure Update_Base_Pool_Start_Index is
    begin
 ${
   var output = "";
   for (t ← IR) {
-    val name = t.getName
-    val skillName = t.getSkillName
+    output += s"""      if State.Has_Type ("%s") then
+         State.Get_Type ("%s").bpsi := State.Storage_Size ("%s") + 1;
+      end if;\r\n""".format(t.getSkillName, t.getSkillName, t.getSkillName)
+  }
+  output.stripSuffix("\r\n")
+}
+   end Update_Base_Pool_Start_Index;
 
+   procedure Create_Objects (Type_Name : String; Instance_Count : Natural) is
+   begin
+${
+  def printSuperTypes (d: Declaration): String = {
+    var output = "";
+    val superTypes = getSuperTypes(d).toList.reverse
+    superTypes.foreach {
+      output += s"""\r\n\r\n               declare
+                  Sub_Type : Type_Information := State.Get_Type ("%s");
+                  Super_Type : Type_Information := State.Get_Type ("%s");
+                  Position : Natural := (Sub_Type.lbpsi - Super_Type.lbpsi) + Super_Type.bpsi + I - 1;
+               begin
+                  Super_Type.Storage_Pool.Replace_Element (Position, Object);
+               end;""".format(d.getSkillName, _)
+    }
+    output
+  }
+
+  var output = "";
+  for (t ← IR) {
     output += s"""      if "%s" = Type_Name then
          for I in 1 .. Instance_Count loop
             declare
-               Object : Skill_Type_Access := new %s_Type'(
-""".format(skillName, name)
+               Object : Skill_Type_Access := new %s_Type'
+                 (""".format(t.getSkillName, t.getName)
     output += t.getAllFields.filter { f ⇒ !f.isConstant && !f.isIgnored }.map({ f ⇒
-      s"""                  %s => %s""".format(f.getSkillName, defaultValue(f))
-    }).mkString(",\r\n")
-    output += s"""
-               );
+      s"""%s => %s""".format(f.getSkillName, defaultValue(f))
+    }).mkString(",\r\n                  ")
+    output += s""");
             begin
-               State.Put_Object (Type_Name, Object);
+               State.Put_Object (Type_Name, Object);${printSuperTypes(t)}
             end;
          end loop;
       end if;\r\n"""
-    }
-    output.stripSuffix("\r\n")
+  }
+  output.stripSuffix("\r\n")
 }
    end Create_Objects;
 
    procedure Data_Chunk_Vector_Iterator (Iterator : Data_Chunk_Vector.Cursor) is
       Chunk : Data_Chunk := Data_Chunk_Vector.Element (Iterator);
       Skip_Bytes : Boolean := True;
+
+      Skill_Parse_Error : exception;
    begin
 ${
   var output = "";
   for (t ← IR) {
-    output += t.getAllFields.filter { f ⇒ !f.isAuto && !f.isConstant && !f.isIgnored }.map({ f ⇒
+    output += t.getAllFields.filter { f ⇒ !f.isAuto && !f.isIgnored }.map({ f ⇒
       s"""      if "%s" = Chunk.Type_Name and then "%s" = Chunk.Field_Name then
          for I in Chunk.Start_Index .. Chunk.End_Index loop
             declare
-               ${mapFileParser(t, f)}
+            ${mapFileParser(t, f)}
             end;
          end loop;
          Skip_Bytes := False;
       end if;\r\n""".format(t.getSkillName, f.getSkillName)}).mkString("")
-    }
-    output
+  }
+  output
 }
       if True = Skip_Bytes then
          Byte_Reader.Skip_Bytes (Chunk.Data_Length);
@@ -204,7 +257,7 @@ ${
    end Data_Chunk_Vector_Iterator;
 
    procedure Skip_Restrictions is
-      X : Long := Byte_Reader.Read_v64;
+      Zero : Long := Byte_Reader.Read_v64;
    begin
       null;
    end Skip_Restrictions;

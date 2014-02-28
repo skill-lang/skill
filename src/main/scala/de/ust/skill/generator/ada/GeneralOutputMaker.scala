@@ -14,6 +14,7 @@ import java.util.Date
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
 import java.io.FileOutputStream
+import scala.collection.mutable.MutableList
 
 /**
  * The parent class for all output makers.
@@ -67,6 +68,8 @@ trait GeneralOutputMaker {
    * Assume the existence of a translation function for fields.
    */
   protected def mapFileParser(t: Type, f: Field): String
+
+  protected def getSuperTypes(d: Declaration): MutableList[String]
 
   /**
    * Assume a package prefix provider.

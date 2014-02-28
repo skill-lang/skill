@@ -20,4 +20,6 @@ class GeneratorTest extends FunSuite {
   test("annotation")(check("annotation.skill", "annotation"))
   test("date")(check("date.skill", "date"))
   test("node")(check("nodeExample.tool1.skill", "node"))
+  test("subtypes")(check("subtypesExample.skill", "subtypes"))
+  test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
 }
