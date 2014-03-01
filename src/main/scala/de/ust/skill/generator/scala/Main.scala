@@ -98,7 +98,7 @@ class Main extends FakeMain
     with InternalInstancePropertiesMaker
     with internal.FieldDeclarationMaker
     with SerializableStateMaker
-    with SerializationFunctionsMaker
+//    with SerializationFunctionsMaker
     with SkillStateMaker
     with SkillTypeMaker
     with TypeInfoMaker {

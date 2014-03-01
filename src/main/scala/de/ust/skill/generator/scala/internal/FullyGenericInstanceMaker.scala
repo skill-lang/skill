@@ -33,18 +33,18 @@ final class FullyGenericInstance(name: String, var skillID: Long = 0L) extends S
   /**
    * reflective setter
    */
-  def set(acc: Access[_ <: SkillType], field: FieldDeclaration, value: Any) {
-    acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field).put(this, value)
+  def set(acc: Access[_ <: SkillType], field: container.api.FieldDeclaration, value: Any) {
+    acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[FieldDeclaration]).put(this, value)
   }
 
   /**
    * reflective getter
    */
-  def get(acc: Access[_ <: SkillType], field: FieldDeclaration): Any = {
+  def get(acc: Access[_ <: SkillType], field: container.api.FieldDeclaration): Any = {
     try {
-      acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field)(this)
+      acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[FieldDeclaration])(this)
     } catch {
-      case e: Exception ⇒ this+" is not in:\n"+acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field).mkString("\n")
+      case e: Exception ⇒ this+" is not in:\n"+acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[FieldDeclaration]).mkString("\n")
     }
   }
 }
