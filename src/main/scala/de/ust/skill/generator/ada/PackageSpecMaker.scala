@@ -61,11 +61,13 @@ ${
   for (t ← IR) {
     val superType = if (t.getSuperType == null) "Skill" else t.getSuperType.getName
     output += s"""   type %s_Type is new %s_Type with\r\n      record\r\n""".format(t.getName, superType)
-    output += t.getFields.filter { f ⇒ !f.isConstant && !f.isIgnored }.map({ f ⇒
-    var comment = "";
-    if (f.isAuto()) comment = "  --  auto aka not serialized"
+    val fields = t.getFields.filter { f ⇒ !f.isConstant && !f.isIgnored }
+    output += fields.map({ f ⇒
+      var comment = "";
+      if (f.isAuto()) comment = "  --  auto aka not serialized"
       s"""         %s : %s;%s""".format(f.getName, mapType(f.getType), comment)
     }).mkString("\r\n")
+    if (fields.length <= 0) output += s"""         null;"""
     output += s"""\r\n      end record;\r\n"""
     output += s"""   type %s_Type_Access is access all %s_Type;\r\n""".format(t.getName, t.getName)
     // fake constants as function
@@ -123,10 +125,9 @@ private
    ------------------
    type Data_Chunk (Type_Size, Field_Size : Positive) is record
       Type_Name : String (1 .. Type_Size);
+      Field_Name : String (1 .. Field_Size);
       Start_Index : Natural;
       End_Index : Natural;
-      Field_Name : String (1 .. Field_Size);
-      Field_Type : Short_Short_Integer;
       Data_Length : Long;
    end record;
 
@@ -139,12 +140,15 @@ private
    protected type Skill_State is
 
       --  string pool
-      function Get_String (Position : Long) return String;
+      function Get_String (Index : Positive) return String;
+      function Get_String (Index : Long) return String;
+      function Get_String_Index (Value : String) return Natural;
+      function String_Pool_Size return Natural;
       procedure Put_String (Value : String);
 
       --  storage pool
       function Get_Object (Type_Name : String; Position : Positive) return Skill_Type_Access;
-      function Storage_Size (Type_Name : String) return Natural;
+      function Storage_Pool_Size (Type_Name : String) return Natural;
       procedure Put_Object (Type_Name : String; New_Object : Skill_Type_Access);
       procedure Replace_Object (Type_Name : String; Position : Positive; New_Object : Skill_Type_Access);
 

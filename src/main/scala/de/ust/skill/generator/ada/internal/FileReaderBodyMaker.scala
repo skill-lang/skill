@@ -10,13 +10,13 @@ import scala.collection.JavaConversions._
 import de.ust.skill.ir.Declaration
 import scala.collection.mutable.MutableList
 
-trait FileParserBodyMaker extends GeneralOutputMaker {
+trait FileReaderBodyMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-internal-file_parser.adb""")
+    val out = open(s"""${packagePrefix}-internal-file_reader.adb""")
 
     out.write(s"""
-package body ${packagePrefix.capitalize}.Internal.File_Parser is
+package body ${packagePrefix.capitalize}.Internal.File_Reader is
 
    package Byte_Reader renames ${packagePrefix.capitalize}.Internal.Byte_Reader;
 
@@ -123,7 +123,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Parser is
       else
          declare
             Known_Fields : Long := State.Known_Fields (Type_Name);
-            Start_Index : Natural := State.Storage_Size (Type_Name) + 1;
+            Start_Index : Natural := State.Storage_Pool_Size (Type_Name) + 1;
             End_Index : Natural := Start_Index + Instance_Count - 1;
          begin
             Create_Objects (Type_Name, Instance_Count);
@@ -141,10 +141,9 @@ package body ${packagePrefix.capitalize}.Internal.File_Parser is
                     (Type_Size => Type_Name'Length,
                      Field_Size => Field.Name'Length,
                      Type_Name => Type_Name,
+                     Field_Name => Field.Name,
                      Start_Index => Start_Index,
                      End_Index => End_Index,
-                     Field_Name => Field.Name,
-                     Field_Type => Field.F_Type,
                      Data_Length => Data_Length);
                begin
                   Last_End := Field_End;
@@ -161,14 +160,68 @@ package body ${packagePrefix.capitalize}.Internal.File_Parser is
 
       declare
          Field_Type : Short_Short_Integer := Byte_Reader.Read_i8;
-         Field_Name : String := State.Get_String (Byte_Reader.Read_v64);
-
-         New_Field : Field_Information := new Field_Declaration'
-           (Size => Field_Name'Length,
-            Name => Field_Name,
-            F_Type => Field_Type);
       begin
-         State.Put_Field (Type_Name, New_Field);
+         case Field_Type is
+            --  unused
+            when Short_Short_Integer'First .. -1 | 16 | 21 .. 31 =>
+               null;
+
+            --  constants i8, i16, i32, i64, v64
+            when 0 .. 4 =>
+               null;
+
+            --  annotation, bool, i8, i16, i32, i64, v64, f32, f64, string
+            when 5 .. 14 =>
+               null;
+
+            --  array T[i]
+            when 15 =>
+               declare
+                  X : Long := Byte_Reader.Read_v64;
+                  Y : Short_Short_Integer := Byte_Reader.Read_i8;
+               begin
+                  null;
+               end;
+
+            --  array T[], list, set
+            when 17 .. 19 =>
+               declare
+                  X : Short_Short_Integer := Byte_Reader.Read_i8;
+               begin
+                  null;
+               end;
+
+            --  map
+            when 20 =>
+               declare
+                  X : Long := Byte_Reader.Read_v64;
+               begin
+                  for I in 1 .. X loop
+                     declare
+                        Y : Short_Short_Integer := Byte_Reader.Read_i8;
+                     begin
+                        null;
+                     end;
+                  end loop;
+               end;
+
+            --  user type
+            when 32 .. Short_Short_Integer'Last =>
+               null;
+
+            when others => null;
+         end case;
+
+         declare
+            Field_Name : String := State.Get_String (Byte_Reader.Read_v64);
+
+            New_Field : Field_Information := new Field_Declaration'
+              (Size => Field_Name'Length,
+               Name => Field_Name,
+               F_Type => Field_Type);
+         begin
+            State.Put_Field (Type_Name, New_Field);
+         end;
       end;
    end Read_Field_Declaration;
 
@@ -184,7 +237,7 @@ ${
   var output = "";
   for (t ← IR) {
     output += s"""      if State.Has_Type ("%s") then
-         State.Get_Type ("%s").bpsi := State.Storage_Size ("%s") + 1;
+         State.Get_Type ("%s").bpsi := State.Storage_Pool_Size ("%s") + 1;
       end if;\r\n""".format(t.getSkillName, t.getSkillName, t.getSkillName)
   }
   output.stripSuffix("\r\n")
@@ -194,7 +247,7 @@ ${
    procedure Create_Objects (Type_Name : String; Instance_Count : Natural) is
    begin
 ${
-  def printSuperTypes (d: Declaration): String = {
+  def printSuperTypes(d: Declaration): String = {
     var output = "";
     val superTypes = getSuperTypes(d).toList.reverse
     superTypes.foreach {
@@ -209,22 +262,32 @@ ${
     output
   }
 
+  def printDefaultValues(d: Declaration): String = {
+    var fieldsExists = false
+    var output = "'\r\n                 ("
+    val fields = d.getAllFields.filter { f ⇒ !f.isConstant && !f.isIgnored }
+    output += fields.map({ f ⇒
+      val value = defaultValue(f)
+      if ("null" != value) {
+          fieldsExists = true
+    	  s"""%s => %s""".format(f.getSkillName, value)
+      }
+    }).mkString(",\r\n                  ")
+    output += ")"
+    if (fieldsExists) output else ""
+  }
+
   var output = "";
   for (t ← IR) {
     output += s"""      if "%s" = Type_Name then
          for I in 1 .. Instance_Count loop
             declare
-               Object : Skill_Type_Access := new %s_Type'
-                 (""".format(t.getSkillName, t.getName)
-    output += t.getAllFields.filter { f ⇒ !f.isConstant && !f.isIgnored }.map({ f ⇒
-      s"""%s => %s""".format(f.getSkillName, defaultValue(f))
-    }).mkString(",\r\n                  ")
-    output += s""");
+               Object : Skill_Type_Access := new %s_Type${printDefaultValues(t)};
             begin
                State.Put_Object (Type_Name, Object);${printSuperTypes(t)}
             end;
          end loop;
-      end if;\r\n"""
+      end if;\r\n""".format(t.getSkillName, t.getName)
   }
   output.stripSuffix("\r\n")
 }
@@ -239,7 +302,7 @@ ${
 ${
   var output = "";
   for (t ← IR) {
-    output += t.getAllFields.filter { f ⇒ !f.isAuto && !f.isIgnored }.map({ f ⇒
+    output += t.getFields.filter { f ⇒ !f.isAuto && !f.isIgnored }.map({ f ⇒
       s"""      if "%s" = Chunk.Type_Name and then "%s" = Chunk.Field_Name then
          for I in Chunk.Start_Index .. Chunk.End_Index loop
             declare
@@ -262,7 +325,7 @@ ${
       null;
    end Skip_Restrictions;
 
-end ${packagePrefix.capitalize}.Internal.File_Parser;
+end ${packagePrefix.capitalize}.Internal.File_Reader;
 """)
 
     out.close()

@@ -14,7 +14,8 @@ trait SkillSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}-api-skill.ads""")
 
     out.write(s"""
-with ${packagePrefix.capitalize}.Internal.File_Parser;
+with ${packagePrefix.capitalize}.Internal.File_Reader;
+with ${packagePrefix.capitalize}.Internal.File_Writer;
 
 package ${packagePrefix.capitalize}.Api.Skill is
 
@@ -27,6 +28,7 @@ ${
 	output
    }
    procedure Read (State : access Skill_State; File_Name : String);
+   procedure Write (State : access Skill_State; File_Name : String);
 
 ${
     var output = "";

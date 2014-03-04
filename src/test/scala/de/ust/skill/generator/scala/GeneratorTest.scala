@@ -23,7 +23,8 @@ class GeneratorTest extends FunSuite {
 
 //  test("annotation")(check("annotation.skill", "annotation"))
 //  test("blocks")(check("blocks.skill", "block"))
-//  test("container")(check("container.skill", "container"))
+  test("constant")(check("constant.skill", "constant"))
+  test("container")(check("container.skill", "container"))
 //  test("date")(check("date.skill", "date"))
 //  test("graph")(check("graph.skill", "graph"))
 

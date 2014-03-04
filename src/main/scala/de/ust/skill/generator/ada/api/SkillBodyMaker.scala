@@ -17,10 +17,16 @@ trait SkillBodyMaker extends GeneralOutputMaker {
 package body ${packagePrefix.capitalize}.Api.Skill is
 
    procedure Read (State : access Skill_State; File_Name : String) is
-      package File_Parser is new ${packagePrefix.capitalize}.Internal.File_Parser;
+      package File_Reader is new ${packagePrefix.capitalize}.Internal.File_Reader;
    begin
-      File_Parser.Read (State, File_Name);
+      File_Reader.Read (State, File_Name);
    end Read;
+
+   procedure Write (State : access Skill_State; File_Name : String) is
+      package File_Writer is new ${packagePrefix.capitalize}.Internal.File_Writer;
+   begin
+      File_Writer.Write (State, File_Name);
+   end Write;
 
 ${
     var output = "";
@@ -28,7 +34,7 @@ ${
 	  val name = declaration.getName
 	  val skillName = declaration.getSkillName
 	  output += s"""   function Get_${name}s (State : access Skill_State) return ${name}_Type_Accesses is
-      Length : Natural := State.Storage_Size ("${skillName}");
+      Length : Natural := State.Storage_Pool_Size ("${skillName}");
       rval : ${name}_Type_Accesses (1 .. Length);
    begin
       for I in rval'Range loop

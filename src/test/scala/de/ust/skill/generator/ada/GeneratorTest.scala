@@ -18,6 +18,7 @@ class GeneratorTest extends FunSuite {
 
   test("aircraft")(check("aircraft.skill", "aircraft"))
   test("annotation")(check("annotation.skill", "annotation"))
+  test("container")(check("container.skill", "container"))
   test("date")(check("date.skill", "date"))
   test("node")(check("nodeExample.tool1.skill", "node"))
   test("subtypes")(check("subtypesExample.skill", "subtypes"))

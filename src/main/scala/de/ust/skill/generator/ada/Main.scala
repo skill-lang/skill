@@ -83,8 +83,10 @@ class Main extends FakeMain
     with ByteReaderSpecMaker
     with ByteWriterBodyMaker
     with ByteWriterSpecMaker
-    with FileParserBodyMaker
-    with FileParserSpecMaker {
+    with FileReaderBodyMaker
+    with FileReaderSpecMaker
+    with FileWriterBodyMaker
+    with FileWriterSpecMaker {
 
   var outPath: String = null
   var IR: List[Declaration] = null
@@ -109,6 +111,8 @@ class Main extends FakeMain
 
       case "string"     ⇒ "SU.Unbounded_String"
     }
+
+    case t: ConstantLengthArrayType ⇒ "null"
 
     case t: Declaration ⇒ "Skill_Type_Access"
   }
@@ -146,11 +150,15 @@ class Main extends FakeMain
                Object.${f.getSkillName} := SU.To_Unbounded_String (State.Get_String (Byte_Reader.Read_v64));"""
     }
 
-    case d: Declaration ⇒
-       s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
+    case t: ConstantLengthArrayType ⇒
+      s"""begin
+               null;"""
+
+    case t: Declaration ⇒
+      s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
             begin
                Object.${f.getSkillName} := State.Get_Object ("${
-                val superTypes = getSuperTypes(d).toList;
+                val superTypes = getSuperTypes(t).toList;
                 if (superTypes.length > 0) superTypes(0); else t.getSkillName
               }", Positive (Byte_Reader.Read_v64));"""
   }

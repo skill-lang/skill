@@ -32,7 +32,17 @@ ${
       -------------------
       --  STRING POOL  --
       -------------------
-      function Get_String (Position : Long) return String is (String_Pool.Element (Positive (Position)));
+      function Get_String (Index : Positive) return String is
+         (String_Pool.Element (Index));
+
+      function Get_String (Index : Long) return String is
+         (Get_String (Positive (Index)));
+
+      function Get_String_Index (Value : String) return Natural is
+         (String_Pool.Reverse_Find_Index (Value));
+
+      function String_Pool_Size return Natural is
+         (Natural (String_Pool.Length));
 
       procedure Put_String (Value : String) is
       begin
@@ -45,7 +55,7 @@ ${
       function Get_Object (Type_Name : String; Position : Positive) return Skill_Type_Access is
          (Get_Type (Type_Name).Storage_Pool.Element (Position));
 
-      function Storage_Size (Type_Name : String) return Natural is
+      function Storage_Pool_Size (Type_Name : String) return Natural is
          (Natural (Get_Type (Type_Name).Storage_Pool.Length));
 
       procedure Put_Object (Type_Name : String; New_Object : Skill_Type_Access) is

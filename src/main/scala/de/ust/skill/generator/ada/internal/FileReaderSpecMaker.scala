@@ -8,16 +8,16 @@ package de.ust.skill.generator.ada.internal
 import java.io.PrintWriter
 import de.ust.skill.generator.ada.GeneralOutputMaker
 
-trait FileParserSpecMaker extends GeneralOutputMaker {
+trait FileReaderSpecMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-internal-file_parser.ads""")
+    val out = open(s"""${packagePrefix}-internal-file_reader.ads""")
 
     out.write(s"""
 with ${packagePrefix.capitalize}.Internal.Byte_Reader;
 
 generic
-package ${packagePrefix.capitalize}.Internal.File_Parser is
+package ${packagePrefix.capitalize}.Internal.File_Reader is
 
    procedure Read (pState : access Skill_State; File_Name : String);
 
@@ -34,7 +34,7 @@ private
    procedure Data_Chunk_Vector_Iterator (Iterator : Data_Chunk_Vector.Cursor);
    procedure Skip_Restrictions;
 
-end ${packagePrefix.capitalize}.Internal.File_Parser;
+end ${packagePrefix.capitalize}.Internal.File_Reader;
 """)
 
     out.close()
