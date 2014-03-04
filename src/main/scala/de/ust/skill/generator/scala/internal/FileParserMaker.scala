@@ -47,7 +47,10 @@ object FileParser {
     @inline def newPool(name: String, superName: String, restrictions: Array[Nothing]): StoragePool[_ <: SkillType] = {
       val p = name match {
 ${
-      (for (t ← IR) yield s"""        case "${t.getSkillName}" ⇒ new ${t.getCapitalName}StoragePool(types.size)""").mkString("\n")
+      (for (t ← IR) yield s"""        case "${t.getSkillName}" ⇒ new ${t.getCapitalName}StoragePool(types.size${
+        if (null == t.getSuperType) ""
+        else s""", poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${t.getSuperType.getCapitalName}StoragePool]"""
+      })""").mkString("\n")
     }
         case _ ⇒
           if (null == superName) new BasePool[SkillType](types.size, name, HashMap())
@@ -289,8 +292,8 @@ ${
 
     new SerializableState(
 ${
-  (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(newPool("${t.getSkillName}", null, null)).asInstanceOf[${t.getCapitalName}StoragePool],""").mkString("\n")
-}
+      (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(newPool("${t.getSkillName}", null, null)).asInstanceOf[${t.getCapitalName}StoragePool],""").mkString("\n")
+    }
       String,
       types
     )

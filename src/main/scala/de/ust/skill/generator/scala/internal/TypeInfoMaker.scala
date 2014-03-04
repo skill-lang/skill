@@ -6,7 +6,6 @@
 package de.ust.skill.generator.scala.internal
 
 import scala.collection.JavaConversions._
-
 import de.ust.skill.generator.scala.GeneralOutputMaker
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
@@ -16,6 +15,7 @@ import de.ust.skill.ir.MapType
 import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.restriction.SingletonRestriction
 
 trait TypeInfoMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -377,7 +377,9 @@ class SubPool[T <: SkillType](poolIndex: Long, name: String, knownFields: HashMa
 """)
 
 
-    for (t ← IR)
+    for (t ← IR){
+      val isSingleton = !t.getRestrictions.collect { case r: SingletonRestriction ⇒ r }.isEmpty
+
       out.write(s"""
 final class ${t.getCapitalName}StoragePool(poolIndex: Long${if(t.getSuperType==null) ""
         else s",\nsuperPool: ${t.getSuperType.getCapitalName}StoragePool"})
@@ -406,10 +408,17 @@ final class ${t.getCapitalName}StoragePool(poolIndex: Long${if(t.getSuperType==n
     }
   }
 
-  override def apply(args: Any*) = ???
+${
+  if(isSingleton)
+    """  override def get = ???"""
+  else 
+    """  override def apply(args: Any*) = ???
 
+  override def size = dynamicSize.toInt"""
+}
 }
 """)
+    }
 
     //class prefix
     out.close()

@@ -20,7 +20,9 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.ListBuffer
 
-import ${packagePrefix}api._
+import ${packagePrefix}api.Access
+import ${packagePrefix}api.SkillType
+import ${packagePrefix}api.StringAccess
 import ${packagePrefix}internal._
 import ${packagePrefix}internal.streams.InStream
 """)

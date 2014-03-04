@@ -33,6 +33,7 @@ import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.parser.Parser
 import de.ust.skill.generator.scala.internal.FullyGenericInstanceMaker
 import de.ust.skill.generator.scala.internal.InternalInstancePropertiesMaker
+import de.ust.skill.generator.scala.internal.StringPoolMaker
 
 /**
  * Entry point of the scala generator.
@@ -98,9 +99,10 @@ class Main extends FakeMain
     with InternalInstancePropertiesMaker
     with internal.FieldDeclarationMaker
     with SerializableStateMaker
-//    with SerializationFunctionsMaker
+    //    with SerializationFunctionsMaker
     with SkillStateMaker
     with SkillTypeMaker
+    with StringPoolMaker
     with TypeInfoMaker {
 
   var outPath: String = null

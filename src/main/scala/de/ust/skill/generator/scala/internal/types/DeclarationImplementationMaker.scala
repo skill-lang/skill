@@ -127,7 +127,7 @@ final class $name(private var skillID: Long) extends _root_.${packagePrefix}$nam
     out.write(s"""
   override final def get(acc: Access[_ <: SkillType], field: FieldDeclaration): Any = field.name match {
 ${
-      (for(f <- d.getAllFields) yield s"""    case "${f.getSkillName}" ⇒ _${f.getName}""").mkString("\n")
+      (for(f <- d.getAllFields.filterNot(_.isIgnored)) yield s"""    case "${f.getSkillName}" ⇒ _${f.getName}""").mkString("\n")
 }
     case _ ⇒
       try {
@@ -143,8 +143,13 @@ ${
   override final def set(acc: Access[_ <: SkillType], field: FieldDeclaration, value: Any): Unit = field.name match {
 ${
   (
-    for(f <- d.getAllFields) 
+    for(f <- d.getAllFields.filterNot{t ⇒ t.isIgnored || t.isConstant()}) 
       yield s"""    case "${f.getSkillName}" ⇒ _${f.getName} = value.asInstanceOf[${mapType(f.getType)}]"""
+  ).mkString("\n")
+}${
+  (
+    for(f <- d.getAllFields.filter(_.isConstant)) 
+      yield s"""    case "${f.getSkillName}" ⇒ throw new IllegalStateException("${f.getName} is constant!")"""
   ).mkString("\n")
 }
     case _ ⇒

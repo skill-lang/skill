@@ -5,7 +5,9 @@
 \*                                                                            */
 package de.ust.skill.generator.scala.api
 
+import scala.collection.JavaConversions.asScalaBuffer
 import de.ust.skill.generator.scala.GeneralOutputMaker
+import de.ust.skill.ir.restriction.SingletonRestriction
 
 trait AccessMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -50,15 +52,28 @@ trait StringAccess {
   def size: Int
 }
 """)
-    for (t ← IR)
-      out.write(s"""
+    for (t ← IR) {
+      if (t.getRestrictions.collect { case r: SingletonRestriction ⇒ r }.isEmpty)
+        out.write(s"""
 trait ${t.getCapitalName}Access extends Access[$packagePrefix${t.getCapitalName}] {
   /**
    * create a new ${t.getName} instance
    */
-  def apply(${makeConstructorArguments(t)})
+  def apply(${makeConstructorArguments(t)}): $packagePrefix${t.getCapitalName}
+
+  def size: Int
 }
 """)
+      else
+        out.write(s"""
+trait ${t.getCapitalName}Access extends Access[$packagePrefix${t.getCapitalName}] {
+  /**
+   * @return the instance
+   */
+  def get: $packagePrefix${t.getCapitalName}
+}
+""")
+    }
 
     out.close()
   }

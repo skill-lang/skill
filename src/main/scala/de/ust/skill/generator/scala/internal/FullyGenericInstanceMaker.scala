@@ -15,8 +15,7 @@ trait FullyGenericInstanceMaker extends GeneralOutputMaker {
     out.write(s"""package ${packagePrefix}internal
 
 import ${packagePrefix}api._
-""")
-    out.write("""
+
 /**
  * @author Timm Felden
  */
@@ -27,24 +26,24 @@ final class FullyGenericInstance(name: String, var skillID: Long = 0L) extends S
   /**
    * provides a pretty representation of this
    */
-  def prettyString: String = s"<fully generic $name#$skillID>"
+  def prettyString: String = s"<fully generic $$name#$$skillID>"
   override def toString = prettyString
 
   /**
    * reflective setter
    */
-  def set(acc: Access[_ <: SkillType], field: container.api.FieldDeclaration, value: Any) {
+  def set(acc: Access[_ <: SkillType], field: ${packagePrefix}api.FieldDeclaration, value: Any) {
     acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[FieldDeclaration]).put(this, value)
   }
 
   /**
    * reflective getter
    */
-  def get(acc: Access[_ <: SkillType], field: container.api.FieldDeclaration): Any = {
+  def get(acc: Access[_ <: SkillType], field: ${packagePrefix}api.FieldDeclaration): Any = {
     try {
       acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[FieldDeclaration])(this)
     } catch {
-      case e: Exception ⇒ this+" is not in:\n"+acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[FieldDeclaration]).mkString("\n")
+      ${"""case e: Exception ⇒ this+" is not in:\n"+acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[FieldDeclaration]).mkString("\n")"""}
     }
   }
 }

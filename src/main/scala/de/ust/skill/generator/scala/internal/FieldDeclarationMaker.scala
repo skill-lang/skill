@@ -54,7 +54,7 @@ case class BlockInfo(val bpsi: Long, val count: Long);
 class FieldDeclaration(
     var t: FieldType,
     override val name: String,
-    var index: Long) extends container.api.FieldDeclaration {
+    var index: Long) extends ${packagePrefix}api.FieldDeclaration {
 
   /**
    *  Data chunk information, as it is required for later parsing.
