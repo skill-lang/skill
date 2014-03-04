@@ -112,7 +112,7 @@ ${
    type Field_Declaration (Size : Positive) is tagged
       record
          Name : String (1 .. Size);
-         F_Type : Short_Short_Integer;
+         F_Type : Long;
       end record;
    type Field_Information is access Field_Declaration;
 

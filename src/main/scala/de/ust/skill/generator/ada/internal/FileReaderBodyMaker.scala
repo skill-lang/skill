@@ -79,8 +79,6 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
       Type_Name : String := State.Get_String (Byte_Reader.Read_v64);
       Instance_Count : Natural;
       Field_Count : Long;
-
-      Skill_Unsupported_File_Format : exception;
    begin
       if not State.Has_Type (Type_Name) then
          declare
@@ -162,11 +160,11 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
       Skip_Restrictions;
 
       declare
-         Field_Type : Short_Short_Integer := Byte_Reader.Read_i8;
+         Field_Type : Long := Byte_Reader.Read_v64;
       begin
          case Field_Type is
             --  unused
-            when Short_Short_Integer'First .. -1 | 16 | 21 .. 31 =>
+            when Long'First .. -1 | 16 | 21 .. 31 =>
                null;
 
             --  constants i8, i16, i32, i64, v64
@@ -209,7 +207,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                end;
 
             --  user type
-            when 32 .. Short_Short_Integer'Last =>
+            when 32 .. Long'Last =>
                null;
 
             when others => null;
