@@ -47,10 +47,17 @@ final class SerializableState(
 ${
       (for (t ← IR) yield s"  val ${t.getCapitalName}: ${t.getCapitalName}Access,").mkString("\n")
     }
+  val String: StringAccess,
   val pools: ArrayBuffer[StoragePool[_ <: SkillType]])
     extends SkillState {
 
   def all = pools.iterator.asInstanceOf[Iterator[Access[_ <: SkillType]]]
+
+  def write(target: Path): Unit = ???
+  def write(): Unit = ???
+
+  def append(): Unit = ???
+  def append(target: Path): Unit = ???
 }
 //final class SerializableState extends SkillState {
 //  import SerializableState._

@@ -172,6 +172,7 @@ case class TypeDefinitionName(name: String) extends FieldType(-1) {
   override def toString(): String = s"<type definition name: $$name>"
   override def equals(obj: Any) = obj match {
     case TypeDefinitionName(n) ⇒ n.equals(name)
+    case t: StoragePool[_]     ⇒ t.name.equals(name)
     case _                     ⇒ false
   }
 }
@@ -214,12 +215,14 @@ sealed abstract class StoragePool[T <: SkillType](
   /**
    * Adds a new field, checks consistency and updates field data if required.
    */
-  private[internal] def addField(f: FieldDeclaration) {
+  final private[internal] def addField(f: FieldDeclaration) {
     if (knownFields.contains(f.name)) {
-      if (!f.equals(knownFields(f.name)))
-        ???
+      // type-check
+      if (!f.t.equals(knownFields(f.name)))
+        throw TypeMissmatchError(f.t, knownFields(f.name).toString, f.name, name);
 
     } else {
+      // add generic pool
       putFieldMap(f, new HashMap[SkillType, Any])
     }
 
@@ -274,8 +277,8 @@ sealed abstract class StoragePool[T <: SkillType](
 }
 
 class BasePool[T <: SkillType](poolIndex: Long, name: String, knownFields: HashMap[String, FieldType])
-  extends StoragePool[T](poolIndex, name, knownFields, None)
-  with Access[T] {
+    extends StoragePool[T](poolIndex, name, knownFields, None)
+    with Access[T] {
 
   /**
    * We are the base pool.
@@ -329,8 +332,8 @@ class BasePool[T <: SkillType](poolIndex: Long, name: String, knownFields: HashM
 }
 
 class SubPool[T <: SkillType](poolIndex: Long, name: String, knownFields: HashMap[String, FieldType], superPool: StoragePool[_ <: SkillType])
-  extends StoragePool[T](poolIndex, name, knownFields, Some(superPool))
-  with Access[T] {
+    extends StoragePool[T](poolIndex, name, knownFields, Some(superPool))
+    with Access[T] {
 
   override val basePool = superPool.basePool
 
@@ -381,16 +384,17 @@ final class ${t.getCapitalName}StoragePool(poolIndex: Long${if(t.getSuperType==n
     extends ${if(t.getSuperType==null)"Base"else"Sub"}Pool[${packagePrefix}${t.getCapitalName}](
       poolIndex,
       "${t.getSkillName}",
-      HashMap[String, FieldType](
-${(for(f <- t.getFields) yield s"""        "${f.getSkillName}" -> ${mapToFieldType(f.getType)}""").mkString(",\n")}
-      )${
+      HashMap[String, FieldType](${
+        if(t.getFields.isEmpty) ""
+        else (for(f <- t.getFields) yield s"""\n        "${f.getSkillName}" -> ${mapToFieldType(f.getType)}""").mkString("",",","\n      ")
+      })${
         if(t.getSuperType==null) ""
         else ",\nsuperPool"
       }
     )
     with ${t.getCapitalName}Access {
 
-	override def insertInstance(skillID: Long) = {
+  override def insertInstance(skillID: Long) = {
     val i = skillID.toInt - 1
     if (null != data(i))
       false
@@ -433,7 +437,7 @@ ${(for(f <- t.getFields) yield s"""        "${f.getSkillName}" -> ${mapToFieldTy
       case t: VariableLengthArrayType ⇒ s"VariableLengthArray(${mapGroundType(t.getBaseType)})"
       case t: ListType                ⇒ s"ListType(${mapGroundType(t.getBaseType)})"
       case t: SetType                 ⇒ s"SetType(${mapGroundType(t.getBaseType)})"
-      case t: MapType                 ⇒ s"MapType(Seq[FieldType](${t.getBaseTypes.map(mapGroundType).mkString(",")}))"
+      case t: MapType                 ⇒ s"MapType(Seq[FieldType](${t.getBaseTypes.map(mapGroundType).mkString(", ")}))"
       case t: Declaration             ⇒ s"""TypeDefinitionName("${t.getSkillName}")"""
     }
   }

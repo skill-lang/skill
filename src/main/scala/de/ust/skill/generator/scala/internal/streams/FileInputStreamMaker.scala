@@ -40,13 +40,6 @@ final public class FileInputStream extends InStream {
 		return input.position();
 	}
 
-	/**
-	 * use with care!
-	 * 
-	 * @param position
-	 *            jump to target position, without the ability to restore the
-	 *            old position
-	 */
 	@Override
 	public void jump(long position) {
 		input.position((int) position);
@@ -68,17 +61,11 @@ final public class FileInputStream extends InStream {
 		return input.limit() == input.position();
 	}
 
-	/**
-	 * @return true iff there are at least n bytes left in the stream
-	 */
 	@Override
 	public boolean has(int n) {
 		return input.limit() >= n + input.position();
 	}
 
-	/**
-	 * @return raw byte array taken from the stream
-	 */
 	@Override
 	public byte[] bytes(long length) {
 		final byte[] rval = new byte[(int) length];
@@ -86,43 +73,26 @@ final public class FileInputStream extends InStream {
 		return rval;
 	}
 
-	/**
-	 * @return take an i8 from the stream
-	 */
 	@Override
 	public byte i8() {
 		return input.get();
 	}
 
-	/**
-	 * @return take an i16 from the stream
-	 */
 	@Override
 	public short i16() {
 		return input.getShort();
 	}
 
-	/**
-	 * @return take an i32 from the stream
-	 * @throws UnexpectedEOF
-	 *             if there is no i32 in the stream
-	 */
 	@Override
 	public int i32() {
 		return input.getInt();
 	}
 
-	/**
-	 * @return take an i64 from the stream
-	 */
 	@Override
 	public long i64() {
 		return input.getLong();
 	}
 
-	/**
-	 * @return take an v64 from the stream
-	 */
 	@Override
 	public long v64() {
 		long count = 0;
@@ -138,17 +108,11 @@ final public class FileInputStream extends InStream {
 		return rval;
 	}
 
-	/**
-	 * @return take an f32 from the stream
-	 */
 	@Override
 	public float f32() {
 		return input.getFloat();
 	}
 
-	/**
-	 * @return take an f64 from the stream
-	 */
 	@Override
 	public double f64() {
 		return input.getDouble();

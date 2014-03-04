@@ -39,8 +39,7 @@ object FileParser {
     var blockCounter = 0;
 
     // STRING POOL
-    val strings = ArrayBuffer[String](null);
-    @inline def getString(index: Long) = try { strings(index.toInt) } catch { case e: Exception ⇒ throw InvalidPoolIndex(index, strings.size - 1, "string") }
+    val String = new StringPool(in)
 
     // STORAGE POOLS
     val types = ArrayBuffer[StoragePool[_ <: SkillType]]();
@@ -109,16 +108,20 @@ ${
     @inline def stringBlock {
       try {
         val count = in.v64.toInt
-        val offsets = new Array[Int](count);
-        for (i ← 0 until count) {
-          offsets(i) = in.i32;
-        }
-        // TODO !lazy
-        strings.sizeHint(strings.size + count)
-        var last = 0L
-        for (i ← 0 until count) {
-          strings += new String(in.bytes(offsets(i) - last), "UTF-8")
-          last = offsets(i)
+
+        if (0L != count) {
+          val offsets = new Array[Int](count);
+          for (i ← 0 until count) {
+            offsets(i) = in.i32;
+          }
+          String.stringPositions.sizeHint(String.stringPositions.size + count)
+          var last = 0
+          for (i ← 0 until count) {
+            String.stringPositions.append((in.position + last, offsets(i) - last))
+            String.idMap += null
+            last = offsets(i)
+          }
+          in.jump(in.position + last);
         }
       } catch {
         case e: Exception ⇒ throw ParseException(in, blockCounter, "corrupted string block", e)
@@ -126,7 +129,11 @@ ${
     }
 
     @inline def typeBlock {
+      // deferred pool resize requests
       val resizeQueue = new Queue[StoragePool[_ <: SkillType]]
+      // deferred field declaration appends
+      val fieldInsertionQueue = new Queue[(StoragePool[_ <: SkillType], FieldDeclaration)]
+      // field data updates
       val fieldDataQueue = new Queue[(StoragePool[_ <: SkillType], FieldDeclaration)]
       var offset = 0L
 
@@ -136,7 +143,7 @@ ${
           if (0 == superName)
             (null, 1L) // bpsi is 1 if the first legal index is one
           else
-            (getString(superName), in.v64)
+            (String.get(superName), in.v64)
         }
         @inline def restrictions = {
           in.v64.ensuring(_ == 0, "restriction parsing not implemented")
@@ -144,7 +151,7 @@ ${
         }
 
         // read type part
-        val name = getString(in.v64)
+        val name = String.get(in.v64)
         try {
           var definition: StoragePool[_ <: SkillType] = null
           var count = 0L
@@ -186,25 +193,27 @@ ${
             for (fi ← knownFieldCount until fieldCount) {
               val rest = restrictions
               val t = fieldType
-              val name = getString(in.v64)
+              val name = String.get(in.v64)
               val end = in.v64
 
-              definition.addField(new FieldDeclaration(t, name, fi))
-              fields(fi).dataChunks += new BulkChunkInfo(offset, end, count + definition.dynamicSize)
+              val f = new FieldDeclaration(t, name, fi)
+              fieldInsertionQueue += ((definition, f))
+              f.dataChunks += new BulkChunkInfo(offset, end, count + definition.dynamicSize)
               offset = end
-              fieldDataQueue += ((definition, fields(fi)))
+              fieldDataQueue += ((definition, f))
             }
           } else {
             for (fi ← knownFieldCount until knownFieldCount + fieldCount) {
               val rest = restrictions
               val t = fieldType
-              val name = getString(in.v64)
+              val name = String.get(in.v64)
               val end = in.v64
 
-              definition.addField(new FieldDeclaration(t, name, fi))
-              fields(fi).dataChunks += new BulkChunkInfo(offset, end, count + definition.dynamicSize)
+              val f = new FieldDeclaration(t, name, fi)
+              fieldInsertionQueue += ((definition, f))
+              f.dataChunks += new BulkChunkInfo(offset, end, count + definition.dynamicSize)
               offset = end
-              fieldDataQueue += ((definition, fields(fi)))
+              fieldDataQueue += ((definition, f))
             }
           }
         } catch {
@@ -231,6 +240,12 @@ ${
             i += 1;
         }
       }
+      @inline def insertFields {
+        for ((d, f) ← fieldInsertionQueue) {
+          f.t = eliminatePreliminaryTypesIn(f.t)
+          d.addField(f)
+        }
+      }
       @inline def eliminatePreliminaryTypesIn(t: FieldType): FieldType = t match {
         case TypeDefinitionIndex(i)    ⇒ types(i.toInt)
         case TypeDefinitionName(n)     ⇒ poolByName(n)
@@ -252,7 +267,7 @@ ${
           val c = f.dataChunks.last
           c.begin += fileOffset
           c.end += fileOffset
-          FieldParser.parseThisField(in, t, f, poolByName, strings)
+          FieldParser.parseThisField(in, t, f, poolByName, String)
         }
       }
 
@@ -261,6 +276,7 @@ ${
         typeDefinition
 
       resizePools
+      insertFields
       processFieldData
     }
 
@@ -275,6 +291,7 @@ ${
 ${
   (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(newPool("${t.getSkillName}", null, null)).asInstanceOf[${t.getCapitalName}StoragePool],""").mkString("\n")
 }
+      String,
       types
     )
   }

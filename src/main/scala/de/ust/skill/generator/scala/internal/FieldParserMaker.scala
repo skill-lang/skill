@@ -32,7 +32,7 @@ object FieldParser {
   /**
    * Parse a field assuming that in is at the right position and the last chunk of f is to be processed.
    */
-  def parseThisField(in: InStream, t: StoragePool[_ <: SkillType], f: FieldDeclaration, pools: HashMap[String, StoragePool[_ <: SkillType]], strings: ArrayBuffer[String]) {
+  def parseThisField(in: InStream, t: StoragePool[_ <: SkillType], f: FieldDeclaration, pools: HashMap[String, StoragePool[_ <: SkillType]], String: StringAccess) {
     @inline def readSingleField(t: FieldType): Any = t match {
       case I8  ⇒ in.i8
       case I16 ⇒ in.i16
@@ -41,12 +41,12 @@ object FieldParser {
       case V64 ⇒ in.v64
       case Annotation ⇒ (in.v64, in.v64) match {
         case (0L, _) ⇒ null
-        case (t, i)  ⇒ pools(strings(t.toInt)).getByID(i)
+        case (t, i)  ⇒ pools(String.get(t)).getByID(i)
       }
       case BoolType   ⇒ in.i8 != 0
       case F32        ⇒ in.f32
       case F64        ⇒ in.f64
-      case StringType ⇒ strings(in.v64.toInt)
+      case StringType ⇒ String.get(in.v64)
 
       case d: ConstantLengthArray ⇒
         (for (i ← 0 until d.length.toInt)
