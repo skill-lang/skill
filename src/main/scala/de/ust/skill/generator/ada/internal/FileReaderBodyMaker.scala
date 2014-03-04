@@ -117,41 +117,44 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
 
       Field_Count := Byte_Reader.Read_v64;
 
-      if 0 = Instance_Count then
-         raise Skill_Unsupported_File_Format;
-      else
-         declare
-            Known_Fields : Long := State.Known_Fields (Type_Name);
-            Start_Index : Natural := State.Storage_Pool_Size (Type_Name) + 1;
-            End_Index : Natural := Start_Index + Instance_Count - 1;
-         begin
+      declare
+         Known_Fields : Long := State.Known_Fields (Type_Name);
+         Start_Index : Natural;
+         End_Index : Natural;
+      begin
+         if 0 = Instance_Count then
+            Start_Index := 1;
+            End_Index := State.Storage_Pool_Size (Type_Name);
+         else
+            Start_Index := State.Storage_Pool_Size (Type_Name) + 1;
+            End_Index := Start_Index + Instance_Count - 1;
             Create_Objects (Type_Name, Instance_Count);
+         end if;
 
-            for I in 1 .. Field_Count loop
-               if Field_Count > Known_Fields then
-                  Read_Field_Declaration (Type_Name);
-               end if;
+         for I in 1 .. Field_Count loop
+            if Field_Count > Known_Fields or 0 = Instance_Count then
+               Read_Field_Declaration (Type_Name);
+            end if;
 
-               declare
-                  Field_End : Long := Byte_Reader.Read_v64;
-                  Data_Length : Long := Field_End - Last_End;
-                  Field : Field_Information := State.Get_Field (Type_Name, I);
-                  Chunk : Data_Chunk (Type_Name'Length, Field.Name'Length) := (
-                     Type_Size => Type_Name'Length,
-                     Field_Size => Field.Name'Length,
-                     Type_Name => Type_Name,
-                     Field_Name => Field.Name,
-                     Start_Index => Start_Index,
-                     End_Index => End_Index,
-                     Data_Length => Data_Length
-                  );
-               begin
-                  Last_End := Field_End;
-                  Data_Chunks.Append (Chunk);
-               end;
-            end loop;
-         end;
-      end if;
+            declare
+               Field_End : Long := Byte_Reader.Read_v64;
+               Data_Length : Long := Field_End - Last_End;
+               Field : Field_Information := State.Get_Field (Type_Name, I);
+               Chunk : Data_Chunk (Type_Name'Length, Field.Name'Length) := (
+                  Type_Size => Type_Name'Length,
+                  Field_Size => Field.Name'Length,
+                  Type_Name => Type_Name,
+                  Field_Name => Field.Name,
+                  Start_Index => Start_Index,
+                  End_Index => End_Index,
+                  Data_Length => Data_Length
+               );
+            begin
+               Last_End := Field_End;
+               Data_Chunks.Append (Chunk);
+            end;
+         end loop;
+      end;
    end Read_Type_Declaration;
 
    procedure Read_Field_Declaration (Type_Name : String) is
