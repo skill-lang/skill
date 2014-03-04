@@ -43,10 +43,7 @@ trait ExpectableSkillException {}
 case class ParseException(in: InStream, block: Int, msg: String, cause: Throwable) extends SkillException(
   s"In block ${block + 1} @0x${in.position.toHexString}: $msg",
   cause
-) {
-  def this(in: InStream, block: Int, msg: String) = this(in, block, msg, null)
-  def this(in: InStream, block: Int, cause: Exception) = this(in, block, cause.getMessage, cause)
-}
+);
 
 /**
  * This exception is used if byte stream related errors occur.
@@ -54,15 +51,6 @@ case class ParseException(in: InStream, block: Int, msg: String, cause: Throwabl
  * @author Timm Felden
  */
 class StreamException(msg: String, cause: Throwable) extends SkillException(msg, cause) {}
-
-/**
- * Thrown, if the end of file is reached at an illegal point, i.e. inside a block.
- *
- * @author Timm Felden
- */
-case class UnexpectedEOF(msg: String, cause: Throwable)
-  extends StreamException(msg, cause)
-  with ExpectableSkillException {}
 
 /**
  * Thrown, if an index into a pool is invalid.

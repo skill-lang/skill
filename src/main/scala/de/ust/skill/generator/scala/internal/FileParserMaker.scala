@@ -20,6 +20,7 @@ import java.nio.file.StandardOpenOption
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
 import scala.collection.mutable.Queue
 import scala.collection.mutable.Stack
 
@@ -37,6 +38,7 @@ object FileParser {
   def file(in: InStream): SkillState = {
     // ERROR REPORTING
     var blockCounter = 0;
+    var seenTypes = HashSet[String]();
 
     // STRING POOL
     val String = new StringPool(in)
@@ -87,7 +89,7 @@ ${
       case 19           ⇒ SetType(groundType)
       case 20           ⇒ MapType((0 until in.v64.toInt).map { n ⇒ groundType }.toSeq)
       case i if i >= 32 ⇒ TypeDefinitionIndex(i - 32)
-      case id           ⇒ throw new ParseException(in, blockCounter, s"Invalid type ID: $$id")
+      case id           ⇒ throw ParseException(in, blockCounter, s"Invalid type ID: $$id", null)
     }
 
     /**
@@ -105,7 +107,7 @@ ${
       case 13           ⇒ F64
       case 14           ⇒ StringType
       case i if i >= 32 ⇒ TypeDefinitionIndex(i - 32)
-      case id           ⇒ throw new ParseException(in, blockCounter, s"Invalid base type ID: $$id")
+      case id           ⇒ throw ParseException(in, blockCounter, s"Invalid base type ID: $$id", null)
     }
 
     @inline def stringBlock {
@@ -155,6 +157,13 @@ ${
 
         // read type part
         val name = String.get(in.v64)
+
+        // type duplication error detection
+        if (seenTypes.contains(name))
+          throw ParseException(in, blockCounter, s"Duplicate definition of type $$name", null)
+        seenTypes += name
+
+        // try to parse the type definition
         try {
           var definition: StoragePool[_ <: SkillType] = null
           var count = 0L
@@ -186,6 +195,9 @@ ${
           val fields = definition.fields
           val knownFieldCount = fields.size
           if (0 != count) {
+            if (knownFieldCount > fieldCount)
+              throw ParseException(in, blockCounter, s"Type $$name has $$fieldCount fields (requires $$knownFieldCount)", null)
+
             for (fi ← 0 until knownFieldCount) {
               val end = in.v64
               fields(fi).dataChunks += new SimpleChunkInfo(offset, end, lbpsi, count)
@@ -220,7 +232,8 @@ ${
             }
           }
         } catch {
-          case e: Exception ⇒ throw new ParseException(in, blockCounter, e)
+          case e: java.nio.BufferUnderflowException            ⇒ throw ParseException(in, blockCounter, "unexpected end of file", e)
+          case e: Exception if !e.isInstanceOf[ParseException] ⇒ throw ParseException(in, blockCounter, e.getMessage, e)
         }
       }
       @inline def resizePools {
@@ -250,8 +263,16 @@ ${
         }
       }
       @inline def eliminatePreliminaryTypesIn(t: FieldType): FieldType = t match {
-        case TypeDefinitionIndex(i)    ⇒ types(i.toInt)
-        case TypeDefinitionName(n)     ⇒ poolByName(n)
+        case TypeDefinitionIndex(i) ⇒ try {
+          types(i.toInt)
+        } catch {
+          case e: Exception ⇒ throw ParseException(in, blockCounter, s"inexistent user type $$i (user types: $${types.zipWithIndex.map(_.swap).toMap.mkString})", e)
+        }
+        case TypeDefinitionName(n) ⇒ try {
+          poolByName(n)
+        } catch {
+          case e: Exception ⇒ throw ParseException(in, blockCounter, s"inexistent user type $$n (user types: $${poolByName.mkString})", e)
+        }
         case ConstantLengthArray(l, t) ⇒ ConstantLengthArray(l, eliminatePreliminaryTypesIn(t))
         case VariableLengthArray(t)    ⇒ VariableLengthArray(eliminatePreliminaryTypesIn(t))
         case ListType(t)               ⇒ ListType(eliminatePreliminaryTypesIn(t))
@@ -288,6 +309,7 @@ ${
       typeBlock
 
       blockCounter += 1
+      seenTypes = HashSet()
     }
 
     new SerializableState(

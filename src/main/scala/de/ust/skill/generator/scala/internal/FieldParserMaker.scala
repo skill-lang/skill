@@ -90,7 +90,9 @@ object FieldParser {
       }
 
     val c = f.dataChunks.last
-    assert(in.position == c.begin, s"@end of data chunk: expected position(0x${in.position.toHexString}) to be 0x${c.begin.toHexString}")
+    if (in.position != c.begin)
+      throw new SkillException("@begin of data chunk: expected position(0x${in.position.toHexString}) to be 0x${c.begin.toHexString}")
+
     c match {
       case c: SimpleChunkInfo ⇒
         for (i ← c.bpsi until c.bpsi + c.count)
@@ -102,7 +104,9 @@ object FieldParser {
           i ← bi.bpsi until bi.bpsi + bi.count
         ) t.getByID(i + 1).set(t.asInstanceOf[Access[SkillType]], f, readSingleField(f.t))
     }
-    assert(in.position == c.end, s"@end of data chunk: expected position(0x${in.position.toHexString}) to be 0x${c.end.toHexString}")
+
+    if (in.position != c.end)
+      throw PoolSizeMissmatchError(c.end - c.begin, in.position - c.begin, f.t.toString)
   }
 
   /**
