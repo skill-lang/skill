@@ -116,6 +116,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
       Field_Count := Byte_Reader.Read_v64;
 
       declare
+         Field_Index : Long;
          Known_Fields : Long := State.Known_Fields (Type_Name);
          Start_Index : Natural;
          End_Index : Natural;
@@ -134,10 +135,15 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                Read_Field_Declaration (Type_Name);
             end if;
 
+            Field_Index := I;
+            if 0 = Instance_Count then
+               Field_Index := Field_Index + Known_Fields;
+            end if;
+
             declare
                Field_End : Long := Byte_Reader.Read_v64;
                Data_Length : Long := Field_End - Last_End;
-               Field : Field_Information := State.Get_Field (Type_Name, I);
+               Field : Field_Information := State.Get_Field (Type_Name, Field_Index);
                Chunk : Data_Chunk (Type_Name'Length, Field.Name'Length) := (
                   Type_Size => Type_Name'Length,
                   Field_Size => Field.Name'Length,
