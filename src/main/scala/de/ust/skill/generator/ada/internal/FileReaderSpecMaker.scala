@@ -16,7 +16,6 @@ trait FileReaderSpecMaker extends GeneralOutputMaker {
     out.write(s"""
 with ${packagePrefix.capitalize}.Internal.Byte_Reader;
 
-generic
 package ${packagePrefix.capitalize}.Internal.File_Reader is
 
    procedure Read (pState : access Skill_State; File_Name : String);

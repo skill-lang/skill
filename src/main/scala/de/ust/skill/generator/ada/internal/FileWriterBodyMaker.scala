@@ -18,8 +18,6 @@ trait FileWriterBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Internal.File_Writer is
 
-   package Byte_Writer renames ${packagePrefix.capitalize}.Internal.Byte_Writer;
-
    State : access Skill_State;
 
    procedure Write (pState : access Skill_State; File_Name : String) is

@@ -53,32 +53,48 @@ package ${packagePrefix.capitalize} is
    --  SKILL  --
    -------------
    type Skill_State is limited private;
-   type Skill_Type is abstract tagged null record;
+   type Skill_Type is abstract tagged private;
    type Skill_Type_Access is access all Skill_Type'Class;
 
 ${
   var output = "";
-  for (t ← IR) {
-    val superType = if (t.getSuperType == null) "Skill" else t.getSuperType.getName
-    output += s"""   type %s_Type is new %s_Type with\r\n      record\r\n""".format(t.getName, superType)
-    val fields = t.getFields.filter { f ⇒ !f.isConstant && !f.isIgnored }
+  for (d ← IR) {
+    output += s"""   type ${d.getName}_Type is new Skill_Type with private;\r\n"""
+    output += s"""   type ${d.getName}_Type_Access is access all ${d.getName}_Type;\r\n"""
+  }
+  output
+}
+${
+  var output = "";
+  for (d ← IR) {
+    d.getAllFields.filter({ f ⇒ !f.isIgnored }).foreach({ f =>
+      output += s"""   function Get_${f.getName.capitalize} (Object : ${d.getName}_Type) return ${mapType(f.getType)};\r\n"""
+      if (!f.isConstant)
+        output += s"""   procedure Set_${f.getName.capitalize} (Object : in out ${d.getName}_Type; Value : ${mapType(f.getType)});\r\n"""
+    })
+  }
+  output
+}
+private
+
+   type Skill_Type is abstract tagged null record;
+
+${
+  var output = "";
+  for (d ← IR) {
+    val superType = if (d.getSuperType == null) "Skill" else d.getSuperType.getName
+    output += s"""   type ${d.getName}_Type is new ${superType}_Type with\r\n      record\r\n"""
+    val fields = d.getFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
     output += fields.map({ f ⇒
       var comment = "";
       if (f.isAuto()) comment = "  --  auto aka not serialized"
-      s"""         %s : %s;%s""".format(f.getName, mapType(f.getType), comment)
+      s"""         ${f.getName} : ${mapType(f.getType)};${comment}"""
     }).mkString("\r\n")
     if (fields.length <= 0) output += s"""         null;"""
     output += s"""\r\n      end record;\r\n"""
-    output += s"""   type %s_Type_Access is access all %s_Type;\r\n""".format(t.getName, t.getName)
-    // fake constants as function
-    output += t.getAllFields.filter { f ⇒ f.isConstant && !f.isIgnored }.map({ f ⇒
-      s"""   function %s (Object : %s_Type) return %s;  --  constant""".format(f.getName, t.getName, mapType(f.getType))
-    }).mkString("\r\n")
-    output += "\r\n"
   }
   output.stripSuffix("\r\n")
 }
-private
 
    ------------------
    --  STRING POOL --

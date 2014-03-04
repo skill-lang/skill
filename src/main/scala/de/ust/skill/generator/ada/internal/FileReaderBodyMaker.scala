@@ -18,8 +18,6 @@ trait FileReaderBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Internal.File_Reader is
 
-   package Byte_Reader renames ${packagePrefix.capitalize}.Internal.Byte_Reader;
-
    State : access Skill_State;
 
    procedure Read (pState : access Skill_State; File_Name : String) is
@@ -90,14 +88,15 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
 
             New_Type_Fields : Fields_Vector.Vector;
             New_Type_Storage_Pool : Storage_Pool_Vector.Vector;
-            New_Type : Type_Information := new Type_Declaration'
-              (Size => Type_Name'Length,
+            New_Type : Type_Information := new Type_Declaration'(
+               Size => Type_Name'Length,
                Name => Type_Name,
                Super_Name => Super_Name,
                bpsi => 1,
                lbpsi => 1,
                Fields => New_Type_Fields,
-               Storage_Pool => New_Type_Storage_Pool);
+               Storage_Pool => New_Type_Storage_Pool
+            );
          begin
             State.Put_Type (New_Type);
          end;
@@ -137,14 +136,15 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                   Field_End : Long := Byte_Reader.Read_v64;
                   Data_Length : Long := Field_End - Last_End;
                   Field : Field_Information := State.Get_Field (Type_Name, I);
-                  Chunk : Data_Chunk (Type_Name'Length, Field.Name'Length) :=
-                    (Type_Size => Type_Name'Length,
+                  Chunk : Data_Chunk (Type_Name'Length, Field.Name'Length) := (
+                     Type_Size => Type_Name'Length,
                      Field_Size => Field.Name'Length,
                      Type_Name => Type_Name,
                      Field_Name => Field.Name,
                      Start_Index => Start_Index,
                      End_Index => End_Index,
-                     Data_Length => Data_Length);
+                     Data_Length => Data_Length
+                  );
                begin
                   Last_End := Field_End;
                   Data_Chunks.Append (Chunk);
@@ -215,10 +215,11 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
          declare
             Field_Name : String := State.Get_String (Byte_Reader.Read_v64);
 
-            New_Field : Field_Information := new Field_Declaration'
-              (Size => Field_Name'Length,
+            New_Field : Field_Information := new Field_Declaration'(
+               Size => Field_Name'Length,
                Name => Field_Name,
-               F_Type => Field_Type);
+               F_Type => Field_Type
+            );
          begin
             State.Put_Field (Type_Name, New_Field);
          end;
@@ -235,10 +236,10 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
    begin
 ${
   var output = "";
-  for (t ← IR) {
-    output += s"""      if State.Has_Type ("%s") then
-         State.Get_Type ("%s").bpsi := State.Storage_Pool_Size ("%s") + 1;
-      end if;\r\n""".format(t.getSkillName, t.getSkillName, t.getSkillName)
+  for (d ← IR) {
+    output += s"""      if State.Has_Type ("${d.getSkillName}") then
+         State.Get_Type ("${d.getSkillName}").bpsi := State.Storage_Pool_Size ("${d.getSkillName}") + 1;
+      end if;\r\n"""
   }
   output.stripSuffix("\r\n")
 }
@@ -250,44 +251,43 @@ ${
   def printSuperTypes(d: Declaration): String = {
     var output = "";
     val superTypes = getSuperTypes(d).toList.reverse
-    superTypes.foreach {
+    superTypes.foreach({ t =>
       output += s"""\r\n\r\n               declare
-                  Sub_Type : Type_Information := State.Get_Type ("%s");
-                  Super_Type : Type_Information := State.Get_Type ("%s");
+                  Sub_Type : Type_Information := State.Get_Type ("${d.getSkillName}");
+                  Super_Type : Type_Information := State.Get_Type ("${t}");
                   Position : Natural := (Sub_Type.lbpsi - Super_Type.lbpsi) + Super_Type.bpsi + I - 1;
                begin
                   Super_Type.Storage_Pool.Replace_Element (Position, Object);
-               end;""".format(d.getSkillName, _)
-    }
+               end;"""
+    })
     output
   }
 
   def printDefaultValues(d: Declaration): String = {
-    var fieldsExists = false
-    var output = "'\r\n                 ("
-    val fields = d.getAllFields.filter { f ⇒ !f.isConstant && !f.isIgnored }
+    var output = ""
+    var hasFields = false;
+    val fields = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
     output += fields.map({ f ⇒
       val value = defaultValue(f)
       if ("null" != value) {
-          fieldsExists = true
-    	  s"""%s => %s""".format(f.getSkillName, value)
+          hasFields = true;
+    	  s"""                  ${f.getSkillName} => ${value}"""
       }
-    }).mkString(",\r\n                  ")
-    output += ")"
-    if (fieldsExists) output else ""
+    }).mkString("'(\r\n", ",\r\n", "\r\n               )")
+    if (hasFields) output else ""
   }
 
   var output = "";
-  for (t ← IR) {
-    output += s"""      if "%s" = Type_Name then
+  for (d ← IR) {
+    output += s"""      if "${d.getSkillName}" = Type_Name then
          for I in 1 .. Instance_Count loop
             declare
-               Object : Skill_Type_Access := new %s_Type${printDefaultValues(t)};
+               Object : Skill_Type_Access := new ${d.getName}_Type${printDefaultValues(d)};
             begin
-               State.Put_Object (Type_Name, Object);${printSuperTypes(t)}
+               State.Put_Object (Type_Name, Object);${printSuperTypes(d)}
             end;
          end loop;
-      end if;\r\n""".format(t.getSkillName, t.getName)
+      end if;\r\n"""
   }
   output.stripSuffix("\r\n")
 }
@@ -301,16 +301,16 @@ ${
    begin
 ${
   var output = "";
-  for (t ← IR) {
-    output += t.getFields.filter { f ⇒ !f.isAuto && !f.isIgnored }.map({ f ⇒
-      s"""      if "%s" = Chunk.Type_Name and then "%s" = Chunk.Field_Name then
+  for (d ← IR) {
+    output += d.getFields.filter { f ⇒ !f.isAuto && !f.isConstant && !f.isIgnored }.map({ f ⇒
+      s"""      if "${d.getSkillName}" = Chunk.Type_Name and then "${f.getSkillName}" = Chunk.Field_Name then
          for I in Chunk.Start_Index .. Chunk.End_Index loop
             declare
-            ${mapFileParser(t, f)}
+            ${mapFileParser(d, f)}
             end;
          end loop;
          Skip_Bytes := False;
-      end if;\r\n""".format(t.getSkillName, f.getSkillName)}).mkString("")
+      end if;\r\n"""}).mkString("")
   }
   output
 }

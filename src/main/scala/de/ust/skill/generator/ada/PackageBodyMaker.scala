@@ -18,13 +18,21 @@ package body ${packagePrefix.capitalize} is
 
 ${
   var output = "";
-  for (t ← IR) {
-    val name = t.getName
-    output += t.getAllFields.filter { f ⇒ f.isConstant && !f.isIgnored }.map({ f ⇒
-      s"""   function %s (Object : %s_Type) return %s is (%s);""".format(f.getName, name, mapType(f.getType), f.constantValue)
-    }).mkString("\r\n")
+  for (d ← IR) {
+    d.getAllFields.filter { f ⇒ !f.isIgnored }.foreach({ f ⇒
+      if (f.isConstant) {
+        output += s"""   function Get_${f.getSkillName.capitalize} (Object : ${d.getName}_Type) return ${mapType(f.getType)} is (${f.constantValue});\r\n\r\n"""
+      }
+      else {
+        output += s"""   function Get_${f.getSkillName.capitalize} (Object : ${d.getName}_Type) return ${mapType(f.getType)} is (Object.${f.getSkillName});\r\n"""
+        output += s"""   procedure Set_${f.getSkillName.capitalize} (Object : in out ${d.getName}_Type; Value : ${mapType(f.getType)}) is
+   begin
+      Object.${f.getSkillName} := Value;
+   end Set_${f.getSkillName.capitalize};\r\n\r\n"""
+      }
+    })
   }
-  output;
+  output.stripSuffix("\r\n\r\n");
 }
 
    protected body Skill_State is

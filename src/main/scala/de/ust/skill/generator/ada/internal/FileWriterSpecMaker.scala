@@ -16,7 +16,6 @@ trait FileWriterSpecMaker extends GeneralOutputMaker {
     out.write(s"""
 with ${packagePrefix.capitalize}.Internal.Byte_Writer;
 
-generic
 package ${packagePrefix.capitalize}.Internal.File_Writer is
 
    procedure Write (pState : access Skill_State; File_Name : String);

@@ -114,7 +114,7 @@ class Main extends FakeMain
 
     case t: ConstantLengthArrayType ⇒ "null"
 
-    case t: Declaration ⇒ "Skill_Type_Access"
+    case t: Declaration ⇒ s"${t.getName()}_Type_Access"
   }
 
   protected def mapFileParser(t: Type, f: Field): String = f.getType match {
@@ -157,10 +157,10 @@ class Main extends FakeMain
     case t: Declaration ⇒
       s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
             begin
-               Object.${f.getSkillName} := State.Get_Object ("${
+               Object.${f.getSkillName} := ${t.getName}_Type_Access (State.Get_Object ("${
                 val superTypes = getSuperTypes(t).toList;
                 if (superTypes.length > 0) superTypes(0); else t.getSkillName
-              }", Positive (Byte_Reader.Read_v64));"""
+              }", Positive (Byte_Reader.Read_v64)));"""
   }
 
   protected def getSuperTypes(d: Declaration): MutableList[String] = {
