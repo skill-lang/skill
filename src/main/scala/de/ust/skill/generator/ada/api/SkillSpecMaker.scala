@@ -27,6 +27,7 @@ ${
   }
   output
 }
+   procedure Create (State : access Skill_State);
    procedure Read (State : access Skill_State; File_Name : String);
    procedure Write (State : access Skill_State; File_Name : String);
 

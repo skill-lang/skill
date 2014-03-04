@@ -17,6 +17,11 @@ trait SkillBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Api.Skill is
 
+   procedure Create (State : access Skill_State) is
+   begin
+      null;
+   end Create;
+
    procedure Read (State : access Skill_State; File_Name : String) is
       package File_Reader renames Internal.File_Reader;
    begin
