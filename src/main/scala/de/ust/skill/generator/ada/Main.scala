@@ -117,12 +117,12 @@ class Main extends FakeMain
     case t: Declaration ⇒ s"${t.getName()}_Type_Access"
   }
 
-  protected def mapFileParser(t: Type, f: Field): String = f.getType match {
+  protected def mapFileReader(t: Type, f: Field): String = f.getType match {
     case ft: GroundType ⇒ ft.getName() match {
       case "annotation" ⇒
-      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
-               X : v64 := Byte_Reader.Read_v64;
-               Y : v64 := Byte_Reader.Read_v64;
+      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Item.Type_Name, I));
+               X : v64 := Byte_Reader.Read_v64 (Input_Stream);
+               Y : v64 := Byte_Reader.Read_v64 (Input_Stream);
             begin
                if 0 /= X then
                   Object.${f.getSkillName} := State.Get_Object (State.Get_String (X), Positive (Y));
@@ -130,24 +130,24 @@ class Main extends FakeMain
 
       case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
         if (f.isConstant) {
-          s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
+          s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Item.Type_Name, I));
             begin
                if Object.${f.getSkillName} /= Byte_Reader.Read_${mapType(f.getType)} then
                   raise Skill_Parse_Error;
                end if;"""
         } else {
-          s"""Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
+          s"""Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Item.Type_Name, I));
             begin
-               Object.${f.getSkillName} := Byte_Reader.Read_${mapType(f.getType)};"""
+               Object.${f.getSkillName} := Byte_Reader.Read_${mapType(f.getType)} (Input_Stream);"""
         }
 
       case "f32" ⇒ "ERROR"
       case "f64" ⇒ "ERROR"
 
       case "string" ⇒
-      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
+      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Item.Type_Name, I));
             begin
-               Object.${f.getSkillName} := SU.To_Unbounded_String (State.Get_String (Byte_Reader.Read_v64));"""
+               Object.${f.getSkillName} := SU.To_Unbounded_String (State.Get_String (Byte_Reader.Read_v64 (Input_Stream)));"""
     }
 
     case t: ConstantLengthArrayType ⇒
@@ -155,12 +155,12 @@ class Main extends FakeMain
                null;"""
 
     case t: Declaration ⇒
-      s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Chunk.Type_Name, I));
+      s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Item.Type_Name, I));
             begin
                Object.${f.getSkillName} := ${t.getName}_Type_Access (State.Get_Object ("${
                 val superTypes = getSuperTypes(t).toList;
                 if (superTypes.length > 0) superTypes(0); else t.getSkillName
-              }", Positive (Byte_Reader.Read_v64)));"""
+              }", Positive (Byte_Reader.Read_v64 (Input_Stream))));"""
   }
 
   protected def getSuperTypes(d: Declaration): MutableList[String] = {

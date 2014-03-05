@@ -18,24 +18,22 @@ with Ada.Unchecked_Conversion;
 
 package ${packagePrefix.capitalize}.Internal.Byte_Writer is
 
-   procedure Initialize (pOutput_Stream : ASS_IO.Stream_Access);
+   procedure Write_i8 (Stream : ASS_IO.Stream_Access; Value : i8);
+   procedure Write_i16 (Stream : ASS_IO.Stream_Access; Value : i16);
+   procedure Write_i32 (Stream : ASS_IO.Stream_Access; Value : i32);
+   procedure Write_i64 (Stream : ASS_IO.Stream_Access; Value : i64);
 
-   procedure Write_i8 (Value : i8);
-   procedure Write_i16 (Value : i16);
-   procedure Write_i32 (Value : i32);
-   procedure Write_i64 (Value : i64);
+   procedure Write_v64 (Stream : ASS_IO.Stream_Access; Value : v64);
 
-   procedure Write_v64 (Value : v64);
+   procedure Write_f32 (Stream : ASS_IO.Stream_Access; Value : f32);
+   procedure Write_f64 (Stream : ASS_IO.Stream_Access; Value : f64);
 
-   procedure Write_f32 (Value : f32);
-   procedure Write_f64 (Value : f64);
-
-   procedure Write_Boolean (Value : Boolean);
-   procedure Write_String (Value : String);
+   procedure Write_Boolean (Stream : ASS_IO.Stream_Access; Value : Boolean);
+   procedure Write_String (Stream : ASS_IO.Stream_Access; Value : String);
 
 private
 
-   procedure Write_Byte (Next : Byte);
+   procedure Write_Byte (Stream : ASS_IO.Stream_Access; Next : Byte);
 
    type Byte_v64_Type is array (Natural range <>) of Byte;
    function Get_v64_Bytes (Value : v64) return Byte_v64_Type;

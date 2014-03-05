@@ -8,6 +8,7 @@ package de.ust.skill.generator.ada.api
 import java.io.PrintWriter
 import scala.collection.JavaConversions._
 import de.ust.skill.generator.ada.GeneralOutputMaker
+import de.ust.skill.ir.Declaration
 
 trait SkillSpecMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -32,10 +33,20 @@ ${
    procedure Write (State : access Skill_State; File_Name : String);
 
 ${
+  def printParameters(d : Declaration): String = {
+    var hasFields = false;
+    var output = "";
+    output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
+      hasFields = true;
+      s"${f.getSkillName()} : ${mapType(f.getType)}"
+    }).mkString("; ", "; ", "")
+    if (hasFields) output else ""
+  }
+
   var output = "";
   for (d ← IR) {
     val parameters = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map(f => s"${f.getSkillName()} : ${mapType(f.getType)}").mkString("; ", "; ", "")
-    output += s"""   procedure New_${d.getName} (State : access Skill_State${parameters});\r\n"""
+    output += s"""   procedure New_${d.getName} (State : access Skill_State${printParameters(d)});\r\n"""
     output += s"""   function Get_${d.getName}s (State : access Skill_State) return ${d.getName}_Type_Accesses;\r\n"""
   }
   output

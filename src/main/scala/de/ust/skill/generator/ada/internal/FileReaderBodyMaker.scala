@@ -5,10 +5,9 @@
 \*                                                                            */
 package de.ust.skill.generator.ada.internal
 
-import de.ust.skill.generator.ada.GeneralOutputMaker
 import scala.collection.JavaConversions._
 import de.ust.skill.ir.Declaration
-import scala.collection.mutable.MutableList
+import de.ust.skill.generator.ada.GeneralOutputMaker
 
 trait FileReaderBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -18,15 +17,13 @@ trait FileReaderBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Internal.File_Reader is
 
-   State : access Skill_State;
-
    procedure Read (pState : access Skill_State; File_Name : String) is
       Input_File : ASS_IO.File_Type;
    begin
       State := pState;
 
       ASS_IO.Open (Input_File, ASS_IO.In_File, File_Name);
-      Byte_Reader.Initialize (ASS_IO.Stream (Input_File));
+      Input_Stream := ASS_IO.Stream (Input_File);
 
       while (not ASS_IO.End_Of_File (Input_File)) loop
          Read_String_Block;
@@ -38,14 +35,14 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
    end Read;
 
    procedure Read_String_Block is
-      Count : Long := Byte_Reader.Read_v64;
+      Count : Long := Byte_Reader.Read_v64 (Input_Stream);
       String_Lengths : array (1 .. Count) of Integer;
       Last_End : Integer := 0;
    begin
       --  read ends and calculate lengths
       for I in String_Lengths'Range loop
          declare
-            String_End : Integer := Byte_Reader.Read_i32;
+            String_End : Integer := Byte_Reader.Read_i32 (Input_Stream);
             String_Length : Integer := String_End - Last_End;
          begin
             String_Lengths (I) := String_End - Last_End;
@@ -57,7 +54,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
       for I in String_Lengths'Range loop
          declare
             String_Length : Integer := String_Lengths (I);
-            Next_String : String := Byte_Reader.Read_String (String_Length);
+            Next_String : String := Byte_Reader.Read_String (Input_Stream, String_Length);
          begin
             State.Put_String (Next_String);
          end;
@@ -65,7 +62,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
    end Read_String_Block;
 
    procedure Read_Type_Block is
-      Count : Long := Byte_Reader.Read_v64;
+      Count : Long := Byte_Reader.Read_v64 (Input_Stream);
       Last_End : Long := 0;
    begin
       for I in 1 .. Count loop
@@ -76,13 +73,13 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
    end Read_Type_Block;
 
    procedure Read_Type_Declaration (Last_End : in out Long) is
-      Type_Name : String := State.Get_String (Byte_Reader.Read_v64);
+      Type_Name : String := State.Get_String (Byte_Reader.Read_v64 (Input_Stream));
       Instance_Count : Natural;
       Field_Count : Long;
    begin
       if not State.Has_Type (Type_Name) then
          declare
-            Super_Name : Long := Byte_Reader.Read_v64;
+            Super_Name : Long := Byte_Reader.Read_v64 (Input_Stream);
 
             New_Type_Fields : Fields_Vector.Vector;
             New_Type_Storage_Pool : Storage_Pool_Vector.Vector;
@@ -100,24 +97,24 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
          end;
 
          if 0 /= State.Get_Type (Type_Name).Super_Name then
-            State.Get_Type (Type_Name).lbpsi := Positive (Byte_Reader.Read_v64);
+            State.Get_Type (Type_Name).lbpsi := Positive (Byte_Reader.Read_v64 (Input_Stream));
          end if;
 
-         Instance_Count := Natural (Byte_Reader.Read_v64);
+         Instance_Count := Natural (Byte_Reader.Read_v64 (Input_Stream));
          Skip_Restrictions;
       else
          if 0 /= State.Get_Type (Type_Name).Super_Name then
-            State.Get_Type (Type_Name).lbpsi := Positive (Byte_Reader.Read_v64);
+            State.Get_Type (Type_Name).lbpsi := Positive (Byte_Reader.Read_v64 (Input_Stream));
          end if;
 
-         Instance_Count := Natural (Byte_Reader.Read_v64);
+         Instance_Count := Natural (Byte_Reader.Read_v64 (Input_Stream));
       end if;
 
-      Field_Count := Byte_Reader.Read_v64;
+      Field_Count := Byte_Reader.Read_v64 (Input_Stream);
 
       declare
          Field_Index : Long;
-         Known_Fields : Long := State.Known_Fields (Type_Name);
+         Known_Fields : Long := Long (State.Field_Size (Type_Name));
          Start_Index : Natural;
          End_Index : Natural;
       begin
@@ -141,10 +138,10 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
             end if;
 
             declare
-               Field_End : Long := Byte_Reader.Read_v64;
+               Field_End : Long := Byte_Reader.Read_v64 (Input_Stream);
                Data_Length : Long := Field_End - Last_End;
                Field : Field_Information := State.Get_Field (Type_Name, Field_Index);
-               Chunk : Data_Chunk (Type_Name'Length, Field.Name'Length) := (
+               Item : Queue_Item (Type_Name'Length, Field.Name'Length) := (
                   Type_Size => Type_Name'Length,
                   Field_Size => Field.Name'Length,
                   Type_Name => Type_Name,
@@ -155,7 +152,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                );
             begin
                Last_End := Field_End;
-               Data_Chunks.Append (Chunk);
+               Read_Queue.Append (Item);
             end;
          end loop;
       end;
@@ -166,7 +163,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
       Skip_Restrictions;
 
       declare
-         Field_Type : Long := Byte_Reader.Read_v64;
+         Field_Type : Long := Byte_Reader.Read_v64 (Input_Stream);
       begin
          case Field_Type is
             --  constants i8, i16, i32, i64, v64
@@ -180,8 +177,8 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
             --  array T[i]
             when 15 =>
                declare
-                  X : Long := Byte_Reader.Read_v64;
-                  Y : Short_Short_Integer := Byte_Reader.Read_i8;
+                  X : Long := Byte_Reader.Read_v64 (Input_Stream);
+                  Y : Short_Short_Integer := Byte_Reader.Read_i8 (Input_Stream);
                begin
                   null;
                end;
@@ -189,7 +186,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
             --  array T[], list, set
             when 17 .. 19 =>
                declare
-                  X : Short_Short_Integer := Byte_Reader.Read_i8;
+                  X : Short_Short_Integer := Byte_Reader.Read_i8 (Input_Stream);
                begin
                   null;
                end;
@@ -197,11 +194,11 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
             --  map
             when 20 =>
                declare
-                  X : Long := Byte_Reader.Read_v64;
+                  X : Long := Byte_Reader.Read_v64 (Input_Stream);
                begin
                   for I in 1 .. X loop
                      declare
-                        Y : Short_Short_Integer := Byte_Reader.Read_i8;
+                        Y : Short_Short_Integer := Byte_Reader.Read_i8 (Input_Stream);
                      begin
                         null;
                      end;
@@ -218,7 +215,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
          end case;
 
          declare
-            Field_Name : String := State.Get_String (Byte_Reader.Read_v64);
+            Field_Name : String := State.Get_String (Byte_Reader.Read_v64 (Input_Stream));
 
             New_Field : Field_Information := new Field_Declaration'(
                Size => Field_Name'Length,
@@ -233,8 +230,8 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
 
    procedure Read_Field_Data is
    begin
-      Data_Chunks.Iterate (Data_Chunk_Vector_Iterator'Access);
-      Data_Chunks.Clear;
+      Read_Queue.Iterate (Read_Queue_Vector_Iterator'Access);
+      Read_Queue.Clear;
    end Read_Field_Data;
 
    procedure Update_Base_Pool_Start_Index is
@@ -298,8 +295,8 @@ ${
 }
    end Create_Objects;
 
-   procedure Data_Chunk_Vector_Iterator (Iterator : Data_Chunk_Vector.Cursor) is
-      Chunk : Data_Chunk := Data_Chunk_Vector.Element (Iterator);
+   procedure Read_Queue_Vector_Iterator (Iterator : Read_Queue_Vector.Cursor) is
+      Item : Queue_Item := Read_Queue_Vector.Element (Iterator);
       Skip_Bytes : Boolean := True;
 
       Skill_Parse_Error : exception;
@@ -308,10 +305,10 @@ ${
   var output = "";
   for (d ← IR) {
     output += d.getFields.filter { f ⇒ !f.isAuto && !f.isConstant && !f.isIgnored }.map({ f ⇒
-      s"""      if "${d.getSkillName}" = Chunk.Type_Name and then "${f.getSkillName}" = Chunk.Field_Name then
-         for I in Chunk.Start_Index .. Chunk.End_Index loop
+      s"""      if "${d.getSkillName}" = Item.Type_Name and then "${f.getSkillName}" = Item.Field_Name then
+         for I in Item.Start_Index .. Item.End_Index loop
             declare
-            ${mapFileParser(d, f)}
+               ${mapFileReader(d, f)}
             end;
          end loop;
          Skip_Bytes := False;
@@ -320,12 +317,12 @@ ${
   output
 }
       if True = Skip_Bytes then
-         Byte_Reader.Skip_Bytes (Chunk.Data_Length);
+         Byte_Reader.Skip_Bytes (Input_Stream, Item.Data_Length);
       end if;
-   end Data_Chunk_Vector_Iterator;
+   end Read_Queue_Vector_Iterator;
 
    procedure Skip_Restrictions is
-      Zero : Long := Byte_Reader.Read_v64;
+      Zero : Long := Byte_Reader.Read_v64 (Input_Stream);
    begin
       null;
    end Skip_Restrictions;

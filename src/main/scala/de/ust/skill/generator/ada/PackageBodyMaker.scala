@@ -60,11 +60,11 @@ ${
       --------------------
       --  STORAGE_POOL  --
       --------------------
-      function Get_Object (Type_Name : String; Position : Positive) return Skill_Type_Access is
-         (Get_Type (Type_Name).Storage_Pool.Element (Position));
-
       function Storage_Pool_Size (Type_Name : String) return Natural is
          (Natural (Get_Type (Type_Name).Storage_Pool.Length));
+
+      function Get_Object (Type_Name : String; Position : Positive) return Skill_Type_Access is
+         (Get_Type (Type_Name).Storage_Pool.Element (Position));
 
       procedure Put_Object (Type_Name : String; New_Object : Skill_Type_Access) is
       begin
@@ -79,14 +79,17 @@ ${
       --------------------------
       --  FIELD DECLARATIONS  --
       --------------------------
-      function Known_Fields (Name : String) return Long is
-         (Long (Types.Element (Name).Fields.Length));
+      function Field_Size (Type_Name : String) return Natural is
+         (Natural (Types.Element (Type_Name).Fields.Length));
 
-      function Get_Field (Type_Name : String; Position : Long) return Field_Information is
+      function Get_Field (Type_Name : String; Position : Positive) return Field_Information is
          X : Type_Information := Get_Type (Type_Name);
       begin
-         return X.Fields.Element (Positive (Position));
+         return X.Fields.Element (Position);
       end Get_Field;
+
+      function Get_Field (Type_Name : String; Position : Long) return Field_Information is
+         (Get_Field (Type_Name, Positive (Position)));
 
       procedure Put_Field (Type_Name : String; New_Field : Field_Information) is
          Type_Declaration : Type_Information := Types.Element (Type_Name);
@@ -97,6 +100,9 @@ ${
       --------------------------
       --  TYPES DECLARATIONS  --
       --------------------------
+      function Type_Size return Natural is
+         (Natural (Types.Length));
+
       function Has_Type (Name : String) return Boolean is
       begin
          return Types.Contains (Name);
@@ -115,6 +121,9 @@ ${
       begin
          Types.Insert (New_Type.Name, New_Type);
       end Put_Type;
+
+      function Get_Types return Types_Hash_Map.Map is
+         (Types);
 
    end Skill_State;
 

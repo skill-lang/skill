@@ -16,36 +16,29 @@ trait ByteWriterBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Internal.Byte_Writer is
 
-   Output_Stream : ASS_IO.Stream_Access;
-
-   procedure Initialize (pOutput_Stream : ASS_IO.Stream_Access) is
+   procedure Write_Byte (Stream : ASS_IO.Stream_Access; Next : Byte) is
    begin
-      Output_Stream := pOutput_Stream;
-   end Initialize;
-
-   procedure Write_Byte (Next : Byte) is
-   begin
-      Byte'Write (Output_Stream, Next);
+      Byte'Write (Stream, Next);
    end Write_Byte;
 
-   procedure Write_i8 (Value : i8) is
+   procedure Write_i8 (Stream : ASS_IO.Stream_Access; Value : i8) is
       function Convert is new Ada.Unchecked_Conversion (Source => i8, Target => Byte);
    begin
-      Write_Byte (Convert (Value));
+      Write_Byte (Stream, Convert (Value));
    end Write_i8;
 
-   procedure Write_i16 (Value : i16) is
+   procedure Write_i16 (Stream : ASS_IO.Stream_Access; Value : i16) is
       type Result is mod 2 ** 16;
       function Convert is new Ada.Unchecked_Conversion (Source => i16, Target => Result);
 
       A : Result := (Convert (Value) / (2 ** 8)) and 16#ff#;
       B : Result := Convert (Value) and 16#ff#;
    begin
-      Write_Byte (Byte (A));
-      Write_Byte (Byte (B));
+      Write_Byte (Stream, Byte (A));
+      Write_Byte (Stream, Byte (B));
    end Write_i16;
 
-   procedure Write_i32 (Value : i32) is
+   procedure Write_i32 (Stream : ASS_IO.Stream_Access; Value : i32) is
       type Result is mod 2 ** 32;
       function Convert is new Ada.Unchecked_Conversion (Source => i32, Target => Result);
 
@@ -54,13 +47,13 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Writer is
       C : Result := (Convert (Value) / (2 ** 8)) and 16#ff#;
       D : Result := Convert (Value) and 16#ff#;
    begin
-      Write_Byte (Byte (A));
-      Write_Byte (Byte (B));
-      Write_Byte (Byte (C));
-      Write_Byte (Byte (D));
+      Write_Byte (Stream, Byte (A));
+      Write_Byte (Stream, Byte (B));
+      Write_Byte (Stream, Byte (C));
+      Write_Byte (Stream, Byte (D));
    end Write_i32;
 
-   procedure Write_i64 (Value : i64) is
+   procedure Write_i64 (Stream : ASS_IO.Stream_Access; Value : i64) is
       type Result is mod 2 ** 64;
       function Convert is new Ada.Unchecked_Conversion (Source => i64, Target => Result);
 
@@ -73,21 +66,21 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Writer is
       G : Result := (Convert (Value) / (2 ** 8)) and 16#ff#;
       H : Result := Convert (Value) and 16#ff#;
    begin
-      Write_Byte (Byte (A));
-      Write_Byte (Byte (B));
-      Write_Byte (Byte (C));
-      Write_Byte (Byte (D));
-      Write_Byte (Byte (E));
-      Write_Byte (Byte (F));
-      Write_Byte (Byte (G));
-      Write_Byte (Byte (H));
+      Write_Byte (Stream, Byte (A));
+      Write_Byte (Stream, Byte (B));
+      Write_Byte (Stream, Byte (C));
+      Write_Byte (Stream, Byte (D));
+      Write_Byte (Stream, Byte (E));
+      Write_Byte (Stream, Byte (F));
+      Write_Byte (Stream, Byte (G));
+      Write_Byte (Stream, Byte (H));
    end Write_i64;
 
-   procedure Write_v64 (Value : v64) is
+   procedure Write_v64 (Stream : ASS_IO.Stream_Access; Value : v64) is
       rval : Byte_v64_Type := Get_v64_Bytes (Value);
    begin
       for I in rval'Range loop
-         Write_Byte (rval (I));
+         Write_Byte (Stream, rval (I));
       end loop;
    end Write_v64;
 
@@ -128,31 +121,31 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Writer is
       end;
    end Get_v64_Bytes;
 
-   procedure Write_f32 (Value : f32) is
+   procedure Write_f32 (Stream : ASS_IO.Stream_Access; Value : f32) is
       Skill_Unsupported_Type : exception;
    begin
       raise Skill_Unsupported_Type;
    end Write_f32;
 
-   procedure Write_f64 (Value : f64) is
+   procedure Write_f64 (Stream : ASS_IO.Stream_Access; Value : f64) is
       Skill_Unsupported_Type : exception;
    begin
       raise Skill_Unsupported_Type;
    end Write_f64;
 
-   procedure Write_Boolean (Value : Boolean) is
+   procedure Write_Boolean (Stream : ASS_IO.Stream_Access; Value : Boolean) is
    begin
       case Value is
-         when True => Write_Byte (16#ff#);
-         when False => Write_Byte (16#00#);
+         when True => Write_Byte (Stream, 16#ff#);
+         when False => Write_Byte (Stream, 16#00#);
       end case;
       Ada.Text_IO.Put_Line (Boolean'Image (Value));
    end Write_Boolean;
 
-   procedure Write_String (Value : String) is
+   procedure Write_String (Stream : ASS_IO.Stream_Access; Value : String) is
    begin
       for I in Value'Range loop
-         Write_Byte (Byte (Character'Pos (Value (I))));
+         Write_Byte (Stream, Byte (Character'Pos (Value (I))));
       end loop;
    end Write_String;
 

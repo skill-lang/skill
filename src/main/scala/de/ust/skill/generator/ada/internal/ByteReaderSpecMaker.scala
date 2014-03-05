@@ -18,26 +18,24 @@ with Ada.Unchecked_Conversion;
 
 package ${packagePrefix.capitalize}.Internal.Byte_Reader is
 
-   procedure Initialize (pInput_Stream : ASS_IO.Stream_Access);
+   function Read_i8 (Input_Stream : ASS_IO.Stream_Access) return i8;
+   function Read_i16 (Input_Stream : ASS_IO.Stream_Access) return i16;
+   function Read_i32 (Input_Stream : ASS_IO.Stream_Access) return i32;
+   function Read_i64 (Input_Stream : ASS_IO.Stream_Access) return i64;
 
-   function Read_i8 return i8;
-   function Read_i16 return i16;
-   function Read_i32 return i32;
-   function Read_i64 return i64;
+   function Read_v64 (Input_Stream : ASS_IO.Stream_Access) return v64;
 
-   function Read_v64 return v64;
+   function Read_f32 (Input_Stream : ASS_IO.Stream_Access) return f32;
+   function Read_f64 (Input_Stream : ASS_IO.Stream_Access) return f64;
 
-   function Read_f32 return f32;
-   function Read_f64 return f64;
+   function Read_Boolean (Input_Stream : ASS_IO.Stream_Access) return Boolean;
+   function Read_String (Input_Stream : ASS_IO.Stream_Access; Length : Integer) return String;
 
-   function Read_Boolean return Boolean;
-   function Read_String (Length : Integer) return String;
-
-   procedure Skip_Bytes (Length : Long);
+   procedure Skip_Bytes (Input_Stream : ASS_IO.Stream_Access; Length : Long);
 
 private
 
-   function Read_Byte return Byte;
+   function Read_Byte (Input_Stream : ASS_IO.Stream_Access) return Byte;
 
 end ${packagePrefix.capitalize}.Internal.Byte_Reader;
 """)

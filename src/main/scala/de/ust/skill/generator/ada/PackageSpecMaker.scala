@@ -135,20 +135,6 @@ ${
    package Types_Hash_Map is new Ada.Containers.Indefinite_Hashed_Maps
       (String, Type_Information, Ada.Strings.Hash, "=");
 
-   ------------------
-   --  DATA CHUNKS --
-   ------------------
-   type Data_Chunk (Type_Size, Field_Size : Positive) is record
-      Type_Name : String (1 .. Type_Size);
-      Field_Name : String (1 .. Field_Size);
-      Start_Index : Natural;
-      End_Index : Natural;
-      Data_Length : Long;
-   end record;
-
-   package Data_Chunk_Vector is new Ada.Containers.Indefinite_Vectors (Positive, Data_Chunk);
-   Data_Chunks : Data_Chunk_Vector.Vector;
-
    -------------------
    --  SKILL STATE  --
    -------------------
@@ -162,20 +148,23 @@ ${
       procedure Put_String (Value : String);
 
       --  storage pool
-      function Get_Object (Type_Name : String; Position : Positive) return Skill_Type_Access;
       function Storage_Pool_Size (Type_Name : String) return Natural;
+      function Get_Object (Type_Name : String; Position : Positive) return Skill_Type_Access;
       procedure Put_Object (Type_Name : String; New_Object : Skill_Type_Access);
       procedure Replace_Object (Type_Name : String; Position : Positive; New_Object : Skill_Type_Access);
 
       --  field declarations
-      function Known_Fields (Name : String) return Long;
+      function Field_Size (Type_Name : String) return Natural;
+      function Get_Field (Type_Name : String; Position : Positive) return Field_Information;
       function Get_Field (Type_Name : String; Position : Long) return Field_Information;
       procedure Put_Field (Type_Name : String; New_Field : Field_Information);
 
       --  type declarations
+      function Type_Size return Natural;
       function Has_Type (Name : String) return Boolean;
       function Get_Type (Name : String) return Type_Information;
       procedure Put_Type (New_Type : Type_Information);
+      function Get_Types return Types_Hash_Map.Map;
 
    private
 

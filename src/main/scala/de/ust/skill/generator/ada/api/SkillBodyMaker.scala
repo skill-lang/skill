@@ -8,6 +8,7 @@ package de.ust.skill.generator.ada.api
 import java.io.PrintWriter
 import scala.collection.JavaConversions._
 import de.ust.skill.generator.ada.GeneralOutputMaker
+import de.ust.skill.ir.Declaration
 
 trait SkillBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -34,14 +35,31 @@ package body ${packagePrefix.capitalize}.Api.Skill is
       File_Writer.Write (State, File_Name);
    end Write;
 ${
+  def printFields(d : Declaration): String = {
+    var output = ""
+    var hasFields = false
+    output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
+      hasFields = true
+      s"         ${f.getSkillName} => ${f.getSkillName}"
+    }).mkString("'(\r\n", ",\r\n", "\r\n      )")
+    if (hasFields) output else ""
+  }
+
+  def printParameters(d : Declaration): String = {
+    var output = "";
+    var hasFields = false
+    output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
+      hasFields = true
+      s"${f.getSkillName()} : ${mapType(f.getType)}"
+    }).mkString("; ", "; ", "")
+    if (hasFields) output else ""
+  }
+
   var output = "";
   for (d ← IR) {
-    val parameters = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map(f => s"${f.getSkillName()} : ${mapType(f.getType)}").mkString("; ", "; ", "")
-    val fields = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map(f => s"         ${f.getSkillName} => ${f.getSkillName}").mkString("'(\r\n", ",\r\n", "\r\n      )")
-
     output += s"""
-   procedure New_${d.getName} (State : access Skill_State${parameters}) is
-      New_Object : ${d.getName}_Type_Access := new ${d.getName}_Type${fields};
+   procedure New_${d.getName} (State : access Skill_State${printParameters(d)}) is
+      New_Object : ${d.getName}_Type_Access := new ${d.getName}_Type${printFields(d)};
    begin
       State.Put_Object ("${d.getSkillName}", Skill_Type_Access (New_Object));
    end New_${d.getName};
