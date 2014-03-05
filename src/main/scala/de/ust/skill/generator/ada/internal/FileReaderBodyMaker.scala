@@ -169,10 +169,6 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
          Field_Type : Long := Byte_Reader.Read_v64;
       begin
          case Field_Type is
-            --  unused
-            when Long'First .. -1 | 16 | 21 .. 31 =>
-               null;
-
             --  constants i8, i16, i32, i64, v64
             when 0 .. 4 =>
                null;
@@ -216,7 +212,9 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
             when 32 .. Long'Last =>
                null;
 
-            when others => null;
+            --  unused (Long'First .. -1 | 16 | 21 .. 31)
+            when others =>
+               null;
          end case;
 
          declare

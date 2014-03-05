@@ -91,11 +91,10 @@ ${
       s"""         ${f.getName} : ${mapType(f.getType)};${comment}"""
     }).mkString("\r\n")
     if (fields.length <= 0) output += s"""         null;"""
-    output += s"""\r\n      end record;\r\n"""
+    output += s"""\r\n      end record;\r\n\r\n"""
   }
   output.stripSuffix("\r\n")
 }
-
    ------------------
    --  STRING POOL --
    ------------------
