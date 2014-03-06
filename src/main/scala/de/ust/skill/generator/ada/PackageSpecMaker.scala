@@ -108,10 +108,11 @@ ${
    --------------------------
    --  FIELD DECLARATIONS  --
    --------------------------
-   type Field_Declaration (Size : Positive) is tagged
+   type Field_Declaration (Size : Positive) is
       record
          Name : String (1 .. Size);
          F_Type : Long;
+         Constant_Value : Long;
       end record;
    type Field_Information is access Field_Declaration;
 

@@ -140,12 +140,10 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
             declare
                Field_End : Long := Byte_Reader.Read_v64 (Input_Stream);
                Data_Length : Long := Field_End - Last_End;
-               Field : Field_Information := State.Get_Field (Type_Name, Field_Index);
-               Item : Queue_Item (Type_Name'Length, Field.Name'Length) := (
-                  Type_Size => Type_Name'Length,
-                  Field_Size => Field.Name'Length,
-                  Type_Name => Type_Name,
-                  Field_Name => Field.Name,
+               Field_Declaration : Field_Information := State.Get_Field (Type_Name, Field_Index);
+               Item : Queue_Item := (
+                  Type_Declaration => State.Get_Type (Type_Name),
+                  Field_Declaration => Field_Declaration,
                   Start_Index => Start_Index,
                   End_Index => End_Index,
                   Data_Length => Data_Length
@@ -163,16 +161,21 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
       Skip_Restrictions;
 
       declare
+         Constant_Value : Long := 0;
+         Field_Name_Index : Long;
          Field_Type : Long := Byte_Reader.Read_v64 (Input_Stream);
       begin
          case Field_Type is
-            --  constants i8, i16, i32, i64, v64
-            when 0 .. 4 =>
-               null;
-
-            --  annotation, bool, i8, i16, i32, i64, v64, f32, f64, string
-            when 5 .. 14 =>
-               null;
+            --  const i8
+            when 0 => Constant_Value := Long (Byte_Reader.Read_i8 (Input_Stream));
+            --  const i16
+            when 1 => Constant_Value := Long (Byte_Reader.Read_i16 (Input_Stream));
+            --  const i32
+            when 2 => Constant_Value := Long (Byte_Reader.Read_i32 (Input_Stream));
+            --  const i64
+            when 3 => Constant_Value := Byte_Reader.Read_i64 (Input_Stream);
+            --  const v64
+            when 4 => Constant_Value := Byte_Reader.Read_v64 (Input_Stream);
 
             --  array T[i]
             when 15 =>
@@ -205,22 +208,20 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                   end loop;
                end;
 
-            --  user type
-            when 32 .. Long'Last =>
-               null;
-
-            --  unused (Long'First .. -1 | 16 | 21 .. 31)
             when others =>
                null;
          end case;
 
+         Field_Name_Index := Byte_Reader.Read_v64 (Input_Stream);
+
          declare
-            Field_Name : String := State.Get_String (Byte_Reader.Read_v64 (Input_Stream));
+            Field_Name : String := State.Get_String (Field_Name_Index);
 
             New_Field : Field_Information := new Field_Declaration'(
                Size => Field_Name'Length,
                Name => Field_Name,
-               F_Type => Field_Type
+               F_Type => Field_Type,
+               Constant_Value => Constant_Value
             );
          begin
             State.Put_Field (Type_Name, New_Field);
@@ -299,16 +300,22 @@ ${
       Item : Queue_Item := Read_Queue_Vector.Element (Iterator);
       Skip_Bytes : Boolean := True;
 
+      Type_Declaration : Type_Information := Item.Type_Declaration;
+      Field_Declaration : Field_Information := Item.Field_Declaration;
+
+      Type_Name : String := Type_Declaration.Name;
+      Field_Name : String := Field_Declaration.Name;
+
       Skill_Parse_Error : exception;
    begin
 ${
   var output = "";
   for (d ← IR) {
-    output += d.getFields.filter { f ⇒ !f.isAuto && !f.isConstant && !f.isIgnored }.map({ f ⇒
-      s"""      if "${d.getSkillName}" = Item.Type_Name and then "${f.getSkillName}" = Item.Field_Name then
+    output += d.getFields.filter { f ⇒ !f.isAuto && !f.isIgnored }.map({ f ⇒
+      s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
          for I in Item.Start_Index .. Item.End_Index loop
             declare
-               ${mapFileReader(d, f)}
+            ${mapFileReader(d, f)}
             end;
          end loop;
          Skip_Bytes := False;

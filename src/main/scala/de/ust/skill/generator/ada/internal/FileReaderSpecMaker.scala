@@ -25,9 +25,9 @@ private
    State : access Skill_State;
    Input_Stream : ASS_IO.Stream_Access;
 
-   type Queue_Item (Type_Size, Field_Size : Positive) is record
-      Type_Name : String (1 .. Type_Size);
-      Field_Name : String (1 .. Field_Size);
+   type Queue_Item is record
+      Type_Declaration : Type_Information;
+      Field_Declaration : Field_Information;
       Start_Index : Natural;
       End_Index : Natural;
       Data_Length : Long;

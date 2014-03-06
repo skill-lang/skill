@@ -1,5 +1,6 @@
+Aircraft {}
+
 Airplane {
-	const i64 x = 42;
 	auto i32 y;
 	i16 id;
 	string name;

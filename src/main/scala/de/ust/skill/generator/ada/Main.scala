@@ -120,7 +120,7 @@ class Main extends FakeMain
   protected def mapFileReader(t: Type, f: Field): String = f.getType match {
     case ft: GroundType ⇒ ft.getName() match {
       case "annotation" ⇒
-      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Item.Type_Name, I));
+      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
                X : v64 := Byte_Reader.Read_v64 (Input_Stream);
                Y : v64 := Byte_Reader.Read_v64 (Input_Stream);
             begin
@@ -130,24 +130,50 @@ class Main extends FakeMain
 
       case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
         if (f.isConstant) {
-          s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Item.Type_Name, I));
+          s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
             begin
-               if Object.${f.getSkillName} /= Byte_Reader.Read_${mapType(f.getType)} then
+               if Object.Get_${f.getSkillName.capitalize} /= ${mapType(f.getType)} (Field_Declaration.Constant_Value) then
                   raise Skill_Parse_Error;
                end if;"""
         } else {
-          s"""Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Item.Type_Name, I));
+          s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
             begin
                Object.${f.getSkillName} := Byte_Reader.Read_${mapType(f.getType)} (Input_Stream);"""
         }
 
-      case "f32" ⇒ "ERROR"
-      case "f64" ⇒ "ERROR"
-
       case "string" ⇒
-      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Item.Type_Name, I));
+      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
             begin
                Object.${f.getSkillName} := SU.To_Unbounded_String (State.Get_String (Byte_Reader.Read_v64 (Input_Stream)));"""
+    }
+
+    case t: ConstantLengthArrayType ⇒
+      s"""   begin
+               null;"""
+
+    case t: Declaration ⇒
+      s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
+            begin
+               Object.${f.getSkillName} := ${t.getName}_Type_Access (State.Get_Object ("${
+                val superTypes = getSuperTypes(t).toList;
+                if (superTypes.length > 0) superTypes(0); else t.getSkillName
+              }", Positive (Byte_Reader.Read_v64 (Input_Stream))));"""
+  }
+
+  protected def mapFileWriter(t: Type, f: Field): String = f.getType match {
+    case ft: GroundType ⇒ ft.getName() match {
+      case "annotation" ⇒
+      	s"""begin
+               null;"""
+
+      case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
+        s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
+            begin
+               Byte_Writer.Write_${mapType(f.getType)} (Stream, Object.${f.getSkillName});"""
+
+      case "string" ⇒
+      	s"""begin
+               null;"""
     }
 
     case t: ConstantLengthArrayType ⇒
@@ -155,12 +181,8 @@ class Main extends FakeMain
                null;"""
 
     case t: Declaration ⇒
-      s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Item.Type_Name, I));
-            begin
-               Object.${f.getSkillName} := ${t.getName}_Type_Access (State.Get_Object ("${
-                val superTypes = getSuperTypes(t).toList;
-                if (superTypes.length > 0) superTypes(0); else t.getSkillName
-              }", Positive (Byte_Reader.Read_v64 (Input_Stream))));"""
+      s"""begin
+               null;"""
   }
 
   protected def getSuperTypes(d: Declaration): MutableList[String] = {

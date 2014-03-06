@@ -68,6 +68,7 @@ trait GeneralOutputMaker {
    * Assume the existence of a translation function for fields.
    */
   protected def mapFileReader(t: Type, f: Field): String
+  protected def mapFileWriter(t: Type, f: Field): String
 
   protected def getSuperTypes(d: Declaration): MutableList[String]
 

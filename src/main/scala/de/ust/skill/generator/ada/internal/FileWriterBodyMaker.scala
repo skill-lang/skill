@@ -90,33 +90,42 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
    procedure Write_Field_Declaration (Type_Declaration : Type_Information; Field_Declaration : Field_Information) is
       Type_Name : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
-      Size : Long := Field_Data_Size (Type_Name, Field_Name);
+      Field_Type : Long := Field_Declaration.F_Type;
+      Size : Long := Field_Data_Size (Type_Declaration, Field_Declaration);
    begin
       Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
-      Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.F_Type);  --  type TODO
+      Byte_Writer.Write_v64 (Output_Stream, Field_Type);
+
+      case Field_Type is
+         --  constants i8, i16, i32, i64, v64
+         when 0 .. 4 =>
+            null;
+
+         when others =>
+            null;
+      end case;
+
       Byte_Writer.Write_v64 (Output_Stream, Long (State.Get_String_Index (Field_Name)));
 
       Last_Types_End := Last_Types_End + Size;
       Byte_Writer.Write_v64 (Output_Stream, Last_Types_End);
 
       declare
-         Item : Queue_Item (Type_Name'Length, Field_Name'Length) := (
-            Type_Size => Type_Name'Length,
-            Field_Size => Field_Name'Length,
-            Type_Name => Type_Name,
-            Field_Name => Field_Name
+         Item : Queue_Item := (
+            Type_Declaration => Type_Declaration,
+            Field_Declaration => Field_Declaration
          );
       begin
          Write_Queue.Append (Item);
       end;
    end Write_Field_Declaration;
 
-   function Field_Data_Size (Type_Name, Field_Name : String) return Long is
+   function Field_Data_Size (Type_Declaration : Type_Information; Field_Declaration : Field_Information) return Long is
       Fake_Output_File : ASS_IO.File_Type;
       rval : Long;
    begin
       ASS_IO.Create (Fake_Output_File, ASS_IO.Out_File);
-      Write_Field_Data (ASS_IO.Stream (Fake_Output_File), Type_Name, Field_Name);
+      Write_Field_Data (ASS_IO.Stream (Fake_Output_File), Type_Declaration, Field_Declaration);
       rval := Long (ASS_IO.Size (Fake_Output_File));
       ASS_IO.Delete (Fake_Output_File);
       return rval;
@@ -125,20 +134,27 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
    procedure Write_Queue_Vector_Iterator (Iterator : Write_Queue_Vector.Cursor) is
       Item : Queue_Item := Write_Queue_Vector.Element (Iterator);
    begin
-      Write_Field_Data (Output_Stream, Item.Type_Name, Item.Field_Name);
+      Write_Field_Data (Output_Stream, Item.Type_Declaration, Item.Field_Declaration);
    end Write_Queue_Vector_Iterator;
 
-   procedure Write_Field_Data (Stream : ASS_IO.Stream_Access; Type_Name, Field_Name : String) is
+   procedure Write_Field_Data (Stream : ASS_IO.Stream_Access; Type_Declaration : Type_Information; Field_Declaration : Field_Information) is
+      Type_Name : String := Type_Declaration.Name;
+      Field_Name : String := Field_Declaration.Name;
    begin
-      if "date" = Type_Name and then "date" = Field_Name then
+${
+  var output = "";
+  for (d ← IR) {
+    output += d.getFields.filter { f ⇒ !f.isAuto && !f.isConstant && !f.isIgnored }.map({ f ⇒
+      s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
          for I in 1 .. State.Storage_Pool_Size (Type_Name) loop
             declare
-               Object : Date_Type_Access := Date_Type_Access (State.Get_Object (Type_Name, I));
-            begin
-               Byte_Writer.Write_v64 (Stream, Object.date);
+            ${mapFileWriter(d, f)}
             end;
          end loop;
-      end if;
+      end if;\r\n"""}).mkString("")
+  }
+  output
+}      null;
    end Write_Field_Data;
 
 end ${packagePrefix.capitalize}.Internal.File_Writer;
