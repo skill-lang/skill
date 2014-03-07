@@ -156,6 +156,7 @@ ${
 
       --  field declarations
       function Field_Size (Type_Name : String) return Natural;
+      function Has_Field (Type_Name, Field_Name : String) return Boolean;
       function Get_Field (Type_Name : String; Position : Positive) return Field_Information;
       function Get_Field (Type_Name : String; Position : Long) return Field_Information;
       function Get_Field (Type_Name, Field_Name : String) return Field_Information;

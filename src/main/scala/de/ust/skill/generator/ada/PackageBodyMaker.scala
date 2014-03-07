@@ -102,6 +102,25 @@ ${
       function Field_Size (Type_Name : String) return Natural is
          (Natural (Types.Element (Type_Name).Fields.Length));
 
+      function Has_Field (Type_Name, Field_Name : String) return Boolean is
+         use Fields_Vector;
+
+         Type_Declaration : Type_Information := Get_Type (Type_Name);
+         A_Cursor : Cursor := Type_Declaration.Fields.First;
+      begin
+         while A_Cursor /= No_Element loop
+            declare
+               Index : Positive := To_Index (A_Cursor);
+            begin
+               if Field_Name = Type_Declaration.Fields.Element (Index).Name then
+                  return True;
+               end if;
+            end;
+            Next (A_Cursor);
+         end loop;
+         return False;
+      end Has_Field;
+
       function Get_Field (Type_Name : String; Position : Positive) return Field_Information is
          X : Type_Information := Get_Type (Type_Name);
       begin
