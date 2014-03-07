@@ -25,18 +25,10 @@ trait SerializableStateMaker extends GeneralOutputMaker {
 
     out.write(s"""package ${packagePrefix}internal
 
-import java.io.ByteArrayOutputStream
-import java.io.IOException
-import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardOpenOption
-
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 
 import ${packagePrefix}api._
+import ${packagePrefix}internal.streams.FileOutputStream
 
 /**
  * This class is used to handle objects in a serializable state.
@@ -48,12 +40,14 @@ ${
       (for (t ← IR) yield s"  val ${t.getCapitalName}: ${t.getCapitalName}Access,").mkString("\n")
     }
   val String: StringAccess,
-  val pools: ArrayBuffer[StoragePool[_ <: SkillType]])
+  val pools: Array[StoragePool[_ <: SkillType]])
     extends SkillState {
+
+  val poolByName = pools.map(_.name).zip(pools).toSeq.toMap
 
   def all = pools.iterator.asInstanceOf[Iterator[Access[_ <: SkillType]]]
 
-  def write(target: Path): Unit = ???
+  def write(target: Path): Unit = new StateWriter(this, FileOutputStream.write(target))
   def write(): Unit = ???
 
   def append(): Unit = ???
@@ -210,10 +204,17 @@ object SerializableState {
    * Creates a new and empty serializable state.
    */
   def create(): SerializableState = {
-//    val result = new SerializableState;
-//    result.finishInitialization
-//    result
-    ???
+${
+      var i = -1
+      (for (t ← IR) yield s"""    val ${t.getCapitalName} = new ${t.getCapitalName}StoragePool(${i += 1; i}${if (null == t.getSuperType) "" else {", " + t.getSuperType.getCapitalName}})""").mkString("\n")
+    }
+    new SerializableState(
+${
+      (for (t ← IR) yield s"""      ${t.getCapitalName},""").mkString("\n")
+    }
+      new StringPool(null),
+      Array[StoragePool[_ <: SkillType]](${IR.map(_.getCapitalName).mkString(",")})
+    )
   }
 }
 """)

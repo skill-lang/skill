@@ -181,10 +181,12 @@ case class TypeDefinitionName(name: String) extends FieldType(-1) {
  * Contains type information and instances of user defined types.
  */
 sealed abstract class StoragePool[T <: SkillType](
-    private[internal] val poolIndex: Long,
-    val name: String,
-    private[internal] val knownFields: HashMap[String, FieldType],
-    private[internal] val superPool: Option[StoragePool[_ <: SkillType]]) extends FieldType(32 + poolIndex) {
+  private[internal] val poolIndex: Long,
+  val name: String,
+  private[internal] val knownFields: HashMap[String, FieldType],
+  private[internal] val superPool: Option[StoragePool[_ <: SkillType]])
+    extends FieldType(32 + poolIndex)
+    with Access[T] {
 
   val superName = superPool.map(_.name)
 
@@ -200,11 +202,13 @@ sealed abstract class StoragePool[T <: SkillType](
   /**
    * the sub pools are constructed during construction of all storage pools of a state
    */
-  private[internal] val subPools = new ArrayBuffer[StoragePool[_ <: T]];
+  private[internal] val subPools = new ArrayBuffer[SubPool[_ <: T]];
   // update sub-pool relation
-  if (superPool.isDefined) {
-    // @note: we drop the super type, because we can not know what it is in general
-    superPool.get.subPools.asInstanceOf[ArrayBuffer[StoragePool[_]]] += this
+  this match {
+    case t: SubPool[T] ⇒
+      // @note: we drop the super type, because we can not know what it is in general
+      superPool.get.subPools.asInstanceOf[ArrayBuffer[SubPool[_]]] += t
+    case _ ⇒
   }
 
   /**
@@ -276,9 +280,8 @@ sealed abstract class StoragePool[T <: SkillType](
   }
 }
 
-class BasePool[T <: SkillType](poolIndex: Long, name: String, knownFields: HashMap[String, FieldType])
-    extends StoragePool[T](poolIndex, name, knownFields, None)
-    with Access[T] {
+sealed class BasePool[T <: SkillType](poolIndex: Long, name: String, knownFields: HashMap[String, FieldType])
+    extends StoragePool[T](poolIndex, name, knownFields, None) {
 
   /**
    * We are the base pool.
@@ -331,9 +334,8 @@ class BasePool[T <: SkillType](poolIndex: Long, name: String, knownFields: HashM
   override def staticSize: Long = staticData.size + newObjects.length
 }
 
-class SubPool[T <: SkillType](poolIndex: Long, name: String, knownFields: HashMap[String, FieldType], superPool: StoragePool[_ <: SkillType])
-    extends StoragePool[T](poolIndex, name, knownFields, Some(superPool))
-    with Access[T] {
+sealed class SubPool[T <: SkillType](poolIndex: Long, name: String, knownFields: HashMap[String, FieldType], superPool: StoragePool[_ <: SkillType])
+    extends StoragePool[T](poolIndex, name, knownFields, Some(superPool)) {
 
   override val basePool = superPool.basePool
 

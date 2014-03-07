@@ -23,11 +23,14 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
 import ${packagePrefix}api._
-import ${packagePrefix}internal.streams.InStream""")
+import ${packagePrefix}internal.streams.InStream
+import ${packagePrefix}internal.streams.OutStream
+import ${packagePrefix}internal.streams.OutBuffer
+""")
 
     out.write("""
 final class StringPool(in: InStream) extends StringAccess {
-  //  import SerializationFunctions.v64
+  import SerializationFunctions.v64
 
   /**
    * the set of new strings, i.e. strings which do not have an ID
@@ -73,50 +76,61 @@ final class StringPool(in: InStream) extends StringAccess {
   override def all: Iterator[String] = (1 until stringPositions.size).map(get(_)).iterator ++ newStrings.iterator
   override def size = stringPositions.size + newStrings.size
 
-  //  /**
-  //   * prepares serialization of the string pool by adding new strings to the idMap
-  //   *
-  //   * @note TODO this solution is not correct if strings are not used anymore, i.e. it may produce garbage
-  //   */
-  //  private[internal] def prepareAndWrite(out: FileChannel, ws: WriteState) {
-  //    val serializationIDs = ws.serializationIDs
-  //
-  //    // ensure all strings are present
-  //    for (k ← stringPositions.keySet)
-  //      get(k)
-  //
-  //    // create inverse map
-  //    idMap.foreach({ case (k, v) ⇒ serializationIDs.put(v, k) })
-  //
-  //    // instert new strings to the map;
-  //    //  this is the place where duplications with lazy strings will be detected and eliminated
-  //    for (s ← newStrings)
-  //      if (!serializationIDs.contains(s)) {
-  //        idMap.put(idMap.size + 1, s)
-  //        serializationIDs.put(s, idMap.size)
-  //      }
-  //
-  //    //count
-  //    out.write(ByteBuffer.wrap(v64(idMap.size)))
-  //
-  //    //end & data
-  //    val end = ByteBuffer.allocate(4 * idMap.size)
-  //    val data = new ByteArrayOutputStream
-  //
-  //    var off = 0
-  //    for (i ← 1 to idMap.size) {
-  //      val s = idMap(i).getBytes()
-  //      off += s.length
-  //      end.putInt(off)
-  //      data.write(s)
-  //    }
-  //
-  //    //write back
-  //    end.rewind()
-  //    out.write(end)
-  //    out.write(ByteBuffer.wrap(data.toByteArray()))
-  //  }
-  //
+  /**
+   * prepares serialization of the string pool by adding new strings to the idMap
+   *
+   * writes the string block and provides implementation of the ws.string(Long ⇀ String) function
+   */
+  private[internal] def prepareAndWrite(out: OutStream, ws: StateWriter) {
+    val serializationIDs = ws.stringIDs
+
+    // ensure all strings are present
+    for (k ← 1 until stringPositions.size) {
+      get(k)
+    }
+
+    // create inverse map
+    for (i ← 1 until idMap.size) {
+      serializationIDs.put(idMap(i), i)
+    }
+
+    // instert new strings to the map;
+    //  this is the place where duplications with lazy strings will be detected and eliminated
+    for (s ← newStrings) {
+      if (!serializationIDs.contains(s)) {
+        serializationIDs.put(s, idMap.size)
+        idMap += s
+      }
+    }
+
+    //count
+    //@note idMap access performance hack
+    v64(idMap.size - 1, out)
+
+    //@note OutBuffer performance hack
+    //@note idMap access performance hack
+    if (1 != idMap.size) {
+      //end & data
+      val end = ByteBuffer.allocate(4 * (idMap.size - 1))
+
+      // unroll first loop step, to eliminate null checks in out buffer :)
+      var off = idMap(1).length
+      end.putInt(off)
+      val data = new OutBuffer(idMap(1).getBytes)
+
+      for (i ← 2 until idMap.size) {
+        val s = idMap(i).getBytes
+        off += s.length
+        end.putInt(off)
+        data.put(s)
+      }
+
+      //write back
+      out.put(end.array)
+      out.putAll(data)
+    }
+  }
+
   //  /**
   //   * prepares serialization of the string pool and appends new Strings to the output stream.
   //   */

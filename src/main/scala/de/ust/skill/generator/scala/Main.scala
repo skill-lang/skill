@@ -34,6 +34,11 @@ import de.ust.skill.parser.Parser
 import de.ust.skill.generator.scala.internal.FullyGenericInstanceMaker
 import de.ust.skill.generator.scala.internal.InternalInstancePropertiesMaker
 import de.ust.skill.generator.scala.internal.StringPoolMaker
+import com.sun.corba.se.pept.transport.OutboundConnectionCache
+import de.ust.skill.generator.scala.internal.streams.OutBufferMaker
+import de.ust.skill.generator.scala.internal.streams.OutStreamMaker
+import de.ust.skill.generator.scala.internal.streams.FileOutputStreamMaker
+import de.ust.skill.generator.scala.internal.StateWriterMaker
 
 /**
  * Entry point of the scala generator.
@@ -93,15 +98,19 @@ class Main extends FakeMain
     with ExceptionsMaker
     with FieldParserMaker
     with FileInputStreamMaker
+    with FileOutputStreamMaker
     with FileParserMaker
     with FullyGenericInstanceMaker
     with InStreamMaker
     with InternalInstancePropertiesMaker
     with internal.FieldDeclarationMaker
+    with OutBufferMaker
+    with OutStreamMaker
     with SerializableStateMaker
-    //    with SerializationFunctionsMaker
+    with SerializationFunctionsMaker
     with SkillStateMaker
     with SkillTypeMaker
+    with StateWriterMaker
     with StringPoolMaker
     with TypeInfoMaker {
 

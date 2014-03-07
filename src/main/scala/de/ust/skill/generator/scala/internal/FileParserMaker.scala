@@ -317,7 +317,7 @@ ${
       (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(newPool("${t.getSkillName}", null, null)).asInstanceOf[${t.getCapitalName}StoragePool],""").mkString("\n")
     }
       String,
-      types
+      types.to
     )
   }
 
