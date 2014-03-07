@@ -158,6 +158,7 @@ ${
       function Field_Size (Type_Name : String) return Natural;
       function Get_Field (Type_Name : String; Position : Positive) return Field_Information;
       function Get_Field (Type_Name : String; Position : Long) return Field_Information;
+      function Get_Field (Type_Name, Field_Name : String) return Field_Information;
       procedure Put_Field (Type_Name : String; New_Field : Field_Information);
 
       --  type declarations

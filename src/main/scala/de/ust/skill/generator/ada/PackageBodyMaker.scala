@@ -111,6 +111,27 @@ ${
       function Get_Field (Type_Name : String; Position : Long) return Field_Information is
          (Get_Field (Type_Name, Positive (Position)));
 
+      function Get_Field (Type_Name, Field_Name : String) return Field_Information is
+         use Fields_Vector;
+
+         X : Type_Information := Get_Type (Type_Name);
+         A_Cursor : Cursor := X.Fields.First;
+
+         Skill_Unexcepted_Field_Name : exception;
+      begin
+         while A_Cursor /= No_Element loop
+            declare
+               Index : Positive := To_Index (A_Cursor);
+            begin
+               if Field_Name = X.Fields.Element (Index).Name then
+                  return X.Fields.Element (Index);
+               end if;
+            end;
+            Next (A_Cursor);
+         end loop;
+         raise Skill_Unexcepted_Field_Name;
+      end;
+
       procedure Put_Field (Type_Name : String; New_Field : Field_Information) is
          Type_Declaration : Type_Information := Types.Element (Type_Name);
       begin
