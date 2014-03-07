@@ -47,14 +47,34 @@ ${
          (Get_String (Positive (Index)));
 
       function Get_String_Index (Value : String) return Natural is
-         (String_Pool.Reverse_Find_Index (Value));
+         Index : Natural := String_Pool.Reverse_Find_Index (Value);
+         Skill_Unknown_String_Index : exception;
+      begin
+         if 0 = Index then
+            raise Skill_Unknown_String_Index;
+         end if;
+         return Index;
+      end Get_String_Index;
 
       function String_Pool_Size return Natural is
          (Natural (String_Pool.Length));
 
-      procedure Put_String (Value : String) is
+      procedure Put_String (Value : String; Safe : Boolean := False) is
+         Append : Boolean := True;
       begin
-         String_Pool.Append (Value);
+         if True = Safe then
+            declare
+               Index : Natural := String_Pool.Reverse_Find_Index (Value);
+            begin
+               if 0 < Index then
+                  Append := False;
+               end if;
+            end;
+         end if;
+
+         if True = Append then
+            String_Pool.Append (Value);
+         end if;
       end Put_String;
 
       --------------------

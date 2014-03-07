@@ -18,6 +18,7 @@ trait SkillSpecMaker extends GeneralOutputMaker {
     out.write(s"""
 with ${packagePrefix.capitalize}.Internal.File_Reader;
 with ${packagePrefix.capitalize}.Internal.File_Writer;
+with ${packagePrefix.capitalize}.Internal.State_Maker;
 
 package ${packagePrefix.capitalize}.Api.Skill is
 

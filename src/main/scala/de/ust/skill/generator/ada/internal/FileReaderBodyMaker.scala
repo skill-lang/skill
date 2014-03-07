@@ -79,31 +79,39 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
    begin
       if not State.Has_Type (Type_Name) then
          declare
-            Super_Name : Long := Byte_Reader.Read_v64 (Input_Stream);
-
-            New_Type_Fields : Fields_Vector.Vector;
-            New_Type_Storage_Pool : Storage_Pool_Vector.Vector;
-            New_Type : Type_Information := new Type_Declaration'(
-               Size => Type_Name'Length,
-               Name => Type_Name,
-               Super_Name => Super_Name,
-               bpsi => 1,
-               lbpsi => 1,
-               Fields => New_Type_Fields,
-               Storage_Pool => New_Type_Storage_Pool
-            );
+            Super_Name_Index : Long := Byte_Reader.Read_v64 (Input_Stream);
+            Super_Name : SU.Unbounded_String := SU.To_Unbounded_String("");
          begin
-            State.Put_Type (New_Type);
+            if Super_Name_Index > 0 then
+               Super_Name := SU.To_Unbounded_String (State.Get_String (Super_Name_Index));
+            end if;
+
+            declare
+               New_Type_Fields : Fields_Vector.Vector;
+               New_Type_Storage_Pool : Storage_Pool_Vector.Vector;
+               New_Type : Type_Information := new Type_Declaration'(
+                  Type_Size => Type_Name'Length,
+                  Super_Size => SU.To_String (Super_Name)'Length,
+                  Name => Type_Name,
+                  Super_Name => SU.To_String (Super_Name),
+                  bpsi => 1,
+                  lbpsi => 1,
+                  Fields => New_Type_Fields,
+                  Storage_Pool => New_Type_Storage_Pool
+               );
+            begin
+               State.Put_Type (New_Type);
+            end;
          end;
 
-         if 0 /= State.Get_Type (Type_Name).Super_Name then
+         if 0 /= State.Get_Type (Type_Name).Super_Name'Length then
             State.Get_Type (Type_Name).lbpsi := Positive (Byte_Reader.Read_v64 (Input_Stream));
          end if;
 
          Instance_Count := Natural (Byte_Reader.Read_v64 (Input_Stream));
          Skip_Restrictions;
       else
-         if 0 /= State.Get_Type (Type_Name).Super_Name then
+         if 0 /= State.Get_Type (Type_Name).Super_Name'Length then
             State.Get_Type (Type_Name).lbpsi := Positive (Byte_Reader.Read_v64 (Input_Stream));
          end if;
 
@@ -311,7 +319,7 @@ ${
 ${
   var output = "";
   for (d ← IR) {
-    output += d.getFields.filter { f ⇒ !f.isAuto && !f.isIgnored }.map({ f ⇒
+    output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
       s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
          for I in Item.Start_Index .. Item.End_Index loop
             declare

@@ -33,6 +33,8 @@ private
    package Write_Queue_Vector is new Ada.Containers.Indefinite_Vectors (Positive, Queue_Item);
    Write_Queue : Write_Queue_Vector.Vector;
 
+   procedure Prepare_String_Pool;
+   procedure Prepare_String_Pool_Types_Iterator (Iterator : Types_Hash_Map.Cursor);
    procedure Write_String_Pool;
    procedure Write_Type_Block;
    procedure Types_Hash_Map_Iterator (Iterator : Types_Hash_Map.Cursor);
@@ -40,7 +42,8 @@ private
    procedure Write_Field_Declaration (Type_Declaration : Type_Information; Field_Declaration : Field_Information);
    function Field_Data_Size (Type_Declaration : Type_Information; Field_Declaration : Field_Information) return Long;
    procedure Write_Queue_Vector_Iterator (Iterator : Write_Queue_Vector.Cursor);
-   procedure Write_Field_Data (Stream : ASS_IO.Stream_Access; Type_Declaration : Type_Information; Field_Declaration : Field_Information);
+   procedure Write_Field_Data
+      (Stream : ASS_IO.Stream_Access; Type_Declaration : Type_Information; Field_Declaration : Field_Information);
 
 end ${packagePrefix.capitalize}.Internal.File_Writer;
 """)

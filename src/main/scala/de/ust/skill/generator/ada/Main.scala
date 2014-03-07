@@ -86,7 +86,9 @@ class Main extends FakeMain
     with FileReaderBodyMaker
     with FileReaderSpecMaker
     with FileWriterBodyMaker
-    with FileWriterSpecMaker {
+    with FileWriterSpecMaker
+    with StateMakerBodyMaker
+    with StateMakerSpecMaker {
 
   var outPath: String = null
   var IR: List[Declaration] = null
@@ -115,6 +117,29 @@ class Main extends FakeMain
     case t: ConstantLengthArrayType ⇒ "null"
 
     case t: Declaration ⇒ s"${t.getName()}_Type_Access"
+  }
+
+  override protected def mapTypeToId(t: Type): Long = t match {
+    case t: GroundType ⇒ t.getName() match {
+      case "annotation" ⇒ 5
+      case "bool"       ⇒ 6
+      case "i8"         ⇒ 7
+      case "i16"        ⇒ 8
+      case "i32"        ⇒ 9
+      case "i64"        ⇒ 10
+      case "v64"        ⇒ 11
+      case "f32"        ⇒ 12
+      case "f64"        ⇒ 13
+      case "string"     ⇒ 14
+    }
+
+    case t: ConstantLengthArrayType ⇒ 15
+    case t: VariableLengthArrayType ⇒ 17
+    case t: ListType                ⇒ 18
+    case t: SetType                 ⇒ 19
+    case t: MapType					⇒ 20
+
+    case t: Declaration				⇒ 32
   }
 
   protected def mapFileReader(t: Type, f: Field): String = f.getType match {

@@ -122,10 +122,10 @@ ${
    -------------------------
    --  TYPE DECLARATIONS  --
    -------------------------
-   type Type_Declaration (Size : Positive) is
+   type Type_Declaration (Type_Size : Positive; Super_Size : Natural) is
       record
-         Name : String (1 .. Size);
-         Super_Name : Long;
+         Name : String (1 .. Type_Size);
+         Super_Name : String (1 .. Super_Size);
          bpsi : Positive;
          lbpsi : Positive;
          Fields : Fields_Vector.Vector;
@@ -146,7 +146,7 @@ ${
       function Get_String (Index : Long) return String;
       function Get_String_Index (Value : String) return Natural;
       function String_Pool_Size return Natural;
-      procedure Put_String (Value : String);
+      procedure Put_String (Value : String; Safe : Boolean := False);
 
       --  storage pool
       function Storage_Pool_Size (Type_Name : String) return Natural;

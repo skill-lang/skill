@@ -34,24 +34,41 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       ASS_IO.Close (Output_File);
    end Write;
 
-   procedure Write_String_Pool is
-      Size : Natural := State.String_Pool_Size;
-      Last_String_End : Natural := 0;
+   procedure Prepare_String_Pool is
    begin
-      Byte_Writer.Write_v64 (Output_Stream, Long (Size));
+      State.Get_Types.Iterate (Prepare_String_Pool_Types_Iterator'Access);
+   end Prepare_String_Pool;
 
-      for I in 1 .. Size loop
-         declare
-            String_Length : Positive := State.Get_String (I)'Length + Last_String_End;
-         begin
-            Byte_Writer.Write_i32 (Output_Stream, String_Length);
-            Last_String_End := String_Length;
-         end;
-      end loop;
+   procedure Prepare_String_Pool_Types_Iterator (Iterator : Types_Hash_Map.Cursor) is
+      Type_Declaration : Type_Information := Types_Hash_Map.Element (Iterator);
+      Type_Name : String := Type_Declaration.Name;
+   begin
+      State.Put_String (Type_Name, Safe => True);
+   end Prepare_String_Pool_Types_Iterator;
 
-      for I in 1 .. Size loop
-         Byte_Writer.Write_String (Output_Stream, State.Get_String (I));
-      end loop;
+   procedure Write_String_Pool is
+   begin
+      Prepare_String_Pool;
+
+      declare
+         Size : Natural := State.String_Pool_Size;
+         Last_String_End : Natural := 0;
+      begin
+         Byte_Writer.Write_v64 (Output_Stream, Long (Size));
+
+         for I in 1 .. Size loop
+            declare
+               String_Length : Positive := State.Get_String (I)'Length + Last_String_End;
+            begin
+               Byte_Writer.Write_i32 (Output_Stream, String_Length);
+               Last_String_End := String_Length;
+            end;
+         end loop;
+
+         for I in 1 .. Size loop
+            Byte_Writer.Write_String (Output_Stream, State.Get_String (I));
+         end loop;
+      end;
    end Write_String_Pool;
 
    procedure Write_Type_Block is
@@ -70,7 +87,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       Type_Declaration : Type_Information := Types_Hash_Map.Element (Iterator);
    begin
       Write_Type_Declaration (Type_Declaration);
-   end;
+   end Types_Hash_Map_Iterator;
 
    procedure Write_Type_Declaration (Type_Declaration : Type_Information) is
       Type_Name : String := Type_Declaration.Name;
@@ -137,7 +154,11 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       Write_Field_Data (Output_Stream, Item.Type_Declaration, Item.Field_Declaration);
    end Write_Queue_Vector_Iterator;
 
-   procedure Write_Field_Data (Stream : ASS_IO.Stream_Access; Type_Declaration : Type_Information; Field_Declaration : Field_Information) is
+   procedure Write_Field_Data (
+      Stream : ASS_IO.Stream_Access;
+      Type_Declaration : Type_Information;
+      Field_Declaration : Field_Information
+   ) is
       Type_Name : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
    begin
