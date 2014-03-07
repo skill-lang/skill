@@ -44,7 +44,15 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       Type_Name : String := Type_Declaration.Name;
    begin
       State.Put_String (Type_Name, Safe => True);
+      Type_Declaration.Fields.Iterate (Prepare_String_Pool_Fields_Iterator'Access);
    end Prepare_String_Pool_Types_Iterator;
+
+   procedure Prepare_String_Pool_Fields_Iterator (Iterator : Fields_Vector.Cursor) is
+      Field_Declaration : Field_Information := Fields_Vector.Element (Iterator);
+      Field_Name : String := Field_Declaration.Name;
+   begin
+      State.Put_String (Field_Name, Safe => True);
+   end Prepare_String_Pool_Fields_Iterator;
 
    procedure Write_String_Pool is
    begin

@@ -36,6 +36,7 @@ private
 
    procedure Prepare_String_Pool;
    procedure Prepare_String_Pool_Types_Iterator (Iterator : Types_Hash_Map.Cursor);
+   procedure Prepare_String_Pool_Fields_Iterator (Iterator : Fields_Vector.Cursor);
    procedure Write_String_Pool;
    procedure Write_Type_Block;
    procedure Types_Hash_Map_Iterator (Iterator : Types_Hash_Map.Cursor);
