@@ -150,6 +150,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                Data_Length : Long := Field_End - Last_End;
                Field_Declaration : Field_Information := State.Get_Field (Type_Name, Field_Index);
                Item : Queue_Item := (
+                  Option => Data,
                   Type_Declaration => State.Get_Type (Type_Name),
                   Field_Declaration => Field_Declaration,
                   Start_Index => Start_Index,
@@ -316,11 +317,15 @@ ${
 
       Skill_Parse_Error : exception;
    begin
+      if Item.Option = Skip then
+         Byte_Reader.Skip_Bytes (Input_Stream, Item.Data_Length);
+      end if;
+
 ${
   var output = "";
   for (d ← IR) {
     output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
-      s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
+      s"""      if Item.Option = Data and then "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
          for I in Item.Start_Index .. Item.End_Index loop
             declare
             ${mapFileReader(d, f)}
@@ -329,8 +334,9 @@ ${
          Skip_Bytes := False;
       end if;\r\n"""}).mkString("")
   }
-  output
+  output.stripSuffix("\r\n")
 }
+
       if True = Skip_Bytes then
          Byte_Reader.Skip_Bytes (Input_Stream, Item.Data_Length);
       end if;
