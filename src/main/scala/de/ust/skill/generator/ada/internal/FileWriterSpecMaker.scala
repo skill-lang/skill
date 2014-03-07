@@ -25,10 +25,11 @@ private
    State : access Skill_State;
    Output_Stream : ASS_IO.Stream_Access;
 
-   type Queue_Item is record
-      Type_Declaration : Type_Information;
-      Field_Declaration : Field_Information;
-   end record;
+   type Queue_Item is
+      record
+         Type_Declaration : Type_Information;
+         Field_Declaration : Field_Information;
+      end record;
 
    package Write_Queue_Vector is new Ada.Containers.Indefinite_Vectors (Positive, Queue_Item);
    Write_Queue : Write_Queue_Vector.Vector;
