@@ -26,8 +26,10 @@ package body ${packagePrefix.capitalize}.Api.Skill is
 
    procedure Read (State : access Skill_State; File_Name : String) is
       package File_Reader renames Internal.File_Reader;
+      package State_Maker renames Internal.State_Maker;
    begin
       File_Reader.Read (State, File_Name);
+      State_Maker.Create (State);
    end Read;
 
    procedure Write (State : access Skill_State; File_Name : String) is
