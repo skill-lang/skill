@@ -196,7 +196,7 @@ class Main extends FakeMain
                   Byte_Writer.Write_v64 (Stream, 0);
                else
                   Byte_Writer.Write_v64 (Stream, Long (State.Get_String_Index (Type_Name)));
-                  Byte_Writer.Write_v64 (Stream, Long (Object.skill_id));
+                  Byte_Writer.Write_v64 (Stream, Long (Object.${f.getSkillName}.skill_id));
                end if;"""
 
       case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
@@ -205,8 +205,9 @@ class Main extends FakeMain
                Byte_Writer.Write_${mapType(f.getType)} (Stream, Object.${f.getSkillName});"""
 
       case "string" ⇒
-      	s"""begin
-               null;"""
+      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
+      	    begin
+               Byte_Writer.Write_v64 (Stream, Long (State.Get_String_Index (SU.To_String (Object.${f.getSkillName}))));"""
     }
 
     case t: ConstantLengthArrayType ⇒
