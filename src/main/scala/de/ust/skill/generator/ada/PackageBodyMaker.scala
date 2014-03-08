@@ -106,17 +106,17 @@ ${
          use Fields_Vector;
 
          Type_Declaration : Type_Information := Get_Type (Type_Name);
-         A_Cursor : Cursor := Type_Declaration.Fields.First;
+         Position : Cursor := Type_Declaration.Fields.First;
       begin
-         while A_Cursor /= No_Element loop
+         while Position /= No_Element loop
             declare
-               Index : Positive := To_Index (A_Cursor);
+               Index : Positive := To_Index (Position);
             begin
                if Field_Name = Type_Declaration.Fields.Element (Index).Name then
                   return True;
                end if;
             end;
-            Next (A_Cursor);
+            Next (Position);
          end loop;
          return False;
       end Has_Field;
@@ -134,19 +134,19 @@ ${
          use Fields_Vector;
 
          X : Type_Information := Get_Type (Type_Name);
-         A_Cursor : Cursor := X.Fields.First;
+         Position : Cursor := X.Fields.First;
 
          Skill_Unexcepted_Field_Name : exception;
       begin
-         while A_Cursor /= No_Element loop
+         while Position /= No_Element loop
             declare
-               Index : Positive := To_Index (A_Cursor);
+               Index : Positive := To_Index (Position);
             begin
                if Field_Name = X.Fields.Element (Index).Name then
                   return X.Fields.Element (Index);
                end if;
             end;
-            Next (A_Cursor);
+            Next (Position);
          end loop;
          raise Skill_Unexcepted_Field_Name;
       end;
