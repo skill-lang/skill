@@ -139,7 +139,6 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Writer is
          when True => Write_Byte (Stream, 16#ff#);
          when False => Write_Byte (Stream, 16#00#);
       end case;
-      Ada.Text_IO.Put_Line (Boolean'Image (Value));
    end Write_Boolean;
 
    procedure Write_String (Stream : ASS_IO.Stream_Access; Value : String) is
