@@ -77,7 +77,10 @@ ${
 }
 private
 
-   type Skill_Type is abstract tagged null record;
+   type Skill_Type is abstract tagged
+      record
+         skill_id : Natural;
+      end record;
 
 ${
   var output = "";

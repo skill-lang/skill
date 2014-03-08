@@ -39,13 +39,12 @@ package body ${packagePrefix.capitalize}.Api.Skill is
    end Write;
 ${
   def printFields(d : Declaration): String = {
-    var output = ""
-    var hasFields = false
+    var output = s"""'(\r\n         skill_id => State.Storage_Pool_Size ("${d.getSkillName}") + 1"""
     output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
-      hasFields = true
-      s"         ${f.getSkillName} => ${f.getSkillName}"
-    }).mkString("'(\r\n", ",\r\n", "\r\n      )")
-    if (hasFields) output else ""
+      s",\r\n         ${f.getSkillName} => ${f.getSkillName}"
+    }).mkString("")
+    output += "\r\n      )";
+    output
   }
 
   def printParameters(d : Declaration): String = {

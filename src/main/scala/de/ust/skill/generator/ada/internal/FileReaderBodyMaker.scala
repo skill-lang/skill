@@ -271,17 +271,13 @@ ${
   }
 
   def printDefaultValues(d: Declaration): String = {
-    var output = ""
-    var hasFields = false;
+    var output = s"""'(\r\n                  skill_id => State.Storage_Pool_Size ("${d.getSkillName}") + 1"""
     val fields = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
     output += fields.map({ f ⇒
-      val value = defaultValue(f)
-      if ("null" != value) {
-          hasFields = true;
-    	  s"""                  ${f.getSkillName} => ${value}"""
-      }
-    }).mkString("'(\r\n", ",\r\n", "\r\n               )")
-    if (hasFields) output else ""
+      s""",\r\n                  ${f.getSkillName} => ${defaultValue(f)}"""
+    }).mkString("")
+    output += "\r\n               )";
+    output
   }
 
   var output = "";
