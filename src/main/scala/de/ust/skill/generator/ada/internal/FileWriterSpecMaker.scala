@@ -39,6 +39,7 @@ private
    procedure Prepare_String_Pool_Fields_Iterator (Iterator : Fields_Vector.Cursor);
    procedure Prepare_String_Pool_Storage_Pool_Iterator (Iterator : Storage_Pool_Vector.Cursor);
    procedure Write_String_Pool;
+   function Count_Instantiated_Types return Long;
    procedure Write_Type_Block;
    procedure Types_Hash_Map_Iterator (Iterator : Types_Hash_Map.Cursor);
    procedure Write_Type_Declaration (Type_Declaration : Type_Information);

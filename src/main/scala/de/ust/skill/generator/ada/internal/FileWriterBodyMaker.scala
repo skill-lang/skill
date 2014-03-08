@@ -44,10 +44,12 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       Type_Name : String := Type_Declaration.Name;
       Super_Name : String := Type_Declaration.Super_Name;
    begin
-      State.Put_String (Type_Name, Safe => True);
-      State.Put_String (Super_Name, Safe => True);
-      Type_Declaration.Fields.Iterate (Prepare_String_Pool_Fields_Iterator'Access);
-      Type_Declaration.Storage_Pool.Iterate (Prepare_String_Pool_Storage_Pool_Iterator'Access);
+      if 0 < State.Storage_Pool_Size (Type_Name) then
+         State.Put_String (Type_Name, Safe => True);
+         State.Put_String (Super_Name, Safe => True);
+         Type_Declaration.Fields.Iterate (Prepare_String_Pool_Fields_Iterator'Access);
+         Type_Declaration.Storage_Pool.Iterate (Prepare_String_Pool_Storage_Pool_Iterator'Access);
+      end if;
    end Prepare_String_Pool_Types_Iterator;
 
    procedure Prepare_String_Pool_Fields_Iterator (Iterator : Fields_Vector.Cursor) is
@@ -105,8 +107,26 @@ ${
       end;
    end Write_String_Pool;
 
+   function Count_Instantiated_Types return Long is
+      use Types_Hash_Map;
+
+      rval : Long := 0;
+
+      procedure Iterate (Iterator : Cursor) is
+         Type_Declaration : Type_Information := Types_Hash_Map.Element (Iterator);
+         Type_Name : String := Type_Declaration.Name;
+      begin
+         if 0 < State.Storage_Pool_Size (Type_Name) then
+            rval := rval + 1;
+         end if;
+      end Iterate;
+   begin
+      State.Get_Types.Iterate (Iterate'Access);
+      return rval;
+   end Count_Instantiated_Types;
+
    procedure Write_Type_Block is
-      Count : Long := Long (State.Type_Size);
+      Count : Long := Count_Instantiated_Types;
    begin
       Byte_Writer.Write_v64 (Output_Stream, Count);
 
@@ -119,8 +139,11 @@ ${
 
    procedure Types_Hash_Map_Iterator (Iterator : Types_Hash_Map.Cursor) is
       Type_Declaration : Type_Information := Types_Hash_Map.Element (Iterator);
+      Type_Name : String := Type_Declaration.Name;
    begin
-      Write_Type_Declaration (Type_Declaration);
+      if 0 < State.Storage_Pool_Size (Type_Name) then
+         Write_Type_Declaration (Type_Declaration);
+      end if;
    end Types_Hash_Map_Iterator;
 
    procedure Write_Type_Declaration (Type_Declaration : Type_Information) is
