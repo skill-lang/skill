@@ -44,6 +44,11 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       Type_Name : String := Type_Declaration.Name;
    begin
       State.Put_String (Type_Name, Safe => True);
+
+      if 0 < Super_Name'Length then
+         State.Put_String (Super_Name, Safe => True);
+      end if;
+
       Type_Declaration.Fields.Iterate (Prepare_String_Pool_Fields_Iterator'Access);
       Type_Declaration.Storage_Pool.Iterate (Prepare_String_Pool_Storage_Pool_Iterator'Access);
    end Prepare_String_Pool_Types_Iterator;
