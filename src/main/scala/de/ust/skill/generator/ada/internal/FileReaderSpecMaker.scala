@@ -25,18 +25,13 @@ private
    State : access Skill_State;
    Input_Stream : ASS_IO.Stream_Access;
 
-   type Queue_Item_Type is (Data, Skip);
-   type Queue_Item (Option : Queue_Item_Type) is
+   type Queue_Item is
       record
+         Type_Declaration : Type_Information;
+         Field_Declaration : Field_Information;
+         Start_Index : Natural;
+         End_Index : Natural;
          Data_Length : Long;
-         case Option is
-            when Data =>
-               Type_Declaration : Type_Information;
-               Field_Declaration : Field_Information;
-               Start_Index : Natural;
-               End_Index : Natural;
-            when Skip => null;
-         end case;
       end record;
 
    package Read_Queue_Vector is new Ada.Containers.Indefinite_Vectors (Positive, Queue_Item);
