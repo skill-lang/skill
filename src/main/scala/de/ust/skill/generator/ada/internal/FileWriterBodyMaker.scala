@@ -116,15 +116,19 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       Type_Name : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
       Field_Type : Long := Field_Declaration.F_Type;
+      Constant_Value : Long := Field_Declaration.Constant_Value;
       Size : Long := Field_Data_Size (Type_Declaration, Field_Declaration);
    begin
       Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
       Byte_Writer.Write_v64 (Output_Stream, Field_Type);
 
       case Field_Type is
-         --  constants i8, i16, i32, i64, v64
-         when 0 .. 4 =>
-            null;
+         --  const i8, i16, i32, i64, v64
+         when 0 => Byte_Writer.Write_i8 (Output_Stream, Short_Short_Integer (Constant_Value));
+         when 1 => Byte_Writer.Write_i16 (Output_Stream, Short (Constant_Value));
+         when 2 => Byte_Writer.Write_i32 (Output_Stream, Integer (Constant_Value));
+         when 3 => Byte_Writer.Write_i64 (Output_Stream, Constant_Value);
+         when 4 => Byte_Writer.Write_v64 (Output_Stream, Constant_Value);
 
          when others =>
             null;

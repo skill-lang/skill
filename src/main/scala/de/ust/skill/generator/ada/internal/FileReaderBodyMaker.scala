@@ -150,7 +150,6 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                Data_Length : Long := Field_End - Last_End;
                Field_Declaration : Field_Information := State.Get_Field (Type_Name, Field_Index);
                Item : Queue_Item := (
-                  Option => Data,
                   Type_Declaration => State.Get_Type (Type_Name),
                   Field_Declaration => Field_Declaration,
                   Start_Index => Start_Index,
@@ -170,20 +169,16 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
       Skip_Restrictions;
 
       declare
-         Constant_Value : Long := 0;
          Field_Name_Index : Long;
          Field_Type : Long := Byte_Reader.Read_v64 (Input_Stream);
+         Constant_Value : Long := 0;
       begin
          case Field_Type is
-            --  const i8
+            --  const i8, i16, i32, i64, v64
             when 0 => Constant_Value := Long (Byte_Reader.Read_i8 (Input_Stream));
-            --  const i16
             when 1 => Constant_Value := Long (Byte_Reader.Read_i16 (Input_Stream));
-            --  const i32
             when 2 => Constant_Value := Long (Byte_Reader.Read_i32 (Input_Stream));
-            --  const i64
             when 3 => Constant_Value := Byte_Reader.Read_i64 (Input_Stream);
-            --  const v64
             when 4 => Constant_Value := Byte_Reader.Read_v64 (Input_Stream);
 
             --  array T[i]
@@ -317,15 +312,11 @@ ${
 
       Skill_Parse_Error : exception;
    begin
-      if Item.Option = Skip then
-         Byte_Reader.Skip_Bytes (Input_Stream, Item.Data_Length);
-      end if;
-
 ${
   var output = "";
   for (d ← IR) {
     output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
-      s"""      if Item.Option = Data and then "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
+      s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
          for I in Item.Start_Index .. Item.End_Index loop
             declare
             ${mapFileReader(d, f)}
