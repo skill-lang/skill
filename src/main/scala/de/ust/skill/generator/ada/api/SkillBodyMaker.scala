@@ -20,22 +20,42 @@ package body ${packagePrefix.capitalize}.Api.Skill is
 
    procedure Create (State : access Skill_State) is
       package State_Maker renames Internal.State_Maker;
+
+      Skill_State_Already_Consumed : exception;
    begin
-      State_Maker.Create (State);
+      if False = State.Is_Consumed then
+         State_Maker.Create (State);
+         State.Consume;
+      else
+         raise Skill_State_Already_Consumed;
+      end if;
    end Create;
 
    procedure Read (State : access Skill_State; File_Name : String) is
       package File_Reader renames Internal.File_Reader;
       package State_Maker renames Internal.State_Maker;
+
+      Skill_State_Already_Consumed : exception;
    begin
-      File_Reader.Read (State, File_Name);
-      State_Maker.Create (State);
+      if False = State.Is_Consumed then
+         File_Reader.Read (State, File_Name);
+         State_Maker.Create (State);
+         State.Consume;
+      else
+         raise Skill_State_Already_Consumed;
+      end if;
    end Read;
 
    procedure Write (State : access Skill_State; File_Name : String) is
       package File_Writer renames Internal.File_Writer;
+
+      Skill_State_Not_Consumed : exception;
    begin
-      File_Writer.Write (State, File_Name);
+      if True = State.Is_Consumed then
+         File_Writer.Write (State, File_Name);
+      else
+         raise Skill_State_Not_Consumed;
+      end if;
    end Write;
 ${
   def printFields(d : Declaration): String = {

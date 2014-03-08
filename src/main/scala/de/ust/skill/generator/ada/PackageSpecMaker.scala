@@ -77,6 +77,8 @@ ${
 }
 private
 
+   type Skill_States is (Unconsumed, Consumed);
+
    type Skill_Type is abstract tagged
       record
          skill_id : Natural;
@@ -172,10 +174,15 @@ ${
       procedure Put_Type (New_Type : Type_Information);
       function Get_Types return Types_Hash_Map.Map;
 
+      --  state
+      function Is_Consumed return Boolean;
+      procedure Consume;
+
    private
 
       String_Pool : String_Pool_Vector.Vector;
       Types : Types_Hash_Map.Map;
+      State : Skill_States := Unconsumed;
 
    end Skill_State;
 

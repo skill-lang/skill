@@ -185,6 +185,17 @@ ${
       function Get_Types return Types_Hash_Map.Map is
          (Types);
 
+      -------------
+      --  STATE  --
+      -------------
+      function Is_Consumed return Boolean is
+         (Consumed = State);
+
+      procedure Consume is
+      begin
+         State := Consumed;
+      end Consume;
+
    end Skill_State;
 
 end ${packagePrefix.capitalize};
