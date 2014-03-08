@@ -149,21 +149,21 @@ ${
       --  string pool
       function Get_String (Index : Positive) return String;
       function Get_String (Index : Long) return String;
-      function Get_String_Index (Value : String) return Natural;
+      function Get_String_Index (Value : String) return Positive;
       function String_Pool_Size return Natural;
       procedure Put_String (Value : String; Safe : Boolean := False);
 
       --  storage pool
       function Storage_Pool_Size (Type_Name : String) return Natural;
-      function Get_Object (Type_Name : String; Position : Positive) return Skill_Type_Access;
+      function Get_Object (Type_Name : String; Index : Positive) return Skill_Type_Access;
       procedure Put_Object (Type_Name : String; New_Object : Skill_Type_Access);
-      procedure Replace_Object (Type_Name : String; Position : Positive; New_Object : Skill_Type_Access);
+      procedure Replace_Object (Type_Name : String; Index : Positive; New_Object : Skill_Type_Access);
 
       --  field declarations
       function Field_Size (Type_Name : String) return Natural;
       function Has_Field (Type_Name, Field_Name : String) return Boolean;
-      function Get_Field (Type_Name : String; Position : Positive) return Field_Information;
-      function Get_Field (Type_Name : String; Position : Long) return Field_Information;
+      function Get_Field (Type_Name : String; Index : Positive) return Field_Information;
+      function Get_Field (Type_Name : String; Index : Long) return Field_Information;
       function Get_Field (Type_Name, Field_Name : String) return Field_Information;
       procedure Put_Field (Type_Name : String; New_Field : Field_Information);
 

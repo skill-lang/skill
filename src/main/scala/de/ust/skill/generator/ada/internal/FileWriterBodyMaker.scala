@@ -45,6 +45,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
    begin
       State.Put_String (Type_Name, Safe => True);
       Type_Declaration.Fields.Iterate (Prepare_String_Pool_Fields_Iterator'Access);
+      Type_Declaration.Storage_Pool.Iterate (Prepare_String_Pool_Storage_Pool_Iterator'Access);
    end Prepare_String_Pool_Types_Iterator;
 
    procedure Prepare_String_Pool_Fields_Iterator (Iterator : Fields_Vector.Cursor) is
@@ -53,6 +54,29 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
    begin
       State.Put_String (Field_Name, Safe => True);
    end Prepare_String_Pool_Fields_Iterator;
+
+   procedure Prepare_String_Pool_Storage_Pool_Iterator (Iterator : Storage_Pool_Vector.Cursor) is
+      A_Object : Skill_Type_Access := Storage_Pool_Vector.Element (Iterator);
+      Object_Type : String := Get_Object_Type (A_Object);
+   begin
+${
+  var output = "";
+  for (d ← IR) {
+    output += s"""      if "${d.getSkillName}" = Object_Type then
+         declare
+            Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (A_Object);
+         begin
+"""
+    output += d.getAllFields.filter({ f ⇒ f.getType.getSkillName == "string" }).map({ f ⇒
+      s"            State.Put_String (SU.To_String (Object.${f.getSkillName}), Safe => True);\r\n"
+    }).mkString("")
+    output += s"""            null;
+         end;
+      end if;\r\n"""
+  }
+  output.stripSuffix("\r\n")
+}
+   end Prepare_String_Pool_Storage_Pool_Iterator;
 
    procedure Write_String_Pool is
    begin
@@ -166,20 +190,6 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       Write_Field_Data (Output_Stream, Item.Type_Declaration, Item.Field_Declaration);
    end Write_Queue_Vector_Iterator;
 
-   function Get_Annotation_Type (Object : Skill_Type_Access) return String is
-   begin
-${
-  var output = "";
-  for (d ← IR) {
-    output += s"""      if Object.all in ${d.getName}_Type'Class then
-         return "${d.getSkillName}";
-      end if;\r\n"""
-  }
-  output
-}
-      return "";
-   end Get_Annotation_Type;
-
    procedure Write_Field_Data (
       Stream : ASS_IO.Stream_Access;
       Type_Declaration : Type_Information;
@@ -191,7 +201,7 @@ ${
 ${
   var output = "";
   for (d ← IR) {
-    output += d.getFields.filter { f ⇒ !f.isAuto && !f.isConstant && !f.isIgnored }.map({ f ⇒
+    output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isConstant && !f.isIgnored }).map({ f ⇒
       s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
          for I in 1 .. State.Storage_Pool_Size (Type_Name) loop
             declare
@@ -203,6 +213,20 @@ ${
   output
 }      null;
    end Write_Field_Data;
+
+   function Get_Object_Type (Object : Skill_Type_Access) return String is
+   begin
+${
+  var output = "";
+  for (d ← IR) {
+    output += s"""      if Object.all in ${d.getName}_Type'Class then
+         return "${d.getSkillName}";
+      end if;\r\n"""
+  }
+  output
+}
+      return "";
+   end Get_Object_Type;
 
 end ${packagePrefix.capitalize}.Internal.File_Writer;
 """)

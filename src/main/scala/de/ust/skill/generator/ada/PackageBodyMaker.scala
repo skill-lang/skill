@@ -46,7 +46,7 @@ ${
       function Get_String (Index : Long) return String is
          (Get_String (Positive (Index)));
 
-      function Get_String_Index (Value : String) return Natural is
+      function Get_String_Index (Value : String) return Positive is
          Index : Natural := String_Pool.Reverse_Find_Index (Value);
          Skill_Unknown_String_Index : exception;
       begin
@@ -83,17 +83,17 @@ ${
       function Storage_Pool_Size (Type_Name : String) return Natural is
          (Natural (Get_Type (Type_Name).Storage_Pool.Length));
 
-      function Get_Object (Type_Name : String; Position : Positive) return Skill_Type_Access is
-         (Get_Type (Type_Name).Storage_Pool.Element (Position));
+      function Get_Object (Type_Name : String; Index : Positive) return Skill_Type_Access is
+         (Get_Type (Type_Name).Storage_Pool.Element (Index));
 
       procedure Put_Object (Type_Name : String; New_Object : Skill_Type_Access) is
       begin
          Get_Type (Type_Name).Storage_Pool.Append (New_Object);
       end Put_Object;
 
-      procedure Replace_Object (Type_Name : String; Position : Positive; New_Object : Skill_Type_Access) is
+      procedure Replace_Object (Type_Name : String; Index : Positive; New_Object : Skill_Type_Access) is
       begin
-         Get_Type (Type_Name).Storage_Pool.Replace_Element (Position, New_Object);
+         Get_Type (Type_Name).Storage_Pool.Replace_Element (Index, New_Object);
       end Replace_Object;
 
       --------------------------
@@ -121,14 +121,14 @@ ${
          return False;
       end Has_Field;
 
-      function Get_Field (Type_Name : String; Position : Positive) return Field_Information is
+      function Get_Field (Type_Name : String; Index : Positive) return Field_Information is
          X : Type_Information := Get_Type (Type_Name);
       begin
-         return X.Fields.Element (Position);
+         return X.Fields.Element (Index);
       end Get_Field;
 
-      function Get_Field (Type_Name : String; Position : Long) return Field_Information is
-         (Get_Field (Type_Name, Positive (Position)));
+      function Get_Field (Type_Name : String; Index : Long) return Field_Information is
+         (Get_Field (Type_Name, Positive (Index)));
 
       function Get_Field (Type_Name, Field_Name : String) return Field_Information is
          use Fields_Vector;

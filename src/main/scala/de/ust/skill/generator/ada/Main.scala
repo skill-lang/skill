@@ -189,7 +189,7 @@ class Main extends FakeMain
     case ft: GroundType ⇒ ft.getName() match {
       case "annotation" ⇒
       	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
-               Type_Name : String := Get_Annotation_Type (Object.${f.getSkillName});
+               Type_Name : String := Get_Object_Type (Object.${f.getSkillName});
             begin
                if 0 = Type_Name'Length then
                   Byte_Writer.Write_v64 (Stream, 0);
