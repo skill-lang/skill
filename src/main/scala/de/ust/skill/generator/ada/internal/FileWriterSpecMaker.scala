@@ -44,6 +44,7 @@ private
    procedure Write_Field_Declaration (Type_Declaration : Type_Information; Field_Declaration : Field_Information);
    function Field_Data_Size (Type_Declaration : Type_Information; Field_Declaration : Field_Information) return Long;
    procedure Write_Queue_Vector_Iterator (Iterator : Write_Queue_Vector.Cursor);
+   function Get_Annotation_Type (Object : Skill_Type_Access) return String;
    procedure Write_Field_Data
       (Stream : ASS_IO.Stream_Access; Type_Declaration : Type_Information; Field_Declaration : Field_Information);
 

@@ -166,6 +166,20 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       Write_Field_Data (Output_Stream, Item.Type_Declaration, Item.Field_Declaration);
    end Write_Queue_Vector_Iterator;
 
+   function Get_Annotation_Type (Object : Skill_Type_Access) return String is
+   begin
+${
+  var output = "";
+  for (d ← IR) {
+    output += s"""      if Object.all in ${d.getName}_Type'Class then
+         return "${d.getSkillName}";
+      end if;\r\n"""
+  }
+  output
+}
+      return "";
+   end Get_Annotation_Type;
+
    procedure Write_Field_Data (
       Stream : ASS_IO.Stream_Access;
       Type_Declaration : Type_Information;
