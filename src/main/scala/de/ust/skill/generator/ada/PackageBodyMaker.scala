@@ -66,7 +66,7 @@ ${
             declare
                Index : Natural := String_Pool.Reverse_Find_Index (Value);
             begin
-               if 0 < Index then
+               if 0 < Index or 0 = Value'Length then
                   Append := False;
                end if;
             end;

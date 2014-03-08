@@ -42,13 +42,10 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
    procedure Prepare_String_Pool_Types_Iterator (Iterator : Types_Hash_Map.Cursor) is
       Type_Declaration : Type_Information := Types_Hash_Map.Element (Iterator);
       Type_Name : String := Type_Declaration.Name;
+      Super_Name : String := Type_Declaration.Super_Name;
    begin
       State.Put_String (Type_Name, Safe => True);
-
-      if 0 < Super_Name'Length then
-         State.Put_String (Super_Name, Safe => True);
-      end if;
-
+      State.Put_String (Super_Name, Safe => True);
       Type_Declaration.Fields.Iterate (Prepare_String_Pool_Fields_Iterator'Access);
       Type_Declaration.Storage_Pool.Iterate (Prepare_String_Pool_Storage_Pool_Iterator'Access);
    end Prepare_String_Pool_Types_Iterator;
