@@ -77,13 +77,30 @@ ${
     if (hasFields) output else ""
   }
 
+  def printSimpleParameters(d : Declaration): String = {
+    var output = "";
+    var hasFields = false
+    output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
+      hasFields = true
+      f.getSkillName()
+    }).mkString(", ", ", ", "")
+    if (hasFields) output else ""
+  }
+
   var output = "";
   for (d ← IR) {
     output += s"""
-   procedure New_${d.getName} (State : access Skill_State${printParameters(d)}) is
+   function New_${d.getName} (State : access Skill_State${printParameters(d)}) return ${d.getName}_Type_Access is
       New_Object : ${d.getName}_Type_Access := new ${d.getName}_Type${printFields(d)};
    begin
       State.Put_Object ("${d.getSkillName}", Skill_Type_Access (New_Object));
+      return New_Object;
+   end New_${d.getName};
+
+   procedure New_${d.getName} (State : access Skill_State${printParameters(d)}) is
+      New_Object : ${d.getName}_Type_Access := New_${d.getName} (State${printSimpleParameters(d)});
+   begin
+      null;
    end New_${d.getName};
 
    function Get_${d.getName}s (State : access Skill_State) return ${d.getName}_Type_Accesses is
