@@ -72,7 +72,7 @@ ${
     var hasFields = false
     output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
       hasFields = true
-      s"${f.getSkillName()} : ${mapType(f.getType)}"
+      s"${f.getSkillName()} : ${mapType(f.getType, d, f)}"
     }).mkString("; ", "; ", "")
     if (hasFields) output else ""
   }

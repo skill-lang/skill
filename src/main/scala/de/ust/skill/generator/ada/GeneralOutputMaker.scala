@@ -62,14 +62,14 @@ trait GeneralOutputMaker {
   /**
    * Assume the existence of a translation function for types.
    */
-  protected def mapType(t: Type): String
+  protected def mapType(t : Type, _d: Declaration, _f: Field): String
 
   /**
    * Assume the existence of a translation function for fields.
    */
   protected def mapTypeToId(t: Type): Long
-  protected def mapFileReader(t: Type, f: Field): String
-  protected def mapFileWriter(t: Type, f: Field): String
+  protected def mapFileReader(d: Declaration, f: Field): String
+  protected def mapFileWriter(d: Declaration, f: Field): String
 
   protected def getSuperTypes(d: Declaration): MutableList[String]
 
@@ -81,7 +81,7 @@ trait GeneralOutputMaker {
   /**
    * Provides a string representation of the default value of f.
    */
-  protected def defaultValue(f: Field): String
+  protected def defaultValue(t: Type, _d: Declaration, _f: Field): String
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.

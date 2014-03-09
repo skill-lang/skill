@@ -6,6 +6,7 @@
 package de.ust.skill.generator.ada
 
 import scala.collection.JavaConversions._
+import de.ust.skill.ir._
 
 trait PackageSpecMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -13,16 +14,20 @@ trait PackageSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}.ads""")
 
     out.write(s"""
+with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Hashed_Maps;
+with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Strings.Hash;
 with Ada.Strings.Unbounded;
+with Ada.Tags;
 
 with Ada.Text_IO;
 
 package ${packagePrefix.capitalize} is
 
    package SU renames Ada.Strings.Unbounded;
+   use SU;
 
    -------------
    --  TYPES  --
@@ -55,6 +60,8 @@ package ${packagePrefix.capitalize} is
    type Skill_State is limited private;
    type Skill_Type is abstract tagged private;
    type Skill_Type_Access is access all Skill_Type'Class;
+   function "<" (Left, Right : Skill_Type_Access) return Boolean;
+   function "=" (Left, Right : Skill_Type_Access) return Boolean;
 
 ${
   var output = "";
@@ -62,15 +69,34 @@ ${
     output += s"""   type ${d.getName}_Type is new Skill_Type with private;\r\n"""
     output += s"""   type ${d.getName}_Type_Access is access all ${d.getName}_Type;\r\n"""
   }
-  output
-}
-${
-  var output = "";
+
   for (d ← IR) {
-    d.getAllFields.filter({ f ⇒ !f.isIgnored }).foreach({ f =>
-      output += s"""   function Get_${f.getName.capitalize} (Object : ${d.getName}_Type) return ${mapType(f.getType)};\r\n"""
+    d.getFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
+      f.getType match {
+        case t: ConstantLengthArrayType ⇒
+          output += s"   type ${mapType(f.getType, d, f)} is array (1 .. ${t.getLength}) of ${mapType(t.getBaseType, d, f)};\r\n"
+        case t: VariableLengthArrayType ⇒
+          output += s"   package ${mapType(f.getType, d, f).stripSuffix(".Vector")} is new Ada.Containers.Indefinite_Vectors (Positive, ${mapType(t.getBaseType, d, f)});\r\n"
+        case t: ListType ⇒
+          output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".List")} is new Ada.Containers.Indefinite_Doubly_Linked_Lists (${mapType(t.getBaseType, d, f)}, "=");\r\n"""
+        case t: SetType ⇒
+          t.getBaseType match {
+            case t: Declaration ⇒
+              output += s"""   function "<" (Left, Right : ${mapType(t.getBaseType, d, f)}) return Boolean;\r\n"""
+              output += s"""   function "=" (Left, Right : ${mapType(t.getBaseType, d, f)}) return Boolean;\r\n"""
+            case _ => null
+          }
+          output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Set")} is new Ada.Containers.Indefinite_Ordered_Sets (${mapType(t.getBaseType, d, f)}, "<", "=");\r\n"""
+        case _ ⇒ null
+      }
+    })
+  }
+
+  for (d ← IR) {
+    d.getAllFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
+      output += s"""   function Get_${f.getName.capitalize} (Object : ${d.getName}_Type) return ${mapType(f.getType, d, f)};\r\n"""
       if (!f.isConstant)
-        output += s"""   procedure Set_${f.getName.capitalize} (Object : in out ${d.getName}_Type; Value : ${mapType(f.getType)});\r\n"""
+        output += s"""   procedure Set_${f.getName.capitalize} (Object : in out ${d.getName}_Type; Value : ${mapType(f.getType, d, f)});\r\n"""
     })
   }
   output
@@ -93,7 +119,7 @@ ${
     output += fields.map({ f ⇒
       var comment = "";
       if (f.isAuto()) comment = "  --  auto aka not serialized"
-      s"""         ${f.getName} : ${mapType(f.getType)};${comment}"""
+      s"""         ${f.getName} : ${mapType(f.getType, d, f)};${comment}"""
     }).mkString("\r\n")
     if (fields.length <= 0) output += s"""         null;"""
     output += s"""\r\n      end record;\r\n\r\n"""
@@ -121,8 +147,7 @@ ${
       end record;
    type Field_Information is access Field_Declaration;
 
-   package Fields_Vector is new Ada.Containers.Indefinite_Vectors
-      (Index_Type => Positive, Element_Type => Field_Information);
+   package Fields_Vector is new Ada.Containers.Indefinite_Vectors (Positive, Field_Information);
 
    -------------------------
    --  TYPE DECLARATIONS  --

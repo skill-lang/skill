@@ -96,7 +96,7 @@ class Main extends FakeMain
   /**
    * Translates types into ada type names.
    */
-  override protected def mapType(t: Type): String = t match {
+  override protected def mapType(t : Type, _d: Declaration, _f: Field): String = t match {
     case t: GroundType ⇒ t.getName() match {
       case "annotation" ⇒ "Skill_Type_Access"
 
@@ -114,7 +114,10 @@ class Main extends FakeMain
       case "string"     ⇒ "SU.Unbounded_String"
     }
 
-    case t: ConstantLengthArrayType ⇒ "null"
+    case t: ConstantLengthArrayType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_Array"
+    case t: VariableLengthArrayType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_Vector.Vector"
+    case t: ListType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_List.List"
+    case t: SetType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_Set.Set"
 
     case t: Declaration ⇒ s"${t.getName()}_Type_Access"
   }
@@ -142,53 +145,90 @@ class Main extends FakeMain
     case t: Declaration				⇒ 32
   }
 
-  protected def mapFileReader(t: Type, f: Field): String = f.getType match {
-    case ft: GroundType ⇒ ft.getName() match {
-      case "annotation" ⇒
-      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
-               X : v64 := Byte_Reader.Read_v64 (Input_Stream);
-               Y : v64 := Byte_Reader.Read_v64 (Input_Stream);
-            begin
-               if 0 /= X then
-                  Object.${f.getSkillName} := State.Get_Object (State.Get_String (X), Positive (Y));
-               end if;"""
-
-      case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
-        if (f.isConstant) {
-          s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
-            begin
-               if Object.Get_${f.getSkillName.capitalize} /= ${mapType(f.getType)} (Field_Declaration.Constant_Value) then
-                  raise Skill_Parse_Error;
-               end if;"""
-        } else {
-          s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
-            begin
-               Object.${f.getSkillName} := Byte_Reader.Read_${mapType(f.getType)} (Input_Stream);"""
+  protected def mapFileReader(d: Declaration, f: Field): String = {
+    def inner(t: Type, _d: Declaration, _f: Field): String = {
+      t match {
+        case t: GroundType ⇒ t.getName() match {
+          case "annotation" ⇒
+            s"Read_Annotation (Input_Stream)"
+          case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
+            s"Byte_Reader.Read_${mapType(t, _d, _f)} (Input_Stream)"
+          case "string" ⇒
+            s"Read_Unbounded_String (Input_Stream)"
         }
-
-      case "string" ⇒
-      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
-            begin
-               Object.${f.getSkillName} := SU.To_Unbounded_String (State.Get_String (Byte_Reader.Read_v64 (Input_Stream)));"""
+        case t: Declaration ⇒
+          s"""Read_${t.getName}_Type (Input_Stream)"""
+      }
     }
 
-    case t: ConstantLengthArrayType ⇒
-      s"""   begin
-               null;"""
-
-    case t: Declaration ⇒
-      s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
+    f.getType match {
+      case t: GroundType ⇒ t.getName() match {
+        case "annotation" ⇒
+      	  s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
             begin
-               Object.${f.getSkillName} := ${t.getName}_Type_Access (State.Get_Object ("${
-                val superTypes = getSuperTypes(t).toList;
-                if (superTypes.length > 0) superTypes(0); else t.getSkillName
-              }", Positive (Byte_Reader.Read_v64 (Input_Stream))));"""
+               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
+
+        case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
+          if (f.isConstant) {
+            s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
+            begin
+               if Object.Get_${f.getSkillName.capitalize} /= ${mapType(f.getType, d, f)} (Field_Declaration.Constant_Value) then
+                  raise Skill_Parse_Error;
+               end if;"""
+          } else {
+            s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
+            begin
+               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
+          }
+
+        case "string" ⇒
+      	  s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
+            begin
+               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
+      }
+
+      case t: ConstantLengthArrayType ⇒
+        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
+            begin
+               for I in 1 .. ${t.getLength} loop
+                  Object.${f.getSkillName} (I) := ${inner(t.getBaseType, d, f)};
+               end loop;"""
+
+      case t: VariableLengthArrayType ⇒
+        s"""   Object : Container_Type_Access := Container_Type_Access (State.Get_Object (Type_Name, I));
+               X : Natural := Natural (Byte_Reader.Read_v64 (Input_Stream));
+            begin
+               for I in 1 .. X loop
+                  Object.${f.getSkillName}.Append (${inner(t.getBaseType, d, f)});
+               end loop;"""
+
+      case t: ListType ⇒
+        s"""   Object : Container_Type_Access := Container_Type_Access (State.Get_Object (Type_Name, I));
+               X : Natural := Natural (Byte_Reader.Read_v64 (Input_Stream));
+            begin
+               for I in 1 .. X loop
+                  Object.${f.getSkillName}.Append (${inner(t.getBaseType, d, f)});
+               end loop;"""
+
+      case t: SetType ⇒
+        s"""   Object : Container_Type_Access := Container_Type_Access (State.Get_Object (Type_Name, I));
+               X : Natural := Natural (Byte_Reader.Read_v64 (Input_Stream));
+            begin
+               for I in 1 .. X loop
+                  Object.${f.getSkillName}.Insert (${inner(t.getBaseType, d, f)});
+               end loop;"""
+
+      case t: Declaration ⇒
+        s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
+            begin
+               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
+    }
   }
 
-  protected def mapFileWriter(t: Type, f: Field): String = f.getType match {
+  protected def mapFileWriter(d: Declaration, f: Field): String = f.getType match {
     case ft: GroundType ⇒ ft.getName() match {
       case "annotation" ⇒
-      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
+      	s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
                Type_Name : String := Get_Object_Type (Object.${f.getSkillName});
             begin
                if 0 = Type_Name'Length then
@@ -200,17 +240,29 @@ class Main extends FakeMain
                end if;"""
 
       case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
-        s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
+        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
             begin
-               Byte_Writer.Write_${mapType(f.getType)} (Stream, Object.${f.getSkillName});"""
+               Byte_Writer.Write_${mapType(f.getType, d, f)} (Stream, Object.${f.getSkillName});"""
 
       case "string" ⇒
-      	s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
+      	s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
       	    begin
                Byte_Writer.Write_v64 (Stream, Long (State.Get_String_Index (SU.To_String (Object.${f.getSkillName}))));"""
     }
 
     case t: ConstantLengthArrayType ⇒
+      s"""begin
+               null;"""
+
+    case t: VariableLengthArrayType ⇒
+      s"""begin
+               null;"""
+
+    case t: ListType ⇒
+      s"""begin
+               null;"""
+
+    case t: SetType ⇒
       s"""begin
                null;"""
 
@@ -281,7 +333,7 @@ class Main extends FakeMain
 """
   }
 
-  override protected def defaultValue(f: Field) = f.getType() match {
+  override protected def defaultValue(t: Type, _d: Declaration, _f: Field) = t match {
     case t: GroundType ⇒ t.getSkillName() match {
       case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
       case "f32" | "f64"                        ⇒ "0.0f"
@@ -290,7 +342,10 @@ class Main extends FakeMain
       case _                                    ⇒ "null"
     }
 
-    // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
+    case t: ConstantLengthArrayType ⇒ s"(others => ${defaultValue(t.getBaseType, _d, _f)})"
+    case t: VariableLengthArrayType ⇒ s"New_${mapType(t, _d, _f).stripSuffix(".Vector")}"
+    case t: ListType ⇒ s"New_${mapType(t, _d, _f).stripSuffix(".List")}"
+    case t: SetType ⇒ s"New_${mapType(t, _d, _f).stripSuffix(".Set")}"
 
     case _ ⇒ "null"
   }

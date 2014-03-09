@@ -39,14 +39,14 @@ ${
     var output = "";
     output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
       hasFields = true;
-      s"${f.getSkillName()} : ${mapType(f.getType)}"
+      s"${f.getSkillName()} : ${mapType(f.getType, d, f)}"
     }).mkString("; ", "; ", "")
     if (hasFields) output else ""
   }
 
   var output = "";
   for (d ← IR) {
-    val parameters = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map(f => s"${f.getSkillName()} : ${mapType(f.getType)}").mkString("; ", "; ", "")
+    val parameters = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map(f => s"${f.getSkillName()} : ${mapType(f.getType, d, f)}").mkString("; ", "; ", "")
     output += s"""   function New_${d.getName} (State : access Skill_State${printParameters(d)}) return ${d.getName}_Type_Access;\r\n"""
     output += s"""   procedure New_${d.getName} (State : access Skill_State${printParameters(d)});\r\n"""
     output += s"""   function Get_${d.getName}s (State : access Skill_State) return ${d.getName}_Type_Accesses;\r\n"""

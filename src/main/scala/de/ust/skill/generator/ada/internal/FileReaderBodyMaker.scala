@@ -8,6 +8,9 @@ package de.ust.skill.generator.ada.internal
 import scala.collection.JavaConversions._
 import de.ust.skill.ir.Declaration
 import de.ust.skill.generator.ada.GeneralOutputMaker
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.SetType
 
 trait FileReaderBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -274,7 +277,7 @@ ${
     var output = s"""'(\r\n                  skill_id => State.Storage_Pool_Size ("${d.getSkillName}") + 1"""
     val fields = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
     output += fields.map({ f ⇒
-      s""",\r\n                  ${f.getSkillName} => ${defaultValue(f)}"""
+      s""",\r\n                  ${f.getSkillName} => ${defaultValue(f.getType, d, f)}"""
     }).mkString("")
     output += "\r\n               )";
     output
@@ -285,7 +288,19 @@ ${
     output += s"""      if "${d.getSkillName}" = Type_Name then
          for I in 1 .. Instance_Count loop
             declare
-               Object : Skill_Type_Access := new ${d.getName}_Type${printDefaultValues(d)};
+"""
+    output += d.getFields.filter({ f ⇒ !f.isIgnored }).map({ f ⇒
+      f.getType match {
+        case t: VariableLengthArrayType ⇒
+          s"               New_${mapType(f.getType, d, f).stripSuffix(".Vector")} : ${mapType(f.getType, d, f)};\r\n"
+        case t: ListType ⇒
+          s"               New_${mapType(f.getType, d, f).stripSuffix(".List")} : ${mapType(f.getType, d, f)};\r\n"
+        case t: SetType ⇒
+          s"               New_${mapType(f.getType, d, f).stripSuffix(".Set")} : ${mapType(f.getType, d, f)};\r\n"
+        case _ ⇒ ""
+      }
+    }).mkString("")
+    output += s"""               Object : Skill_Type_Access := new ${d.getName}_Type${printDefaultValues(d)};
             begin
                State.Put_Object (Type_Name, Object);${printSuperTypes(d)}
             end;
@@ -329,6 +344,38 @@ ${
       end if;
    end Read_Queue_Vector_Iterator;
 
+   function Read_Annotation (Input_Stream : ASS_IO.Stream_Access) return Skill_Type_Access is
+      X : v64 := Byte_Reader.Read_v64 (Input_Stream);
+      Y : v64 := Byte_Reader.Read_v64 (Input_Stream);
+   begin
+      if 0 = X then
+         return null;
+      else
+         return State.Get_Object (State.Get_String (X), Positive (Y));
+      end if;
+   end Read_Annotation;
+
+   function Read_Unbounded_String (Input_Stream : ASS_IO.Stream_Access) return SU.Unbounded_String is
+      (SU.To_Unbounded_String (State.Get_String (Byte_Reader.Read_v64 (Input_Stream))));
+
+${
+  var output = "";
+  for (d ← IR) {
+    output += s"""   function Read_${d.getName}_Type (Input_Stream : ASS_IO.Stream_Access) return ${d.getName}_Type_Access is
+      X : Long := Byte_Reader.Read_v64 (Input_Stream);
+   begin
+      if 0 = X then
+         return null;
+      else
+         return ${d.getName}_Type_Access (State.Get_Object ("${
+  val superTypes = getSuperTypes(d).toList;
+  if (superTypes.length > 0) superTypes(0) else d.getSkillName
+}", Positive (X)));
+      end if;
+   end Read_${d.getName}_Type;\r\n\r\n"""
+  }
+  output.stripSuffix("\r\n")
+}
    procedure Skip_Restrictions is
       Zero : Long := Byte_Reader.Read_v64 (Input_Stream);
    begin

@@ -7,6 +7,7 @@ package de.ust.skill.generator.ada
 
 import java.io.PrintWriter
 import scala.collection.JavaConversions._
+import de.ust.skill.ir._
 
 trait PackageBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -16,19 +17,41 @@ trait PackageBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize} is
 
+   function "<" (Left, Right : Skill_Type_Access) return Boolean is
+      (Left.skill_id < Right.skill_id);
+
+   function "=" (Left, Right : Skill_Type_Access) return Boolean is
+      use Ada.Tags;
+   begin
+      return (Left.all'Tag = Right.all'Tag and then Left.skill_id = Right.skill_id);
+   end "=";
+
 ${
   var output = "";
   for (d ← IR) {
     d.getAllFields.filter { f ⇒ !f.isIgnored }.foreach({ f ⇒
       if (f.isConstant) {
-        output += s"""   function Get_${f.getSkillName.capitalize} (Object : ${d.getName}_Type) return ${mapType(f.getType)} is (${f.constantValue});\r\n\r\n"""
+        output += s"""   function Get_${f.getSkillName.capitalize} (Object : ${d.getName}_Type) return ${mapType(f.getType, d, f)} is (${f.constantValue});\r\n\r\n"""
       }
       else {
-        output += s"""   function Get_${f.getSkillName.capitalize} (Object : ${d.getName}_Type) return ${mapType(f.getType)} is (Object.${f.getSkillName});\r\n"""
-        output += s"""   procedure Set_${f.getSkillName.capitalize} (Object : in out ${d.getName}_Type; Value : ${mapType(f.getType)}) is
+        output += s"""   function Get_${f.getSkillName.capitalize} (Object : ${d.getName}_Type) return ${mapType(f.getType, d, f)} is (Object.${f.getSkillName});\r\n"""
+        output += s"""   procedure Set_${f.getSkillName.capitalize} (Object : in out ${d.getName}_Type; Value : ${mapType(f.getType, d, f)}) is
    begin
       Object.${f.getSkillName} := Value;
    end Set_${f.getSkillName.capitalize};\r\n\r\n"""
+      }
+
+      f.getType match {
+        case t: SetType ⇒
+          t.getBaseType match {
+            case t: Declaration ⇒
+              output += s"""   function "<" (Left, Right : ${mapType(t.getBaseType, d, f)}) return Boolean is
+      (Skill_Type_Access (Left) < Skill_Type_Access (Right));\r\n\r\n"""
+              output += s"""   function "=" (Left, Right : ${mapType(t.getBaseType, d, f)}) return Boolean is
+      (Skill_Type_Access (Left) = Skill_Type_Access (Right));\r\n\r\n"""
+            case _ => null
+          }
+        case _ ⇒ null
       }
     })
   }
