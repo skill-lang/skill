@@ -6,7 +6,7 @@
 package de.ust.skill.generator.ada.internal
 
 import scala.collection.JavaConversions._
-import de.ust.skill.ir.Declaration
+import de.ust.skill.ir._
 import de.ust.skill.generator.ada.GeneralOutputMaker
 
 trait StateMakerBodyMaker extends GeneralOutputMaker {
@@ -31,6 +31,7 @@ ${
             New_Type : Type_Information := new Type_Declaration'(
                Type_Size => Type_Name'Length,
                Super_Size => Super_Name'Length,
+               id => State.Type_Size + 32,
                Name => Type_Name,
                Super_Name => Super_Name,
                bpsi => 1,
@@ -42,7 +43,12 @@ ${
             State.Put_Type (New_Type);
          end;
       end if;\r\n\r\n"""
-
+  }
+  output.stripSuffix("\r\n")
+}
+${
+  var output = "";
+  for (d ← IR) {
      output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
        s"""      if not State.Has_Field ("${d.getSkillName}", "${f.getSkillName}") then
          declare
@@ -51,8 +57,23 @@ ${
             New_Field : Field_Information := new Field_Declaration'(
                Size => Field_Name'Length,
                Name => Field_Name,
-               F_Type => ${if (f.isConstant) mapTypeToId(f.getType) - 7 else mapTypeToId(f.getType)},
-               Constant_Value => ${f.constantValue}
+               F_Type => ${mapTypeToId(f.getType, f)},
+               Constant_Value => ${f.constantValue},
+               Constant_Array_Length => ${
+  f.getType match {
+    case t: ConstantLengthArrayType ⇒ t.getLength
+    case _ => -1
+  }
+},
+               Base_Type => ${
+  f.getType match {
+    case t: ConstantLengthArrayType ⇒ mapTypeToId(t.getBaseType, f)
+    case t: VariableLengthArrayType ⇒ mapTypeToId(t.getBaseType, f)
+    case t: ListType ⇒ mapTypeToId(t.getBaseType, f)
+    case t: SetType ⇒ mapTypeToId(t.getBaseType, f)
+    case _ ⇒ -1
+  }
+}
             );
          begin
             State.Put_Field (Type_Name, New_Field);

@@ -6,11 +6,8 @@
 package de.ust.skill.generator.ada.internal
 
 import scala.collection.JavaConversions._
-import de.ust.skill.ir.Declaration
+import de.ust.skill.ir._
 import de.ust.skill.generator.ada.GeneralOutputMaker
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.ListType
-import de.ust.skill.ir.SetType
 
 trait FileReaderBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -95,6 +92,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                New_Type : Type_Information := new Type_Declaration'(
                   Type_Size => Type_Name'Length,
                   Super_Size => SU.To_String (Super_Name)'Length,
+                  id => State.Type_Size + 32,
                   Name => Type_Name,
                   Super_Name => SU.To_String (Super_Name),
                   bpsi => 1,
@@ -172,9 +170,10 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
       Skip_Restrictions;
 
       declare
-         Field_Name_Index : Long;
          Field_Type : Long := Byte_Reader.Read_v64 (Input_Stream);
          Constant_Value : Long := 0;
+         Constant_Array_Length : Integer := -1;
+         Base_Type : Integer := -1;
       begin
          case Field_Type is
             --  const i8, i16, i32, i64, v64
@@ -188,17 +187,18 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
             when 15 =>
                declare
                   X : Long := Byte_Reader.Read_v64 (Input_Stream);
-                  Y : Short_Short_Integer := Byte_Reader.Read_i8 (Input_Stream);
+                  Y : Long := Byte_Reader.Read_v64 (Input_Stream);
                begin
-                  null;
+                  Constant_Array_Length := Integer (X);
+                  Base_Type := Integer (Y);
                end;
 
             --  array T[], list, set
             when 17 .. 19 =>
                declare
-                  X : Short_Short_Integer := Byte_Reader.Read_i8 (Input_Stream);
+                  X : Long := Byte_Reader.Read_v64 (Input_Stream);
                begin
-                  null;
+                  Base_Type := Integer (X);
                end;
 
             --  map
@@ -208,7 +208,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                begin
                   for I in 1 .. X loop
                      declare
-                        Y : Short_Short_Integer := Byte_Reader.Read_i8 (Input_Stream);
+                        Y : Long := Byte_Reader.Read_v64 (Input_Stream);
                      begin
                         null;
                      end;
@@ -219,16 +219,16 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                null;
          end case;
 
-         Field_Name_Index := Byte_Reader.Read_v64 (Input_Stream);
-
          declare
-            Field_Name : String := State.Get_String (Field_Name_Index);
+            Field_Name : String := State.Get_String (Byte_Reader.Read_v64 (Input_Stream));
 
             New_Field : Field_Information := new Field_Declaration'(
                Size => Field_Name'Length,
                Name => Field_Name,
-               F_Type => Field_Type,
-               Constant_Value => Constant_Value
+               F_Type => Natural (Field_Type),
+               Constant_Value => Constant_Value,
+               Constant_Array_Length => Constant_Array_Length,
+               Base_Type => Base_Type
             );
          begin
             State.Put_Field (Type_Name, New_Field);

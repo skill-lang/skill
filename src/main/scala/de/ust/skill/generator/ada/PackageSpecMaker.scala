@@ -142,8 +142,10 @@ ${
    type Field_Declaration (Size : Positive) is
       record
          Name : String (1 .. Size);
-         F_Type : Long;
+         F_Type : Natural;
          Constant_Value : Long;
+         Constant_Array_Length : Integer;
+         Base_Type : Integer;
       end record;
    type Field_Information is access Field_Declaration;
 
@@ -154,6 +156,7 @@ ${
    -------------------------
    type Type_Declaration (Type_Size : Positive; Super_Size : Natural) is
       record
+         id : Positive;
          Name : String (1 .. Type_Size);
          Super_Name : String (1 .. Super_Size);
          bpsi : Positive;

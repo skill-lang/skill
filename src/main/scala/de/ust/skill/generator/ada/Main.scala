@@ -93,6 +93,40 @@ class Main extends FakeMain
   var outPath: String = null
   var IR: List[Declaration] = null
 
+  override protected def mapTypeToId(t: Type, _f: Field): String = t match {
+    case t: GroundType ⇒
+      if (_f.isConstant()) {
+        t.getName() match {
+          case "i8"         ⇒ 0.toString
+          case "i16"        ⇒ 1.toString
+          case "i32"        ⇒ 2.toString
+          case "i64"        ⇒ 3.toString
+          case "v64"        ⇒ 4.toString
+        }
+      } else {
+        t.getName() match {
+          case "annotation" ⇒ 5.toString
+          case "bool"       ⇒ 6.toString
+          case "i8"         ⇒ 7.toString
+          case "i16"        ⇒ 8.toString
+          case "i32"        ⇒ 9.toString
+          case "i64"        ⇒ 10.toString
+          case "v64"        ⇒ 11.toString
+          case "f32"        ⇒ 12.toString
+          case "f64"        ⇒ 13.toString
+          case "string"     ⇒ 14.toString
+        }
+    }
+
+    case t: ConstantLengthArrayType ⇒ 15.toString
+    case t: VariableLengthArrayType ⇒ 17.toString
+    case t: ListType                ⇒ 18.toString
+    case t: SetType                 ⇒ 19.toString
+    case t: MapType					⇒ 20.toString
+
+    case t: Declaration				⇒ s"""State.Get_Type ("${t.getSkillName}").id"""
+  }
+
   /**
    * Translates types into ada type names.
    */
@@ -120,29 +154,6 @@ class Main extends FakeMain
     case t: SetType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_Set.Set"
 
     case t: Declaration ⇒ s"${t.getName()}_Type_Access"
-  }
-
-  override protected def mapTypeToId(t: Type): Long = t match {
-    case t: GroundType ⇒ t.getName() match {
-      case "annotation" ⇒ 5
-      case "bool"       ⇒ 6
-      case "i8"         ⇒ 7
-      case "i16"        ⇒ 8
-      case "i32"        ⇒ 9
-      case "i64"        ⇒ 10
-      case "v64"        ⇒ 11
-      case "f32"        ⇒ 12
-      case "f64"        ⇒ 13
-      case "string"     ⇒ 14
-    }
-
-    case t: ConstantLengthArrayType ⇒ 15
-    case t: VariableLengthArrayType ⇒ 17
-    case t: ListType                ⇒ 18
-    case t: SetType                 ⇒ 19
-    case t: MapType					⇒ 20
-
-    case t: Declaration				⇒ 32
   }
 
   protected def mapFileReader(d: Declaration, f: Field): String = {

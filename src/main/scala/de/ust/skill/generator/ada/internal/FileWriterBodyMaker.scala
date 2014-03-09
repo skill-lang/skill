@@ -164,12 +164,12 @@ ${
    procedure Write_Field_Declaration (Type_Declaration : Type_Information; Field_Declaration : Field_Information) is
       Type_Name : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
-      Field_Type : Long := Field_Declaration.F_Type;
+      Field_Type : Natural := Field_Declaration.F_Type;
       Constant_Value : Long := Field_Declaration.Constant_Value;
       Size : Long := Field_Data_Size (Type_Declaration, Field_Declaration);
    begin
       Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
-      Byte_Writer.Write_v64 (Output_Stream, Field_Type);
+      Byte_Writer.Write_v64 (Output_Stream, Long (Field_Type));
 
       case Field_Type is
          --  const i8, i16, i32, i64, v64

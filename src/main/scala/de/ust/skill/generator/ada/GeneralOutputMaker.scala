@@ -62,12 +62,12 @@ trait GeneralOutputMaker {
   /**
    * Assume the existence of a translation function for types.
    */
+  protected def mapTypeToId(t: Type, _f: Field): String
   protected def mapType(t : Type, _d: Declaration, _f: Field): String
 
   /**
    * Assume the existence of a translation function for fields.
    */
-  protected def mapTypeToId(t: Type): Long
   protected def mapFileReader(d: Declaration, f: Field): String
   protected def mapFileWriter(d: Declaration, f: Field): String
 
