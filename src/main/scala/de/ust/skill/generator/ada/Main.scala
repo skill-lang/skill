@@ -225,50 +225,60 @@ class Main extends FakeMain
     }
   }
 
-  protected def mapFileWriter(d: Declaration, f: Field): String = f.getType match {
-    case ft: GroundType ⇒ ft.getName() match {
-      case "annotation" ⇒
-      	s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
-               Type_Name : String := Get_Object_Type (Object.${f.getSkillName});
-            begin
-               if 0 = Type_Name'Length then
-                  Byte_Writer.Write_v64 (Stream, 0);
-                  Byte_Writer.Write_v64 (Stream, 0);
-               else
-                  Byte_Writer.Write_v64 (Stream, Long (State.Get_String_Index (Type_Name)));
-                  Byte_Writer.Write_v64 (Stream, Long (Object.${f.getSkillName}.skill_id));
-               end if;"""
-
-      case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
-        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
-            begin
-               Byte_Writer.Write_${mapType(f.getType, d, f)} (Stream, Object.${f.getSkillName});"""
-
-      case "string" ⇒
-      	s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
-      	    begin
-               Byte_Writer.Write_v64 (Stream, Long (State.Get_String_Index (SU.To_String (Object.${f.getSkillName}))));"""
+  protected def mapFileWriter(d: Declaration, f: Field): String = {
+    def inner(t: Type, _d: Declaration, _f: Field): String = {
+      t match {
+        case t: GroundType ⇒ t.getName() match {
+          case "annotation" ⇒
+            s"Write_Annotation (Stream, Object.${_f.getSkillName})"
+          case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
+            s"Byte_Writer.Write_${mapType(t, _d, _f)} (Stream, Object.${_f.getSkillName})"
+          case "string" ⇒
+            s"Byte_Writer.Write_v64 (Stream, Long (State.Get_String_Index (SU.To_String (Object.${_f.getSkillName}))))"
+        }
+        case t: Declaration ⇒
+          s"""Read_${t.getName}_Type (Input_Stream)"""
+      }
     }
 
-    case t: ConstantLengthArrayType ⇒
-      s"""begin
+    f.getType match {
+      case t: GroundType ⇒ t.getName() match {
+        case "annotation" ⇒
+      	  s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
+            begin
+               ${inner(f.getType, d, f)};"""
+
+        case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
+          s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
+            begin
+               ${inner(f.getType, d, f)};"""
+
+        case "string" ⇒
+      	  s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
+      	    begin
+               ${inner(f.getType, d, f)};"""
+      }
+
+      case t: ConstantLengthArrayType ⇒
+        s"""begin
                null;"""
 
-    case t: VariableLengthArrayType ⇒
-      s"""begin
+      case t: VariableLengthArrayType ⇒
+        s"""begin
                null;"""
 
-    case t: ListType ⇒
-      s"""begin
+      case t: ListType ⇒
+        s"""begin
                null;"""
 
-    case t: SetType ⇒
-      s"""begin
+      case t: SetType ⇒
+        s"""begin
                null;"""
 
-    case t: Declaration ⇒
-      s"""begin
+      case t: Declaration ⇒
+        s"""begin
                null;"""
+    }
   }
 
   protected def getSuperTypes(d: Declaration): MutableList[String] = {

@@ -38,6 +38,7 @@ private
    procedure Prepare_String_Pool_Types_Iterator (Iterator : Types_Hash_Map.Cursor);
    procedure Prepare_String_Pool_Fields_Iterator (Iterator : Fields_Vector.Cursor);
    procedure Prepare_String_Pool_Storage_Pool_Iterator (Iterator : Storage_Pool_Vector.Cursor);
+
    procedure Write_String_Pool;
    function Count_Instantiated_Types return Long;
    procedure Write_Type_Block;
@@ -48,6 +49,8 @@ private
    procedure Write_Queue_Vector_Iterator (Iterator : Write_Queue_Vector.Cursor);
    procedure Write_Field_Data
       (Stream : ASS_IO.Stream_Access; Type_Declaration : Type_Information; Field_Declaration : Field_Information);
+
+   procedure Write_Annotation (Stream : ASS_IO.Stream_Access; Object : Skill_Type_Access);
    function Get_Object_Type (Object : Skill_Type_Access) return String;
 
 end ${packagePrefix.capitalize}.Internal.File_Writer;

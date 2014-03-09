@@ -239,6 +239,18 @@ ${
 }      null;
    end Write_Field_Data;
 
+   procedure Write_Annotation (Stream : ASS_IO.Stream_Access; Object : Skill_Type_Access) is
+      Type_Name : String := Get_Object_Type (Object);
+   begin
+      if 0 = Type_Name'Length then
+         Byte_Writer.Write_v64 (Stream, 0);
+         Byte_Writer.Write_v64 (Stream, 0);
+      else
+         Byte_Writer.Write_v64 (Stream, Long (State.Get_String_Index (Type_Name)));
+         Byte_Writer.Write_v64 (Stream, Long (Object.skill_id));
+      end if;
+   end Write_Annotation;
+
    function Get_Object_Type (Object : Skill_Type_Access) return String is
    begin
 ${
