@@ -16,10 +16,11 @@ trait PackageSpecMaker extends GeneralOutputMaker {
     out.write(s"""
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Hashed_Maps;
-with Ada.Containers.Indefinite_Ordered_Sets;
+with Ada.Containers.Indefinite_Hashed_Sets;
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Strings.Hash;
 with Ada.Strings.Unbounded;
+with Ada.Strings.Unbounded.Hash;
 with Ada.Tags;
 
 with Ada.Text_IO;
@@ -60,8 +61,16 @@ package ${packagePrefix.capitalize} is
    type Skill_State is limited private;
    type Skill_Type is abstract tagged private;
    type Skill_Type_Access is access all Skill_Type'Class;
+
+   function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type;
    function "<" (Left, Right : Skill_Type_Access) return Boolean;
    function "=" (Left, Right : Skill_Type_Access) return Boolean;
+
+   function Hash (Element : Short_Short_Integer) return Ada.Containers.Hash_Type;
+   function Hash (Element : Short) return Ada.Containers.Hash_Type;
+   function Hash (Element : Integer) return Ada.Containers.Hash_Type;
+   function Hash (Element : Long) return Ada.Containers.Hash_Type;
+   function Hash (Element : SU.Unbounded_String) return Ada.Containers.Hash_Type;
 
 ${
   var output = "";
@@ -82,11 +91,12 @@ ${
         case t: SetType ⇒
           t.getBaseType match {
             case t: Declaration ⇒
+              output += s"""   function Hash (Element : ${mapType(t.getBaseType, d, f)}) return Ada.Containers.Hash_Type;\r\n"""
               output += s"""   function "<" (Left, Right : ${mapType(t.getBaseType, d, f)}) return Boolean;\r\n"""
               output += s"""   function "=" (Left, Right : ${mapType(t.getBaseType, d, f)}) return Boolean;\r\n"""
             case _ => null
           }
-          output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Set")} is new Ada.Containers.Indefinite_Ordered_Sets (${mapType(t.getBaseType, d, f)}, "<", "=");\r\n"""
+          output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Set")} is new Ada.Containers.Indefinite_Hashed_Sets (${mapType(t.getBaseType, d, f)}, Hash, "=");\r\n"""
         case _ ⇒ null
       }
     })

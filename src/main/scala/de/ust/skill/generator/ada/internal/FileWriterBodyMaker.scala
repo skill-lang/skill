@@ -165,7 +165,6 @@ ${
       Type_Name : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
       Field_Type : Natural := Field_Declaration.F_Type;
-      Constant_Value : Long := Field_Declaration.Constant_Value;
       Size : Long := Field_Data_Size (Type_Declaration, Field_Declaration);
    begin
       Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
@@ -173,11 +172,17 @@ ${
 
       case Field_Type is
          --  const i8, i16, i32, i64, v64
-         when 0 => Byte_Writer.Write_i8 (Output_Stream, Short_Short_Integer (Constant_Value));
-         when 1 => Byte_Writer.Write_i16 (Output_Stream, Short (Constant_Value));
-         when 2 => Byte_Writer.Write_i32 (Output_Stream, Integer (Constant_Value));
-         when 3 => Byte_Writer.Write_i64 (Output_Stream, Constant_Value);
-         when 4 => Byte_Writer.Write_v64 (Output_Stream, Constant_Value);
+         when 0 => Byte_Writer.Write_i8 (Output_Stream, Short_Short_Integer (Field_Declaration.Constant_Value));
+         when 1 => Byte_Writer.Write_i16 (Output_Stream, Short (Field_Declaration.Constant_Value));
+         when 2 => Byte_Writer.Write_i32 (Output_Stream, Integer (Field_Declaration.Constant_Value));
+         when 3 => Byte_Writer.Write_i64 (Output_Stream, Field_Declaration.Constant_Value);
+         when 4 => Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Constant_Value);
+
+         when 15 =>
+            Byte_Writer.Write_v64 (Output_Stream, Long (Field_Declaration.Constant_Array_Length));
+            Byte_Writer.Write_v64 (Output_Stream, Long (Field_Declaration.Base_Type));
+
+         when 17 .. 19 => Byte_Writer.Write_v64 (Output_Stream, Long (Field_Declaration.Base_Type));
 
          when others =>
             null;
@@ -251,6 +256,25 @@ ${
       end if;
    end Write_Annotation;
 
+   procedure Write_Unbounded_String (Stream : ASS_IO.Stream_Access; Value : SU.Unbounded_String) is
+   begin
+      Byte_Writer.Write_v64 (Stream, Long (State.Get_String_Index (SU.To_String (Value))));
+   end Write_Unbounded_String;
+
+${
+  var output = "";
+  for (d ← IR) {
+    output += s"""   procedure Write_${d.getName}_Type (Stream : ASS_IO.Stream_Access; X : ${d.getName}_Type_Access) is
+   begin
+      if null = X then
+         Byte_Writer.Write_v64 (Stream, 0);
+      else
+         Byte_Writer.Write_v64 (Stream, Long (X.skill_id));
+      end if;
+   end Write_${d.getName}_Type;\r\n\r\n"""
+  }
+  output.stripSuffix("\r\n")
+}
    function Get_Object_Type (Object : Skill_Type_Access) return String is
    begin
 ${

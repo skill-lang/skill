@@ -17,6 +17,9 @@ trait PackageBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize} is
 
+   function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type is
+      (Ada.Containers.Hash_Type'Mod (Element.skill_id));
+
    function "<" (Left, Right : Skill_Type_Access) return Boolean is
       (Left.skill_id < Right.skill_id);
 
@@ -25,6 +28,21 @@ package body ${packagePrefix.capitalize} is
    begin
       return (Left.all'Tag = Right.all'Tag and then Left.skill_id = Right.skill_id);
    end "=";
+
+   function Hash (Element : Short_Short_Integer) return Ada.Containers.Hash_Type is
+      (Ada.Containers.Hash_Type'Mod (Element));
+
+   function Hash (Element : Short) return Ada.Containers.Hash_Type is
+      (Ada.Containers.Hash_Type'Mod (Element));
+
+   function Hash (Element : Integer) return Ada.Containers.Hash_Type is
+      (Ada.Containers.Hash_Type'Mod (Element));
+
+   function Hash (Element : Long) return Ada.Containers.Hash_Type is
+      (Ada.Containers.Hash_Type'Mod (Element));
+
+   function Hash (Element : SU.Unbounded_String) return Ada.Containers.Hash_Type is
+      (Ada.Strings.Unbounded.Hash (Element));
 
 ${
   var output = "";
@@ -45,6 +63,8 @@ ${
         case t: SetType ⇒
           t.getBaseType match {
             case t: Declaration ⇒
+              output += s"""   function Hash (Element : ${mapType(t.getBaseType, d, f)}) return Ada.Containers.Hash_Type is
+      (Hash (Skill_Type_Access (Element)));\r\n\r\n"""
               output += s"""   function "<" (Left, Right : ${mapType(t.getBaseType, d, f)}) return Boolean is
       (Skill_Type_Access (Left) < Skill_Type_Access (Right));\r\n\r\n"""
               output += s"""   function "=" (Left, Right : ${mapType(t.getBaseType, d, f)}) return Boolean is

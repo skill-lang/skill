@@ -185,21 +185,11 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
 
             --  array T[i]
             when 15 =>
-               declare
-                  X : Long := Byte_Reader.Read_v64 (Input_Stream);
-                  Y : Long := Byte_Reader.Read_v64 (Input_Stream);
-               begin
-                  Constant_Array_Length := Integer (X);
-                  Base_Type := Integer (Y);
-               end;
+               Constant_Array_Length := Integer (Byte_Reader.Read_v64 (Input_Stream));
+               Base_Type := Integer (Byte_Reader.Read_v64 (Input_Stream));
 
             --  array T[], list, set
-            when 17 .. 19 =>
-               declare
-                  X : Long := Byte_Reader.Read_v64 (Input_Stream);
-               begin
-                  Base_Type := Integer (X);
-               end;
+            when 17 .. 19 => Base_Type := Integer (Byte_Reader.Read_v64 (Input_Stream));
 
             --  map
             when 20 =>

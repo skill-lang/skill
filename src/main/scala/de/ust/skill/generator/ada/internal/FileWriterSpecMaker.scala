@@ -51,6 +51,15 @@ private
       (Stream : ASS_IO.Stream_Access; Type_Declaration : Type_Information; Field_Declaration : Field_Information);
 
    procedure Write_Annotation (Stream : ASS_IO.Stream_Access; Object : Skill_Type_Access);
+   procedure Write_Unbounded_String (Stream : ASS_IO.Stream_Access; Value : SU.Unbounded_String);
+
+${
+  var output = ""
+  for (d ← IR) {
+    output += s"   procedure Write_${d.getName}_Type (Stream : ASS_IO.Stream_Access; X : ${d.getName}_Type_Access);\r\n"
+  }
+  output
+}
    function Get_Object_Type (Object : Skill_Type_Access) return String;
 
 end ${packagePrefix.capitalize}.Internal.File_Writer;

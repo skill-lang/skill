@@ -206,7 +206,7 @@ class Main extends FakeMain
                end loop;"""
 
       case t: VariableLengthArrayType ⇒
-        s"""   Object : Container_Type_Access := Container_Type_Access (State.Get_Object (Type_Name, I));
+        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
                X : Natural := Natural (Byte_Reader.Read_v64 (Input_Stream));
             begin
                for I in 1 .. X loop
@@ -214,7 +214,7 @@ class Main extends FakeMain
                end loop;"""
 
       case t: ListType ⇒
-        s"""   Object : Container_Type_Access := Container_Type_Access (State.Get_Object (Type_Name, I));
+        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
                X : Natural := Natural (Byte_Reader.Read_v64 (Input_Stream));
             begin
                for I in 1 .. X loop
@@ -222,7 +222,7 @@ class Main extends FakeMain
                end loop;"""
 
       case t: SetType ⇒
-        s"""   Object : Container_Type_Access := Container_Type_Access (State.Get_Object (Type_Name, I));
+        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
                X : Natural := Natural (Byte_Reader.Read_v64 (Input_Stream));
             begin
                for I in 1 .. X loop
@@ -237,18 +237,18 @@ class Main extends FakeMain
   }
 
   protected def mapFileWriter(d: Declaration, f: Field): String = {
-    def inner(t: Type, _d: Declaration, _f: Field): String = {
+    def inner(t: Type, _d: Declaration, _f: Field, value: String): String = {
       t match {
         case t: GroundType ⇒ t.getName() match {
           case "annotation" ⇒
-            s"Write_Annotation (Stream, Object.${_f.getSkillName})"
+            s"Write_Annotation (Stream, ${value})"
           case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
-            s"Byte_Writer.Write_${mapType(t, _d, _f)} (Stream, Object.${_f.getSkillName})"
+            s"Byte_Writer.Write_${mapType(t, _d, _f)} (Stream, ${value})"
           case "string" ⇒
-            s"Byte_Writer.Write_v64 (Stream, Long (State.Get_String_Index (SU.To_String (Object.${_f.getSkillName}))))"
+            s"Write_Unbounded_String (Stream, ${value})"
         }
         case t: Declaration ⇒
-          s"""Read_${t.getName}_Type (Input_Stream)"""
+          s"""Write_${t.getName}_Type (Stream, ${value})"""
       }
     }
 
@@ -257,34 +257,67 @@ class Main extends FakeMain
         case "annotation" ⇒
       	  s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
             begin
-               ${inner(f.getType, d, f)};"""
+               ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
 
         case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
           s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
             begin
-               ${inner(f.getType, d, f)};"""
+               ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
 
         case "string" ⇒
       	  s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
       	    begin
-               ${inner(f.getType, d, f)};"""
+               ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
       }
 
       case t: ConstantLengthArrayType ⇒
-        s"""begin
-               null;"""
+        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
+            begin
+               for I in Object.${f.getSkillName}'Range loop
+                  ${inner(t.getBaseType, d, f, s"Object.${f.getSkillName} (I)")};
+               end loop;"""
 
       case t: VariableLengthArrayType ⇒
-        s"""begin
-               null;"""
+        s"""   use ${mapType(f.getType, d, f).stripSuffix(".Vector")};
+
+               Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
+               X : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
+
+               procedure Iterate (Position : Cursor) is
+               begin
+                  ${inner(t.getBaseType, d, f, s"${mapType(f.getType, d, f).stripSuffix(".Vector")}.Element (Position)")};
+               end Iterate;
+            begin
+               Byte_Writer.Write_v64 (Stream, Long (X.Length));
+               X.Iterate (Iterate'Access);"""
 
       case t: ListType ⇒
-        s"""begin
-               null;"""
+        s"""   use ${mapType(f.getType, d, f).stripSuffix(".List")};
+
+               Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
+               X : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
+
+               procedure Iterate (Position : Cursor) is
+               begin
+                  ${inner(t.getBaseType, d, f, s"${mapType(f.getType, d, f).stripSuffix(".List")}.Element (Position)")};
+               end Iterate;
+            begin
+               Byte_Writer.Write_v64 (Stream, Long (X.Length));
+               X.Iterate (Iterate'Access);"""
 
       case t: SetType ⇒
-        s"""begin
-               null;"""
+        s"""   use ${mapType(f.getType, d, f).stripSuffix(".Set")};
+
+               Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
+               X : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
+
+               procedure Iterate (Position : Cursor) is
+               begin
+                  ${inner(t.getBaseType, d, f, s"${mapType(f.getType, d, f).stripSuffix(".Set")}.Element (Position)")};
+               end Iterate;
+            begin
+               Byte_Writer.Write_v64 (Stream, Long (X.Length));
+               X.Iterate (Iterate'Access);"""
 
       case t: Declaration ⇒
         s"""begin
