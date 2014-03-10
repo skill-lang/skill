@@ -46,7 +46,7 @@ object FileParser {
     // STORAGE POOLS
     val types = ArrayBuffer[StoragePool[_ <: SkillType]]();
     val poolByName = HashMap[String, StoragePool[_ <: SkillType]]();
-    @inline def newPool(name: String, superName: String, restrictions: Array[Nothing]): StoragePool[_ <: SkillType] = {
+    @inline def newPool(name: String, superName: String, restrictions: HashSet[Restriction]): StoragePool[_ <: SkillType] = {
       val p = name match {
 ${
       (for (t ← IR) yield s"""        case "${t.getSkillName}" ⇒ new ${t.getCapitalName}StoragePool(types.size${
@@ -150,9 +150,45 @@ ${
           else
             (String.get(superName), in.v64)
         }
-        @inline def restrictions = {
-          in.v64.ensuring(_ == 0, "restriction parsing not implemented")
-          Array[Nothing]()
+        @inline def typeRestrictions: HashSet[Restriction] = {
+          val count = in.v64.toInt
+          (for (i ← 0 until count; if i < 7 || 1 == (i % 2))
+            yield in.v64 match {
+            case 0 ⇒ throw new ParseException(in, blockCounter, "Types can not be nullable restricted!", null)
+            case 1 ⇒ throw new ParseException(in, blockCounter, "Types can not be range restricted!", null)
+            case 2 ⇒ Unique
+            case 3 ⇒ throw new ParseException(in, blockCounter, "Types can not be constant length pointer restricted!", null)
+            case 4 ⇒ Singleton
+            case 5 ⇒ throw new ParseException(in, blockCounter, "Types can not be coding restricted!", null)
+            case 6 ⇒ Monotone
+            case i ⇒ throw new ParseException(in, blockCounter, "Found unknown type restriction $$i. Please regenerate your binding, if possible.", null)
+          }
+          ).toSet[Restriction].to
+        }
+        @inline def fieldRestrictions(t: FieldType): HashSet[Restriction] = {
+          val count = in.v64.toInt
+          (for (i ← 0 until count; if i < 7 || 1 == (i % 2))
+            yield in.v64 match {
+            case 0 ⇒ Nullable
+            case 1 ⇒ t match {
+              case null ⇒ throw new Error("Range Restrictions can not be serialized in TR13!")
+              case I8   ⇒ Range(in.i8, in.i8)
+              case I16  ⇒ Range(in.i16, in.i16)
+              case I32  ⇒ Range(in.i32, in.i32)
+              case I64  ⇒ Range(in.i64, in.i64)
+              case V64  ⇒ Range(in.v64, in.v64)
+              case F32  ⇒ Range(in.f32, in.f32)
+              case F64  ⇒ Range(in.f64, in.f64)
+              case t    ⇒ throw new ParseException(in, blockCounter, "Type $$t can not be range restricted!", null)
+            }
+            case 2 ⇒ throw new ParseException(in, blockCounter, "Fields can not be unique restricted!", null)
+            case 3 ⇒ ConstantLengthPointer
+            case 4 ⇒ throw new ParseException(in, blockCounter, "Fields can not be singleton restricted!", null)
+            case 5 ⇒ Coding(String.get(in.v64))
+            case 6 ⇒ throw new ParseException(in, blockCounter, "Fields can not be monotone restricted!", null)
+            case i ⇒ throw new ParseException(in, blockCounter, "Found unknown field restriction $$i. Please regenerate your binding, if possible.", null)
+          }
+          ).toSet[Restriction].to
         }
 
         // read type part
@@ -177,7 +213,7 @@ ${
             val superDef = superDefinition
             lbpsi = superDef._2
             count = in.v64
-            val rest = restrictions
+            val rest = typeRestrictions
 
             definition = newPool(name, superDef._1, rest)
           }
@@ -206,7 +242,7 @@ ${
             }
 
             for (fi ← knownFieldCount until fieldCount) {
-              val rest = restrictions
+              val rest = fieldRestrictions(null)
               val t = fieldType
               val name = String.get(in.v64)
               val end = in.v64
@@ -219,7 +255,7 @@ ${
             }
           } else {
             for (fi ← knownFieldCount until knownFieldCount + fieldCount) {
-              val rest = restrictions
+              val rest = fieldRestrictions(null)
               val t = fieldType
               val name = String.get(in.v64)
               val end = in.v64

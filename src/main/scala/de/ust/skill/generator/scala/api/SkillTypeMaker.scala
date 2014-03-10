@@ -29,12 +29,12 @@ trait SkillType extends InternalInstanceProperties {
   /**
    * reflective setter
    */
-  def set(acc: Access[_<:SkillType], field: FieldDeclaration, value: Any)
+  def set[@specialized T](acc: Access[_ <: SkillType], field: FieldDeclaration, value: T)
 
   /**
    * reflective getter
    */
-  def get(acc: Access[_<:SkillType], field: FieldDeclaration): Any
+  def get(acc: Access[_ <: SkillType], field: FieldDeclaration): Any
 }
 """)
 

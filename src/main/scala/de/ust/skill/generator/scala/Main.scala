@@ -39,6 +39,8 @@ import de.ust.skill.generator.scala.internal.streams.OutBufferMaker
 import de.ust.skill.generator.scala.internal.streams.OutStreamMaker
 import de.ust.skill.generator.scala.internal.streams.FileOutputStreamMaker
 import de.ust.skill.generator.scala.internal.StateWriterMaker
+import de.ust.skill.generator.scala.internal.RestrictionsMaker
+import de.ust.skill.generator.scala.internal.ExceptionsMaker
 
 /**
  * Entry point of the scala generator.
@@ -106,6 +108,7 @@ class Main extends FakeMain
     with internal.FieldDeclarationMaker
     with OutBufferMaker
     with OutStreamMaker
+    with RestrictionsMaker
     with SerializableStateMaker
     with SerializationFunctionsMaker
     with SkillStateMaker

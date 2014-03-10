@@ -135,7 +135,7 @@ ${
 
     // generic set
     out.write(s"""
-  override final def set(acc: Access[_ <: SkillType], field: FieldDeclaration, value: Any): Unit = field.name match {
+  override final def set[@specialized T](acc: Access[_ <: SkillType], field: FieldDeclaration, value: T): Unit = field.name match {
 ${
   (
     for(f <- d.getAllFields.filterNot{t ⇒ t.isIgnored || t.isConstant()}) 
