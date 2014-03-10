@@ -67,6 +67,10 @@ trait GeneralOutputMaker {
    * creates argument list of a constructor call, not including potential skillID or braces
    */
   protected def makeConstructorArguments(t: Declaration): String
+  /**
+   * creates argument list of a constructor call, including a trailing comma for insertion into an argument list
+   */
+  protected def appendConstructorArguments(t: Declaration): String
 
   /**
    * Assume a package prefix provider.

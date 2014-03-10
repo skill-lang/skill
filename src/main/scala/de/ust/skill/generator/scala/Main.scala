@@ -152,10 +152,13 @@ class Main extends FakeMain
 
   /**
    * creates argument list of a constructor call, not including potential skillID or braces
-   *
-   * TODO provide a real implementation
    */
   override protected def makeConstructorArguments(t: Declaration) = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", ")
+  override protected def appendConstructorArguments(t: Declaration) = {
+    val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
+    if(r.isEmpty) ""
+    else r.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", ", ", ", "")
+  }
 
   /**
    * provides the package prefix

@@ -35,13 +35,8 @@ import ${packagePrefix}internal.StoragePool
 final class $name(private var skillID: Long) extends _root_.${packagePrefix}$name {""")
 
 	if(!relevantFields.isEmpty){
-		out.write("""
-  def this(skillID: Long, """)
-
-  		// data
-        out.write(makeConstructorArguments(d))
-
-    	out.write(s""") {
+    	out.write(s"""
+  def this(skillID: Long${appendConstructorArguments(d)}) {
     this(skillID)
     ${relevantFields.map{f ⇒ s"_${f.getName()} = ${escaped(f.getName)}"}.mkString("\n    ")}
   }""")

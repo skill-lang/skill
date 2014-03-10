@@ -415,7 +415,7 @@ ${
     """  override def get = ???"""
   else 
     s"""  override def apply(${makeConstructorArguments(t)}) = {
-    val r = new types.${t.getCapitalName}(-1L, ${makeConstructorArguments(t)})
+    val r = new types.${t.getCapitalName}(-1L${appendConstructorArguments(t)})
     newObjects.append(r)
     r
   }
