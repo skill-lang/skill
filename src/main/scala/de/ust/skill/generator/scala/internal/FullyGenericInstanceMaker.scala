@@ -32,7 +32,7 @@ final class FullyGenericInstance(name: String, var skillID: Long = 0L) extends S
   /**
    * reflective setter
    */
-  def set[@specialized T](acc: Access[_ <: SkillType], field: date.api.FieldDeclaration, value: T) {
+  def set[@specialized T](acc: Access[_ <: SkillType], field: ${packagePrefix}api.FieldDeclaration, value: T) {
     acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[FieldDeclaration]).put(this, value)
   }
 
