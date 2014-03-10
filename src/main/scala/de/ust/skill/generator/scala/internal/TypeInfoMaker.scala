@@ -414,7 +414,11 @@ ${
   if(isSingleton)
     """  override def get = ???"""
   else 
-    """  override def apply(args: Any*) = ???
+    s"""  override def apply(${makeConstructorArguments(t)}) = {
+    val r = new types.${t.getCapitalName}(-1L, ${makeConstructorArguments(t)})
+    newObjects.append(r)
+    r
+  }
 
   override def size = dynamicSize.toInt"""
 }

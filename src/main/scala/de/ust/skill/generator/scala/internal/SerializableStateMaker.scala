@@ -43,6 +43,8 @@ ${
   val pools: Array[StoragePool[_ <: SkillType]])
     extends SkillState {
 
+  finalizePools;
+
   val poolByName = pools.map(_.name).zip(pools).toSeq.toMap
 
   def all = pools.iterator.asInstanceOf[Iterator[Access[_ <: SkillType]]]
@@ -52,6 +54,34 @@ ${
 
   def append(): Unit = ???
   def append(target: Path): Unit = ???
+
+  @inline private def finalizePools {
+    @inline def eliminatePreliminaryTypesIn(t: FieldType): FieldType = t match {
+      case TypeDefinitionIndex(i) ⇒ try {
+        pools(i.toInt)
+      } catch {
+        case e: Exception ⇒ throw new IllegalStateException(s"inexistent user type $$i (user types: $${poolByName.mkString})", e)
+      }
+      case TypeDefinitionName(n) ⇒ try {
+        poolByName(n)
+      } catch {
+        case e: Exception ⇒ throw new IllegalStateException(s"inexistent user type $$n (user types: $${poolByName.mkString})", e)
+      }
+      case ConstantLengthArray(l, t) ⇒ ConstantLengthArray(l, eliminatePreliminaryTypesIn(t))
+      case VariableLengthArray(t)    ⇒ VariableLengthArray(eliminatePreliminaryTypesIn(t))
+      case ListType(t)               ⇒ ListType(eliminatePreliminaryTypesIn(t))
+      case SetType(t)                ⇒ SetType(eliminatePreliminaryTypesIn(t))
+      case MapType(ts)               ⇒ MapType(for (t ← ts) yield eliminatePreliminaryTypesIn(t))
+      case t                         ⇒ t
+    }
+    for (p ← pools) {
+      val fieldMap = p.fields.map { _.name }.zip(p.fields).toMap
+
+      for ((n, t) ← p.knownFields if !fieldMap.contains(n)) {
+        p.addField(new FieldDeclaration(eliminatePreliminaryTypesIn(t), n, p.fields.size))
+      }
+    }
+  }
 }
 //final class SerializableState extends SkillState {
 //  import SerializableState._
@@ -143,24 +173,6 @@ ${
 //
 //  // TODO check if state can be appended
 //  def canAppend: Boolean = null != fromPath
-//
-//  /**
-//   * replace user types with pools and read required field data
-//   */
-//  def finishInitialization {
-//
-//    // remove proxy types and add names to the string pool
-//    for (p ← pools.values) {
-//      String.add(p.name)
-//      for (f ← p.fields.values) {
-//        String.add(f.name)
-//        f.t match {
-//          case t: NamedUserType ⇒ f.t = pools(t.name)
-//          case t: UserType      ⇒ f.t = pools(t.name)
-//          case _                ⇒
-//        }
-//      }
-//    }
 //
 //    // read required fields
 //    val fieldParser = new FieldParser(this)

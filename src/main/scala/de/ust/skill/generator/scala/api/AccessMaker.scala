@@ -48,7 +48,7 @@ trait Access[T <: SkillType] {
 trait StringAccess {
   def get(index: Long): String
   def add(string: String)
-  def all:Iterator[String]
+  def all: Iterator[String]
   def size: Int
 }
 """)
@@ -59,7 +59,7 @@ trait ${t.getCapitalName}Access extends Access[$packagePrefix${t.getCapitalName}
   /**
    * create a new ${t.getName} instance
    */
-  def apply(${makeConstructorArguments(t)}): $packagePrefix${t.getCapitalName}
+  def apply(${makeConstructorArguments(t)}): _root_.$packagePrefix${t.getCapitalName}
 
   def size: Int
 }

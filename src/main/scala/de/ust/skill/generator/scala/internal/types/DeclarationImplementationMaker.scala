@@ -36,10 +36,10 @@ final class $name(private var skillID: Long) extends _root_.${packagePrefix}$nam
 
 	if(!relevantFields.isEmpty){
 		out.write("""
-  def this(skillID: Long""")
+  def this(skillID: Long, """)
 
   		// data
-    	out.write(relevantFields.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", ",", ",""))
+        out.write(makeConstructorArguments(d))
 
     	out.write(s""") {
     this(skillID)

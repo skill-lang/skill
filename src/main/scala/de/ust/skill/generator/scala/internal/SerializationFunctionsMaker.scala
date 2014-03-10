@@ -50,7 +50,7 @@ abstract class SerializationFunctions(state: SerializableState) {
     for (p ← state.pools) {
       strings.add(p.name)
       for (f ← p.fields) {
-        strings.add(p.name)
+        strings.add(f.name)
         if (StringType == f.t) {
           for (i ← p.all)
             strings.add(i.get(p, f).asInstanceOf[String])
@@ -64,14 +64,16 @@ abstract class SerializationFunctions(state: SerializableState) {
   def annotation(ref: SkillType, out: OutStream): Unit
 
   def string(v: String, out: OutStream): Unit = v64(stringIDs(v), out)
-}
 
-object SerializationFunctions {
+  val skillIDs: HashMap[SkillType, Long]
 
   @inline def userRef[T <: SkillType](ref: T, out: OutStream) {
     if (null == ref) out.put(0.toByte)
-    else v64(ref.getSkillID, out)
+    else v64(skillIDs(ref), out)
   }
+}
+
+object SerializationFunctions {
 
   @inline def bool(v: Boolean): Array[Byte] = Array[Byte](if (v) -1 else 0)
 

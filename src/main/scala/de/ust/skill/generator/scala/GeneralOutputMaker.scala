@@ -66,7 +66,7 @@ trait GeneralOutputMaker {
   /**
    * creates argument list of a constructor call, not including potential skillID or braces
    */
-  protected def makeConstructorArguments(t: Type): String
+  protected def makeConstructorArguments(t: Declaration): String
 
   /**
    * Assume a package prefix provider.

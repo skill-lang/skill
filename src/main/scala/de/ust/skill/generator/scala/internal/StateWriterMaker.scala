@@ -58,7 +58,7 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
    * @note this can be seen as a sort operation on the skillID space, which might be fragmented due to read/new-ops
    */
   val data = new HashMap[String, ArrayBuffer[SkillType]]
-  // store static instances in d
+  // store static instances in data
   for (p ← state.pools) {
     val ab = new ArrayBuffer[SkillType](p.staticSize.toInt);
     for (i ← p.staticInstances)
@@ -66,8 +66,9 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
     data.put(p.name, ab)
   }
 
-  // make lbpsi map and update data map to contain dynamic instances
+  // make lbpsi map, update data map to contain dynamic instances and create serialization skill IDs for serialization
   // index → bpsi
+  override val skillIDs = new HashMap[SkillType, Long]
   val lbpsiMap = new Array[Long](state.pools.length)
   state.pools.foreach {
     case p: BasePool[_] ⇒
@@ -75,7 +76,7 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
       concatenateDataMap(p, data)
       var id = 1L
       for (i ← data(p.name)) {
-        i.setSkillID(id)
+        skillIDs(i) = id
         id += 1
       }
     case _ ⇒
@@ -110,7 +111,7 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
     // @note performance hack: requires at least 1 instance in order to work correctly
     @inline def genericPutField(p: StoragePool[_ <: SkillType], f: FieldDeclaration, instances: Iterable[SkillType]) {
       f.t match {
-        case I8 ⇒ for (i ← instances) i8(i.get(p, f).asInstanceOf[Byte], dataChunk)
+        case I8  ⇒ for (i ← instances) i8(i.get(p, f).asInstanceOf[Byte], dataChunk)
         case I16 ⇒ for (i ← instances) i16(i.get(p, f).asInstanceOf[Short], dataChunk)
         case I32 ⇒ for (i ← instances) i32(i.get(p, f).asInstanceOf[Int], dataChunk)
         case I64 ⇒ for (i ← instances) i64(i.get(p, f).asInstanceOf[Long], dataChunk)

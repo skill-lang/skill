@@ -155,7 +155,7 @@ class Main extends FakeMain
    *
    * TODO provide a real implementation
    */
-  override protected def makeConstructorArguments(t: Type) = "args: Any*"
+  override protected def makeConstructorArguments(t: Declaration) = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", ")
 
   /**
    * provides the package prefix
