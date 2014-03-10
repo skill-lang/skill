@@ -43,9 +43,9 @@ ${
   val pools: Array[StoragePool[_ <: SkillType]])
     extends SkillState {
 
-  finalizePools;
-
   val poolByName = pools.map(_.name).zip(pools).toSeq.toMap
+
+  finalizePools;
 
   def all = pools.iterator.asInstanceOf[Iterator[Access[_ <: SkillType]]]
 
