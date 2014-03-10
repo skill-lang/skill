@@ -11,14 +11,6 @@ import scala.collection.JavaConversions.asScalaBuffer
 import de.ust.skill.generator.ada.api._
 import de.ust.skill.generator.ada.internal._
 import de.ust.skill.ir._
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.Field
-import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.ListType
-import de.ust.skill.ir.MapType
-import de.ust.skill.ir.SetType
-import de.ust.skill.ir.Type
-import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.parser.Parser
 import scala.collection.mutable.MutableList
 
