@@ -137,8 +137,9 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
          end if;
 
          for I in 1 .. Field_Count loop
-            if Field_Count > Known_Fields or 0 = Instance_Count then
+            if (Known_Fields < Field_Count and then Known_Fields < I) or 0 = Instance_Count then
                Read_Field_Declaration (Type_Name);
+               Start_Index := 1;
             end if;
 
             Field_Index := I;
@@ -357,10 +358,7 @@ ${
       if 0 = X then
          return null;
       else
-         return ${d.getName}_Type_Access (State.Get_Object ("${
-  val superTypes = getSuperTypes(d).toList;
-  if (superTypes.length > 0) superTypes(0) else d.getSkillName
-}", Positive (X)));
+         return ${d.getName}_Type_Access (State.Get_Object ("${if (null == d.getSuperType) d.getSkillName else d.getBaseType.getSkillName}", Positive (X)));
       end if;
    end Read_${d.getName}_Type;\r\n\r\n"""
   }
