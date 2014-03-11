@@ -140,6 +140,8 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
 
           v64(${d.getAllFields.size}, out)
 
+          ${
+          if (d.getAllFields.size != 0) s"""
           for (f ← fields if p.knownFields.contains(f.name)) {
             restrictions(f, out)
             writeType(f.t, out)
@@ -147,15 +149,17 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
 
             // data
             f.name match {${
-          (for (f ← fields) yield s"""
+            (for (f ← fields) yield s"""
               case "${f.getSkillName()}" ⇒ locally {
                 ${writeField(d, f, "outData")}
               }""").mkString("")
-        }
+          }
             }
             // end
             v64(dataChunk.size, out)
-          }
+          }"""
+          else ""
+        }
         }"""
       }
       ).mkString("")
