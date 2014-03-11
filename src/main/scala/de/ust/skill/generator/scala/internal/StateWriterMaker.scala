@@ -27,7 +27,6 @@ trait StateWriterMaker extends GeneralOutputMaker {
 
 import java.util.Arrays
 import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap

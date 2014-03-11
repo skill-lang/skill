@@ -26,6 +26,7 @@ trait StateAppenderMaker extends GeneralOutputMaker {
     out.write(s"""package ${packagePrefix}internal
 
 import java.util.Arrays
+import java.nio.ByteBuffer
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
