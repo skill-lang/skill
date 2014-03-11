@@ -25,6 +25,7 @@ trait SerializableStateMaker extends GeneralOutputMaker {
 
     out.write(s"""package ${packagePrefix}internal
 
+import java.nio.file.Files
 import java.nio.file.Path
 
 import ${packagePrefix}api._
@@ -40,7 +41,8 @@ ${
       (for (t ← IR) yield s"  val ${t.getCapitalName}: ${t.getCapitalName}Access,").mkString("\n")
     }
   val String: StringAccess,
-  val pools: Array[StoragePool[_ <: SkillType]])
+  val pools: Array[StoragePool[_ <: SkillType]],
+  var fromPath: Option[Path])
     extends SkillState {
 
   val poolByName = pools.map(_.name).zip(pools).toSeq.toMap
@@ -49,11 +51,29 @@ ${
 
   def all = pools.iterator.asInstanceOf[Iterator[Access[_ <: SkillType]]]
 
-  def write(target: Path): Unit = new StateWriter(this, FileOutputStream.write(target))
+  def write(target: Path): Unit = {
+    new StateWriter(this, FileOutputStream.write(target))
+    if (fromPath.isEmpty)
+      fromPath = Some(target)
+  }
+  // @note: this is more tricky then append, because the state has to be prepared before the file is deleted
   def write(): Unit = ???
 
-  def append(): Unit = ???
-  def append(target: Path): Unit = ???
+  def append(): Unit = new StateAppender(this, FileOutputStream.append(fromPath.getOrElse(throw new IllegalStateException("The state was not created using a read operation, thus append is not possible!"))))
+  def append(target: Path): Unit = {
+    if (fromPath.isEmpty) {
+      // append and write is the same operation, if we did not read a file
+      write(target)
+    } else if (target.equals(fromPath.get)) {
+      append
+    } else {
+      // copy the read file to the target location
+      Files.deleteIfExists(target)
+      Files.copy(fromPath.get, target)
+      // append to the target file
+      new StateAppender(this, FileOutputStream.append(target))
+    }
+  }
 
   @inline private def finalizePools {
     @inline def eliminatePreliminaryTypesIn(t: FieldType): FieldType = t match {
@@ -225,7 +245,8 @@ ${
       (for (t ← IR) yield s"""      ${t.getCapitalName},""").mkString("\n")
     }
       new StringPool(null),
-      Array[StoragePool[_ <: SkillType]](${IR.map(_.getCapitalName).mkString(",")})
+      Array[StoragePool[_ <: SkillType]](${IR.map(_.getCapitalName).mkString(",")}),
+      None
     )
   }
 }

@@ -353,11 +353,15 @@ ${
       (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(newPool("${t.getSkillName}", null, null)).asInstanceOf[${t.getCapitalName}StoragePool],""").mkString("\n")
     }
       String,
-      types.to
+      types.to,
+      in match {
+        case in: streams.FileInputStream ⇒ Some(in.path)
+        case _                   ⇒ None
+      }
     )
   }
 
-  def read(path: Path) = file(new FileInputStream(Files.newByteChannel(path, StandardOpenOption.READ).asInstanceOf[FileChannel]))
+  def read(path: Path) = file(new FileInputStream(path))
 }
 """)
 

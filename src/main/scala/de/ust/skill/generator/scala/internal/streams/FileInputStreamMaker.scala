@@ -19,6 +19,9 @@ import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Stack;
 
 /**
@@ -30,9 +33,12 @@ final public class FileInputStream extends InStream {
 
 	private final MappedByteBuffer input;
 	private final Stack<Long> positions = new Stack<Long>();
+	private final Path path;
 
-	public FileInputStream(FileChannel file) throws IOException {
+	public FileInputStream(Path path) throws IOException {
+		FileChannel file = (FileChannel) Files.newByteChannel(path, StandardOpenOption.READ);
 		input = file.map(MapMode.READ_ONLY, 0, file.size());
+		this.path = path;
 	}
 
 	@Override
@@ -116,6 +122,10 @@ final public class FileInputStream extends InStream {
 	@Override
 	public double f64() {
 		return input.getDouble();
+	}
+
+	public Path path() {
+		return path;
 	}
 }
 """)

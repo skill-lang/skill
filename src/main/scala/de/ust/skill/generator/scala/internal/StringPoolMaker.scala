@@ -131,46 +131,47 @@ final class StringPool(in: InStream) extends StringAccess {
     }
   }
 
-  //  /**
-  //   * prepares serialization of the string pool and appends new Strings to the output stream.
-  //   */
-  //  private[internal] def prepareAndAppend(out: FileChannel, as: AppendState) {
-  //    val serializationIDs = as.serializationIDs
-  //
-  //    // ensure all strings are present
-  //    for (k ← stringPositions.keySet)
-  //      get(k)
-  //
-  //    // create inverse map
-  //    idMap.foreach({ case (k, v) ⇒ serializationIDs.put(v, k) })
-  //
-  //    val data = new ByteArrayOutputStream
-  //    var offsets = ArrayBuffer[Int]()
-  //
-  //    // instert new strings to the map;
-  //    //  this is the place where duplications with lazy strings will be detected and eliminated
-  //    //  this is also the place, where new instances are appended to the output file
-  //    for (s ← newStrings)
-  //      if (!serializationIDs.contains(s)) {
-  //        idMap.put(idMap.size + 1, s)
-  //        serializationIDs.put(s, idMap.size)
-  //        data.write(s.getBytes)
-  //        offsets += data.size
-  //      }
-  //
-  //    //count
-  //    val count = offsets.size
-  //    out.write(ByteBuffer.wrap(v64(count)))
-  //
-  //    //end & data
-  //    val end = ByteBuffer.allocate(4 * count)
-  //    offsets.foreach(end.putInt(_))
-  //
-  //    //write back
-  //    end.rewind()
-  //    out.write(end)
-  //    out.write(ByteBuffer.wrap(data.toByteArray()))
-  //  }
+  /**
+   * prepares serialization of the string pool and appends new Strings to the output stream.
+   */
+  private[internal] def prepareAndAppend(out: OutStream, as: StateAppender) {
+    val serializationIDs = as.stringIDs
+
+    // ensure all strings are present
+    for (k ← 1 until stringPositions.size)
+      get(k)
+
+    // create inverse map
+    for (i ← 1 until idMap.size) {
+      serializationIDs.put(idMap(i), i)
+    }
+
+    val data = new OutBuffer()
+    var offsets = ArrayBuffer[Int]()
+
+    // instert new strings to the map;
+    //  this is the place where duplications with lazy strings will be detected and eliminated
+    //  this is also the place, where new instances are appended to the output file
+    for (s ← newStrings)
+      if (!serializationIDs.contains(s)) {
+        serializationIDs.put(s, idMap.size)
+        idMap += s
+        data.put(s.getBytes)
+        offsets += data.size.toInt
+      }
+
+    //count
+    val count = offsets.size
+    v64(count, out)
+
+    //end & data
+    val end = ByteBuffer.allocate(4 * count)
+    offsets.foreach(end.putInt(_))
+
+    //write back
+    out.put(end.array)
+    out.putAll(data)
+  }
 }
 """)
 
