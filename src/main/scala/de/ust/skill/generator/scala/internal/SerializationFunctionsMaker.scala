@@ -50,10 +50,12 @@ abstract class SerializationFunctions(state: SerializableState) {
     for (p ← state.pools) {
       strings.add(p.name)
       for (f ← p.fields) {
-        strings.add(f.name)
-        if (StringType == f.t) {
-          for (i ← p.all)
-            strings.add(i.get(p, f).asInstanceOf[String])
+        if (p.knownFields.contains(f.name)) {
+          strings.add(f.name)
+          if (StringType == f.t) {
+            for (i ← p.all)
+              strings.add(i.get(p, f).asInstanceOf[String])
+          }
         }
       }
     }

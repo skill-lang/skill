@@ -14,6 +14,7 @@ trait ExceptionsMaker extends GeneralOutputMaker {
     //package & imports
     out.write(s"""package ${packagePrefix}internal
 
+import ${packagePrefix}api.SkillType
 import ${packagePrefix}internal.streams.InStream""")
 
     out.write("""
@@ -34,6 +35,13 @@ class SkillException(msg: String, cause: Throwable) extends Exception(msg, cause
  * @author Timm Felden
  */
 trait ExpectableSkillException {}
+
+/**
+ * Thrown on invalid generic access.
+ *
+ * @author Timm Felden
+ */
+case class GenericAccessException(v: SkillType, t: String, f: String, cause: Throwable) extends SkillException(s"$v has no value in $t.$f", cause) with ExpectableSkillException;
 
 /**
  * This exception is used if byte stream related errors occur.

@@ -30,6 +30,7 @@ trait DeclarationImplementationMaker extends GeneralOutputMaker {
     out.write(s"""package ${packagePrefix}internal.types
 
 import ${packagePrefix}api._
+import ${packagePrefix}internal.GenericAccessException
 import ${packagePrefix}internal.StoragePool
 
 final class $name(private var skillID: Long) extends _root_.${packagePrefix}$name {""")
@@ -128,7 +129,7 @@ ${
       try {
         acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[_root_.${packagePrefix}internal.FieldDeclaration])(this)
       } catch {
-        case e: Exception ⇒ this+" is not in:\\n"+acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[_root_.${packagePrefix}internal.FieldDeclaration]).mkString("\\n")
+        case e: Exception ⇒ throw GenericAccessException(this, acc.name, field.name, e)
       }
   }
 """)
@@ -151,7 +152,7 @@ ${
       try {
         acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[_root_.${packagePrefix}internal.FieldDeclaration]).put(this, value)
       } catch {
-        case e: Exception ⇒ this+" is not in:\\n"+acc.asInstanceOf[StoragePool[SkillType]].unknownFieldData(field.asInstanceOf[_root_.${packagePrefix}internal.FieldDeclaration]).mkString("\\n")
+        case e: Exception ⇒ throw GenericAccessException(this, acc.name, field.name, e)
       }
   }
 """)

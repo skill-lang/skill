@@ -138,9 +138,9 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
           v64(outData.size, out)
           restrictions(p, out)
 
-          v64(p.fields.size, out)
+          v64(${d.getAllFields.size}, out)
 
-          for (f ← fields) {
+          for (f ← fields if p.knownFields.contains(f.name)) {
             restrictions(f, out)
             writeType(f.t, out)
             string(f.name, out)
@@ -152,7 +152,6 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
                 ${writeField(d, f, "outData")}
               }""").mkString("")
         }
-              case _ ⇒ if (outData.size > 0) genericPutField(p, f, outData)
             }
             // end
             v64(dataChunk.size, out)
