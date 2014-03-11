@@ -145,6 +145,7 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
 
           val fields = if (0 != count) p.fields
           else p.fields.filter(_.dataChunks.isEmpty)
+          assert(fields.forall { f ⇒ p.knownFields.contains(f.name) }, "adding instances with an unknown field is currently not supported")
 
           v64(fields.size, out)
 
@@ -204,6 +205,8 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
 
           val fields = if (0 != count) p.fields
           else p.fields.filter(_.dataChunks.isEmpty)
+          assert(fields.forall { f ⇒ p.knownFields.contains(f.name) }, "adding instances with an unknown field is currently not supported")
+
           v64(fields.size, out)
           for (f ← fields) {
             if (f.dataChunks.isEmpty) {
