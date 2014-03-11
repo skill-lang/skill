@@ -108,13 +108,15 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
     val dataChunk = new OutBuffer();
 
     // @note performance hack: requires at least 1 instance in order to work correctly
-    @inline def genericPutField(p: StoragePool[_ <: SkillType], f: FieldDeclaration, instances: Iterable[SkillType]) {
+    @inline def genericPutField(p: StoragePool[_ <: SkillType], f: FieldDeclaration, instances: Iterator[SkillType]) {
       f.t match {
         case I8  ⇒ for (i ← instances) i8(i.get(p, f).asInstanceOf[Byte], dataChunk)
         case I16 ⇒ for (i ← instances) i16(i.get(p, f).asInstanceOf[Short], dataChunk)
         case I32 ⇒ for (i ← instances) i32(i.get(p, f).asInstanceOf[Int], dataChunk)
         case I64 ⇒ for (i ← instances) i64(i.get(p, f).asInstanceOf[Long], dataChunk)
         case V64 ⇒ for (i ← instances) v64(i.get(p, f).asInstanceOf[Long], dataChunk)
+
+        case StringType ⇒ for (i ← instances) string(i.get(p, f).asInstanceOf[String], dataChunk)
       }
     }
     @inline def write(p: StoragePool[_ <: SkillType]) {
@@ -125,7 +127,6 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
         s"""
         case "$sName" ⇒ locally {
           val outData = data("$sName").asInstanceOf[Iterable[${d.getName}]]
-          val fields = p.fields
           val newPool = p.blockInfos.isEmpty
 
           string("$sName", out)
@@ -136,28 +137,42 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
             v64(lbpsiMap(p.poolIndex.toInt), out)"""
         }
           }
-          v64(outData.size, out)
+          val count = outData.size
+          v64(count, out)
 
           if (newPool)
             restrictions(p, out)
 
-          v64(p.fields.size, out)
+          val fields = if (0 != count) p.fields
+          else p.fields.filter(_.dataChunks.isEmpty)
+
+          v64(fields.size, out)
 
           for (f ← fields) {
             if (f.dataChunks.isEmpty) {
               restrictions(f, out)
               writeType(f.t, out)
               string(f.name, out)
-            }
 
-            // data
-            f.name match {${
+              // bulk chunk
+              f.name match {${
           (for (f ← fields) yield s"""
-              case "${f.getSkillName()}" ⇒ locally {
-                ${writeField(d, f, "outData")}
-              }""").mkString("")
+                case "${f.getSkillName()}" ⇒ locally {
+                  ${writeField(d, f, s"p.all.asInstanceOf[Iterator[${d.getCapitalName}]]")}
+                }""").mkString("")
         }
-              case _ ⇒ if (outData.size > 0) genericPutField(p, f, outData)
+                case _ ⇒ if (outData.size > 0) genericPutField(p, f, p.all.asInstanceOf[Iterator[${d.getCapitalName}]])
+              }
+            } else {
+              // simple chunk
+              f.name match {${
+          (for (f ← fields) yield s"""
+                case "${f.getSkillName()}" ⇒ locally {
+                  ${writeField(d, f, "outData")}
+                }""").mkString("")
+        }
+                case _ ⇒ if (outData.size > 0) genericPutField(p, f, outData.iterator)
+              }
             }
             // end
             v64(dataChunk.size, out)
@@ -181,22 +196,29 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
                 out.put(0.toByte)
             }
           }
-          v64(outData.size, out)
+          val count = outData.size
+          v64(count, out)
 
           if (newPool)
             restrictions(p, out)
 
-          v64(p.fields.size, out)
-          for (f ← p.fields) {
+          val fields = if (0 != count) p.fields
+          else p.fields.filter(_.dataChunks.isEmpty)
+          v64(fields.size, out)
+          for (f ← fields) {
             if (f.dataChunks.isEmpty) {
               restrictions(f, out)
               writeType(f.t, out)
               string(f.name, out)
-            }
 
-            // data
-            if (outData.size > 0) {
-              genericPutField(p, f, outData)
+              // bulk chunk
+              if (p.dynamicSize > 0)
+                genericPutField(p, f, p.all.asInstanceOf[Iterator[SkillType]])
+            } else {
+              // simple chunk
+              if (outData.size > 0) {
+                genericPutField(p, f, outData.iterator)
+              }
             }
 
             // end

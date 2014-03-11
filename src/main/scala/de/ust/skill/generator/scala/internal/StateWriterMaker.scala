@@ -115,6 +115,8 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
         case I32 ⇒ for (i ← instances) i32(i.get(p, f).asInstanceOf[Int], dataChunk)
         case I64 ⇒ for (i ← instances) i64(i.get(p, f).asInstanceOf[Long], dataChunk)
         case V64 ⇒ for (i ← instances) v64(i.get(p, f).asInstanceOf[Long], dataChunk)
+
+        case StringType ⇒ for (i ← instances) string(i.get(p, f).asInstanceOf[String], dataChunk)
       }
     }
     @inline def write(p: StoragePool[_ <: SkillType]) {
