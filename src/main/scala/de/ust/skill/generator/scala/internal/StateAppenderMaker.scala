@@ -18,16 +18,14 @@ import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.Type
-trait StateWriterMaker extends GeneralOutputMaker {
+trait StateAppenderMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("internal/StateWriter.scala")
+    val out = open("internal/StateAppender.scala")
     //package
     out.write(s"""package ${packagePrefix}internal
 
 import java.util.Arrays
-import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
@@ -43,7 +41,7 @@ import ${packagePrefix}internal.streams.OutStream
  * @see SKilL §6
  * @author Timm Felden
  */
-private[internal] final class StateWriter(state: SerializableState, out: OutStream) extends SerializationFunctions(state) {
+private[internal] final class StateAppender(state: SerializableState, out: OutStream) extends SerializationFunctions(state) {
   import SerializationFunctions._
 
   /**
@@ -60,8 +58,8 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
   val data = new HashMap[String, ArrayBuffer[SkillType]]
   // store static instances in data
   for (p ← state.pools) {
-    val ab = new ArrayBuffer[SkillType](p.staticSize.toInt);
-    for (i ← p.staticInstances)
+    val ab = new ArrayBuffer[SkillType](p.newObjects.size);
+    for (i ← p.newObjects)
       ab.append(i)
     data.put(p.name, ab)
   }
@@ -74,10 +72,10 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
     case p: BasePool[_] ⇒
       makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ data(s).size })
       concatenateDataMap(p, data)
-      var id = 1L
+      var id = 1L + p.data.size
       for (i ← data(p.name)) {
         skillIDs(i) = id
-        id += 1
+        id += 1L
       }
     case _ ⇒
   }
@@ -100,7 +98,7 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
    */
   locally {
     // write string block
-    state.String.asInstanceOf[StringPool].prepareAndWrite(out, this)
+    state.String.asInstanceOf[StringPool].prepareAndAppend(out, this)
 
     // write count of the type block
     v64(state.pools.size, out)
@@ -127,22 +125,29 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
         case "$sName" ⇒ locally {
           val outData = data("$sName").asInstanceOf[Iterable[${d.getName}]]
           val fields = p.fields
+          val newPool = p.blockInfos.isEmpty
 
           string("$sName", out)
-          ${
+          if (newPool) {
+            ${
           if (null == d.getSuperType) "out.put(0.toByte)"
           else s"""string("${d.getSuperType.getSkillName}", out)
-          v64(lbpsiMap(p.poolIndex.toInt), out)"""
+            v64(lbpsiMap(p.poolIndex.toInt), out)"""
         }
+          }
           v64(outData.size, out)
-          restrictions(p, out)
+
+          if (newPool)
+            restrictions(p, out)
 
           v64(p.fields.size, out)
 
           for (f ← fields) {
-            restrictions(f, out)
-            writeType(f.t, out)
-            string(f.name, out)
+            if (f.dataChunks.isEmpty) {
+              restrictions(f, out)
+              writeType(f.t, out)
+              string(f.name, out)
+            }
 
             // data
             f.name match {${
@@ -162,23 +167,31 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
     }
         case _ ⇒ locally {
           // generic write
-          string(p.name, out)
+          val newPool = p.blockInfos.isEmpty
           val outData = data(p.name)
-          p.superName match {
-            case Some(sn) ⇒
-              string(sn, out)
-              v64(lbpsiMap(p.poolIndex.toInt), out)
-            case None ⇒
-              out.put(0.toByte)
+
+          string(p.name, out)
+          if (newPool) {
+            p.superName match {
+              case Some(sn) ⇒
+                string(sn, out)
+                v64(lbpsiMap(p.poolIndex.toInt), out)
+              case None ⇒
+                out.put(0.toByte)
+            }
           }
           v64(outData.size, out)
-          restrictions(p, out)
+
+          if (newPool)
+            restrictions(p, out)
 
           v64(p.fields.size, out)
           for (f ← p.fields) {
-            restrictions(f, out)
-            writeType(f.t, out)
-            string(f.name, out)
+            if (f.dataChunks.isEmpty) {
+              restrictions(f, out)
+              writeType(f.t, out)
+              string(f.name, out)
+            }
 
             // data
             if (outData.size > 0) {
