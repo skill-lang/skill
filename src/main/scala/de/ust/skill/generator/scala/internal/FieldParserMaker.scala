@@ -100,12 +100,11 @@ object FieldParser {
 ${
       (for (t ← IR)
         yield s"""      case p: ${t.getCapitalName}StoragePool ⇒ f.name match {
-        ${
+${
         (for (f ← t.getAllFields)
-          yield if (f.isIgnored) s"""case "${f.getSkillName}" ⇒ in.jump(c.end)"""
-        else if (f.isConstant) s"""case "${f.getSkillName}" ⇒"""
-        else
-          s"""case "${f.getSkillName}" ⇒ c match {
+          yield if (f.isIgnored) s"""        case "${f.getSkillName}" ⇒ in.jump(c.end)"""
+        else if (f.isConstant) s"""        case "${f.getSkillName}" ⇒"""
+        else s"""        case "${f.getSkillName}" ⇒ c match {
             case c: SimpleChunkInfo ⇒
               for (i ← c.bpsi until c.bpsi + c.count)
                 p.getByID(i + 1).${f.getName} = ${readSingleField(f.getType)}
@@ -231,7 +230,7 @@ ${
       case n        ⇒ "in."+n
     }
 
-    case _ ⇒ "???"
+    case _ ⇒ "readSingleField(f.t).asInstanceOf["+mapType(t)+"]"
   }
 
 }
