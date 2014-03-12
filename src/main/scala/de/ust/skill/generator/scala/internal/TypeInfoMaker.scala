@@ -253,7 +253,7 @@ sealed abstract class StoragePool[T <: SkillType](
   /**
    * returns the skill object at position index
    */
-  def getByID(index: Long): SkillType;
+  def getByID(index: Long): T;
 
   /**
    * the number of instances of exactly this type, excluding sub-types

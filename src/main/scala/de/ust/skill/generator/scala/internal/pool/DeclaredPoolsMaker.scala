@@ -25,6 +25,7 @@ import de.ust.skill.ir.SetType
  * Creates storage pools for declared types.
  *
  * @author Timm Felden
+ * @deprecated this part of the generator is dead, but the code has not yet been merged into other parts, so it is still required (delete after performance of the new binding can compete with the old one and after all tests pass)
  */
 trait DeclaredPoolsMaker extends GeneralOutputMaker {
   abstract override def make {
