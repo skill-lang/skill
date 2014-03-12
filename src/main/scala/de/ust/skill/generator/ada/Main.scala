@@ -116,7 +116,7 @@ class Main extends FakeMain
     case t: SetType                 ⇒ 19.toString
     case t: MapType					⇒ 20.toString
 
-    case t: Declaration				⇒ s"""State.Get_Type ("${t.getSkillName}").id"""
+    case t: Declaration				⇒ s"""Long (State.Get_Type ("${t.getSkillName}").id)"""
   }
 
   /**
@@ -144,6 +144,7 @@ class Main extends FakeMain
     case t: VariableLengthArrayType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_Vector.Vector"
     case t: ListType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_List.List"
     case t: SetType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_Set.Set"
+    case t: MapType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_Map.Map"
 
     case t: Declaration ⇒ s"${t.getName()}_Type_Access"
   }
@@ -220,6 +221,10 @@ class Main extends FakeMain
                for I in 1 .. X loop
                   Object.${f.getSkillName}.Insert (${inner(t.getBaseType, d, f)});
                end loop;"""
+
+     case t: MapType ⇒
+       s"""begin
+               null;"""
 
       case t: Declaration ⇒
         s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
@@ -311,6 +316,10 @@ class Main extends FakeMain
                Byte_Writer.Write_v64 (Stream, Long (X.Length));
                X.Iterate (Iterate'Access);"""
 
+      case t: MapType ⇒
+        s"""begin
+               null;"""
+
       case t: Declaration ⇒
         s"""begin
                null;"""
@@ -392,6 +401,7 @@ class Main extends FakeMain
     case t: VariableLengthArrayType ⇒ s"New_${mapType(t, _d, _f).stripSuffix(".Vector")}"
     case t: ListType ⇒ s"New_${mapType(t, _d, _f).stripSuffix(".List")}"
     case t: SetType ⇒ s"New_${mapType(t, _d, _f).stripSuffix(".Set")}"
+    case t: MapType ⇒ s"New_${mapType(t, _d, _f).stripSuffix(".Map")}"
 
     case _ ⇒ "null"
   }

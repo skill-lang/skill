@@ -92,7 +92,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                New_Type : Type_Information := new Type_Declaration'(
                   Type_Size => Type_Name'Length,
                   Super_Size => SU.To_String (Super_Name)'Length,
-                  id => State.Type_Size + 32,
+                  id => Long (State.Type_Size + 32),
                   Name => Type_Name,
                   Super_Name => SU.To_String (Super_Name),
                   bpsi => 1,
@@ -173,8 +173,8 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
       declare
          Field_Type : Long := Byte_Reader.Read_v64 (Input_Stream);
          Constant_Value : Long := 0;
-         Constant_Array_Length : Integer := -1;
-         Base_Type : Integer := -1;
+         Constant_Array_Length : Long := 0;
+         Base_Types : Base_Types_Vector.Vector;
       begin
          case Field_Type is
             --  const i8, i16, i32, i64, v64
@@ -186,11 +186,11 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
 
             --  array T[i]
             when 15 =>
-               Constant_Array_Length := Integer (Byte_Reader.Read_v64 (Input_Stream));
-               Base_Type := Integer (Byte_Reader.Read_v64 (Input_Stream));
+               Constant_Array_Length := Byte_Reader.Read_v64 (Input_Stream);
+               Base_Types.Append (Byte_Reader.Read_v64 (Input_Stream));
 
             --  array T[], list, set
-            when 17 .. 19 => Base_Type := Integer (Byte_Reader.Read_v64 (Input_Stream));
+            when 17 .. 19 => Base_Types.Append (Byte_Reader.Read_v64 (Input_Stream));
 
             --  map
             when 20 =>
@@ -198,11 +198,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                   X : Long := Byte_Reader.Read_v64 (Input_Stream);
                begin
                   for I in 1 .. X loop
-                     declare
-                        Y : Long := Byte_Reader.Read_v64 (Input_Stream);
-                     begin
-                        null;
-                     end;
+                     Base_Types.Append (Byte_Reader.Read_v64 (Input_Stream));
                   end loop;
                end;
 
@@ -215,10 +211,10 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
             New_Field : Field_Information := new Field_Declaration'(
                Size => Field_Name'Length,
                Name => Field_Name,
-               F_Type => Natural (Field_Type),
+               F_Type => Field_Type,
                Constant_Value => Constant_Value,
                Constant_Array_Length => Constant_Array_Length,
-               Base_Type => Base_Type
+               Base_Types => Base_Types
             );
          begin
             State.Put_Field (Type_Name, New_Field);
@@ -287,6 +283,8 @@ ${
           s"               New_${mapType(f.getType, d, f).stripSuffix(".List")} : ${mapType(f.getType, d, f)};\r\n"
         case t: SetType ⇒
           s"               New_${mapType(f.getType, d, f).stripSuffix(".Set")} : ${mapType(f.getType, d, f)};\r\n"
+        case t: MapType ⇒
+          s"               New_${mapType(f.getType, d, f).stripSuffix(".Map")} : ${mapType(f.getType, d, f)};\r\n"
         case _ ⇒ ""
       }
     }).mkString("")

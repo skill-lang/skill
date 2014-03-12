@@ -164,7 +164,7 @@ ${
    procedure Write_Field_Declaration (Type_Declaration : Type_Information; Field_Declaration : Field_Information) is
       Type_Name : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
-      Field_Type : Natural := Field_Declaration.F_Type;
+      Field_Type : Long := Field_Declaration.F_Type;
       Size : Long := Field_Data_Size (Type_Declaration, Field_Declaration);
    begin
       Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
@@ -180,9 +180,9 @@ ${
 
          when 15 =>
             Byte_Writer.Write_v64 (Output_Stream, Long (Field_Declaration.Constant_Array_Length));
-            Byte_Writer.Write_v64 (Output_Stream, Long (Field_Declaration.Base_Type));
+            Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Base_Types.First_Element);
 
-         when 17 .. 19 => Byte_Writer.Write_v64 (Output_Stream, Long (Field_Declaration.Base_Type));
+         when 17 .. 19 => Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Base_Types.First_Element);
 
          when others => null;
       end case;

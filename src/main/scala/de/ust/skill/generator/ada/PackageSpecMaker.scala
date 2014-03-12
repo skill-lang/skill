@@ -58,26 +58,30 @@ package ${packagePrefix.capitalize} is
    -------------
    --  SKILL  --
    -------------
-   type Skill_State is limited private;
-   type Skill_Type is abstract tagged private;
-   type Skill_Type_Access is access all Skill_Type'Class;
-
-   function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type;
-   function "<" (Left, Right : Skill_Type_Access) return Boolean;
-   function "=" (Left, Right : Skill_Type_Access) return Boolean;
-
    function Hash (Element : Short_Short_Integer) return Ada.Containers.Hash_Type;
    function Hash (Element : Short) return Ada.Containers.Hash_Type;
    function Hash (Element : Integer) return Ada.Containers.Hash_Type;
    function Hash (Element : Long) return Ada.Containers.Hash_Type;
    function Hash (Element : SU.Unbounded_String) return Ada.Containers.Hash_Type;
 
+   type Skill_State is limited private;
+   type Skill_Type is abstract tagged private;
+   type Skill_Type_Access is access all Skill_Type'Class;
+   function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type;
+   function "<" (Left, Right : Skill_Type_Access) return Boolean;
+   function "=" (Left, Right : Skill_Type_Access) return Boolean;
+
 ${
   var output = "";
   for (d ← IR) {
     output += s"""   type ${d.getName}_Type is new Skill_Type with private;\r\n"""
     output += s"""   type ${d.getName}_Type_Access is access all ${d.getName}_Type;\r\n"""
+    output += s"""   function Hash (Element : ${d.getName}_Type_Access) return Ada.Containers.Hash_Type;\r\n"""
+    output += s"""   function "<" (Left, Right : ${d.getName}_Type_Access) return Boolean;\r\n"""
+    output += s"""   function "=" (Left, Right : ${d.getName}_Type_Access) return Boolean;\r\n\r\n"""
   }
+
+  output.stripSuffix("\r\n")
 
   for (d ← IR) {
     d.getFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
@@ -89,14 +93,9 @@ ${
         case t: ListType ⇒
           output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".List")} is new Ada.Containers.Indefinite_Doubly_Linked_Lists (${mapType(t.getBaseType, d, f)}, "=");\r\n"""
         case t: SetType ⇒
-          t.getBaseType match {
-            case t: Declaration ⇒
-              output += s"""   function Hash (Element : ${mapType(t.getBaseType, d, f)}) return Ada.Containers.Hash_Type;\r\n"""
-              output += s"""   function "<" (Left, Right : ${mapType(t.getBaseType, d, f)}) return Boolean;\r\n"""
-              output += s"""   function "=" (Left, Right : ${mapType(t.getBaseType, d, f)}) return Boolean;\r\n"""
-            case _ => null
-          }
           output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Set")} is new Ada.Containers.Indefinite_Hashed_Sets (${mapType(t.getBaseType, d, f)}, Hash, "=");\r\n"""
+        case t: MapType ⇒
+          output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Map")} is new Ada.Containers.Indefinite_Hashed_Maps (${mapType(t.getBaseTypes.get(0), d, f)}, ${mapType(t.getBaseTypes.get(1), d, f)}, Hash, "=");\r\n"""
         case _ ⇒ null
       }
     })
@@ -149,13 +148,14 @@ ${
    --------------------------
    --  FIELD DECLARATIONS  --
    --------------------------
+   package Base_Types_Vector is new Ada.Containers.Indefinite_Vectors (Positive, Long);
    type Field_Declaration (Size : Positive) is
       record
          Name : String (1 .. Size);
-         F_Type : Natural;
+         F_Type : Long;
          Constant_Value : Long;
-         Constant_Array_Length : Integer;
-         Base_Type : Integer;
+         Constant_Array_Length : Long;
+         Base_Types : Base_Types_Vector.Vector;
       end record;
    type Field_Information is access Field_Declaration;
 
@@ -166,7 +166,7 @@ ${
    -------------------------
    type Type_Declaration (Type_Size : Positive; Super_Size : Natural) is
       record
-         id : Positive;
+         id : Long;
          Name : String (1 .. Type_Size);
          Super_Name : String (1 .. Super_Size);
          bpsi : Positive;

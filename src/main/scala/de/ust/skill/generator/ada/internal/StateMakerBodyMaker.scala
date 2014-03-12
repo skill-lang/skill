@@ -31,7 +31,7 @@ ${
             New_Type : Type_Information := new Type_Declaration'(
                Type_Size => Type_Name'Length,
                Super_Size => Super_Name'Length,
-               id => State.Type_Size + 32,
+               id => Long (State.Type_Size + 32),
                Name => Type_Name,
                Super_Name => Super_Name,
                bpsi => 1,
@@ -54,6 +54,7 @@ ${
          declare
             Type_Name : String := "${d.getSkillName}";
             Field_Name : String := "${f.getSkillName}";
+            Base_Types : Base_Types_Vector.Vector;
             New_Field : Field_Information := new Field_Declaration'(
                Size => Field_Name'Length,
                Name => Field_Name,
@@ -62,21 +63,27 @@ ${
                Constant_Array_Length => ${
   f.getType match {
     case t: ConstantLengthArrayType ⇒ t.getLength
-    case _ => -1
+    case _ => 0
   }
 },
-               Base_Type => ${
-  f.getType match {
-    case t: ConstantLengthArrayType ⇒ mapTypeToId(t.getBaseType, f)
-    case t: VariableLengthArrayType ⇒ mapTypeToId(t.getBaseType, f)
-    case t: ListType ⇒ mapTypeToId(t.getBaseType, f)
-    case t: SetType ⇒ mapTypeToId(t.getBaseType, f)
-    case _ ⇒ -1
-  }
-}
+               Base_Types => Base_Types
             );
          begin
-            State.Put_Field (Type_Name, New_Field);
+${
+  var output = ""
+  f.getType match {
+    case t: ConstantLengthArrayType ⇒
+      output += s"            Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
+    case t: VariableLengthArrayType ⇒
+      output += s"            Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
+    case t: ListType ⇒
+      output += s"            Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
+    case t: SetType ⇒
+      output += s"            Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
+    case _ ⇒ null
+  }
+  output
+}            State.Put_Field (Type_Name, New_Field);
          end;
       end if;\r\n\r\n"""}).mkString("")
   }
