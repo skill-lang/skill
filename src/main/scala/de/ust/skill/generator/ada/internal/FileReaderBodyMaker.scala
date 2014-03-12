@@ -206,8 +206,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                   end loop;
                end;
 
-            when others =>
-               null;
+            when others => null;
          end case;
 
          declare
@@ -311,8 +310,6 @@ ${
 
       Type_Name : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
-
-      Skill_Parse_Error : exception;
    begin
 ${
   var output = "";

@@ -184,8 +184,7 @@ ${
 
          when 17 .. 19 => Byte_Writer.Write_v64 (Output_Stream, Long (Field_Declaration.Base_Type));
 
-         when others =>
-            null;
+         when others => null;
       end case;
 
       Byte_Writer.Write_v64 (Output_Stream, Long (State.Get_String_Index (Field_Name)));
