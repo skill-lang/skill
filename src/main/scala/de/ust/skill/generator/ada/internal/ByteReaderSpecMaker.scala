@@ -25,9 +25,6 @@ package ${packagePrefix.capitalize}.Internal.Byte_Reader is
 
    function Read_v64 (Input_Stream : ASS_IO.Stream_Access) return v64;
 
-   function Read_f32 (Input_Stream : ASS_IO.Stream_Access) return f32;
-   function Read_f64 (Input_Stream : ASS_IO.Stream_Access) return f64;
-
    function Read_Boolean (Input_Stream : ASS_IO.Stream_Access) return Boolean;
    function Read_String (Input_Stream : ASS_IO.Stream_Access; Length : Integer) return String;
 
@@ -36,6 +33,16 @@ package ${packagePrefix.capitalize}.Internal.Byte_Reader is
 private
 
    function Read_Byte (Input_Stream : ASS_IO.Stream_Access) return Byte;
+
+   pragma Inline (Read_i8);
+   pragma Inline (Read_i16);
+   pragma Inline (Read_i32);
+   pragma Inline (Read_i64);
+   pragma Inline (Read_v64);
+   pragma Inline (Read_Boolean);
+   pragma Inline (Read_String);
+   pragma Inline (Skip_Bytes);
+   pragma Inline (Read_Byte);
 
 end ${packagePrefix.capitalize}.Internal.Byte_Reader;
 """)

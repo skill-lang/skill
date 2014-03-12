@@ -87,20 +87,6 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Reader is
       return Convert (rval);
    end Read_v64;
 
-   function Read_f32 (Input_Stream : ASS_IO.Stream_Access) return f32 is
-      Skill_Unsupported_Type : exception;
-   begin
-      raise Skill_Unsupported_Type;
-      return 0.0;
-   end Read_f32;
-
-   function Read_f64 (Input_Stream : ASS_IO.Stream_Access) return f64 is
-      Skill_Unsupported_Type : exception;
-   begin
-      raise Skill_Unsupported_Type;
-      return 0.0;
-   end Read_f64;
-
    function Read_Boolean (Input_Stream : ASS_IO.Stream_Access) return Boolean is
       Unexcepted_Value : exception;
    begin

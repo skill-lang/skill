@@ -121,18 +121,6 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Writer is
       end;
    end Get_v64_Bytes;
 
-   procedure Write_f32 (Stream : ASS_IO.Stream_Access; Value : f32) is
-      Skill_Unsupported_Type : exception;
-   begin
-      raise Skill_Unsupported_Type;
-   end Write_f32;
-
-   procedure Write_f64 (Stream : ASS_IO.Stream_Access; Value : f64) is
-      Skill_Unsupported_Type : exception;
-   begin
-      raise Skill_Unsupported_Type;
-   end Write_f64;
-
    procedure Write_Boolean (Stream : ASS_IO.Stream_Access; Value : Boolean) is
    begin
       case Value is

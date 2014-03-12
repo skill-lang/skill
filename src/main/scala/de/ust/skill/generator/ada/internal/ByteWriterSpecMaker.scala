@@ -25,9 +25,6 @@ package ${packagePrefix.capitalize}.Internal.Byte_Writer is
 
    procedure Write_v64 (Stream : ASS_IO.Stream_Access; Value : v64);
 
-   procedure Write_f32 (Stream : ASS_IO.Stream_Access; Value : f32);
-   procedure Write_f64 (Stream : ASS_IO.Stream_Access; Value : f64);
-
    procedure Write_Boolean (Stream : ASS_IO.Stream_Access; Value : Boolean);
    procedure Write_String (Stream : ASS_IO.Stream_Access; Value : String);
 
@@ -37,6 +34,17 @@ private
 
    type Byte_v64_Type is array (Natural range <>) of Byte;
    function Get_v64_Bytes (Value : v64) return Byte_v64_Type;
+
+   pragma Inline (Write_i8);
+   pragma Inline (Write_i16);
+   pragma Inline (Write_i32);
+   pragma Inline (Write_i64);
+   pragma Inline (Write_v64);
+   pragma Inline (Write_Boolean);
+   pragma Inline (Write_String);
+   pragma Inline (Write_Byte);
+   pragma Inline (Write_Byte);
+   pragma Inline (Get_v64_Bytes);
 
 end ${packagePrefix.capitalize}.Internal.Byte_Writer;
 """)
