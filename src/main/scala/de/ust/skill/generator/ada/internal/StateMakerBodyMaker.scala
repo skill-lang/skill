@@ -80,6 +80,10 @@ ${
       output += s"            Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
     case t: SetType ⇒
       output += s"            Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
+    case t: MapType ⇒
+      t.getBaseTypes.foreach({ t =>
+        output += s"            Base_Types.Append (${mapTypeToId(t, f)});\r\n"
+      })
     case _ ⇒ null
   }
   output

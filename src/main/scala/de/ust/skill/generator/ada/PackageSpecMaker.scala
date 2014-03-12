@@ -23,12 +23,9 @@ with Ada.Strings.Unbounded;
 with Ada.Strings.Unbounded.Hash;
 with Ada.Tags;
 
-with Ada.Text_IO;
-
 package ${packagePrefix.capitalize} is
 
    package SU renames Ada.Strings.Unbounded;
-   use SU;
 
    -------------
    --  TYPES  --
@@ -63,6 +60,7 @@ package ${packagePrefix.capitalize} is
    function Hash (Element : Integer) return Ada.Containers.Hash_Type;
    function Hash (Element : Long) return Ada.Containers.Hash_Type;
    function Hash (Element : SU.Unbounded_String) return Ada.Containers.Hash_Type;
+   function "=" (Left, Right : SU.Unbounded_String) return Boolean renames SU."=";
 
    type Skill_State is limited private;
    type Skill_Type is abstract tagged private;
