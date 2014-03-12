@@ -14,6 +14,7 @@ trait FileReaderSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}-internal-file_reader.ads""")
 
     out.write(s"""
+with Ada.Unchecked_Deallocation;
 with ${packagePrefix.capitalize}.Internal.Byte_Reader;
 
 package ${packagePrefix.capitalize}.Internal.File_Reader is

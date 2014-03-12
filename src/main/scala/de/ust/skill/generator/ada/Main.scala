@@ -350,9 +350,9 @@ ${
     }
   }
 
-  protected def getSuperTypes(d: Declaration): MutableList[String] = {
-    if (null == d.getSuperType) MutableList[String]()
-    else getSuperTypes (d.getSuperType) += d.getSuperType.getSkillName
+  protected def getSuperTypes(d: Declaration): MutableList[Type] = {
+    if (null == d.getSuperType) MutableList[Type]()
+    else getSuperTypes (d.getSuperType) += d.getSuperType
   }
 
   /**

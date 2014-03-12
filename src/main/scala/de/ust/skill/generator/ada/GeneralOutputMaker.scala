@@ -69,7 +69,7 @@ trait GeneralOutputMaker {
   protected def mapFileReader(d: Declaration, f: Field): String
   protected def mapFileWriter(d: Declaration, f: Field): String
 
-  protected def getSuperTypes(d: Declaration): MutableList[String]
+  protected def getSuperTypes(d: Declaration): MutableList[Type]
 
   /**
    * Assume a package prefix provider.

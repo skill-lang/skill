@@ -250,10 +250,17 @@ ${
     superTypes.foreach({ t =>
       output += s"""\r\n\r\n               declare
                   Sub_Type : Type_Information := State.Get_Type ("${d.getSkillName}");
-                  Super_Type : Type_Information := State.Get_Type ("${t}");
-                  Position : Natural := (Sub_Type.lbpsi - Super_Type.lbpsi) + Super_Type.bpsi + I - 1;
-               begin
-                  Super_Type.Storage_Pool.Replace_Element (Position, Object);
+                  Super_Type : Type_Information := State.Get_Type ("${t.getSkillName}");
+                  Index : Natural := (Sub_Type.lbpsi - Super_Type.lbpsi) + Super_Type.bpsi + I - 1;
+               begin\r\n"""
+      if (t == superTypes.last)
+        output += s"""                  declare
+                     procedure Free is new Ada.Unchecked_Deallocation (${t.getName}_Type, ${t.getName}_Type_Access);
+                     X : ${t.getName}_Type_Access := ${t.getName}_Type_Access (Super_Type.Storage_Pool.Element (Index));
+                  begin
+                     Free (X);
+                  end;\r\n"""
+      output += s"""                  Super_Type.Storage_Pool.Replace_Element (Index, Object);
                end;"""
     })
     output
