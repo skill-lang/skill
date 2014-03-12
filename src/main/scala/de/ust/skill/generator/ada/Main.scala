@@ -235,17 +235,17 @@ ${
       else
         s"""Map.Insert (${inner(types.get(i+1), d, f)}, Read_Map_${types.length-i});"""
     }
-    output += s"""            function Read_Map_${types.length-(i+1)} return ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map is
-               Map : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map;
-            begin
-               for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
-                  ${x}
-               end loop;
-               return Map;
-            end Read_Map_${types.length-(i+1)};
-            pragma Inline (Read_Map_${types.length-(i+1)});\r\n\r\n"""
+    output += s"""               function Read_Map_${types.length-(i+1)} return ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map is
+                  Map : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map;
+               begin
+                  for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
+                     ${x}
+                  end loop;
+                  return Map;
+               end Read_Map_${types.length-(i+1)};
+               pragma Inline (Read_Map_${types.length-(i+1)});\r\n\r\n"""
   })
-  output.stripLineEnd
+  output.stripLineEnd.stripLineEnd
 }
             begin
                Object.f := Read_Map_1;"""
@@ -302,51 +302,85 @@ ${
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".Vector")};
 
                Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
-               X : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
+               Vector : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
 
                procedure Iterate (Position : Cursor) is
                begin
                   ${inner(t.getBaseType, d, f, s"${mapType(f.getType, d, f).stripSuffix(".Vector")}.Element (Position)")};
                end Iterate;
+               pragma Inline (Iterate);
             begin
-               Byte_Writer.Write_v64 (Stream, Long (X.Length));
-               X.Iterate (Iterate'Access);"""
+               Byte_Writer.Write_v64 (Stream, Long (Vector.Length));
+               Vector.Iterate (Iterate'Access);"""
 
       case t: ListType ⇒
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".List")};
 
                Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
-               X : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
+               List : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
 
                procedure Iterate (Position : Cursor) is
                begin
                   ${inner(t.getBaseType, d, f, s"${mapType(f.getType, d, f).stripSuffix(".List")}.Element (Position)")};
                end Iterate;
+               pragma Inline (Iterate);
             begin
-               Byte_Writer.Write_v64 (Stream, Long (X.Length));
-               X.Iterate (Iterate'Access);"""
+               Byte_Writer.Write_v64 (Stream, Long (List.Length));
+               List.Iterate (Iterate'Access);"""
 
       case t: SetType ⇒
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".Set")};
 
                Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
-               X : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
+               Set : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
 
                procedure Iterate (Position : Cursor) is
                begin
                   ${inner(t.getBaseType, d, f, s"${mapType(f.getType, d, f).stripSuffix(".Set")}.Element (Position)")};
                end Iterate;
+               pragma Inline (Iterate);
             begin
-               Byte_Writer.Write_v64 (Stream, Long (X.Length));
-               X.Iterate (Iterate'Access);"""
+               Byte_Writer.Write_v64 (Stream, Long (Set.Length));
+               Set.Iterate (Iterate'Access);"""
 
       case t: MapType ⇒
-        s"""begin
-               null;"""
+        s"""   Object : Container_Type_Access := Container_Type_Access (State.Get_Object (Type_Name, I));
+
+${
+  var output = ""
+  val types = t.getBaseTypes().reverse
+  types.slice(0, types.length-1).zipWithIndex.foreach({ case (t, i) =>
+    val x = {
+      if (0 == i)
+        s"""${inner(types.get(i+1), d, f, s"${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Key (Position)")};
+                     ${inner(types.get(i), d, f, s"${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Element (Position)")};"""
+      else
+        s"""${inner(types.get(i+1), d, f, s"${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Key (Position)")};
+                     Write_Map_${types.length-i} (${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Element (Position));"""
+    }
+    output += s"""               procedure Write_Map_${types.length-(i+1)} (Map : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map) is
+                  use ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)};
+
+                  procedure Iterate (Position : Cursor) is
+                  begin
+                     ${x}
+                  end Iterate;
+                  pragma Inline (Iterate);
+               begin
+                  Byte_Writer.Write_v64 (Stream, Long (Map.Length));
+                  Map.Iterate (Iterate'Access);
+               end Write_Map_${types.length-(i+1)};
+               pragma Inline (Write_Map_${types.length-(i+1)});\r\n\r\n"""
+  })
+  output.stripLineEnd.stripLineEnd
+}
+            begin
+               Write_Map_1 (Object.${f.getSkillName});"""
 
       case t: Declaration ⇒
-        s"""begin
-               null;"""
+        s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));
+            begin
+               ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
     }
   }
 

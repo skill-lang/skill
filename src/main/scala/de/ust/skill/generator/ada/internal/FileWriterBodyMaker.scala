@@ -121,6 +121,7 @@ ${
             rval := rval + 1;
          end if;
       end Iterate;
+      pragma Inline (Iterate);
    begin
       State.Get_Types.Iterate (Iterate'Access);
       return rval;
@@ -167,6 +168,7 @@ ${
       Field_Name : String := Field_Declaration.Name;
       Field_Type : Long := Field_Declaration.F_Type;
       Size : Long := Field_Data_Size (Type_Declaration, Field_Declaration);
+      Base_Types : Base_Types_Vector.Vector := Field_Declaration.Base_Types;
    begin
       Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
       Byte_Writer.Write_v64 (Output_Stream, Long (Field_Type));
@@ -184,6 +186,20 @@ ${
             Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Base_Types.First_Element);
 
          when 17 .. 19 => Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Base_Types.First_Element);
+
+         when 20 =>
+            declare
+               use Base_Types_Vector;
+
+               procedure Iterate (Position : Cursor) is
+                  X : Long := Base_Types_Vector.Element (Position);
+               begin
+                  Byte_Writer.Write_v64 (Output_Stream, X);
+               end Iterate;
+            begin
+               Byte_Writer.Write_v64 (Output_Stream, Long (Base_Types.Length));
+               Base_Types.Iterate (Iterate'Access);
+            end;
 
          when others => null;
       end case;
