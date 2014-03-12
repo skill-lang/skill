@@ -7,7 +7,7 @@ package de.ust.skill.generator.ada
 
 import java.io.File
 import java.util.Date
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions._
 import de.ust.skill.generator.ada.api._
 import de.ust.skill.generator.ada.internal._
 import de.ust.skill.ir._
@@ -223,8 +223,32 @@ class Main extends FakeMain
                end loop;"""
 
      case t: MapType ⇒
-       s"""begin
-               null;"""
+       s"""   Object : Container_Type_Access := Container_Type_Access (State.Get_Object (Type_Name, I));
+
+${
+  var output = ""
+  val types = t.getBaseTypes().reverse
+  types.slice(0, types.length-1).zipWithIndex.foreach({ case (t, i) =>
+    val x = {
+      if (0 == i)
+        s"Map.Insert (${inner(types.get(i+1), d, f)}, ${inner(types.get(i), d, f)});"
+      else
+        s"""Map.Insert (${inner(types.get(i+1), d, f)}, Read_Map_${types.length-i});"""
+    }
+    output += s"""            function Read_Map_${types.length-(i+1)} return ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map is
+               Map : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map;
+            begin
+               for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
+                  ${x}
+               end loop;
+               return Map;
+            end Read_Map_${types.length-(i+1)};
+            pragma Inline (Read_Map_${types.length-(i+1)});\r\n\r\n"""
+  })
+  output.stripLineEnd
+}
+            begin
+               Object.f := Read_Map_1;"""
 
       case t: Declaration ⇒
         s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (State.Get_Object (Type_Name, I));

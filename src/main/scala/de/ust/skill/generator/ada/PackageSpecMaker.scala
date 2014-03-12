@@ -94,8 +94,21 @@ ${
           output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".List")} is new Ada.Containers.Indefinite_Doubly_Linked_Lists (${mapType(t.getBaseType, d, f)}, "=");\r\n"""
         case t: SetType ⇒
           output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Set")} is new Ada.Containers.Indefinite_Hashed_Sets (${mapType(t.getBaseType, d, f)}, Hash, "=");\r\n"""
-        case t: MapType ⇒
-          output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Map")} is new Ada.Containers.Indefinite_Hashed_Maps (${mapType(t.getBaseTypes.get(0), d, f)}, ${mapType(t.getBaseTypes.get(1), d, f)}, Hash, "=");\r\n"""
+        case t: MapType ⇒ {
+          val types = t.getBaseTypes().reverse
+          types.slice(0, types.length-1).zipWithIndex.foreach({ case (t, i) =>
+            val x = {
+              if (0 == i)
+                mapType(types.get(i), d, f)
+              else
+                s"""${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-i}.Map"""
+            }
+
+            output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)} is new Ada.Containers.Indefinite_Hashed_Maps (${mapType(types.get(i+1), d, f)}, ${x}, Hash, "=");\r\n"""
+            output += s"""   function "=" (Left, Right : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map) return Boolean renames ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}."=";\r\n""";
+          })
+          output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Map")} renames ${mapType(f.getType, d, f).stripSuffix(".Map")}_1;\r\n"""
+        }
         case _ ⇒ null
       }
     })
@@ -187,6 +200,8 @@ ${
       --  string pool
       function Get_String (Index : Positive) return String;
       function Get_String (Index : Long) return String;
+      function Get_String (Index : Positive) return SU.Unbounded_String;
+      function Get_String (Index : Long) return SU.Unbounded_String;
       function Get_String_Index (Value : String) return Positive;
       function String_Pool_Size return Natural;
       procedure Put_String (Value : String; Safe : Boolean := False);

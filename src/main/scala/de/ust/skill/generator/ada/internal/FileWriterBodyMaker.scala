@@ -94,7 +94,8 @@ ${
 
          for I in 1 .. Size loop
             declare
-               String_Length : Positive := State.Get_String (I)'Length + Last_String_End;
+               X : String := State.Get_String (I);
+               String_Length : Positive := X'Length + Last_String_End;
             begin
                Byte_Writer.Write_i32 (Output_Stream, String_Length);
                Last_String_End := String_Length;

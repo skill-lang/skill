@@ -80,6 +80,12 @@ ${
       function Get_String (Index : Long) return String is
          (Get_String (Positive (Index)));
 
+      function Get_String (Index : Positive) return SU.Unbounded_String is
+         (SU.To_Unbounded_String (Get_String (Index)));
+
+      function Get_String (Index : Long) return SU.Unbounded_String is
+         (SU.To_Unbounded_String (Get_String (Positive (Index))));
+
       function Get_String_Index (Value : String) return Positive is
          Index : Natural := String_Pool.Reverse_Find_Index (Value);
          Skill_Unknown_String_Index : exception;
