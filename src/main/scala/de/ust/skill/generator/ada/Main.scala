@@ -231,9 +231,18 @@ ${
   types.slice(0, types.length-1).zipWithIndex.foreach({ case (t, i) =>
     val x = {
       if (0 == i)
-        s"Map.Insert (${inner(types.get(i+1), d, f)}, ${inner(types.get(i), d, f)});"
+        s"""declare
+                        X : ${mapType(types.get(i+1), d, f)} := ${inner(types.get(i+1), d, f)};
+                        Y : ${mapType(types.get(i), d, f)} := ${inner(types.get(i), d, f)};
+                     begin
+                        Map.Insert (X, Y);
+                     end;"""
       else
-        s"""Map.Insert (${inner(types.get(i+1), d, f)}, Read_Map_${types.length-i});"""
+        s"""declare
+                        X : ${mapType(types.get(i+1), d, f)} := ${inner(types.get(i+1), d, f)};
+                     begin
+                        Map.Insert (X, Read_Map_${types.length-i});
+                     end;"""
     }
     output += s"""               function Read_Map_${types.length-(i+1)} return ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map is
                   Map : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map;
