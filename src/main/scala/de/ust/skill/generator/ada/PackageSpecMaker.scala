@@ -23,6 +23,8 @@ with Ada.Strings.Unbounded;
 with Ada.Strings.Unbounded.Hash;
 with Ada.Tags;
 
+with Ada.Text_IO;
+
 package ${packagePrefix.capitalize} is
 
    package SU renames Ada.Strings.Unbounded;
