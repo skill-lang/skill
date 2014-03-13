@@ -9,6 +9,8 @@ import scala.collection.JavaConversions.asScalaBuffer
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Field
 
 trait FieldParserMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -102,19 +104,12 @@ ${
         yield s"""      case p: ${t.getCapitalName}StoragePool ⇒ f.name match {
 ${
         (for (f ← t.getAllFields)
-          yield if (f.isIgnored) s"""        case "${f.getSkillName}" ⇒ in.jump(c.end)"""
-        else if (f.isConstant) s"""        case "${f.getSkillName}" ⇒"""
-        else s"""        case "${f.getSkillName}" ⇒ c match {
-            case c: SimpleChunkInfo ⇒
-              for (i ← c.bpsi until c.bpsi + c.count)
-                p.getByID(i + 1).${f.getName} = ${readSingleField(f.getType)}
-
-            case bci: BulkChunkInfo ⇒
-              for (
-                bi ← t.blockInfos;
-                i ← bi.bpsi until bi.bpsi + bi.count
-              ) p.getByID(i + 1).${f.getName} = ${readSingleField(f.getType)}
-          }""").mkString("\n")
+          yield s"""        case "${f.getSkillName}" ⇒ """+(
+          if (f.isIgnored) " in.jump(c.end)"
+          else if (f.isConstant) ""
+          else readField(f)
+        )
+        ).mkString("\n")
       }
         case _ ⇒
           c match {
@@ -219,18 +214,47 @@ ${
     out.close()
   }
 
-  private def readSingleField(t: Type): String = t match {
-    case t: Declaration ⇒ s"f.t.asInstanceOf[${t.getCapitalName}StoragePool].getByID(in.v64)"
-    case t: GroundType ⇒ t.getSkillName match {
+  private def readField(f: Field): String = {
+    val t = f.getType
+    val (prelude, action, result) = readSingleField(t)
+    s"""$prelude
+          c match {
+            case c: SimpleChunkInfo ⇒
+              for (i ← c.bpsi until c.bpsi + c.count){$action
+                p.getByID(i + 1).${f.getName} = $result
+              }
+
+            case bci: BulkChunkInfo ⇒
+              for (
+                bi ← t.blockInfos;
+                i ← bi.bpsi until bi.bpsi + bi.count
+              ){$action
+                p.getByID(i + 1).${f.getName} = $result
+              }
+          }"""
+  }
+
+  private def readSingleField(t: Type): (String, String, String) = t match {
+    case t: Declaration ⇒ (s"""
+          val ref = pools("${t.getSkillName}").asInstanceOf[${t.getCapitalName}StoragePool]""", "", "ref.getByID(in.v64)")
+    case t: GroundType ⇒ ("", "", t.getSkillName match {
       case "annotation" ⇒ """(in.v64, in.v64) match {
                 case (0L, _) ⇒ null
                 case (t, i)  ⇒ pools(String.get(t)).getByID(i)
               }"""
       case "string" ⇒ "String.get(in.v64)"
       case n        ⇒ "in."+n
-    }
+    })
 
-    case _ ⇒ "readSingleField(f.t).asInstanceOf["+mapType(t)+"]"
+    case t: SetType ⇒
+      val (p, r, s) = readSingleField(t.getBaseType)
+      (p, s"""
+                val r = new HashSet[${mapType(t.getBaseType)}]
+                val count = in.v64.toInt
+                r.sizeHint(count)
+                for (i ← 0 until count) r.add($s)""", "r")
+
+    case _ ⇒ ("", "", "readSingleField(f.t).asInstanceOf["+mapType(t)+"]")
   }
 
 }

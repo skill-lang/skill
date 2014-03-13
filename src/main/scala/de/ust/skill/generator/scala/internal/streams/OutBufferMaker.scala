@@ -47,14 +47,26 @@ final public class OutBuffer extends OutStream {
 
 	static final class BulkData extends Data {
 		public final byte[] data;
+		/**
+		 * Number of used bytes in data. This is required for v64 caching.
+		 */
+		public int used;
+
+		BulkData(Data tail) {
+			data = new byte[8 * 1024];
+			used = 0;
+			tail.next = this;
+		}
 
 		BulkData(byte[] data) {
 			this.data = data;
+			this.used = data.length;
 		}
 
 		BulkData(byte[] data, Data tail) {
 			tail.next = this;
 			this.data = data;
+			this.used = data.length;
 		}
 	}
 
@@ -106,6 +118,74 @@ final public class OutBuffer extends OutStream {
 	@Override
 	public void close() throws Exception {
 		// irrelevant
+	}
+
+	@Override
+	public void v64(long v) throws Exception {
+		if (!(tail instanceof BulkData) || ((BulkData) tail).data.length - ((BulkData) tail).used < 9)
+			tail = new BulkData(tail);
+
+		BulkData out = (BulkData) tail;
+		byte[] data = out.data;
+		int off = out.used;
+
+		if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
+			data[off++] = (byte) v;
+		} else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
+			data[off++] = (byte) (0x80L | v);
+			data[off++] = (byte) (v >> 7);
+		} else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
+			data[off++] = (byte) (0x80L | v);
+			data[off++] = (byte) (0x80L | v >> 7);
+			data[off++] = (byte) (v >> 14);
+		} else if (0L == (v & 0xFFFFFFFFF0000000L)) {
+			data[off++] = (byte) (0x80L | v);
+			data[off++] = (byte) (0x80L | v >> 7);
+			data[off++] = (byte) (0x80L | v >> 14);
+			data[off++] = (byte) (v >> 21);
+		} else if (0L == (v & 0xFFFFFFF800000000L)) {
+			data[off++] = (byte) (0x80L | v);
+			data[off++] = (byte) (0x80L | v >> 7);
+			data[off++] = (byte) (0x80L | v >> 14);
+			data[off++] = (byte) (0x80L | v >> 21);
+			data[off++] = (byte) (v >> 28);
+		} else if (0L == (v & 0xFFFFFC0000000000L)) {
+			data[off++] = (byte) (0x80L | v);
+			data[off++] = (byte) (0x80L | v >> 7);
+			data[off++] = (byte) (0x80L | v >> 14);
+			data[off++] = (byte) (0x80L | v >> 21);
+			data[off++] = (byte) (0x80L | v >> 28);
+			data[off++] = (byte) (v >> 35);
+		} else if (0L == (v & 0xFFFE000000000000L)) {
+			data[off++] = (byte) (0x80L | v);
+			data[off++] = (byte) (0x80L | v >> 7);
+			data[off++] = (byte) (0x80L | v >> 14);
+			data[off++] = (byte) (0x80L | v >> 21);
+			data[off++] = (byte) (0x80L | v >> 28);
+			data[off++] = (byte) (0x80L | v >> 35);
+			data[off++] = (byte) (v >> 42);
+		} else if (0L == (v & 0xFF00000000000000L)) {
+			data[off++] = (byte) (0x80L | v);
+			data[off++] = (byte) (0x80L | v >> 7);
+			data[off++] = (byte) (0x80L | v >> 14);
+			data[off++] = (byte) (0x80L | v >> 21);
+			data[off++] = (byte) (0x80L | v >> 28);
+			data[off++] = (byte) (0x80L | v >> 35);
+			data[off++] = (byte) (0x80L | v >> 42);
+			data[off++] = (byte) (v >> 49);
+		} else {
+			data[off++] = (byte) (0x80L | v);
+			data[off++] = (byte) (0x80L | v >> 7);
+			data[off++] = (byte) (0x80L | v >> 14);
+			data[off++] = (byte) (0x80L | v >> 21);
+			data[off++] = (byte) (0x80L | v >> 28);
+			data[off++] = (byte) (0x80L | v >> 35);
+			data[off++] = (byte) (0x80L | v >> 42);
+			data[off++] = (byte) (0x80L | v >> 49);
+			data[off++] = (byte) (v >> 56);
+		}
+		size += off - out.used;
+		out.used = off;
 	}
 }
 """)

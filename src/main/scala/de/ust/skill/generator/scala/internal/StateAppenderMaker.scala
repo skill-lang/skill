@@ -67,7 +67,6 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
 
   // make lbpsi map, update data map to contain dynamic instances and create serialization skill IDs for serialization
   // index → bpsi
-  override val skillIDs = new HashMap[SkillType, Long]
   val lbpsiMap = new Array[Long](state.pools.length)
   state.pools.foreach {
     case p: BasePool[_] ⇒
@@ -75,7 +74,7 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
       concatenateDataMap(p, data)
       var id = 1L + p.data.size
       for (i ← data(p.name)) {
-        skillIDs(i) = id
+        i.setSkillID(id)
         id += 1L
       }
     case _ ⇒
@@ -110,11 +109,11 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
     // @note performance hack: requires at least 1 instance in order to work correctly
     @inline def genericPutField(p: StoragePool[_ <: SkillType], f: FieldDeclaration, instances: Iterator[SkillType]) {
       f.t match {
-        case I8  ⇒ for (i ← instances) i8(i.get(p, f).asInstanceOf[Byte], dataChunk)
-        case I16 ⇒ for (i ← instances) i16(i.get(p, f).asInstanceOf[Short], dataChunk)
-        case I32 ⇒ for (i ← instances) i32(i.get(p, f).asInstanceOf[Int], dataChunk)
-        case I64 ⇒ for (i ← instances) i64(i.get(p, f).asInstanceOf[Long], dataChunk)
-        case V64 ⇒ for (i ← instances) v64(i.get(p, f).asInstanceOf[Long], dataChunk)
+        case I8         ⇒ for (i ← instances) i8(i.get(p, f).asInstanceOf[Byte], dataChunk)
+        case I16        ⇒ for (i ← instances) i16(i.get(p, f).asInstanceOf[Short], dataChunk)
+        case I32        ⇒ for (i ← instances) i32(i.get(p, f).asInstanceOf[Int], dataChunk)
+        case I64        ⇒ for (i ← instances) i64(i.get(p, f).asInstanceOf[Long], dataChunk)
+        case V64        ⇒ for (i ← instances) v64(i.get(p, f).asInstanceOf[Long], dataChunk)
 
         case StringType ⇒ for (i ← instances) string(i.get(p, f).asInstanceOf[String], dataChunk)
       }
@@ -276,25 +275,25 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
         case t: Declaration ⇒ s"userRef[${mapType(t)}]"
         case b              ⇒ b.getSkillName()
       }
-    })(instance, out) }"
+    })(instance, dataChunk) }"
     case t: VariableLengthArrayType ⇒ s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ writeVarArray(${
       t.getBaseType() match {
         case t: Declaration ⇒ s"userRef[${mapType(t)}]"
         case b              ⇒ b.getSkillName()
       }
-    })(instance, out) }"
+    })(instance, dataChunk) }"
     case t: SetType ⇒ s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ writeSet(${
       t.getBaseType() match {
         case t: Declaration ⇒ s"userRef[${mapType(t)}]"
         case b              ⇒ b.getSkillName()
       }
-    })(instance, out) }"
+    })(instance, dataChunk) }"
     case t: ListType ⇒ s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ writeList(${
       t.getBaseType() match {
         case t: Declaration ⇒ s"userRef[${mapType(t)}]"
         case b              ⇒ b.getSkillName()
       }
-    })(instance, out) }"
+    })(instance, dataChunk) }"
 
     case t: MapType ⇒ locally {
       s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ ${
@@ -304,7 +303,7 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
         }.reduceRight { (t, v) ⇒
           s"writeMap($t, $v)"
         }
-      }(instance, out) }"
+      }(instance, dataChunk) }"
     }
   }
 }

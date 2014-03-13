@@ -67,7 +67,6 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
 
   // make lbpsi map, update data map to contain dynamic instances and create serialization skill IDs for serialization
   // index → bpsi
-  override val skillIDs = new HashMap[SkillType, Long]
   val lbpsiMap = new Array[Long](state.pools.length)
   state.pools.foreach {
     case p: BasePool[_] ⇒
@@ -75,7 +74,7 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
       concatenateDataMap(p, data)
       var id = 1L
       for (i ← data(p.name)) {
-        skillIDs(i) = id
+        i.setSkillID(id)
         id += 1
       }
     case _ ⇒
@@ -110,11 +109,11 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
     // @note performance hack: requires at least 1 instance in order to work correctly
     @inline def genericPutField(p: StoragePool[_ <: SkillType], f: FieldDeclaration, instances: Iterable[SkillType]) {
       f.t match {
-        case I8  ⇒ for (i ← instances) i8(i.get(p, f).asInstanceOf[Byte], dataChunk)
-        case I16 ⇒ for (i ← instances) i16(i.get(p, f).asInstanceOf[Short], dataChunk)
-        case I32 ⇒ for (i ← instances) i32(i.get(p, f).asInstanceOf[Int], dataChunk)
-        case I64 ⇒ for (i ← instances) i64(i.get(p, f).asInstanceOf[Long], dataChunk)
-        case V64 ⇒ for (i ← instances) v64(i.get(p, f).asInstanceOf[Long], dataChunk)
+        case I8         ⇒ for (i ← instances) i8(i.get(p, f).asInstanceOf[Byte], dataChunk)
+        case I16        ⇒ for (i ← instances) i16(i.get(p, f).asInstanceOf[Short], dataChunk)
+        case I32        ⇒ for (i ← instances) i32(i.get(p, f).asInstanceOf[Int], dataChunk)
+        case I64        ⇒ for (i ← instances) i64(i.get(p, f).asInstanceOf[Long], dataChunk)
+        case V64        ⇒ for (i ← instances) v64(i.get(p, f).asInstanceOf[Long], dataChunk)
 
         case StringType ⇒ for (i ← instances) string(i.get(p, f).asInstanceOf[String], dataChunk)
       }
@@ -139,8 +138,7 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
           restrictions(p, out)
 
           v64(${d.getAllFields.size}, out)
-
-          ${
+${
           if (d.getAllFields.size != 0) s"""
           for (f ← fields if p.knownFields.contains(f.name)) {
             restrictions(f, out)
@@ -210,18 +208,6 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
   // field writing helper functions
   private def writeField(d: Declaration, f: Field, iteratorName: String): String = f.getType match {
     case t: GroundType ⇒ t.getSkillName match {
-      case "annotation" ⇒
-        s"""for(i ← $iteratorName) annotation(i.${escaped(f.getName)}, out)"""
-
-      case "v64" ⇒
-        s"""val target = new Array[Byte](9 * outData.size)
-                var offset = 0
-
-                val it = outData.iterator.asInstanceOf[Iterator[${d.getName}]]
-                while (it.hasNext)
-                  offset += v64(it.next.${escaped(f.getName)}, target, offset)
-
-                dataChunk.put(Arrays.copyOf(target, offset))"""
 
       case "i64" ⇒
         s"""val target = ByteBuffer.allocate(8 * outData.size)
@@ -231,7 +217,7 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
 
                 dataChunk.put(target.array)"""
 
-      case _ ⇒ s"for(i ← $iteratorName) ${f.getType().getSkillName()}(i.${escaped(f.getName)}, dataChunk)"
+      case _ ⇒ s"for (i ← $iteratorName) ${f.getType().getSkillName()}(i.${escaped(f.getName)}, dataChunk)"
     }
 
     case t: Declaration ⇒ s"""for(i ← $iteratorName) userRef(i.${escaped(f.getName)}, dataChunk)"""
@@ -241,25 +227,25 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
         case t: Declaration ⇒ s"userRef[${mapType(t)}]"
         case b              ⇒ b.getSkillName()
       }
-    })(instance, out) }"
+    })(instance, dataChunk) }"
     case t: VariableLengthArrayType ⇒ s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ writeVarArray(${
       t.getBaseType() match {
         case t: Declaration ⇒ s"userRef[${mapType(t)}]"
         case b              ⇒ b.getSkillName()
       }
-    })(instance, out) }"
+    })(instance, dataChunk) }"
     case t: SetType ⇒ s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ writeSet(${
       t.getBaseType() match {
         case t: Declaration ⇒ s"userRef[${mapType(t)}]"
         case b              ⇒ b.getSkillName()
       }
-    })(instance, out) }"
+    })(instance, dataChunk) }"
     case t: ListType ⇒ s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ writeList(${
       t.getBaseType() match {
         case t: Declaration ⇒ s"userRef[${mapType(t)}]"
         case b              ⇒ b.getSkillName()
       }
-    })(instance, out) }"
+    })(instance, dataChunk) }"
 
     case t: MapType ⇒ locally {
       s"$iteratorName.map(_.${escaped(f.getName)}).foreach { instance ⇒ ${
@@ -269,7 +255,7 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
         }.reduceRight { (t, v) ⇒
           s"writeMap($t, $v)"
         }
-      }(instance, out) }"
+      }(instance, dataChunk) }"
     }
   }
 }

@@ -18,10 +18,18 @@ trait OutStreamMaker extends GeneralOutputMaker {
 /**
  * Out streams can only put bytes. The next layer of abstraction is added by the
  * serialization functions.
- * 
+ *
  * @author Timm Felden
  */
 public abstract class OutStream {
+	/**
+	 * put a v64 into the stream
+	 */
+	public abstract void v64(long v) throws Exception;
+
+	/**
+	 * put a byte into the stream
+	 */
 	public abstract void put(byte data) throws Exception;
 
 	/**
@@ -40,14 +48,7 @@ public abstract class OutStream {
 	 * @param stream
 	 *            put the buffer into the stream; required for data chunks
 	 */
-	public void putAll(OutBuffer stream) throws Exception {
-		for (OutBuffer.Data pos = stream.head; null != pos; pos = pos.next) {
-			if (pos instanceof OutBuffer.ByteData)
-				put(((OutBuffer.ByteData) pos).data);
-			else if (pos instanceof OutBuffer.BulkData)
-				put(((OutBuffer.BulkData) pos).data);
-		}
-	}
+	public abstract void putAll(OutBuffer stream) throws Exception;
 
 	/**
 	 * signal the stream to close
