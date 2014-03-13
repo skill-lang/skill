@@ -200,25 +200,22 @@ class Main extends FakeMain
 
       case t: VariableLengthArrayType ⇒
         s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
-               X : Natural := Natural (Byte_Reader.Read_v64 (Input_Stream));
             begin
-               for I in 1 .. X loop
+               for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
                   Object.${f.getSkillName}.Append (${inner(t.getBaseType, d, f)});
                end loop;"""
 
       case t: ListType ⇒
         s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
-               X : Natural := Natural (Byte_Reader.Read_v64 (Input_Stream));
             begin
-               for I in 1 .. X loop
+               for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
                   Object.${f.getSkillName}.Append (${inner(t.getBaseType, d, f)});
                end loop;"""
 
       case t: SetType ⇒
         s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
-               X : Natural := Natural (Byte_Reader.Read_v64 (Input_Stream));
             begin
-               for I in 1 .. X loop
+               for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
                   Object.${f.getSkillName}.Insert (${inner(t.getBaseType, d, f)});
                end loop;"""
 
