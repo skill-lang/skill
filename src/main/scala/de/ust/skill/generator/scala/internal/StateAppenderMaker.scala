@@ -244,18 +244,6 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
   // field writing helper functions
   private def writeField(d: Declaration, f: Field, iteratorName: String): String = f.getType match {
     case t: GroundType ⇒ t.getSkillName match {
-      case "annotation" ⇒
-        s"""for(i ← $iteratorName) annotation(i.${escaped(f.getName)}, out)"""
-
-      case "v64" ⇒
-        s"""val target = new Array[Byte](9 * outData.size)
-                var offset = 0
-
-                val it = outData.iterator.asInstanceOf[Iterator[${d.getName}]]
-                while (it.hasNext)
-                  offset += v64(it.next.${escaped(f.getName)}, target, offset)
-
-                dataChunk.put(Arrays.copyOf(target, offset))"""
 
       case "i64" ⇒
         s"""val target = ByteBuffer.allocate(8 * outData.size)
