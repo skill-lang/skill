@@ -44,7 +44,7 @@ ${
          end;
       end if;\r\n\r\n"""
   }
-  output.stripSuffix("\r\n")
+  output.stripLineEnd
 }
 ${
   var output = "";
@@ -73,16 +73,16 @@ ${
   var output = ""
   f.getType match {
     case t: ConstantLengthArrayType ⇒
-      output += s"            Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
+      output += s"            New_Field.Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
     case t: VariableLengthArrayType ⇒
-      output += s"            Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
+      output += s"            New_Field.Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
     case t: ListType ⇒
-      output += s"            Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
+      output += s"            New_Field.Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
     case t: SetType ⇒
-      output += s"            Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
+      output += s"            New_Field.Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
     case t: MapType ⇒
       t.getBaseTypes.foreach({ t =>
-        output += s"            Base_Types.Append (${mapTypeToId(t, f)});\r\n"
+        output += s"            New_Field.Base_Types.Append (${mapTypeToId(t, f)});\r\n"
       })
     case _ ⇒ null
   }
@@ -91,7 +91,7 @@ ${
          end;
       end if;\r\n\r\n"""}).mkString("")
   }
-  output.stripSuffix("\r\n\r\n")
+  output.stripLineEnd.stripLineEnd
 }
    end Create;
 
