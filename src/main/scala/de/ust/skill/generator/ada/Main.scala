@@ -312,7 +312,7 @@ ${
 
                procedure Iterate (Position : Cursor) is
                begin
-                  ${inner(t.getBaseType, d, f, s"${mapType(f.getType, d, f).stripSuffix(".Vector")}.Element (Position)")};
+                  ${inner(t.getBaseType, d, f, s"Element (Position)")};
                end Iterate;
                pragma Inline (Iterate);
             begin
@@ -327,7 +327,7 @@ ${
 
                procedure Iterate (Position : Cursor) is
                begin
-                  ${inner(t.getBaseType, d, f, s"${mapType(f.getType, d, f).stripSuffix(".List")}.Element (Position)")};
+                  ${inner(t.getBaseType, d, f, s"Element (Position)")};
                end Iterate;
                pragma Inline (Iterate);
             begin
@@ -342,7 +342,7 @@ ${
 
                procedure Iterate (Position : Cursor) is
                begin
-                  ${inner(t.getBaseType, d, f, s"${mapType(f.getType, d, f).stripSuffix(".Set")}.Element (Position)")};
+                  ${inner(t.getBaseType, d, f, s"Element (Position)")};
                end Iterate;
                pragma Inline (Iterate);
             begin
@@ -358,11 +358,11 @@ ${
   types.slice(0, types.length-1).zipWithIndex.foreach({ case (t, i) =>
     val x = {
       if (0 == i)
-        s"""${inner(types.get(i+1), d, f, s"${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Key (Position)")};
-                     ${inner(types.get(i), d, f, s"${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Element (Position)")};"""
+        s"""${inner(types.get(i+1), d, f, "Key (Position)")};
+                     ${inner(types.get(i), d, f, "Element (Position)")};"""
       else
-        s"""${inner(types.get(i+1), d, f, s"${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Key (Position)")};
-                     Write_Map_${types.length-i} (${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Element (Position));"""
+        s"""${inner(types.get(i+1), d, f, "Key (Position)")};
+                     Write_Map_${types.length-i} (Element (Position));"""
     }
     output += s"""               procedure Write_Map_${types.length-(i+1)} (Map : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map) is
                   use ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)};

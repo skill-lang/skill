@@ -7,8 +7,7 @@ package de.ust.skill.generator.ada.internal
 
 import de.ust.skill.generator.ada.GeneralOutputMaker
 import scala.collection.JavaConversions._
-import de.ust.skill.ir.Declaration
-import scala.collection.mutable.MutableList
+import de.ust.skill.ir._
 
 trait FileWriterBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -66,16 +65,120 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
 ${
   var output = "";
   for (d ← IR) {
+    var hasOutput = false;
     output += s"""      if "${d.getSkillName}" = Object_Type then
          declare
             Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (A_Object);
          begin
 """
-    output += d.getAllFields.filter({ f ⇒ f.getType.getSkillName == "string" }).map({ f ⇒
-      s"            State.Put_String (SU.To_String (Object.${f.getSkillName}), Safe => True);\r\n"
-    }).mkString("")
-    output += s"""            null;
-         end;
+    d.getFields.filter({ f ⇒ "string" == f.getType.getSkillName }).foreach({ f ⇒
+      hasOutput = true;
+      output += s"            State.Put_String (SU.To_String (Object.${f.getSkillName}), Safe => True);\r\n"
+    })
+    d.getFields.foreach({ f =>
+      f.getType match {
+        case t: ConstantLengthArrayType ⇒
+          if ("string" == t.getBaseType.getName) {
+            hasOutput = true;
+            output += s"""\r\n            for I in Object.${f.getSkillName}'Range loop
+               State.Put_String (SU.To_String (Object.${f.getSkillName} (I)), Safe => True);
+            end loop;\r\n""";
+          }
+        case t: VariableLengthArrayType ⇒
+          if ("string" == t.getBaseType.getName) {
+            hasOutput = true;
+            output += s"""\r\n            declare
+               use ${mapType(t, d, f).stripSuffix(".Vector")};
+
+               Vector : ${mapType(t, d, f)} := Object.${f.getSkillName};
+
+               procedure Iterate (Position : Cursor) is
+               begin
+                  State.Put_String (SU.To_String (Element (Position)), Safe => True);
+               end Iterate;
+               pragma Inline (Iterate);
+            begin
+               Vector.Iterate (Iterate'Access);
+            end;\r\n"""
+          }
+        case t: ListType ⇒
+           if ("string" == t.getBaseType.getName) {
+             hasOutput = true;
+             output += s"""\r\n            declare
+               use ${mapType(t, d, f).stripSuffix(".List")};
+
+               List : ${mapType(t, d, f)} := Object.${f.getSkillName};
+
+               procedure Iterate (Position : Cursor) is
+               begin
+                  State.Put_String (SU.To_String (Element (Position)), Safe => True);
+               end Iterate;
+               pragma Inline (Iterate);
+            begin
+               List.Iterate (Iterate'Access);
+            end;\r\n"""
+          }
+        case t: SetType ⇒
+           if ("string" == t.getBaseType.getName) {
+             hasOutput = true;
+             output += s"""\r\n            declare
+               use ${mapType(t, d, f).stripSuffix(".Set")};
+
+               Set : ${mapType(t, d, f)} := Object.${f.getSkillName};
+
+               procedure Iterate (Position : Cursor) is
+               begin
+                  State.Put_String (SU.To_String (Element (Position)), Safe => True);
+               end Iterate;
+               pragma Inline (Iterate);
+            begin
+               Set.Iterate (Iterate'Access);
+            end;\r\n"""
+          }
+        case t: MapType ⇒
+          val types = t.getBaseTypes().reverse
+          if (types.map({ x => x.getName }).contains("string")) {
+            hasOutput = true;
+            output += s"\r\n            declare\r\n"
+            types.slice(0, types.length-1).zipWithIndex.foreach({ case (t, i) =>
+              val x = {
+                var output = ""
+                if (0 == i) {
+                  if ("string" == types.get(i+1).getName) output += s"State.Put_String (SU.To_String (Key (Position)), Safe => True);"
+                  if ("string" == types.get(i).getName) {
+                    if (!output.isEmpty) output += "\r\n                     "
+                    output += s"State.Put_String (SU.To_String (Element (Position)), Safe => True);"
+                  }
+                }
+                else {
+                  if ("string" == types.get(i+1).getName) output += s"State.Put_String (SU.To_String (Key (Position)), Safe => True);\r\n                     "
+                  output += s"Read_Map_${types.length-i} (Element (Position));"
+                }
+                if (output.isEmpty) "null;" else output
+              }
+              output += s"""               procedure Read_Map_${types.length-(i+1)} (Map : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map) is
+                  use ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)};
+
+                  procedure Iterate (Position : Cursor) is
+                  begin
+                     ${x}
+                  end Iterate;
+                  pragma Inline (Iterate);
+               begin
+                  Map.Iterate (Iterate'Access);
+               end Read_Map_${types.length-(i+1)};
+               pragma Inline (Read_Map_${types.length-(i+1)});\r\n\r\n"""
+            })
+            output = output.stripLineEnd
+            output += s"""            begin
+               Read_Map_1 (Object.${f.getSkillName});
+            end;\r\n"""
+          }
+        case _ ⇒ null
+      }
+    })
+    if (!hasOutput) output += s"            null;\r\n"
+    output += s"""         end;
       end if;\r\n"""
   }
   output.stripSuffix("\r\n")
