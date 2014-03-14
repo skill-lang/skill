@@ -75,8 +75,6 @@ object SerializationFunctions {
     else v64(ref.getSkillID, out)
   }
 
-  @inline def bool(v: Boolean): Array[Byte] = Array[Byte](if (v) -1 else 0)
-
   @inline def bool(v: Boolean, out: OutStream) = out.put(if (v) -1.toByte else 0.toByte)
 
   @inline def i8(v: Byte, out: OutStream) = out.put(v)
