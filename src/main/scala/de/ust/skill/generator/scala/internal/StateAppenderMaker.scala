@@ -45,35 +45,14 @@ import ${packagePrefix}internal.streams.OutStream
 private[internal] final class StateAppender(state: SerializableState, out: OutStream) extends SerializationFunctions(state) {
   import SerializationFunctions._
 
-  /**
-   * ******************
-   * PHASE 1: Collect *
-   * ******************
-   */
-
-  /**
-   * prepares a state, i.e. collect data to be written and calculate lbpsi map
-   *
-   * @note this can be seen as a sort operation on the skillID space, which might be fragmented due to read/new-ops
-   */
-  val data = new HashMap[String, ArrayBuffer[SkillType]]
-  // store static instances in data
-  for (p ← state.pools) {
-    val ab = new ArrayBuffer[SkillType](p.newObjects.size);
-    for (i ← p.newObjects)
-      ab.append(i)
-    data.put(p.name, ab)
-  }
-
   // make lbpsi map, update data map to contain dynamic instances and create serialization skill IDs for serialization
   // index → bpsi
   val lbpsiMap = new Array[Long](state.pools.length)
   state.pools.foreach {
     case p: BasePool[_] ⇒
-      makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ data(s).size })
-      concatenateDataMap(p, data)
+      makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ state.poolByName(s).newObjects.size })
       var id = 1L + p.data.size
-      for (i ← data(p.name)) {
+      for (i ← p.newObjectsInTypeOrderIterator) {
         i.setSkillID(id)
         id += 1L
       }
@@ -119,13 +98,13 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
       }
     }
     @inline def write(p: StoragePool[_ <: SkillType]) {
-      p.name match {${
+      p match {${
       (for (d ← IR) yield {
         val sName = d.getSkillName
         val fields = d.getFields
         s"""
-        case "$sName" ⇒ locally {
-          val outData = data("$sName").asInstanceOf[Iterable[${d.getName}]]
+        case p: ${d.getCapitalName}StoragePool ⇒
+          val outData = p.newObjectsInTypeOrderIterator
           val newPool = p.blockInfos.isEmpty
 
           string("$sName", out)
@@ -161,7 +140,7 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
                   ${writeField(d, f, s"p.all.asInstanceOf[Iterator[${d.getCapitalName}]]")}
                 }""").mkString("")
         }
-                case _ ⇒ if (outData.size > 0) genericPutField(p, f, p.all.asInstanceOf[Iterator[${d.getCapitalName}]])
+                case _ ⇒ if (outData.size > 0) genericPutField(p, f, p.allInTypeOrder.asInstanceOf[Iterator[${d.getCapitalName}]])
               }
             } else {
               // simple chunk
@@ -171,20 +150,19 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
                   ${writeField(d, f, "outData")}
                 }""").mkString("")
         }
-                case _ ⇒ if (outData.size > 0) genericPutField(p, f, outData.iterator)
+                case _ ⇒ if (outData.size > 0) genericPutField(p, f, outData)
               }
             }
             // end
             v64(dataChunk.size, out)
-          }
-        }"""
+          }"""
       }
       ).mkString("")
     }
         case _ ⇒ locally {
           // generic write
           val newPool = p.blockInfos.isEmpty
-          val outData = data(p.name)
+          val outData = p.newObjectsInTypeOrderIterator
 
           string(p.name, out)
           if (newPool) {
@@ -219,7 +197,7 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
             } else {
               // simple chunk
               if (outData.size > 0) {
-                genericPutField(p, f, outData.iterator)
+                genericPutField(p, f, outData)
               }
             }
 

@@ -249,6 +249,9 @@ sealed abstract class StoragePool[T <: SkillType](
    *  respective fields can be retrieved using the fieldTypes map.
    */
   private[internal] val newObjects = ArrayBuffer[T]()
+  private[internal] def newObjectsInTypeOrderIterator: Iterator[T] = subPools.foldLeft(newObjects.iterator)({
+    case (i, p) ⇒ i ++ p.newObjectsInTypeOrderIterator
+  })
 
   /**
    * returns the skill object at position index

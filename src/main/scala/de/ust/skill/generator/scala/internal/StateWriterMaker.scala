@@ -45,35 +45,14 @@ import ${packagePrefix}internal.streams.OutStream
 private[internal] final class StateWriter(state: SerializableState, out: OutStream) extends SerializationFunctions(state) {
   import SerializationFunctions._
 
-  /**
-   * ******************
-   * PHASE 1: Collect *
-   * ******************
-   */
-
-  /**
-   * prepares a state, i.e. collect data to be written and calculate lbpsi map
-   *
-   * @note this can be seen as a sort operation on the skillID space, which might be fragmented due to read/new-ops
-   */
-  val data = new HashMap[String, ArrayBuffer[SkillType]]
-  // store static instances in data
-  for (p ← state.pools) {
-    val ab = new ArrayBuffer[SkillType](p.staticSize.toInt);
-    for (i ← p.staticInstances)
-      ab.append(i)
-    data.put(p.name, ab)
-  }
-
   // make lbpsi map, update data map to contain dynamic instances and create serialization skill IDs for serialization
   // index → bpsi
   val lbpsiMap = new Array[Long](state.pools.length)
   state.pools.foreach {
     case p: BasePool[_] ⇒
-      makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ data(s).size })
-      concatenateDataMap(p, data)
+      makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ state.poolByName(s).staticSize })
       var id = 1L
-      for (i ← data(p.name)) {
+      for (i ← p.allInTypeOrder) {
         i.setSkillID(id)
         id += 1
       }
@@ -119,13 +98,13 @@ private[internal] final class StateWriter(state: SerializableState, out: OutStre
       }
     }
     @inline def write(p: StoragePool[_ <: SkillType]) {
-      p.name match {${
+      p match {${
       (for (d ← IR) yield {
         val sName = d.getSkillName
         val fields = d.getFields
         s"""
-        case "$sName" ⇒ locally {
-          val outData = data("$sName").asInstanceOf[Iterable[${d.getName}]]
+        case p: ${d.getCapitalName}StoragePool ⇒
+          val outData = p.allInTypeOrder
           val fields = p.fields
 
           string("$sName", out)
@@ -157,7 +136,6 @@ ${
             v64(dataChunk.size, out)
           }"""
           else ""
-        }
         }"""
       }
       ).mkString("")
@@ -165,7 +143,7 @@ ${
         case _ ⇒ locally {
           // generic write
           string(p.name, out)
-          val outData = data(p.name)
+          val outData = p.allInTypeOrder.toIterable
           p.superName match {
             case Some(sn) ⇒
               string(sn, out)
