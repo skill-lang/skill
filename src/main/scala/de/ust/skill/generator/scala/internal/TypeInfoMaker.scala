@@ -329,7 +329,7 @@ sealed class BasePool[T <: SkillType](poolIndex: Long, name: String, knownFields
    *
    * @note base pool data access can not fail, because this would yeald an arary store exception at an earlier stage
    */
-  override def getByID(index: Long): T = try { data(index.toInt - 1).asInstanceOf[T] } catch { case e: ArrayIndexOutOfBoundsException ⇒ throw new InvalidPoolIndex(index, data.size, name) }
+  override def getByID(index: Long): T = try { data(index.toInt - 1).asInstanceOf[T] } catch { case e: ArrayIndexOutOfBoundsException ⇒ if (0 == index) return null.asInstanceOf[T] else throw new InvalidPoolIndex(index, data.size, name) }
 
   override def staticSize: Long = staticData.size + newObjects.length
 }
@@ -371,7 +371,7 @@ sealed class SubPool[T <: SkillType](poolIndex: Long, name: String, knownFields:
         basePool.getByID(index).getClass().getName()
       }""${""}", e
     )
-    case e: ArrayIndexOutOfBoundsException ⇒ throw new InvalidPoolIndex(index, basePool.dynamicSize, name)
+    case e: ArrayIndexOutOfBoundsException ⇒ if (0 == index) return null.asInstanceOf[T] else throw new InvalidPoolIndex(index, basePool.dynamicSize, name)
   }
 
   override def staticSize: Long = staticData.size + newObjects.length
