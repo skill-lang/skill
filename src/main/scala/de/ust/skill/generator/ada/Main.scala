@@ -175,9 +175,10 @@ class Main extends FakeMain
         case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
           if (f.isConstant) {
             s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
+               Skill_Parse_Constant_Error : exception;
             begin
                if Object.Get_${f.getSkillName.capitalize} /= ${mapType(f.getType, d, f)} (Field_Declaration.Constant_Value) then
-                  raise Skill_Parse_Error;
+                  raise Skill_Parse_Constant_Error;
                end if;"""
           } else {
             s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
