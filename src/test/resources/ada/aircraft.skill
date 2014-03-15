@@ -1,7 +1,6 @@
 Aircraft {}
 
 Airplane {
-	auto i32 y;
 	i16 id;
 	string name;
 	bool operational;
