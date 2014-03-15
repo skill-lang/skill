@@ -284,12 +284,15 @@ ${
          when 3 => Byte_Writer.Write_i64 (Output_Stream, Field_Declaration.Constant_Value);
          when 4 => Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Constant_Value);
 
+         --  array T[i]
          when 15 =>
             Byte_Writer.Write_v64 (Output_Stream, Long (Field_Declaration.Constant_Array_Length));
             Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Base_Types.First_Element);
 
+         --  array T[], list, set
          when 17 .. 19 => Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Base_Types.First_Element);
 
+         --  map
          when 20 =>
             declare
                use Base_Types_Vector;
