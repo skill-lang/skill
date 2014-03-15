@@ -68,17 +68,13 @@ package ${packagePrefix.capitalize} is
    type Skill_Type is abstract tagged private;
    type Skill_Type_Access is access all Skill_Type'Class;
    function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type;
---   function Is_Equal (Left, Right : Skill_Type_Access) return Boolean;
---   function "=" (Left, Right : Skill_Type_Access) return Boolean renames Is_Equal;
 
 ${
   var output = "";
   for (d ← IR) {
     output += s"""   type ${d.getName}_Type is new Skill_Type with private;\r\n"""
     output += s"""   type ${d.getName}_Type_Access is access all ${d.getName}_Type;\r\n"""
-    output += s"""   function Hash (Element : ${d.getName}_Type_Access) return Ada.Containers.Hash_Type;\r\n"""
-    //output += s"""   function Is_Equal (Left, Right : ${d.getName}_Type_Access) return Boolean;\r\n"""
-    // output += s"""   function "=" (Left, Right : ${d.getName}_Type_Access) return Boolean renames Is_Equal;\r\n\r\n"""
+    output += s"""   function Hash (Element : ${d.getName}_Type_Access) return Ada.Containers.Hash_Type;\r\n\r\n"""
   }
 
   output.stripSuffix("\r\n")

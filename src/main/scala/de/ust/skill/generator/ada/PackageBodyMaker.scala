@@ -35,18 +35,6 @@ package body ${packagePrefix.capitalize} is
    function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type is
       (Ada.Containers.Hash_Type'Mod (Element.skill_id));
 
---   function Is_Equal (Left, Right : Skill_Type_Access) return Boolean is
---      use Ada.Tags;
---   begin
---      if null = Left and null = Right then
---         return True;
---      elsif null = Left or null = Right then
---         return False;
---      end if;
---
---      return (Left.all'Tag = Right.all'Tag and then Left.skill_id = Right.skill_id);
---   end Is_Equal;
-
 ${
   var output = "";
   for (d ← IR) {
