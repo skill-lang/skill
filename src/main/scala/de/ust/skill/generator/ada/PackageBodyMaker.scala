@@ -35,21 +35,23 @@ package body ${packagePrefix.capitalize} is
    function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type is
       (Ada.Containers.Hash_Type'Mod (Element.skill_id));
 
-   function "<" (Left, Right : Skill_Type_Access) return Boolean is
-      (Left.skill_id < Right.skill_id);
-
-   function "=" (Left, Right : Skill_Type_Access) return Boolean is
-      use Ada.Tags;
-   begin
-      return (Left.all'Tag = Right.all'Tag and then Left.skill_id = Right.skill_id);
-   end "=";
+--   function Is_Equal (Left, Right : Skill_Type_Access) return Boolean is
+--      use Ada.Tags;
+--   begin
+--      if null = Left and null = Right then
+--         return True;
+--      elsif null = Left or null = Right then
+--         return False;
+--      end if;
+--
+--      return (Left.all'Tag = Right.all'Tag and then Left.skill_id = Right.skill_id);
+--   end Is_Equal;
 
 ${
   var output = "";
   for (d ← IR) {
     output += s"""   function Hash (Element : ${d.getName}_Type_Access) return Ada.Containers.Hash_Type is\r\n      (Hash (Skill_Type_Access (Element)));\r\n\r\n"""
-    output += s"""   function "<" (Left, Right : ${d.getName}_Type_Access) return Boolean is\r\n      (Skill_Type_Access (Left) < Skill_Type_Access (Right));\r\n\r\n"""
-    output += s"""   function "=" (Left, Right : ${d.getName}_Type_Access) return Boolean is\r\n      (Skill_Type_Access (Left) = Skill_Type_Access (Right));\r\n\r\n"""
+//    output += s"""   function Is_Equal (Left, Right : ${d.getName}_Type_Access) return Boolean is\r\n      (Skill_Type_Access (Left) = Skill_Type_Access (Right));\r\n\r\n"""
   }
 
   for (d ← IR) {

@@ -399,6 +399,10 @@ ${
 }
    function Get_Object_Type (Object : Skill_Type_Access) return String is
    begin
+      if null = Object then
+         return "";
+      end if;
+
 ${
   var output = "";
   for (d ← IR) {
