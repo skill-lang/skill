@@ -298,10 +298,11 @@ ${
                use Base_Types_Vector;
 
                procedure Iterate (Position : Cursor) is
-                  X : Long := Base_Types_Vector.Element (Position);
+                  X : Long := Element (Position);
                begin
                   Byte_Writer.Write_v64 (Output_Stream, X);
                end Iterate;
+               pragma Inline (Iterate);
             begin
                Byte_Writer.Write_v64 (Output_Stream, Long (Base_Types.Length));
                Base_Types.Iterate (Iterate'Access);
