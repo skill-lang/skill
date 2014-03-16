@@ -195,6 +195,13 @@ class Main extends FakeMain
       case t: ConstantLengthArrayType ⇒
         s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (State.Get_Object (Type_Name, I));
             begin
+               declare
+                  Skill_Parse_Constant_Array_Length_Error : exception;
+               begin
+                  if ${t.getLength} /= Field_Declaration.Constant_Array_Length then
+                     raise Skill_Parse_Constant_Array_Length_Error;
+                  end if;
+               end;
                for I in 1 .. ${t.getLength} loop
                   Object.${f.getSkillName} (I) := ${inner(t.getBaseType, d, f)};
                end loop;"""
