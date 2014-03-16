@@ -14,6 +14,7 @@ trait FileWriterSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}-internal-file_writer.ads""")
 
     out.write(s"""
+with ${packagePrefix.capitalize}.Internal.Byte_Reader;
 with ${packagePrefix.capitalize}.Internal.Byte_Writer;
 
 package ${packagePrefix.capitalize}.Internal.File_Writer is
@@ -23,16 +24,9 @@ package ${packagePrefix.capitalize}.Internal.File_Writer is
 private
 
    State : access Skill_State;
+   Field_Data_File : ASS_IO.File_Type;
+   Field_Data_Stream : ASS_IO.Stream_Access;
    Output_Stream : ASS_IO.Stream_Access;
-
-   type Queue_Item is
-      record
-         Type_Declaration : Type_Information;
-         Field_Declaration : Field_Information;
-      end record;
-
-   package Write_Queue_Vector is new Ada.Containers.Indefinite_Vectors (Positive, Queue_Item);
-   Write_Queue : Write_Queue_Vector.Vector;
 
    procedure Prepare_String_Pool;
    procedure Prepare_String_Pool_Types_Iterator (Iterator : Types_Hash_Map.Cursor);
@@ -46,9 +40,9 @@ private
    procedure Write_Type_Declaration (Type_Declaration : Type_Information);
    procedure Write_Field_Declaration (Type_Declaration : Type_Information; Field_Declaration : Field_Information);
    function Field_Data_Size (Type_Declaration : Type_Information; Field_Declaration : Field_Information) return Long;
-   procedure Write_Queue_Vector_Iterator (Iterator : Write_Queue_Vector.Cursor);
    procedure Write_Field_Data
       (Stream : ASS_IO.Stream_Access; Type_Declaration : Type_Information; Field_Declaration : Field_Information);
+   procedure Copy_Field_Data;
 
    procedure Write_Annotation (Stream : ASS_IO.Stream_Access; Object : Skill_Type_Access);
    procedure Write_Unbounded_String (Stream : ASS_IO.Stream_Access; Value : SU.Unbounded_String);

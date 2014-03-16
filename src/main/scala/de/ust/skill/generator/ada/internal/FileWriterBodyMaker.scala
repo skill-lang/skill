@@ -25,11 +25,15 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       State := pState;
 
       ASS_IO.Create (Output_File, ASS_IO.Out_File, File_Name);
+      ASS_IO.Create (Field_Data_File, ASS_IO.Out_File);
+
+      Field_Data_Stream := ASS_IO.Stream (Field_Data_File);
       Output_Stream := ASS_IO.Stream (Output_File);
 
       Write_String_Pool;
       Write_Type_Block;
 
+      ASS_IO.Delete (Field_Data_File);
       ASS_IO.Close (Output_File);
    end Write;
 
@@ -238,8 +242,7 @@ ${
       State.Get_Types.Iterate (Types_Hash_Map_Iterator'Access);
       Last_Types_End := 0;
 
-      Write_Queue.Iterate (Write_Queue_Vector_Iterator'Access);
-      Write_Queue.Clear;
+      Copy_Field_Data;
    end Write_Type_Block;
 
    procedure Types_Hash_Map_Iterator (Iterator : Types_Hash_Map.Cursor) is
@@ -315,33 +318,16 @@ ${
 
       Last_Types_End := Last_Types_End + Size;
       Byte_Writer.Write_v64 (Output_Stream, Last_Types_End);
-
-      declare
-         Item : Queue_Item := (
-            Type_Declaration => Type_Declaration,
-            Field_Declaration => Field_Declaration
-         );
-      begin
-         Write_Queue.Append (Item);
-      end;
    end Write_Field_Declaration;
 
    function Field_Data_Size (Type_Declaration : Type_Information; Field_Declaration : Field_Information) return Long is
-      Fake_Output_File : ASS_IO.File_Type;
+      Current_Index : Long := Long (ASS_IO.Index (Field_Data_File));
       rval : Long;
    begin
-      ASS_IO.Create (Fake_Output_File, ASS_IO.Out_File);
-      Write_Field_Data (ASS_IO.Stream (Fake_Output_File), Type_Declaration, Field_Declaration);
-      rval := Long (ASS_IO.Size (Fake_Output_File));
-      ASS_IO.Delete (Fake_Output_File);
+      Write_Field_Data (Field_Data_Stream, Type_Declaration, Field_Declaration);
+      rval := Long (ASS_IO.Index (Field_Data_File)) - Current_Index;
       return rval;
    end Field_Data_Size;
-
-   procedure Write_Queue_Vector_Iterator (Iterator : Write_Queue_Vector.Cursor) is
-      Item : Queue_Item := Write_Queue_Vector.Element (Iterator);
-   begin
-      Write_Field_Data (Output_Stream, Item.Type_Declaration, Item.Field_Declaration);
-   end Write_Queue_Vector_Iterator;
 
    procedure Write_Field_Data (
       Stream : ASS_IO.Stream_Access;
@@ -366,6 +352,14 @@ ${
   output
 }      null;
    end Write_Field_Data;
+
+   procedure Copy_Field_Data is
+   begin
+      ASS_IO.Reset (Field_Data_File, ASS_IO.In_File);
+      for I in Long (ASS_IO.Index (Field_Data_File)) .. Long (ASS_IO.Size (Field_Data_File)) loop
+         Byte_Writer.Write_i8 (Output_Stream, Byte_Reader.Read_i8 (Field_Data_Stream));
+      end loop;
+   end Copy_Field_Data;
 
    procedure Write_Annotation (Stream : ASS_IO.Stream_Access; Object : Skill_Type_Access) is
       Type_Name : String := Get_Object_Type (Object);
