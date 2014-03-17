@@ -13,18 +13,16 @@ trait FileParserMaker extends GeneralOutputMaker {
     //package & imports
     out.write(s"""package ${packagePrefix}internal
 
-import java.nio.channels.FileChannel
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardOpenOption
 
+import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.Queue
 import scala.collection.mutable.Stack
 
-import ${packagePrefix}api._
+import ${packagePrefix}api.SkillState
 import ${packagePrefix}internal.streams.FileInputStream
 import ${packagePrefix}internal.streams.InStream
 
@@ -35,7 +33,7 @@ import ${packagePrefix}internal.streams.InStream
  */
 object FileParser {
 
-  def file(in: InStream): SkillState = {
+  def file(in : InStream) : SkillState = {
     // ERROR REPORTING
     var blockCounter = 0;
     var seenTypes = HashSet[String]();
@@ -44,10 +42,10 @@ object FileParser {
     val String = new StringPool(in)
 
     // STORAGE POOLS
-    val types = ArrayBuffer[StoragePool[_ <: SkillType]]();
-    val poolByName = HashMap[String, StoragePool[_ <: SkillType]]();
-    @inline def newPool(name: String, superName: String, restrictions: HashSet[Restriction]): StoragePool[_ <: SkillType] = {
-      val p = name match {
+    val types = ArrayBuffer[StoragePool[_ <: SkillType, _ <: SkillType]]();
+    val poolByName = HashMap[String, StoragePool[_ <: SkillType, _ <: SkillType]]();
+    @inline def newPool[T <: B, B <: SkillType](name : String, superName : String, restrictions : HashSet[Restriction]) : StoragePool[T, B] = {
+      val p = (name match {
 ${
       (for (t ← IR) yield s"""        case "${t.getSkillName}" ⇒ new ${t.getCapitalName}StoragePool(types.size${
         if (null == t.getSuperType) ""
@@ -56,8 +54,8 @@ ${
     }
         case _ ⇒
           if (null == superName) new BasePool[SkillType](types.size, name, HashMap())
-          else new SubPool[SkillType](types.size, name, HashMap(), poolByName(superName))
-      }
+          else poolByName(superName).makeSubPool(types.size, name)
+      }).asInstanceOf[StoragePool[T, B]]
       types += p
       poolByName.put(name, p)
       p
@@ -67,7 +65,7 @@ ${
      * Turns a field type into a preliminary type information. In case of user types, the declaration of the respective
      *  user type may follow after the field declaration.
      */
-    @inline def fieldType: FieldType = in.v64 match {
+    @inline def fieldType : FieldType = in.v64 match {
       case 0            ⇒ ConstantI8(in.i8)
       case 1            ⇒ ConstantI16(in.i16)
       case 2            ⇒ ConstantI32(in.i32)
@@ -95,7 +93,7 @@ ${
     /**
      * matches only types which are legal arguments to ADTs
      */
-    @inline def groundType: FieldType = in.v64 match {
+    @inline def groundType : FieldType = in.v64 match {
       case 5            ⇒ Annotation
       case 6            ⇒ BoolType
       case 7            ⇒ I8
@@ -129,28 +127,28 @@ ${
           in.jump(in.position + last);
         }
       } catch {
-        case e: Exception ⇒ throw ParseException(in, blockCounter, "corrupted string block", e)
+        case e : Exception ⇒ throw ParseException(in, blockCounter, "corrupted string block", e)
       }
     }
 
     @inline def typeBlock {
       // deferred pool resize requests
-      val resizeQueue = new Queue[StoragePool[_ <: SkillType]]
+      val resizeQueue = new Queue[StoragePool[_ <: SkillType, _ <: SkillType]]
       // deferred field declaration appends
-      val fieldInsertionQueue = new Queue[(StoragePool[_ <: SkillType], FieldDeclaration)]
+      val fieldInsertionQueue = new Queue[(StoragePool[_ <: SkillType, _ <: SkillType], FieldDeclaration)]
       // field data updates
-      val fieldDataQueue = new Queue[(StoragePool[_ <: SkillType], FieldDeclaration)]
+      val fieldDataQueue = new Queue[(StoragePool[_ <: SkillType, _ <: SkillType], FieldDeclaration)]
       var offset = 0L
 
-      @inline def typeDefinition {
-        @inline def superDefinition: (String, Long) = {
+      @inline def typeDefinition[T <: B, B <: SkillType] {
+        @inline def superDefinition : (String, Long) = {
           val superName = in.v64;
           if (0 == superName)
             (null, 1L) // bpsi is 1 if the first legal index is one
           else
             (String.get(superName), in.v64)
         }
-        @inline def typeRestrictions: HashSet[Restriction] = {
+        @inline def typeRestrictions : HashSet[Restriction] = {
           val count = in.v64.toInt
           (for (i ← 0 until count; if i < 7 || 1 == (i % 2))
             yield in.v64 match {
@@ -165,7 +163,7 @@ ${
           }
           ).toSet[Restriction].to
         }
-        @inline def fieldRestrictions(t: FieldType): HashSet[Restriction] = {
+        @inline def fieldRestrictions(t : FieldType) : HashSet[Restriction] = {
           val count = in.v64.toInt
           (for (i ← 0 until count; if i < 7 || 1 == (i % 2))
             yield in.v64 match {
@@ -201,11 +199,11 @@ ${
 
         // try to parse the type definition
         try {
-          var definition: StoragePool[_ <: SkillType] = null
+          var definition : StoragePool[T, B] = null
           var count = 0L
           var lbpsi = 1L
           if (poolByName.contains(name)) {
-            definition = poolByName(name)
+            definition = poolByName(name).asInstanceOf[StoragePool[T, B]]
             if (definition.superPool.isDefined)
               lbpsi = in.v64
             count = in.v64
@@ -268,12 +266,12 @@ ${
             }
           }
         } catch {
-          case e: java.nio.BufferUnderflowException            ⇒ throw ParseException(in, blockCounter, "unexpected end of file", e)
-          case e: Exception if !e.isInstanceOf[ParseException] ⇒ throw ParseException(in, blockCounter, e.getMessage, e)
+          case e : java.nio.BufferUnderflowException            ⇒ throw ParseException(in, blockCounter, "unexpected end of file", e)
+          case e : Exception if !e.isInstanceOf[ParseException] ⇒ throw ParseException(in, blockCounter, e.getMessage, e)
         }
       }
       @inline def resizePools {
-        val resizeStack = new Stack[StoragePool[_]]
+        val resizeStack = new Stack[StoragePool[_ <: SkillType, _ <: SkillType]]
         // resize base pools and push entries to stack
         for (p ← resizeQueue) {
           p match {
@@ -298,16 +296,16 @@ ${
           d.addField(f)
         }
       }
-      @inline def eliminatePreliminaryTypesIn(t: FieldType): FieldType = t match {
+      @inline def eliminatePreliminaryTypesIn(t : FieldType) : FieldType = t match {
         case TypeDefinitionIndex(i) ⇒ try {
           types(i.toInt)
         } catch {
-          case e: Exception ⇒ throw ParseException(in, blockCounter, s"inexistent user type $$i (user types: $${types.zipWithIndex.map(_.swap).toMap.mkString})", e)
+          case e : Exception ⇒ throw ParseException(in, blockCounter, s"inexistent user type $$i (user types: $${types.zipWithIndex.map(_.swap).toMap.mkString})", e)
         }
         case TypeDefinitionName(n) ⇒ try {
           poolByName(n)
         } catch {
-          case e: Exception ⇒ throw ParseException(in, blockCounter, s"inexistent user type $$n (user types: $${poolByName.mkString})", e)
+          case e : Exception ⇒ throw ParseException(in, blockCounter, s"inexistent user type $$n (user types: $${poolByName.mkString})", e)
         }
         case ConstantLengthArray(l, t) ⇒ ConstantLengthArray(l, eliminatePreliminaryTypesIn(t))
         case VariableLengthArray(t)    ⇒ VariableLengthArray(eliminatePreliminaryTypesIn(t))
@@ -355,13 +353,13 @@ ${
       String,
       types.to,
       in match {
-        case in: streams.FileInputStream ⇒ Some(in.path)
-        case _                   ⇒ None
+        case in : streams.FileInputStream ⇒ Some(in.path)
+        case _                            ⇒ None
       }
     )
   }
 
-  def read(path: Path) = file(new FileInputStream(path))
+  def read(path : Path) = file(new FileInputStream(path))
 }
 """)
 

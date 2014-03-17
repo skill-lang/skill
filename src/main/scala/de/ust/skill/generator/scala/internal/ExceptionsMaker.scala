@@ -14,7 +14,6 @@ trait ExceptionsMaker extends GeneralOutputMaker {
     //package & imports
     out.write(s"""package ${packagePrefix}internal
 
-import ${packagePrefix}api.SkillType
 import ${packagePrefix}internal.streams.InStream""")
 
     out.write("""

@@ -25,6 +25,7 @@ import scala.collection.mutable.ArrayBuffer
 
 import ${packagePrefix}internal.FileParser
 import ${packagePrefix}internal.SerializableState
+import ${packagePrefix}internal.SkillType
 
 /**
  * The public interface to the SKilL state, which keeps track of serializable objects and provides (de)serialization

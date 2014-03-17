@@ -30,7 +30,6 @@ import java.nio.ByteBuffer
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
-import ${packagePrefix}api.SkillType
 import ${packagePrefix}internal.streams.OutStream
 
 /**
@@ -39,7 +38,7 @@ import ${packagePrefix}internal.streams.OutStream
  * @see SKilL §6.4
  * @author Timm Felden
  */
-abstract class SerializationFunctions(state: SerializableState) {
+abstract class SerializationFunctions(state : SerializableState) {
   import SerializationFunctions._
 
   //collect String instances from known string types; this is needed, because strings are something special on the jvm
@@ -63,52 +62,52 @@ abstract class SerializationFunctions(state: SerializableState) {
 
   val stringIDs = new HashMap[String, Long]
 
-  def annotation(ref: SkillType, out: OutStream): Unit
+  def annotation(ref : SkillType, out : OutStream) : Unit
 
-  def string(v: String, out: OutStream): Unit = out.v64(stringIDs(v))
+  def string(v : String, out : OutStream) : Unit = out.v64(stringIDs(v))
 }
 
 object SerializationFunctions {
 
-  @inline final def userRef[T <: SkillType](ref: T, out: OutStream) {
+  @inline final def userRef[T <: SkillType](ref : T, out : OutStream) {
     if (null == ref) out.put(0.toByte)
     else v64(ref.getSkillID, out)
   }
 
-  @inline def bool(v: Boolean, out: OutStream) = out.put(if (v) -1.toByte else 0.toByte)
+  @inline def bool(v : Boolean, out : OutStream) = out.put(if (v) -1.toByte else 0.toByte)
 
-  @inline def i8(v: Byte, out: OutStream) = out.put(v)
-  @inline def i16(v: Short, out: OutStream) = out.put(ByteBuffer.allocate(2).putShort(v).array)
-  @inline def i32(v: Int, out: OutStream) = out.put(ByteBuffer.allocate(4).putInt(v).array)
-  @inline def i64(v: Long, out: OutStream) = out.put(ByteBuffer.allocate(8).putLong(v).array)
-  @inline def v64(v: Long, out: OutStream) = out.v64(v)
+  @inline def i8(v : Byte, out : OutStream) = out.put(v)
+  @inline def i16(v : Short, out : OutStream) = out.put(ByteBuffer.allocate(2).putShort(v).array)
+  @inline def i32(v : Int, out : OutStream) = out.put(ByteBuffer.allocate(4).putInt(v).array)
+  @inline def i64(v : Long, out : OutStream) = out.put(ByteBuffer.allocate(8).putLong(v).array)
+  @inline def v64(v : Long, out : OutStream) = out.v64(v)
 
-  @inline def f32(v: Float, out: OutStream) = out.put(ByteBuffer.allocate(4).putFloat(v).array)
-  @inline def f64(v: Double, out: OutStream) = out.put(ByteBuffer.allocate(8).putDouble(v).array)
+  @inline def f32(v : Float, out : OutStream) = out.put(ByteBuffer.allocate(4).putFloat(v).array)
+  @inline def f64(v : Double, out : OutStream) = out.put(ByteBuffer.allocate(8).putDouble(v).array)
 
   // wraps translation functions to stream users
-  implicit def wrap[T](f: T ⇒ Array[Byte]): (T, OutStream) ⇒ Unit = { (v: T, out: OutStream) ⇒ out.put(f(v)) }
+  implicit def wrap[T](f : T ⇒ Array[Byte]) : (T, OutStream) ⇒ Unit = { (v : T, out : OutStream) ⇒ out.put(f(v)) }
 
-  def writeConstArray[T, S >: T](trans: (S, OutStream) ⇒ Unit)(elements: scala.collection.mutable.ArrayBuffer[T], out: OutStream) {
+  def writeConstArray[T, S >: T](trans : (S, OutStream) ⇒ Unit)(elements : scala.collection.mutable.ArrayBuffer[T], out : OutStream) {
     for (e ← elements)
       trans(e, out)
   }
-  def writeVarArray[T, S >: T](trans: (S, OutStream) ⇒ Unit)(elements: scala.collection.mutable.ArrayBuffer[T], out: OutStream) {
+  def writeVarArray[T, S >: T](trans : (S, OutStream) ⇒ Unit)(elements : scala.collection.mutable.ArrayBuffer[T], out : OutStream) {
     v64(elements.size, out)
     for (e ← elements)
       trans(e, out)
   }
-  def writeList[T, S >: T](trans: (S, OutStream) ⇒ Unit)(elements: scala.collection.mutable.ListBuffer[T], out: OutStream) {
+  def writeList[T, S >: T](trans : (S, OutStream) ⇒ Unit)(elements : scala.collection.mutable.ListBuffer[T], out : OutStream) {
     v64(elements.size, out)
     for (e ← elements)
       trans(e, out)
   }
-  def writeSet[T, S >: T](trans: (S, OutStream) ⇒ Unit)(elements: scala.collection.mutable.HashSet[T], out: OutStream) {
+  def writeSet[T, S >: T](trans : (S, OutStream) ⇒ Unit)(elements : scala.collection.mutable.HashSet[T], out : OutStream) {
     v64(elements.size, out)
     for (e ← elements)
       trans(e, out)
   }
-  def writeMap[T, U](keys: (T, OutStream) ⇒ Unit, vals: (U, OutStream) ⇒ Unit)(elements: scala.collection.mutable.HashMap[T, U], out: OutStream) {
+  def writeMap[T, U](keys : (T, OutStream) ⇒ Unit, vals : (U, OutStream) ⇒ Unit)(elements : scala.collection.mutable.HashMap[T, U], out : OutStream) {
     v64(elements.size, out)
     for ((k, v) ← elements) {
       keys(k, out)
@@ -119,15 +118,15 @@ object SerializationFunctions {
   /**
    * TODO serialization of restrictions
    */
-  def restrictions(p: StoragePool[_], out: OutStream) = out.put(0.toByte)
+  def restrictions(p : StoragePool[_, _], out : OutStream) = out.put(0.toByte)
   /**
    * TODO serialization of restrictions
    */
-  def restrictions(f: FieldDeclaration, out: OutStream) = out.put(0.toByte)
+  def restrictions(f : FieldDeclaration, out : OutStream) = out.put(0.toByte)
   /**
    * serialization of types is fortunately independent of state, because field types know their ID
    */
-  def writeType(t: FieldType, out: OutStream) = t match {
+  def writeType(t : FieldType, out : OutStream) = t match {
     case ConstantI8(v) ⇒
       v64(t.typeID, out)
       i8(v, out)
@@ -173,7 +172,7 @@ object SerializationFunctions {
    * creates an lbpsi map by recursively adding the local base pool start index to the map and adding all sub pools
    *  afterwards
    */
-  final def makeLBPSIMap[T <: SkillType](pool: StoragePool[T], lbpsiMap: Array[Long], next: Long, size: String ⇒ Long): Long = {
+  final def makeLBPSIMap[T <: B, B <: SkillType](pool : StoragePool[T, B], lbpsiMap : Array[Long], next : Long, size : String ⇒ Long) : Long = {
     lbpsiMap(pool.poolIndex.toInt) = next
     var result = next + size(pool.name)
     for (sub ← pool.subPools) {
@@ -186,7 +185,7 @@ object SerializationFunctions {
    * concatenates array buffers in the d-map. This will in fact turn the d-map from a map pointing from names to static
    *  instances into a map pointing from names to dynamic instances.
    */
-  final def concatenateDataMap[T <: SkillType](pool: StoragePool[T], data: HashMap[String, ArrayBuffer[SkillType]]): Unit = for (sub ← pool.subPools) {
+  final def concatenateDataMap[T <: B, B <: SkillType](pool : StoragePool[T, B], data : HashMap[String, ArrayBuffer[SkillType]]) : Unit = for (sub ← pool.subPools) {
     data(pool.basePool.name) ++= data(sub.name)
     data(sub.name) = data(pool.basePool.name)
     concatenateDataMap(sub, data)

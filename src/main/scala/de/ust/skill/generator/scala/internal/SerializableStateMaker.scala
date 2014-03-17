@@ -38,11 +38,11 @@ import ${packagePrefix}internal.streams.FileOutputStream
  */
 final class SerializableState(
 ${
-      (for (t ← IR) yield s"  val ${t.getCapitalName}: ${t.getCapitalName}Access,").mkString("\n")
+      (for (t ← IR) yield s"  val ${t.getCapitalName} : ${t.getCapitalName}Access,").mkString("\n")
     }
-  val String: StringAccess,
-  val pools: Array[StoragePool[_ <: SkillType]],
-  var fromPath: Option[Path])
+  val String : StringAccess,
+  val pools : Array[StoragePool[_ <: SkillType, _ <: SkillType]],
+  var fromPath : Option[Path])
     extends SkillState {
 
   val poolByName = pools.map(_.name).zip(pools).toSeq.toMap
@@ -51,16 +51,16 @@ ${
 
   def all = pools.iterator.asInstanceOf[Iterator[Access[_ <: SkillType]]]
 
-  def write(target: Path): Unit = {
+  def write(target : Path) : Unit = {
     new StateWriter(this, FileOutputStream.write(target))
     if (fromPath.isEmpty)
       fromPath = Some(target)
   }
   // @note: this is more tricky then append, because the state has to be prepared before the file is deleted
-  def write(): Unit = ???
+  def write() : Unit = ???
 
-  def append(): Unit = new StateAppender(this, FileOutputStream.append(fromPath.getOrElse(throw new IllegalStateException("The state was not created using a read operation, thus append is not possible!"))))
-  def append(target: Path): Unit = {
+  def append() : Unit = new StateAppender(this, FileOutputStream.append(fromPath.getOrElse(throw new IllegalStateException("The state was not created using a read operation, thus append is not possible!"))))
+  def append(target : Path) : Unit = {
     if (fromPath.isEmpty) {
       // append and write is the same operation, if we did not read a file
       write(target)
@@ -76,16 +76,16 @@ ${
   }
 
   @inline private def finalizePools {
-    @inline def eliminatePreliminaryTypesIn(t: FieldType): FieldType = t match {
+    @inline def eliminatePreliminaryTypesIn(t : FieldType) : FieldType = t match {
       case TypeDefinitionIndex(i) ⇒ try {
         pools(i.toInt)
       } catch {
-        case e: Exception ⇒ throw new IllegalStateException(s"inexistent user type $$i (user types: $${poolByName.mkString})", e)
+        case e : Exception ⇒ throw new IllegalStateException(s"inexistent user type $$i (user types: $${poolByName.mkString})", e)
       }
       case TypeDefinitionName(n) ⇒ try {
         poolByName(n)
       } catch {
-        case e: Exception ⇒ throw new IllegalStateException(s"inexistent user type $$n (user types: $${poolByName.mkString})", e)
+        case e : Exception ⇒ throw new IllegalStateException(s"inexistent user type $$n (user types: $${poolByName.mkString})", e)
       }
       case ConstantLengthArray(l, t) ⇒ ConstantLengthArray(l, eliminatePreliminaryTypesIn(t))
       case VariableLengthArray(t)    ⇒ VariableLengthArray(eliminatePreliminaryTypesIn(t))
@@ -235,7 +235,7 @@ object SerializableState {
   /**
    * Creates a new and empty serializable state.
    */
-  def create(): SerializableState = {
+  def create() : SerializableState = {
 ${
       var i = -1
       (for (t ← IR) yield s"""    val ${t.getCapitalName} = new ${t.getCapitalName}StoragePool(${i += 1; i}${if (null == t.getSuperType) "" else {", " + t.getSuperType.getCapitalName}})""").mkString("\n")
@@ -245,7 +245,7 @@ ${
       (for (t ← IR) yield s"""      ${t.getCapitalName},""").mkString("\n")
     }
       new StringPool(null),
-      Array[StoragePool[_ <: SkillType]](${IR.map(_.getCapitalName).mkString(",")}),
+      Array[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.map(_.getCapitalName).mkString(",")}),
       None
     )
   }

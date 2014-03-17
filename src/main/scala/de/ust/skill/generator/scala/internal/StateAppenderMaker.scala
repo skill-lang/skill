@@ -32,7 +32,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import ${packagePrefix}_
-import ${packagePrefix}api.SkillType
 import ${packagePrefix}internal.streams.OutBuffer
 import ${packagePrefix}internal.streams.OutStream
 
@@ -42,14 +41,14 @@ import ${packagePrefix}internal.streams.OutStream
  * @see SKilL §6
  * @author Timm Felden
  */
-private[internal] final class StateAppender(state: SerializableState, out: OutStream) extends SerializationFunctions(state) {
+private[internal] final class StateAppender(state : SerializableState, out : OutStream) extends SerializationFunctions(state) {
   import SerializationFunctions._
 
   // make lbpsi map, update data map to contain dynamic instances and create serialization skill IDs for serialization
   // index → bpsi
   val lbpsiMap = new Array[Long](state.pools.length)
   state.pools.foreach {
-    case p: BasePool[_] ⇒
+    case p : BasePool[_] ⇒
       makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ state.poolByName(s).newObjects.size })
       var id = 1L + p.data.size
       for (i ← p.newObjectsInTypeOrderIterator) {
@@ -59,7 +58,7 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
     case _ ⇒
   }
 
-  override def annotation(ref: SkillType, out: OutStream) {
+  override def annotation(ref : SkillType, out : OutStream) {
     if (null == ref) {
       out.put(0.toByte)
       out.put(0.toByte)
@@ -86,7 +85,7 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
     val dataChunk = new OutBuffer();
 
     // @note performance hack: requires at least 1 instance in order to work correctly
-    @inline def genericPutField(p: StoragePool[_ <: SkillType], f: FieldDeclaration, instances: Iterator[SkillType]) {
+    @inline def genericPutField(p : StoragePool[_ <: SkillType, _ <: SkillType], f : FieldDeclaration, instances : Iterator[SkillType]) {
       f.t match {
         case I8         ⇒ for (i ← instances) i8(i.get(p, f).asInstanceOf[Byte], dataChunk)
         case I16        ⇒ for (i ← instances) i16(i.get(p, f).asInstanceOf[Short], dataChunk)
@@ -97,13 +96,13 @@ private[internal] final class StateAppender(state: SerializableState, out: OutSt
         case StringType ⇒ for (i ← instances) string(i.get(p, f).asInstanceOf[String], dataChunk)
       }
     }
-    @inline def write(p: StoragePool[_ <: SkillType]) {
+    @inline def write(p : StoragePool[_ <: SkillType, _ <: SkillType]) {
       p match {${
       (for (d ← IR) yield {
         val sName = d.getSkillName
         val fields = d.getFields
         s"""
-        case p: ${d.getCapitalName}StoragePool ⇒
+        case p : ${d.getCapitalName}StoragePool ⇒
           val outData = p.newObjectsInTypeOrderIterator
           val newPool = p.blockInfos.isEmpty
 

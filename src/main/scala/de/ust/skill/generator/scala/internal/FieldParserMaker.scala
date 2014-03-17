@@ -27,7 +27,6 @@ import scala.collection.mutable.HashSet
 import scala.collection.mutable.ListBuffer
 
 import ${packagePrefix}api.Access
-import ${packagePrefix}api.SkillType
 import ${packagePrefix}api.StringAccess
 import ${packagePrefix}internal._
 import ${packagePrefix}internal.streams.InStream
@@ -39,8 +38,8 @@ object FieldParser {
   /**
    * Parse a field assuming that in is at the right position and the last chunk of f is to be processed.
    */
-  def parseThisField(in: InStream, t: StoragePool[_ <: SkillType], f: FieldDeclaration, pools: HashMap[String, StoragePool[_ <: SkillType]], String: StringAccess) {
-    @inline def readSingleField(t: FieldType): Any = t match {
+  def parseThisField(in : InStream, t : StoragePool[_ <: SkillType, _ <: SkillType], f : FieldDeclaration, pools : HashMap[String, StoragePool[_ <: SkillType, _ <: SkillType]], String : StringAccess) {
+    @inline def readSingleField(t : FieldType) : Any = t match {
       case I8  ⇒ in.i8
       case I16 ⇒ in.i16
       case I32 ⇒ in.i32
@@ -55,27 +54,27 @@ object FieldParser {
       case F64        ⇒ in.f64
       case StringType ⇒ String.get(in.v64)
 
-      case d: ConstantLengthArray ⇒
+      case d : ConstantLengthArray ⇒
         (for (i ← 0 until d.length.toInt)
           yield readSingleField(d.groundType)).to[ArrayBuffer]
 
-      case d: VariableLengthArray ⇒
+      case d : VariableLengthArray ⇒
         (for (i ← 0 until in.v64.toInt)
           yield readSingleField(d.groundType)).to[ArrayBuffer]
 
-      case d: SetType ⇒
+      case d : SetType ⇒
         (for (i ← 0 until in.v64.toInt)
           yield readSingleField(d.groundType)).to[HashSet]
 
-      case d: ListType ⇒
+      case d : ListType ⇒
         (for (i ← 0 until in.v64.toInt)
           yield readSingleField(d.groundType)).to[ListBuffer]
 
       // map parsing is recursive on the ground types
-      case d: MapType ⇒ parseMap(d.groundType)
+      case d : MapType ⇒ parseMap(d.groundType)
 
       // user types are just references, easy pray
-      case d: StoragePool[_] ⇒ in.v64 match {
+      case d : StoragePool[_, _] ⇒ in.v64 match {
         case 0     ⇒ null
         case index ⇒ d.getByID(index)
       }
@@ -85,7 +84,7 @@ object FieldParser {
     /**
      * if d is a map<T,U,V>, the result is a Parser[Map[T,Map[U,V]]]
      */
-    @inline def parseMap(types: Seq[FieldType]): Any =
+    @inline def parseMap(types : Seq[FieldType]) : Any =
       if (1 == types.size) readSingleField(types.head)
       else {
         val result = new HashMap[Any, Any]
@@ -101,10 +100,10 @@ object FieldParser {
     t match {
 ${
       (for (t ← IR)
-        yield s"""      case p: ${t.getCapitalName}StoragePool ⇒ f.name match {
+        yield s"""      case p : ${t.getCapitalName}StoragePool ⇒ f.name match {
 ${
         (for (f ← t.getAllFields)
-          yield s"""        case "${f.getSkillName}" ⇒ """+(
+          yield s"""        case "${f.getSkillName}" ⇒"""+(
           if (f.isIgnored) " in.jump(c.end)"
           else if (f.isConstant) ""
           else readField(f)
@@ -113,11 +112,11 @@ ${
       }
         case _ ⇒
           c match {
-            case c: SimpleChunkInfo ⇒
+            case c : SimpleChunkInfo ⇒
               for (i ← c.bpsi until c.bpsi + c.count)
                 t.getByID(i + 1).set(t.asInstanceOf[Access[SkillType]], f, readSingleField(f.t))
 
-            case bci: BulkChunkInfo ⇒
+            case bci : BulkChunkInfo ⇒
               for (
                 bi ← t.blockInfos;
                 i ← bi.bpsi until bi.bpsi + bi.count
@@ -127,11 +126,11 @@ ${
     }
       case _ ⇒
         c match {
-          case c: SimpleChunkInfo ⇒
+          case c : SimpleChunkInfo ⇒
             for (i ← c.bpsi until c.bpsi + c.count)
               t.getByID(i + 1).set(t.asInstanceOf[Access[SkillType]], f, readSingleField(f.t))
 
-          case bci: BulkChunkInfo ⇒
+          case bci : BulkChunkInfo ⇒
             for (
               bi ← t.blockInfos;
               i ← bi.bpsi until bi.bpsi + bi.count
@@ -146,8 +145,8 @@ ${
   /**
    * Reads an array of single fields of type t.
    */
-  private[this] def readArray[T](size: Long, t: FieldType, in: InStream, pools: HashMap[String, StoragePool[_ <: SkillType]], strings: ArrayBuffer[String]): ArrayBuffer[T] = {
-    @inline def readSingleField(t: FieldType): Any = t match {
+  private[this] def readArray[T](size : Long, t : FieldType, in : InStream, pools : HashMap[String, StoragePool[_, _ <: SkillType]], strings : ArrayBuffer[String]) : ArrayBuffer[T] = {
+    @inline def readSingleField(t : FieldType) : Any = t match {
       case I8  ⇒ in.i8
       case I16 ⇒ in.i16
       case I32 ⇒ in.i32
@@ -162,27 +161,27 @@ ${
       case F64        ⇒ in.f64
       case StringType ⇒ strings(in.v64.toInt)
 
-      case d: ConstantLengthArray ⇒
+      case d : ConstantLengthArray ⇒
         (for (i ← 0 until d.length.toInt)
           yield readSingleField(d.groundType)).to[ArrayBuffer]
 
-      case d: VariableLengthArray ⇒
+      case d : VariableLengthArray ⇒
         (for (i ← 0 until in.v64.toInt)
           yield readSingleField(d.groundType)).to[ArrayBuffer]
 
-      case d: SetType ⇒
+      case d : SetType ⇒
         (for (i ← 0 until in.v64.toInt)
           yield readSingleField(d.groundType)).to[HashSet]
 
-      case d: ListType ⇒
+      case d : ListType ⇒
         (for (i ← 0 until in.v64.toInt)
           yield readSingleField(d.groundType)).to[ListBuffer]
 
       // map parsing is recursive on the ground types
-      case d: MapType ⇒ parseMap(d.groundType)
+      case d : MapType ⇒ parseMap(d.groundType)
 
       // user types are just references, easy pray
-      case d: StoragePool[_] ⇒ in.v64 match {
+      case d : StoragePool[_, _] ⇒ in.v64 match {
         case 0     ⇒ null
         case index ⇒ pools(d.name).getByID(index)
       }
@@ -192,7 +191,7 @@ ${
     /**
      * if d is a map<T,U,V>, the result is a Parser[Map[T,Map[U,V]]]
      */
-    @inline def parseMap(types: Seq[FieldType]): Any =
+    @inline def parseMap(types : Seq[FieldType]) : Any =
       if (1 == types.size) readSingleField(types.head)
       else {
         val result = new HashMap[Any, Any]
@@ -219,16 +218,16 @@ ${
     val (prelude, action, result) = readSingleField(t)
     s"""$prelude
           c match {
-            case c: SimpleChunkInfo ⇒
-              for (i ← c.bpsi until c.bpsi + c.count){$action
+            case c : SimpleChunkInfo ⇒
+              for (i ← c.bpsi until c.bpsi + c.count) {$action
                 p.getByID(i + 1).${f.getName} = $result
               }
 
-            case bci: BulkChunkInfo ⇒
+            case bci : BulkChunkInfo ⇒
               for (
                 bi ← t.blockInfos;
                 i ← bi.bpsi until bi.bpsi + bi.count
-              ){$action
+              ) {$action
                 p.getByID(i + 1).${f.getName} = $result
               }
           }"""
