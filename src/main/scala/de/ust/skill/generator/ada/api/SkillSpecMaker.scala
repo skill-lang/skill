@@ -16,19 +16,13 @@ trait SkillSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}-api-skill.ads""")
 
     out.write(s"""
+with Ada.Unchecked_Conversion;
 with ${packagePrefix.capitalize}.Internal.File_Reader;
 with ${packagePrefix.capitalize}.Internal.File_Writer;
 with ${packagePrefix.capitalize}.Internal.State_Maker;
 
 package ${packagePrefix.capitalize}.Api.Skill is
 
-${
-  var output = "";
-  for (d ← IR) {
-    output += s"""   type ${d.getName}_Type_Accesses is array (Natural range <>) of ${d.getName}_Type_Access;\r\n"""
-  }
-  output
-}
    procedure Create (State : access Skill_State);
    procedure Read (State : access Skill_State; File_Name : String);
    procedure Write (State : access Skill_State; File_Name : String);
@@ -49,7 +43,8 @@ ${
     val parameters = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map(f => s"${f.getSkillName()} : ${mapType(f.getType, d, f)}").mkString("; ", "; ", "")
     output += s"""   function New_${d.getName} (State : access Skill_State${printParameters(d)}) return ${d.getName}_Type_Access;\r\n"""
     output += s"""   procedure New_${d.getName} (State : access Skill_State${printParameters(d)});\r\n"""
-    output += s"""   function Get_${d.getName}s (State : access Skill_State) return ${d.getName}_Type_Accesses;\r\n"""
+    output += s"""   function ${d.getName}s_Size (State : access Skill_State) return Natural;\r\n"""
+    output += s"""   function Get_${d.getName} (State : access Skill_State; Index : Natural) return ${d.getName}_Type_Access;\r\n"""
   }
   output
 }

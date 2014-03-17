@@ -103,15 +103,15 @@ ${
       null;
    end New_${d.getName};
 
-   function Get_${d.getName}s (State : access Skill_State) return ${d.getName}_Type_Accesses is
-      Length : Natural := State.Storage_Pool_Size ("${d.getSkillName}");
-      rval : ${d.getName}_Type_Accesses (1 .. Length);
+   function ${d.getName}s_Size (State : access Skill_State) return Natural is
+      (State.Storage_Pool_Size ("${d.getSkillName}"));
+
+   function Get_${d.getName} (State : access Skill_State; Index : Natural) return ${d.getName}_Type_Access is
+      function Convert is new Ada.Unchecked_Conversion (Skill_Type_Access, ${d.getName}_Type_Access);
+      pragma Inline (Convert);
    begin
-      for I in rval'Range loop
-         rval (I) := ${d.getName}_Type_Access (State.Get_Object ("${d.getSkillName}", I));
-      end loop;
-      return rval;
-   end Get_${d.getName}s;\r\n"""
+      return Convert (State.Get_Object ("${d.getSkillName}", Index));
+   end Get_${d.getName};\r\n"""
   }
   output
 }
