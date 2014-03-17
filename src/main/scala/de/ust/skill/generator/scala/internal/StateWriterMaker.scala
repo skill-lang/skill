@@ -21,6 +21,7 @@ import de.ust.skill.ir.Type
 trait StateWriterMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
+    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
     val out = open("internal/StateWriter.scala")
     //package
     out.write(s"""package ${packagePrefix}internal
@@ -93,7 +94,7 @@ private[internal] final class StateWriter(state : SerializableState, out : OutSt
     p match {${
       (for (d ← IR) yield {
         val sName = d.getSkillName
-        val fields = d.getFields
+        val fields = d.getFields.filterNot(_.isIgnored)
         s"""
       case p : ${d.getCapitalName}StoragePool ⇒
         p.compress
@@ -110,11 +111,11 @@ private[internal] final class StateWriter(state : SerializableState, out : OutSt
         restrictions(p, out)
 
         out.${
-          if (d.getAllFields.size < 127) s"put(${d.getAllFields.size}.toByte)"
-          else s"v64(${d.getAllFields.size})"
+          if (fields.size < 127) s"put(${fields.size}.toByte)"
+          else s"v64(${fields.size})"
         }
 ${
-          if (d.getAllFields.size != 0) s"""
+          if (fields.size != 0) s"""
         for (f ← fields if p.knownFields.contains(f.name)) {
           restrictions(f, out)
           writeType(f.t, out)

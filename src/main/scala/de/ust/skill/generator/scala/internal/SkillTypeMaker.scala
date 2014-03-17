@@ -10,6 +10,7 @@ import de.ust.skill.generator.scala.GeneralOutputMaker
 trait SkillTypeMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
+    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
     val out = open("internal/SkillType.scala")
     //package & imports
     out.write(s"""package ${packagePrefix}internal

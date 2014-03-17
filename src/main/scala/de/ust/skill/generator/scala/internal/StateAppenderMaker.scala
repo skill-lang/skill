@@ -21,6 +21,7 @@ import de.ust.skill.ir.Type
 trait StateAppenderMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
+    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
     val out = open("internal/StateAppender.scala")
     //package
     out.write(s"""package ${packagePrefix}internal
@@ -100,7 +101,7 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
       p match {${
       (for (d ← IR) yield {
         val sName = d.getSkillName
-        val fields = d.getFields
+        val fields = d.getFields.filterNot(_.isIgnored)
         s"""
         case p : ${d.getCapitalName}StoragePool ⇒
           val outData = p.newObjectsInTypeOrderIterator

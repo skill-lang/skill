@@ -18,7 +18,7 @@ trait TypesMaker extends GeneralOutputMaker {
     val out = open("Types.scala")
 
     //package
-    out.write(s"""package $packageName
+    out.write(s"""package ${this.packageName}
 
 import ${packagePrefix}api.Access
 import ${packagePrefix}internal.FieldDeclaration
@@ -26,9 +26,11 @@ import ${packagePrefix}internal.SkillType
 
 """)
 
+    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
+
     for (t ← IR) {
-    val fields = t.getAllFields.filter(!_.isConstant)
-    val relevantFields = fields.filter(!_.isIgnored)
+      val fields = t.getAllFields.filter(!_.isConstant)
+      val relevantFields = fields.filter(!_.isIgnored)
 
       //class comment
       if (t.getSkillComment.size > 0)
