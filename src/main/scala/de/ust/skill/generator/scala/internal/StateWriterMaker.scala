@@ -21,7 +21,7 @@ import de.ust.skill.ir.Type
 trait StateWriterMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
+    val packageName = if (this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.') + 1) else this.packageName;
     val out = open("internal/StateWriter.scala")
     //package
     out.write(s"""package ${packagePrefix}internal
@@ -96,9 +96,11 @@ private[internal] final class StateWriter(state : SerializableState, out : OutSt
         val sName = d.getSkillName
         val fields = d.getFields.filterNot(_.isIgnored)
         s"""
-      case p : ${d.getCapitalName}StoragePool ⇒
-        p.compress
-        val outData = p.data.asInstanceOf[Array[graph.Node]]
+      case p : ${d.getCapitalName}StoragePool ⇒${
+          if (null != d.getSuperType) "" else """
+        p.compress"""
+        }
+        val outData = p.data.asInstanceOf[Array[${packagePrefix}${d.getCapitalName}]]
         val fields = p.fields
 
         string("$sName", out)

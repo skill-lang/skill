@@ -23,7 +23,6 @@ trait TypesMaker extends GeneralOutputMaker {
 import ${packagePrefix}api.Access
 import ${packagePrefix}internal.FieldDeclaration
 import ${packagePrefix}internal.SkillType
-
 """)
 
     val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
@@ -38,10 +37,11 @@ import ${packagePrefix}internal.SkillType
 
       //class prefix
       val Name = t.getCapitalName;
-      out.write(s"sealed class $Name private[$packageName] (skillID : Long) ${
+      out.write(s"""
+sealed class $Name private[$packageName] (skillID : Long) ${
         if (null != t.getSuperType()) { s"extends ${t.getSuperType().getCapitalName()}" }
         else { "extends SkillType" }
-      }(skillID) {")
+      }(skillID) {""")
 
       // constructor
 	if(!relevantFields.isEmpty){
@@ -56,7 +56,7 @@ import ${packagePrefix}internal.SkillType
 	///////////////////////
 	// getters & setters //
 	///////////////////////
-	fields.foreach({ f ⇒
+	for(f <- t.getFields if !f.isConstant){
       val name = f.getName()
       val name_ = escaped(name)
       val Name = name.capitalize
@@ -118,11 +118,11 @@ import ${packagePrefix}internal.SkillType
   final def ${name_}_=($Name : ${mapType(f.getType())}) = $makeSetterImplementation
 """)
       }
-    });
+    }
 
     // generic get
     out.write(s"""
-  override final def get(acc : Access[_ <: SkillType], field : FieldDeclaration) : Any = field.name match {
+  override def get(acc : Access[_ <: SkillType], field : FieldDeclaration) : Any = field.name match {
 ${
       (for(f <- t.getAllFields.filterNot(_.isIgnored)) yield s"""    case "${f.getSkillName}" ⇒ _${f.getName}""").mkString("\n")
 }${
@@ -134,7 +134,7 @@ ${
 
     // generic set
     out.write(s"""
-  override final def set[@specialized T](acc : Access[_ <: SkillType], field : FieldDeclaration, value : T) : Unit = field.name match {
+  override def set[@specialized T](acc : Access[_ <: SkillType], field : FieldDeclaration, value : T) : Unit = field.name match {
 ${
   (
     for(f <- t.getAllFields.filterNot{t ⇒ t.isIgnored || t.isConstant()}) 
