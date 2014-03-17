@@ -107,11 +107,7 @@ ${
       (State.Storage_Pool_Size ("${d.getSkillName}"));
 
    function Get_${d.getName} (State : access Skill_State; Index : Natural) return ${d.getName}_Type_Access is
-      function Convert is new Ada.Unchecked_Conversion (Skill_Type_Access, ${d.getName}_Type_Access);
-      pragma Inline (Convert);
-   begin
-      return Convert (State.Get_Object ("${d.getSkillName}", Index));
-   end Get_${d.getName};\r\n"""
+      (${d.getName}_Type_Access (State.Get_Object ("${d.getSkillName}", Index)));\r\n"""
   }
   output
 }
