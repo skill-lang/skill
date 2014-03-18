@@ -28,21 +28,11 @@ package ${packagePrefix.capitalize}.Internal.Byte_Reader is
    function Read_Boolean (Input_Stream : ASS_IO.Stream_Access) return Boolean;
    function Read_String (Input_Stream : ASS_IO.Stream_Access; Length : Integer) return String;
 
-   procedure Skip_Bytes (Input_Stream : ASS_IO.Stream_Access; Length : Long);
-
 private
 
    function Read_Byte (Input_Stream : ASS_IO.Stream_Access) return Byte;
 
-   pragma Inline (Read_i8);
-   pragma Inline (Read_i16);
-   pragma Inline (Read_i32);
-   pragma Inline (Read_i64);
-   pragma Inline (Read_v64);
-   pragma Inline (Read_Boolean);
-   pragma Inline (Read_String);
-   pragma Inline (Skip_Bytes);
-   pragma Inline (Read_Byte);
+   pragma Inline (Read_i8, Read_i16, Read_i32, Read_i64, Read_v64, Read_Boolean, Read_String, Read_Byte);
 
 end ${packagePrefix.capitalize}.Internal.Byte_Reader;
 """)

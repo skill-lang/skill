@@ -24,6 +24,7 @@ package ${packagePrefix.capitalize}.Internal.File_Reader is
 private
 
    State : access Skill_State;
+   Input_File : ASS_IO.File_Type;
    Input_Stream : ASS_IO.Stream_Access;
 
    type Queue_Item is

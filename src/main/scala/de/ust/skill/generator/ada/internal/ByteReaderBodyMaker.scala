@@ -25,12 +25,11 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Reader is
 
    --  Short_Short_Integer
    function Read_i8 (Input_Stream : ASS_IO.Stream_Access) return i8 is
-      type Result is mod 2 ** 8;
-      function Convert is new Ada.Unchecked_Conversion (Source => Result, Target => i8);
+      function Convert is new Ada.Unchecked_Conversion (Byte, i8);
 
-      A : Result := Result (Read_Byte (Input_Stream));
+      A : i8 := Convert (Read_Byte (Input_Stream));
    begin
-      return Convert (A);
+      return A;
    end Read_i8;
 
    --  Short_Integer (Short)
@@ -105,17 +104,6 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Reader is
       end loop;
       return New_String;
    end Read_String;
-
-   procedure Skip_Bytes (Input_Stream : ASS_IO.Stream_Access; Length : Long) is
-   begin
-      for I in 1 .. Length loop
-         declare
-            Skip : Byte := Read_Byte (Input_Stream);
-         begin
-            null;
-         end;
-      end loop;
-   end Skip_Bytes;
 
 end ${packagePrefix.capitalize}.Internal.Byte_Reader;
 """)

@@ -18,7 +18,6 @@ trait FileReaderBodyMaker extends GeneralOutputMaker {
 package body ${packagePrefix.capitalize}.Internal.File_Reader is
 
    procedure Read (pState : access Skill_State; File_Name : String) is
-      Input_File : ASS_IO.File_Type;
    begin
       State := pState;
 
@@ -333,7 +332,11 @@ ${
 }
 
       if True = Skip_Bytes then
-         Byte_Reader.Skip_Bytes (Input_Stream, Item.Data_Length);
+         declare
+            use ASS_IO;
+         begin
+            Set_Index (Input_File, Index (Input_File) + Count (Item.Data_Length));
+         end;
       end if;
    end Read_Queue_Vector_Iterator;
 
