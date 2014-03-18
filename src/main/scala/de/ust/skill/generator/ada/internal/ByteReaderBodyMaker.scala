@@ -26,10 +26,8 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Reader is
    --  Short_Short_Integer
    function Read_i8 (Input_Stream : ASS_IO.Stream_Access) return i8 is
       function Convert is new Ada.Unchecked_Conversion (Byte, i8);
-
-      A : i8 := Convert (Read_Byte (Input_Stream));
    begin
-      return A;
+      return Convert (Read_Byte (Input_Stream));
    end Read_i8;
 
    --  Short_Integer (Short)
@@ -65,7 +63,9 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Reader is
    end Read_i64;
 
    function Read_v64 (Input_Stream : ASS_IO.Stream_Access) return v64 is
-      type Result is mod 2 ** 64;
+      use Interfaces;
+
+      subtype Result is Interfaces.Unsigned_64;
       function Convert is new Ada.Unchecked_Conversion (Source => Result, Target => v64);
 
       Count : Natural := 0;

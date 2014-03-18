@@ -85,12 +85,14 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Writer is
    end Write_v64;
 
    function Get_v64_Bytes (Value : v64) return Byte_v64_Type is
+      use Interfaces;
+
+      subtype Result is Interfaces.Unsigned_64;
+      function Convert is new Ada.Unchecked_Conversion (Source => v64, Target => Result);
+
       Size : Natural := 0;
    begin
       declare
-         type Result is mod 2 ** 64;
-         function Convert is new Ada.Unchecked_Conversion (Source => v64, Target => Result);
-
          Buckets : Result := Convert (Value);
       begin
          while (Buckets > 0) loop
@@ -106,9 +108,6 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Writer is
       end case;
 
       declare
-         type Result is mod 2 ** 64;
-         function Convert is new Ada.Unchecked_Conversion (Source => v64, Target => Result);
-
          rval : Byte_v64_Type (0 .. Size - 1);
          Count : Natural := 0;
       begin
