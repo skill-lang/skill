@@ -21,10 +21,12 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
    begin
       State := pState;
 
+      Byte_Reader.Buffer_Index := Byte_Reader.Buffer_Size + 1;
+
       ASS_IO.Open (Input_File, ASS_IO.In_File, File_Name);
       Input_Stream := ASS_IO.Stream (Input_File);
 
-      while (not ASS_IO.End_Of_File (Input_File)) loop
+      while not ASS_IO.End_Of_File (Input_File) or else Byte_Reader.Buffer_Index < Byte_Reader.Buffer_Last loop
          Read_String_Block;
          Read_Type_Block;
          Update_Base_Pool_Start_Index;
@@ -332,11 +334,7 @@ ${
 }
 
       if True = Skip_Bytes then
-         declare
-            use ASS_IO;
-         begin
-            Set_Index (Input_File, Index (Input_File) + Count (Item.Data_Length));
-         end;
+         Byte_Reader.Skip_Bytes (Input_Stream, Item.Data_Length);
       end if;
    end Read_Queue_Vector_Iterator;
 

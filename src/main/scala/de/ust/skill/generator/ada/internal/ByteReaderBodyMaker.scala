@@ -16,11 +16,31 @@ trait ByteReaderBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Internal.Byte_Reader is
 
-   function Read_Byte (Input_Stream : ASS_IO.Stream_Access) return Byte is
-      Next : Byte;
+   procedure Read_Buffer (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : out Buffer) is
+      Buffer : Ada.Streams.Stream_Element_Array (1 .. Ada.Streams.Stream_Element_Offset (Buffer_Size));
+      Last : Ada.Streams.Stream_Element_Offset;
    begin
-      Byte'Read (Input_Stream, Next);
-      return Next;
+      Stream.Read (Buffer, Last);
+      Buffer_Last := Positive (Last);
+
+      for I in 1 .. Last loop
+         Item (Integer (I)) := Byte (Buffer (I));
+      end loop;
+   end Read_Buffer;
+
+   function Read_Byte (Input_Stream : ASS_IO.Stream_Access) return Byte is
+   begin
+      if Buffer_Size + 1 = Buffer_Index then
+         Buffer'Read (Input_Stream, Buffer_Array);
+         Buffer_Index := 1;
+      end if;
+
+      declare
+         Next : Byte := Buffer_Array (Buffer_Index);
+      begin
+         Buffer_Index := Buffer_Index + 1;
+         return Next;
+      end;
    end Read_Byte;
 
    --  Short_Short_Integer
@@ -104,6 +124,17 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Reader is
       end loop;
       return New_String;
    end Read_String;
+
+   procedure Skip_Bytes (Input_Stream : ASS_IO.Stream_Access; Length : Long) is
+   begin
+      for I in 1 .. Length loop
+         declare
+            Skip : Byte := Read_Byte (Input_Stream);
+         begin
+            null;
+         end;
+      end loop;
+   end Skip_Bytes;
 
 end ${packagePrefix.capitalize}.Internal.Byte_Reader;
 """)

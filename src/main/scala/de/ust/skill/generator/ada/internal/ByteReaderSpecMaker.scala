@@ -18,6 +18,15 @@ with Ada.Unchecked_Conversion;
 
 package ${packagePrefix.capitalize}.Internal.Byte_Reader is
 
+   type Byte is new Interfaces.Unsigned_8;
+   Buffer_Size : Positive := 2 ** 7;
+   Buffer_Last : Positive := 1;
+   Buffer_Index : Integer := Buffer_Size + 1;
+   type Buffer is array (Positive range <>) of Byte;
+   procedure Read_Buffer (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : out Buffer);
+   for Buffer'Read use Read_Buffer;
+   Buffer_Array : Buffer (1 .. Buffer_Size);
+
    function Read_i8 (Input_Stream : ASS_IO.Stream_Access) return i8;
    function Read_i16 (Input_Stream : ASS_IO.Stream_Access) return i16;
    function Read_i32 (Input_Stream : ASS_IO.Stream_Access) return i32;
@@ -28,11 +37,13 @@ package ${packagePrefix.capitalize}.Internal.Byte_Reader is
    function Read_Boolean (Input_Stream : ASS_IO.Stream_Access) return Boolean;
    function Read_String (Input_Stream : ASS_IO.Stream_Access; Length : Integer) return String;
 
+   procedure Skip_Bytes (Input_Stream : ASS_IO.Stream_Access; Length : Long);
+
 private
 
    function Read_Byte (Input_Stream : ASS_IO.Stream_Access) return Byte;
 
-   pragma Inline (Read_i8, Read_i16, Read_i32, Read_i64, Read_v64, Read_Boolean, Read_String, Read_Byte);
+   pragma Inline (Read_i8, Read_i16, Read_i32, Read_i64, Read_v64, Read_Boolean, Read_String, Skip_Bytes, Read_Byte);
 
 end ${packagePrefix.capitalize}.Internal.Byte_Reader;
 """)
