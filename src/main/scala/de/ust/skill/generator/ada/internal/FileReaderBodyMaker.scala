@@ -21,7 +21,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
    begin
       State := pState;
 
-      Byte_Reader.Buffer_Index := Byte_Reader.Buffer_Size + 1;
+      Byte_Reader.Buffer_Index := Byte_Reader.Buffer_Size;
 
       ASS_IO.Open (Input_File, ASS_IO.In_File, File_Name);
       Input_Stream := ASS_IO.Stream (Input_File);

@@ -18,10 +18,9 @@ with Ada.Unchecked_Conversion;
 
 package ${packagePrefix.capitalize}.Internal.Byte_Reader is
 
-   type Byte is new Interfaces.Unsigned_8;
-   Buffer_Size : Positive := 2 ** 7;
-   Buffer_Last : Positive := 1;
-   Buffer_Index : Integer := Buffer_Size + 1;
+   Buffer_Size : constant Positive := 2 ** 7;
+   Buffer_Last : Positive;
+   Buffer_Index : Integer := Buffer_Size;
    type Buffer is array (Positive range <>) of Byte;
    procedure Read_Buffer (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : out Buffer);
    for Buffer'Read use Read_Buffer;

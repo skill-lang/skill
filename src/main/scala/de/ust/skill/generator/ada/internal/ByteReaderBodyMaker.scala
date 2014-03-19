@@ -30,15 +30,16 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Reader is
 
    function Read_Byte (Input_Stream : ASS_IO.Stream_Access) return Byte is
    begin
-      if Buffer_Size + 1 = Buffer_Index then
+      if Buffer_Size = Buffer_Index then
          Buffer'Read (Input_Stream, Buffer_Array);
-         Buffer_Index := 1;
+         Buffer_Index := 0;
       end if;
+
+      Buffer_Index := Buffer_Index + 1;
 
       declare
          Next : Byte := Buffer_Array (Buffer_Index);
       begin
-         Buffer_Index := Buffer_Index + 1;
          return Next;
       end;
    end Read_Byte;

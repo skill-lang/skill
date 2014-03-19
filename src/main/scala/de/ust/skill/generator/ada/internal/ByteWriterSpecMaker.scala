@@ -18,8 +18,7 @@ with Ada.Unchecked_Conversion;
 
 package ${packagePrefix.capitalize}.Internal.Byte_Writer is
 
-   type Byte is new Interfaces.Unsigned_8;
-   Buffer_Size : Positive := 2 ** 7;
+   Buffer_Size : constant Positive := 2 ** 7;
    Buffer_Index : Natural := 0;
    type Buffer is array (Positive range <>) of Byte;
    procedure Write_Buffer (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : in Buffer);
