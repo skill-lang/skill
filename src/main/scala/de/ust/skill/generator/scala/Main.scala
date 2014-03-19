@@ -243,4 +243,57 @@ class Main extends FakeMain
     //the string is fine anyway
     case _ ⇒ target
   }
+
+  protected def writeField(d : Declaration, f : Field) : String = {
+    val fName = escaped(f.getName)
+    f.getType match {
+      case t : GroundType ⇒ t.getSkillName match {
+
+        case "i64" ⇒
+          s"""val target = ByteBuffer.allocate(8 * outData.size)
+                for(i ← outData) target.putLong(i.$fName)
+                dataChunk.put(target.array)"""
+
+        case _ ⇒ s"for(i ← outData) ${f.getType.getSkillName}(i.$fName, dataChunk)"
+      }
+
+      case t : Declaration ⇒ s"""for(i ← outData) userRef(i.$fName, dataChunk)"""
+
+      case t : ConstantLengthArrayType ⇒ s"for(i ← outData) writeConstArray(${
+        t.getBaseType() match {
+          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+          case b               ⇒ b.getSkillName()
+        }
+      })(i.$fName, dataChunk)"
+      case t : VariableLengthArrayType ⇒ s"for(i ← outData) writeVarArray(${
+        t.getBaseType() match {
+          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+          case b               ⇒ b.getSkillName()
+        }
+      })(i.$fName, dataChunk)"
+      case t : SetType ⇒ s"for(i ← outData) writeSet(${
+        t.getBaseType() match {
+          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+          case b               ⇒ b.getSkillName()
+        }
+      })(i.$fName, dataChunk)"
+      case t : ListType ⇒ s"for(i ← outData) writeList(${
+        t.getBaseType() match {
+          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+          case b               ⇒ b.getSkillName()
+        }
+      })(i.$fName, dataChunk)"
+
+      case t : MapType ⇒ locally {
+        s"for(i ← outData) ${
+          t.getBaseTypes().map {
+            case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+            case b               ⇒ b.getSkillName()
+          }.reduceRight { (t, v) ⇒
+            s"writeMap($t, $v)"
+          }
+        }(i.$fName, dataChunk)"
+      }
+    }
+  }
 }

@@ -100,7 +100,7 @@ private[internal] final class StateWriter(state : SerializableState, out : OutSt
           if (null != d.getSuperType) "" else """
         p.compress"""
         }
-        val outData = p.data.asInstanceOf[Array[${packagePrefix}${d.getCapitalName}]]
+        val outData = p.data.asInstanceOf[Array[_root_.${packagePrefix}${d.getCapitalName}]]
         val fields = p.fields
 
         string("$sName", out)
@@ -139,18 +139,18 @@ ${
       }
       ).mkString("")
     }
-      case _ ⇒ locally {
+      case p : StoragePool[SkillType, SkillType] @unchecked ⇒ locally {
         // generic write
         string(p.name, out)
-        val outData = p.allInTypeOrder.toIterable
         p.superName match {
           case Some(sn) ⇒
             string(sn, out)
             v64(lbpsiMap(p.poolIndex.toInt), out)
           case None ⇒
+            p.asInstanceOf[BasePool[_]].compress
             out.put(0.toByte)
         }
-        v64(outData.size, out)
+        v64(p.dynamicSize, out)
         restrictions(p, out)
 
         v64(p.fields.size, out)
@@ -160,8 +160,8 @@ ${
           string(f.name, out)
 
           // data
-          if (outData.size > 0) {
-            genericPutField(p, f, outData)
+          if (p.dynamicSize > 0) {
+            genericPutField(p, f, p)
           }
 
           // end
@@ -178,61 +178,5 @@ ${
 
     //class prefix
     out.close()
-  }
-
-  // field writing helper functions
-  private def writeField(d : Declaration, f : Field) : String = {
-    val fName = escaped(f.getName)
-    f.getType match {
-      case t : GroundType ⇒ t.getSkillName match {
-
-        case "i64" ⇒
-          s"""val target = ByteBuffer.allocate(8 * outData.length)
-                for(i ← 0 until outData.length)
-                  target.putLong(outData(i).$fName)
-
-                dataChunk.put(target.array)"""
-
-        case _ ⇒ s"for(i ← 0 until outData.length) ${f.getType.getSkillName}(outData(i).$fName, dataChunk)"
-      }
-
-      case t : Declaration ⇒ s"""for(i ← 0 until outData.length) userRef(outData(i).$fName, dataChunk)"""
-
-      case t : ConstantLengthArrayType ⇒ s"for(i ← 0 until outData.length) writeConstArray(${
-        t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
-          case b               ⇒ b.getSkillName()
-        }
-      })(outData(i).$fName, dataChunk)"
-      case t : VariableLengthArrayType ⇒ s"for(i ← 0 until outData.length) writeVarArray(${
-        t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
-          case b               ⇒ b.getSkillName()
-        }
-      })(outData(i).$fName, dataChunk)"
-      case t : SetType ⇒ s"for(i ← 0 until outData.length) writeSet(${
-        t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
-          case b               ⇒ b.getSkillName()
-        }
-      })(outData(i).$fName, dataChunk)"
-      case t : ListType ⇒ s"for(i ← 0 until outData.length) writeList(${
-        t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
-          case b               ⇒ b.getSkillName()
-        }
-      })(outData(i).$fName, dataChunk)"
-
-      case t : MapType ⇒ locally {
-        s"for(i ← 0 until outData.length) ${
-          t.getBaseTypes().map {
-            case t : Declaration ⇒ s"userRef[${mapType(t)}]"
-            case b               ⇒ b.getSkillName()
-          }.reduceRight { (t, v) ⇒
-            s"writeMap($t, $v)"
-          }
-        }(outData(i).$fName, dataChunk)"
-      }
-    }
   }
 }

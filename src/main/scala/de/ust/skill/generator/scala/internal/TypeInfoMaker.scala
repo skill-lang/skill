@@ -255,14 +255,52 @@ sealed abstract class StoragePool[T <: B : ClassTag, B <: SkillType](
    *  respective fields can be retrieved using the fieldTypes map.
    */
   private[internal] val newObjects = ArrayBuffer[T]()
-  private[internal] def newObjectsInTypeOrderIterator : Iterator[T] = subPools.foldLeft(newObjects.iterator)({
-    case (i, p) ⇒ i ++ p.newObjectsInTypeOrderIterator
-  })
+  protected def newDynamicInstances : Iterator[T] = subPools.foldLeft(newObjects.iterator)(_ ++ _.newDynamicInstances)
 
   /**
    * called after a compress operation to write empty the new objects buffer and to set blocks correctly
    */
   protected def updateAfterCompress : Unit;
+  /**
+   * called after a prepare append operation to write empty the new objects buffer and to set blocks correctly
+   */
+  final protected def updateAfterPrepareAppend(chunkMap : HashMap[FieldDeclaration, ChunkInfo]) : Unit = {
+    val newInstances = !newDynamicInstances.isEmpty
+    val newPool = blockInfos.isEmpty
+    val newField = fields.forall(!_.dataChunks.isEmpty)
+    if (newPool || newInstances || newField) {
+
+      //build block chunk
+      val lcount = newDynamicInstances.size
+      //@ note this is the index into the data array and NOT the written lbpsi
+      val lbpsi = if (0 == lcount) 0L
+      else newDynamicInstances.next.getSkillID
+
+      blockInfos += new BlockInfo(lbpsi, lcount)
+
+      //@note: if this does not hold for p; then it will not hold for p.subPools either!
+      if (newInstances || !newPool) {
+        //build field chunks
+        for (f ← fields) {
+          if (f.dataChunks.isEmpty) {
+            val c = new BulkChunkInfo(-1, -1, dynamicSize)
+            f.dataChunks += c
+            chunkMap.put(f, c)
+          } else if (newInstances) {
+            val c = new SimpleChunkInfo(-1, -1, lbpsi, lcount)
+            f.dataChunks += c
+            chunkMap.put(f, c)
+          }
+        }
+      }
+    }
+    //notify sub pools
+    for (p ← subPools)
+      p.updateAfterPrepareAppend(chunkMap)
+
+    //remove new objects, because they are regular objects by now
+    newObjects.clear
+  }
 
   /**
    * returns the skill object at position index
@@ -280,6 +318,7 @@ sealed abstract class StoragePool[T <: B : ClassTag, B <: SkillType](
    * @note this is an O(t) operation, where t is the number of sub-types
    */
   final def dynamicSize : Long = subPools.map(_.dynamicSize).fold(staticSize)(_ + _);
+  final override def size = dynamicSize.toInt
 
   /**
    * The block layout of data.
@@ -345,6 +384,31 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
   }
 
   /**
+   * prepare an append operation by moving all new instances into the data array.
+   * @param chunkMap field data that has to be written to the file is appended here
+   */
+  def prepareAppend(chunkMap : HashMap[FieldDeclaration, ChunkInfo]) {
+    val newInstances = !newDynamicInstances.isEmpty
+
+    // check if we have to append at all
+    if (!fields.forall(_.dataChunks.isEmpty) && !newInstances)
+      return ;
+
+    if (newInstances) {
+      // we have to resize
+      val d = new Array[T](dynamicSize.toInt)
+      data.copyToArray(d)
+      var i = data.length
+      for (instance ← newDynamicInstances) {
+        d(i) = instance
+        i += 1
+        instance.setSkillID(i)
+      }
+    }
+    updateAfterPrepareAppend(chunkMap)
+  }
+
+  /**
    * the base type data store; use SkillType arrays, because we do not like the type system anyway:)
    */
   private[internal] var data = new Array[T](0)
@@ -355,7 +419,7 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
   protected val staticData = new ArrayBuffer[T]
 
   override def all : Iterator[T] = data.iterator.asInstanceOf[Iterator[T]] ++ newDynamicInstances
-  def newDynamicInstances : Iterator[T] = subPools.foldLeft(newObjects.iterator)(_ ++ _.newObjects.iterator)
+  override def iterator : Iterator[T] = data.iterator.asInstanceOf[Iterator[T]] ++ newDynamicInstances
 
   override def allInTypeOrder : Iterator[T] = subPools.foldLeft(staticInstances)(_ ++ _.staticInstances)
   override def staticInstances : Iterator[T] = staticData.iterator ++ newObjects.iterator
@@ -368,6 +432,21 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
   override def getByID(index : Long) : T = data(index.toInt - 1).asInstanceOf[T]
 
   override def staticSize : Long = staticData.size + newObjects.length
+
+  final override def foreach[U](f : T ⇒ U) {
+    for (i ← 0 until data.length)
+      f(data(i))
+    for (i ← newDynamicInstances)
+      f(i)
+  }
+
+  final override def toArray[B >: T : ClassTag] = {
+    val r = new Array[B](size)
+    data.copyToArray(r);
+    if (data.length != r.length)
+      newDynamicInstances.copyToArray(r, data.length)
+    r
+  }
 }
 
 sealed class SubPool[T <: B : ClassTag, B <: SkillType](poolIndex : Long, name : String, knownFields : HashMap[String, FieldType], superPool : StoragePool[_ <: B, B])
@@ -396,7 +475,7 @@ sealed class SubPool[T <: B : ClassTag, B <: SkillType](poolIndex : Long, name :
   protected val staticData = new ArrayBuffer[T]
 
   override def all : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
-  def newDynamicInstances : Iterator[T] = subPools.foldLeft(newObjects.iterator)(_ ++ _.newObjects.iterator)
+  override def iterator : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
 
   override def allInTypeOrder : Iterator[T] = subPools.foldLeft(staticInstances)(_ ++ _.staticInstances)
   override def staticInstances = staticData.iterator ++ newObjects.iterator
@@ -416,7 +495,7 @@ sealed class SubPool[T <: B : ClassTag, B <: SkillType](poolIndex : Long, name :
 """)
 
     for (t ← IR) {
-      val typeName = packagePrefix + t.getCapitalName
+      val typeName = "_root_."+packagePrefix + t.getCapitalName
       val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
 
       out.write(s"""
@@ -440,7 +519,10 @@ final class ${t.getCapitalName}StoragePool(poolIndex : Long${
     )
     with ${t.getCapitalName}Access {
 
-  override def makeSubPool(poolIndex : Long, name : String) = new ${t.getCapitalName}SubPool(poolIndex, name, this)
+  override def makeSubPool(poolIndex : Long, name : String) = ${
+        if (isSingleton) s"""throw new SkillException("${t.getCapitalName} is a Singleton and can therefore not have any subtypes.")"""
+        else s"new ${t.getCapitalName}SubPool(poolIndex, name, this)"
+      }
 
   override def insertInstance(skillID : Long) = {
     val i = skillID.toInt - 1
@@ -462,9 +544,7 @@ ${
     val r = new $typeName(-1L${appendConstructorArguments(t)})
     newObjects.append(r)
     r
-  }
-
-  override def size = dynamicSize.toInt"""
+  }"""
       }
 }
 """)

@@ -73,6 +73,13 @@ trait GeneralOutputMaker {
   protected def appendConstructorArguments(t : Declaration) : String
 
   /**
+   * turns a declaration and a field into a string writing that field into an outStream
+   * @note the used iterator is "outData"
+   * @note the used target OutStream is "dataChunk"
+   */
+  protected def writeField(d : Declaration, f : Field) : String
+
+  /**
    * Assume a package prefix provider.
    */
   protected def packagePrefix() : String
