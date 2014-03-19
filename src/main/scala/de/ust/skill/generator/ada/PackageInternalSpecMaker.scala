@@ -20,8 +20,6 @@ package ${packagePrefix.capitalize}.Internal is
 
    package ASS_IO renames Ada.Streams.Stream_IO;
 
-   subtype Byte is Interfaces.Unsigned_8;
-
 end ${packagePrefix.capitalize}.Internal;
 """)
 

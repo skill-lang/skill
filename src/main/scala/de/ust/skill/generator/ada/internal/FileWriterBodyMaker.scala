@@ -33,6 +33,8 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       Write_String_Pool;
       Write_Type_Block;
 
+      Byte_Writer.Finalize_Buffer (Output_Stream);
+
       ASS_IO.Delete (Field_Data_File);
       ASS_IO.Close (Output_File);
    end Write;
@@ -324,7 +326,9 @@ ${
       Current_Index : Long := Long (ASS_IO.Index (Field_Data_File));
       rval : Long;
    begin
+      Byte_Writer.Finalize_Buffer (Output_Stream);
       Write_Field_Data (Field_Data_Stream, Type_Declaration, Field_Declaration);
+      Byte_Writer.Finalize_Buffer (Field_Data_Stream);
       rval := Long (ASS_IO.Index (Field_Data_File)) - Current_Index;
       return rval;
    end Field_Data_Size;

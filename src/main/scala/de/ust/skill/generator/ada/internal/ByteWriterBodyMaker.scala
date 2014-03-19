@@ -16,9 +16,34 @@ trait ByteWriterBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Internal.Byte_Writer is
 
+   procedure Write_Buffer (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : in Buffer) is
+      use Ada.Streams;
+
+      Buffer : Stream_Element_Array (1 .. Stream_Element_Offset (Buffer_Index));
+      Last : Stream_Element_Offset := Stream_Element_Offset (Buffer_Index);
+   begin
+      for I in 1 .. Last loop
+         Buffer (I) := Stream_Element (Item (Integer (I)));
+      end loop;
+
+      Stream.Write (Buffer);
+   end Write_Buffer;
+
+   procedure Finalize_Buffer (Stream : ASS_IO.Stream_Access) is
+   begin
+      Buffer'Write (Stream, Buffer_Array);
+      Buffer_Index := 0;
+   end;
+
    procedure Write_Byte (Stream : ASS_IO.Stream_Access; Next : Byte) is
    begin
-      Byte'Write (Stream, Next);
+      Buffer_Index := Buffer_Index + 1;
+      Buffer_Array (Buffer_Index) := Next;
+
+      if Buffer_Size = Buffer_Index then
+         Buffer'Write (Stream, Buffer_Array);
+         Buffer_Index := 0;
+      end if;
    end Write_Byte;
 
    procedure Write_i8 (Stream : ASS_IO.Stream_Access; Value : i8) is
