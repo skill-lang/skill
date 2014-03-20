@@ -36,7 +36,7 @@ private
          Data_Length : Long;
       end record;
 
-   package Read_Queue_Vector is new Ada.Containers.Indefinite_Vectors (Positive, Queue_Item);
+   package Read_Queue_Vector is new Ada.Containers.Vectors (Positive, Queue_Item);
    Read_Queue : Read_Queue_Vector.Vector;
 
    procedure Read_String_Block;

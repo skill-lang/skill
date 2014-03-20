@@ -17,8 +17,10 @@ trait ByteReaderBodyMaker extends GeneralOutputMaker {
 package body ${packagePrefix.capitalize}.Internal.Byte_Reader is
 
    procedure Read_Buffer (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : out Buffer) is
-      Buffer : Ada.Streams.Stream_Element_Array (1 .. Ada.Streams.Stream_Element_Offset (Buffer_Size));
-      Last : Ada.Streams.Stream_Element_Offset;
+      use Ada.Streams;
+
+      Buffer : Stream_Element_Array (1 .. Stream_Element_Offset (Buffer_Size));
+      Last : Stream_Element_Offset;
    begin
       Stream.Read (Buffer, Last);
       Buffer_Last := Positive (Last);

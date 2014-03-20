@@ -14,10 +14,12 @@ trait PackageSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}.ads""")
 
     out.write(s"""
-with Ada.Containers.Indefinite_Doubly_Linked_Lists;
+with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Containers.Hashed_Maps;
+with Ada.Containers.Hashed_Sets;
 with Ada.Containers.Indefinite_Hashed_Maps;
-with Ada.Containers.Indefinite_Hashed_Sets;
 with Ada.Containers.Indefinite_Vectors;
+with Ada.Containers.Vectors;
 with Ada.Strings.Hash;
 with Ada.Strings.Unbounded;
 with Ada.Strings.Unbounded.Hash;
@@ -85,11 +87,11 @@ ${
         case t: ConstantLengthArrayType ⇒
           output += s"   type ${mapType(f.getType, d, f)} is array (1 .. ${t.getLength}) of ${mapType(t.getBaseType, d, f)};\r\n"
         case t: VariableLengthArrayType ⇒
-          output += s"   package ${mapType(f.getType, d, f).stripSuffix(".Vector")} is new Ada.Containers.Indefinite_Vectors (Positive, ${mapType(t.getBaseType, d, f)});\r\n"
+          output += s"   package ${mapType(f.getType, d, f).stripSuffix(".Vector")} is new Ada.Containers.Vectors (Positive, ${mapType(t.getBaseType, d, f)});\r\n"
         case t: ListType ⇒
-          output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".List")} is new Ada.Containers.Indefinite_Doubly_Linked_Lists (${mapType(t.getBaseType, d, f)}, "=");\r\n"""
+          output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".List")} is new Ada.Containers.Doubly_Linked_Lists (${mapType(t.getBaseType, d, f)}, "=");\r\n"""
         case t: SetType ⇒
-          output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Set")} is new Ada.Containers.Indefinite_Hashed_Sets (${mapType(t.getBaseType, d, f)}, Hash, "=");\r\n"""
+          output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Set")} is new Ada.Containers.Hashed_Sets (${mapType(t.getBaseType, d, f)}, Hash, "=");\r\n"""
         case t: MapType ⇒ {
           val types = t.getBaseTypes().reverse
           types.slice(0, types.length-1).zipWithIndex.foreach({ case (t, i) =>
@@ -100,7 +102,7 @@ ${
                 s"""${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-i}.Map"""
             }
 
-            output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)} is new Ada.Containers.Indefinite_Hashed_Maps (${mapType(types.get(i+1), d, f)}, ${x}, Hash, "=");\r\n"""
+            output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)} is new Ada.Containers.Hashed_Maps (${mapType(types.get(i+1), d, f)}, ${x}, Hash, "=");\r\n"""
             output += s"""   function "=" (Left, Right : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map) return Boolean renames ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}."=";\r\n""";
           })
           output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Map")} renames ${mapType(f.getType, d, f).stripSuffix(".Map")}_1;\r\n"""
@@ -152,12 +154,12 @@ ${
    --------------------
    --  STORAGE POOL  --
    --------------------
-   package Storage_Pool_Vector is new Ada.Containers.Indefinite_Vectors (Positive, Skill_Type_Access);
+   package Storage_Pool_Vector is new Ada.Containers.Vectors (Positive, Skill_Type_Access);
 
    --------------------------
    --  FIELD DECLARATIONS  --
    --------------------------
-   package Base_Types_Vector is new Ada.Containers.Indefinite_Vectors (Positive, Long);
+   package Base_Types_Vector is new Ada.Containers.Vectors (Positive, Long);
    type Field_Declaration (Size : Positive) is
       record
          Name : String (1 .. Size);
@@ -168,7 +170,7 @@ ${
       end record;
    type Field_Information is access Field_Declaration;
 
-   package Fields_Vector is new Ada.Containers.Indefinite_Vectors (Positive, Field_Information);
+   package Fields_Vector is new Ada.Containers.Vectors (Positive, Field_Information);
 
    -------------------------
    --  TYPE DECLARATIONS  --

@@ -42,7 +42,7 @@ private
 
    function Read_Byte (Input_Stream : ASS_IO.Stream_Access) return Byte;
 
-   pragma Inline (Read_i8, Read_i16, Read_i32, Read_i64, Read_v64, Read_Boolean, Read_String, Skip_Bytes, Read_Byte);
+   pragma Inline (Read_Buffer, Read_i8, Read_i16, Read_i32, Read_i64, Read_v64, Read_Boolean, Read_String, Skip_Bytes, Read_Byte);
 
 end ${packagePrefix.capitalize}.Internal.Byte_Reader;
 """)

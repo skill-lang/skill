@@ -36,6 +36,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       Byte_Writer.Finalize_Buffer (Output_Stream);
 
       ASS_IO.Delete (Field_Data_File);
+      ASS_IO.Flush (Output_File);
       ASS_IO.Close (Output_File);
    end Write;
 
