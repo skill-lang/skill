@@ -113,19 +113,6 @@ ${
       function Storage_Pool_Size (Type_Name : String) return Natural is
          (Natural (Get_Type (Type_Name).Storage_Pool.Length));
 
-      function Get_Object (Type_Name : String; Index : Positive) return Skill_Type_Access is
-         (Get_Type (Type_Name).Storage_Pool.Element (Index));
-
-      procedure Put_Object (Type_Name : String; New_Object : Skill_Type_Access) is
-      begin
-         Get_Type (Type_Name).Storage_Pool.Append (New_Object);
-      end Put_Object;
-
-      procedure Replace_Object (Type_Name : String; Index : Positive; New_Object : Skill_Type_Access) is
-      begin
-         Get_Type (Type_Name).Storage_Pool.Replace_Element (Index, New_Object);
-      end Replace_Object;
-
       --------------------------
       --  FIELD DECLARATIONS  --
       --------------------------

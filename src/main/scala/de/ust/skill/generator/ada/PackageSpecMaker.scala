@@ -49,13 +49,6 @@ package ${packagePrefix.capitalize} is
    subtype i64 is Long;
    subtype v64 is Long;
 
-   --  Float
-   subtype f32 is Float;
-
-   --  Long_Float
-   subtype Double is Long_Float'Base;
-   subtype f64 is Double;
-
    -------------
    --  SKILL  --
    -------------
@@ -206,9 +199,6 @@ ${
 
       --  storage pool
       function Storage_Pool_Size (Type_Name : String) return Natural;
-      function Get_Object (Type_Name : String; Index : Positive) return Skill_Type_Access;
-      procedure Put_Object (Type_Name : String; New_Object : Skill_Type_Access);
-      procedure Replace_Object (Type_Name : String; Index : Positive; New_Object : Skill_Type_Access);
 
       --  field declarations
       function Field_Size (Type_Name : String) return Natural;
