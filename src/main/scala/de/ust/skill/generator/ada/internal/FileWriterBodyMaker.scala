@@ -50,7 +50,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       Type_Name : String := Type_Declaration.Name;
       Super_Name : String := Type_Declaration.Super_Name;
    begin
-      if 0 < State.Storage_Pool_Size (Type_Name) then
+      if 0 < Natural (Type_Declaration.Storage_Pool.Length) then
          State.Put_String (Type_Name, Safe => True);
          State.Put_String (Super_Name, Safe => True);
 
@@ -245,31 +245,42 @@ ${
    end Count_Instantiated_Types;
 
    procedure Write_Type_Block is
-      Count : Long := Count_Instantiated_Types;
    begin
-      Byte_Writer.Write_v64 (Output_Stream, Count);
+      Byte_Writer.Write_v64 (Output_Stream, Count_Instantiated_Types);
 
-      State.Get_Types.Iterate (Types_Hash_Map_Iterator'Access);
+${
+  var output = ""
+  for (d ← IR) {
+    output += s"""      declare
+         Type_Declaration : Type_Information := State.Get_Type ("${d.getSkillName}");
+         Type_Name : String := Type_Declaration.Name;
+      begin
+         if 0 < Natural (Type_Declaration.Storage_Pool.Length) then
+            Write_Type_Declaration (Type_Declaration);
+         end if;
+      end;\r\n"""
+  }
+  output
+}
       Last_Types_End := 0;
 
       Copy_Field_Data;
    end Write_Type_Block;
 
-   procedure Types_Hash_Map_Iterator (Iterator : Types_Hash_Map.Cursor) is
-      Type_Declaration : Type_Information := Types_Hash_Map.Element (Iterator);
-      Type_Name : String := Type_Declaration.Name;
-   begin
-      if 0 < State.Storage_Pool_Size (Type_Name) then
-         Write_Type_Declaration (Type_Declaration);
-      end if;
-   end Types_Hash_Map_Iterator;
-
    procedure Write_Type_Declaration (Type_Declaration : Type_Information) is
       Type_Name : String := Type_Declaration.Name;
+      Super_Name : String := Type_Declaration.Super_Name;
       Field_Size : Natural := State.Field_Size (Type_Name);
    begin
       Byte_Writer.Write_v64 (Output_Stream, Long (State.Get_String_Index (Type_Name)));
-      Byte_Writer.Write_v64 (Output_Stream, 0);  --  super TODO
+
+      if 0 < Super_Name'Length then
+         Byte_Writer.Write_v64 (Output_Stream, Long (State.Get_String_Index (Super_Name)));
+         Byte_Writer.Write_v64 (Output_Stream, Long (Type_Declaration.lbpsi));
+      else
+         Byte_Writer.Write_v64 (Output_Stream, 0);
+      end if;
+
       Byte_Writer.Write_v64 (Output_Stream, Long (State.Storage_Pool_Size (Type_Name)));
       Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
       Byte_Writer.Write_v64 (Output_Stream, Long (Field_Size));
@@ -413,6 +424,7 @@ ${
   output.stripSuffix("\r\n")
 }
    function Get_Object_Type (Object : Skill_Type_Access) return String is
+      use Ada.Tags;
    begin
       if null = Object then
          return "";
@@ -421,7 +433,7 @@ ${
 ${
   var output = "";
   for (d ← IR) {
-    output += s"""      if Object.all in ${d.getName}_Type'Class then
+    output += s"""      if ${d.getName}_Type'Tag = Object.all'Tag then
          return "${d.getSkillName}";
       end if;\r\n"""
   }
