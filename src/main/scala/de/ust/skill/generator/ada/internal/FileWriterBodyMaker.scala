@@ -369,12 +369,23 @@ ${
 
    procedure Write_Annotation (Stream : ASS_IO.Stream_Access; Object : Skill_Type_Access) is
       Type_Name : String := Get_Object_Type (Object);
+      Types : Types_Hash_Map.Map := State.Get_Types;
+
+      function Get_Base_Type (Type_Declaration : Type_Information) return String is
+         Super_Name : String := Type_Declaration.Super_Name;
+      begin
+         if 0 = Super_Name'Length then
+            return Type_Name;
+         else
+            return Get_Base_Type (State.Get_Type (Super_Name));
+         end if;
+      end Get_Base_Type;
    begin
       if 0 = Type_Name'Length then
          Byte_Writer.Write_v64 (Stream, 0);
          Byte_Writer.Write_v64 (Stream, 0);
       else
-         Byte_Writer.Write_v64 (Stream, Long (State.Get_String_Index (Type_Name)));
+         Byte_Writer.Write_v64 (Stream, Long (State.Get_String_Index (Get_Base_Type (Types.Element (Type_Name)))));
          Byte_Writer.Write_v64 (Stream, Long (Object.skill_id));
       end if;
    end Write_Annotation;
