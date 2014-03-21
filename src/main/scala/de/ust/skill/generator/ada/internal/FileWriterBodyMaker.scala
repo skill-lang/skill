@@ -54,99 +54,89 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
          State.Put_String (Type_Name, Safe => True);
          State.Put_String (Super_Name, Safe => True);
          Type_Declaration.Fields.Iterate (Prepare_String_Pool_Fields_Iterator'Access);
-         Type_Declaration.Storage_Pool.Iterate (Prepare_String_Pool_Storage_Pool_Iterator'Access);
-      end if;
-   end Prepare_String_Pool_Types_Iterator;
 
-   procedure Prepare_String_Pool_Fields_Iterator (Iterator : Fields_Vector.Cursor) is
-      Field_Declaration : Field_Information := Fields_Vector.Element (Iterator);
-      Field_Name : String := Field_Declaration.Name;
-   begin
-      State.Put_String (Field_Name, Safe => True);
-   end Prepare_String_Pool_Fields_Iterator;
-
-   procedure Prepare_String_Pool_Storage_Pool_Iterator (Iterator : Storage_Pool_Vector.Cursor) is
-      A_Object : Skill_Type_Access := Storage_Pool_Vector.Element (Iterator);
-      Object_Type : String := Get_Object_Type (A_Object);
-   begin
+         declare
+            procedure Iterate (Iterator : Storage_Pool_Vector.Cursor) is
+               A_Object : Skill_Type_Access := Storage_Pool_Vector.Element (Iterator);
+            begin
 ${
   var output = "";
   for (d ← IR) {
     var hasOutput = false;
-    output += s"""      if "${d.getSkillName}" = Object_Type then
-         declare
-            Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (A_Object);
-         begin
+    output += s"""               if "${d.getSkillName}" = Type_Name then
+                  declare
+                     Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (A_Object);
+                  begin
 """
     d.getFields.filter({ f ⇒ "string" == f.getType.getSkillName }).foreach({ f ⇒
       hasOutput = true;
-      output += s"            State.Put_String (SU.To_String (Object.${f.getSkillName}), Safe => True);\r\n"
+      output += s"                     State.Put_String (SU.To_String (Object.${f.getSkillName}), Safe => True);\r\n"
     })
     d.getFields.foreach({ f =>
       f.getType match {
         case t: ConstantLengthArrayType ⇒
           if ("string" == t.getBaseType.getName) {
             hasOutput = true;
-            output += s"""\r\n            for I in Object.${f.getSkillName}'Range loop
-               State.Put_String (SU.To_String (Object.${f.getSkillName} (I)), Safe => True);
-            end loop;\r\n""";
+            output += s"""\r\n                     for I in Object.${f.getSkillName}'Range loop
+                        State.Put_String (SU.To_String (Object.${f.getSkillName} (I)), Safe => True);
+                     end loop;\r\n""";
           }
         case t: VariableLengthArrayType ⇒
           if ("string" == t.getBaseType.getName) {
             hasOutput = true;
-            output += s"""\r\n            declare
-               use ${mapType(t, d, f).stripSuffix(".Vector")};
+            output += s"""\r\n                     declare
+                        use ${mapType(t, d, f).stripSuffix(".Vector")};
 
-               Vector : ${mapType(t, d, f)} := Object.${f.getSkillName};
+                        Vector : ${mapType(t, d, f)} := Object.${f.getSkillName};
 
-               procedure Iterate (Position : Cursor) is
-               begin
-                  State.Put_String (SU.To_String (Element (Position)), Safe => True);
-               end Iterate;
-               pragma Inline (Iterate);
-            begin
-               Vector.Iterate (Iterate'Access);
-            end;\r\n"""
+                        procedure Iterate (Position : Cursor) is
+                        begin
+                           State.Put_String (SU.To_String (Element (Position)), Safe => True);
+                        end Iterate;
+                        pragma Inline (Iterate);
+                     begin
+                        Vector.Iterate (Iterate'Access);
+                     end;\r\n"""
           }
         case t: ListType ⇒
            if ("string" == t.getBaseType.getName) {
              hasOutput = true;
-             output += s"""\r\n            declare
-               use ${mapType(t, d, f).stripSuffix(".List")};
+             output += s"""\r\n                     declare
+                        use ${mapType(t, d, f).stripSuffix(".List")};
 
-               List : ${mapType(t, d, f)} := Object.${f.getSkillName};
+                        List : ${mapType(t, d, f)} := Object.${f.getSkillName};
 
-               procedure Iterate (Position : Cursor) is
-               begin
-                  State.Put_String (SU.To_String (Element (Position)), Safe => True);
-               end Iterate;
-               pragma Inline (Iterate);
-            begin
-               List.Iterate (Iterate'Access);
-            end;\r\n"""
+                        procedure Iterate (Position : Cursor) is
+                        begin
+                           State.Put_String (SU.To_String (Element (Position)), Safe => True);
+                        end Iterate;
+                        pragma Inline (Iterate);
+                     begin
+                        List.Iterate (Iterate'Access);
+                     end;\r\n"""
           }
         case t: SetType ⇒
            if ("string" == t.getBaseType.getName) {
              hasOutput = true;
-             output += s"""\r\n            declare
-               use ${mapType(t, d, f).stripSuffix(".Set")};
+             output += s"""\r\n                     declare
+                        use ${mapType(t, d, f).stripSuffix(".Set")};
 
-               Set : ${mapType(t, d, f)} := Object.${f.getSkillName};
+                        Set : ${mapType(t, d, f)} := Object.${f.getSkillName};
 
-               procedure Iterate (Position : Cursor) is
-               begin
-                  State.Put_String (SU.To_String (Element (Position)), Safe => True);
-               end Iterate;
-               pragma Inline (Iterate);
-            begin
-               Set.Iterate (Iterate'Access);
-            end;\r\n"""
+                        procedure Iterate (Position : Cursor) is
+                        begin
+                           State.Put_String (SU.To_String (Element (Position)), Safe => True);
+                        end Iterate;
+                        pragma Inline (Iterate);
+                     begin
+                        Set.Iterate (Iterate'Access);
+                     end;\r\n"""
           }
         case t: MapType ⇒
           val types = t.getBaseTypes().reverse
           if (types.map({ x => x.getName }).contains("string")) {
             hasOutput = true;
-            output += s"\r\n            declare\r\n"
+            output += s"                     declare\r\n"
             types.slice(0, types.length-1).zipWithIndex.foreach({ case (t, i) =>
               val x = {
                 var output = ""
@@ -158,39 +148,51 @@ ${
                   }
                 }
                 else {
-                  if ("string" == types.get(i+1).getName) output += s"State.Put_String (SU.To_String (Key (Position)), Safe => True);\r\n                     "
+                  if ("string" == types.get(i+1).getName) output += s"State.Put_String (SU.To_String (Key (Position)), Safe => True);\r\n                              "
                   output += s"Read_Map_${types.length-i} (Element (Position));"
                 }
                 if (output.isEmpty) "null;" else output
               }
-              output += s"""               procedure Read_Map_${types.length-(i+1)} (Map : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map) is
-                  use ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)};
+              output += s"""                        procedure Read_Map_${types.length-(i+1)} (Map : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map) is
+                           use ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)};
 
-                  procedure Iterate (Position : Cursor) is
-                  begin
-                     ${x}
-                  end Iterate;
-                  pragma Inline (Iterate);
-               begin
-                  Map.Iterate (Iterate'Access);
-               end Read_Map_${types.length-(i+1)};
-               pragma Inline (Read_Map_${types.length-(i+1)});\r\n\r\n"""
+                           procedure Iterate (Position : Cursor) is
+                           begin
+                              ${x}
+                           end Iterate;
+                           pragma Inline (Iterate);
+                        begin
+                           Map.Iterate (Iterate'Access);
+                        end Read_Map_${types.length-(i+1)};
+                        pragma Inline (Read_Map_${types.length-(i+1)});\r\n\r\n"""
             })
             output = output.stripLineEnd
-            output += s"""            begin
-               Read_Map_1 (Object.${f.getSkillName});
-            end;\r\n"""
+            output += s"""                     begin
+                        Read_Map_1 (Object.${f.getSkillName});
+                     end;\r\n"""
           }
         case _ ⇒ null
       }
     })
-    if (!hasOutput) output += s"            null;\r\n"
-    output += s"""         end;
-      end if;\r\n"""
+    if (!hasOutput) output += s"                     null;\r\n"
+    output += s"""                  end;
+               end if;\r\n"""
   }
   output.stripSuffix("\r\n")
 }
-   end Prepare_String_Pool_Storage_Pool_Iterator;
+            end Iterate;
+         begin
+            Type_Declaration.Storage_Pool.Iterate (Iterate'Access);
+         end;
+      end if;
+   end Prepare_String_Pool_Types_Iterator;
+
+   procedure Prepare_String_Pool_Fields_Iterator (Iterator : Fields_Vector.Cursor) is
+      Field_Declaration : Field_Information := Fields_Vector.Element (Iterator);
+      Field_Name : String := Field_Declaration.Name;
+   begin
+      State.Put_String (Field_Name, Safe => True);
+   end Prepare_String_Pool_Fields_Iterator;
 
    procedure Write_String_Pool is
    begin
@@ -334,11 +336,7 @@ ${
       return rval;
    end Field_Data_Size;
 
-   procedure Write_Field_Data (
-      Stream : ASS_IO.Stream_Access;
-      Type_Declaration : Type_Information;
-      Field_Declaration : Field_Information
-   ) is
+   procedure Write_Field_Data (Stream : ASS_IO.Stream_Access; Type_Declaration : Type_Information; Field_Declaration : Field_Information) is
       Type_Name : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
    begin
@@ -347,7 +345,7 @@ ${
   for (d ← IR) {
     output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isConstant && !f.isIgnored }).map({ f ⇒
       s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
-         for I in 1 .. State.Storage_Pool_Size (Type_Name) loop
+         for I in 1 .. Natural (Type_Declaration.Storage_Pool.Length) loop
             declare
             ${mapFileWriter(d, f)}
             end;
