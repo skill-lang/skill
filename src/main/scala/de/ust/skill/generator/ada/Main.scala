@@ -154,14 +154,14 @@ class Main extends FakeMain
       t match {
         case t: GroundType ⇒ t.getName() match {
           case "annotation" ⇒
-            s"Read_Annotation (Input_Stream)"
+            s"Read_Annotation (Input_Stream, Types)"
           case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
             s"Byte_Reader.Read_${mapType(t, _d, _f)} (Input_Stream)"
           case "string" ⇒
             s"Read_Unbounded_String (Input_Stream)"
         }
         case t: Declaration ⇒
-          s"""Read_${t.getName}_Type (Input_Stream)"""
+          s"""Read_${t.getName}_Type (Input_Stream, Types)"""
       }
     }
 

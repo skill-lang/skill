@@ -316,6 +316,8 @@ ${
 
       Type_Name : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
+
+      Types : Types_Hash_Map.Map := State.Get_Types;
    begin
 ${
   var output = "";
@@ -338,14 +340,14 @@ ${
       end if;
    end Read_Queue_Vector_Iterator;
 
-   function Read_Annotation (Input_Stream : ASS_IO.Stream_Access) return Skill_Type_Access is
+   function Read_Annotation (Input_Stream : ASS_IO.Stream_Access; Types : Types_Hash_Map.Map) return Skill_Type_Access is
       X : v64 := Byte_Reader.Read_v64 (Input_Stream);
       Y : v64 := Byte_Reader.Read_v64 (Input_Stream);
    begin
       if 0 = X then
          return null;
       else
-         return State.Get_Object (State.Get_String (X), Positive (Y));
+         return Types.Element (State.Get_String (X)).Storage_Pool.Element (Positive (Y));
       end if;
    end Read_Annotation;
 
@@ -355,13 +357,13 @@ ${
 ${
   var output = "";
   for (d ← IR) {
-    output += s"""   function Read_${d.getName}_Type (Input_Stream : ASS_IO.Stream_Access) return ${d.getName}_Type_Access is
+    output += s"""   function Read_${d.getName}_Type (Input_Stream : ASS_IO.Stream_Access; Types : Types_Hash_Map.Map) return ${d.getName}_Type_Access is
       X : Long := Byte_Reader.Read_v64 (Input_Stream);
    begin
       if 0 = X then
          return null;
       else
-         return ${d.getName}_Type_Access (State.Get_Object ("${if (null == d.getSuperType) d.getSkillName else d.getBaseType.getSkillName}", Positive (X)));
+         return ${d.getName}_Type_Access (Types.Element ("${if (null == d.getSuperType) d.getSkillName else d.getBaseType.getSkillName}").Storage_Pool.Element (Positive (X)));
       end if;
    end Read_${d.getName}_Type;\r\n\r\n"""
   }
