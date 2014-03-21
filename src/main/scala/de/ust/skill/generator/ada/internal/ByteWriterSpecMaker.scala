@@ -40,10 +40,7 @@ private
 
    procedure Write_Byte (Stream : ASS_IO.Stream_Access; Next : Byte);
 
-   type Byte_v64_Type is array (Natural range <>) of Byte;
-   function Get_v64_Bytes (Value : v64) return Byte_v64_Type;
-
-   pragma Inline (Write_Buffer, Write_i8, Write_i16, Write_i32, Write_i64, Write_v64, Write_Boolean, Write_String, Write_Byte, Get_v64_Bytes);
+   pragma Inline (Write_Buffer, Write_i8, Write_i16, Write_i32, Write_i64, Write_v64, Write_Boolean, Write_String, Write_Byte);
 
 end ${packagePrefix.capitalize}.Internal.Byte_Writer;
 """)

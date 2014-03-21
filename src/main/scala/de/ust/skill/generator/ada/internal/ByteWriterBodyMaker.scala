@@ -102,48 +102,51 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Writer is
    end Write_i64;
 
    procedure Write_v64 (Stream : ASS_IO.Stream_Access; Value : v64) is
+      type Byte_v64_Type is array (Natural range <>) of Byte;
+
+      function Get_v64_Bytes (Value : v64) return Byte_v64_Type is
+         use Interfaces;
+
+         subtype Result is Interfaces.Unsigned_64;
+         function Convert is new Ada.Unchecked_Conversion (Source => v64, Target => Result);
+
+         Size : Natural := 0;
+      begin
+         declare
+            Buckets : Result := Convert (Value);
+         begin
+            while (Buckets > 0) loop
+               Buckets := Buckets / (2 ** 7);
+               Size := Size + 1;
+            end loop;
+         end;
+
+         case Size is
+            when 0 => return (0 => 0);
+            when 10 => Size := 9;
+            when others => null;
+         end case;
+
+         declare
+            rval : Byte_v64_Type (0 .. Size - 1);
+            Count : Natural := 0;
+         begin
+            while (Count < 8 and then Count < Size - 1) loop
+               rval (Count) := Byte (((Convert (Value) / (2 ** (7 * Count))) or 16#80#) and 16#ff#);
+               Count := Count + 1;
+            end loop;
+            rval (Count) := Byte ((Convert (Value) / (2 ** (7 * Count))) and 16#ff#);
+            return rval;
+         end;
+      end Get_v64_Bytes;
+      pragma Inline (Get_v64_Bytes);
+
       rval : Byte_v64_Type := Get_v64_Bytes (Value);
    begin
       for I in rval'Range loop
          Write_Byte (Stream, rval (I));
       end loop;
    end Write_v64;
-
-   function Get_v64_Bytes (Value : v64) return Byte_v64_Type is
-      use Interfaces;
-
-      subtype Result is Interfaces.Unsigned_64;
-      function Convert is new Ada.Unchecked_Conversion (Source => v64, Target => Result);
-
-      Size : Natural := 0;
-   begin
-      declare
-         Buckets : Result := Convert (Value);
-      begin
-         while (Buckets > 0) loop
-            Buckets := Buckets / (2 ** 7);
-            Size := Size + 1;
-         end loop;
-      end;
-
-      case Size is
-         when 0 => return (0 => 0);
-         when 10 => Size := 9;
-         when others => null;
-      end case;
-
-      declare
-         rval : Byte_v64_Type (0 .. Size - 1);
-         Count : Natural := 0;
-      begin
-         while (Count < 8 and then Count < Size - 1) loop
-            rval (Count) := Byte (((Convert (Value) / (2 ** (7 * Count))) or 16#80#) and 16#ff#);
-            Count := Count + 1;
-         end loop;
-         rval (Count) := Byte ((Convert (Value) / (2 ** (7 * Count))) and 16#ff#);
-         return rval;
-      end;
-   end Get_v64_Bytes;
 
    procedure Write_Boolean (Stream : ASS_IO.Stream_Access; Value : Boolean) is
    begin
