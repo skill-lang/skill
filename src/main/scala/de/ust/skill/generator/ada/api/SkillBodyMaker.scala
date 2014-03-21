@@ -59,7 +59,7 @@ package body ${packagePrefix.capitalize}.Api.Skill is
    end Write;
 ${
   def printFields(d : Declaration): String = {
-    var output = s"""'(\r\n         skill_id => State.Storage_Pool_Size ("${if (null == d.getBaseType) d.getSkillName else d.getBaseType.getSkillName}") + 1"""
+    var output = s"""'(\r\n         skill_id => Natural (${if (null == d.getBaseType) d.getName else d.getBaseType.getName}_Type_Declaration.Storage_Pool.Length) + 1"""
     output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
       s",\r\n         ${f.getSkillName} => ${f.getSkillName}"
     }).mkString("")
@@ -91,18 +91,26 @@ ${
     var output = "";
     val superTypes = getSuperTypes(d).toList.reverse
     superTypes.foreach({ t =>
-      output += s"""\r\n      State.Put_Object ("${t.getSkillName}", Skill_Type_Access (New_Object));"""
+      output += s"""\r\n      ${t.getName}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));"""
     })
     output
   }
 
-  var output = "";
+  var output = ""
   for (d ← IR) {
     output += s"""
    function New_${d.getName} (State : access Skill_State${printParameters(d)}) return ${d.getName}_Type_Access is
+      ${d.getName}_Type_Declaration : Type_Information := State.Get_Type ("${d.getSkillName}");${
+  var output = "" 
+  val superTypes = getSuperTypes(d).toList.reverse
+  superTypes.foreach({ t =>
+    output += s"""\r\n      ${t.getName}_Type_Declaration : Type_Information := State.Get_Type ("${t.getSkillName}");"""
+  })
+  output
+}
       New_Object : ${d.getName}_Type_Access := new ${d.getName}_Type${printFields(d)};
    begin
-      State.Put_Object ("${d.getSkillName}", Skill_Type_Access (New_Object));${printSuperTypes(d)}
+      ${d.getName}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));${printSuperTypes(d)}
       return New_Object;
    end New_${d.getName};
 
@@ -113,10 +121,10 @@ ${
    end New_${d.getName};
 
    function ${d.getName}s_Size (State : access Skill_State) return Natural is
-      (State.Storage_Pool_Size ("${d.getSkillName}"));
+      (Natural (State.Get_Type ("${d.getSkillName}").Storage_Pool.Length));
 
    function Get_${d.getName} (State : access Skill_State; Index : Natural) return ${d.getName}_Type_Access is
-      (${d.getName}_Type_Access (State.Get_Object ("${d.getSkillName}", Index)));\r\n"""
+      (${d.getName}_Type_Access (State.Get_Type ("${d.getSkillName}").Storage_Pool.Element (Index)));\r\n"""
   }
   output
 }
