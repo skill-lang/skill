@@ -59,7 +59,7 @@ package body ${packagePrefix.capitalize}.Api.Skill is
    end Write;
 ${
   def printFields(d : Declaration): String = {
-    var output = s"""'(\r\n         skill_id => State.Storage_Pool_Size ("${d.getSkillName}") + 1"""
+    var output = s"""'(\r\n         skill_id => State.Storage_Pool_Size ("${if (null == d.getBaseType) d.getSkillName else d.getBaseType.getSkillName}") + 1"""
     output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
       s",\r\n         ${f.getSkillName} => ${f.getSkillName}"
     }).mkString("")
@@ -87,13 +87,22 @@ ${
     if (hasFields) output else ""
   }
 
+  def printSuperTypes(d: Declaration): String = {
+    var output = "";
+    val superTypes = getSuperTypes(d).toList.reverse
+    superTypes.foreach({ t =>
+      output += s"""\r\n      State.Put_Object ("${t.getSkillName}", Skill_Type_Access (New_Object));"""
+    })
+    output
+  }
+
   var output = "";
   for (d ← IR) {
     output += s"""
    function New_${d.getName} (State : access Skill_State${printParameters(d)}) return ${d.getName}_Type_Access is
       New_Object : ${d.getName}_Type_Access := new ${d.getName}_Type${printFields(d)};
    begin
-      State.Put_Object ("${d.getSkillName}", Skill_Type_Access (New_Object));
+      State.Put_Object ("${d.getSkillName}", Skill_Type_Access (New_Object));${printSuperTypes(d)}
       return New_Object;
    end New_${d.getName};
 

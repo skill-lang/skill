@@ -268,7 +268,7 @@ ${
   }
 
   def printDefaultValues(d: Declaration): String = {
-    var output = s"""'(\r\n                  skill_id => State.Storage_Pool_Size ("${d.getSkillName}") + 1"""
+    var output = s"""'(\r\n                  skill_id => State.Storage_Pool_Size ("${if (null == d.getBaseType) d.getSkillName else d.getBaseType.getSkillName}") + 1"""
     val fields = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
     output += fields.map({ f ⇒
       s""",\r\n                  ${f.getSkillName} => ${defaultValue(f.getType, d, f)}"""
