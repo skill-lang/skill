@@ -42,10 +42,10 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
 
    procedure Prepare_String_Pool is
    begin
-      State.Get_Types.Iterate (Prepare_String_Pool_Types_Iterator'Access);
+      State.Get_Types.Iterate (Prepare_String_Pool_Iterator'Access);
    end Prepare_String_Pool;
 
-   procedure Prepare_String_Pool_Types_Iterator (Iterator : Types_Hash_Map.Cursor) is
+   procedure Prepare_String_Pool_Iterator (Iterator : Types_Hash_Map.Cursor) is
       Type_Declaration : Type_Information := Types_Hash_Map.Element (Iterator);
       Type_Name : String := Type_Declaration.Name;
       Super_Name : String := Type_Declaration.Super_Name;
@@ -53,11 +53,22 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       if 0 < State.Storage_Pool_Size (Type_Name) then
          State.Put_String (Type_Name, Safe => True);
          State.Put_String (Super_Name, Safe => True);
-         Type_Declaration.Fields.Iterate (Prepare_String_Pool_Fields_Iterator'Access);
+
+         declare
+            procedure Iterate (Iterator : Fields_Vector.Cursor) is
+               Field_Declaration : Field_Information := Fields_Vector.Element (Iterator);
+               Field_Name : String := Field_Declaration.Name;
+            begin
+               State.Put_String (Field_Name, Safe => True);
+            end Iterate;
+            pragma Inline (Iterate);
+         begin
+            Type_Declaration.Fields.Iterate (Iterate'Access);
+         end;
 
          declare
             procedure Iterate (Iterator : Storage_Pool_Vector.Cursor) is
-               A_Object : Skill_Type_Access := Storage_Pool_Vector.Element (Iterator);
+               Skill_Object : Skill_Type_Access := Storage_Pool_Vector.Element (Iterator);
             begin
 ${
   var output = "";
@@ -65,7 +76,7 @@ ${
     var hasOutput = false;
     output += s"""               if "${d.getSkillName}" = Type_Name then
                   declare
-                     Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (A_Object);
+                     Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Skill_Object);
                   begin
 """
     d.getFields.filter({ f ⇒ "string" == f.getType.getSkillName }).foreach({ f ⇒
@@ -181,18 +192,12 @@ ${
   output.stripSuffix("\r\n")
 }
             end Iterate;
+            pragma Inline (Iterate);
          begin
             Type_Declaration.Storage_Pool.Iterate (Iterate'Access);
          end;
       end if;
-   end Prepare_String_Pool_Types_Iterator;
-
-   procedure Prepare_String_Pool_Fields_Iterator (Iterator : Fields_Vector.Cursor) is
-      Field_Declaration : Field_Information := Fields_Vector.Element (Iterator);
-      Field_Name : String := Field_Declaration.Name;
-   begin
-      State.Put_String (Field_Name, Safe => True);
-   end Prepare_String_Pool_Fields_Iterator;
+   end Prepare_String_Pool_Iterator;
 
    procedure Write_String_Pool is
    begin

@@ -29,8 +29,7 @@ private
    Output_Stream : ASS_IO.Stream_Access;
 
    procedure Prepare_String_Pool;
-   procedure Prepare_String_Pool_Types_Iterator (Iterator : Types_Hash_Map.Cursor);
-   procedure Prepare_String_Pool_Fields_Iterator (Iterator : Fields_Vector.Cursor);
+   procedure Prepare_String_Pool_Iterator (Iterator : Types_Hash_Map.Cursor);
 
    procedure Write_String_Pool;
    function Count_Instantiated_Types return Long;
