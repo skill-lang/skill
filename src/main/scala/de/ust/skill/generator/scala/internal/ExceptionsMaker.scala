@@ -7,14 +7,14 @@ package de.ust.skill.generator.scala.internal
 
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
-trait SkillExceptionMaker extends GeneralOutputMaker {
+trait ExceptionsMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("internal/SkillException.scala")
+    val out = open("internal/Exceptions.scala")
     //package & imports
     out.write(s"""package ${packagePrefix}internal
 
-import ${packagePrefix}internal.parsers.ByteReader""")
+import ${packagePrefix}internal.streams.InStream""")
 
     out.write("""
 
@@ -36,29 +36,28 @@ class SkillException(msg: String, cause: Throwable) extends Exception(msg, cause
 trait ExpectableSkillException {}
 
 /**
- * This exception is used if byte stream related errors occur.
+ * Thrown on invalid generic access.
  *
  * @author Timm Felden
  */
-case class ParseException(in: ByteReader, block: Int, msg: String) extends SkillException(
-  s"In block ${block + 1} @0x${in.position.toHexString}: $msg"
-) {}
+case class GenericAccessException(v: SkillType, t: String, f: String, cause: Throwable) extends SkillException(s"$v has no value in $t.$f", cause) with ExpectableSkillException;
 
 /**
  * This exception is used if byte stream related errors occur.
  *
  * @author Timm Felden
  */
-class ByteReaderException(msg: String, cause: Throwable) extends SkillException(msg, cause) {}
+case class ParseException(in: InStream, block: Int, msg: String, cause: Throwable) extends SkillException(
+  s"In block ${block + 1} @0x${in.position.toHexString}: $msg",
+  cause
+);
 
 /**
- * Thrown, if the end of file is reached at an illegal point, i.e. inside a block.
+ * This exception is used if byte stream related errors occur.
  *
  * @author Timm Felden
  */
-case class UnexpectedEOF(msg: String, cause: Throwable)
-  extends ByteReaderException(msg, cause)
-  with ExpectableSkillException {}
+class StreamException(msg: String, cause: Throwable) extends SkillException(msg, cause) {}
 
 /**
  * Thrown, if an index into a pool is invalid.
@@ -83,7 +82,7 @@ case class PoolSizeMissmatchError(expected: Long, actual: Long, t: String)
  *
  * @author Timm Felden
  */
-case class TypeMissmatchError(t: TypeInfo, expected: String, fieldName: String, poolName: String)
+case class TypeMissmatchError(t: FieldType, expected: String, fieldName: String, poolName: String)
   extends SkillException(s"""+"\"\"\""+"""During construction of $poolName.$fieldName: Encountered incompatible type "$t" (expected: $expected)"""+"\"\"\""+""")
   with ExpectableSkillException {}
 """)

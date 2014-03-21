@@ -25,186 +25,230 @@ trait SerializableStateMaker extends GeneralOutputMaker {
 
     out.write(s"""package ${packagePrefix}internal
 
-import java.io.ByteArrayOutputStream
-import java.io.IOException
-import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardOpenOption
-
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 
 import ${packagePrefix}api._
-import ${packagePrefix}internal.SerializationFunctions.v64
-import ${packagePrefix}internal.parsers._
-import ${packagePrefix}internal.pool._
+import ${packagePrefix}internal.streams.FileOutputStream
 
 /**
  * This class is used to handle objects in a serializable state.
  *
  * @author Timm Felden
  */
-final class SerializableState extends SkillState {
-  import SerializableState._
-
-  /**
-   * path of the file, the serializable state has been created from; this is required for lazy evaluation and appending
-   *
-   * null iff the state has not been created from a file
-   */
-  private[internal] var fromPath: Path = null
-  /**
-   * reader for the input file, which is used for lazy evaluation and error reporting
-   */
-  private[internal] var fromReader: ByteReader = null
-
-  private[internal] var pools = new HashMap[String, AbstractPool]
-  @inline def knownPools = pools.values.collect({ case p: KnownPool[_, _] ⇒ p }).toArray
-
-  override val String = new StringPool(this)
-  ${
-      (
-        for (d ← IR; name = d.getName)
-          yield s"""override val $name = new ${name}StoragePool(this)
-  pools.put("${d.getSkillName}", $name)"""
-      ).mkString("", "\n  ", "")
+final class SerializableState(
+${
+      (for (t ← IR) yield s"  val ${t.getCapitalName} : ${t.getCapitalName}Access,").mkString("\n")
     }
+  val String : StringAccess,
+  val pools : Array[StoragePool[_ <: SkillType, _ <: SkillType]],
+  var fromPath : Option[Path])
+    extends SkillState {
 
-  /**
-   * Creates a new SKilL file at target.
-   */
-  override def write(target: Path) {
-    import SerializationFunctions._
+  val poolByName = pools.map(_.name).zip(pools).toSeq.toMap
 
-    Files.deleteIfExists(target)
+  finalizePools;
 
-    val file = Files.newByteChannel(target,
-      StandardOpenOption.CREATE,
-      StandardOpenOption.WRITE,
-      StandardOpenOption.TRUNCATE_EXISTING).asInstanceOf[FileChannel]
+  def all = pools.iterator.asInstanceOf[Iterator[Access[_ <: SkillType]]]
 
-    if (null == fromPath) try {
-      fromPath = target
-      fromReader = new ByteReader(Files.newByteChannel(fromPath).asInstanceOf[FileChannel])
-    } catch {
-      case e: IOException ⇒ // we don't care, because this means we do not have right permissions Oo
-    }
+  def write(target : Path) : Unit = {
+    new StateWriter(this, FileOutputStream.write(target))
+    if (fromPath.isEmpty)
+      fromPath = Some(target)
+  }
+  // @note: this is more tricky then append, because the state has to be prepared before the file is deleted
+  def write() : Unit = ???
 
-    val ws = new WriteState(this)
-
-    String.prepareAndWrite(file, ws)
-    knownPools.foreach(_.prepareSerialization(this))
-
-    ws.writeTypeBlock(file)
-
-    file.close()
-
-    // reset skill IDs
-    knownPools.foreach {
-      case p: BasePool[_] ⇒ p.restoreIndices
-      case _              ⇒
+  def append() : Unit = new StateAppender(this, FileOutputStream.append(fromPath.getOrElse(throw new IllegalStateException("The state was not created using a read operation, thus append is not possible!"))))
+  def append(target : Path) : Unit = {
+    if (fromPath.isEmpty) {
+      // append and write is the same operation, if we did not read a file
+      write(target)
+    } else if (target.equals(fromPath.get)) {
+      append
+    } else {
+      // copy the read file to the target location
+      Files.deleteIfExists(target)
+      Files.copy(fromPath.get, target)
+      // append to the target file
+      new StateAppender(this, FileOutputStream.append(target))
     }
   }
 
-  /**
-   * Appends to the SKilL file we read.
-   */
-  override def append = append(fromPath.ensuring(_ != null))
-  /**
-   * Appends to an existing SKilL file.
-   */
-  override def append(target: Path) {
-    require(canAppend)
-    import SerializationFunctions._
+  @inline private def finalizePools {
+    @inline def eliminatePreliminaryTypesIn(t : FieldType) : FieldType = t match {
+      case TypeDefinitionIndex(i) ⇒ try {
+        pools(i.toInt)
+      } catch {
+        case e : Exception ⇒ throw new IllegalStateException(s"inexistent user type $$i (user types: $${poolByName.mkString})", e)
+      }
+      case TypeDefinitionName(n) ⇒ try {
+        poolByName(n)
+      } catch {
+        case e : Exception ⇒ throw new IllegalStateException(s"inexistent user type $$n (user types: $${poolByName.mkString})", e)
+      }
+      case ConstantLengthArray(l, t) ⇒ ConstantLengthArray(l, eliminatePreliminaryTypesIn(t))
+      case VariableLengthArray(t)    ⇒ VariableLengthArray(eliminatePreliminaryTypesIn(t))
+      case ListType(t)               ⇒ ListType(eliminatePreliminaryTypesIn(t))
+      case SetType(t)                ⇒ SetType(eliminatePreliminaryTypesIn(t))
+      case MapType(ts)               ⇒ MapType(for (t ← ts) yield eliminatePreliminaryTypesIn(t))
+      case t                         ⇒ t
+    }
+    for (p ← pools) {
+      val fieldMap = p.fields.map { _.name }.zip(p.fields).toMap
 
-    val file = Files.newByteChannel(target,
-      StandardOpenOption.APPEND,
-      StandardOpenOption.WRITE).asInstanceOf[FileChannel]
-
-    assert(target == fromPath, "we still have to implement copy in this case!!!")
-
-    val as = new AppendState(this)
-
-    String.prepareAndAppend(file, as)
-    knownPools.foreach(_.prepareSerialization(this))
-
-    as.writeTypeBlock(file)
-    file.close()
-  }
-
-  // TODO check if state can be appended
-  def canAppend: Boolean = null != fromPath
-
-  /**
-   * replace user types with pools and read required field data
-   */
-  def finishInitialization {
-
-    // remove proxy types and add names to the string pool
-    for (p ← pools.values) {
-      String.add(p.name)
-      for (f ← p.fields.values) {
-        String.add(f.name)
-        f.t match {
-          case t: NamedUserType ⇒ f.t = pools(t.name)
-          case t: UserType      ⇒ f.t = pools(t.name)
-          case _                ⇒
-        }
+      for ((n, t) ← p.knownFields if !fieldMap.contains(n)) {
+        p.addField(new FieldDeclaration(eliminatePreliminaryTypesIn(t), n, p.fields.size))
       }
     }
-
-    // read required fields
-    val fieldParser = new FieldParser(this)
-${(for (d ← IR) yield s"""    ${d.getName}.readFields(fieldParser)""").mkString("\n")}
-  }
-
-  /**
-   * prints some debug information onto stdout
-   */
-  def dumpDebugInfo = {
-    println("DEBUG INFO START")
-    println(s"StringPool ($${String.size}):")
-    for (i ← 1 to String.stringPositions.size) {
-      if (!String.idMap.contains(i))
-        print("lazy ⇒ ")
-      println(String.get(i))
-    }
-    String.newStrings.foreach(println(_))
-    println("")
-    println("ReflectionPool:")
-    for (s ← pools.values) {
-      println(s.name + s.blockInfos.mkString("[", ", ", "] "))
-      println(s.fields.values.map { f ⇒ f.toString ++ f.dataChunks.mkString(" = {", ", ", "}") }.mkString("{\\n", ";\\n", "\\n}\\n"))
-    }
-    println("")
-    println("StoragePools:")
-    knownPools.foreach({ s ⇒
-      println(s.name+": "+s.dynamicSize);
-      println(s.iterator.map(_.asInstanceOf[KnownType].prettyString).mkString("  ", "\\n  ", "\\n"))
-    })
-    println("")
-
-    println("DEBUG INFO END")
   }
 }
+//final class SerializableState extends SkillState {
+//  import SerializableState._
+//
+//  /**
+//   * path of the file, the serializable state has been created from; this is required for lazy evaluation and appending
+//   *
+//   * null iff the state has not been created from a file
+//   */
+//  private[internal] var fromPath: Path = null
+//  /**
+//   * reader for the input file, which is used for lazy evaluation and error reporting
+//   */
+//  private[internal] var fromReader: ByteReader = null
+//
+//  private[internal] var pools = new HashMap[String, AbstractPool]
+//  @inline def knownPools = pools.values.collect({ case p: KnownPool[_, _] ⇒ p }).toArray
+//
+//  override val String = new StringPool(this)
+//  ${
+      //      (
+      //        for (d ← IR; name = d.getName)
+      //          yield s"""override val $name = new ${name}StoragePool(this)
+      //  pools.put("${d.getSkillName}", $name)"""
+      //      ).mkString("", "\n  ", "")
+    }
+//
+//  /**
+//   * Creates a new SKilL file at target.
+//   */
+//  override def write(target: Path) {
+//    import SerializationFunctions._
+//
+//    Files.deleteIfExists(target)
+//
+//    val file = Files.newByteChannel(target,
+//      StandardOpenOption.CREATE,
+//      StandardOpenOption.WRITE,
+//      StandardOpenOption.TRUNCATE_EXISTING).asInstanceOf[FileChannel]
+//
+//    if (null == fromPath) try {
+//      fromPath = target
+//      fromReader = new ByteReader(Files.newByteChannel(fromPath).asInstanceOf[FileChannel])
+//    } catch {
+//      case e: IOException ⇒ // we don't care, because this means we do not have right permissions Oo
+//    }
+//
+//    val ws = new WriteState(this)
+//
+//    String.prepareAndWrite(file, ws)
+//    knownPools.foreach(_.prepareSerialization(this))
+//
+//    ws.writeTypeBlock(file)
+//
+//    file.close()
+//
+//    // reset skill IDs
+//    knownPools.foreach {
+//      case p: BasePool[_] ⇒ p.restoreIndices
+//      case _              ⇒
+//    }
+//  }
+//
+//  /**
+//   * Appends to the SKilL file we read.
+//   */
+//  override def append = append(fromPath.ensuring(_ != null))
+//  /**
+//   * Appends to an existing SKilL file.
+//   */
+//  override def append(target: Path) {
+//    require(canAppend)
+//    import SerializationFunctions._
+//
+//    val file = Files.newByteChannel(target,
+//      StandardOpenOption.APPEND,
+//      StandardOpenOption.WRITE).asInstanceOf[FileChannel]
+//
+//    assert(target == fromPath, "we still have to implement copy in this case!!!")
+//
+//    val as = new AppendState(this)
+//
+//    String.prepareAndAppend(file, as)
+//    knownPools.foreach(_.prepareSerialization(this))
+//
+//    as.writeTypeBlock(file)
+//    file.close()
+//  }
+//
+//  // TODO check if state can be appended
+//  def canAppend: Boolean = null != fromPath
+//
+//    // read required fields
+//    val fieldParser = new FieldParser(this)
+//${
+      //      (for (d ← IR) yield s"""    ${d.getName}.readFields(fieldParser)""").mkString("\n")
+    }
+//  }
+//
+//  /**
+//   * prints some debug information onto stdout
+//   */
+//  def dumpDebugInfo = {
+//    println("DEBUG INFO START")
+//    println(s"StringPool ($${String.size}):")
+//    for (i ← 1 to String.stringPositions.size) {
+//      if (!String.idMap.contains(i))
+//        print("lazy ⇒ ")
+//      println(String.get(i))
+//    }
+//    String.newStrings.foreach(println(_))
+//    println("")
+//    println("ReflectionPool:")
+//    for (s ← pools.values) {
+//      println(s.name + s.blockInfos.mkString("[", ", ", "] "))
+//      println(s.fields.values.map { f ⇒ f.toString ++ f.dataChunks.mkString(" = {", ", ", "}") }.mkString("{\\n", ";\\n", "\\n}\\n"))
+//    }
+//    println("")
+//    println("StoragePools:")
+//    knownPools.foreach({ s ⇒
+//      println(s.name+": "+s.dynamicSize);
+//      println(s.iterator.map(_.asInstanceOf[KnownType].prettyString).mkString("  ", "\\n  ", "\\n"))
+//    })
+//    println("")
+//
+//    println("DEBUG INFO END")
+//  }
+//}
 
 object SerializableState {
-
   /**
    * Creates a new and empty serializable state.
    */
-  def create(): SerializableState = {
-    val result = new SerializableState;
-    result.finishInitialization
-    result
+  def create() : SerializableState = {
+${
+      var i = -1
+      (for (t ← IR) yield s"""    val ${t.getCapitalName} = new ${t.getCapitalName}StoragePool(${i += 1; i}${if (null == t.getSuperType) "" else {", " + t.getSuperType.getCapitalName}})""").mkString("\n")
+    }
+    new SerializableState(
+${
+      (for (t ← IR) yield s"""      ${t.getCapitalName},""").mkString("\n")
+    }
+      new StringPool(null),
+      Array[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.map(_.getCapitalName).mkString(",")}),
+      None
+    )
   }
-
-  /**
-   * Reads a skill file and turns it into a serializable state.
-   */
-  def read(target: Path): SerializableState = FileParser.read(target)
 }
 """)
 

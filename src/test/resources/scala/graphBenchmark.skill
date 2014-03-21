@@ -1,0 +1,7 @@
+/** a graph with four nodes */
+Node {
+  Node north;
+  Node south;
+  Node east;
+  Node west;
+}

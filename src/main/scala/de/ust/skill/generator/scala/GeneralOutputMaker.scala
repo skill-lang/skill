@@ -31,24 +31,24 @@ trait GeneralOutputMaker {
   /**
    * The base path of the output.
    */
-  var outPath: String
+  var outPath : String
 
   /**
    * The intermediate representation of the (known) output type system.
    */
-  var IR: List[Declaration]
+  var IR : List[Declaration]
 
   /**
    * Makes the output; has to invoke super.make!!!
    */
-  def make: Unit;
+  def make : Unit;
 
-  private[scala] def header: String
+  private[scala] def header : String
 
   /**
    * Creates the correct PrintWriter for the argument file.
    */
-  protected def open(path: String) = {
+  protected def open(path : String) = {
     val f = new File(s"$outPath$packagePath$path")
     f.getParentFile.mkdirs
     f.createNewFile
@@ -61,22 +61,39 @@ trait GeneralOutputMaker {
   /**
    * Assume the existence of a translation function for types.
    */
-  protected def mapType(t: Type): String
+  protected def mapType(t : Type) : String
+
+  /**
+   * creates argument list of a constructor call, not including potential skillID or braces
+   */
+  protected def makeConstructorArguments(t : Declaration) : String
+  /**
+   * creates argument list of a constructor call, including a trailing comma for insertion into an argument list
+   */
+  protected def appendConstructorArguments(t : Declaration) : String
+
+  /**
+   * turns a declaration and a field into a string writing that field into an outStream
+   * @note the used iterator is "outData"
+   * @note the used target OutStream is "dataChunk"
+   */
+  protected def writeField(d : Declaration, f : Field) : String
 
   /**
    * Assume a package prefix provider.
    */
-  protected def packagePrefix(): String
+  protected def packagePrefix() : String
+  protected def packageName = packagePrefix.substring(0, packagePrefix.length - 1)
 
   /**
    * Provides a string representation of the default value of f.
    */
-  protected def defaultValue(f: Field): String
+  protected def defaultValue(f : Field) : String
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
-  protected def escaped(target: String): String
+  protected def escaped(target : String) : String
 
   private lazy val packagePath = if (packagePrefix.length > 0) {
     packagePrefix.replace(".", "/")

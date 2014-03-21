@@ -30,7 +30,9 @@ import scala.collection.mutable.ListBuffer
  *
  * @author Timm Felden
  */
-case class ChunkInfo(var begin: Long, var end: Long, bpsi: Long, count: Long);
+sealed abstract class ChunkInfo(var begin : Long, var end : Long);
+final class SimpleChunkInfo(begin : Long, end : Long, val bpsi : Long, val count : Long) extends ChunkInfo(begin, end);
+final class BulkChunkInfo(begin : Long, end : Long, val count : Long) extends ChunkInfo(begin, end);
 
 /**
  * Blocks contain information about the type of an index range.
@@ -39,7 +41,7 @@ case class ChunkInfo(var begin: Long, var end: Long, bpsi: Long, count: Long);
  * @param count the number of instances in this chunk
  * @author Timm Felden
  */
-case class BlockInfo(bpsi: Long, count: Long);
+case class BlockInfo(val bpsi : Long, val count : Long);
 
 /**
  * A field decalariation, as it occurs during parsing of a type blocks header.
@@ -49,10 +51,7 @@ case class BlockInfo(bpsi: Long, count: Long);
  * @param name the name of the field
  * @param index the index of this field, starting from 0; required for append operations
  */
-class FieldDeclaration(
-    var t: TypeInfo,
-    val name: String,
-    var index: Long) {
+class FieldDeclaration(var t : FieldType, val name : String, val index : Long) {
 
   /**
    *  Data chunk information, as it is required for later parsing.
@@ -60,9 +59,9 @@ class FieldDeclaration(
   val dataChunks = ListBuffer[ChunkInfo]();
 
   override def toString = t.toString+" "+name
-  override def equals(obj: Any) = obj match {
-    case f: FieldDeclaration ⇒ name == f.name && t == f.t
-    case _                   ⇒ false
+  override def equals(obj : Any) = obj match {
+    case f : FieldDeclaration ⇒ name == f.name && t == f.t
+    case _                    ⇒ false
   }
   override def hashCode = name.hashCode ^ t.hashCode
 }

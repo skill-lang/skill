@@ -10,28 +10,26 @@ import java.util.Date
 
 import scala.collection.JavaConversions.asScalaBuffer
 
-import de.ust.skill.generator.scala.api.GenericTypeMaker
-import de.ust.skill.generator.scala.api.KnownTypeMaker
+import de.ust.skill.generator.scala.api.AccessMaker
 import de.ust.skill.generator.scala.api.SkillStateMaker
-import de.ust.skill.generator.scala.api.SkillTypeMaker
+import de.ust.skill.generator.scala.internal.ExceptionsMaker
 import de.ust.skill.generator.scala.internal.FieldDeclarationMaker
+import de.ust.skill.generator.scala.internal.FieldParserMaker
+import de.ust.skill.generator.scala.internal.FileParserMaker
 import de.ust.skill.generator.scala.internal.InternalInstancePropertiesMaker
+import de.ust.skill.generator.scala.internal.RestrictionsMaker
 import de.ust.skill.generator.scala.internal.SerializableStateMaker
 import de.ust.skill.generator.scala.internal.SerializationFunctionsMaker
-import de.ust.skill.generator.scala.internal.SkillExceptionMaker
+import de.ust.skill.generator.scala.internal.SkillTypeMaker
+import de.ust.skill.generator.scala.internal.StateAppenderMaker
+import de.ust.skill.generator.scala.internal.StateWriterMaker
+import de.ust.skill.generator.scala.internal.StringPoolMaker
 import de.ust.skill.generator.scala.internal.TypeInfoMaker
-import de.ust.skill.generator.scala.internal.parsers.ByteReaderMaker
-import de.ust.skill.generator.scala.internal.parsers.ByteStreamParsersMaker
-import de.ust.skill.generator.scala.internal.parsers.FieldParserMaker
-import de.ust.skill.generator.scala.internal.parsers.FileParserMaker
-import de.ust.skill.generator.scala.internal.pool.AbstractPoolMaker
-import de.ust.skill.generator.scala.internal.pool.BasePoolMaker
-import de.ust.skill.generator.scala.internal.pool.DeclaredPoolsMaker
-import de.ust.skill.generator.scala.internal.pool.GenericPoolMaker
-import de.ust.skill.generator.scala.internal.pool.KnownPoolMaker
-import de.ust.skill.generator.scala.internal.pool.StringPoolMaker
-import de.ust.skill.generator.scala.internal.pool.SubPoolMaker
-import de.ust.skill.generator.scala.internal.types.DeclarationImplementationMaker
+import de.ust.skill.generator.scala.internal.streams.FileInputStreamMaker
+import de.ust.skill.generator.scala.internal.streams.FileOutputStreamMaker
+import de.ust.skill.generator.scala.internal.streams.InStreamMaker
+import de.ust.skill.generator.scala.internal.streams.OutBufferMaker
+import de.ust.skill.generator.scala.internal.streams.OutStreamMaker
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
@@ -47,7 +45,7 @@ import de.ust.skill.parser.Parser
  * Entry point of the scala generator.
  */
 object Main {
-  private def printHelp: Unit = println("""
+  private def printHelp : Unit = println("""
 usage:
   [options] skillPath outPath
 
@@ -61,7 +59,7 @@ Opitions:
   /**
    * Takes an argument skill file name and generates a scala binding.
    */
-  def main(args: Array[String]): Unit = {
+  def main(args : Array[String]) : Unit = {
     var m = new Main
 
     //processing command line arguments
@@ -94,38 +92,36 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * @author Timm Felden
  */
 class Main extends FakeMain
-    with FileParserMaker
-    with AbstractPoolMaker
-    with BasePoolMaker
-    with ByteReaderMaker
-    with ByteStreamParsersMaker
-    with DeclarationInterfaceMaker
-    with DeclarationImplementationMaker
-    with DeclaredPoolsMaker
-    with FieldParserMaker
+    with AccessMaker
+    with ExceptionsMaker
     with FieldDeclarationMaker
-    with GenericPoolMaker
-    with GenericTypeMaker
+    with FieldParserMaker
+    with FileInputStreamMaker
+    with FileOutputStreamMaker
+    with FileParserMaker
+    with InStreamMaker
     with InternalInstancePropertiesMaker
-    with KnownPoolMaker
-    with KnownTypeMaker
+    with OutBufferMaker
+    with OutStreamMaker
+    with RestrictionsMaker
     with SerializableStateMaker
     with SerializationFunctionsMaker
-    with SkillExceptionMaker
     with SkillStateMaker
     with SkillTypeMaker
+    with StateAppenderMaker
+    with StateWriterMaker
     with StringPoolMaker
-    with SubPoolMaker
-    with TypeInfoMaker {
+    with TypeInfoMaker
+    with TypesMaker {
 
-  var outPath: String = null
-  var IR: List[Declaration] = null
+  var outPath : String = null
+  var IR : List[Declaration] = null
 
   /**
    * Translates types into scala type names.
    */
-  override protected def mapType(t: Type): String = t match {
-    case t: GroundType ⇒ t.getName() match {
+  override protected def mapType(t : Type) : String = t match {
+    case t : GroundType ⇒ t.getName() match {
       case "annotation" ⇒ "SkillType"
 
       case "bool"       ⇒ "Boolean"
@@ -142,34 +138,44 @@ class Main extends FakeMain
       case "string"     ⇒ "String"
     }
 
-    case t: ConstantLengthArrayType ⇒ s"$ArrayTypeName[${mapType(t.getBaseType())}]"
-    case t: VariableLengthArrayType ⇒ s"$VarArrayTypeName[${mapType(t.getBaseType())}]"
-    case t: ListType                ⇒ s"$ListTypeName[${mapType(t.getBaseType())}]"
-    case t: SetType                 ⇒ s"$SetTypeName[${mapType(t.getBaseType())}]"
-    case t: MapType ⇒ {
+    case t : ConstantLengthArrayType ⇒ s"$ArrayTypeName[${mapType(t.getBaseType())}]"
+    case t : VariableLengthArrayType ⇒ s"$VarArrayTypeName[${mapType(t.getBaseType())}]"
+    case t : ListType                ⇒ s"$ListTypeName[${mapType(t.getBaseType())}]"
+    case t : SetType                 ⇒ s"$SetTypeName[${mapType(t.getBaseType())}]"
+    case t : MapType ⇒ {
       val types = t.getBaseTypes().reverse.map(mapType(_))
       types.tail.fold(types.head)({ (U, t) ⇒ s"$MapTypeName[$t, $U]" });
     }
 
-    case t: Declaration ⇒ "_root_."+packagePrefix + t.getName()
+    case t : Declaration ⇒ "_root_."+packagePrefix + t.getName()
+  }
+
+  /**
+   * creates argument list of a constructor call, not including potential skillID or braces
+   */
+  override protected def makeConstructorArguments(t : Declaration) = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", ")
+  override protected def appendConstructorArguments(t : Declaration) = {
+    val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
+    if (r.isEmpty) ""
+    else r.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", ", ", ", "")
   }
 
   /**
    * provides the package prefix
    */
-  override protected def packagePrefix(): String = _packagePrefix
+  override protected def packagePrefix() : String = _packagePrefix
   private var _packagePrefix = ""
 
-  override private[scala] def header: String = _header
+  override private[scala] def header : String = _header
   private var _header = ""
 
-  private def setOptions(args: Array[String]) {
+  private def setOptions(args : Array[String]) {
     var index = 0
-    var headerLine1: Option[String] = None
-    var headerLine2: Option[String] = None
-    var headerLine3: Option[String] = None
-    var userName: Option[String] = None
-    var date: Option[String] = None
+    var headerLine1 : Option[String] = None
+    var headerLine2 : Option[String] = None
+    var headerLine3 : Option[String] = None
+    var userName : Option[String] = None
+    var date : Option[String] = None
 
     while (index < args.length) args(index) match {
       case "-p"    ⇒ _packagePrefix = args(index + 1)+"."; index += 2;
@@ -211,8 +217,8 @@ class Main extends FakeMain
 """
   }
 
-  override protected def defaultValue(f: Field) = f.getType() match {
-    case t: GroundType ⇒ t.getSkillName() match {
+  override protected def defaultValue(f : Field) = f.getType() match {
+    case t : GroundType ⇒ t.getSkillName() match {
       case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
       case "f32" | "f64"                        ⇒ "0.0f"
       case "bool"                               ⇒ "false"
@@ -227,7 +233,7 @@ class Main extends FakeMain
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
-  protected def escaped(target: String): String = target match {
+  protected def escaped(target : String) : String = target match {
     //keywords get a suffix "_", because that way at least auto-completion will work as expected
     case "abstract" | "case" | "catch" | "class" | "def" | "do" | "else" | "extends" | "false" | "final" | "finally" |
       "for" | "forSome" | "if" | "implicit" | "import" | "lazy" | "match" | "new" | "null" | "object" | "override" |
@@ -236,5 +242,58 @@ class Main extends FakeMain
 
     //the string is fine anyway
     case _ ⇒ target
+  }
+
+  protected def writeField(d : Declaration, f : Field) : String = {
+    val fName = escaped(f.getName)
+    f.getType match {
+      case t : GroundType ⇒ t.getSkillName match {
+
+        case "i64" ⇒
+          s"""val target = ByteBuffer.allocate(8 * outData.size)
+                for(i ← outData) target.putLong(i.$fName)
+                dataChunk.put(target.array)"""
+
+        case _ ⇒ s"for(i ← outData) ${f.getType.getSkillName}(i.$fName, dataChunk)"
+      }
+
+      case t : Declaration ⇒ s"""for(i ← outData) userRef(i.$fName, dataChunk)"""
+
+      case t : ConstantLengthArrayType ⇒ s"for(i ← outData) writeConstArray(${
+        t.getBaseType() match {
+          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+          case b               ⇒ b.getSkillName()
+        }
+      })(i.$fName, dataChunk)"
+      case t : VariableLengthArrayType ⇒ s"for(i ← outData) writeVarArray(${
+        t.getBaseType() match {
+          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+          case b               ⇒ b.getSkillName()
+        }
+      })(i.$fName, dataChunk)"
+      case t : SetType ⇒ s"for(i ← outData) writeSet(${
+        t.getBaseType() match {
+          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+          case b               ⇒ b.getSkillName()
+        }
+      })(i.$fName, dataChunk)"
+      case t : ListType ⇒ s"for(i ← outData) writeList(${
+        t.getBaseType() match {
+          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+          case b               ⇒ b.getSkillName()
+        }
+      })(i.$fName, dataChunk)"
+
+      case t : MapType ⇒ locally {
+        s"for(i ← outData) ${
+          t.getBaseTypes().map {
+            case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+            case b               ⇒ b.getSkillName()
+          }.reduceRight { (t, v) ⇒
+            s"writeMap($t, $v)"
+          }
+        }(i.$fName, dataChunk)"
+      }
+    }
   }
 }
