@@ -239,7 +239,8 @@ ${
          Length : Natural := Natural (Type_Declaration.Storage_Pool.Length);
 
          type Temp_Type is array (1 .. Length) of Skill_Type_Access;
-         Temp : Temp_Type;
+         type Temp_Type_Access is access Temp_Type;
+         Temp : Temp_Type_Access := new Temp_Type;
          Index : Positive := 1;
 """
       types.foreach({ t =>
