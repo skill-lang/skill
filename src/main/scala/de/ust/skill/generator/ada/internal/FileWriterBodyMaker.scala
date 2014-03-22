@@ -225,6 +225,64 @@ ${
       end;
    end Write_String_Pool;
 
+   procedure Order_Types is
+   begin${
+  var output = ""
+  for (d ← IR) {
+    if (null == d.getSuperType) {
+      val types = getSubTypes(d).+=:(d)
+
+      output += s"""\r\n      declare
+         use Storage_Pool_Vector;
+
+         Type_Declaration : Type_Information := State.Get_Type ("${d.getSkillName}");
+         Length : Natural := Natural (Type_Declaration.Storage_Pool.Length);
+
+         type Temp_Type is array (1 .. Length) of Skill_Type_Access;
+         Temp : Temp_Type;
+         Index : Positive := 1;
+"""
+      types.foreach({ t =>
+        output += s"""\r\n         ${t.getName}_Type_Declaration : Type_Information := State.Get_Type ("${t.getSkillName}");
+         procedure Iterate_${t.getName} (Iterator : Cursor) is
+            Object : Skill_Type_Access := Element (Iterator);
+         begin
+            if 0 = ${t.getName}_Type_Declaration.lbpsi then
+               ${t.getName}_Type_Declaration.lbpsi := Index;
+            end if;
+            if "${t.getSkillName}" = Get_Object_Type (Object) then
+               Temp (Index) := Object;
+               Index := Index + 1;
+            end if;
+         end Iterate_${t.getName};
+         pragma Inline (Iterate_${t.getName});\r\n"""
+      })
+      output += "      begin\r\n"
+      types.foreach({ t =>
+        output += s"""         ${t.getName}_Type_Declaration.lbpsi := 0;
+         Type_Declaration.Storage_Pool.Iterate (Iterate_${t.getName}'Access);\r\n"""
+      })
+      output += "\r\n"
+      types.foreach({ t =>
+        output += s"""         declare
+            Next_Type_Declaration : Type_Information := ${t.getName}_Type_Declaration;
+            Start_Index : Natural := Next_Type_Declaration.lbpsi;
+            End_Index : Integer := Start_Index + Natural (Next_Type_Declaration.Storage_Pool.Length) - 1;
+         begin
+            for I in Start_Index .. End_Index loop
+               Temp (I).skill_id := I;
+               Next_Type_Declaration.Storage_Pool.Replace_Element (I - Start_Index + 1, Temp (I));
+            end loop;
+         end;\r\n"""
+      })
+      output += "      end;"
+      output
+    }
+  }
+  output.stripLineEnd.stripLineEnd
+}
+   end Order_Types;
+
    function Count_Instantiated_Types return Long is
       use Types_Hash_Map;
 
@@ -246,12 +304,13 @@ ${
 
    procedure Write_Type_Block is
    begin
+      Order_Types;
+
       Byte_Writer.Write_v64 (Output_Stream, Count_Instantiated_Types);
 
 ${
-  var output = ""
-  for (d ← IR) {
-    output += s"""      declare
+  def inner (d : Type): String = {
+    s"""      declare
          Type_Declaration : Type_Information := State.Get_Type ("${d.getSkillName}");
          Type_Name : String := Type_Declaration.Name;
       begin
@@ -259,6 +318,13 @@ ${
             Write_Type_Declaration (Type_Declaration);
          end if;
       end;\r\n"""
+  }
+  var output = ""
+  for (d ← IR) {
+    if (null == d.getSuperType) {
+      output += inner(d)
+      getSubTypes(d).foreach({ t => output += inner(t) })
+    }
   }
   output
 }
@@ -433,7 +499,7 @@ ${
 ${
   var output = "";
   for (d ← IR) {
-    output += s"""      if ${d.getName}_Type'Tag = Object.all'Tag then
+    output += s"""      if ${d.getName}_Type'Tag = Object'Tag then
          return "${d.getSkillName}";
       end if;\r\n"""
   }

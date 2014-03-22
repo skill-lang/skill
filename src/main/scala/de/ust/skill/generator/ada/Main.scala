@@ -402,6 +402,19 @@ ${
     if (null == d.getSuperType) MutableList[Type]()
     else getSuperTypes (d.getSuperType) += d.getSuperType
   }
+  
+  protected def getSubTypes(d: Declaration): MutableList[Type] = {
+    var rval = MutableList[Type]()
+
+    1 to IR.length foreach { _ =>
+	  for (_d ← IR) {
+        if (d == _d.getSuperType && -1 == rval.indexOf(_d)) rval += _d // element ist subtyp und noch nicht erfasst
+        if (-1 < rval.indexOf(_d.getSuperType) && -1 == rval.indexOf(_d)) rval += _d // element ist subtyp aus element in der liste und noch nicht erfasst
+	  }
+    }
+
+    rval
+  }
 
   /**
    * provides the package prefix

@@ -174,7 +174,7 @@ ${
          Name : String (1 .. Type_Size);
          Super_Name : String (1 .. Super_Size);
          bpsi : Positive;
-         lbpsi : Positive;
+         lbpsi : Natural;
          Fields : Fields_Vector.Vector;
          Storage_Pool : Storage_Pool_Vector.Vector;
       end record;
