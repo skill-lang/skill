@@ -34,7 +34,6 @@ private
 
    procedure Write_String_Pool;
    procedure Order_Types;
-   function Count_Instantiated_Types return Long;
    procedure Write_Type_Block;
    procedure Write_Type_Declaration (Type_Declaration : Type_Information);
    procedure Write_Field_Declaration (Type_Declaration : Type_Information; Field_Declaration : Field_Information);
