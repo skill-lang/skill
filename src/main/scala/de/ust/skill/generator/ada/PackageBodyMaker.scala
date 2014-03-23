@@ -39,7 +39,6 @@ ${
   var output = "";
   for (d ← IR) {
     output += s"""   function Hash (Element : ${d.getName}_Type_Access) return Ada.Containers.Hash_Type is\r\n      (Hash (Skill_Type_Access (Element)));\r\n\r\n"""
-//    output += s"""   function Is_Equal (Left, Right : ${d.getName}_Type_Access) return Boolean is\r\n      (Skill_Type_Access (Left) = Skill_Type_Access (Right));\r\n\r\n"""
   }
 
   for (d ← IR) {

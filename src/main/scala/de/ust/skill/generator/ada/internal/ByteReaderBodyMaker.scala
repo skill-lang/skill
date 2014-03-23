@@ -30,6 +30,14 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Reader is
       end loop;
    end Read_Buffer;
 
+   procedure Reset_Buffer is
+   begin
+      Byte_Reader.Buffer_Index := Byte_Reader.Buffer_Size;
+   end Reset_Buffer;
+
+   function End_Of_Buffer return Boolean is
+      (Byte_Reader.Buffer_Index >= Byte_Reader.Buffer_Last);
+
    function Read_Byte (Input_Stream : ASS_IO.Stream_Access) return Byte is
    begin
       if Buffer_Size = Buffer_Index then

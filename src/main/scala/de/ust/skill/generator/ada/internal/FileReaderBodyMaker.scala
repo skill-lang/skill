@@ -21,12 +21,12 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
    begin
       State := pState;
 
-      Byte_Reader.Buffer_Index := Byte_Reader.Buffer_Size;
+      Byte_Reader.Reset_Buffer;
 
       ASS_IO.Open (Input_File, ASS_IO.In_File, File_Name);
       Input_Stream := ASS_IO.Stream (Input_File);
 
-      while not ASS_IO.End_Of_File (Input_File) or else Byte_Reader.Buffer_Index < Byte_Reader.Buffer_Last loop
+      while not ASS_IO.End_Of_File (Input_File) or else not Byte_Reader.End_Of_Buffer loop
          Read_String_Block;
          Read_Type_Block;
          Update_Base_Pool_Start_Index;

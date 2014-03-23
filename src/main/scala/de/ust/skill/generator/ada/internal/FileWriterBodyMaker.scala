@@ -442,7 +442,7 @@ ${
    procedure Copy_Field_Data is
    begin
       ASS_IO.Reset (Field_Data_File, ASS_IO.In_File);
-      Byte_Reader.Buffer_Index := Byte_Reader.Buffer_Size;
+      Byte_Reader.Reset_Buffer;
       for I in Long (ASS_IO.Index (Field_Data_File)) .. Long (ASS_IO.Size (Field_Data_File)) loop
          Byte_Writer.Write_i8 (Output_Stream, Byte_Reader.Read_i8 (Field_Data_Stream));
       end loop;

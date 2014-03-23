@@ -18,13 +18,8 @@ with Ada.Unchecked_Conversion;
 
 package ${packagePrefix.capitalize}.Internal.Byte_Reader is
 
-   Buffer_Size : constant Positive := 2 ** 7;
-   Buffer_Last : Positive;
-   Buffer_Index : Integer := Buffer_Size;
-   type Buffer is array (Positive range <>) of Byte;
-   procedure Read_Buffer (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : out Buffer);
-   for Buffer'Read use Read_Buffer;
-   Buffer_Array : Buffer (1 .. Buffer_Size);
+   procedure Reset_Buffer;
+   function End_Of_Buffer return Boolean;
 
    function Read_i8 (Input_Stream : ASS_IO.Stream_Access) return i8;
    function Read_i16 (Input_Stream : ASS_IO.Stream_Access) return i16;
@@ -40,9 +35,17 @@ package ${packagePrefix.capitalize}.Internal.Byte_Reader is
 
 private
 
+   Buffer_Size : constant Positive := 2 ** 7;
+   Buffer_Last : Positive;
+   Buffer_Index : Integer := Buffer_Size;
+   type Buffer is array (Positive range <>) of Byte;
+   procedure Read_Buffer (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : out Buffer);
+   for Buffer'Read use Read_Buffer;
+   Buffer_Array : Buffer (1 .. Buffer_Size);
+
    function Read_Byte (Input_Stream : ASS_IO.Stream_Access) return Byte;
 
-   pragma Inline (Read_Buffer, Read_i8, Read_i16, Read_i32, Read_i64, Read_v64, Read_Boolean, Read_String, Skip_Bytes, Read_Byte);
+   pragma Inline (Read_Buffer, Read_i8, Read_i16, Read_i32, Read_i64, Read_v64, Read_Boolean, Read_String, Skip_Bytes, Read_Buffer, Read_Byte);
 
 end ${packagePrefix.capitalize}.Internal.Byte_Reader;
 """)

@@ -1,13 +1,12 @@
-Aircraft {}
-
-Airplane {
-	i16 id;
+Aircraft {
 	string name;
 	bool operational;
 }
 
-Helicopter {
+Airplane : Aircraft {
+	i16 id;
+}
+
+Helicopter : Aircraft {
 	i8 id;
-	string name;
-	bool operational;
 }
