@@ -228,7 +228,7 @@ class Main extends FakeMain
                end loop;"""
 
      case t: MapType ⇒
-       s"""   Object : Container_Type_Access := Container_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+       s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
 
 ${
   var output = ""
@@ -265,7 +265,7 @@ ${
                Object.f := Read_Map_1;"""
 
       case t: Declaration ⇒
-        s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
             begin
                Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
     }
@@ -358,7 +358,7 @@ ${
                Set.Iterate (Iterate'Access);"""
 
       case t: MapType ⇒
-        s"""   Object : Container_Type_Access := Container_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
 
 ${
   var output = ""
@@ -392,7 +392,7 @@ ${
                Write_Map_1 (Object.${f.getSkillName});"""
 
       case t: Declaration ⇒
-        s"""   Object : ${t.getName}_Type_Access := ${t.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
             begin
                ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
     }
