@@ -32,7 +32,7 @@ package ${packagePrefix.capitalize}.Internal.Byte_Writer is
 
 private
 
-   Buffer_Size : constant Positive := 2 ** 7;
+   Buffer_Size : constant Positive := 2**10;
    Buffer_Index : Natural := 0;
    type Buffer is array (Positive range <>) of Byte;
    procedure Write_Buffer (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : in Buffer);
@@ -41,7 +41,7 @@ private
 
    procedure Write_Byte (Stream : ASS_IO.Stream_Access; Next : Byte);
 
-   pragma Inline (Write_Buffer, Write_i8, Write_i16, Write_i32, Write_i64, Write_v64, Write_Boolean, Write_String, Write_Buffer, Write_Byte);
+   pragma Inline (Finalize_Buffer, Write_i8, Write_i16, Write_i32, Write_i64, Write_v64, Write_Boolean, Write_String, Write_Buffer, Write_Byte);
 
 end ${packagePrefix.capitalize}.Internal.Byte_Writer;
 """)

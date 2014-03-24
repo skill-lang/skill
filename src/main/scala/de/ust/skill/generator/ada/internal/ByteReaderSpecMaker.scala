@@ -35,7 +35,7 @@ package ${packagePrefix.capitalize}.Internal.Byte_Reader is
 
 private
 
-   Buffer_Size : constant Positive := 2 ** 7;
+   Buffer_Size : constant Positive := 2**10;
    Buffer_Last : Positive;
    Buffer_Index : Integer := Buffer_Size;
    type Buffer is array (Positive range <>) of Byte;
@@ -45,7 +45,7 @@ private
 
    function Read_Byte (Input_Stream : ASS_IO.Stream_Access) return Byte;
 
-   pragma Inline (Read_Buffer, Read_i8, Read_i16, Read_i32, Read_i64, Read_v64, Read_Boolean, Read_String, Skip_Bytes, Read_Buffer, Read_Byte);
+   pragma Inline (Reset_Buffer, End_Of_Buffer, Read_i8, Read_i16, Read_i32, Read_i64, Read_v64, Read_Boolean, Read_String, Skip_Bytes, Read_Buffer, Read_Byte);
 
 end ${packagePrefix.capitalize}.Internal.Byte_Reader;
 """)
