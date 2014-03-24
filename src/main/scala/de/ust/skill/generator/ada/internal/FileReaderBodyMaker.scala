@@ -250,14 +250,14 @@ ${
     val superTypes = getSuperTypes(d).toList.reverse
     superTypes.foreach({ t =>
       output += s"""\r\n\r\n                  declare
-                     Sub_Type : Type_Information := ${d.getName}_Type_Declaration;
-                     Super_Type : Type_Information := ${t.getName}_Type_Declaration;
+                     Sub_Type : Type_Information := ${escaped(d.getName)}_Type_Declaration;
+                     Super_Type : Type_Information := ${escaped(t.getName)}_Type_Declaration;
                      Index : Natural := (Sub_Type.lbpsi - Super_Type.lbpsi) + Super_Type.bpsi + I - 1;
                   begin\r\n"""
       if (t == superTypes.last)
         output += s"""                     declare
-                        procedure Free is new Ada.Unchecked_Deallocation (${t.getName}_Type, ${t.getName}_Type_Access);
-                        X : ${t.getName}_Type_Access := ${t.getName}_Type_Access (Super_Type.Storage_Pool.Element (Index));
+                        procedure Free is new Ada.Unchecked_Deallocation (${escaped(t.getName)}_Type, ${escaped(t.getName)}_Type_Access);
+                        X : ${t.getName}_Type_Access := ${escaped(t.getName)}_Type_Access (Super_Type.Storage_Pool.Element (Index));
                      begin
                         Free (X);
                      end;\r\n"""
@@ -268,7 +268,7 @@ ${
   }
 
   def printDefaultValues(d: Declaration): String = {
-    var output = s"""'(\r\n                     skill_id => Natural (${if (null == d.getBaseType) d.getName else d.getBaseType.getName}_Type_Declaration.Storage_Pool.Length) + 1"""
+    var output = s"""'(\r\n                     skill_id => Natural (${if (null == d.getBaseType) escaped(d.getName) else escaped(d.getBaseType.getName)}_Type_Declaration.Storage_Pool.Length) + 1"""
     val fields = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
     output += fields.map({ f ⇒
       s""",\r\n                     ${f.getSkillName} => ${defaultValue(f.getType, d, f)}"""
@@ -282,7 +282,7 @@ ${
     output += s"""      if "${d.getSkillName}" = Type_Name then
          declare
 ${
-  var output = s"""            ${d.getName}_Type_Declaration : Type_Information := State.Get_Type ("${d.getSkillName}");\r\n"""
+  var output = s"""            ${escaped(d.getName)}_Type_Declaration : Type_Information := State.Get_Type ("${d.getSkillName}");\r\n"""
   val superTypes = getSuperTypes(d).toList.reverse
   superTypes.foreach({ t =>
     output += s"""            ${t.getName}_Type_Declaration : Type_Information := State.Get_Type ("${t.getSkillName}");\r\n"""
@@ -306,9 +306,9 @@ ${
         case _ ⇒ ""
       }
     }).mkString("")
-    output += s"""                  Object : Skill_Type_Access := new ${d.getName}_Type${printDefaultValues(d)};
+    output += s"""                  Object : Skill_Type_Access := new ${escaped(d.getName)}_Type${printDefaultValues(d)};
                begin
-                  ${d.getName}_Type_Declaration.Storage_Pool.Append (Object);${printSuperTypes(d)}
+                  ${escaped(d.getName)}_Type_Declaration.Storage_Pool.Append (Object);${printSuperTypes(d)}
                end;
             end loop;
          end;
@@ -368,15 +368,15 @@ ${
 ${
   var output = "";
   for (d ← IR) {
-    output += s"""   function Read_${d.getName}_Type (Input_Stream : ASS_IO.Stream_Access; Types : Types_Hash_Map.Map) return ${d.getName}_Type_Access is
+    output += s"""   function Read_${escaped(d.getName)}_Type (Input_Stream : ASS_IO.Stream_Access; Types : Types_Hash_Map.Map) return ${escaped(d.getName)}_Type_Access is
       X : Long := Byte_Reader.Read_v64 (Input_Stream);
    begin
       if 0 = X then
          return null;
       else
-         return ${d.getName}_Type_Access (Types.Element ("${if (null == d.getSuperType) d.getSkillName else d.getBaseType.getSkillName}").Storage_Pool.Element (Positive (X)));
+         return ${escaped(d.getName)}_Type_Access (Types.Element ("${if (null == d.getSuperType) d.getSkillName else d.getBaseType.getSkillName}").Storage_Pool.Element (Positive (X)));
       end if;
-   end Read_${d.getName}_Type;\r\n\r\n"""
+   end Read_${escaped(d.getName)}_Type;\r\n\r\n"""
   }
   output.stripSuffix("\r\n")
 }

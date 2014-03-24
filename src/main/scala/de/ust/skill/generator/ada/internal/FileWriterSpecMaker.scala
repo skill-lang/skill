@@ -47,7 +47,7 @@ private
 ${
   var output = ""
   for (d ← IR) {
-    output += s"   procedure Write_${d.getName}_Type (Stream : ASS_IO.Stream_Access; X : ${d.getName}_Type_Access);\r\n"
+    output += s"   procedure Write_${escaped(d.getName)}_Type (Stream : ASS_IO.Stream_Access; X : ${escaped(d.getName)}_Type_Access);\r\n"
   }
   output
 }

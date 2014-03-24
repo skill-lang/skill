@@ -55,7 +55,7 @@ private
 ${
   var output = ""
   for (d ← IR) {
-    output += s"   function Read_${d.getName}_Type (Input_Stream : ASS_IO.Stream_Access; Types : Types_Hash_Map.Map) return ${d.getName}_Type_Access;\r\n"
+    output += s"   function Read_${escaped(d.getName)}_Type (Input_Stream : ASS_IO.Stream_Access; Types : Types_Hash_Map.Map) return ${escaped(d.getName)}_Type_Access;\r\n"
   }
   output
 }

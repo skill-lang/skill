@@ -54,8 +54,10 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       State.Put_String (Super_Name, Safe => True);
 
       declare
-         procedure Iterate (Iterator : Fields_Vector.Cursor) is
-            Field_Declaration : Field_Information := Fields_Vector.Element (Iterator);
+         use Fields_Vector;
+
+         procedure Iterate (Iterator : Cursor) is
+            Field_Declaration : Field_Information := Element (Iterator);
             Field_Name : String := Field_Declaration.Name;
          begin
             State.Put_String (Field_Name, Safe => True);
@@ -75,7 +77,7 @@ ${
     var hasOutput = false;
     output += s"""            if "${d.getSkillName}" = Type_Name then
                declare
-                  Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Skill_Object);
+                  Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Skill_Object);
                begin
 """
     d.getFields.filter({ f ⇒ "string" == f.getType.getSkillName }).foreach({ f ⇒
@@ -227,7 +229,7 @@ ${
    begin${
   var output = ""
   for (d ← IR) {
-    if (null == d.getSuperType) {
+    if (null == d.getSuperType && 0 < getSubTypes(d).length) {
       val types = getSubTypes(d).+=:(d)
 
       output += s"""\r\n      declare
@@ -242,29 +244,29 @@ ${
          Index : Positive := 1;
 """
       types.foreach({ t =>
-        output += s"""\r\n         ${t.getName}_Type_Declaration : Type_Information := State.Get_Type ("${t.getSkillName}");
-         procedure Iterate_${t.getName} (Iterator : Cursor) is
+        output += s"""\r\n         ${escaped(t.getName)}_Type_Declaration : Type_Information := State.Get_Type ("${t.getSkillName}");
+         procedure Iterate_${escaped(t.getName)} (Iterator : Cursor) is
             Object : Skill_Type_Access := Element (Iterator);
          begin
-            if 0 = ${t.getName}_Type_Declaration.lbpsi then
-               ${t.getName}_Type_Declaration.lbpsi := Index;
+            if 0 = ${escaped(t.getName)}_Type_Declaration.lbpsi then
+               ${escaped(t.getName)}_Type_Declaration.lbpsi := Index;
             end if;
             if "${t.getSkillName}" = Get_Object_Type (Object) then
                Temp (Index) := Object;
                Index := Index + 1;
             end if;
-         end Iterate_${t.getName};
-         pragma Inline (Iterate_${t.getName});\r\n"""
+         end Iterate_${escaped(t.getName)};
+         pragma Inline (Iterate_${escaped(t.getName)});\r\n"""
       })
       output += "      begin\r\n"
       types.foreach({ t =>
-        output += s"""         ${t.getName}_Type_Declaration.lbpsi := 0;
-         Type_Declaration.Storage_Pool.Iterate (Iterate_${t.getName}'Access);\r\n"""
+        output += s"""         ${escaped(t.getName)}_Type_Declaration.lbpsi := 0;
+         Type_Declaration.Storage_Pool.Iterate (Iterate_${escaped(t.getName)}'Access);\r\n"""
       })
       output += "\r\n"
       types.foreach({ t =>
         output += s"""         declare
-            Next_Type_Declaration : Type_Information := ${t.getName}_Type_Declaration;
+            Next_Type_Declaration : Type_Information := ${escaped(t.getName)}_Type_Declaration;
             Start_Index : Natural := Next_Type_Declaration.lbpsi;
             End_Index : Integer := Start_Index + Natural (Next_Type_Declaration.Storage_Pool.Length) - 1;
          begin
@@ -280,6 +282,7 @@ ${
   }
   output.stripLineEnd.stripLineEnd
 }
+      null;
    end Order_Types;
 
    procedure Write_Type_Block is
@@ -451,14 +454,14 @@ ${
 ${
   var output = "";
   for (d ← IR) {
-    output += s"""   procedure Write_${d.getName}_Type (Stream : ASS_IO.Stream_Access; X : ${d.getName}_Type_Access) is
+    output += s"""   procedure Write_${escaped(d.getName)}_Type (Stream : ASS_IO.Stream_Access; X : ${escaped(d.getName)}_Type_Access) is
    begin
       if null = X then
          Byte_Writer.Write_v64 (Stream, 0);
       else
          Byte_Writer.Write_v64 (Stream, Long (X.skill_id));
       end if;
-   end Write_${d.getName}_Type;\r\n\r\n"""
+   end Write_${escaped(d.getName)}_Type;\r\n\r\n"""
   }
   output.stripSuffix("\r\n")
 }
@@ -472,7 +475,7 @@ ${
 ${
   var output = "";
   for (d ← IR) {
-    output += s"""      if ${d.getName}_Type'Tag = Object'Tag then
+    output += s"""      if ${escaped(d.getName)}_Type'Tag = Object'Tag then
          return "${d.getSkillName}";
       end if;\r\n"""
   }

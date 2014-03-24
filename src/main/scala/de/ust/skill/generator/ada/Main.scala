@@ -13,6 +13,7 @@ import de.ust.skill.generator.ada.internal._
 import de.ust.skill.ir._
 import de.ust.skill.parser.Parser
 import scala.collection.mutable.MutableList
+import scala.util.matching.Regex
 
 /**
  * Entry point of the ada generator.
@@ -146,7 +147,7 @@ class Main extends FakeMain
     case t: SetType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_Set.Set"
     case t: MapType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_Map.Map"
 
-    case t: Declaration ⇒ s"${t.getName()}_Type_Access"
+    case t: Declaration ⇒ s"${escaped(t.getName())}_Type_Access"
   }
 
   protected def mapFileReader(d: Declaration, f: Field): String = {
@@ -161,39 +162,39 @@ class Main extends FakeMain
             s"Read_Unbounded_String (Input_Stream)"
         }
         case t: Declaration ⇒
-          s"""Read_${t.getName}_Type (Input_Stream, Types)"""
+          s"""Read_${escaped(t.getName)}_Type (Input_Stream, Types)"""
       }
     }
 
     f.getType match {
       case t: GroundType ⇒ t.getName() match {
         case "annotation" ⇒
-      	  s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+      	  s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
             begin
                Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
 
         case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
           if (f.isConstant) {
-            s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+            s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
                Skill_Parse_Constant_Error : exception;
             begin
                if Object.Get_${f.getSkillName.capitalize} /= ${mapType(f.getType, d, f)} (Field_Declaration.Constant_Value) then
                   raise Skill_Parse_Constant_Error;
                end if;"""
           } else {
-            s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+            s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
             begin
                Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
           }
 
         case "string" ⇒
-      	  s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+      	  s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
             begin
                Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
       }
 
       case t: ConstantLengthArrayType ⇒
-        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
             begin
                declare
                   Skill_Parse_Constant_Array_Length_Error : exception;
@@ -207,28 +208,28 @@ class Main extends FakeMain
                end loop;"""
 
       case t: VariableLengthArrayType ⇒
-        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
             begin
                for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
                   Object.${f.getSkillName}.Append (${inner(t.getBaseType, d, f)});
                end loop;"""
 
       case t: ListType ⇒
-        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
             begin
                for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
                   Object.${f.getSkillName}.Append (${inner(t.getBaseType, d, f)});
                end loop;"""
 
       case t: SetType ⇒
-        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
             begin
                for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
                   Object.${f.getSkillName}.Insert (${inner(t.getBaseType, d, f)});
                end loop;"""
 
      case t: MapType ⇒
-       s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+       s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
 
 ${
   var output = ""
@@ -265,7 +266,7 @@ ${
                Object.f := Read_Map_1;"""
 
       case t: Declaration ⇒
-        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
             begin
                Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
     }
@@ -283,30 +284,30 @@ ${
             s"Write_Unbounded_String (Stream, ${value})"
         }
         case t: Declaration ⇒
-          s"""Write_${t.getName}_Type (Stream, ${value})"""
+          s"""Write_${escaped(t.getName)}_Type (Stream, ${value})"""
       }
     }
 
     f.getType match {
       case t: GroundType ⇒ t.getName() match {
         case "annotation" ⇒
-      	  s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+      	  s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
             begin
                ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
 
         case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
-          s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+          s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
             begin
                ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
 
         case "string" ⇒
-      	  s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+      	  s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
       	    begin
                ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
       }
 
       case t: ConstantLengthArrayType ⇒
-        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
             begin
                for I in Object.${f.getSkillName}'Range loop
                   ${inner(t.getBaseType, d, f, s"Object.${f.getSkillName} (I)")};
@@ -315,7 +316,7 @@ ${
       case t: VariableLengthArrayType ⇒
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".Vector")};
 
-               Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+               Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
                Vector : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
 
                procedure Iterate (Position : Cursor) is
@@ -330,7 +331,7 @@ ${
       case t: ListType ⇒
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".List")};
 
-               Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+               Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
                List : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
 
                procedure Iterate (Position : Cursor) is
@@ -345,7 +346,7 @@ ${
       case t: SetType ⇒
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".Set")};
 
-               Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+               Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
                Set : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
 
                procedure Iterate (Position : Cursor) is
@@ -358,7 +359,7 @@ ${
                Set.Iterate (Iterate'Access);"""
 
       case t: MapType ⇒
-        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
 
 ${
   var output = ""
@@ -392,7 +393,7 @@ ${
                Write_Map_1 (Object.${f.getSkillName});"""
 
       case t: Declaration ⇒
-        s"""   Object : ${d.getName}_Type_Access := ${d.getName}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
+        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
             begin
                ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
     }
@@ -494,14 +495,18 @@ ${
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
-  protected def escaped(target: String): String = target match {
-    //keywords get a suffix "_", because that way at least auto-completion will work as expected
-    case "abstract" | "case" | "catch" | "class" | "def" | "do" | "else" | "extends" | "false" | "final" | "finally" |
-      "for" | "forSome" | "if" | "implicit" | "import" | "lazy" | "match" | "new" | "null" | "object" | "override" |
-      "package" | "private" | "protected" | "return" | "sealed" | "super" | "this" | "throw" | "trait" | "true" |
-      "try" | "type" | "var" | "while" | "with" | "yield" | "val" ⇒ target+"_"
+  protected def escaped(pTarget: String): String = {
+    val target = pTarget.replaceAll("([A-Z])", "_$0").stripPrefix("_")
 
-    //the string is fine anyway
-    case _ ⇒ target
+    target match {
+      // keywords get a suffix "_2", because that way at least auto-completion will work as expected
+      case "abstract" | "case" | "catch" | "class" | "def" | "do" | "else" | "extends" | "false" | "final" | "finally" |
+        "for" | "forSome" | "if" | "implicit" | "import" | "lazy" | "match" | "new" | "null" | "object" | "override" |
+        "package" | "private" | "protected" | "return" | "sealed" | "super" | "this" | "throw" | "trait" | "true" |
+        "try" | "type" | "var" | "while" | "with" | "yield" | "val" ⇒ return target+"_2" + "asd"
+
+      // the string is fine anyway
+      case _ ⇒ return target
+    }
   }
 }

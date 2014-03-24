@@ -41,10 +41,10 @@ ${
   var output = "";
   for (d ← IR) {
     val parameters = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map(f => s"${f.getSkillName()} : ${mapType(f.getType, d, f)}").mkString("; ", "; ", "")
-    output += s"""   function New_${d.getName} (State : access Skill_State${printParameters(d)}) return ${d.getName}_Type_Access;\r\n"""
-    output += s"""   procedure New_${d.getName} (State : access Skill_State${printParameters(d)});\r\n"""
-    output += s"""   function ${d.getName}s_Size (State : access Skill_State) return Natural;\r\n"""
-    output += s"""   function Get_${d.getName} (State : access Skill_State; Index : Natural) return ${d.getName}_Type_Access;\r\n"""
+    output += s"""   function New_${escaped(d.getName)} (State : access Skill_State${printParameters(d)}) return ${escaped(d.getName)}_Type_Access;\r\n"""
+    output += s"""   procedure New_${escaped(d.getName)} (State : access Skill_State${printParameters(d)});\r\n"""
+    output += s"""   function ${escaped(d.getName)}s_Size (State : access Skill_State) return Natural;\r\n"""
+    output += s"""   function Get_${escaped(d.getName)} (State : access Skill_State; Index : Natural) return ${escaped(d.getName)}_Type_Access;\r\n"""
   }
   output
 }

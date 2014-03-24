@@ -59,7 +59,7 @@ package body ${packagePrefix.capitalize}.Api.Skill is
    end Write;
 ${
   def printFields(d : Declaration): String = {
-    var output = s"""'(\r\n         skill_id => Natural (${if (null == d.getBaseType) d.getName else d.getBaseType.getName}_Type_Declaration.Storage_Pool.Length) + 1"""
+    var output = s"""'(\r\n         skill_id => Natural (${if (null == d.getBaseType) escaped(d.getName) else escaped(d.getBaseType.getName)}_Type_Declaration.Storage_Pool.Length) + 1"""
     output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
       s",\r\n         ${f.getSkillName} => ${f.getSkillName}"
     }).mkString("")
@@ -91,7 +91,7 @@ ${
     var output = "";
     val superTypes = getSuperTypes(d).toList.reverse
     superTypes.foreach({ t =>
-      output += s"""\r\n      ${t.getName}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));"""
+      output += s"""\r\n      ${escaped(t.getName)}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));"""
     })
     output
   }
@@ -99,32 +99,32 @@ ${
   var output = ""
   for (d ← IR) {
     output += s"""
-   function New_${d.getName} (State : access Skill_State${printParameters(d)}) return ${d.getName}_Type_Access is
-      ${d.getName}_Type_Declaration : Type_Information := State.Get_Type ("${d.getSkillName}");${
+   function New_${escaped(d.getName)} (State : access Skill_State${printParameters(d)}) return ${escaped(d.getName)}_Type_Access is
+      ${escaped(d.getName)}_Type_Declaration : Type_Information := State.Get_Type ("${d.getSkillName}");${
   var output = "" 
   val superTypes = getSuperTypes(d).toList.reverse
   superTypes.foreach({ t =>
-    output += s"""\r\n      ${t.getName}_Type_Declaration : Type_Information := State.Get_Type ("${t.getSkillName}");"""
+    output += s"""\r\n      ${escaped(t.getName)}_Type_Declaration : Type_Information := State.Get_Type ("${t.getSkillName}");"""
   })
   output
 }
-      New_Object : ${d.getName}_Type_Access := new ${d.getName}_Type${printFields(d)};
+      New_Object : ${escaped(d.getName)}_Type_Access := new ${escaped(d.getName)}_Type${printFields(d)};
    begin
-      ${d.getName}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));${printSuperTypes(d)}
+      ${escaped(d.getName)}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));${printSuperTypes(d)}
       return New_Object;
-   end New_${d.getName};
+   end New_${escaped(d.getName)};
 
-   procedure New_${d.getName} (State : access Skill_State${printParameters(d)}) is
-      New_Object : ${d.getName}_Type_Access := New_${d.getName} (State${printSimpleParameters(d)});
+   procedure New_${escaped(d.getName)} (State : access Skill_State${printParameters(d)}) is
+      New_Object : ${escaped(d.getName)}_Type_Access := New_${escaped(d.getName)} (State${printSimpleParameters(d)});
    begin
       null;
-   end New_${d.getName};
+   end New_${escaped(d.getName)};
 
-   function ${d.getName}s_Size (State : access Skill_State) return Natural is
+   function ${escaped(d.getName)}s_Size (State : access Skill_State) return Natural is
       (Natural (State.Get_Type ("${d.getSkillName}").Storage_Pool.Length));
 
-   function Get_${d.getName} (State : access Skill_State; Index : Natural) return ${d.getName}_Type_Access is
-      (${d.getName}_Type_Access (State.Get_Type ("${d.getSkillName}").Storage_Pool.Element (Index)));\r\n"""
+   function Get_${escaped(d.getName)} (State : access Skill_State; Index : Natural) return ${escaped(d.getName)}_Type_Access is
+      (${escaped(d.getName)}_Type_Access (State.Get_Type ("${d.getSkillName}").Storage_Pool.Element (Index)));\r\n"""
   }
   output
 }

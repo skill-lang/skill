@@ -38,20 +38,20 @@ package body ${packagePrefix.capitalize} is
 ${
   var output = "";
   for (d ← IR) {
-    output += s"""   function Hash (Element : ${d.getName}_Type_Access) return Ada.Containers.Hash_Type is\r\n      (Hash (Skill_Type_Access (Element)));\r\n\r\n"""
+    output += s"""   function Hash (Element : ${escaped(d.getName)}_Type_Access) return Ada.Containers.Hash_Type is\r\n      (Hash (Skill_Type_Access (Element)));\r\n\r\n"""
   }
 
   for (d ← IR) {
     d.getAllFields.filter { f ⇒ !f.isIgnored }.foreach({ f ⇒
       if (f.isConstant) {
-        output += s"""   function Get_${f.getSkillName.capitalize} (Object : ${d.getName}_Type) return ${mapType(f.getType, d, f)} is (${f.constantValue});\r\n\r\n"""
+        output += s"""   function Get_${f.getName.capitalize} (Object : ${escaped(d.getName)}_Type) return ${mapType(f.getType, d, f)} is (${f.constantValue});\r\n\r\n"""
       }
       else {
-        output += s"""   function Get_${f.getSkillName.capitalize} (Object : ${d.getName}_Type) return ${mapType(f.getType, d, f)} is (Object.${f.getSkillName});\r\n"""
-        output += s"""   procedure Set_${f.getSkillName.capitalize} (Object : in out ${d.getName}_Type; Value : ${mapType(f.getType, d, f)}) is
+        output += s"""   function Get_${f.getName.capitalize} (Object : ${escaped(d.getName)}_Type) return ${mapType(f.getType, d, f)} is (Object.${f.getSkillName});\r\n"""
+        output += s"""   procedure Set_${f.getName.capitalize} (Object : in out ${escaped(d.getName)}_Type; Value : ${mapType(f.getType, d, f)}) is
    begin
       Object.${f.getSkillName} := Value;
-   end Set_${f.getSkillName.capitalize};\r\n\r\n"""
+   end Set_${f.getName.capitalize};\r\n\r\n"""
       }
     })
   }

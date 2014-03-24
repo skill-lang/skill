@@ -67,9 +67,9 @@ package ${packagePrefix.capitalize} is
 ${
   var output = "";
   for (d ← IR) {
-    output += s"""   type ${d.getName}_Type is new Skill_Type with private;\r\n"""
-    output += s"""   type ${d.getName}_Type_Access is access all ${d.getName}_Type;\r\n"""
-    output += s"""   function Hash (Element : ${d.getName}_Type_Access) return Ada.Containers.Hash_Type;\r\n\r\n"""
+    output += s"""   type ${escaped(d.getName)}_Type is new Skill_Type with private;\r\n"""
+    output += s"""   type ${escaped(d.getName)}_Type_Access is access all ${escaped(d.getName)}_Type;\r\n"""
+    output += s"""   function Hash (Element : ${escaped(d.getName)}_Type_Access) return Ada.Containers.Hash_Type;\r\n\r\n"""
   }
 
   output.stripSuffix("\r\n")
@@ -107,9 +107,9 @@ ${
 
   for (d ← IR) {
     d.getAllFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
-      output += s"""   function Get_${f.getName.capitalize} (Object : ${d.getName}_Type) return ${mapType(f.getType, d, f)};\r\n"""
+      output += s"""   function Get_${f.getName.capitalize} (Object : ${escaped(d.getName)}_Type) return ${mapType(f.getType, d, f)};\r\n"""
       if (!f.isConstant)
-        output += s"""   procedure Set_${f.getName.capitalize} (Object : in out ${d.getName}_Type; Value : ${mapType(f.getType, d, f)});\r\n"""
+        output += s"""   procedure Set_${f.getName.capitalize} (Object : in out ${escaped(d.getName)}_Type; Value : ${mapType(f.getType, d, f)});\r\n"""
     })
   }
   output
@@ -127,12 +127,12 @@ ${
   var output = "";
   for (d ← IR) {
     val superType = if (d.getSuperType == null) "Skill" else d.getSuperType.getName
-    output += s"""   type ${d.getName}_Type is new ${superType}_Type with\r\n      record\r\n"""
+    output += s"""   type ${escaped(d.getName)}_Type is new ${superType}_Type with\r\n      record\r\n"""
     val fields = d.getFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
     output += fields.map({ f ⇒
       var comment = "";
       if (f.isAuto()) comment = "  --  auto aka not serialized"
-      s"""         ${f.getName} : ${mapType(f.getType, d, f)};${comment}"""
+      s"""         ${f.getSkillName} : ${mapType(f.getType, d, f)};${comment}"""
     }).mkString("\r\n")
     if (fields.length <= 0) output += s"""         null;"""
     output += s"""\r\n      end record;\r\n\r\n"""
