@@ -124,7 +124,24 @@ ${
       (Natural (State.Get_Type ("${d.getSkillName}").Storage_Pool.Length));
 
    function Get_${escaped(d.getName)} (State : access Skill_State; Index : Natural) return ${escaped(d.getName)}_Type_Access is
-      (${escaped(d.getName)}_Type_Access (State.Get_Type ("${d.getSkillName}").Storage_Pool.Element (Index)));\r\n"""
+      (${escaped(d.getName)}_Type_Access (State.Get_Type ("${d.getSkillName}").Storage_Pool.Element (Index)));
+
+   function Get_${escaped(d.getName)}s (State : access Skill_State) return ${escaped(d.getName)}_Type_Accesses is
+      use Storage_Pool_Vector;
+
+      Type_Declaration : Type_Information := State.Get_Type ("${d.getSkillName}");
+      Length : Natural := Natural (Type_Declaration.Storage_Pool.Length);
+      rval : ${escaped(d.getName)}_Type_Accesses := new ${escaped(d.getName)}_Type_Array (1 .. Length);
+
+      procedure Iterate (Position : Cursor) is
+      begin
+         rval (To_Index (Position)) := ${escaped(d.getName)}_Type_Access (Element (Position));
+      end Iterate;
+      pragma Inline (Iterate);
+   begin
+      Type_Declaration.Storage_Pool.Iterate (Iterate'Access);
+      return rval;
+   end Get_${escaped(d.getName)}s;\r\n"""
   }
   output
 }

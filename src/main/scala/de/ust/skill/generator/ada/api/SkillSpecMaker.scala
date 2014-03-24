@@ -45,6 +45,7 @@ ${
     output += s"""   procedure New_${escaped(d.getName)} (State : access Skill_State${printParameters(d)});\r\n"""
     output += s"""   function ${escaped(d.getName)}s_Size (State : access Skill_State) return Natural;\r\n"""
     output += s"""   function Get_${escaped(d.getName)} (State : access Skill_State; Index : Natural) return ${escaped(d.getName)}_Type_Access;\r\n"""
+    output += s"""   function Get_${escaped(d.getName)}s (State : access Skill_State) return ${escaped(d.getName)}_Type_Accesses;\r\n"""
   }
   output
 }

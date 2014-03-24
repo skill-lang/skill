@@ -69,6 +69,8 @@ ${
   for (d ← IR) {
     output += s"""   type ${escaped(d.getName)}_Type is new Skill_Type with private;\r\n"""
     output += s"""   type ${escaped(d.getName)}_Type_Access is access all ${escaped(d.getName)}_Type;\r\n"""
+    output += s"""   type ${escaped(d.getName)}_Type_Array is array (Natural range <>) of ${escaped(d.getName)}_Type_Access;\r\n"""
+    output += s"""   type ${escaped(d.getName)}_Type_Accesses is access ${escaped(d.getName)}_Type_Array;\r\n"""
     output += s"""   function Hash (Element : ${escaped(d.getName)}_Type_Access) return Ada.Containers.Hash_Type;\r\n\r\n"""
   }
 
