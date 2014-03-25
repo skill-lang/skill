@@ -20,11 +20,10 @@ with ${packagePrefix.capitalize}.Internal.Byte_Writer;
 
 package ${packagePrefix.capitalize}.Internal.File_Writer is
 
-   procedure Write (pState : access Skill_State; File_Name : String);
+   procedure Write (State : access Skill_State; File_Name : String);
 
 private
 
-   State : access Skill_State;
    Field_Data_File : ASS_IO.File_Type;
    Field_Data_Stream : ASS_IO.Stream_Access;
    Output_Stream : ASS_IO.Stream_Access;

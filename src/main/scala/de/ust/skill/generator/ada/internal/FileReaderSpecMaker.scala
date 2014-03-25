@@ -19,11 +19,10 @@ with ${packagePrefix.capitalize}.Internal.Byte_Reader;
 
 package ${packagePrefix.capitalize}.Internal.File_Reader is
 
-   procedure Read (pState : access Skill_State; File_Name : String);
+   procedure Read (State : access Skill_State; File_Name : String);
 
 private
 
-   State : access Skill_State;
    Input_File : ASS_IO.File_Type;
    Input_Stream : ASS_IO.Stream_Access;
 

@@ -20,9 +20,8 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
    String_Pool : access String_Pool_Vector.Vector;
    Types : access Types_Hash_Map.Map;
 
-   procedure Read (pState : access Skill_State; File_Name : String) is
+   procedure Read (State : access Skill_State; File_Name : String) is
    begin
-      State := pState;
       String_Pool := State.String_Pool;
       Types := State.Types;
 

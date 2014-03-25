@@ -16,7 +16,6 @@ trait SkillSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}-api-skill.ads""")
 
     out.write(s"""
-with Ada.Unchecked_Conversion;
 with ${packagePrefix.capitalize}.Internal.File_Reader;
 with ${packagePrefix.capitalize}.Internal.File_Writer;
 with ${packagePrefix.capitalize}.Internal.State_Maker;

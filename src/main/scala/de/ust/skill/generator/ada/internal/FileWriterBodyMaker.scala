@@ -22,10 +22,9 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
 
    Last_Types_End : Long := 0;
 
-   procedure Write (pState : access Skill_State; File_Name : String) is
+   procedure Write (State : access Skill_State; File_Name : String) is
       Output_File : ASS_IO.File_Type;
    begin
-      State := pState;
       String_Pool := State.String_Pool;
       Types := State.Types;
 
