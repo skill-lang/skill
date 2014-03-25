@@ -26,8 +26,8 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       Output_File : ASS_IO.File_Type;
    begin
       State := pState;
-      String_Pool := State.Get_String_Pool;
-      Types := State.Get_Types;
+      String_Pool := State.String_Pool;
+      Types := State.Types;
 
       ASS_IO.Create (Output_File, ASS_IO.Out_File, File_Name);
       ASS_IO.Create (Field_Data_File, ASS_IO.Out_File);

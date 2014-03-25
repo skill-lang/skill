@@ -23,9 +23,9 @@ package body ${packagePrefix.capitalize}.Api.Skill is
 
       Skill_State_Already_Consumed : exception;
    begin
-      if False = State.Is_Consumed then
+      if Unconsumed = State.State then
          State_Maker.Create (State);
-         State.Consume;
+         State.State := Consumed;
       else
          raise Skill_State_Already_Consumed;
       end if;
@@ -37,10 +37,10 @@ package body ${packagePrefix.capitalize}.Api.Skill is
 
       Skill_State_Already_Consumed : exception;
    begin
-      if False = State.Is_Consumed then
+      if Unconsumed = State.State then
          File_Reader.Read (State, File_Name);
          State_Maker.Create (State);
-         State.Consume;
+         State.State := Consumed;
       else
          raise Skill_State_Already_Consumed;
       end if;
@@ -51,7 +51,7 @@ package body ${packagePrefix.capitalize}.Api.Skill is
 
       Skill_State_Not_Consumed : exception;
    begin
-      if True = State.Is_Consumed then
+      if Consumed = State.State then
          File_Writer.Write (State, File_Name);
       else
          raise Skill_State_Not_Consumed;
@@ -100,11 +100,11 @@ ${
   for (d ← IR) {
     output += s"""
    function New_${escaped(d.getName)} (State : access Skill_State${printParameters(d)}) return ${escaped(d.getName)}_Type_Access is
-      ${escaped(d.getName)}_Type_Declaration : Type_Information := State.Get_Types.Element ("${d.getSkillName}");${
+      ${escaped(d.getName)}_Type_Declaration : Type_Information := State.Types.Element ("${d.getSkillName}");${
   var output = "" 
   val superTypes = getSuperTypes(d).toList.reverse
   superTypes.foreach({ t =>
-    output += s"""\r\n      ${escaped(t.getName)}_Type_Declaration : Type_Information := State.Get_Types.Element ("${t.getSkillName}");"""
+    output += s"""\r\n      ${escaped(t.getName)}_Type_Declaration : Type_Information := State.Types.Element ("${t.getSkillName}");"""
   })
   output
 }
@@ -121,15 +121,15 @@ ${
    end New_${escaped(d.getName)};
 
    function ${escaped(d.getName)}s_Size (State : access Skill_State) return Natural is
-      (Natural (State.Get_Types.Element ("${d.getSkillName}").Storage_Pool.Length));
+      (Natural (State.Types.Element ("${d.getSkillName}").Storage_Pool.Length));
 
    function Get_${escaped(d.getName)} (State : access Skill_State; Index : Natural) return ${escaped(d.getName)}_Type_Access is
-      (${escaped(d.getName)}_Type_Access (State.Get_Types.Element ("${d.getSkillName}").Storage_Pool.Element (Index)));
+      (${escaped(d.getName)}_Type_Access (State.Types.Element ("${d.getSkillName}").Storage_Pool.Element (Index)));
 
    function Get_${escaped(d.getName)}s (State : access Skill_State) return ${escaped(d.getName)}_Type_Accesses is
       use Storage_Pool_Vector;
 
-      Type_Declaration : Type_Information := State.Get_Types.Element ("${d.getSkillName}");
+      Type_Declaration : Type_Information := State.Types.Element ("${d.getSkillName}");
       Length : Natural := Natural (Type_Declaration.Storage_Pool.Length);
       rval : ${escaped(d.getName)}_Type_Accesses := new ${escaped(d.getName)}_Type_Array (1 .. Length);
 

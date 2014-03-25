@@ -18,7 +18,7 @@ trait StateMakerBodyMaker extends GeneralOutputMaker {
 package body ${packagePrefix.capitalize}.Internal.State_Maker is
 
    procedure Create (State : access Skill_State) is
-      Types : access Types_Hash_Map.Map := State.Get_Types;
+      Types : access Types_Hash_Map.Map := State.Types;
    begin
 ${
   var output = "";

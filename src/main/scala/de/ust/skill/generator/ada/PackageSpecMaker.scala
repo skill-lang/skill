@@ -188,25 +188,12 @@ ${
    -------------------
    --  SKILL STATE  --
    -------------------
-   protected type Skill_State is
-
-      --  string pool
-      function Get_String_Pool return access String_Pool_Vector.Vector;
-
-      --  type declarations
-      function Get_Types return access Types_Hash_Map.Map;
-
-      --  state
-      function Is_Consumed return Boolean;
-      procedure Consume;
-
-   private
-
-      String_Pool : access String_Pool_Vector.Vector := new String_Pool_Vector.Vector;
-      Types : access Types_Hash_Map.Map := new Types_Hash_Map.Map;
-      State : Skill_States := Unconsumed;
-
-   end Skill_State;
+   type Skill_State is
+      record
+         String_Pool : access String_Pool_Vector.Vector := new String_Pool_Vector.Vector;
+         Types : access Types_Hash_Map.Map := new Types_Hash_Map.Map;
+         State : Skill_States := Unconsumed;
+      end record;
 
 end ${packagePrefix.capitalize};
 """)

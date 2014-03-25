@@ -23,8 +23,8 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
    procedure Read (pState : access Skill_State; File_Name : String) is
    begin
       State := pState;
-      String_Pool := State.Get_String_Pool;
-      Types := State.Get_Types;
+      String_Pool := State.String_Pool;
+      Types := State.Types;
 
       Byte_Reader.Reset_Buffer;
 

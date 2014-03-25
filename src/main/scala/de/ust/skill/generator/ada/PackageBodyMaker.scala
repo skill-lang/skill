@@ -58,33 +58,6 @@ ${
   output.stripSuffix("\r\n\r\n");
 }
 
-   protected body Skill_State is
-
-      -------------------
-      --  STRING POOL  --
-      -------------------
-      function Get_String_Pool return access String_Pool_Vector.Vector is
-         (String_Pool);
-
-      --------------------------
-      --  TYPES DECLARATIONS  --
-      --------------------------
-      function Get_Types return access Types_Hash_Map.Map is
-         (Types);
-
-      -------------
-      --  STATE  --
-      -------------
-      function Is_Consumed return Boolean is
-         (Consumed = State);
-
-      procedure Consume is
-      begin
-         State := Consumed;
-      end Consume;
-
-   end Skill_State;
-
 end ${packagePrefix.capitalize};
 """)
 
