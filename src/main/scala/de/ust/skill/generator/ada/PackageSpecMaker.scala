@@ -145,6 +145,7 @@ ${
    --  STRING POOL --
    ------------------
    package String_Pool_Vector is new Ada.Containers.Indefinite_Vectors (Positive, String);
+   type String_Pool_Access is access String_Pool_Vector.Vector;
 
    --------------------
    --  STORAGE POOL  --
@@ -184,14 +185,15 @@ ${
 
    package Types_Hash_Map is new Ada.Containers.Indefinite_Hashed_Maps
       (String, Type_Information, Ada.Strings.Hash, "=");
+   type Types_Hash_Map_Access is access Types_Hash_Map.Map;
 
    -------------------
    --  SKILL STATE  --
    -------------------
    type Skill_State is
       record
-         String_Pool : access String_Pool_Vector.Vector := new String_Pool_Vector.Vector;
-         Types : access Types_Hash_Map.Map := new Types_Hash_Map.Map;
+         String_Pool : String_Pool_Access := new String_Pool_Vector.Vector;
+         Types : Types_Hash_Map_Access := new Types_Hash_Map.Map;
          State : Skill_States := Unconsumed;
       end record;
 

@@ -17,8 +17,8 @@ trait FileReaderBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Internal.File_Reader is
 
-   String_Pool : access String_Pool_Vector.Vector;
-   Types : access Types_Hash_Map.Map;
+   String_Pool : String_Pool_Access;
+   Types : Types_Hash_Map_Access;
 
    procedure Read (State : access Skill_State; File_Name : String) is
    begin
