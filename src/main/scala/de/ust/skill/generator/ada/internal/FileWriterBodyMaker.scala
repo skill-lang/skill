@@ -17,12 +17,17 @@ trait FileWriterBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Internal.File_Writer is
 
+   String_Pool : access String_Pool_Vector.Vector;
+   Types : access Types_Hash_Map.Map;
+
    Last_Types_End : Long := 0;
 
    procedure Write (pState : access Skill_State; File_Name : String) is
       Output_File : ASS_IO.File_Type;
    begin
       State := pState;
+      String_Pool := State.Get_String_Pool;
+      Types := State.Get_Types;
 
       ASS_IO.Create (Output_File, ASS_IO.Out_File, File_Name);
       ASS_IO.Create (Field_Data_File, ASS_IO.Out_File);
@@ -40,9 +45,37 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       ASS_IO.Close (Output_File);
    end Write;
 
+   function Get_String_Index (Value : String) return Positive is
+      Index : Natural := String_Pool.Reverse_Find_Index (Value);
+      Skill_Unknown_String_Index : exception;
+   begin
+      if 0 = Index then
+         raise Skill_Unknown_String_Index;
+      end if;
+      return Index;
+   end Get_String_Index;
+
+   procedure Put_String (Value : String; Safe : Boolean := False) is
+      Append : Boolean := True;
+   begin
+      if True = Safe then
+         declare
+            Index : Natural := String_Pool.Reverse_Find_Index (Value);
+         begin
+            if 0 < Index or 0 = Value'Length then
+               Append := False;
+            end if;
+         end;
+      end if;
+
+      if True = Append then
+         String_Pool.Append (Value);
+      end if;
+   end Put_String;
+
    procedure Prepare_String_Pool is
    begin
-      State.Get_Types.Iterate (Prepare_String_Pool_Iterator'Access);
+      Types.Iterate (Prepare_String_Pool_Iterator'Access);
    end Prepare_String_Pool;
 
    procedure Prepare_String_Pool_Iterator (Iterator : Types_Hash_Map.Cursor) is
@@ -50,8 +83,8 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
       Type_Name : String := Type_Declaration.Name;
       Super_Name : String := Type_Declaration.Super_Name;
    begin
-      State.Put_String (Type_Name, Safe => True);
-      State.Put_String (Super_Name, Safe => True);
+      Put_String (Type_Name, Safe => True);
+      Put_String (Super_Name, Safe => True);
 
       declare
          use Fields_Vector;
@@ -60,7 +93,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
             Field_Declaration : Field_Information := Element (Iterator);
             Field_Name : String := Field_Declaration.Name;
          begin
-            State.Put_String (Field_Name, Safe => True);
+            Put_String (Field_Name, Safe => True);
          end Iterate;
          pragma Inline (Iterate);
       begin
@@ -82,7 +115,7 @@ ${
 """
     d.getFields.filter({ f ⇒ "string" == f.getType.getSkillName }).foreach({ f ⇒
       hasOutput = true;
-      output += s"                  State.Put_String (SU.To_String (Object.${f.getSkillName}), Safe => True);\r\n"
+      output += s"                  Put_String (SU.To_String (Object.${f.getSkillName}), Safe => True);\r\n"
     })
     d.getFields.foreach({ f =>
       f.getType match {
@@ -90,7 +123,7 @@ ${
           if ("string" == t.getBaseType.getName) {
             hasOutput = true;
             output += s"""\r\n                  for I in Object.${f.getSkillName}'Range loop
-                     State.Put_String (SU.To_String (Object.${f.getSkillName} (I)), Safe => True);
+                     Put_String (SU.To_String (Object.${f.getSkillName} (I)), Safe => True);
                   end loop;\r\n""";
           }
         case t: VariableLengthArrayType ⇒
@@ -103,7 +136,7 @@ ${
 
                      procedure Iterate (Position : Cursor) is
                      begin
-                        State.Put_String (SU.To_String (Element (Position)), Safe => True);
+                        Put_String (SU.To_String (Element (Position)), Safe => True);
                      end Iterate;
                      pragma Inline (Iterate);
                   begin
@@ -120,7 +153,7 @@ ${
 
                      procedure Iterate (Position : Cursor) is
                      begin
-                        State.Put_String (SU.To_String (Element (Position)), Safe => True);
+                        Put_String (SU.To_String (Element (Position)), Safe => True);
                      end Iterate;
                      pragma Inline (Iterate);
                   begin
@@ -137,7 +170,7 @@ ${
 
                      procedure Iterate (Position : Cursor) is
                      begin
-                        State.Put_String (SU.To_String (Element (Position)), Safe => True);
+                        Put_String (SU.To_String (Element (Position)), Safe => True);
                      end Iterate;
                      pragma Inline (Iterate);
                   begin
@@ -153,14 +186,14 @@ ${
               val x = {
                 var output = ""
                 if (0 == i) {
-                  if ("string" == types.get(i+1).getName) output += s"State.Put_String (SU.To_String (Key (Position)), Safe => True);"
+                  if ("string" == types.get(i+1).getName) output += s"Put_String (SU.To_String (Key (Position)), Safe => True);"
                   if ("string" == types.get(i).getName) {
                     if (!output.isEmpty) output += "\r\n                     "
-                    output += s"State.Put_String (SU.To_String (Element (Position)), Safe => True);"
+                    output += s"Put_String (SU.To_String (Element (Position)), Safe => True);"
                   }
                 }
                 else {
-                  if ("string" == types.get(i+1).getName) output += s"State.Put_String (SU.To_String (Key (Position)), Safe => True);\r\n                           "
+                  if ("string" == types.get(i+1).getName) output += s"Put_String (SU.To_String (Key (Position)), Safe => True);\r\n                           "
                   output += s"Read_Map_${types.length-i} (Element (Position));"
                 }
                 if (output.isEmpty) "null;" else output
@@ -204,14 +237,14 @@ ${
       Prepare_String_Pool;
 
       declare
-         Size : Natural := State.String_Pool_Size;
+         Size : Natural := Natural (String_Pool.Length);
          Last_String_End : Natural := 0;
       begin
          Byte_Writer.Write_v64 (Output_Stream, Long (Size));
 
          for I in 1 .. Size loop
             declare
-               X : String := State.Get_String (I);
+               X : String := String_Pool.Element (I);
                String_Length : Positive := X'Length + Last_String_End;
             begin
                Byte_Writer.Write_i32 (Output_Stream, String_Length);
@@ -220,7 +253,7 @@ ${
          end loop;
 
          for I in 1 .. Size loop
-            Byte_Writer.Write_String (Output_Stream, State.Get_String (I));
+            Byte_Writer.Write_String (Output_Stream, String_Pool.Element (I));
          end loop;
       end;
    end Write_String_Pool;
@@ -235,7 +268,7 @@ ${
       output += s"""\r\n      declare
          use Storage_Pool_Vector;
 
-         Type_Declaration : Type_Information := State.Get_Type ("${d.getSkillName}");
+         Type_Declaration : Type_Information := Types.Element ("${d.getSkillName}");
          Length : Natural := Natural (Type_Declaration.Storage_Pool.Length);
 
          type Temp_Type is array (1 .. Length) of Skill_Type_Access;
@@ -244,7 +277,7 @@ ${
          Index : Positive := 1;
 """
       types.foreach({ t =>
-        output += s"""\r\n         ${escaped(t.getName)}_Type_Declaration : Type_Information := State.Get_Type ("${t.getSkillName}");
+        output += s"""\r\n         ${escaped(t.getName)}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");
          procedure Iterate_${escaped(t.getName)} (Iterator : Cursor) is
             Object : Skill_Type_Access := Element (Iterator);
          begin
@@ -293,7 +326,7 @@ ${
 
 ${
   def inner (d : Type): String = {
-    s"""      Write_Type_Declaration (State.Get_Type ("${d.getSkillName}"));\r\n"""
+    s"""      Write_Type_Declaration (Types.Element ("${d.getSkillName}"));\r\n"""
   }
   var output = ""
   for (d ← IR) {
@@ -312,23 +345,23 @@ ${
    procedure Write_Type_Declaration (Type_Declaration : Type_Information) is
       Type_Name : String := Type_Declaration.Name;
       Super_Name : String := Type_Declaration.Super_Name;
-      Field_Size : Natural := State.Field_Size (Type_Name);
+      Field_Size : Natural := Natural (Types.Element (Type_Name).Fields.Length);
    begin
-      Byte_Writer.Write_v64 (Output_Stream, Long (State.Get_String_Index (Type_Name)));
+      Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Type_Name)));
 
       if 0 < Super_Name'Length then
-         Byte_Writer.Write_v64 (Output_Stream, Long (State.Get_String_Index (Super_Name)));
+         Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Super_Name)));
          Byte_Writer.Write_v64 (Output_Stream, Long (Type_Declaration.lbpsi));
       else
          Byte_Writer.Write_v64 (Output_Stream, 0);
       end if;
 
-      Byte_Writer.Write_v64 (Output_Stream, Long (State.Storage_Pool_Size (Type_Name)));
+      Byte_Writer.Write_v64 (Output_Stream, Long (Types.Element (Type_Name).Storage_Pool.Length));
       Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
       Byte_Writer.Write_v64 (Output_Stream, Long (Field_Size));
 
       for I in 1 .. Field_Size loop
-         Write_Field_Declaration (Type_Declaration, State.Get_Field (Type_Name, I));
+         Write_Field_Declaration (Type_Declaration, Types.Element (Type_Name).Fields.Element (Positive (I)));
       end loop;
    end Write_Type_Declaration;
 
@@ -377,7 +410,7 @@ ${
          when others => null;
       end case;
 
-      Byte_Writer.Write_v64 (Output_Stream, Long (State.Get_String_Index (Field_Name)));
+      Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Field_Name)));
 
       Last_Types_End := Last_Types_End + Size;
       Byte_Writer.Write_v64 (Output_Stream, Last_Types_End);
@@ -425,7 +458,6 @@ ${
 
    procedure Write_Annotation (Stream : ASS_IO.Stream_Access; Object : Skill_Type_Access) is
       Type_Name : String := Get_Object_Type (Object);
-      Types : Types_Hash_Map.Map := State.Get_Types;
 
       function Get_Base_Type (Type_Declaration : Type_Information) return String is
          Super_Name : String := Type_Declaration.Super_Name;
@@ -433,7 +465,7 @@ ${
          if 0 = Super_Name'Length then
             return Type_Name;
          else
-            return Get_Base_Type (State.Get_Type (Super_Name));
+            return Get_Base_Type (Types.Element (Super_Name));
          end if;
       end Get_Base_Type;
    begin
@@ -441,14 +473,14 @@ ${
          Byte_Writer.Write_v64 (Stream, 0);
          Byte_Writer.Write_v64 (Stream, 0);
       else
-         Byte_Writer.Write_v64 (Stream, Long (State.Get_String_Index (Get_Base_Type (Types.Element (Type_Name)))));
+         Byte_Writer.Write_v64 (Stream, Long (Get_String_Index (Get_Base_Type (Types.Element (Type_Name)))));
          Byte_Writer.Write_v64 (Stream, Long (Object.skill_id));
       end if;
    end Write_Annotation;
 
    procedure Write_Unbounded_String (Stream : ASS_IO.Stream_Access; Value : SU.Unbounded_String) is
    begin
-      Byte_Writer.Write_v64 (Stream, Long (State.Get_String_Index (SU.To_String (Value))));
+      Byte_Writer.Write_v64 (Stream, Long (Get_String_Index (SU.To_String (Value))));
    end Write_Unbounded_String;
 
 ${

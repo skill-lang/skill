@@ -191,31 +191,10 @@ ${
    protected type Skill_State is
 
       --  string pool
-      function Get_String (Index : Positive) return String;
-      function Get_String (Index : Long) return String;
-      function Get_String (Index : Positive) return SU.Unbounded_String;
-      function Get_String (Index : Long) return SU.Unbounded_String;
-      function Get_String_Index (Value : String) return Positive;
-      function String_Pool_Size return Natural;
-      procedure Put_String (Value : String; Safe : Boolean := False);
-
-      --  storage pool
-      function Storage_Pool_Size (Type_Name : String) return Natural;
-
-      --  field declarations
-      function Field_Size (Type_Name : String) return Natural;
-      function Has_Field (Type_Name, Field_Name : String) return Boolean;
-      function Get_Field (Type_Name : String; Index : Positive) return Field_Information;
-      function Get_Field (Type_Name : String; Index : Long) return Field_Information;
-      function Get_Field (Type_Name, Field_Name : String) return Field_Information;
-      procedure Put_Field (Type_Name : String; New_Field : Field_Information);
+      function Get_String_Pool return access String_Pool_Vector.Vector;
 
       --  type declarations
-      function Type_Size return Natural;
-      function Has_Type (Name : String) return Boolean;
-      function Get_Type (Name : String) return Type_Information;
-      procedure Put_Type (New_Type : Type_Information);
-      function Get_Types return Types_Hash_Map.Map;
+      function Get_Types return access Types_Hash_Map.Map;
 
       --  state
       function Is_Consumed return Boolean;
@@ -223,8 +202,8 @@ ${
 
    private
 
-      String_Pool : String_Pool_Vector.Vector;
-      Types : Types_Hash_Map.Map;
+      String_Pool : access String_Pool_Vector.Vector := new String_Pool_Vector.Vector;
+      Types : access Types_Hash_Map.Map := new Types_Hash_Map.Map;
       State : Skill_States := Unconsumed;
 
    end Skill_State;

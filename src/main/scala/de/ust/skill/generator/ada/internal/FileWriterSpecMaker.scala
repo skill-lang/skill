@@ -32,6 +32,8 @@ private
    procedure Prepare_String_Pool;
    procedure Prepare_String_Pool_Iterator (Iterator : Types_Hash_Map.Cursor);
 
+   function Get_String_Index (Value : String) return Positive;
+   procedure Put_String (Value : String; Safe : Boolean := False);
    procedure Write_String_Pool;
    procedure Order_Types;
    procedure Write_Type_Block;

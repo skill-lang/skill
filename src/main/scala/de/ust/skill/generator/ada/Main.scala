@@ -117,7 +117,7 @@ class Main extends FakeMain
     case t: SetType                 ⇒ 19.toString
     case t: MapType					⇒ 20.toString
 
-    case t: Declaration				⇒ s"""Long (State.Get_Type ("${t.getSkillName}").id)"""
+    case t: Declaration				⇒ s"""Long (Types.Element ("${t.getSkillName}").id)"""
   }
 
   /**
@@ -155,14 +155,14 @@ class Main extends FakeMain
       t match {
         case t: GroundType ⇒ t.getName() match {
           case "annotation" ⇒
-            s"Read_Annotation (Input_Stream, Types)"
+            s"Read_Annotation (Input_Stream)"
           case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
             s"Byte_Reader.Read_${mapType(t, _d, _f)} (Input_Stream)"
           case "string" ⇒
             s"Read_Unbounded_String (Input_Stream)"
         }
         case t: Declaration ⇒
-          s"""Read_${escaped(t.getName)}_Type (Input_Stream, Types)"""
+          s"""Read_${escaped(t.getName)}_Type (Input_Stream)"""
       }
     }
 

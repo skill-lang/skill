@@ -49,13 +49,13 @@ private
    procedure Create_Objects (Type_Name : String; Instance_Count : Natural);
    procedure Read_Queue_Vector_Iterator (Iterator : Read_Queue_Vector.Cursor);
 
-   function Read_Annotation (Input_Stream : ASS_IO.Stream_Access; Types : Types_Hash_Map.Map) return Skill_Type_Access;
+   function Read_Annotation (Input_Stream : ASS_IO.Stream_Access) return Skill_Type_Access;
    function Read_Unbounded_String (Input_Stream : ASS_IO.Stream_Access) return SU.Unbounded_String;
 
 ${
   var output = ""
   for (d ← IR) {
-    output += s"   function Read_${escaped(d.getName)}_Type (Input_Stream : ASS_IO.Stream_Access; Types : Types_Hash_Map.Map) return ${escaped(d.getName)}_Type_Access;\r\n"
+    output += s"   function Read_${escaped(d.getName)}_Type (Input_Stream : ASS_IO.Stream_Access) return ${escaped(d.getName)}_Type_Access;\r\n"
   }
   output
 }

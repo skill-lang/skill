@@ -18,11 +18,12 @@ trait StateMakerBodyMaker extends GeneralOutputMaker {
 package body ${packagePrefix.capitalize}.Internal.State_Maker is
 
    procedure Create (State : access Skill_State) is
+      Types : access Types_Hash_Map.Map := State.Get_Types;
    begin
 ${
   var output = "";
   for (d ← IR) {
-    output += s"""      if not State.Has_Type ("${d.getSkillName}") then
+    output += s"""      if not Types.Contains ("${d.getSkillName}") then
          declare
             Type_Name : String := "${d.getSkillName}";
             Super_Name : String := "${if (null == d.getSuperType) "" else d.getSuperType}";
@@ -31,7 +32,7 @@ ${
             New_Type : Type_Information := new Type_Declaration'(
                Type_Size => Type_Name'Length,
                Super_Size => Super_Name'Length,
-               id => Long (State.Type_Size + 32),
+               id => Long (Natural (Types.Length) + 32),
                Name => Type_Name,
                Super_Name => Super_Name,
                bpsi => 1,
@@ -40,7 +41,7 @@ ${
                Storage_Pool => Storage_Pool
             );
          begin
-            State.Put_Type (New_Type);
+            Types.Insert (New_Type.Name, New_Type);
          end;
       end if;\r\n\r\n"""
   }
@@ -50,7 +51,7 @@ ${
   var output = "";
   for (d ← IR) {
      output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
-       s"""      if not State.Has_Field ("${d.getSkillName}", "${f.getSkillName}") then
+       s"""      if not Has_Field (Types.Element ("${d.getSkillName}"), "${f.getSkillName}") then
          declare
             Type_Name : String := "${d.getSkillName}";
             Field_Name : String := "${f.getSkillName}";
@@ -87,13 +88,31 @@ ${
     case _ ⇒ null
   }
   output
-}            State.Put_Field (Type_Name, New_Field);
+}            Types.Element (Type_Name).Fields.Append (New_Field);
          end;
       end if;\r\n\r\n"""}).mkString("")
   }
   output.stripLineEnd.stripLineEnd
 }
    end Create;
+
+   function Has_Field (Type_Declaration : Type_Information; Field_Name : String) return Boolean is
+      use Fields_Vector;
+
+      Position : Cursor := Type_Declaration.Fields.First;
+   begin
+      while Position /= No_Element loop
+         declare
+            Index : Positive := To_Index (Position);
+         begin
+            if Field_Name = Type_Declaration.Fields.Element (Index).Name then
+               return True;
+            end if;
+         end;
+         Next (Position);
+      end loop;
+      return False;
+   end Has_Field;
 
 end ${packagePrefix.capitalize}.Internal.State_Maker;
 """)

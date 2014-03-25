@@ -18,6 +18,10 @@ package ${packagePrefix.capitalize}.Internal.State_Maker is
 
    procedure Create (State : access Skill_State);
 
+private
+
+   function Has_Field (Type_Declaration : Type_Information; Field_Name : String) return Boolean;
+
 end ${packagePrefix.capitalize}.Internal.State_Maker;
 """)
 

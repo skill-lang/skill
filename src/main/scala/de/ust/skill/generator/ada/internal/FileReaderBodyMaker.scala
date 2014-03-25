@@ -17,9 +17,14 @@ trait FileReaderBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Internal.File_Reader is
 
+   String_Pool : access String_Pool_Vector.Vector;
+   Types : access Types_Hash_Map.Map;
+
    procedure Read (pState : access Skill_State; File_Name : String) is
    begin
       State := pState;
+      String_Pool := State.Get_String_Pool;
+      Types := State.Get_Types;
 
       Byte_Reader.Reset_Buffer;
 
@@ -57,7 +62,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
             String_Length : Integer := String_Lengths (I);
             Next_String : String := Byte_Reader.Read_String (Input_Stream, String_Length);
          begin
-            State.Put_String (Next_String);
+            String_Pool.Append (Next_String);
          end;
       end loop;
    end Read_String_Block;
@@ -74,17 +79,17 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
    end Read_Type_Block;
 
    procedure Read_Type_Declaration (Last_End : in out Long) is
-      Type_Name : String := State.Get_String (Byte_Reader.Read_v64 (Input_Stream));
+      Type_Name : String := String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream)));
       Instance_Count : Natural;
       Field_Count : Long;
    begin
-      if not State.Has_Type (Type_Name) then
+      if not Types.Contains (Type_Name) then
          declare
             Super_Name_Index : Long := Byte_Reader.Read_v64 (Input_Stream);
             Super_Name : SU.Unbounded_String := SU.To_Unbounded_String("");
          begin
             if Super_Name_Index > 0 then
-               Super_Name := SU.To_Unbounded_String (State.Get_String (Super_Name_Index));
+               Super_Name := SU.To_Unbounded_String (String_Pool.Element (Natural (Super_Name_Index)));
             end if;
 
             declare
@@ -93,7 +98,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                New_Type : Type_Information := new Type_Declaration'(
                   Type_Size => Type_Name'Length,
                   Super_Size => SU.To_String (Super_Name)'Length,
-                  id => Long (State.Type_Size + 32),
+                  id => Long (Natural (Types.Length) + 32),
                   Name => Type_Name,
                   Super_Name => SU.To_String (Super_Name),
                   bpsi => 1,
@@ -102,19 +107,19 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                   Storage_Pool => New_Type_Storage_Pool
                );
             begin
-               State.Put_Type (New_Type);
+               Types.Insert (New_Type.Name, New_Type);
             end;
          end;
 
-         if 0 /= State.Get_Type (Type_Name).Super_Name'Length then
-            State.Get_Type (Type_Name).lbpsi := Positive (Byte_Reader.Read_v64 (Input_Stream));
+         if 0 /= Types.Element (Type_Name).Super_Name'Length then
+            Types.Element (Type_Name).lbpsi := Positive (Byte_Reader.Read_v64 (Input_Stream));
          end if;
 
          Instance_Count := Natural (Byte_Reader.Read_v64 (Input_Stream));
          Skip_Restrictions;
       else
-         if 0 /= State.Get_Type (Type_Name).Super_Name'Length then
-            State.Get_Type (Type_Name).lbpsi := Positive (Byte_Reader.Read_v64 (Input_Stream));
+         if 0 /= Types.Element (Type_Name).Super_Name'Length then
+            Types.Element (Type_Name).lbpsi := Positive (Byte_Reader.Read_v64 (Input_Stream));
          end if;
 
          Instance_Count := Natural (Byte_Reader.Read_v64 (Input_Stream));
@@ -124,15 +129,15 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
 
       declare
          Field_Index : Long;
-         Known_Fields : Long := Long (State.Field_Size (Type_Name));
+         Known_Fields : Long := Long (Types.Element (Type_Name).Fields.Length);
          Start_Index : Natural;
          End_Index : Natural;
       begin
          if 0 = Instance_Count then
             Start_Index := 1;
-            End_Index := State.Storage_Pool_Size (Type_Name);
+            End_Index := Natural (Types.Element (Type_Name).Storage_Pool.Length);
          else
-            Start_Index := State.Storage_Pool_Size (Type_Name) + 1;
+            Start_Index := Natural (Types.Element (Type_Name).Storage_Pool.Length) + 1;
             End_Index := Start_Index + Instance_Count - 1;
             Create_Objects (Type_Name, Instance_Count);
          end if;
@@ -151,9 +156,9 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
             declare
                Field_End : Long := Byte_Reader.Read_v64 (Input_Stream);
                Data_Length : Long := Field_End - Last_End;
-               Field_Declaration : Field_Information := State.Get_Field (Type_Name, Field_Index);
+               Field_Declaration : Field_Information := Types.Element (Type_Name).Fields.Element (Positive (Field_Index));
                Item : Queue_Item := (
-                  Type_Declaration => State.Get_Type (Type_Name),
+                  Type_Declaration => Types.Element (Type_Name),
                   Field_Declaration => Field_Declaration,
                   Start_Index => Start_Index,
                   End_Index => End_Index,
@@ -207,7 +212,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
          end case;
 
          declare
-            Field_Name : String := State.Get_String (Byte_Reader.Read_v64 (Input_Stream));
+            Field_Name : String := String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream)));
 
             New_Field : Field_Information := new Field_Declaration'(
                Size => Field_Name'Length,
@@ -218,7 +223,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                Base_Types => Base_Types
             );
          begin
-            State.Put_Field (Type_Name, New_Field);
+            Types.Element (Type_Name).Fields.Append (New_Field);
          end;
       end;
    end Read_Field_Declaration;
@@ -234,8 +239,8 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
 ${
   var output = "";
   for (d ← IR) {
-    output += s"""      if State.Has_Type ("${d.getSkillName}") then
-         State.Get_Type ("${d.getSkillName}").bpsi := State.Storage_Pool_Size ("${d.getSkillName}") + 1;
+    output += s"""      if Types.Contains ("${d.getSkillName}") then
+         Types.Element ("${d.getSkillName}").bpsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length) + 1;
       end if;\r\n"""
   }
   output.stripSuffix("\r\n")
@@ -282,10 +287,10 @@ ${
     output += s"""      if "${d.getSkillName}" = Type_Name then
          declare
 ${
-  var output = s"""            ${escaped(d.getName)}_Type_Declaration : Type_Information := State.Get_Type ("${d.getSkillName}");\r\n"""
+  var output = s"""            ${escaped(d.getName)}_Type_Declaration : Type_Information := Types.Element ("${d.getSkillName}");\r\n"""
   val superTypes = getSuperTypes(d).toList.reverse
   superTypes.foreach({ t =>
-    output += s"""            ${t.getName}_Type_Declaration : Type_Information := State.Get_Type ("${t.getSkillName}");\r\n"""
+    output += s"""            ${t.getName}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");\r\n"""
   })
   output.stripLineEnd
 }
@@ -327,8 +332,6 @@ ${
 
       Type_Name : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
-
-      Types : Types_Hash_Map.Map := State.Get_Types;
    begin
 ${
   var output = "";
@@ -351,24 +354,24 @@ ${
       end if;
    end Read_Queue_Vector_Iterator;
 
-   function Read_Annotation (Input_Stream : ASS_IO.Stream_Access; Types : Types_Hash_Map.Map) return Skill_Type_Access is
+   function Read_Annotation (Input_Stream : ASS_IO.Stream_Access) return Skill_Type_Access is
       X : v64 := Byte_Reader.Read_v64 (Input_Stream);
       Y : v64 := Byte_Reader.Read_v64 (Input_Stream);
    begin
       if 0 = X then
          return null;
       else
-         return Types.Element (State.Get_String (X)).Storage_Pool.Element (Positive (Y));
+         return Types.Element (String_Pool.Element (Natural (X))).Storage_Pool.Element (Positive (Y));
       end if;
    end Read_Annotation;
 
    function Read_Unbounded_String (Input_Stream : ASS_IO.Stream_Access) return SU.Unbounded_String is
-      (SU.To_Unbounded_String (State.Get_String (Byte_Reader.Read_v64 (Input_Stream))));
+      (SU.To_Unbounded_String (String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream)))));
 
 ${
   var output = "";
   for (d ← IR) {
-    output += s"""   function Read_${escaped(d.getName)}_Type (Input_Stream : ASS_IO.Stream_Access; Types : Types_Hash_Map.Map) return ${escaped(d.getName)}_Type_Access is
+    output += s"""   function Read_${escaped(d.getName)}_Type (Input_Stream : ASS_IO.Stream_Access) return ${escaped(d.getName)}_Type_Access is
       X : Long := Byte_Reader.Read_v64 (Input_Stream);
    begin
       if 0 = X then

@@ -100,11 +100,11 @@ ${
   for (d ← IR) {
     output += s"""
    function New_${escaped(d.getName)} (State : access Skill_State${printParameters(d)}) return ${escaped(d.getName)}_Type_Access is
-      ${escaped(d.getName)}_Type_Declaration : Type_Information := State.Get_Type ("${d.getSkillName}");${
+      ${escaped(d.getName)}_Type_Declaration : Type_Information := State.Get_Types.Element ("${d.getSkillName}");${
   var output = "" 
   val superTypes = getSuperTypes(d).toList.reverse
   superTypes.foreach({ t =>
-    output += s"""\r\n      ${escaped(t.getName)}_Type_Declaration : Type_Information := State.Get_Type ("${t.getSkillName}");"""
+    output += s"""\r\n      ${escaped(t.getName)}_Type_Declaration : Type_Information := State.Get_Types.Element ("${t.getSkillName}");"""
   })
   output
 }
@@ -121,15 +121,15 @@ ${
    end New_${escaped(d.getName)};
 
    function ${escaped(d.getName)}s_Size (State : access Skill_State) return Natural is
-      (Natural (State.Get_Type ("${d.getSkillName}").Storage_Pool.Length));
+      (Natural (State.Get_Types.Element ("${d.getSkillName}").Storage_Pool.Length));
 
    function Get_${escaped(d.getName)} (State : access Skill_State; Index : Natural) return ${escaped(d.getName)}_Type_Access is
-      (${escaped(d.getName)}_Type_Access (State.Get_Type ("${d.getSkillName}").Storage_Pool.Element (Index)));
+      (${escaped(d.getName)}_Type_Access (State.Get_Types.Element ("${d.getSkillName}").Storage_Pool.Element (Index)));
 
    function Get_${escaped(d.getName)}s (State : access Skill_State) return ${escaped(d.getName)}_Type_Accesses is
       use Storage_Pool_Vector;
 
-      Type_Declaration : Type_Information := State.Get_Type ("${d.getSkillName}");
+      Type_Declaration : Type_Information := State.Get_Types.Element ("${d.getSkillName}");
       Length : Natural := Natural (Type_Declaration.Storage_Pool.Length);
       rval : ${escaped(d.getName)}_Type_Accesses := new ${escaped(d.getName)}_Type_Array (1 .. Length);
 
