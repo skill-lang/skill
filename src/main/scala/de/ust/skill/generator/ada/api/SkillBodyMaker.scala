@@ -21,46 +21,46 @@ package body ${packagePrefix.capitalize}.Api.Skill is
    procedure Append (State : access Skill_State; File_Name : String) is
       package File_Writer renames Internal.File_Writer;
    begin
-      File_Writer.Append (State, File_Name);
+      if Append = State.State or else Read = State.State or else Write = State.State then
+         File_Writer.Append (State, File_Name);
+         State.State := Append;
+      else
+         raise Skill_State_Error;
+      end if;
    end Append;
 
    procedure Create (State : access Skill_State) is
       package State_Maker renames Internal.State_Maker;
-
-      Skill_State_Already_Consumed : exception;
    begin
-      if Unconsumed = State.State then
+      if Unused = State.State then
          State_Maker.Create (State);
-         State.State := Consumed;
+         State.State := Create;
       else
-         raise Skill_State_Already_Consumed;
+         raise Skill_State_Error;
       end if;
    end Create;
 
    procedure Read (State : access Skill_State; File_Name : String) is
       package File_Reader renames Internal.File_Reader;
       package State_Maker renames Internal.State_Maker;
-
-      Skill_State_Already_Consumed : exception;
    begin
-      if Unconsumed = State.State then
+      if Unused = State.State then
          File_Reader.Read (State, File_Name);
          State_Maker.Create (State);
-         State.State := Consumed;
+         State.State := Read;
       else
-         raise Skill_State_Already_Consumed;
+         raise Skill_State_Error;
       end if;
    end Read;
 
    procedure Write (State : access Skill_State; File_Name : String) is
       package File_Writer renames Internal.File_Writer;
-
-      Skill_State_Not_Consumed : exception;
    begin
-      if Consumed = State.State then
+      if Append = State.State or else Create = State.State or else Read = State.State or else Write = State.State then
          File_Writer.Write (State, File_Name);
+         State.State := Write;
       else
-         raise Skill_State_Not_Consumed;
+         raise Skill_State_Error;
       end if;
    end Write;
 ${

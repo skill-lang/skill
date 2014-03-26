@@ -118,7 +118,8 @@ ${
 }
 private
 
-   type Skill_States is (Unconsumed, Consumed);
+   type Skill_States is (Unused, Append, Create, Read, Write);
+   Skill_State_Error : exception;
 
    type Skill_Type is abstract tagged
       record
@@ -198,7 +199,7 @@ ${
       record
          String_Pool : String_Pool_Access := new String_Pool_Vector.Vector;
          Types : Types_Hash_Map_Access := new Types_Hash_Map.Map;
-         State : Skill_States := Unconsumed;
+         State : Skill_States := Unused;
       end record;
 
 end ${packagePrefix.capitalize};
