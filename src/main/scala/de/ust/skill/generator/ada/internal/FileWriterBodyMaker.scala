@@ -353,7 +353,7 @@ ${
         output += s"""         declare
             Next_Type_Declaration : Type_Information := ${escaped(t.getName)}_Type_Declaration;
             Start_Index : Natural := Next_Type_Declaration.lbpsi;
-            End_Index : Integer := Start_Index + (Natural (Next_Type_Declaration.Storage_Pool.Length) - Next_Type_Declaration.spsi + 1) - 1;
+            End_Index : Integer := Start_Index + Natural (Next_Type_Declaration.Storage_Pool.Length) - Next_Type_Declaration.spsi;
          begin
             for I in Start_Index .. End_Index loop${if (d == t) s"\r\n               Temp (I).skill_id := Type_Declaration.spsi + I - 1;" else "" }
                Next_Type_Declaration.Storage_Pool.Replace_Element (Next_Type_Declaration.spsi + I - Start_Index, Temp (I));
