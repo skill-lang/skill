@@ -374,9 +374,31 @@ ${
    end Order_Types;
 
    function Is_Type_Instantiated (Type_Declaration : Type_Information) return Boolean is
+      use Fields_Vector;
+
+      rval : Natural := 0;
       Size : Natural := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
+
+      procedure Iterate (Position : Cursor) is
+         Field_Declaration : Field_Information := Element (Position);
+      begin
+         if Field_Declaration.Known and then not Field_Declaration.Written then
+            rval := rval + 1;
+         end if;
+      end Iterate;
+      pragma Inline (Iterate);
    begin
-      return Type_Declaration.Known and then (Write = Modus or else 0 < Size);
+      if Type_Declaration.Known then
+         Type_Declaration.Fields.Iterate (Iterate'Access);
+
+         if 0 < rval then
+            return True;
+         else
+            return (Write = Modus or else 0 < Size);
+         end if;
+      else
+         return False;
+      end if;
    end Is_Type_Instantiated;
 
    function Count_Instantiated_Types return Long is
