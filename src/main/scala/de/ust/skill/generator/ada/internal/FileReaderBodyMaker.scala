@@ -33,7 +33,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
       while not ASS_IO.End_Of_File (Input_File) or else not Byte_Reader.End_Of_Buffer loop
          Read_String_Block;
          Read_Type_Block;
-         Update_Base_Pool_Start_Index;
+         Update_Storage_Pool_Start_Index;
       end loop;
 
       ASS_IO.Close (Input_File);
@@ -100,10 +100,12 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                   id => Long (Natural (Types.Length) + 32),
                   Name => Type_Name,
                   Super_Name => SU.To_String (Super_Name),
-                  bpsi => 1,
+                  spsi => 1,
                   lbpsi => 1,
                   Fields => New_Type_Fields,
-                  Storage_Pool => New_Type_Storage_Pool
+                  Storage_Pool => New_Type_Storage_Pool,
+                  Known => False,
+                  Written => True
                );
             begin
                Types.Insert (New_Type.Name, New_Type);
@@ -219,7 +221,9 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
                F_Type => Field_Type,
                Constant_Value => Constant_Value,
                Constant_Array_Length => Constant_Array_Length,
-               Base_Types => Base_Types
+               Base_Types => Base_Types,
+               Known => False,
+               Written => True
             );
          begin
             Types.Element (Type_Name).Fields.Append (New_Field);
@@ -233,19 +237,6 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
       Read_Queue.Clear;
    end Read_Field_Data;
 
-   procedure Update_Base_Pool_Start_Index is
-   begin
-${
-  var output = "";
-  for (d ← IR) {
-    output += s"""      if Types.Contains ("${d.getSkillName}") then
-         Types.Element ("${d.getSkillName}").bpsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length) + 1;
-      end if;\r\n"""
-  }
-  output.stripSuffix("\r\n")
-}
-   end Update_Base_Pool_Start_Index;
-
    procedure Create_Objects (Type_Name : String; Instance_Count : Natural) is
    begin
 ${
@@ -256,13 +247,14 @@ ${
       output += s"""\r\n\r\n                  declare
                      Sub_Type : Type_Information := ${escaped(d.getName)}_Type_Declaration;
                      Super_Type : Type_Information := ${escaped(t.getName)}_Type_Declaration;
-                     Index : Natural := (Sub_Type.lbpsi - Super_Type.lbpsi) + Super_Type.bpsi + I - 1;
+                     Index : Natural := (Sub_Type.lbpsi - Super_Type.lbpsi) + Super_Type.spsi + I - 1;
                   begin\r\n"""
       if (t == superTypes.last)
         output += s"""                     declare
                         procedure Free is new Ada.Unchecked_Deallocation (${escaped(t.getName)}_Type, ${escaped(t.getName)}_Type_Access);
                         X : ${t.getName}_Type_Access := ${escaped(t.getName)}_Type_Access (Super_Type.Storage_Pool.Element (Index));
                      begin
+                        Object.skill_id := X.skill_id;
                         Free (X);
                      end;\r\n"""
       output += s"""                     Super_Type.Storage_Pool.Replace_Element (Index, Object);
@@ -272,7 +264,7 @@ ${
   }
 
   def printDefaultValues(d: Declaration): String = {
-    var output = s"""'(\r\n                     skill_id => Natural (${if (null == d.getBaseType) escaped(d.getName) else escaped(d.getBaseType.getName)}_Type_Declaration.Storage_Pool.Length) + 1"""
+    var output = s"""'(\r\n                     skill_id => ${if (null == d.getSuperType) s"Natural (${escaped(d.getBaseType.getName)}_Type_Declaration.Storage_Pool.Length) + 1" else "0"}"""
     val fields = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
     output += fields.map({ f ⇒
       s""",\r\n                     ${f.getSkillName} => ${defaultValue(f.getType, d, f)}"""
@@ -382,6 +374,19 @@ ${
   }
   output.stripSuffix("\r\n")
 }
+   procedure Update_Storage_Pool_Start_Index is
+   begin
+${
+  var output = "";
+  for (d ← IR) {
+    output += s"""      if Types.Contains ("${d.getSkillName}") then
+         Types.Element ("${d.getSkillName}").spsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length) + 1;
+      end if;\r\n"""
+  }
+  output.stripSuffix("\r\n")
+}
+   end Update_Storage_Pool_Start_Index;
+
    procedure Skip_Restrictions is
       Zero : Long := Byte_Reader.Read_v64 (Input_Stream);
    begin

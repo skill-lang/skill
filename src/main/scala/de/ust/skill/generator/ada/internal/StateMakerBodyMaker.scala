@@ -35,15 +35,18 @@ ${
                id => Long (Natural (Types.Length) + 32),
                Name => Type_Name,
                Super_Name => Super_Name,
-               bpsi => 1,
+               spsi => 1,
                lbpsi => 1,
                Fields => Fields,
-               Storage_Pool => Storage_Pool
+               Storage_Pool => Storage_Pool,
+               Known => True,
+               Written => False
             );
          begin
             Types.Insert (New_Type.Name, New_Type);
          end;
-      end if;\r\n\r\n"""
+      end if;
+      Types.Element ("${d.getSkillName}").Known := True;\r\n\r\n"""
   }
   output.stripLineEnd
 }
@@ -67,7 +70,9 @@ ${
     case _ => 0
   }
 },
-               Base_Types => Base_Types
+               Base_Types => Base_Types,
+               Known => True,
+               Written => False
             );
          begin
 ${
@@ -90,7 +95,8 @@ ${
   output
 }            Types.Element (Type_Name).Fields.Append (New_Field);
          end;
-      end if;\r\n\r\n"""}).mkString("")
+      end if;
+      Get_Field (Types.Element ("${d.getSkillName}"), "${f.getSkillName}").Known := True;\r\n\r\n"""}).mkString("")
   }
   output.stripLineEnd.stripLineEnd
 }
@@ -113,6 +119,24 @@ ${
       end loop;
       return False;
    end Has_Field;
+
+   function Get_Field (Type_Declaration : Type_Information; Field_Name : String) return Field_Information is
+      use Fields_Vector;
+
+      Position : Cursor := Type_Declaration.Fields.First;
+   begin
+      while Position /= No_Element loop
+         declare
+            Index : Positive := To_Index (Position);
+         begin
+            if Field_Name = Type_Declaration.Fields.Element (Index).Name then
+               return Type_Declaration.Fields.Element (Index);
+            end if;
+         end;
+         Next (Position);
+      end loop;
+      return null;
+   end Get_Field;
 
 end ${packagePrefix.capitalize}.Internal.State_Maker;
 """)

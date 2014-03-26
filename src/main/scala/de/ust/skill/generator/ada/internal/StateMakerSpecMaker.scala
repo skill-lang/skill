@@ -21,6 +21,7 @@ package ${packagePrefix.capitalize}.Internal.State_Maker is
 private
 
    function Has_Field (Type_Declaration : Type_Information; Field_Name : String) return Boolean;
+   function Get_Field (Type_Declaration : Type_Information; Field_Name : String) return Field_Information;
 
 end ${packagePrefix.capitalize}.Internal.State_Maker;
 """)

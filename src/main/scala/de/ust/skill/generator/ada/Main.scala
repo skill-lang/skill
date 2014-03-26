@@ -302,7 +302,7 @@ ${
 
         case "string" ⇒
       	  s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-      	    begin
+            begin
                ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
       }
 

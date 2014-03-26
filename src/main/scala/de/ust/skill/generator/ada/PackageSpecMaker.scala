@@ -163,6 +163,8 @@ ${
          Constant_Value : Long;
          Constant_Array_Length : Long;
          Base_Types : Base_Types_Vector.Vector;
+         Known : Boolean;
+         Written : Boolean;
       end record;
    type Field_Information is access Field_Declaration;
 
@@ -176,10 +178,12 @@ ${
          id : Long;
          Name : String (1 .. Type_Size);
          Super_Name : String (1 .. Super_Size);
-         bpsi : Positive;
+         spsi : Positive;
          lbpsi : Natural;
          Fields : Fields_Vector.Vector;
          Storage_Pool : Storage_Pool_Vector.Vector;
+         Known : Boolean;
+         Written : Boolean;
       end record;
    type Type_Information is access Type_Declaration;
 

@@ -22,6 +22,7 @@ with ${packagePrefix.capitalize}.Internal.State_Maker;
 
 package ${packagePrefix.capitalize}.Api.Skill is
 
+   procedure Append (State : access Skill_State; File_Name : String);
    procedure Create (State : access Skill_State);
    procedure Read (State : access Skill_State; File_Name : String);
    procedure Write (State : access Skill_State; File_Name : String);

@@ -43,7 +43,6 @@ private
    procedure Read_Type_Declaration (Last_End : in out Long);
    procedure Read_Field_Declaration (Type_Name : String);
    procedure Read_Field_Data;
-   procedure Update_Base_Pool_Start_Index;
 
    procedure Create_Objects (Type_Name : String; Instance_Count : Natural);
    procedure Read_Queue_Vector_Iterator (Iterator : Read_Queue_Vector.Cursor);
@@ -58,6 +57,7 @@ ${
   }
   output
 }
+   procedure Update_Storage_Pool_Start_Index;
    procedure Skip_Restrictions;
 
 end ${packagePrefix.capitalize}.Internal.File_Reader;

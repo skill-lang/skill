@@ -17,16 +17,64 @@ trait FileWriterBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Internal.File_Writer is
 
+   Modus : Modus_Type;
    String_Pool : String_Pool_Access;
    Types : Types_Hash_Map_Access;
 
    Last_Types_End : Long := 0;
 
+   procedure Append (State : access Skill_State; File_Name : String) is
+      Output_File : ASS_IO.File_Type;
+   begin
+      Modus := Append;
+
+      String_Pool := State.String_Pool;
+      Types := State.Types;
+
+      ASS_IO.Open (Output_File, ASS_IO.Append_File, File_Name);
+      ASS_IO.Create (Field_Data_File, ASS_IO.Out_File);
+
+      Field_Data_Stream := ASS_IO.Stream (Field_Data_File);
+      Output_Stream := ASS_IO.Stream (Output_File);
+
+      Write_String_Pool;
+      Write_Type_Block;
+      Update_Storage_Pool_Start_Index;
+
+      Byte_Writer.Finalize_Buffer (Output_Stream);
+
+      ASS_IO.Delete (Field_Data_File);
+      ASS_IO.Flush (Output_File);
+      ASS_IO.Close (Output_File);
+   end Append;
+
    procedure Write (State : access Skill_State; File_Name : String) is
       Output_File : ASS_IO.File_Type;
    begin
+      Modus := Write;
+
       String_Pool := State.String_Pool;
       Types := State.Types;
+
+      --  reset string pool, spsi and written flags
+      String_Pool.Clear;
+      declare
+         use Types_Hash_Map;
+
+         procedure Iterate (Position : Cursor) is
+            Type_Declaration : Type_Information := Element (Position);
+         begin
+            for I in 1 .. Natural (Type_Declaration.Fields.Length) loop
+               Type_Declaration.Fields (I).Written := False;
+            end loop;
+
+            Type_Declaration.spsi := 1;
+            Type_Declaration.Written := False;
+         end Iterate;
+         pragma Inline (Iterate);
+      begin
+         Types.Iterate (Iterate'Access);
+      end;
 
       ASS_IO.Create (Output_File, ASS_IO.Out_File, File_Name);
       ASS_IO.Create (Field_Data_File, ASS_IO.Out_File);
@@ -36,6 +84,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
 
       Write_String_Pool;
       Write_Type_Block;
+      Update_Storage_Pool_Start_Index;
 
       Byte_Writer.Finalize_Buffer (Output_Stream);
 
@@ -61,7 +110,7 @@ package body ${packagePrefix.capitalize}.Internal.File_Writer is
          declare
             Index : Natural := String_Pool.Reverse_Find_Index (Value);
          begin
-            if 0 < Index or 0 = Value'Length then
+            if 0 < Index or else 0 = Value'Length then
                Append := False;
             end if;
          end;
@@ -232,16 +281,20 @@ ${
    end Prepare_String_Pool_Iterator;
 
    procedure Write_String_Pool is
+      Last_Size : Natural := Natural (String_Pool.Length);
    begin
       Prepare_String_Pool;
 
       declare
-         Size : Natural := Natural (String_Pool.Length);
+         Current_Size : Natural := Natural (String_Pool.Length);
+         Start_Index : Natural := Last_Size + 1;
+         End_Index : Natural := Current_Size;
+         Size : Natural := Current_Size - Last_Size;
          Last_String_End : Natural := 0;
       begin
          Byte_Writer.Write_v64 (Output_Stream, Long (Size));
 
-         for I in 1 .. Size loop
+         for I in Start_Index .. End_Index loop
             declare
                X : String := String_Pool.Element (I);
                String_Length : Positive := X'Length + Last_String_End;
@@ -251,7 +304,7 @@ ${
             end;
          end loop;
 
-         for I in 1 .. Size loop
+         for I in Start_Index .. End_Index loop
             Byte_Writer.Write_String (Output_Stream, String_Pool.Element (I));
          end loop;
       end;
@@ -276,35 +329,34 @@ ${
          Index : Positive := 1;
 """
       types.foreach({ t =>
-        output += s"""\r\n         ${escaped(t.getName)}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");
-         procedure Iterate_${escaped(t.getName)} (Iterator : Cursor) is
-            Object : Skill_Type_Access := Element (Iterator);
-         begin
-            if 0 = ${escaped(t.getName)}_Type_Declaration.lbpsi then
-               ${escaped(t.getName)}_Type_Declaration.lbpsi := Index;
-            end if;
-            if "${t.getSkillName}" = Get_Object_Type (Object) then
-               Temp (Index) := Object;
-               Index := Index + 1;
-            end if;
-         end Iterate_${escaped(t.getName)};
-         pragma Inline (Iterate_${escaped(t.getName)});\r\n"""
+        output += s"""\r\n         ${escaped(t.getName)}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");\r\n"""
       })
       output += "      begin\r\n"
       types.foreach({ t =>
         output += s"""         ${escaped(t.getName)}_Type_Declaration.lbpsi := 0;
-         Type_Declaration.Storage_Pool.Iterate (Iterate_${escaped(t.getName)}'Access);\r\n"""
+         for I in Type_Declaration.spsi .. Natural (Type_Declaration.Storage_Pool.Length) loop
+            declare
+               Object : Skill_Type_Access := Type_Declaration.Storage_Pool.Element (I);
+            begin
+               if 0 = ${escaped(t.getName)}_Type_Declaration.lbpsi then
+                  ${escaped(t.getName)}_Type_Declaration.lbpsi := Index;
+               end if;
+               if "${t.getSkillName}" = Get_Object_Type (Object) then
+                  Temp (Index) := Object;
+                  Index := Index + 1;
+               end if;
+            end;
+         end loop;\r\n"""
       })
       output += "\r\n"
       types.foreach({ t =>
         output += s"""         declare
             Next_Type_Declaration : Type_Information := ${escaped(t.getName)}_Type_Declaration;
             Start_Index : Natural := Next_Type_Declaration.lbpsi;
-            End_Index : Integer := Start_Index + Natural (Next_Type_Declaration.Storage_Pool.Length) - 1;
+            End_Index : Integer := Start_Index + (Natural (Next_Type_Declaration.Storage_Pool.Length) - Next_Type_Declaration.spsi + 1) - 1;
          begin
-            for I in Start_Index .. End_Index loop
-               Temp (I).skill_id := I;
-               Next_Type_Declaration.Storage_Pool.Replace_Element (I - Start_Index + 1, Temp (I));
+            for I in Start_Index .. End_Index loop${if (d == t) s"\r\n               Temp (I).skill_id := Type_Declaration.spsi + I - 1;" else "" }
+               Next_Type_Declaration.Storage_Pool.Replace_Element (Next_Type_Declaration.spsi + I - Start_Index, Temp (I));
             end loop;
          end;\r\n"""
       })
@@ -317,15 +369,39 @@ ${
       null;
    end Order_Types;
 
+   function Is_Type_Instantiated (Type_Declaration : Type_Information) return Boolean is
+   begin
+      return Type_Declaration.Known and then (Write = Modus or else 0 < Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1);
+   end Is_Type_Instantiated;
+
+   function Count_Instantiated_Types return Long is
+      use Types_Hash_Map;
+
+      rval : Long := 0;
+
+      procedure Iterate (Iterator : Cursor) is
+         Type_Declaration : Type_Information := Types_Hash_Map.Element (Iterator);
+      begin
+         if Is_Type_Instantiated (Type_Declaration) then
+            rval := rval + 1;
+         end if;
+      end Iterate;
+   begin
+      Types.Iterate (Iterate'Access);
+      return rval;
+   end Count_Instantiated_Types;
+
    procedure Write_Type_Block is
    begin
       Order_Types;
 
-      Byte_Writer.Write_v64 (Output_Stream, ${ IR.length });
+      Byte_Writer.Write_v64 (Output_Stream, Count_Instantiated_Types);
 
 ${
   def inner (d : Type): String = {
-    s"""      Write_Type_Declaration (Types.Element ("${d.getSkillName}"));\r\n"""
+    s"""      if Is_Type_Instantiated (Types.Element ("${d.getSkillName}")) then
+         Write_Type_Declaration (Types.Element ("${d.getSkillName}"));
+      end if;\r\n"""
   }
   var output = ""
   for (d ← IR) {
@@ -349,19 +425,27 @@ ${
       Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Type_Name)));
 
       if 0 < Super_Name'Length then
-         Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Super_Name)));
+         if not Type_Declaration.Written then
+            Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Super_Name)));
+         end if;
          Byte_Writer.Write_v64 (Output_Stream, Long (Type_Declaration.lbpsi));
       else
-         Byte_Writer.Write_v64 (Output_Stream, 0);
+         if not Type_Declaration.Written then
+            Byte_Writer.Write_v64 (Output_Stream, 0);
+         end if;
       end if;
 
-      Byte_Writer.Write_v64 (Output_Stream, Long (Types.Element (Type_Name).Storage_Pool.Length));
-      Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
-      Byte_Writer.Write_v64 (Output_Stream, Long (Field_Size));
+      Byte_Writer.Write_v64 (Output_Stream, Long (Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1));
+      if not Type_Declaration.Written then
+         Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
+      end if;
 
+      Byte_Writer.Write_v64 (Output_Stream, Long (Field_Size));
       for I in 1 .. Field_Size loop
-         Write_Field_Declaration (Type_Declaration, Types.Element (Type_Name).Fields.Element (Positive (I)));
+         Write_Field_Declaration (Type_Declaration, Type_Declaration.Fields.Element (Positive (I)));
       end loop;
+
+      Type_Declaration.Written := True;
    end Write_Type_Declaration;
 
    procedure Write_Field_Declaration (Type_Declaration : Type_Information; Field_Declaration : Field_Information) is
@@ -371,48 +455,52 @@ ${
       Size : Long := Field_Data_Size (Type_Declaration, Field_Declaration);
       Base_Types : Base_Types_Vector.Vector := Field_Declaration.Base_Types;
    begin
-      Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
-      Byte_Writer.Write_v64 (Output_Stream, Long (Field_Type));
+      if not Field_Declaration.Written then
+         Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
+         Byte_Writer.Write_v64 (Output_Stream, Long (Field_Type));
 
-      case Field_Type is
-         --  const i8, i16, i32, i64, v64
-         when 0 => Byte_Writer.Write_i8 (Output_Stream, Short_Short_Integer (Field_Declaration.Constant_Value));
-         when 1 => Byte_Writer.Write_i16 (Output_Stream, Short (Field_Declaration.Constant_Value));
-         when 2 => Byte_Writer.Write_i32 (Output_Stream, Integer (Field_Declaration.Constant_Value));
-         when 3 => Byte_Writer.Write_i64 (Output_Stream, Field_Declaration.Constant_Value);
-         when 4 => Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Constant_Value);
+         case Field_Type is
+            --  const i8, i16, i32, i64, v64
+            when 0 => Byte_Writer.Write_i8 (Output_Stream, Short_Short_Integer (Field_Declaration.Constant_Value));
+            when 1 => Byte_Writer.Write_i16 (Output_Stream, Short (Field_Declaration.Constant_Value));
+            when 2 => Byte_Writer.Write_i32 (Output_Stream, Integer (Field_Declaration.Constant_Value));
+            when 3 => Byte_Writer.Write_i64 (Output_Stream, Field_Declaration.Constant_Value);
+            when 4 => Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Constant_Value);
 
-         --  array T[i]
-         when 15 =>
-            Byte_Writer.Write_v64 (Output_Stream, Long (Field_Declaration.Constant_Array_Length));
-            Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Base_Types.First_Element);
+            --  array T[i]
+            when 15 =>
+               Byte_Writer.Write_v64 (Output_Stream, Long (Field_Declaration.Constant_Array_Length));
+               Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Base_Types.First_Element);
 
-         --  array T[], list, set
-         when 17 .. 19 => Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Base_Types.First_Element);
+            --  array T[], list, set
+            when 17 .. 19 => Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Base_Types.First_Element);
 
-         --  map
-         when 20 =>
-            declare
-               use Base_Types_Vector;
+            --  map
+            when 20 =>
+               declare
+                  use Base_Types_Vector;
 
-               procedure Iterate (Position : Cursor) is
-                  X : Long := Element (Position);
+                  procedure Iterate (Position : Cursor) is
+                     X : Long := Element (Position);
+                  begin
+                     Byte_Writer.Write_v64 (Output_Stream, X);
+                  end Iterate;
+                  pragma Inline (Iterate);
                begin
-                  Byte_Writer.Write_v64 (Output_Stream, X);
-               end Iterate;
-               pragma Inline (Iterate);
-            begin
-               Byte_Writer.Write_v64 (Output_Stream, Long (Base_Types.Length));
-               Base_Types.Iterate (Iterate'Access);
-            end;
+                  Byte_Writer.Write_v64 (Output_Stream, Long (Base_Types.Length));
+                  Base_Types.Iterate (Iterate'Access);
+               end;
 
-         when others => null;
-      end case;
+            when others => null;
+         end case;
 
-      Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Field_Name)));
+         Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Field_Name)));
+      end if;
 
       Last_Types_End := Last_Types_End + Size;
       Byte_Writer.Write_v64 (Output_Stream, Last_Types_End);
+
+      Field_Declaration.Written := True;
    end Write_Field_Declaration;
 
    function Field_Data_Size (Type_Declaration : Type_Information; Field_Declaration : Field_Information) return Long is
@@ -429,13 +517,18 @@ ${
    procedure Write_Field_Data (Stream : ASS_IO.Stream_Access; Type_Declaration : Type_Information; Field_Declaration : Field_Information) is
       Type_Name : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
+      Start_Index : Positive := 1;
    begin
+      if Field_Declaration.Written then
+         Start_Index := Type_Declaration.spsi;
+      end if;
+
 ${
   var output = "";
   for (d ← IR) {
     output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isConstant && !f.isIgnored }).map({ f ⇒
       s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
-         for I in 1 .. Natural (Type_Declaration.Storage_Pool.Length) loop
+         for I in Start_Index .. Natural (Type_Declaration.Storage_Pool.Length) loop
             declare
             ${mapFileWriter(d, f)}
             end;
@@ -514,6 +607,19 @@ ${
 }
       return "";
    end Get_Object_Type;
+
+   procedure Update_Storage_Pool_Start_Index is
+   begin
+${
+  var output = "";
+  for (d ← IR) {
+    output += s"""      if Types.Contains ("${d.getSkillName}") then
+         Types.Element ("${d.getSkillName}").spsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length) + 1;
+      end if;\r\n"""
+  }
+  output.stripSuffix("\r\n")
+}
+   end Update_Storage_Pool_Start_Index;
 
 end ${packagePrefix.capitalize}.Internal.File_Writer;
 """)

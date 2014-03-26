@@ -20,9 +20,12 @@ with ${packagePrefix.capitalize}.Internal.Byte_Writer;
 
 package ${packagePrefix.capitalize}.Internal.File_Writer is
 
+   procedure Append (State : access Skill_State; File_Name : String);
    procedure Write (State : access Skill_State; File_Name : String);
 
 private
+
+   type Modus_Type is (Append, Write);
 
    Field_Data_File : ASS_IO.File_Type;
    Field_Data_Stream : ASS_IO.Stream_Access;
@@ -35,6 +38,8 @@ private
    procedure Put_String (Value : String; Safe : Boolean := False);
    procedure Write_String_Pool;
    procedure Order_Types;
+   function Is_Type_Instantiated (Type_Declaration : Type_Information) return Boolean;
+   function Count_Instantiated_Types return Long;
    procedure Write_Type_Block;
    procedure Write_Type_Declaration (Type_Declaration : Type_Information);
    procedure Write_Field_Declaration (Type_Declaration : Type_Information; Field_Declaration : Field_Information);
@@ -53,6 +58,8 @@ ${
   output
 }
    function Get_Object_Type (Object : Skill_Type_Access) return String;
+
+   procedure Update_Storage_Pool_Start_Index;
 
 end ${packagePrefix.capitalize}.Internal.File_Writer;
 """)
