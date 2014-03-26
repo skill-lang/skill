@@ -41,6 +41,7 @@ private
    function Is_Type_Instantiated (Type_Declaration : Type_Information) return Boolean;
    function Count_Instantiated_Types return Long;
    procedure Write_Type_Block;
+   function Count_Known_Fields (Type_Declaration : Type_Information) return Long;
    procedure Write_Type_Declaration (Type_Declaration : Type_Information);
    procedure Write_Field_Declaration (Type_Declaration : Type_Information; Field_Declaration : Field_Information);
    function Field_Data_Size (Type_Declaration : Type_Information; Field_Declaration : Field_Information) return Long;

@@ -135,7 +135,6 @@ package body ${packagePrefix.capitalize}.Internal.File_Reader is
          End_Index : Natural;
       begin
          if 0 = Instance_Count then
-            Start_Index := 1;
             End_Index := Natural (Types.Element (Type_Name).Storage_Pool.Length);
          else
             Start_Index := Natural (Types.Element (Type_Name).Storage_Pool.Length) + 1;

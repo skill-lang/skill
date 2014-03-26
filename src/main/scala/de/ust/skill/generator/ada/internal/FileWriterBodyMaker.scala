@@ -321,17 +321,17 @@ ${
          use Storage_Pool_Vector;
 
          Type_Declaration : Type_Information := Types.Element ("${d.getSkillName}");
-         Length : Natural := Natural (Type_Declaration.Storage_Pool.Length);
+         Size : Natural := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
 
-         type Temp_Type is array (1 .. Length) of Skill_Type_Access;
+         type Temp_Type is array (1 .. Size) of Skill_Type_Access;
          type Temp_Type_Access is access Temp_Type;
          Temp : Temp_Type_Access := new Temp_Type;
          Index : Positive := 1;
 """
       types.foreach({ t =>
-        output += s"""\r\n         ${escaped(t.getName)}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");\r\n"""
+        output += s"""\r\n         ${escaped(t.getName)}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");"""
       })
-      output += "      begin\r\n"
+      output += "\r\n      begin\r\n"
       types.foreach({ t =>
         output += s"""         ${escaped(t.getName)}_Type_Declaration.lbpsi := 0;
          for I in Type_Declaration.spsi .. Natural (Type_Declaration.Storage_Pool.Length) loop
@@ -356,7 +356,11 @@ ${
             End_Index : Integer := Start_Index + Natural (Next_Type_Declaration.Storage_Pool.Length) - Next_Type_Declaration.spsi;
          begin
             for I in Start_Index .. End_Index loop${if (d == t) s"\r\n               Temp (I).skill_id := Type_Declaration.spsi + I - 1;" else "" }
-               Next_Type_Declaration.Storage_Pool.Replace_Element (Next_Type_Declaration.spsi + I - Start_Index, Temp (I));
+               declare
+                  Index : Natural := Next_Type_Declaration.spsi - Start_Index + I;
+               begin
+                  Next_Type_Declaration.Storage_Pool.Replace_Element (Index, Temp (I));
+               end;
             end loop;
          end;\r\n"""
       })
@@ -370,8 +374,9 @@ ${
    end Order_Types;
 
    function Is_Type_Instantiated (Type_Declaration : Type_Information) return Boolean is
+      Size : Natural := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
    begin
-      return Type_Declaration.Known and then (Write = Modus or else 0 < Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1);
+      return Type_Declaration.Known and then (Write = Modus or else 0 < Size);
    end Is_Type_Instantiated;
 
    function Count_Instantiated_Types return Long is
@@ -386,6 +391,7 @@ ${
             rval := rval + 1;
          end if;
       end Iterate;
+      pragma Inline (Iterate);
    begin
       Types.Iterate (Iterate'Access);
       return rval;
@@ -417,10 +423,27 @@ ${
       Copy_Field_Data;
    end Write_Type_Block;
 
+   function Count_Known_Fields (Type_Declaration : Type_Information) return Long is
+      use Fields_Vector;
+
+      rval : Long := 0;
+
+      procedure Iterate (Iterator : Cursor) is
+         Field_Declaration : Field_Information := Fields_Vector.Element (Iterator);
+      begin
+         if Field_Declaration.Known then
+            rval := rval + 1;
+         end if;
+      end Iterate;
+      pragma Inline (Iterate);
+   begin
+      Type_Declaration.Fields.Iterate (Iterate'Access);
+      return rval;
+   end Count_Known_Fields;
+
    procedure Write_Type_Declaration (Type_Declaration : Type_Information) is
       Type_Name : String := Type_Declaration.Name;
       Super_Name : String := Type_Declaration.Super_Name;
-      Field_Size : Natural := Natural (Types.Element (Type_Name).Fields.Length);
    begin
       Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Type_Name)));
 
@@ -440,9 +463,15 @@ ${
          Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
       end if;
 
-      Byte_Writer.Write_v64 (Output_Stream, Long (Field_Size));
-      for I in 1 .. Field_Size loop
-         Write_Field_Declaration (Type_Declaration, Type_Declaration.Fields.Element (Positive (I)));
+      Byte_Writer.Write_v64 (Output_Stream, Count_Known_Fields (Type_Declaration));
+      for I in 1 .. Natural (Types.Element (Type_Name).Fields.Length) loop
+         declare
+            Field_Declaration : Field_Information := Type_Declaration.Fields.Element (Positive (I));
+         begin
+            if Field_Declaration.Known then
+               Write_Field_Declaration (Type_Declaration, Field_Declaration);
+            end if;
+         end;
       end loop;
 
       Type_Declaration.Written := True;
