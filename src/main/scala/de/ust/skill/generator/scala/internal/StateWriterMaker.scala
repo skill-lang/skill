@@ -58,8 +58,8 @@ private[internal] final class StateWriter(state : SerializableState, out : OutSt
       out.put(0.toByte)
       out.put(0.toByte)
     } else {
-      val baseName = state.poolByName(ref.getClass.getSimpleName.toLowerCase).basePool.name
-      string(baseName, out)
+      if(ref.isInstanceOf[NamedType]) string(ref.asInstanceOf[NamedType].name, out)
+      else string(ref.getClass.getSimpleName.toLowerCase, out)
       v64(ref.getSkillID, out)
     }
   }
