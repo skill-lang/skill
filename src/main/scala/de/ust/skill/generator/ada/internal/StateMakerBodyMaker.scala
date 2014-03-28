@@ -45,8 +45,9 @@ ${
          begin
             Types.Insert (New_Type.Name, New_Type);
          end;
-      end if;
-      Types.Element ("${d.getSkillName}").Known := True;\r\n\r\n"""
+      else
+         Types.Element ("${d.getSkillName}").Known := True;
+      end if;\r\n\r\n"""
   }
   output.stripLineEnd
 }
@@ -95,8 +96,9 @@ ${
   output
 }            Types.Element (Type_Name).Fields.Append (New_Field);
          end;
-      end if;
-      Get_Field (Types.Element ("${d.getSkillName}"), "${f.getSkillName}").Known := True;\r\n\r\n"""}).mkString("")
+      else
+         Get_Field (Types.Element ("${d.getSkillName}"), "${f.getSkillName}").Known := True;
+      end if;\r\n\r\n"""}).mkString("")
   }
   output.stripLineEnd.stripLineEnd
 }

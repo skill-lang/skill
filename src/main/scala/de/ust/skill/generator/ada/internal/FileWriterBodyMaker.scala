@@ -376,14 +376,14 @@ ${
    function Is_Type_Instantiated (Type_Declaration : Type_Information) return Boolean is
       use Fields_Vector;
 
-      rval : Natural := 0;
-      Size : Natural := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
+      Known_Unwritten_Fields_Count : Natural := 0;
+      New_Instances_Count : Natural := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
 
       procedure Iterate (Position : Cursor) is
          Field_Declaration : Field_Information := Element (Position);
       begin
          if Field_Declaration.Known and then not Field_Declaration.Written then
-            rval := rval + 1;
+            Known_Unwritten_Fields_Count := Known_Unwritten_Fields_Count + 1;
          end if;
       end Iterate;
       pragma Inline (Iterate);
@@ -391,11 +391,8 @@ ${
       if Type_Declaration.Known then
          Type_Declaration.Fields.Iterate (Iterate'Access);
 
-         if 0 < rval then
-            return True;
-         else
-            return (Write = Modus or else 0 < Size);
-         end if;
+         --  write modus, new fields or new instances
+         return Write = Modus or else 0 < Known_Unwritten_Fields_Count or else 0 < New_Instances_Count;
       else
          return False;
       end if;
@@ -463,9 +460,29 @@ ${
       return rval;
    end Count_Known_Fields;
 
+   function Count_Known_Unwritten_Fields (Type_Declaration : Type_Information) return Long is
+      use Fields_Vector;
+
+      rval : Long := 0;
+
+      procedure Iterate (Iterator : Cursor) is
+         Field_Declaration : Field_Information := Fields_Vector.Element (Iterator);
+      begin
+         if Field_Declaration.Known and then not Field_Declaration.Written then
+            rval := rval + 1;
+         end if;
+      end Iterate;
+      pragma Inline (Iterate);
+   begin
+      Type_Declaration.Fields.Iterate (Iterate'Access);
+      return rval;
+   end Count_Known_Unwritten_Fields;
+
    procedure Write_Type_Declaration (Type_Declaration : Type_Information) is
       Type_Name : String := Type_Declaration.Name;
       Super_Name : String := Type_Declaration.Super_Name;
+      Field_Count : Natural := Natural (Type_Declaration.Fields.Length);
+      Instances_Count : Natural := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
    begin
       Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Type_Name)));
 
@@ -480,21 +497,55 @@ ${
          end if;
       end if;
 
-      Byte_Writer.Write_v64 (Output_Stream, Long (Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1));
+      Byte_Writer.Write_v64 (Output_Stream, Long (Instances_Count));
       if not Type_Declaration.Written then
          Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
       end if;
 
-      Byte_Writer.Write_v64 (Output_Stream, Count_Known_Fields (Type_Declaration));
-      for I in 1 .. Natural (Types.Element (Type_Name).Fields.Length) loop
-         declare
-            Field_Declaration : Field_Information := Type_Declaration.Fields.Element (Positive (I));
-         begin
-            if Field_Declaration.Known then
-               Write_Field_Declaration (Type_Declaration, Field_Declaration);
-            end if;
-         end;
-      end loop;
+      if Write = Modus then
+         Byte_Writer.Write_v64 (Output_Stream, Count_Known_Fields (Type_Declaration));
+
+         --  write known fields
+         for I in 1 .. Field_Count loop
+            declare
+               Field_Declaration : Field_Information := Type_Declaration.Fields.Element (Positive (I));
+            begin
+               if Field_Declaration.Known then
+                  Write_Field_Declaration (Type_Declaration, Field_Declaration);
+               end if;
+            end;
+         end loop;
+      end if;
+
+      if Append = Modus then
+         if 0 = Instances_Count then
+            Byte_Writer.Write_v64 (Output_Stream, Count_Known_Unwritten_Fields (Type_Declaration));
+         else
+            Byte_Writer.Write_v64 (Output_Stream, Count_Known_Fields (Type_Declaration));
+
+            --  write known written fields
+            for I in 1 .. Field_Count loop
+               declare
+                  Field_Declaration : Field_Information := Type_Declaration.Fields.Element (Positive (I));
+               begin
+                  if Field_Declaration.Known and Field_Declaration.Written then
+                     Write_Field_Declaration (Type_Declaration, Field_Declaration);
+                  end if;
+               end;
+            end loop;
+         end if;
+
+         --  write known unwritten fields
+         for I in 1 .. Field_Count loop
+            declare
+               Field_Declaration : Field_Information := Type_Declaration.Fields.Element (Positive (I));
+            begin
+               if Field_Declaration.Known and not Field_Declaration.Written then
+                  Write_Field_Declaration (Type_Declaration, Field_Declaration);
+               end if;
+            end;
+         end loop;
+      end if;
 
       Type_Declaration.Written := True;
    end Write_Type_Declaration;
