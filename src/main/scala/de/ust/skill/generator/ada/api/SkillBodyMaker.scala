@@ -18,11 +18,11 @@ trait SkillBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Api.Skill is
 
-   procedure Append (State : access Skill_State; File_Name : String) is
+   procedure Append (State : access Skill_State) is
       package File_Writer renames Internal.File_Writer;
    begin
       if Append = State.State or else Read = State.State or else Write = State.State then
-         File_Writer.Append (State, File_Name);
+         File_Writer.Append (State, SU.To_String (State.File_Name));
          State.State := Append;
       else
          raise Skill_State_Error;
@@ -47,6 +47,7 @@ package body ${packagePrefix.capitalize}.Api.Skill is
       if Unused = State.State then
          File_Reader.Read (State, File_Name);
          State_Maker.Create (State);
+         State.File_Name := SU.To_Unbounded_String (File_Name);
          State.State := Read;
       else
          raise Skill_State_Error;
@@ -58,6 +59,7 @@ package body ${packagePrefix.capitalize}.Api.Skill is
    begin
       if Append = State.State or else Create = State.State or else Read = State.State or else Write = State.State then
          File_Writer.Write (State, File_Name);
+         State.File_Name := SU.To_Unbounded_String (File_Name);
          State.State := Write;
       else
          raise Skill_State_Error;
