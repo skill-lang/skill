@@ -25,6 +25,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.WrappedArray
 
 import ${packagePrefix}api.Access
 import ${packagePrefix}api.StringAccess
@@ -100,7 +101,9 @@ object FieldParser {
     t match {
 ${
       (for (t ← IR)
-        yield s"""      case p : ${t.getCapitalName}StoragePool ⇒ f.name match {
+        yield s"""      case p : ${t.getCapitalName}StoragePool ⇒
+        val d = ${if(t.getSuperType()!= null) s"WrappedArray.make[${packagePrefix}${t.getCapitalName}](p.data)" else "p.data"}
+        f.name match {
 ${
         (for (f ← t.getAllFields)
           yield s"""        case "${f.getSkillName}" ⇒"""+(
@@ -113,27 +116,31 @@ ${
         case _ ⇒
           c match {
             case c : SimpleChunkInfo ⇒
-              for (i ← c.bpsi until c.bpsi + c.count)
-                t.getByID(i + 1).set(t.asInstanceOf[Access[SkillType]], f, readSingleField(f.t))
+              val low = c.bpsi.toInt
+              val high = (c.bpsi + c.count).toInt
+              for (i ← low until high)
+                d(i).set(t.asInstanceOf[Access[SkillType]], f, readSingleField(f.t))
 
             case bci : BulkChunkInfo ⇒
               for (
                 bi ← t.blockInfos;
-                i ← bi.bpsi until bi.bpsi + bi.count
-              ) t.getByID(i + 1).set(t.asInstanceOf[Access[SkillType]], f, readSingleField(f.t))
+                i ← bi.bpsi.toInt until (bi.bpsi + bi.count).toInt
+              ) d(i).set(t.asInstanceOf[Access[SkillType]], f, readSingleField(f.t))
           }
       }""").mkString("\n")
     }
       case _ ⇒
         c match {
           case c : SimpleChunkInfo ⇒
-            for (i ← c.bpsi until c.bpsi + c.count)
+            val low = c.bpsi.toInt
+            val high = (c.bpsi + c.count).toInt
+            for (i ← low until high)
               t.getByID(i + 1).set(t.asInstanceOf[Access[SkillType]], f, readSingleField(f.t))
 
           case bci : BulkChunkInfo ⇒
             for (
               bi ← t.blockInfos;
-              i ← bi.bpsi until bi.bpsi + bi.count
+              i ← bi.bpsi.toInt until (bi.bpsi + bi.count).toInt
             ) t.getByID(i + 1).set(t.asInstanceOf[Access[SkillType]], f, readSingleField(f.t))
         }
     }
@@ -219,16 +226,18 @@ ${
     s"""$prelude
           c match {
             case c : SimpleChunkInfo ⇒
-              for (i ← c.bpsi until c.bpsi + c.count) {$action
-                p.getByID(i + 1).${f.getName} = $result
+              val low = c.bpsi.toInt
+              val high = (c.bpsi + c.count).toInt
+              for (i ← low until high) {$action
+                d(i).${f.getName} = $result
               }
 
             case bci : BulkChunkInfo ⇒
               for (
                 bi ← t.blockInfos;
-                i ← bi.bpsi until bi.bpsi + bi.count
+                i ← bi.bpsi.toInt until (bi.bpsi + bi.count).toInt
               ) {$action
-                p.getByID(i + 1).${f.getName} = $result
+                d(i).${f.getName} = $result
               }
           }"""
   }

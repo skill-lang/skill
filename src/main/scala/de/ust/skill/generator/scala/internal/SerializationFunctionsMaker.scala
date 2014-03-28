@@ -71,7 +71,7 @@ object SerializationFunctions {
 
   @inline final def userRef[T <: SkillType](ref : T, out : OutStream) {
     if (null == ref) out.put(0.toByte)
-    else v64(ref.getSkillID, out)
+    else out.v64(ref.getSkillID)
   }
 
   @inline def bool(v : Boolean, out : OutStream) = out.put(if (v) -1.toByte else 0.toByte)

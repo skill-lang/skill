@@ -275,8 +275,8 @@ ${
         // resize base pools and push entries to stack
         for (p ← resizeQueue) {
           p match {
-            case p: BasePool[_] ⇒ p.resizeData(p.blockInfos.last.count.toInt)
-            case _              ⇒
+            case p : BasePool[_] ⇒ p.resizeData(p.blockInfos.last.count.toInt)
+            case _               ⇒
           }
           resizeStack.push(p)
         }

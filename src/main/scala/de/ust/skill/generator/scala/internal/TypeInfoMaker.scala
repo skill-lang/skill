@@ -299,6 +299,7 @@ sealed abstract class StoragePool[T <: B : ClassTag, B <: SkillType](
       p.updateAfterPrepareAppend(chunkMap)
 
     //remove new objects, because they are regular objects by now
+    staticData ++= newObjects
     newObjects.clear
   }
 
@@ -310,8 +311,12 @@ sealed abstract class StoragePool[T <: B : ClassTag, B <: SkillType](
   /**
    * the number of instances of exactly this type, excluding sub-types
    */
-  def staticSize : Long;
-  def staticInstances : Iterator[T]
+  final def staticSize : Long = staticData.size + newObjects.length
+  final def staticInstances : Iterator[T] = staticData.iterator ++ newObjects.iterator
+  /**
+   * the number of static instances loaded from the file
+   */
+  final protected val staticData = new ArrayBuffer[T]
 
   /**
    * the number of instances of this type, including sub-types
@@ -404,6 +409,7 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
         i += 1
         instance.setSkillID(i)
       }
+      data = d
     }
     updateAfterPrepareAppend(chunkMap)
   }
@@ -413,16 +419,10 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
    */
   private[internal] var data = new Array[T](0)
 
-  /**
-   * the number of static instances loaded from the file
-   */
-  protected val staticData = new ArrayBuffer[T]
-
   override def all : Iterator[T] = data.iterator.asInstanceOf[Iterator[T]] ++ newDynamicInstances
   override def iterator : Iterator[T] = data.iterator.asInstanceOf[Iterator[T]] ++ newDynamicInstances
 
   override def allInTypeOrder : Iterator[T] = subPools.foldLeft(staticInstances)(_ ++ _.staticInstances)
-  override def staticInstances : Iterator[T] = staticData.iterator ++ newObjects.iterator
 
   /**
    * returns instances directly from the data store
@@ -430,8 +430,6 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
    * @note base pool data access can not fail, because this would yeald an arary store exception at an earlier stage
    */
   override def getByID(index : Long) : T = data(index.toInt - 1).asInstanceOf[T]
-
-  override def staticSize : Long = staticData.size + newObjects.length
 
   final override def foreach[U](f : T ⇒ U) {
     for (i ← 0 until data.length)
@@ -469,16 +467,11 @@ sealed class SubPool[T <: B : ClassTag, B <: SkillType](poolIndex : Long, name :
    * the base type data store
    */
   private[internal] def data = basePool.data
-  /**
-   * the number of static instances loaded from the file
-   */
-  protected val staticData = new ArrayBuffer[T]
 
   override def all : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
   override def iterator : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
 
   override def allInTypeOrder : Iterator[T] = subPools.foldLeft(staticInstances)(_ ++ _.staticInstances)
-  override def staticInstances = staticData.iterator ++ newObjects.iterator
 
   override def getByID(index : Long) : T = basePool.data(index.toInt - 1).asInstanceOf[T]
 
@@ -489,8 +482,6 @@ sealed class SubPool[T <: B : ClassTag, B <: SkillType](poolIndex : Long, name :
     for (p ← subPools)
       p.updateAfterCompress
   }
-
-  override def staticSize : Long = staticData.size + newObjects.length
 }
 """)
 

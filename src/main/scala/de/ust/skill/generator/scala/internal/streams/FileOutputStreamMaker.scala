@@ -15,14 +15,11 @@ trait FileOutputStreamMaker extends GeneralOutputMaker {
     //package
     out.write(s"""package ${packagePrefix}internal.streams;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-
-import ${packagePrefix}internal.streams.OutBuffer.BulkData;
-import ${packagePrefix}internal.streams.OutBuffer.ByteData;
 
 /**
  * BufferedOutputStream based output stream.
@@ -31,9 +28,20 @@ import ${packagePrefix}internal.streams.OutBuffer.ByteData;
  */
 final public class FileOutputStream extends OutStream {
 
-	private final BufferedOutputStream out;
+	private final int BUFFERSIZE = 8 * 1024;
+	private final byte[] buffer = new byte[BUFFERSIZE];
+	private int capacity = 0;
 
-	private FileOutputStream(BufferedOutputStream out) {
+	private void flush() throws IOException {
+		if (0 != capacity) {
+			out.write(buffer, 0, capacity);
+			capacity = 0;
+		}
+	}
+
+	private final OutputStream out;
+
+	private FileOutputStream(OutputStream out) {
 		this.out = out;
 	}
 
@@ -45,8 +53,7 @@ final public class FileOutputStream extends OutStream {
 	 * 
 	 */
 	public static FileOutputStream append(Path target) throws IOException {
-		return new FileOutputStream(new BufferedOutputStream(Files.newOutputStream(target, StandardOpenOption.APPEND,
-				StandardOpenOption.WRITE)));
+		return new FileOutputStream(Files.newOutputStream(target, StandardOpenOption.APPEND, StandardOpenOption.WRITE));
 	}
 
 	/**
@@ -55,101 +62,105 @@ final public class FileOutputStream extends OutStream {
 	 *             propagated error
 	 */
 	public static FileOutputStream write(Path target) throws IOException {
-		return new FileOutputStream(new BufferedOutputStream(Files.newOutputStream(target, StandardOpenOption.CREATE,
-				StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)));
+		return new FileOutputStream(Files.newOutputStream(target, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+				StandardOpenOption.TRUNCATE_EXISTING));
 	}
 
 	@Override
 	public void put(byte data) throws Exception {
-		out.write(data);
+		if (capacity == BUFFERSIZE)
+			flush();
+		buffer[capacity++] = data;
 	}
 
 	@Override
 	public void put(byte[] data) throws Exception {
+		flush();
 		out.write(data);
 	}
 
 	@Override
 	public void close() throws Exception {
+		flush();
 		out.close();
 	}
 
 	@Override
 	public void v64(long v) throws Exception {
+		if (capacity + 9 >= BUFFERSIZE)
+			flush();
+
 		if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
-			out.write((int) v);
+			buffer[capacity++] = (byte) v;
 			return;
 		} else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
-			out.write((int) (0x80L | v));
-			out.write((int) (v >> 7));
+			buffer[capacity++] = (byte) (0x80L | v);
+			buffer[capacity++] = (byte) (v >> 7);
 			return;
 		} else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
-			out.write((int) (0x80L | v));
-			out.write((int) (0x80L | v >> 7));
-			out.write((int) (v >> 14));
+			buffer[capacity++] = (byte) (0x80L | v);
+			buffer[capacity++] = (byte) (0x80L | v >> 7);
+			buffer[capacity++] = (byte) (v >> 14);
 			return;
 		} else if (0L == (v & 0xFFFFFFFFF0000000L)) {
-			out.write((int) (0x80L | v));
-			out.write((int) (0x80L | v >> 7));
-			out.write((int) (0x80L | v >> 14));
-			out.write((int) (v >> 21));
+			buffer[capacity++] = (byte) (0x80L | v);
+			buffer[capacity++] = (byte) (0x80L | v >> 7);
+			buffer[capacity++] = (byte) (0x80L | v >> 14);
+			buffer[capacity++] = (byte) (v >> 21);
 			return;
 		} else if (0L == (v & 0xFFFFFFF800000000L)) {
-			out.write((int) (0x80L | v));
-			out.write((int) (0x80L | v >> 7));
-			out.write((int) (0x80L | v >> 14));
-			out.write((int) (0x80L | v >> 21));
-			out.write((int) (v >> 28));
+			buffer[capacity++] = (byte) (0x80L | v);
+			buffer[capacity++] = (byte) (0x80L | v >> 7);
+			buffer[capacity++] = (byte) (0x80L | v >> 14);
+			buffer[capacity++] = (byte) (0x80L | v >> 21);
+			buffer[capacity++] = (byte) (v >> 28);
 			return;
 		} else if (0L == (v & 0xFFFFFC0000000000L)) {
-			out.write((int) (0x80L | v));
-			out.write((int) (0x80L | v >> 7));
-			out.write((int) (0x80L | v >> 14));
-			out.write((int) (0x80L | v >> 21));
-			out.write((int) (0x80L | v >> 28));
-			out.write((int) (v >> 35));
+			buffer[capacity++] = (byte) (0x80L | v);
+			buffer[capacity++] = (byte) (0x80L | v >> 7);
+			buffer[capacity++] = (byte) (0x80L | v >> 14);
+			buffer[capacity++] = (byte) (0x80L | v >> 21);
+			buffer[capacity++] = (byte) (0x80L | v >> 28);
+			buffer[capacity++] = (byte) (v >> 35);
 			return;
 		} else if (0L == (v & 0xFFFE000000000000L)) {
-			out.write((int) (0x80L | v));
-			out.write((int) (0x80L | v >> 7));
-			out.write((int) (0x80L | v >> 14));
-			out.write((int) (0x80L | v >> 21));
-			out.write((int) (0x80L | v >> 28));
-			out.write((int) (0x80L | v >> 35));
-			out.write((int) (v >> 42));
+			buffer[capacity++] = (byte) (0x80L | v);
+			buffer[capacity++] = (byte) (0x80L | v >> 7);
+			buffer[capacity++] = (byte) (0x80L | v >> 14);
+			buffer[capacity++] = (byte) (0x80L | v >> 21);
+			buffer[capacity++] = (byte) (0x80L | v >> 28);
+			buffer[capacity++] = (byte) (0x80L | v >> 35);
+			buffer[capacity++] = (byte) (v >> 42);
 			return;
 		} else if (0L == (v & 0xFF00000000000000L)) {
-			out.write((int) (0x80L | v));
-			out.write((int) (0x80L | v >> 7));
-			out.write((int) (0x80L | v >> 14));
-			out.write((int) (0x80L | v >> 21));
-			out.write((int) (0x80L | v >> 28));
-			out.write((int) (0x80L | v >> 35));
-			out.write((int) (0x80L | v >> 42));
-			out.write((int) (v >> 49));
+			buffer[capacity++] = (byte) (0x80L | v);
+			buffer[capacity++] = (byte) (0x80L | v >> 7);
+			buffer[capacity++] = (byte) (0x80L | v >> 14);
+			buffer[capacity++] = (byte) (0x80L | v >> 21);
+			buffer[capacity++] = (byte) (0x80L | v >> 28);
+			buffer[capacity++] = (byte) (0x80L | v >> 35);
+			buffer[capacity++] = (byte) (0x80L | v >> 42);
+			buffer[capacity++] = (byte) (v >> 49);
 			return;
 		} else {
-			out.write((int) (0x80L | v));
-			out.write((int) (0x80L | v >> 7));
-			out.write((int) (0x80L | v >> 14));
-			out.write((int) (0x80L | v >> 21));
-			out.write((int) (0x80L | v >> 28));
-			out.write((int) (0x80L | v >> 35));
-			out.write((int) (0x80L | v >> 42));
-			out.write((int) (0x80L | v >> 49));
-			out.write((int) (v >> 56));
+			buffer[capacity++] = (byte) (0x80L | v);
+			buffer[capacity++] = (byte) (0x80L | v >> 7);
+			buffer[capacity++] = (byte) (0x80L | v >> 14);
+			buffer[capacity++] = (byte) (0x80L | v >> 21);
+			buffer[capacity++] = (byte) (0x80L | v >> 28);
+			buffer[capacity++] = (byte) (0x80L | v >> 35);
+			buffer[capacity++] = (byte) (0x80L | v >> 42);
+			buffer[capacity++] = (byte) (0x80L | v >> 49);
+			buffer[capacity++] = (byte) (v >> 56);
 			return;
 		}
 	}
 
 	@Override
 	public void putAll(OutBuffer stream) throws Exception {
+		flush();
 		for (OutBuffer.Data d = stream.head; d != null; d = d.next) {
-			if (d instanceof BulkData) {
-				out.write(((BulkData) d).data, 0, ((BulkData) d).used);
-			} else if (d instanceof ByteData) {
-				out.write(((ByteData) d).data);
-			}
+			out.write(d.data, 0, d.used);
 		}
 	}
 }

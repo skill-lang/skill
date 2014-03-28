@@ -23,6 +23,7 @@ trait TypesMaker extends GeneralOutputMaker {
 import ${packagePrefix}api.Access
 import ${packagePrefix}internal.FieldDeclaration
 import ${packagePrefix}internal.SkillType
+import ${packagePrefix}internal.NamedType
 """)
 
     val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
@@ -176,7 +177,7 @@ ${
 object $Name {
   def unapply(self : $Name) = ${(for (f ← t.getAllFields) yield "self."+f.getName).mkString("Some(", ", ", ")")}
 
-  final class SubType private[$packageName] (name : String, skillID : Long) extends $Name(skillID) {
+  final class SubType private[$packageName] (val name : String, skillID : Long) extends $Name(skillID) with NamedType{
     override def prettyString : String = name+$prettyStringArgs
     override def toString = name+"#"+skillID
   }

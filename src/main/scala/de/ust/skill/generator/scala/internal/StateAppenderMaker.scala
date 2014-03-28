@@ -68,8 +68,8 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
       out.put(0.toByte)
       out.put(0.toByte)
     } else {
-      val baseName = state.poolByName(ref.getClass.getSimpleName.toLowerCase).basePool.name
-      string(baseName, out)
+      if(ref.isInstanceOf[NamedType]) string(ref.asInstanceOf[NamedType].name, out)
+      else string(ref.getClass.getSimpleName.toLowerCase, out)
       v64(ref.getSkillID, out)
     }
   }
@@ -103,23 +103,23 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
     }
     for (p ← state.pools) {
       p match {${
-      (for (d ← IR) yield {
-        val sName = d.getSkillName
-        val fields = d.getFields.filterNot(_.isIgnored)
+      (for (t ← IR) yield {
+        val sName = t.getSkillName
+        val fields = t.getFields.filterNot(_.isIgnored)
         s"""
-        case p : ${d.getCapitalName}StoragePool ⇒
+        case p : ${t.getCapitalName}StoragePool ⇒
           val newPool = p.poolIndex >= newPoolIndex
           val fields = p.fields.filter(chunkMap.contains(_))
           if (0 != fields.size || newPool) {
             string("$sName", out)
             if (newPool) {
               ${
-          if (null == d.getSuperType) "out.put(0.toByte)"
-          else s"""string("${d.getSuperType.getSkillName}", out)
+          if (null == t.getSuperType) "out.put(0.toByte)"
+          else s"""string("${t.getSuperType.getSkillName}", out)
               v64(lbpsiMap(p.poolIndex.toInt), out)"""
         }
             }
-            val count = p.blockInfos.tail.size
+            val count = p.blockInfos.last.count
             out.v64(count)
 
             if (newPool)
@@ -137,13 +137,13 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
                   p.all
 
                 case sci : SimpleChunkInfo ⇒
-                  p.data.view(sci.bpsi.toInt, (sci.bpsi + sci.count).toInt)
+                  p.data.view(sci.bpsi.toInt, (sci.bpsi + sci.count).toInt).iterator.asInstanceOf[Iterator[_root_.${packagePrefix}${t.getCapitalName}]]
 
               }
               f.name match {${
           (for (f ← fields) yield s"""
                 case "${f.getSkillName()}" ⇒ locally {
-                  ${writeField(d, f)}
+                  ${writeField(t, f)}
                 }""").mkString("")
         }
                 case _ ⇒ if (outData.size > 0) genericPutField(p, f, outData)

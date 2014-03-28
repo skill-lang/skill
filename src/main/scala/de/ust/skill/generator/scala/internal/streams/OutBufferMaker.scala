@@ -24,46 +24,32 @@ trait OutBufferMaker extends GeneralOutputMaker {
  * @author Timm Felden
  */
 final public class OutBuffer extends OutStream {
-	static abstract class Data {
-		public Data next = null;
-	}
+	static final class Data {
+		public Data next;
 
-	static final class NoData extends Data {
-		// is used for roots; can appear everywhere!
-	}
-
-	static final class ByteData extends Data {
-		public final byte data;
-
-		ByteData(byte data) {
-			this.data = data;
-		}
-
-		ByteData(byte data, Data tail) {
-			tail.next = this;
-			this.data = data;
-		}
-	}
-
-	static final class BulkData extends Data {
 		public final byte[] data;
 		/**
 		 * Number of used bytes in data. This is required for v64 caching.
 		 */
 		public int used;
 
-		BulkData(Data tail) {
+		Data() {
+			data = new byte[8 * 1024];
+			used = 0;
+		}
+
+		Data(Data tail) {
 			data = new byte[8 * 1024];
 			used = 0;
 			tail.next = this;
 		}
 
-		BulkData(byte[] data) {
+		Data(byte[] data) {
 			this.data = data;
 			this.used = data.length;
 		}
 
-		BulkData(byte[] data, Data tail) {
+		Data(byte[] data, Data tail) {
 			tail.next = this;
 			this.data = data;
 			this.used = data.length;
@@ -79,32 +65,35 @@ final public class OutBuffer extends OutStream {
 	}
 
 	public OutBuffer() {
-		head = new NoData();
+		head = new Data();
 		tail = head;
 		size = 0;
 	}
 
 	public OutBuffer(byte data) {
-		head = new ByteData(data);
+		head = new Data();
 		tail = head;
-		size = 1;
+		put(data);
 	}
 
 	public OutBuffer(byte[] data) {
-		head = new BulkData(data);
+		head = new Data(data);
 		tail = head;
 		size = data.length;
 	}
 
 	@Override
 	public void put(byte data) {
-		tail = new ByteData(data, tail);
+		if (tail.data.length - tail.used < 1)
+			tail = new Data(tail);
+
+		tail.data[tail.used++] = data;
 		size++;
 	}
 
 	@Override
 	public void put(byte[] data) {
-		tail = new BulkData(data, tail);
+		tail = new Data(data, tail);
 		size += data.length;
 	}
 
@@ -122,12 +111,11 @@ final public class OutBuffer extends OutStream {
 
 	@Override
 	public void v64(long v) throws Exception {
-		if (!(tail instanceof BulkData) || ((BulkData) tail).data.length - ((BulkData) tail).used < 9)
-			tail = new BulkData(tail);
+		if (tail.data.length - tail.used < 9)
+			tail = new Data(tail);
 
-		BulkData out = (BulkData) tail;
-		byte[] data = out.data;
-		int off = out.used;
+		byte[] data = tail.data;
+		int off = tail.used;
 
 		if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
 			data[off++] = (byte) v;
@@ -184,8 +172,8 @@ final public class OutBuffer extends OutStream {
 			data[off++] = (byte) (0x80L | v >> 49);
 			data[off++] = (byte) (v >> 56);
 		}
-		size += off - out.used;
-		out.used = off;
+		size += off - tail.used;
+		tail.used = off;
 	}
 }
 """)
