@@ -170,9 +170,9 @@ ${
       }
     }
     out.putAll(dataChunk)
-
-    out.close
   }
+
+  out.close
 }
 """)
 

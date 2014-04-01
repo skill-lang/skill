@@ -201,9 +201,9 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
       }
     }
     out.putAll(dataChunk)
-
-    out.close
   }
+
+  out.close
 }
 """)
 
