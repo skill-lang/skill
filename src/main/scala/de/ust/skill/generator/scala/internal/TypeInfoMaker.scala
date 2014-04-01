@@ -274,7 +274,7 @@ sealed abstract class StoragePool[T <: B : ClassTag, B <: SkillType](
       val lcount = newDynamicInstances.size
       //@ note this is the index into the data array and NOT the written lbpsi
       val lbpsi = if (0 == lcount) 0L
-      else newDynamicInstances.next.getSkillID
+      else newDynamicInstances.next.getSkillID - 1
 
       blockInfos += new BlockInfo(lbpsi, lcount)
 

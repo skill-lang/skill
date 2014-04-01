@@ -98,6 +98,12 @@ object FieldParser {
     if (in.position != c.begin)
       throw new SkillException("@begin of data chunk: expected position(0x$${in.position.toHexString}) to be 0x$${c.begin.toHexString}")
 
+    // partial fields, refer to TR14§???
+    if (0 != c.count && c.begin == c.end && f.t.typeID > 4) {
+      System.err.println(s"[SKilL TR14] detected partial field: $$f");
+      return
+    }
+
     t match {
 ${
       (for (t ← IR)
