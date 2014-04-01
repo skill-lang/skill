@@ -35,7 +35,7 @@ package ${packagePrefix.capitalize}.Internal.Byte_Reader is
 
 private
 
-   Buffer_Size : constant Positive := 2**10;
+   Buffer_Size : constant Positive := 2**16;
    Buffer_Last : Positive;
    Buffer_Index : Integer := Buffer_Size;
    type Buffer is array (Positive range <>) of Byte;

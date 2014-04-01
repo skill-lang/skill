@@ -24,6 +24,7 @@ class GeneratorTest extends FunSuite {
   test("filter")(check("filter.skill", "filter"))
   test("graph")(check("graph.skill", "graph"))
   test("node")(check("nodeExample.tool1.skill", "node"))
+  test("number")(check("number.skill", "number"))
   test("subtypes")(check("subtypesExample.skill", "subtypes"))
   test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
 }
