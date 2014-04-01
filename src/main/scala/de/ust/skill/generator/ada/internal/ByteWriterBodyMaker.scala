@@ -103,8 +103,6 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Writer is
 
    --  optimized write v64: taken from the scala binding
    procedure Write_v64 (Stream : ASS_IO.Stream_Access; Value : v64) is
-      use Interfaces;
-
       type Result is new Interfaces.Unsigned_64;
       function Convert is new Ada.Unchecked_Conversion (Source => v64, Target => Result);
    begin

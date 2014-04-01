@@ -76,7 +76,7 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Reader is
       C : i32 := i32 (Read_Byte (Input_Stream));
       D : i32 := i32 (Read_Byte (Input_Stream));
    begin
-      return A * (2**24) + B*(2**16) + C*(2**8) + D;
+      return A * (2 ** 24) + B * (2 ** 16) + C * (2 ** 8) + D;
    end Read_i32;
 
    --  Long_Integer (Long)
@@ -90,13 +90,11 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Reader is
       G : i64 := i64 (Read_Byte (Input_Stream));
       H : i64 := i64 (Read_Byte (Input_Stream));
    begin
-      return A * (2**56) + B*(2**48) + C*(2**40) + D*(2**32) + E*(2**24) + F*(2**16) + G*(2**8) + H;
+      return A * (2 ** 56) + B * (2 ** 48) + C * (2 ** 40) + D * (2 ** 32) + E * (2 ** 24) + F * (2 ** 16) + G * (2 ** 8) + H;
    end Read_i64;
 
    function Read_v64 (Input_Stream : ASS_IO.Stream_Access) return v64 is
-      use Interfaces;
-
-      subtype Result is Interfaces.Unsigned_64;
+      type Result is new Interfaces.Unsigned_64;
       function Convert is new Ada.Unchecked_Conversion (Source => Result, Target => v64);
 
       Count : Natural := 0;
