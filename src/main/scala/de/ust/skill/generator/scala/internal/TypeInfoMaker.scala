@@ -267,7 +267,7 @@ sealed abstract class StoragePool[T <: B : ClassTag, B <: SkillType](
   final protected def updateAfterPrepareAppend(chunkMap : HashMap[FieldDeclaration, ChunkInfo]) : Unit = {
     val newInstances = !newDynamicInstances.isEmpty
     val newPool = blockInfos.isEmpty
-    val newField = fields.forall(!_.dataChunks.isEmpty)
+    val newField = fields.exists(_.dataChunks.isEmpty)
     if (newPool || newInstances || newField) {
 
       //build block chunk
@@ -396,7 +396,7 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
     val newInstances = !newDynamicInstances.isEmpty
 
     // check if we have to append at all
-    if (!fields.forall(_.dataChunks.isEmpty) && !newInstances)
+    if (!fields.exists(_.dataChunks.isEmpty) && !newInstances)
       return ;
 
     if (newInstances) {
