@@ -114,31 +114,34 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
             if (newPool)
               restrictions(p, out)
 
-            out.v64(fields.size)
+            if (newPool && 0 == count) {
+              out.put(0.toByte);
+            } else {
+              out.v64(fields.size)
+              for (f ← fields) {
+                val outData = f.dataChunks.last match {
+                  case bci : BulkChunkInfo ⇒
+                    restrictions(f, out)
+                    writeType(f.t, out)
+                    string(f.name, out)
 
-            for (f ← fields) {
-              val outData = f.dataChunks.last match {
-                case bci : BulkChunkInfo ⇒
-                  restrictions(f, out)
-                  writeType(f.t, out)
-                  string(f.name, out)
+                    p.all
 
-                  p.all
+                  case sci : SimpleChunkInfo ⇒
+                    p.data.view(sci.bpsi.toInt, (sci.bpsi + sci.count).toInt).iterator.asInstanceOf[Iterator[_root_.${packagePrefix}${t.getCapitalName}]]
 
-                case sci : SimpleChunkInfo ⇒
-                  p.data.view(sci.bpsi.toInt, (sci.bpsi + sci.count).toInt).iterator.asInstanceOf[Iterator[_root_.${packagePrefix}${t.getCapitalName}]]
-
-              }
-              f.name match {${
+                }
+                f.name match {${
           (for (f ← fields) yield s"""
-                case "${f.getSkillName()}" ⇒ locally {
-                  ${writeField(t, f)}
-                }""").mkString("")
+                  case "${f.getSkillName()}" ⇒ locally {
+                    ${writeField(t, f)}
+                  }""").mkString("")
         }
-                case _ ⇒ if (outData.size > 0) genericPutField(p, f, outData)
+                  case _ ⇒ if (outData.size > 0) genericPutField(p, f, outData)
+                }
+                // end
+                out.v64(dataChunk.size)
               }
-              // end
-              out.v64(dataChunk.size)
             }
           }"""
       }
@@ -166,24 +169,28 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
             if (newPool)
               restrictions(p, out)
 
-            v64(fields.size, out)
-            for (f ← fields) {
-              val outData = f.dataChunks.last match {
-                case bci : BulkChunkInfo ⇒
-                  restrictions(f, out)
-                  writeType(f.t, out)
-                  string(f.name, out)
+            if (newPool && 0 == count) {
+              out.put(0.toByte);
+            } else {
+              out.v64(fields.size)
+              for (f ← fields) {
+                val outData = f.dataChunks.last match {
+                  case bci : BulkChunkInfo ⇒
+                    restrictions(f, out)
+                    writeType(f.t, out)
+                    string(f.name, out)
 
-                  p.all
+                    p.all
 
-                case sci : SimpleChunkInfo ⇒
-                  p.basePool.data.view(sci.bpsi.toInt, (sci.bpsi + sci.count).toInt)
+                  case sci : SimpleChunkInfo ⇒
+                    p.basePool.data.view(sci.bpsi.toInt, (sci.bpsi + sci.count).toInt)
 
+                }
+
+                if (outData.size > 0) genericPutField(p, f, outData)
+                // end
+                v64(dataChunk.size, out)
               }
-
-              if (outData.size > 0) genericPutField(p, f, outData)
-              // end
-              v64(dataChunk.size, out)
             }
           }
         }

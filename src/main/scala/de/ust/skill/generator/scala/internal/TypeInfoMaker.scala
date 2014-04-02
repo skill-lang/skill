@@ -397,7 +397,8 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
 
     // check if we have to append at all
     if (!fields.exists(_.dataChunks.isEmpty) && !newInstances)
-      return ;
+      if (!fields.isEmpty && !blockInfos.isEmpty)
+        return ;
 
     if (newInstances) {
       // we have to resize
@@ -529,7 +530,14 @@ final class ${t.getCapitalName}StoragePool(poolIndex : Long${
 
 ${
         if (isSingleton)
-          """  override def get = ???"""
+          s"""  lazy val theInstance = if (staticInstances.hasNext) {
+    staticInstances.next
+  } else {
+    val r = new $typeName(-1L)
+    newObjects.append(r)
+    r
+  }
+  override def get = theInstance"""
         else
           s"""  override def apply(${makeConstructorArguments(t)}) = {
     val r = new $typeName(-1L${appendConstructorArguments(t)})
