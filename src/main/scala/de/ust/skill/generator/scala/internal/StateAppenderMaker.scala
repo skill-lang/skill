@@ -73,7 +73,9 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
     state.String.asInstanceOf[StringPool].prepareAndAppend(out, this)
 
     // write count of the type block
-    v64(state.pools.size, out)
+    v64(state.pools.filter { p ⇒
+      p.poolIndex >= newPoolIndex || p.fields.exists(chunkMap.contains(_))
+    }.size, out)
 
     // we have to buffer the data chunk before writing it
     val dataChunk = new OutBuffer();
@@ -104,10 +106,10 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
             if (newPool) {
               ${
           if (null == t.getSuperType) "out.put(0.toByte)"
-          else s"""string("${t.getSuperType.getSkillName}", out)
-              v64(lbpsiMap(p.poolIndex.toInt), out)"""
+          else s"""string("${t.getSuperType.getSkillName}", out)"""
         }
-            }
+            }${if(null == t.getSuperType)"" else """
+            out.v64(lbpsiMap(p.poolIndex.toInt))"""}
             val count = p.blockInfos.last.count
             out.v64(count)
 
@@ -158,10 +160,12 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
               p.superName match {
                 case Some(sn) ⇒
                   string(sn, out)
-                  v64(lbpsiMap(p.poolIndex.toInt), out)
+                  out.v64(lbpsiMap(p.poolIndex.toInt))
                 case None ⇒
                   out.put(0.toByte)
               }
+            } else for (sn ← p.superName) {
+              out.v64(lbpsiMap(p.poolIndex.toInt))
             }
             val count = p.blockInfos.tail.size
             v64(count, out)

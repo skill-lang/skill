@@ -168,7 +168,7 @@ object SerializationFunctions {
       v64(t.typeID, out)
 
     case MapType(ts) ⇒
-      out.put(0x13.toByte)
+      out.put(0x14.toByte)
       v64(ts.size, out)
       for (t ← ts)
         v64(t.typeID, out)
