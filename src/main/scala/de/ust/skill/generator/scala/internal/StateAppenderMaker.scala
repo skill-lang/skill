@@ -74,7 +74,7 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
 
     // write count of the type block
     v64(state.pools.filter { p ⇒
-      p.poolIndex >= newPoolIndex || p.fields.exists(chunkMap.contains(_))
+      p.poolIndex >= newPoolIndex || (p.dynamicSize > 0 && p.fields.exists(chunkMap.contains(_)))
     }.size, out)
 
     // we have to buffer the data chunk before writing it
@@ -101,7 +101,7 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
         case p : ${t.getCapitalName}StoragePool ⇒
           val newPool = p.poolIndex >= newPoolIndex
           val fields = p.fields.filter(chunkMap.contains(_))
-          if (0 != fields.size || newPool) {
+          if (newPool || (0 != fields.size && p.dynamicSize > 0)) {
             string("$sName", out)
             if (newPool) {
               ${
@@ -153,7 +153,7 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
           // generic append
           val newPool = p.poolIndex >= newPoolIndex
           val fields = p.fields.filter(chunkMap.contains(_))
-          if (0 != fields.size || newPool) {
+          if (newPool || (0 != fields.size && p.dynamicSize > 0)) {
 
             string(p.name, out)
             if (newPool) {
