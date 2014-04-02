@@ -62,9 +62,18 @@ abstract class SerializationFunctions(state : SerializableState) {
 
   val stringIDs = new HashMap[String, Long]
 
-  def annotation(ref : SkillType, out : OutStream) : Unit
-
   def string(v : String, out : OutStream) : Unit = out.v64(stringIDs(v))
+
+  @inline final def annotation(ref : SkillType, out : OutStream) {
+    if (null == ref) {
+      out.put(0.toByte)
+      out.put(0.toByte)
+    } else {
+      if(ref.isInstanceOf[NamedType]) string(ref.asInstanceOf[NamedType].τName, out)
+      else string(ref.getClass.getSimpleName.toLowerCase, out)
+      out.v64(ref.getSkillID)
+    }
+  }
 }
 
 object SerializationFunctions {

@@ -63,17 +63,6 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
     case _ ⇒
   }
 
-  override def annotation(ref : SkillType, out : OutStream) {
-    if (null == ref) {
-      out.put(0.toByte)
-      out.put(0.toByte)
-    } else {
-      if(ref.isInstanceOf[NamedType]) string(ref.asInstanceOf[NamedType].name, out)
-      else string(ref.getClass.getSimpleName.toLowerCase, out)
-      v64(ref.getSkillID, out)
-    }
-  }
-
   /**
    * ****************
    * PHASE 3: WRITE *
