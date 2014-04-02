@@ -81,6 +81,11 @@ final public class FileInputStream extends InStream {
 	}
 
 	@Override
+	public boolean bool() {
+		return input.get() != 0;
+	}
+
+	@Override
 	public byte i8() {
 		return input.get();
 	}
