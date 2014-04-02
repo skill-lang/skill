@@ -31,6 +31,7 @@ import java.nio.ByteBuffer
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.WrappedArray
 
 import ${packagePrefix}internal.streams.OutBuffer
 import ${packagePrefix}internal.streams.OutStream
@@ -46,10 +47,12 @@ private[internal] final class StateWriter(state : SerializableState, out : OutSt
 
   // make lbpsi map, update data map to contain dynamic instances and create serialization skill IDs for serialization
   // index → bpsi
+  //@note pools.par would not be possible if it were an actual map:)
   val lbpsiMap = new Array[Long](state.pools.length)
-  state.pools.foreach {
+  state.pools.par.foreach {
     case p : BasePool[_] ⇒
       makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ state.poolByName(s).staticSize })
+      p.compress(lbpsiMap)
     case _ ⇒
   }
 
@@ -85,11 +88,11 @@ private[internal] final class StateWriter(state : SerializableState, out : OutSt
         val sName = d.getSkillName
         val fields = d.getFields.filterNot(_.isIgnored)
         s"""
-      case p : ${d.getCapitalName}StoragePool ⇒${
-          if (null != d.getSuperType) "" else """
-        p.compress"""
+      case p : ${d.getCapitalName}StoragePool ⇒
+        val outData = ${
+          if (null == d.getSuperType) "p.data"
+          else s"WrappedArray.make[_root_.${packagePrefix}${d.getCapitalName}](p.data).view(p.blockInfos.last.bpsi.toInt - 1, p.blockInfos.last.bpsi.toInt - 1 + p.blockInfos.last.count.toInt)"
         }
-        val outData = p.data.asInstanceOf[Array[_root_.${packagePrefix}${d.getCapitalName}]]
         val fields = p.fields
 
         string("$sName", out)
@@ -136,7 +139,6 @@ ${
             string(sn, out)
             v64(lbpsiMap(p.poolIndex.toInt), out)
           case None ⇒
-            p.asInstanceOf[BasePool[_]].compress
             out.put(0.toByte)
         }
         v64(p.dynamicSize, out)

@@ -260,7 +260,7 @@ sealed abstract class StoragePool[T <: B : ClassTag, B <: SkillType](
   /**
    * called after a compress operation to write empty the new objects buffer and to set blocks correctly
    */
-  protected def updateAfterCompress : Unit;
+  protected def updateAfterCompress(LBPSIs : Array[Long]) : Unit;
   /**
    * called after a prepare append operation to write empty the new objects buffer and to set blocks correctly
    */
@@ -369,7 +369,7 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
   /**
    * compress new instances into the data array and update skillIDs
    */
-  def compress {
+  def compress(LBPSIs : Array[Long]) {
     val d = new Array[T](dynamicSize.toInt)
     var p = 0;
     for (i ← allInTypeOrder) {
@@ -378,14 +378,14 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
       i.setSkillID(p);
     }
     data = d
-    updateAfterCompress
+    updateAfterCompress(LBPSIs)
   }
-  final override def updateAfterCompress {
+  final override def updateAfterCompress(LBPSIs : Array[Long]) {
     blockInfos.clear
     blockInfos += BlockInfo(0, data.length)
     newObjects.clear
     for (p ← subPools)
-      p.updateAfterCompress
+      p.updateAfterCompress(LBPSIs)
   }
 
   /**
@@ -476,12 +476,12 @@ sealed class SubPool[T <: B : ClassTag, B <: SkillType](poolIndex : Long, name :
 
   override def getByID(index : Long) : T = basePool.data(index.toInt - 1).asInstanceOf[T]
 
-  final override def updateAfterCompress {
+  final override def updateAfterCompress(LBPSIs : Array[Long]) {
     blockInfos.clear
-    blockInfos += BlockInfo(staticData(0).getSkillID, data.length)
+    blockInfos += BlockInfo(LBPSIs(poolIndex.toInt), dynamicSize)
     newObjects.clear
     for (p ← subPools)
-      p.updateAfterCompress
+      p.updateAfterCompress(LBPSIs)
   }
 }
 """)
