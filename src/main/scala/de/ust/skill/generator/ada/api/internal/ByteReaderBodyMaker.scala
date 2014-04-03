@@ -125,10 +125,10 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
       end case;
    end Read_Boolean;
 
-   function Read_String (Input_Stream : ASS_IO.Stream_Access; Length : Integer) return String is
-      New_String : String (1 .. Length);
+   function Read_String (Input_Stream : ASS_IO.Stream_Access; Length : i32) return String is
+      New_String : String (1 .. Integer (Length));
    begin
-      for I in Integer range 1 .. Length loop
+      for I in Integer range 1 .. Integer (Length) loop
          New_String (I) := Character'Val (Read_Byte (Input_Stream));
       end loop;
       return New_String;

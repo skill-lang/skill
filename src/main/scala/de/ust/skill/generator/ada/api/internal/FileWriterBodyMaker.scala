@@ -290,14 +290,14 @@ ${
          Start_Index : Natural := Last_Size + 1;
          End_Index : Natural := Current_Size;
          Size : Natural := Current_Size - Last_Size;
-         Last_String_End : Natural := 0;
+         Last_String_End : i32 := 0;
       begin
          Byte_Writer.Write_v64 (Output_Stream, Long (Size));
 
          for I in Start_Index .. End_Index loop
             declare
                X : String := String_Pool.Element (I);
-               String_Length : Positive := X'Length + Last_String_End;
+               String_Length : i32 := X'Length + Last_String_End;
             begin
                Byte_Writer.Write_i32 (Output_Stream, String_Length);
                Last_String_End := String_Length;
@@ -563,9 +563,9 @@ ${
 
          case Field_Type is
             --  const i8, i16, i32, i64, v64
-            when 0 => Byte_Writer.Write_i8 (Output_Stream, Short_Short_Integer (Field_Declaration.Constant_Value));
+            when 0 => Byte_Writer.Write_i8 (Output_Stream, i8 (Field_Declaration.Constant_Value));
             when 1 => Byte_Writer.Write_i16 (Output_Stream, Short (Field_Declaration.Constant_Value));
-            when 2 => Byte_Writer.Write_i32 (Output_Stream, Integer (Field_Declaration.Constant_Value));
+            when 2 => Byte_Writer.Write_i32 (Output_Stream, i32 (Field_Declaration.Constant_Value));
             when 3 => Byte_Writer.Write_i64 (Output_Stream, Field_Declaration.Constant_Value);
             when 4 => Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Constant_Value);
 

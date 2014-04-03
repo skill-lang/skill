@@ -41,14 +41,14 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
 
    procedure Read_String_Block is
       Count : Long := Byte_Reader.Read_v64 (Input_Stream);
-      String_Lengths : array (1 .. Count) of Integer;
-      Last_End : Integer := 0;
+      String_Lengths : array (1 .. Count) of i32;
+      Last_End : i32 := 0;
    begin
       --  read ends and calculate lengths
       for I in String_Lengths'Range loop
          declare
-            String_End : Integer := Byte_Reader.Read_i32 (Input_Stream);
-            String_Length : Integer := String_End - Last_End;
+            String_End : i32 := i32 (Byte_Reader.Read_i32 (Input_Stream));
+            String_Length : i32 := String_End - Last_End;
          begin
             String_Lengths (I) := String_End - Last_End;
             Last_End := String_End;
@@ -58,7 +58,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
       --  read strings
       for I in String_Lengths'Range loop
          declare
-            String_Length : Integer := String_Lengths (I);
+            String_Length : i32 := String_Lengths (I);
             Next_String : String := Byte_Reader.Read_String (Input_Stream, String_Length);
          begin
             String_Pool.Append (Next_String);

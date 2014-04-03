@@ -35,17 +35,17 @@ package ${packagePrefix.capitalize} is
    --  TYPES  --
    -------------
    --  Short_Short_Integer
-   subtype i8 is Short_Short_Integer'Base range -(2**7) .. +(2**7 - 1);
+   type i8 is new Short_Short_Integer'Base range -(2**7) .. +(2**7 - 1);
 
    --  Short_Integer
-   subtype Short is Short_Integer'Base range -(2**15) .. +(2**15 - 1);
+   type Short is new Short_Integer'Base range -(2**15) .. +(2**15 - 1);
    subtype i16 is Short;
 
    --  Integer
-   subtype i32 is Integer'Base range -(2**31) .. +(2**31 - 1);
+   type i32 is new Integer'Base range -(2**31) .. +(2**31 - 1);
 
    --  Long_Integer
-   subtype Long is Long_Integer'Base range -(2**63) .. +(2**63 - 1);
+   type Long is new Long_Integer'Base range -(2**63) .. +(2**63 - 1);
    subtype i64 is Long;
    subtype v64 is Long;
 
