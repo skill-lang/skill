@@ -15,6 +15,7 @@ trait ByteWriterSpecMaker extends GeneralOutputMaker {
 
     out.write(s"""
 with Ada.Unchecked_Conversion;
+with System.Machine_Code;
 
 package ${packagePrefix.capitalize}.Internal.Byte_Writer is
 

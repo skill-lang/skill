@@ -103,136 +103,156 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Writer is
 
    --  optimized write v64: taken from the scala binding
    procedure Write_v64 (Stream : ASS_IO.Stream_Access; Value : v64) is
-      type Result is new Interfaces.Unsigned_64;
-      function Convert is new Ada.Unchecked_Conversion (Source => v64, Target => Result);
+      use Interfaces;
+
+      subtype Result is Long range 0 .. 63;
+      Index : Result;
+      function Convert is new Ada.Unchecked_Conversion (Source => v64, Target => Unsigned_64);
    begin
-      if Convert (Value) < 128 then
-         declare
-            A : Result := Convert (Value) and 16#ff#;
-         begin
-            Write_Byte (Stream, Byte (A));
-         end;
-      elsif Convert (Value) < (128 ** 2) then
-         declare
-            A : Result := (16#80# or Convert (Value)) and 16#ff#;
-            B : Result := (Convert (Value) / (2 ** 7)) and 16#ff#;
-         begin
-            Write_Byte (Stream, Byte (A));
-            Write_Byte (Stream, Byte (B));
-         end;
-      elsif Convert (Value) < (128 ** 3) then
-         declare
-            A : Result := (16#80# or Convert (Value)) and 16#ff#;
-            B : Result := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
-            C : Result := (Convert (Value) / (2 ** 14)) and 16#ff#;
-         begin
-            Write_Byte (Stream, Byte (A));
-            Write_Byte (Stream, Byte (B));
-            Write_Byte (Stream, Byte (C));
-         end;
-      elsif Convert (Value) < (128 ** 4) then
-         declare
-            A : Result := (16#80# or Convert (Value)) and 16#ff#;
-            B : Result := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
-            C : Result := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
-            D : Result := (Convert (Value) / (2 ** 21)) and 16#ff#;
-         begin
-            Write_Byte (Stream, Byte (A));
-            Write_Byte (Stream, Byte (B));
-            Write_Byte (Stream, Byte (C));
-            Write_Byte (Stream, Byte (D));
-         end;
-      elsif Convert (Value) < (128 ** 5) then
-         declare
-            A : Result := (16#80# or Convert (Value)) and 16#ff#;
-            B : Result := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
-            C : Result := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
-            D : Result := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
-            E : Result := (Convert (Value) / (2 ** 28)) and 16#ff#;
-         begin
-            Write_Byte (Stream, Byte (A));
-            Write_Byte (Stream, Byte (B));
-            Write_Byte (Stream, Byte (C));
-            Write_Byte (Stream, Byte (D));
-            Write_Byte (Stream, Byte (E));
-         end;
-      elsif Convert (Value) < (128 ** 6) then
-         declare
-            A : Result := (16#80# or Convert (Value)) and 16#ff#;
-            B : Result := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
-            C : Result := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
-            D : Result := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
-            E : Result := (16#80# or (Convert (Value) / (2 ** 28))) and 16#ff#;
-            F : Result := (Convert (Value) / (2 ** 35)) and 16#ff#;
-         begin
-            Write_Byte (Stream, Byte (A));
-            Write_Byte (Stream, Byte (B));
-            Write_Byte (Stream, Byte (C));
-            Write_Byte (Stream, Byte (D));
-            Write_Byte (Stream, Byte (E));
-            Write_Byte (Stream, Byte (F));
-         end;
-      elsif Convert (Value) < (128 ** 7) then
-         declare
-            A : Result := (16#80# or Convert (Value)) and 16#ff#;
-            B : Result := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
-            C : Result := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
-            D : Result := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
-            E : Result := (16#80# or (Convert (Value) / (2 ** 28))) and 16#ff#;
-            F : Result := (16#80# or (Convert (Value) / (2 ** 35))) and 16#ff#;
-            G : Result := (Convert (Value) / (2 ** 42)) and 16#ff#;
-         begin
-            Write_Byte (Stream, Byte (A));
-            Write_Byte (Stream, Byte (B));
-            Write_Byte (Stream, Byte (C));
-            Write_Byte (Stream, Byte (D));
-            Write_Byte (Stream, Byte (E));
-            Write_Byte (Stream, Byte (F));
-            Write_Byte (Stream, Byte (G));
-         end;
-      elsif Convert (Value) < (128 ** 8) then
-         declare
-            A : Result := (16#80# or Convert (Value)) and 16#ff#;
-            B : Result := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
-            C : Result := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
-            D : Result := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
-            E : Result := (16#80# or (Convert (Value) / (2 ** 28))) and 16#ff#;
-            F : Result := (16#80# or (Convert (Value) / (2 ** 35))) and 16#ff#;
-            G : Result := (16#80# or (Convert (Value) / (2 ** 42))) and 16#ff#;
-            H : Result := (Convert (Value) / (2 ** 49)) and 16#ff#;
-         begin
-            Write_Byte (Stream, Byte (A));
-            Write_Byte (Stream, Byte (B));
-            Write_Byte (Stream, Byte (C));
-            Write_Byte (Stream, Byte (D));
-            Write_Byte (Stream, Byte (E));
-            Write_Byte (Stream, Byte (F));
-            Write_Byte (Stream, Byte (G));
-            Write_Byte (Stream, Byte (H));
-         end;
-      else
-         declare
-            A : Result := (16#80# or Convert (Value)) and 16#ff#;
-            B : Result := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
-            C : Result := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
-            D : Result := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
-            E : Result := (16#80# or (Convert (Value) / (2 ** 28))) and 16#ff#;
-            F : Result := (16#80# or (Convert (Value) / (2 ** 35))) and 16#ff#;
-            G : Result := (16#80# or (Convert (Value) / (2 ** 42))) and 16#ff#;
-            H : Result := (16#80# or (Convert (Value) / (2 ** 49))) and 16#ff#;
-            I : Result := (Convert (Value) / (2 ** 56)) and 16#ff#;
-         begin
-            Write_Byte (Stream, Byte (A));
-            Write_Byte (Stream, Byte (B));
-            Write_Byte (Stream, Byte (C));
-            Write_Byte (Stream, Byte (D));
-            Write_Byte (Stream, Byte (E));
-            Write_Byte (Stream, Byte (F));
-            Write_Byte (Stream, Byte (G));
-            Write_Byte (Stream, Byte (H));
-            Write_Byte (Stream, Byte (I));
-         end;
-      end if;
+
+      System.Machine_Code.Asm ("bsr %1, %0",
+         Outputs => Long'Asm_Output ("=a", Index),
+         Inputs  => Long'Asm_Input ("a", Value)
+         --  Volatile => True
+      );
+
+      case Index is
+         when 0 .. 6 =>
+            declare
+               A : Unsigned_64 := Convert (Value) and 16#ff#;
+            begin
+               Write_Byte (Stream, Byte (A));
+            end;
+
+         when 7 .. 13 =>
+            declare
+               A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
+               B : Unsigned_64 := (Convert (Value) / (2 ** 7)) and 16#ff#;
+            begin
+               Write_Byte (Stream, Byte (A));
+               Write_Byte (Stream, Byte (B));
+            end;
+
+         when 14 .. 20 =>
+            declare
+               A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
+               B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
+               C : Unsigned_64 := (Convert (Value) / (2 ** 14)) and 16#ff#;
+            begin
+               Write_Byte (Stream, Byte (A));
+               Write_Byte (Stream, Byte (B));
+               Write_Byte (Stream, Byte (C));
+            end;
+
+         when 21 .. 27 =>
+            declare
+               A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
+               B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
+               C : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
+               D : Unsigned_64 := (Convert (Value) / (2 ** 21)) and 16#ff#;
+            begin
+               Write_Byte (Stream, Byte (A));
+               Write_Byte (Stream, Byte (B));
+               Write_Byte (Stream, Byte (C));
+               Write_Byte (Stream, Byte (D));
+            end;
+
+         when 28 .. 34 =>
+            declare
+               A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
+               B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
+               C : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
+               D : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
+               E : Unsigned_64 := (Convert (Value) / (2 ** 28)) and 16#ff#;
+            begin
+               Write_Byte (Stream, Byte (A));
+               Write_Byte (Stream, Byte (B));
+               Write_Byte (Stream, Byte (C));
+               Write_Byte (Stream, Byte (D));
+               Write_Byte (Stream, Byte (E));
+            end;
+
+         when 35 .. 41 =>
+            declare
+               A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
+               B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
+               C : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
+               D : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
+               E : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 28))) and 16#ff#;
+               F : Unsigned_64 := (Convert (Value) / (2 ** 35)) and 16#ff#;
+            begin
+               Write_Byte (Stream, Byte (A));
+               Write_Byte (Stream, Byte (B));
+               Write_Byte (Stream, Byte (C));
+               Write_Byte (Stream, Byte (D));
+               Write_Byte (Stream, Byte (E));
+               Write_Byte (Stream, Byte (F));
+            end;
+
+         when 42 .. 48 =>
+            declare
+               A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
+               B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
+               C : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
+               D : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
+               E : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 28))) and 16#ff#;
+               F : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 35))) and 16#ff#;
+               G : Unsigned_64 := (Convert (Value) / (2 ** 42)) and 16#ff#;
+            begin
+               Write_Byte (Stream, Byte (A));
+               Write_Byte (Stream, Byte (B));
+               Write_Byte (Stream, Byte (C));
+               Write_Byte (Stream, Byte (D));
+               Write_Byte (Stream, Byte (E));
+               Write_Byte (Stream, Byte (F));
+               Write_Byte (Stream, Byte (G));
+            end;
+
+
+         when 49 .. 55 =>
+            declare
+               A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
+               B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
+               C : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
+               D : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
+               E : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 28))) and 16#ff#;
+               F : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 35))) and 16#ff#;
+               G : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 42))) and 16#ff#;
+               H : Unsigned_64 := (Convert (Value) / (2 ** 49)) and 16#ff#;
+            begin
+               Write_Byte (Stream, Byte (A));
+               Write_Byte (Stream, Byte (B));
+               Write_Byte (Stream, Byte (C));
+               Write_Byte (Stream, Byte (D));
+               Write_Byte (Stream, Byte (E));
+               Write_Byte (Stream, Byte (F));
+               Write_Byte (Stream, Byte (G));
+               Write_Byte (Stream, Byte (H));
+            end;
+
+         when 56 .. 63 =>
+            declare
+               A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
+               B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
+               C : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
+               D : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
+               E : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 28))) and 16#ff#;
+               F : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 35))) and 16#ff#;
+               G : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 42))) and 16#ff#;
+               H : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 49))) and 16#ff#;
+               I : Unsigned_64 := (Convert (Value) / (2 ** 56)) and 16#ff#;
+            begin
+               Write_Byte (Stream, Byte (A));
+               Write_Byte (Stream, Byte (B));
+               Write_Byte (Stream, Byte (C));
+               Write_Byte (Stream, Byte (D));
+               Write_Byte (Stream, Byte (E));
+               Write_Byte (Stream, Byte (F));
+               Write_Byte (Stream, Byte (G));
+               Write_Byte (Stream, Byte (H));
+               Write_Byte (Stream, Byte (I));
+            end;
+      end case;
    end Write_v64;
 
    procedure Write_Boolean (Stream : ASS_IO.Stream_Access; Value : Boolean) is
