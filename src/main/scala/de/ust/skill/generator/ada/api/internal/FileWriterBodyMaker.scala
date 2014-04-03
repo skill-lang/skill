@@ -163,7 +163,7 @@ ${
 """
     d.getFields.filter({ f ⇒ "string" == f.getType.getSkillName }).foreach({ f ⇒
       hasOutput = true;
-      output += s"                  Put_String (SU.To_String (Object.${f.getSkillName}), Safe => True);\r\n"
+      output += s"                  Put_String (Object.${f.getSkillName}.all, Safe => True);\r\n"
     })
     d.getFields.foreach({ f =>
       f.getType match {
@@ -171,7 +171,7 @@ ${
           if ("string" == t.getBaseType.getName) {
             hasOutput = true;
             output += s"""\r\n                  for I in Object.${f.getSkillName}'Range loop
-                     Put_String (SU.To_String (Object.${f.getSkillName} (I)), Safe => True);
+                     Put_String (Object.${f.getSkillName} (I).all, Safe => True);
                   end loop;\r\n""";
           }
         case t: VariableLengthArrayType ⇒
@@ -184,7 +184,7 @@ ${
 
                      procedure Iterate (Position : Cursor) is
                      begin
-                        Put_String (SU.To_String (Element (Position)), Safe => True);
+                        Put_String (Element (Position).all, Safe => True);
                      end Iterate;
                      pragma Inline (Iterate);
                   begin
@@ -201,7 +201,7 @@ ${
 
                      procedure Iterate (Position : Cursor) is
                      begin
-                        Put_String (SU.To_String (Element (Position)), Safe => True);
+                        Put_String (Element (Position).all, Safe => True);
                      end Iterate;
                      pragma Inline (Iterate);
                   begin
@@ -218,7 +218,7 @@ ${
 
                      procedure Iterate (Position : Cursor) is
                      begin
-                        Put_String (SU.To_String (Element (Position)), Safe => True);
+                        Put_String (Element (Position).all, Safe => True);
                      end Iterate;
                      pragma Inline (Iterate);
                   begin
@@ -234,14 +234,14 @@ ${
               val x = {
                 var output = ""
                 if (0 == i) {
-                  if ("string" == types.get(i+1).getName) output += s"Put_String (SU.To_String (Key (Position)), Safe => True);"
+                  if ("string" == types.get(i+1).getName) output += s"Put_String (Key (Position).all, Safe => True);"
                   if ("string" == types.get(i).getName) {
                     if (!output.isEmpty) output += "\r\n                     "
-                    output += s"Put_String (SU.To_String (Element (Position)), Safe => True);"
+                    output += s"Put_String (Element (Position).all, Safe => True);"
                   }
                 }
                 else {
-                  if ("string" == types.get(i+1).getName) output += s"Put_String (SU.To_String (Key (Position)), Safe => True);\r\n                           "
+                  if ("string" == types.get(i+1).getName) output += s"Put_String (Key (Position).all, Safe => True);\r\n                           "
                   output += s"Read_Map_${types.length-i} (Element (Position));"
                 }
                 if (output.isEmpty) "null;" else output
@@ -672,10 +672,10 @@ ${
       end if;
    end Write_Annotation;
 
-   procedure Write_Unbounded_String (Stream : ASS_IO.Stream_Access; Value : SU.Unbounded_String) is
+   procedure Write_String (Stream : ASS_IO.Stream_Access; Value : String_Access) is
    begin
-      Byte_Writer.Write_v64 (Stream, Long (Get_String_Index (SU.To_String (Value))));
-   end Write_Unbounded_String;
+      Byte_Writer.Write_v64 (Stream, Long (Get_String_Index (Value.all)));
+   end Write_String;
 
 ${
   var output = "";

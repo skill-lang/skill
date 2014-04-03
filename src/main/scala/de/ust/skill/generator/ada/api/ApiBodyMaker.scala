@@ -26,7 +26,7 @@ package body ${packagePrefix.capitalize}.Api is
       package File_Writer renames Api.Internal.File_Writer;
    begin
       if Append = State.State or else Read = State.State or else Write = State.State then
-         File_Writer.Append (State, SU.To_String (State.File_Name));
+         File_Writer.Append (State, State.File_Name.all);
          State.State := Append;
       else
          raise Skill_State_Error;
@@ -51,7 +51,7 @@ package body ${packagePrefix.capitalize}.Api is
       if Unused = State.State then
          File_Reader.Read (State, File_Name);
          State_Maker.Create (State);
-         State.File_Name := SU.To_Unbounded_String (File_Name);
+         State.File_Name := new String'(File_Name);
          State.State := Read;
       else
          raise Skill_State_Error;
@@ -63,7 +63,7 @@ package body ${packagePrefix.capitalize}.Api is
    begin
       if Append = State.State or else Create = State.State or else Read = State.State or else Write = State.State then
          File_Writer.Write (State, File_Name);
-         State.File_Name := SU.To_Unbounded_String (File_Name);
+         State.File_Name := new String'(File_Name);
          State.State := Write;
       else
          raise Skill_State_Error;

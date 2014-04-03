@@ -29,8 +29,11 @@ package body ${packagePrefix.capitalize} is
    function Hash (Element : Long) return Ada.Containers.Hash_Type is
       (Ada.Containers.Hash_Type'Mod (Element));
 
-   function Hash (Element : SU.Unbounded_String) return Ada.Containers.Hash_Type is
-      (Ada.Strings.Unbounded.Hash (Element));
+   function Hash (Element : String_Access) return Ada.Containers.Hash_Type is
+      (Ada.Strings.Hash (Element.all));
+
+   function "=" (Left, Right : String_Access) return Boolean is
+      (Left.all = Right.all);
 
    function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type is
       (Ada.Containers.Hash_Type'Mod (Element.skill_id));

@@ -51,7 +51,7 @@ private
    procedure Copy_Field_Data;
 
    procedure Write_Annotation (Stream : ASS_IO.Stream_Access; Object : Skill_Type_Access);
-   procedure Write_Unbounded_String (Stream : ASS_IO.Stream_Access; Value : SU.Unbounded_String);
+   procedure Write_String (Stream : ASS_IO.Stream_Access; Value : String_Access);
 
 ${
   var output = ""

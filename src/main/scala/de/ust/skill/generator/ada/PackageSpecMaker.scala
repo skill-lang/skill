@@ -21,15 +21,13 @@ with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Vectors;
 with Ada.Strings.Hash;
-with Ada.Strings.Unbounded;
-with Ada.Strings.Unbounded.Hash;
 with Ada.Tags;
 
 with Ada.Text_IO;
 
 package ${packagePrefix.capitalize} is
 
-   package SU renames Ada.Strings.Unbounded;
+   type String_Access is access String;
 
    -------------
    --  TYPES  --
@@ -56,8 +54,8 @@ package ${packagePrefix.capitalize} is
    function Hash (Element : Short) return Ada.Containers.Hash_Type;
    function Hash (Element : Integer) return Ada.Containers.Hash_Type;
    function Hash (Element : Long) return Ada.Containers.Hash_Type;
-   function Hash (Element : SU.Unbounded_String) return Ada.Containers.Hash_Type;
-   function "=" (Left, Right : SU.Unbounded_String) return Boolean renames SU."=";
+   function Hash (Element : String_Access) return Ada.Containers.Hash_Type;
+   function "=" (Left, Right : String_Access) return Boolean;
 
    type Skill_State is limited private;
    type Skill_Type is abstract tagged private;
@@ -197,7 +195,7 @@ ${
    -------------------
    type Skill_State is
       record
-         File_Name : SU.Unbounded_String;
+         File_Name : String_Access;
          State : Skill_States := Unused;
          String_Pool : String_Pool_Access := new String_Pool_Vector.Vector;
          Types : Types_Hash_Map_Access := new Types_Hash_Map.Map;

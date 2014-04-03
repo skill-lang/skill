@@ -85,10 +85,10 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
       if not Types.Contains (Type_Name) then
          declare
             Super_Name_Index : Long := Byte_Reader.Read_v64 (Input_Stream);
-            Super_Name : SU.Unbounded_String := SU.To_Unbounded_String("");
+            Super_Name : String_Access := new String'("");
          begin
             if Super_Name_Index > 0 then
-               Super_Name := SU.To_Unbounded_String (String_Pool.Element (Natural (Super_Name_Index)));
+               Super_Name := new String'(String_Pool.Element (Natural (Super_Name_Index)));
             end if;
 
             declare
@@ -96,10 +96,10 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
                New_Type_Storage_Pool : Storage_Pool_Vector.Vector;
                New_Type : Type_Information := new Type_Declaration'(
                   Type_Size => Type_Name'Length,
-                  Super_Size => SU.To_String (Super_Name)'Length,
+                  Super_Size => Super_Name.all'Length,
                   id => Long (Natural (Types.Length) + 32),
                   Name => Type_Name,
-                  Super_Name => SU.To_String (Super_Name),
+                  Super_Name => Super_Name.all,
                   spsi => 1,
                   lbpsi => 1,
                   Fields => New_Type_Fields,
@@ -355,8 +355,8 @@ ${
       end if;
    end Read_Annotation;
 
-   function Read_Unbounded_String (Input_Stream : ASS_IO.Stream_Access) return SU.Unbounded_String is
-      (SU.To_Unbounded_String (String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream)))));
+   function Read_String (Input_Stream : ASS_IO.Stream_Access) return String_Access is
+      (new String'(String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream)))));
 
 ${
   var output = "";

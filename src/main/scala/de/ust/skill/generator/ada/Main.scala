@@ -139,7 +139,7 @@ class Main extends FakeMain
       case "f32"        ⇒ "Float"
       case "f64"        ⇒ "Double"
 
-      case "string"     ⇒ "SU.Unbounded_String"
+      case "string"     ⇒ "String_Access"
     }
 
     case t: ConstantLengthArrayType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_Array"
@@ -160,7 +160,7 @@ class Main extends FakeMain
           case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
             s"Byte_Reader.Read_${mapType(t, _d, _f)} (Input_Stream)"
           case "string" ⇒
-            s"Read_Unbounded_String (Input_Stream)"
+            s"Read_String (Input_Stream)"
         }
         case t: Declaration ⇒
           s"""Read_${escaped(t.getName)}_Type (Input_Stream)"""
@@ -282,7 +282,7 @@ ${
           case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" ⇒
             s"Byte_Writer.Write_${mapType(t, _d, _f)} (Stream, ${value})"
           case "string" ⇒
-            s"Write_Unbounded_String (Stream, ${value})"
+            s"Write_String (Stream, ${value})"
         }
         case t: Declaration ⇒
           s"""Write_${escaped(t.getName)}_Type (Stream, ${value})"""
@@ -480,7 +480,6 @@ ${
       case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
       case "f32" | "f64"                        ⇒ "0.0f"
       case "bool"                               ⇒ "False"
-      case "string"                             ⇒ s"""SU.To_Unbounded_String("")"""
       case _                                    ⇒ "null"
     }
 

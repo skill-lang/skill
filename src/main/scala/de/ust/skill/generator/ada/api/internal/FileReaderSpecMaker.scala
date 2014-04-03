@@ -49,7 +49,7 @@ private
    procedure Read_Queue_Vector_Iterator (Iterator : Read_Queue_Vector.Cursor);
 
    function Read_Annotation (Input_Stream : ASS_IO.Stream_Access) return Skill_Type_Access;
-   function Read_Unbounded_String (Input_Stream : ASS_IO.Stream_Access) return SU.Unbounded_String;
+   function Read_String (Input_Stream : ASS_IO.Stream_Access) return String_Access;
 
 ${
   var output = ""
