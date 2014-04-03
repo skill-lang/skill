@@ -11,10 +11,10 @@ import de.ust.skill.generator.ada.GeneralOutputMaker
 trait ByteWriterBodyMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-internal-byte_writer.adb""")
+    val out = open(s"""${packagePrefix}-api-internal-byte_writer.adb""")
 
     out.write(s"""
-package body ${packagePrefix.capitalize}.Internal.Byte_Writer is
+package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
 
    procedure Write_Buffer (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : in Buffer) is
       use Ada.Streams;
@@ -270,7 +270,7 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Writer is
       end loop;
    end Write_String;
 
-end ${packagePrefix.capitalize}.Internal.Byte_Writer;
+end ${packagePrefix.capitalize}.Api.Internal.Byte_Writer;
 """)
 
     out.close()

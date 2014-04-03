@@ -11,13 +11,13 @@ import de.ust.skill.generator.ada.GeneralOutputMaker
 trait ByteWriterSpecMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-internal-byte_writer.ads""")
+    val out = open(s"""${packagePrefix}-api-internal-byte_writer.ads""")
 
     out.write(s"""
 with Ada.Unchecked_Conversion;
 with System.Machine_Code;
 
-package ${packagePrefix.capitalize}.Internal.Byte_Writer is
+private package ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
 
    procedure Finalize_Buffer (Stream : ASS_IO.Stream_Access);
 
@@ -44,7 +44,7 @@ private
 
    pragma Inline (Finalize_Buffer, Write_i8, Write_i16, Write_i32, Write_i64, Write_v64, Write_Boolean, Write_String, Write_Buffer, Write_Byte);
 
-end ${packagePrefix.capitalize}.Internal.Byte_Writer;
+end ${packagePrefix.capitalize}.Api.Internal.Byte_Writer;
 """)
 
     out.close()

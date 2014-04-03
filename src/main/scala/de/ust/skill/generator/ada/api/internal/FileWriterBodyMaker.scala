@@ -12,10 +12,10 @@ import de.ust.skill.ir._
 trait FileWriterBodyMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-internal-file_writer.adb""")
+    val out = open(s"""${packagePrefix}-api-internal-file_writer.adb""")
 
     out.write(s"""
-package body ${packagePrefix.capitalize}.Internal.File_Writer is
+package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
 
    Modus : Modus_Type;
    String_Pool : String_Pool_Access;
@@ -723,7 +723,7 @@ ${
 }
    end Update_Storage_Pool_Start_Index;
 
-end ${packagePrefix.capitalize}.Internal.File_Writer;
+end ${packagePrefix.capitalize}.Api.Internal.File_Writer;
 """)
 
     out.close()

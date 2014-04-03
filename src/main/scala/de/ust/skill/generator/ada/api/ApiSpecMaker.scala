@@ -13,14 +13,10 @@ import de.ust.skill.ir.Declaration
 trait SkillSpecMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-api-skill.ads""")
+    val out = open(s"""${packagePrefix}-api.ads""")
 
     out.write(s"""
-with ${packagePrefix.capitalize}.Internal.File_Reader;
-with ${packagePrefix.capitalize}.Internal.File_Writer;
-with ${packagePrefix.capitalize}.Internal.State_Maker;
-
-package ${packagePrefix.capitalize}.Api.Skill is
+package ${packagePrefix.capitalize}.Api is
 
    procedure Append (State : access Skill_State);
    procedure Create (State : access Skill_State);
@@ -49,7 +45,7 @@ ${
   }
   output
 }
-end ${packagePrefix.capitalize}.Api.Skill;
+end ${packagePrefix.capitalize}.Api;
 """)
 
     out.close()

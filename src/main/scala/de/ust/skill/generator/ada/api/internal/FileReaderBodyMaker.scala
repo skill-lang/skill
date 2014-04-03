@@ -12,10 +12,10 @@ import de.ust.skill.generator.ada.GeneralOutputMaker
 trait FileReaderBodyMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-internal-file_reader.adb""")
+    val out = open(s"""${packagePrefix}-api-internal-file_reader.adb""")
 
     out.write(s"""
-package body ${packagePrefix.capitalize}.Internal.File_Reader is
+package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
 
    String_Pool : String_Pool_Access;
    Types : Types_Hash_Map_Access;
@@ -392,7 +392,7 @@ ${
       null;
    end Skip_Restrictions;
 
-end ${packagePrefix.capitalize}.Internal.File_Reader;
+end ${packagePrefix.capitalize}.Api.Internal.File_Reader;
 """)
 
     out.close()

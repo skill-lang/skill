@@ -11,10 +11,10 @@ import de.ust.skill.generator.ada.GeneralOutputMaker
 trait ByteReaderBodyMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-internal-byte_reader.adb""")
+    val out = open(s"""${packagePrefix}-api-internal-byte_reader.adb""")
 
     out.write(s"""
-package body ${packagePrefix.capitalize}.Internal.Byte_Reader is
+package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
 
    procedure Read_Buffer (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : out Buffer) is
       use Ada.Streams;
@@ -145,7 +145,7 @@ package body ${packagePrefix.capitalize}.Internal.Byte_Reader is
       end loop;
    end Skip_Bytes;
 
-end ${packagePrefix.capitalize}.Internal.Byte_Reader;
+end ${packagePrefix.capitalize}.Api.Internal.Byte_Reader;
 """)
 
     out.close()

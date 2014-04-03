@@ -11,12 +11,12 @@ import de.ust.skill.generator.ada.GeneralOutputMaker
 trait ByteReaderSpecMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-internal-byte_reader.ads""")
+    val out = open(s"""${packagePrefix}-api-internal-byte_reader.ads""")
 
     out.write(s"""
 with Ada.Unchecked_Conversion;
 
-package ${packagePrefix.capitalize}.Internal.Byte_Reader is
+private package ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
 
    procedure Reset_Buffer;
    function End_Of_Buffer return Boolean;
@@ -47,7 +47,7 @@ private
 
    pragma Inline (Reset_Buffer, End_Of_Buffer, Read_i8, Read_i16, Read_i32, Read_i64, Read_v64, Read_Boolean, Read_String, Skip_Bytes, Read_Buffer, Read_Byte);
 
-end ${packagePrefix.capitalize}.Internal.Byte_Reader;
+end ${packagePrefix.capitalize}.Api.Internal.Byte_Reader;
 """)
 
     out.close()

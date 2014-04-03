@@ -13,13 +13,17 @@ import de.ust.skill.ir.Declaration
 trait SkillBodyMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-api-skill.adb""")
+    val out = open(s"""${packagePrefix}-api.adb""")
 
     out.write(s"""
-package body ${packagePrefix.capitalize}.Api.Skill is
+with ${packagePrefix.capitalize}.Api.Internal.File_Writer;
+with ${packagePrefix.capitalize}.Api.Internal.State_Maker;
+with ${packagePrefix.capitalize}.Api.Internal.File_Reader;
+
+package body ${packagePrefix.capitalize}.Api is
 
    procedure Append (State : access Skill_State) is
-      package File_Writer renames Internal.File_Writer;
+      package File_Writer renames Api.Internal.File_Writer;
    begin
       if Append = State.State or else Read = State.State or else Write = State.State then
          File_Writer.Append (State, SU.To_String (State.File_Name));
@@ -30,7 +34,7 @@ package body ${packagePrefix.capitalize}.Api.Skill is
    end Append;
 
    procedure Create (State : access Skill_State) is
-      package State_Maker renames Internal.State_Maker;
+      package State_Maker renames Api.Internal.State_Maker;
    begin
       if Unused = State.State then
          State_Maker.Create (State);
@@ -41,8 +45,8 @@ package body ${packagePrefix.capitalize}.Api.Skill is
    end Create;
 
    procedure Read (State : access Skill_State; File_Name : String) is
-      package File_Reader renames Internal.File_Reader;
-      package State_Maker renames Internal.State_Maker;
+      package File_Reader renames Api.Internal.File_Reader;
+      package State_Maker renames Api.Internal.State_Maker;
    begin
       if Unused = State.State then
          File_Reader.Read (State, File_Name);
@@ -55,7 +59,7 @@ package body ${packagePrefix.capitalize}.Api.Skill is
    end Read;
 
    procedure Write (State : access Skill_State; File_Name : String) is
-      package File_Writer renames Internal.File_Writer;
+      package File_Writer renames Api.Internal.File_Writer;
    begin
       if Append = State.State or else Create = State.State or else Read = State.State or else Write = State.State then
          File_Writer.Write (State, File_Name);
@@ -153,7 +157,7 @@ ${
   }
   output
 }
-end ${packagePrefix.capitalize}.Api.Skill;
+end ${packagePrefix.capitalize}.Api;
 """)
 
     out.close()

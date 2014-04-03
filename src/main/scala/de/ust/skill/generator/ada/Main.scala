@@ -14,6 +14,7 @@ import de.ust.skill.ir._
 import de.ust.skill.parser.Parser
 import scala.collection.mutable.MutableList
 import scala.util.matching.Regex
+import de.ust.skill.generator.ada.api.internal.PackageInternalSpecMaker
 
 /**
  * Entry point of the ada generator.

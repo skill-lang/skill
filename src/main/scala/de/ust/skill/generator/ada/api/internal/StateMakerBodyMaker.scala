@@ -12,10 +12,10 @@ import de.ust.skill.generator.ada.GeneralOutputMaker
 trait StateMakerBodyMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-internal-state_maker.adb""")
+    val out = open(s"""${packagePrefix}-api-internal-state_maker.adb""")
 
     out.write(s"""
-package body ${packagePrefix.capitalize}.Internal.State_Maker is
+package body ${packagePrefix.capitalize}.Api.Internal.State_Maker is
 
    procedure Create (State : access Skill_State) is
       Types : access Types_Hash_Map.Map := State.Types;
@@ -140,7 +140,7 @@ ${
       return null;
    end Get_Field;
 
-end ${packagePrefix.capitalize}.Internal.State_Maker;
+end ${packagePrefix.capitalize}.Api.Internal.State_Maker;
 """)
 
     out.close()

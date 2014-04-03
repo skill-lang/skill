@@ -11,13 +11,14 @@ import de.ust.skill.generator.ada.GeneralOutputMaker
 trait FileReaderSpecMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-internal-file_reader.ads""")
+    val out = open(s"""${packagePrefix}-api-internal-file_reader.ads""")
 
     out.write(s"""
-with Ada.Unchecked_Deallocation;
-with ${packagePrefix.capitalize}.Internal.Byte_Reader;
+private with ${packagePrefix.capitalize}.Api.Internal.Byte_Reader;
 
-package ${packagePrefix.capitalize}.Internal.File_Reader is
+with Ada.Unchecked_Deallocation;
+
+package ${packagePrefix.capitalize}.Api.Internal.File_Reader is
 
    procedure Read (State : access Skill_State; File_Name : String);
 
@@ -60,7 +61,7 @@ ${
    procedure Update_Storage_Pool_Start_Index;
    procedure Skip_Restrictions;
 
-end ${packagePrefix.capitalize}.Internal.File_Reader;
+end ${packagePrefix.capitalize}.Api.Internal.File_Reader;
 """)
 
     out.close()

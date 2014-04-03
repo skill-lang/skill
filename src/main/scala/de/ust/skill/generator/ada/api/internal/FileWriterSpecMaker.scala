@@ -11,14 +11,15 @@ import de.ust.skill.generator.ada.GeneralOutputMaker
 trait FileWriterSpecMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-internal-file_writer.ads""")
+    val out = open(s"""${packagePrefix}-api-internal-file_writer.ads""")
 
     out.write(s"""
-with Ada.Tags;
-with ${packagePrefix.capitalize}.Internal.Byte_Reader;
-with ${packagePrefix.capitalize}.Internal.Byte_Writer;
+private with ${packagePrefix.capitalize}.Api.Internal.Byte_Reader;
+private with ${packagePrefix.capitalize}.Api.Internal.Byte_Writer;
 
-package ${packagePrefix.capitalize}.Internal.File_Writer is
+with Ada.Tags;
+
+package ${packagePrefix.capitalize}.Api.Internal.File_Writer is
 
    procedure Append (State : access Skill_State; File_Name : String);
    procedure Write (State : access Skill_State; File_Name : String);
@@ -63,7 +64,7 @@ ${
 
    procedure Update_Storage_Pool_Start_Index;
 
-end ${packagePrefix.capitalize}.Internal.File_Writer;
+end ${packagePrefix.capitalize}.Api.Internal.File_Writer;
 """)
 
     out.close()
