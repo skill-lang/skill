@@ -41,8 +41,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
       Buffer_Array (Buffer_Index) := Next;
 
       if Buffer_Size = Buffer_Index then
-         Buffer'Write (Stream, Buffer_Array);
-         Buffer_Index := 0;
+         Finalize_Buffer (Stream);
       end if;
    end Write_Byte;
 
@@ -53,24 +52,26 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
    end Write_i8;
 
    procedure Write_i16 (Stream : ASS_IO.Stream_Access; Value : i16) is
-      type Result is new Interfaces.Unsigned_16;
-      function Convert is new Ada.Unchecked_Conversion (Source => i16, Target => Result);
+      use Interfaces;
+    
+      function Convert is new Ada.Unchecked_Conversion (Source => i16, Target => Unsigned_16);
 
-      A : Result := (Convert (Value) / (2 ** 8)) and 16#ff#;
-      B : Result := Convert (Value) and 16#ff#;
+      A : Unsigned_16 := (Convert (Value) / (2 ** 8)) and 16#ff#;
+      B : Unsigned_16 := Convert (Value) and 16#ff#;
    begin
       Write_Byte (Stream, Byte (A));
       Write_Byte (Stream, Byte (B));
    end Write_i16;
 
    procedure Write_i32 (Stream : ASS_IO.Stream_Access; Value : i32) is
-      type Result is new Interfaces.Unsigned_32;
-      function Convert is new Ada.Unchecked_Conversion (Source => i32, Target => Result);
+      use Interfaces;
 
-      A : Result := (Convert (Value) / (2 ** 24)) and 16#ff#;
-      B : Result := (Convert (Value) / (2 ** 16)) and 16#ff#;
-      C : Result := (Convert (Value) / (2 ** 8)) and 16#ff#;
-      D : Result := Convert (Value) and 16#ff#;
+      function Convert is new Ada.Unchecked_Conversion (Source => i32, Target => Unsigned_32);
+
+      A : Unsigned_32 := (Convert (Value) / (2 ** 24)) and 16#ff#;
+      B : Unsigned_32 := (Convert (Value) / (2 ** 16)) and 16#ff#;
+      C : Unsigned_32 := (Convert (Value) / (2 ** 8)) and 16#ff#;
+      D : Unsigned_32 := Convert (Value) and 16#ff#;
    begin
       Write_Byte (Stream, Byte (A));
       Write_Byte (Stream, Byte (B));
@@ -79,17 +80,18 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
    end Write_i32;
 
    procedure Write_i64 (Stream : ASS_IO.Stream_Access; Value : i64) is
-      type Result is new Interfaces.Unsigned_64;
-      function Convert is new Ada.Unchecked_Conversion (Source => i64, Target => Result);
+      use Interfaces;
 
-      A : Result := (Convert (Value) / (2 ** 56)) and 16#ff#;
-      B : Result := (Convert (Value) / (2 ** 48)) and 16#ff#;
-      C : Result := (Convert (Value) / (2 ** 40)) and 16#ff#;
-      D : Result := (Convert (Value) / (2 ** 32)) and 16#ff#;
-      E : Result := (Convert (Value) / (2 ** 24)) and 16#ff#;
-      F : Result := (Convert (Value) / (2 ** 16)) and 16#ff#;
-      G : Result := (Convert (Value) / (2 ** 8)) and 16#ff#;
-      H : Result := Convert (Value) and 16#ff#;
+      function Convert is new Ada.Unchecked_Conversion (Source => i64, Target => Unsigned_64);
+
+      A : Unsigned_64 := (Convert (Value) / (2 ** 56)) and 16#ff#;
+      B : Unsigned_64 := (Convert (Value) / (2 ** 48)) and 16#ff#;
+      C : Unsigned_64 := (Convert (Value) / (2 ** 40)) and 16#ff#;
+      D : Unsigned_64 := (Convert (Value) / (2 ** 32)) and 16#ff#;
+      E : Unsigned_64 := (Convert (Value) / (2 ** 24)) and 16#ff#;
+      F : Unsigned_64 := (Convert (Value) / (2 ** 16)) and 16#ff#;
+      G : Unsigned_64 := (Convert (Value) / (2 ** 8)) and 16#ff#;
+      H : Unsigned_64 := Convert (Value) and 16#ff#;
    begin
       Write_Byte (Stream, Byte (A));
       Write_Byte (Stream, Byte (B));
@@ -105,26 +107,28 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
    procedure Write_v64 (Stream : ASS_IO.Stream_Access; Value : v64) is
       use Interfaces;
 
-      subtype Result is Long range 0 .. 63;
-      Index : Result;
+      Result : Long range 0 .. 63;
+      Index : Long range 0 .. 9;
       function Convert is new Ada.Unchecked_Conversion (Source => v64, Target => Unsigned_64);
    begin
 
       System.Machine_Code.Asm ("bsr %1, %0",
-         Outputs => Long'Asm_Output ("=a", Index),
+         Outputs => Long'Asm_Output ("=a", Result),
          Inputs  => Long'Asm_Input ("a", Value)
          --  Volatile => True
       );
 
+      Index := Result / 7;
+
       case Index is
-         when 0 .. 6 =>
+         when 0 =>
             declare
                A : Unsigned_64 := Convert (Value) and 16#ff#;
             begin
                Write_Byte (Stream, Byte (A));
             end;
 
-         when 7 .. 13 =>
+         when 1 =>
             declare
                A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
                B : Unsigned_64 := (Convert (Value) / (2 ** 7)) and 16#ff#;
@@ -133,7 +137,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
                Write_Byte (Stream, Byte (B));
             end;
 
-         when 14 .. 20 =>
+         when 2 =>
             declare
                A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
                B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
@@ -144,7 +148,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
                Write_Byte (Stream, Byte (C));
             end;
 
-         when 21 .. 27 =>
+         when 3 =>
             declare
                A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
                B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
@@ -157,7 +161,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
                Write_Byte (Stream, Byte (D));
             end;
 
-         when 28 .. 34 =>
+         when 4 =>
             declare
                A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
                B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
@@ -172,7 +176,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
                Write_Byte (Stream, Byte (E));
             end;
 
-         when 35 .. 41 =>
+         when 5 =>
             declare
                A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
                B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
@@ -189,7 +193,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
                Write_Byte (Stream, Byte (F));
             end;
 
-         when 42 .. 48 =>
+         when 6 =>
             declare
                A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
                B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
@@ -209,7 +213,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
             end;
 
 
-         when 49 .. 55 =>
+         when 7 =>
             declare
                A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
                B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
@@ -230,7 +234,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
                Write_Byte (Stream, Byte (H));
             end;
 
-         when 56 .. 63 =>
+         when 8 | 9 =>
             declare
                A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
                B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;

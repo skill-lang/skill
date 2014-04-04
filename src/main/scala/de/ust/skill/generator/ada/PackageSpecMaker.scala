@@ -32,20 +32,13 @@ package ${packagePrefix.capitalize} is
    -------------
    --  TYPES  --
    -------------
-   --  Short_Short_Integer
-   type i8 is new Short_Short_Integer'Base range -(2**7) .. +(2**7 - 1);
-
-   --  Short_Integer
-   type Short is new Short_Integer'Base range -(2**15) .. +(2**15 - 1);
-   subtype i16 is Short;
-
-   --  Integer
-   type i32 is new Integer'Base range -(2**31) .. +(2**31 - 1);
-
-   --  Long_Integer
-   type Long is new Long_Integer'Base range -(2**63) .. +(2**63 - 1);
-   subtype i64 is Long;
-   subtype v64 is Long;
+   type i8 is range -(2**7) .. +(2**7 - 1);
+   type i16 is range -(2**15) .. +(2**15 - 1);
+   subtype Short is i16;
+   type i32 is range -(2**31) .. +(2**31 - 1);
+   type i64 is range -(2**63) .. +(2**63 - 1);
+   subtype v64 is i64;
+   subtype Long is i64;
 
    -------------
    --  SKILL  --
