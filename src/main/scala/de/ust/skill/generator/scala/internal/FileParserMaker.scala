@@ -342,8 +342,13 @@ ${
     }
 
     while (!in.eof) {
-      stringBlock
-      typeBlock
+      try {
+        stringBlock
+        typeBlock
+      } catch {
+        case e : SkillException ⇒ throw e
+        case e : Exception      ⇒ throw new ParseException(in, blockCounter, "unexpected foreign exception", e)
+      }
 
       blockCounter += 1
       seenTypes = HashSet()

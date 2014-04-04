@@ -67,6 +67,12 @@ ${
    * @pre canAppend
    */
   def append(target: Path): Unit
+
+  /**
+   * Checks restrictions in types. Restrictions are checked before write/append, where an error is raised if they do not
+   * hold.
+   */
+  def checkRestrictions : Boolean
 }
 
 object SkillState {

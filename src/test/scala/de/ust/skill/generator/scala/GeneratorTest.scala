@@ -26,6 +26,7 @@ class GeneratorTest extends FunSuite {
   test("container")(check("container.skill", "container"))
   test("date")(check("date.skill", "date"))
   test("graph")(check("graph.skill", "graph"))
+  test("float")(check("float.skill", "floatTest"))
 
   test("restrictions: range")(check("restrictions.range.skill", "restrictions.range"))
   test("restrictions: singleton")(check("restrictions.singleton.skill", "restrictions.singleton"))

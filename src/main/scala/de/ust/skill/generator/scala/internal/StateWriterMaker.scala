@@ -160,8 +160,8 @@ ${
         }
       }
     }
-    out.putAll(dataChunk)
   }
+  out.putAll(dataChunk)
 
   out.close
 }
