@@ -87,7 +87,7 @@ final class Parser {
      * 
      * @note the implementation is more liberal then the specification of the specification language, because some illegal arguments are dropped
      */
-    private def restriction:Parser[Restriction] = "@" ~> id >> {
+    private def restriction:Parser[Restriction] = "@" ~> id >> { _.toLowerCase match {
       case "min" ⇒ "(" ~> (
           int ~ opt("," ~> string) ^^ {
             case low ~ None ⇒ new IntRangeRestriction(low, Long.MAX_VALUE, true, true)
@@ -143,7 +143,7 @@ final class Parser {
           arg.mkString("(", ", ", ")")
         } is either not supported or an invalid restriction name")
       }
-    }
+    }}
     /**
      * hints as defined in the paper. Because hints can be ignored by the generator, it is safe to allow arbitrary
      * identifiers and to warn if the identifier is not a known hint.
