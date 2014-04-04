@@ -28,6 +28,9 @@ private package ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
 
    procedure Write_v64 (Stream : ASS_IO.Stream_Access; Value : v64);
 
+   procedure Write_f32 (Stream : ASS_IO.Stream_Access; Value : f32);
+   procedure Write_f64 (Stream : ASS_IO.Stream_Access; Value : f64);
+
    procedure Write_Boolean (Stream : ASS_IO.Stream_Access; Value : Boolean);
    procedure Write_String (Stream : ASS_IO.Stream_Access; Value : String);
 

@@ -54,14 +54,12 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
       end;
    end Read_Byte;
 
-   --  Short_Short_Integer
    function Read_i8 (Input_Stream : ASS_IO.Stream_Access) return i8 is
       function Convert is new Ada.Unchecked_Conversion (Byte, i8);
    begin
       return Convert (Read_Byte (Input_Stream));
    end Read_i8;
 
-   --  Short_Integer (Short)
    function Read_i16 (Input_Stream : ASS_IO.Stream_Access) return i16 is
       A : i16 := i16 (Read_Byte (Input_Stream));
       B : i16 := i16 (Read_Byte (Input_Stream));
@@ -69,7 +67,6 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
       return A * (2**8) + B;
    end Read_i16;
 
-   --  Integer
    function Read_i32 (Input_Stream : ASS_IO.Stream_Access) return i32 is
       A : i32 := i32 (Read_Byte (Input_Stream));
       B : i32 := i32 (Read_Byte (Input_Stream));
@@ -79,7 +76,6 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
       return A * (2 ** 24) + B * (2 ** 16) + C * (2 ** 8) + D;
    end Read_i32;
 
-   --  Long_Integer (Long)
    function Read_i64 (Input_Stream : ASS_IO.Stream_Access) return i64 is
       A : i64 := i64 (Read_Byte (Input_Stream));
       B : i64 := i64 (Read_Byte (Input_Stream));
@@ -95,7 +91,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
 
    function Read_v64 (Input_Stream : ASS_IO.Stream_Access) return v64 is
       type Result is new Interfaces.Unsigned_64;
-      function Convert is new Ada.Unchecked_Conversion (Source => Result, Target => v64);
+      function Convert is new Ada.Unchecked_Conversion (Result, v64);
 
       Count : Natural := 0;
       rval : Result := 0;
@@ -114,6 +110,22 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
 
       return Convert (rval);
    end Read_v64;
+
+   function Read_f32 (Input_Stream : ASS_IO.Stream_Access) return f32 is
+      function Convert is new Ada.Unchecked_Conversion (i32, f32);
+
+      A : i32 := Read_i32 (Input_Stream);
+   begin
+      return Convert (A);
+   end Read_f32;
+
+   function Read_f64 (Input_Stream : ASS_IO.Stream_Access) return f64 is
+      function Convert is new Ada.Unchecked_Conversion (i64, f64);
+
+      A : i64 := Read_i64 (Input_Stream);
+   begin
+      return Convert (A);
+   end Read_f64;
 
    function Read_Boolean (Input_Stream : ASS_IO.Stream_Access) return Boolean is
       Unexcepted_Value : exception;

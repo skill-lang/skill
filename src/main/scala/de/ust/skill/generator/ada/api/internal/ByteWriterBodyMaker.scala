@@ -46,15 +46,15 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
    end Write_Byte;
 
    procedure Write_i8 (Stream : ASS_IO.Stream_Access; Value : i8) is
-      function Convert is new Ada.Unchecked_Conversion (Source => i8, Target => Byte);
+      function Convert is new Ada.Unchecked_Conversion (i8, Byte);
    begin
       Write_Byte (Stream, Convert (Value));
    end Write_i8;
 
    procedure Write_i16 (Stream : ASS_IO.Stream_Access; Value : i16) is
       use Interfaces;
-    
-      function Convert is new Ada.Unchecked_Conversion (Source => i16, Target => Unsigned_16);
+
+      function Convert is new Ada.Unchecked_Conversion (i16, Unsigned_16);
 
       A : Unsigned_16 := (Convert (Value) / (2 ** 8)) and 16#ff#;
       B : Unsigned_16 := Convert (Value) and 16#ff#;
@@ -66,7 +66,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
    procedure Write_i32 (Stream : ASS_IO.Stream_Access; Value : i32) is
       use Interfaces;
 
-      function Convert is new Ada.Unchecked_Conversion (Source => i32, Target => Unsigned_32);
+      function Convert is new Ada.Unchecked_Conversion (i32, Unsigned_32);
 
       A : Unsigned_32 := (Convert (Value) / (2 ** 24)) and 16#ff#;
       B : Unsigned_32 := (Convert (Value) / (2 ** 16)) and 16#ff#;
@@ -82,7 +82,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
    procedure Write_i64 (Stream : ASS_IO.Stream_Access; Value : i64) is
       use Interfaces;
 
-      function Convert is new Ada.Unchecked_Conversion (Source => i64, Target => Unsigned_64);
+      function Convert is new Ada.Unchecked_Conversion (i64, Unsigned_64);
 
       A : Unsigned_64 := (Convert (Value) / (2 ** 56)) and 16#ff#;
       B : Unsigned_64 := (Convert (Value) / (2 ** 48)) and 16#ff#;
@@ -109,7 +109,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
 
       Result : Long range 0 .. 63;
       Index : Long range 0 .. 9;
-      function Convert is new Ada.Unchecked_Conversion (Source => v64, Target => Unsigned_64);
+      function Convert is new Ada.Unchecked_Conversion (v64, Unsigned_64);
    begin
 
       System.Machine_Code.Asm ("bsr %1, %0",
@@ -258,6 +258,18 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
             end;
       end case;
    end Write_v64;
+
+   procedure Write_f32 (Stream : ASS_IO.Stream_Access; Value : f32) is
+      function Convert is new Ada.Unchecked_Conversion (f32, i32);
+   begin
+      Write_i32 (Stream, Convert (Value));
+   end Write_f32;
+
+   procedure Write_f64 (Stream : ASS_IO.Stream_Access; Value : f64) is
+      function Convert is new Ada.Unchecked_Conversion (f64, i64);
+   begin
+      Write_i64 (Stream, Convert (Value));
+   end Write_f64;
 
    procedure Write_Boolean (Stream : ASS_IO.Stream_Access; Value : Boolean) is
    begin

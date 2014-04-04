@@ -28,6 +28,9 @@ private package ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
 
    function Read_v64 (Input_Stream : ASS_IO.Stream_Access) return v64;
 
+   function Read_f32 (Input_Stream : ASS_IO.Stream_Access) return f32;
+   function Read_f64 (Input_Stream : ASS_IO.Stream_Access) return f64;
+
    function Read_Boolean (Input_Stream : ASS_IO.Stream_Access) return Boolean;
    function Read_String (Input_Stream : ASS_IO.Stream_Access; Length : i32) return String;
 
