@@ -38,7 +38,7 @@ private
    function Get_String_Index (Value : String) return Positive;
    procedure Put_String (Value : String; Safe : Boolean := False);
    procedure Write_String_Pool;
-   procedure Order_Types;
+   procedure Ensure_Type_Order;
    function Is_Type_Instantiated (Type_Declaration : Type_Information) return Boolean;
    function Count_Instantiated_Types return Long;
    procedure Write_Type_Block;

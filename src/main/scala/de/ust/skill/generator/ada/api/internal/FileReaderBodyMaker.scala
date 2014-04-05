@@ -314,15 +314,27 @@ ${
    end Create_Objects;
 
    procedure Read_Queue_Vector_Iterator (Iterator : Read_Queue_Vector.Cursor) is
+      use Storage_Pool_Vector;
+
       Item : Queue_Item := Read_Queue_Vector.Element (Iterator);
       Skip_Bytes : Boolean := True;
 
       Type_Declaration : Type_Information := Item.Type_Declaration;
       Field_Declaration : Field_Information := Item.Field_Declaration;
+      Storage_Pool : Storage_Pool_Array_Access := new Storage_Pool_Array (1 .. Natural (Type_Declaration.Storage_Pool.Length));
 
       Type_Name : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
+
+      procedure Iterate (Position : Cursor) is
+         Index : Positive := To_Index (Position);
+      begin
+         Storage_Pool (Index) := Element (Position);
+      end Iterate;
+      pragma Inline (Iterate);
    begin
+      Type_Declaration.Storage_Pool.Iterate (Iterate'Access);
+
 ${
   var output = "";
   for (d ← IR) {
@@ -330,6 +342,7 @@ ${
       s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
          for I in Item.Start_Index .. Item.End_Index loop
             declare
+               Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Storage_Pool (I));
             ${mapFileReader(d, f)}
             end;
          end loop;

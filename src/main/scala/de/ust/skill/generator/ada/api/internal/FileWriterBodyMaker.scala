@@ -310,7 +310,7 @@ ${
       end;
    end Write_String_Pool;
 
-   procedure Order_Types is
+   procedure Ensure_Type_Order is
    begin${
   var output = ""
   for (d ← IR) {
@@ -371,7 +371,7 @@ ${
   output.stripLineEnd.stripLineEnd
 }
       null;
-   end Order_Types;
+   end Ensure_Type_Order;
 
    function Is_Type_Instantiated (Type_Declaration : Type_Information) return Boolean is
       use Fields_Vector;
@@ -418,7 +418,7 @@ ${
 
    procedure Write_Type_Block is
    begin
-      Order_Types;
+      Ensure_Type_Order;
 
       Byte_Writer.Write_v64 (Output_Stream, Count_Instantiated_Types);
 
@@ -620,7 +620,17 @@ ${
       Type_Name : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
       Start_Index : Positive := 1;
+      Storage_Pool : Storage_Pool_Array_Access := new Storage_Pool_Array (1 .. Natural (Type_Declaration.Storage_Pool.Length));
+
+      procedure Iterate (Position : Storage_Pool_Vector.Cursor) is
+         Index : Positive := Storage_Pool_Vector.To_Index (Position);
+      begin
+         Storage_Pool (Index) := Storage_Pool_Vector.Element (Position);
+      end Iterate;
+      pragma Inline (Iterate);
    begin
+      Type_Declaration.Storage_Pool.Iterate (Iterate'Access);
+
       if Field_Declaration.Written then
          Start_Index := Type_Declaration.spsi;
       end if;
@@ -632,6 +642,7 @@ ${
       s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
          for I in Start_Index .. Natural (Type_Declaration.Storage_Pool.Length) loop
             declare
+               Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Storage_Pool (I));
             ${mapFileWriter(d, f)}
             end;
          end loop;

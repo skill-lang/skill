@@ -170,33 +170,28 @@ class Main extends FakeMain
     f.getType match {
       case t: GroundType ⇒ t.getName() match {
         case "annotation" ⇒
-      	  s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-            begin
+      	  s"""begin
                Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
 
         case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" | "f32" | "f64" ⇒
           if (f.isConstant) {
-            s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-               Skill_Parse_Constant_Error : exception;
+            s"""   Skill_Parse_Constant_Error : exception;
             begin
                if Object.Get_${f.getSkillName.capitalize} /= ${mapType(f.getType, d, f)} (Field_Declaration.Constant_Value) then
                   raise Skill_Parse_Constant_Error;
                end if;"""
           } else {
-            s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-            begin
+            s"""begin
                Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
           }
 
         case "string" ⇒
-      	  s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-            begin
+      	  s"""begin
                Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
       }
 
       case t: ConstantLengthArrayType ⇒
-        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-            begin
+        s"""begin
                declare
                   Skill_Parse_Constant_Array_Length_Error : exception;
                begin
@@ -209,30 +204,25 @@ class Main extends FakeMain
                end loop;"""
 
       case t: VariableLengthArrayType ⇒
-        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-            begin
+        s"""begin
                for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
                   Object.${f.getSkillName}.Append (${inner(t.getBaseType, d, f)});
                end loop;"""
 
       case t: ListType ⇒
-        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-            begin
+        s"""begin
                for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
                   Object.${f.getSkillName}.Append (${inner(t.getBaseType, d, f)});
                end loop;"""
 
       case t: SetType ⇒
-        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-            begin
+        s"""begin
                for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
                   Object.${f.getSkillName}.Insert (${inner(t.getBaseType, d, f)});
                end loop;"""
 
      case t: MapType ⇒
-       s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-
-${
+       s"""${
   var output = ""
   val types = t.getBaseTypes().reverse
   types.slice(0, types.length-1).zipWithIndex.foreach({ case (t, i) =>
@@ -267,8 +257,7 @@ ${
                Object.f := Read_Map_1;"""
 
       case t: Declaration ⇒
-        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-            begin
+        s"""begin
                Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
     }
   }
@@ -292,24 +281,20 @@ ${
     f.getType match {
       case t: GroundType ⇒ t.getName() match {
         case "annotation" ⇒
-      	  s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-            begin
+      	  s"""begin
                ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
 
         case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" | "f32" | "f64" ⇒
-          s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-            begin
+          s"""begin
                ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
 
         case "string" ⇒
-      	  s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-            begin
+      	  s"""begin
                ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
       }
 
       case t: ConstantLengthArrayType ⇒
-        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-            begin
+        s"""begin
                for I in Object.${f.getSkillName}'Range loop
                   ${inner(t.getBaseType, d, f, s"Object.${f.getSkillName} (I)")};
                end loop;"""
@@ -317,7 +302,6 @@ ${
       case t: VariableLengthArrayType ⇒
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".Vector")};
 
-               Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
                Vector : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
 
                procedure Iterate (Position : Cursor) is
@@ -332,7 +316,6 @@ ${
       case t: ListType ⇒
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".List")};
 
-               Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
                List : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
 
                procedure Iterate (Position : Cursor) is
@@ -347,7 +330,6 @@ ${
       case t: SetType ⇒
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".Set")};
 
-               Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
                Set : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
 
                procedure Iterate (Position : Cursor) is
@@ -360,9 +342,7 @@ ${
                Set.Iterate (Iterate'Access);"""
 
       case t: MapType ⇒
-        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-
-${
+        s"""${
   var output = ""
   val types = t.getBaseTypes().reverse
   types.slice(0, types.length-1).zipWithIndex.foreach({ case (t, i) =>
@@ -374,7 +354,7 @@ ${
         s"""${inner(types.get(i+1), d, f, "Key (Position)")};
                      Write_Map_${types.length-i} (Element (Position));"""
     }
-    output += s"""               procedure Write_Map_${types.length-(i+1)} (Map : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map) is
+    output += s"""   ${if (types.length-(i+1) == types.length-1) "" else "               "}procedure Write_Map_${types.length-(i+1)} (Map : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map) is
                   use ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)};
 
                   procedure Iterate (Position : Cursor) is
@@ -394,8 +374,7 @@ ${
                Write_Map_1 (Object.${f.getSkillName});"""
 
       case t: Declaration ⇒
-        s"""   Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Type_Declaration.Storage_Pool.Element (I));
-            begin
+        s"""begin
                ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
     }
   }
