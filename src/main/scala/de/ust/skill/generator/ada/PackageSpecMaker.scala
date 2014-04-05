@@ -23,6 +23,7 @@ with Ada.Containers.Vectors;
 with Ada.Strings.Hash;
 with Ada.Tags;
 with Interfaces;
+with System.Storage_Elements;
 
 with Ada.Text_IO;
 
@@ -41,7 +42,9 @@ package ${packagePrefix.capitalize} is
    subtype v64 is i64;
    subtype Long is i64;
    type f32 is new Interfaces.IEEE_Float_32;
+   subtype Float is f32;
    type f64 is new Interfaces.IEEE_Float_64;
+   subtype Double is f64;
 
    -------------
    --  SKILL  --

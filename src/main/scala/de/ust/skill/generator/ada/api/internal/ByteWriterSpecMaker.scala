@@ -45,7 +45,7 @@ private
 
    procedure Write_Byte (Stream : ASS_IO.Stream_Access; Next : Byte);
 
-   pragma Inline (Finalize_Buffer, Write_i8, Write_i16, Write_i32, Write_i64, Write_v64, Write_Boolean, Write_String, Write_Buffer, Write_Byte);
+   pragma Inline (Finalize_Buffer, Write_i8, Write_i16, Write_i32, Write_i64, Write_v64, Write_f32, Write_f64, Write_Boolean, Write_String, Write_Buffer, Write_Byte);
 
 end ${packagePrefix.capitalize}.Api.Internal.Byte_Writer;
 """)

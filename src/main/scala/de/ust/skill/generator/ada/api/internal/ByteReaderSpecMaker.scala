@@ -48,7 +48,7 @@ private
 
    function Read_Byte (Input_Stream : ASS_IO.Stream_Access) return Byte;
 
-   pragma Inline (Reset_Buffer, End_Of_Buffer, Read_i8, Read_i16, Read_i32, Read_i64, Read_v64, Read_Boolean, Read_String, Skip_Bytes, Read_Buffer, Read_Byte);
+   pragma Inline (Reset_Buffer, End_Of_Buffer, Read_i8, Read_i16, Read_i32, Read_i64, Read_v64, Read_f32, Read_f64, Read_Boolean, Read_String, Skip_Bytes, Read_Buffer, Read_Byte);
 
 end ${packagePrefix.capitalize}.Api.Internal.Byte_Reader;
 """)
