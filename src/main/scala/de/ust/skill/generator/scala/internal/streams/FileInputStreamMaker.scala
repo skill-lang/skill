@@ -34,9 +34,10 @@ final public class FileInputStream extends InStream {
 	private final MappedByteBuffer input;
 	private final Stack<Long> positions = new Stack<Long>();
 	private final Path path;
+	private final FileChannel file;
 
 	public FileInputStream(Path path) throws IOException {
-		FileChannel file = (FileChannel) Files.newByteChannel(path, StandardOpenOption.READ);
+		this.file = (FileChannel) Files.newByteChannel(path, StandardOpenOption.READ);
 		input = file.map(MapMode.READ_ONLY, 0, file.size());
 		this.path = path;
 	}
@@ -77,6 +78,11 @@ final public class FileInputStream extends InStream {
 		final byte[] rval = new byte[(int) length];
 		input.get(rval);
 		return rval;
+	}
+
+	@Override
+	public boolean bool() {
+		return input.get() != 0;
 	}
 
 	@Override
@@ -126,6 +132,14 @@ final public class FileInputStream extends InStream {
 
 	public Path path() {
 		return path;
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+
+		if (file.isOpen())
+			file.close();
 	}
 }
 """)

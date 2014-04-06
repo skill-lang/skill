@@ -62,6 +62,7 @@ final public class FileOutputStream extends OutStream {
 	 *             propagated error
 	 */
 	public static FileOutputStream write(Path target) throws IOException {
+		Files.deleteIfExists(target);
 		return new FileOutputStream(Files.newOutputStream(target, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
 				StandardOpenOption.TRUNCATE_EXISTING));
 	}

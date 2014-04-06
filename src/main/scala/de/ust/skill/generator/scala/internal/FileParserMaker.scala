@@ -209,6 +209,9 @@ ${
             count = in.v64
           } else {
             val superDef = superDefinition
+            if (null!=superDef._1 && !poolByName.contains(superDef._1))
+              throw new ParseException(in, blockCounter, s"Type $$name refers to unknown super type $${superDef._1}. Known types are: $${types.mkString(", ")}", null)
+
             lbpsi = superDef._2
             count = in.v64
             val rest = typeRestrictions
@@ -339,8 +342,13 @@ ${
     }
 
     while (!in.eof) {
-      stringBlock
-      typeBlock
+      try {
+        stringBlock
+        typeBlock
+      } catch {
+        case e : SkillException ⇒ throw e
+        case e : Exception      ⇒ throw new ParseException(in, blockCounter, "unexpected foreign exception", e)
+      }
 
       blockCounter += 1
       seenTypes = HashSet()

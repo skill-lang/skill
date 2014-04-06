@@ -65,6 +65,11 @@ public abstract class InStream {
 	public abstract byte i8();
 
 	/**
+	 * @return take a bool from the stream
+	 */
+	public abstract boolean bool();
+
+	/**
 	 * @return raw byte array taken from the stream
 	 */
 	public abstract byte[] bytes(long length);

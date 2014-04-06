@@ -177,9 +177,9 @@ ${
 object $Name {
   def unapply(self : $Name) = ${(for (f ← t.getAllFields) yield "self."+f.getName).mkString("Some(", ", ", ")")}
 
-  final class SubType private[$packageName] (val name : String, skillID : Long) extends $Name(skillID) with NamedType{
-    override def prettyString : String = name+$prettyStringArgs
-    override def toString = name+"#"+skillID
+  final class SubType private[$packageName] (val τName : String, skillID : Long) extends $Name(skillID) with NamedType{
+    override def prettyString : String = τName+$prettyStringArgs
+    override def toString = τName+"#"+skillID
   }
 }
 """);

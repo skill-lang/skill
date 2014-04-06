@@ -25,7 +25,7 @@ class ParserTest extends FunSuite {
   test("bad hints") { intercept[IllegalArgumentException] { check("/badHints.skill") } }
   test("restrictions") {
     val e = intercept[de.ust.skill.ir.ParseException] { check("/restrictions.skill") }
-    assert("notAHint() is either not supported or an invalid restriction name" === e.getMessage())
+    assert("notahint() is either not supported or an invalid restriction name" === e.getMessage())
   }
 
   test("test")(check("/test.skill"))

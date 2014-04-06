@@ -1,0 +1,17 @@
+/** check some float values. */
+FloatTest {
+  f32 zero;
+  f32 minusZero;
+  f32 two;
+  f32 pi;
+  f32 NaN;
+}
+
+/** check some double values. */
+DoubleTest {
+  f64 zero;
+  f64 minusZero;
+  f64 two;
+  f64 pi;
+  f64 NaN;
+}

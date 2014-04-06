@@ -75,6 +75,10 @@ ${
     }
   }
 
+  def checkRestrictions() : Boolean = {
+    ???
+  }
+
   @inline private def finalizePools {
     @inline def eliminatePreliminaryTypesIn(t : FieldType) : FieldType = t match {
       case TypeDefinitionIndex(i) ⇒ try {
@@ -103,133 +107,6 @@ ${
     }
   }
 }
-//final class SerializableState extends SkillState {
-//  import SerializableState._
-//
-//  /**
-//   * path of the file, the serializable state has been created from; this is required for lazy evaluation and appending
-//   *
-//   * null iff the state has not been created from a file
-//   */
-//  private[internal] var fromPath: Path = null
-//  /**
-//   * reader for the input file, which is used for lazy evaluation and error reporting
-//   */
-//  private[internal] var fromReader: ByteReader = null
-//
-//  private[internal] var pools = new HashMap[String, AbstractPool]
-//  @inline def knownPools = pools.values.collect({ case p: KnownPool[_, _] ⇒ p }).toArray
-//
-//  override val String = new StringPool(this)
-//  ${
-      //      (
-      //        for (d ← IR; name = d.getName)
-      //          yield s"""override val $name = new ${name}StoragePool(this)
-      //  pools.put("${d.getSkillName}", $name)"""
-      //      ).mkString("", "\n  ", "")
-    }
-//
-//  /**
-//   * Creates a new SKilL file at target.
-//   */
-//  override def write(target: Path) {
-//    import SerializationFunctions._
-//
-//    Files.deleteIfExists(target)
-//
-//    val file = Files.newByteChannel(target,
-//      StandardOpenOption.CREATE,
-//      StandardOpenOption.WRITE,
-//      StandardOpenOption.TRUNCATE_EXISTING).asInstanceOf[FileChannel]
-//
-//    if (null == fromPath) try {
-//      fromPath = target
-//      fromReader = new ByteReader(Files.newByteChannel(fromPath).asInstanceOf[FileChannel])
-//    } catch {
-//      case e: IOException ⇒ // we don't care, because this means we do not have right permissions Oo
-//    }
-//
-//    val ws = new WriteState(this)
-//
-//    String.prepareAndWrite(file, ws)
-//    knownPools.foreach(_.prepareSerialization(this))
-//
-//    ws.writeTypeBlock(file)
-//
-//    file.close()
-//
-//    // reset skill IDs
-//    knownPools.foreach {
-//      case p: BasePool[_] ⇒ p.restoreIndices
-//      case _              ⇒
-//    }
-//  }
-//
-//  /**
-//   * Appends to the SKilL file we read.
-//   */
-//  override def append = append(fromPath.ensuring(_ != null))
-//  /**
-//   * Appends to an existing SKilL file.
-//   */
-//  override def append(target: Path) {
-//    require(canAppend)
-//    import SerializationFunctions._
-//
-//    val file = Files.newByteChannel(target,
-//      StandardOpenOption.APPEND,
-//      StandardOpenOption.WRITE).asInstanceOf[FileChannel]
-//
-//    assert(target == fromPath, "we still have to implement copy in this case!!!")
-//
-//    val as = new AppendState(this)
-//
-//    String.prepareAndAppend(file, as)
-//    knownPools.foreach(_.prepareSerialization(this))
-//
-//    as.writeTypeBlock(file)
-//    file.close()
-//  }
-//
-//  // TODO check if state can be appended
-//  def canAppend: Boolean = null != fromPath
-//
-//    // read required fields
-//    val fieldParser = new FieldParser(this)
-//${
-      //      (for (d ← IR) yield s"""    ${d.getName}.readFields(fieldParser)""").mkString("\n")
-    }
-//  }
-//
-//  /**
-//   * prints some debug information onto stdout
-//   */
-//  def dumpDebugInfo = {
-//    println("DEBUG INFO START")
-//    println(s"StringPool ($${String.size}):")
-//    for (i ← 1 to String.stringPositions.size) {
-//      if (!String.idMap.contains(i))
-//        print("lazy ⇒ ")
-//      println(String.get(i))
-//    }
-//    String.newStrings.foreach(println(_))
-//    println("")
-//    println("ReflectionPool:")
-//    for (s ← pools.values) {
-//      println(s.name + s.blockInfos.mkString("[", ", ", "] "))
-//      println(s.fields.values.map { f ⇒ f.toString ++ f.dataChunks.mkString(" = {", ", ", "}") }.mkString("{\\n", ";\\n", "\\n}\\n"))
-//    }
-//    println("")
-//    println("StoragePools:")
-//    knownPools.foreach({ s ⇒
-//      println(s.name+": "+s.dynamicSize);
-//      println(s.iterator.map(_.asInstanceOf[KnownType].prettyString).mkString("  ", "\\n  ", "\\n"))
-//    })
-//    println("")
-//
-//    println("DEBUG INFO END")
-//  }
-//}
 
 object SerializableState {
   /**

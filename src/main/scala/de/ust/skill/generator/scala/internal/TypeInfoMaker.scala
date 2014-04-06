@@ -260,21 +260,21 @@ sealed abstract class StoragePool[T <: B : ClassTag, B <: SkillType](
   /**
    * called after a compress operation to write empty the new objects buffer and to set blocks correctly
    */
-  protected def updateAfterCompress : Unit;
+  protected def updateAfterCompress(LBPSIs : Array[Long]) : Unit;
   /**
    * called after a prepare append operation to write empty the new objects buffer and to set blocks correctly
    */
   final protected def updateAfterPrepareAppend(chunkMap : HashMap[FieldDeclaration, ChunkInfo]) : Unit = {
     val newInstances = !newDynamicInstances.isEmpty
     val newPool = blockInfos.isEmpty
-    val newField = fields.forall(!_.dataChunks.isEmpty)
+    val newField = fields.exists(_.dataChunks.isEmpty)
     if (newPool || newInstances || newField) {
 
       //build block chunk
       val lcount = newDynamicInstances.size
       //@ note this is the index into the data array and NOT the written lbpsi
       val lbpsi = if (0 == lcount) 0L
-      else newDynamicInstances.next.getSkillID
+      else newDynamicInstances.next.getSkillID - 1
 
       blockInfos += new BlockInfo(lbpsi, lcount)
 
@@ -369,7 +369,7 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
   /**
    * compress new instances into the data array and update skillIDs
    */
-  def compress {
+  def compress(LBPSIs : Array[Long]) {
     val d = new Array[T](dynamicSize.toInt)
     var p = 0;
     for (i ← allInTypeOrder) {
@@ -378,14 +378,14 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
       i.setSkillID(p);
     }
     data = d
-    updateAfterCompress
+    updateAfterCompress(LBPSIs)
   }
-  final override def updateAfterCompress {
+  final override def updateAfterCompress(LBPSIs : Array[Long]) {
     blockInfos.clear
     blockInfos += BlockInfo(0, data.length)
     newObjects.clear
     for (p ← subPools)
-      p.updateAfterCompress
+      p.updateAfterCompress(LBPSIs)
   }
 
   /**
@@ -396,8 +396,9 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
     val newInstances = !newDynamicInstances.isEmpty
 
     // check if we have to append at all
-    if (!fields.forall(_.dataChunks.isEmpty) && !newInstances)
-      return ;
+    if (!fields.exists(_.dataChunks.isEmpty) && !newInstances)
+      if (!fields.isEmpty && !blockInfos.isEmpty)
+        return ;
 
     if (newInstances) {
       // we have to resize
@@ -475,12 +476,12 @@ sealed class SubPool[T <: B : ClassTag, B <: SkillType](poolIndex : Long, name :
 
   override def getByID(index : Long) : T = basePool.data(index.toInt - 1).asInstanceOf[T]
 
-  final override def updateAfterCompress {
+  final override def updateAfterCompress(LBPSIs : Array[Long]) {
     blockInfos.clear
-    blockInfos += BlockInfo(staticData(0).getSkillID, data.length)
+    blockInfos += BlockInfo(LBPSIs(poolIndex.toInt), dynamicSize)
     newObjects.clear
     for (p ← subPools)
-      p.updateAfterCompress
+      p.updateAfterCompress(LBPSIs)
   }
 }
 """)
@@ -529,7 +530,14 @@ final class ${t.getCapitalName}StoragePool(poolIndex : Long${
 
 ${
         if (isSingleton)
-          """  override def get = ???"""
+          s"""  lazy val theInstance = if (staticInstances.hasNext) {
+    staticInstances.next
+  } else {
+    val r = new $typeName(-1L)
+    newObjects.append(r)
+    r
+  }
+  override def get = theInstance"""
         else
           s"""  override def apply(${makeConstructorArguments(t)}) = {
     val r = new $typeName(-1L${appendConstructorArguments(t)})

@@ -30,9 +30,9 @@ import scala.collection.mutable.ListBuffer
  *
  * @author Timm Felden
  */
-sealed abstract class ChunkInfo(var begin : Long, var end : Long);
-final class SimpleChunkInfo(begin : Long, end : Long, val bpsi : Long, val count : Long) extends ChunkInfo(begin, end);
-final class BulkChunkInfo(begin : Long, end : Long, val count : Long) extends ChunkInfo(begin, end);
+sealed abstract class ChunkInfo(var begin : Long, var end : Long, val count : Long);
+final class SimpleChunkInfo(begin : Long, end : Long, val bpsi : Long, count : Long) extends ChunkInfo(begin, end, count);
+final class BulkChunkInfo(begin : Long, end : Long, count : Long) extends ChunkInfo(begin, end, count);
 
 /**
  * Blocks contain information about the type of an index range.
