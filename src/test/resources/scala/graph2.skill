@@ -1,0 +1,5 @@
+/** a graph of colored nodes */
+Node {
+  string color;
+  set<Node> edges;
+}
