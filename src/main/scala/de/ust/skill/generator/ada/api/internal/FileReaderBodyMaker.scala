@@ -84,6 +84,8 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
    begin
       if not Types.Contains (Type_Name) then
          declare
+            procedure Free is new Ada.Unchecked_Deallocation (String, String_Access);
+
             Super_Name_Index : Long := Byte_Reader.Read_v64 (Input_Stream);
             Super_Name : String_Access := new String'("");
          begin
@@ -108,6 +110,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
                   Written => True
                );
             begin
+               Free (Super_Name);
                Types.Insert (New_Type.Name, New_Type);
             end;
          end;
@@ -355,6 +358,8 @@ ${
       if True = Skip_Bytes then
          Byte_Reader.Skip_Bytes (Input_Stream, Item.Data_Length);
       end if;
+
+      Free (Storage_Pool);
    end Read_Queue_Vector_Iterator;
 
    function Read_Annotation (Input_Stream : ASS_IO.Stream_Access) return Skill_Type_Access is

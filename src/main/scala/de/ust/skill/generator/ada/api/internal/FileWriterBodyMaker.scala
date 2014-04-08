@@ -649,7 +649,8 @@ ${
       end if;\r\n"""}).mkString("")
   }
   output
-}      null;
+}
+      Free (Storage_Pool);
    end Write_Field_Data;
 
    procedure Copy_Field_Data is

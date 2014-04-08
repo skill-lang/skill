@@ -16,9 +16,12 @@ trait SkillSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}-api.ads""")
 
     out.write(s"""
+with Ada.Unchecked_Deallocation;
+
 package ${packagePrefix.capitalize}.Api is
 
    procedure Append (State : access Skill_State);
+   procedure Close (State : access Skill_State);
    procedure Create (State : access Skill_State);
    procedure Read (State : access Skill_State; File_Name : String);
    procedure Write (State : access Skill_State; File_Name : String);

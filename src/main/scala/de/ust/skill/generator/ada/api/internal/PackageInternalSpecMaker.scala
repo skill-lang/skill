@@ -14,6 +14,7 @@ trait PackageInternalSpecMaker extends GeneralOutputMaker {
 
     out.write(s"""
 with Ada.Streams.Stream_IO;
+with Ada.Unchecked_Deallocation;
 with Interfaces;
 
 package ${packagePrefix.capitalize}.Api.Internal is
@@ -23,6 +24,8 @@ package ${packagePrefix.capitalize}.Api.Internal is
    type Byte is new Interfaces.Unsigned_8;
    type Storage_Pool_Array is array (Natural range <>) of Skill_Type_Access;
    type Storage_Pool_Array_Access is access Storage_Pool_Array;
+
+   procedure Free is new Ada.Unchecked_Deallocation (Storage_Pool_Array, Storage_Pool_Array_Access);
 
 end ${packagePrefix.capitalize}.Api.Internal;
 """)

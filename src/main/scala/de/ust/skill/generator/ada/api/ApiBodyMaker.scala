@@ -33,6 +33,45 @@ package body ${packagePrefix.capitalize}.Api is
       end if;
    end Append;
 
+   procedure Close (State : access Skill_State) is
+      procedure Free is new Ada.Unchecked_Deallocation (String_Pool_Vector.Vector, String_Pool_Access);
+      procedure Free is new Ada.Unchecked_Deallocation (Types_Hash_Map.Map, Types_Hash_Map_Access);
+
+      procedure Iterate_Storage_Pool (Position : Storage_Pool_Vector.Cursor) is
+         procedure Free is new Ada.Unchecked_Deallocation (Skill_Type'Class, Skill_Type_Access);
+
+         Object : Skill_Type_Access := Storage_Pool_Vector.Element (Position);
+      begin
+         Free (Object);
+      end Iterate_Storage_Pool;
+      pragma Inline (Iterate_Storage_Pool);
+
+      procedure Iterate_Field_Declaration (Position : Fields_Vector.Cursor) is
+         procedure Free is new Ada.Unchecked_Deallocation (Field_Declaration, Field_Information);
+
+         Field_Declaration : Field_Information := Fields_Vector.Element (Position);
+      begin
+         Free (Field_Declaration);
+      end Iterate_Field_Declaration;
+      pragma Inline (Iterate_Field_Declaration);
+
+      procedure Iterate_Type_Declaration (Position : Types_Hash_Map.Cursor) is
+         procedure Free is new Ada.Unchecked_Deallocation (Type_Declaration, Type_Information);
+
+         Type_Declaration : Type_Information := Types_Hash_Map.Element (Position);
+      begin
+         Type_Declaration.Fields.Iterate (Iterate_Field_Declaration'Access);
+         Type_Declaration.Storage_Pool.Iterate (Iterate_Storage_Pool'Access);
+         Free (Type_Declaration);
+      end Iterate_Type_Declaration;
+      pragma Inline (Iterate_Type_Declaration);
+   begin
+      State.Types.Iterate (Iterate_Type_Declaration'Access);
+
+      Free (State.String_Pool);
+      Free (State.Types);
+   end Close;
+
    procedure Create (State : access Skill_State) is
       package State_Maker renames Api.Internal.State_Maker;
    begin
