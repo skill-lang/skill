@@ -250,7 +250,7 @@ class Main extends FakeMain
       case t : GroundType ⇒ t.getSkillName match {
 
         case "i64" ⇒
-          s"""val target = ByteBuffer.allocate(8 * outData.size)
+          s"""val target = ByteBuffer.allocate(8 * fieldSize)
                 for(i ← outData) target.putLong(i.$fName)
                 dataChunk.put(target.array)"""
 

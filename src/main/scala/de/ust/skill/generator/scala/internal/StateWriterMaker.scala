@@ -110,6 +110,7 @@ private[internal] final class StateWriter(state : SerializableState, out : OutSt
         }
 ${
           if (fields.size != 0) s"""
+        val fieldSize = outData.length
         for (f ← fields if p.knownFields.contains(f.name)) {
           restrictions(f, out)
           writeType(f.t, out)
