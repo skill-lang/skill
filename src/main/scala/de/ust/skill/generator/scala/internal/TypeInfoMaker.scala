@@ -555,10 +555,7 @@ final class ${t.getCapitalName}SubPool(poolIndex : Long, name : String, superPoo
     extends SubPool[$typeName.SubType, ${packagePrefix}${t.getBaseType.getCapitalName}](
       poolIndex,
       "node",
-      HashMap[String, FieldType](
-        "color" -> StringType,
-        "edges" -> SetType(TypeDefinitionName("node"))
-      ),
+      HashMap[String, FieldType](),
       superPool
     ) {
 
