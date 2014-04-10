@@ -36,6 +36,7 @@ package body ${packagePrefix.capitalize}.Api is
    procedure Close (State : access Skill_State) is
       procedure Free is new Ada.Unchecked_Deallocation (String_Pool_Vector.Vector, String_Pool_Access);
       procedure Free is new Ada.Unchecked_Deallocation (Types_Hash_Map.Map, Types_Hash_Map_Access);
+      procedure Free is new Ada.Unchecked_Deallocation (String, String_Access);
 
       procedure Iterate_Storage_Pool (Position : Storage_Pool_Vector.Cursor) is
          procedure Free is new Ada.Unchecked_Deallocation (Skill_Type'Class, Skill_Type_Access);
@@ -68,8 +69,11 @@ package body ${packagePrefix.capitalize}.Api is
    begin
       State.Types.Iterate (Iterate_Type_Declaration'Access);
 
+      Free (State.File_Name);
       Free (State.String_Pool);
       Free (State.Types);
+
+      State.State := Unused;
    end Close;
 
    procedure Create (State : access Skill_State) is
