@@ -36,7 +36,10 @@ package body ${packagePrefix.capitalize} is
       (Left.all = Right.all);
 
    function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type is
-      (Ada.Containers.Hash_Type'Mod (Element.skill_id));
+      function Convert is new Ada.Unchecked_Conversion (Skill_Type_Access, i64);
+   begin
+      return Ada.Containers.Hash_Type'Mod (Convert (Element));
+   end;
 
 ${
   var output = "";

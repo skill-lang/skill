@@ -22,6 +22,7 @@ with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Vectors;
 with Ada.Strings.Hash;
 with Ada.Tags;
+with Ada.Unchecked_Conversion;
 with Interfaces;
 with System.Storage_Elements;
 
