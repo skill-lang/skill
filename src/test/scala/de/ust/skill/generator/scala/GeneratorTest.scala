@@ -19,7 +19,8 @@ class GeneratorTest extends FunSuite {
     Main.main(Array[String]("-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/scala/"+src, "testsuites/scala/src/main/scala/"))
   }
 
-  test("graph benchmark")(check("graphBenchmark.skill", "benchmarks.graph"))
+  test("benchmark: colored graph")(check("benchmarks.coloredGraph.skill", "benchmarks.coloredGraph"))
+  test("benchmark: graph")(check("benchmarks.graph.skill", "benchmarks.graph"))
 
   test("annotation")(check("annotation.skill", "annotation"))
   test("blocks")(check("blocks.skill", "block"))
