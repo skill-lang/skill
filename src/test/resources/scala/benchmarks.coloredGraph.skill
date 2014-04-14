@@ -1,0 +1,8 @@
+/** a graph with four nodes */
+Node {
+  Color color;
+  set<Node> edges;
+}
+
+/** an RGB color */
+Color{ i8 red; i8 green; i8 blue; }
