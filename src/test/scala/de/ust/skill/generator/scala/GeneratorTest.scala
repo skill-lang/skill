@@ -38,6 +38,7 @@ class GeneratorTest extends FunSuite {
   test("number")(check("number.skill", "number"))
   test("subtypes")(check("subtypesExample.skill", "subtypes"))
   test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
+  test("datedMessage")(check("datedMessage.skill", "datedMessage"))
 
   /**
    * generate code for a more complex example that makes use of a set of tools to modify very simple nodes.

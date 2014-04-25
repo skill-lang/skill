@@ -1,0 +1,7 @@
+Message {
+  string content;
+}
+
+DatedMessage extends Message {
+  i64 date;
+}
