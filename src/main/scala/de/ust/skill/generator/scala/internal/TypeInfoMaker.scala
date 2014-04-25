@@ -554,7 +554,7 @@ ${
 final class ${t.getCapitalName}SubPool(poolIndex : Long, name : String, superPool : StoragePool[_ <: $typeName, ${packagePrefix}${t.getBaseType.getCapitalName}])
     extends SubPool[$typeName.SubType, ${packagePrefix}${t.getBaseType.getCapitalName}](
       poolIndex,
-      "node",
+      name,
       HashMap[String, FieldType](),
       superPool
     ) {
