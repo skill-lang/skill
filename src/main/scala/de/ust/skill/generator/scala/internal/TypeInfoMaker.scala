@@ -430,7 +430,7 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
    *
    * @note base pool data access can not fail, because this would yeald an arary store exception at an earlier stage
    */
-  override def getByID(index : Long) : T = data(index.toInt - 1).asInstanceOf[T]
+  override def getByID(index : Long) : T = (if(0==index) null else data(index.toInt - 1)).asInstanceOf[T]
 
   final override def foreach[U](f : T ⇒ U) {
     for (i ← 0 until data.length)
@@ -474,7 +474,7 @@ sealed class SubPool[T <: B : ClassTag, B <: SkillType](poolIndex : Long, name :
 
   override def allInTypeOrder : Iterator[T] = subPools.foldLeft(staticInstances)(_ ++ _.staticInstances)
 
-  override def getByID(index : Long) : T = basePool.data(index.toInt - 1).asInstanceOf[T]
+  override def getByID(index : Long) : T = (if(0==index) null else basePool.data(index.toInt - 1)).asInstanceOf[T]
 
   final override def updateAfterCompress(LBPSIs : Array[Long]) {
     blockInfos.clear
