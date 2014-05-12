@@ -87,7 +87,9 @@ final class Parser {
      * 
      * @note the implementation is more liberal then the specification of the specification language, because some illegal arguments are dropped
      */
-    private def restriction:Parser[Restriction] = "@" ~> id >> { _.toLowerCase match {
+    private def restriction:Parser[Restriction] = ("@" ^^ { s ⇒
+      System.err.println("Restrictions in their current form are deprecated; please wait for the next specification release")}
+    ) ~> id >> { _.toLowerCase match {
       case "min" ⇒ "(" ~> (
           int ~ opt("," ~> string) ^^ {
             case low ~ None ⇒ new IntRangeRestriction(low, Long.MAX_VALUE, true, true)
