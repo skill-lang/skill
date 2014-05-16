@@ -15,32 +15,37 @@ import de.ust.skill.ir.Hint
  */
 sealed abstract class Node;
 
-final class Description(val comment: Option[String], val restrictions: List[Restriction],
-                        val hints: List[Hint]) extends Node;
+final class Description(val comment : Option[String], val restrictions : List[Restriction],
+                        val hints : List[Hint]) extends Node;
 
 sealed abstract class Type extends Node;
 
-final class MapType(val baseTypes: List[BaseType]) extends Type;
+final class MapType(val baseTypes : List[BaseType]) extends Type;
 
-final class SetType(val baseType: BaseType) extends Type;
+final class SetType(val baseType : BaseType) extends Type;
 
-final class ListType(val baseType: BaseType) extends Type;
+final class ListType(val baseType : BaseType) extends Type;
 
-sealed class ArrayType(val baseType: BaseType) extends Type;
-final class ConstantLengthArrayType(baseType: BaseType, val length: Long) extends ArrayType(baseType);
+sealed class ArrayType(val baseType : BaseType) extends Type;
+final class ConstantLengthArrayType(baseType : BaseType, val length : Long) extends ArrayType(baseType);
 
-final class BaseType(val name: String) extends Type {
-  override def toString: String = name
+final class BaseType(val name : String) extends Type {
+  override def toString : String = name
 }
 
-sealed abstract class Field(val t: Type, val name: String) extends Node {
-  var description: Description = new Description(None, List[Restriction](), List[Hint]());
+sealed abstract class Field(val t : Type, val name : String) extends Node {
+  var description : Description = new Description(None, List[Restriction](), List[Hint]());
 }
 
-final class Constant(t: Type, name: String, val value: Long) extends Field(t, name);
+final class Constant(t : Type, name : String, val value : Long) extends Field(t, name);
 
-final class Data(val isAuto: Boolean, t: Type, name: String) extends Field(t, name);
+final class Data(val isAuto : Boolean, t : Type, name : String) extends Field(t, name);
 
-final class Definition(
-  val description: Description,
-  val name: String, val parent: Option[String], val body: List[Field]) extends Node;
+final case class Definition(
+    val description : Description,
+    val name : String, val parent : Option[String], val body : List[Field]) extends Node {
+  override def equals(other : Any) = other match {
+    case Definition(d, n, p, b) ⇒ n.toLowerCase == name.toLowerCase
+    case _                      ⇒ false
+  }
+};

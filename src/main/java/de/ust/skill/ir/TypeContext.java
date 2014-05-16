@@ -10,7 +10,7 @@ import java.util.Set;
  * 
  * @author Timm Felden
  */
-public class TypeContext {
+public final class TypeContext {
 	/**
 	 * Mark ground types which create reference like fields.
 	 * 

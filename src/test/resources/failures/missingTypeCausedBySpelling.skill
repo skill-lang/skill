@@ -1,0 +1,13 @@
+/**
+reported by: Wladislaw Ungur, Timm Felden
+reason: the parser silently fails, because there is a typo in "extends messsage"
+*/
+Message {
+string content;
+}
+
+DatedMessage extends MessSage {
+    i64 date;
+}
+
+

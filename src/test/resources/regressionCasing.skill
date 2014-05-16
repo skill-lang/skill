@@ -1,0 +1,13 @@
+/**
+reported by: Wladislaw Ungur
+reason: the parser creates two distinct definitions of message
+*/
+Message {
+string content;
+}
+
+DatedMessage extends MesSage {
+    i64 date;
+}
+
+

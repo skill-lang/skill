@@ -15,9 +15,9 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class ParserTest extends FunSuite {
 
-  implicit private def basePath(path: String): File = new File("src/test/resources"+path);
+  implicit private def basePath(path : String) : File = new File("src/test/resources"+path);
 
-  private def check(filename: String) = {
+  private def check(filename : String) = {
     assert(0 != Parser.process(filename).size)
   }
 
@@ -41,6 +41,20 @@ class ParserTest extends FunSuite {
   test("type ordered IR") {
     val IR = Parser.process("/typeOrderIR.skill")
     val order = IR.map(_.getSkillName).mkString("")
-    assert(order == "abdc" || order == "acbd")
+    assert(order == "abdc" || order == "acbd", order + " is not in type order!")
+  }
+
+  test("regression: casing of user types") {
+    val ir = Parser.process("/regressionCasing.skill")
+    assert(2 === ir.size)
+    // note: this is a valid test, because IR has to be in type order
+    assert(ir.get(0).getSkillName === "message")
+    assert(ir.get(1).getSkillName === "datedmessage")
+  }
+
+  test("regression: report missing types") {
+    val e = intercept[de.ust.skill.ir.ParseException] { check("/failures/missingTypeCausedBySpelling.skill") }
+    assert("""The type "MessSage" is unknown!
+Known types are: message, datedmessage""" === e.getMessage())
   }
 }

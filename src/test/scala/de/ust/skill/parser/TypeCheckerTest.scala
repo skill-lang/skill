@@ -42,6 +42,18 @@ class TypeCheckerTest extends FunSuite {
     }
   }
 
+  test("case sensitive duplicate definition") {
+    fail[ir.ParseException] {
+      check("/failures/duplicateDefinitionCaseSensitive.skill")
+    }
+  }
+
+  test("cyclic definitions") {
+    fail[ir.ParseException] {
+      check("/failures/cyclicDefinitions.skill")
+    }
+  }
+
   test("duplicateField") {
     fail[ir.ParseException] {
       check("/failures/duplicateField.skill")
