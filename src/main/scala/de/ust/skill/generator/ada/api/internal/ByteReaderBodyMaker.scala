@@ -16,7 +16,10 @@ trait ByteReaderBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
 
-   procedure Read_Buffer (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : out Buffer) is
+   procedure Read_Buffer
+     (Stream : not null access Ada.Streams.Root_Stream_Type'Class;
+      Item : out Buffer)
+   is
       use Ada.Streams;
 
       Buffer : Stream_Element_Array (1 .. Stream_Element_Offset (Buffer_Size));
@@ -86,7 +89,8 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
       G : i64 := i64 (Read_Byte (Input_Stream));
       H : i64 := i64 (Read_Byte (Input_Stream));
    begin
-      return A * (2 ** 56) + B * (2 ** 48) + C * (2 ** 40) + D * (2 ** 32) + E * (2 ** 24) + F * (2 ** 16) + G * (2 ** 8) + H;
+      return A * (2 ** 56) + B * (2 ** 48) + C * (2 ** 40) + D * (2 ** 32) +
+             E * (2 ** 24) + F * (2 ** 16) + G * (2 ** 8) + H;
    end Read_i64;
 
    function Read_v64 (Input_Stream : ASS_IO.Stream_Access) return v64 is

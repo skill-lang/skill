@@ -383,7 +383,7 @@ class Main extends FakeMain
     if (null == d.getSuperType) MutableList[Type]()
     else getSuperTypes (d.getSuperType) += d.getSuperType
   }
-  
+
   protected def getSubTypes(d: Declaration): MutableList[Type] = {
     var rval = MutableList[Type]()
 
@@ -479,10 +479,18 @@ class Main extends FakeMain
 
     target match {
       // keywords get a suffix "_2", because that way at least auto-completion will work as expected
-      case "abstract" | "case" | "catch" | "class" | "def" | "do" | "else" | "extends" | "false" | "final" | "finally" |
-        "for" | "forSome" | "if" | "implicit" | "import" | "lazy" | "match" | "new" | "null" | "object" | "override" |
-        "package" | "private" | "protected" | "return" | "sealed" | "super" | "this" | "throw" | "trait" | "true" |
-        "try" | "type" | "var" | "while" | "with" | "yield" | "val" ⇒ return target+"_2" + "asd"
+      case "abort" | "else" | "new" | "return" | "abs" | "elsif" | "not" | "reverse" | "abstract" | "end" | "null" | 
+      	"accept" | "entry" | "select" | "access" | "exception" | "of" | "separate" | "aliased" | "exit" | "or" |
+      	"some" | "all" | "others" | "subtype" | "and" | "for" | "out" | "synchronized" | "array" | "function" |
+      	"overriding" | "at" | "tagged" | "generic" | "package" | "task" | "begin" | "goto" | "pragma" | "terminate" |
+      	"body" | "private" | "then" | "if" | "procedure" | "type" | "case" | "in" | "protected" | "constant" |
+      	"interface" | "until" | "is" | "raise" | "use" | "declare" | "range" | "delay" | "limited" | "record" |
+      	"when" | "delta" | "loop" | "rem" | "while" | "digits" | "renames" | "with" | "do" | "mod" | "requeue" |
+      	"xor" ⇒ return target+"_2"
+//      case "abstract" | "case" | "catch" | "class" | "def" | "do" | "else" | "extends" | "false" | "final" | "finally" |
+//        "for" | "forSome" | "if" | "implicit" | "import" | "lazy" | "match" | "new" | "null" | "object" | "override" |
+//        "package" | "private" | "protected" | "return" | "sealed" | "super" | "this" | "throw" | "trait" | "true" |
+//        "try" | "type" | "var" | "while" | "with" | "yield" | "val" ⇒ return target+"_2"
 
       // the string is fine anyway
       case _ ⇒ return target

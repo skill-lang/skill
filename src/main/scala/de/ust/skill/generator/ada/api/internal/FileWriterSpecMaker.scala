@@ -45,9 +45,12 @@ private
    function Count_Known_Fields (Type_Declaration : Type_Information) return Long;
    function Count_Known_Unwritten_Fields (Type_Declaration : Type_Information) return Long;
    procedure Write_Type_Declaration (Type_Declaration : Type_Information);
-   procedure Write_Field_Declaration (Type_Declaration : Type_Information; Field_Declaration : Field_Information);
-   function Field_Data_Size (Type_Declaration : Type_Information; Field_Declaration : Field_Information) return Long;
-   procedure Write_Field_Data (Stream : ASS_IO.Stream_Access; Type_Declaration : Type_Information; Field_Declaration : Field_Information);
+   procedure Write_Field_Declaration
+      (Type_Declaration : Type_Information; Field_Declaration : Field_Information);
+   function Field_Data_Size
+      (Type_Declaration : Type_Information; Field_Declaration : Field_Information) return Long;
+   procedure Write_Field_Data
+      (Stream : ASS_IO.Stream_Access; Type_Declaration : Type_Information; Field_Declaration : Field_Information);
    procedure Copy_Field_Data;
 
    procedure Write_Annotation (Stream : ASS_IO.Stream_Access; Object : Skill_Type_Access);

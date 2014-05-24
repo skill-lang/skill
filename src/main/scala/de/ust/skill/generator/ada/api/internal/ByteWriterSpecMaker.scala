@@ -39,13 +39,16 @@ private
    Buffer_Size : constant Positive := 2**16;
    Buffer_Index : Natural := 0;
    type Buffer is array (Positive range <>) of Byte;
-   procedure Write_Buffer (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : in Buffer);
+   procedure Write_Buffer
+      (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : in Buffer);
    for Buffer'Write use Write_Buffer;
    Buffer_Array : Buffer (1 .. Buffer_Size);
 
    procedure Write_Byte (Stream : ASS_IO.Stream_Access; Next : Byte);
 
-   pragma Inline (Finalize_Buffer, Write_i8, Write_i16, Write_i32, Write_i64, Write_v64, Write_f32, Write_f64, Write_Boolean, Write_String, Write_Buffer, Write_Byte);
+   pragma Inline
+     (Finalize_Buffer, Write_i8, Write_i16, Write_i32, Write_i64, Write_v64,
+      Write_f32, Write_f64, Write_Boolean, Write_String, Write_Buffer, Write_Byte);
 
 end ${packagePrefix.capitalize}.Api.Internal.Byte_Writer;
 """)
