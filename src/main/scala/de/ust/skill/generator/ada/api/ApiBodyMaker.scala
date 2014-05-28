@@ -87,7 +87,10 @@ package body ${packagePrefix.capitalize}.Api is
       end if;
    end Create;
 
-   procedure Read (State : access Skill_State; File_Name : String) is
+   procedure Read (
+      State     : access Skill_State;
+      File_Name :        String
+   ) is
       package File_Reader renames Api.Internal.File_Reader;
       package State_Maker renames Api.Internal.State_Maker;
    begin
@@ -101,7 +104,10 @@ package body ${packagePrefix.capitalize}.Api is
       end if;
    end Read;
 
-   procedure Write (State : access Skill_State; File_Name : String) is
+   procedure Write (
+      State     : access Skill_State;
+      File_Name :        String
+   ) is
       package File_Writer renames Api.Internal.File_Writer;
    begin
       if Append = State.State or else Create = State.State or else Read = State.State or else Write = State.State then

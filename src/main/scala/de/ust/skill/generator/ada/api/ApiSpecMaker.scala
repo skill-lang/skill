@@ -18,14 +18,26 @@ trait SkillSpecMaker extends GeneralOutputMaker {
     out.write(s"""
 with Ada.Unchecked_Deallocation;
 
+--
+--  This package provides the API for the skill state.
+--
+
 package ${packagePrefix.capitalize}.Api is
 
    procedure Append (State : access Skill_State);
    procedure Close (State : access Skill_State);
    procedure Create (State : access Skill_State);
-   procedure Read (State : access Skill_State; File_Name : String);
-   procedure Write (State : access Skill_State; File_Name : String);
+   procedure Read (
+      State     : access Skill_State;
+      File_Name :        String
+   );
+   procedure Write (
+      State     : access Skill_State;
+      File_Name :        String
+   );
 
+  --  generated user types by the code generator
+  --  please excuse that it is not pretty formatted
 ${
   def printParameters(d : Declaration): String = {
     var hasFields = false;

@@ -16,39 +16,67 @@ trait ByteReaderSpecMaker extends GeneralOutputMaker {
     out.write(s"""
 with Ada.Unchecked_Conversion;
 
+--
+--  This package provides the necassary functions to read the skill types from a stream.
+--
+
 private package ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
 
    procedure Reset_Buffer;
    function End_Of_Buffer return Boolean;
 
-   function Read_i8 (Input_Stream : ASS_IO.Stream_Access) return i8;
-   function Read_i16 (Input_Stream : ASS_IO.Stream_Access) return i16;
-   function Read_i32 (Input_Stream : ASS_IO.Stream_Access) return i32;
-   function Read_i64 (Input_Stream : ASS_IO.Stream_Access) return i64;
+   function Read_i8 (Stream : ASS_IO.Stream_Access) return i8;
+   function Read_i16 (Stream : ASS_IO.Stream_Access) return i16;
+   function Read_i32 (Stream : ASS_IO.Stream_Access) return i32;
+   function Read_i64 (Stream : ASS_IO.Stream_Access) return i64;
 
-   function Read_v64 (Input_Stream : ASS_IO.Stream_Access) return v64;
+   function Read_v64 (Stream : ASS_IO.Stream_Access) return v64;
 
-   function Read_f32 (Input_Stream : ASS_IO.Stream_Access) return f32;
-   function Read_f64 (Input_Stream : ASS_IO.Stream_Access) return f64;
+   function Read_f32 (Stream : ASS_IO.Stream_Access) return f32;
+   function Read_f64 (Stream : ASS_IO.Stream_Access) return f64;
 
-   function Read_Boolean (Input_Stream : ASS_IO.Stream_Access) return Boolean;
-   function Read_String (Input_Stream : ASS_IO.Stream_Access; Length : i32) return String;
+   function Read_Boolean (Stream : ASS_IO.Stream_Access) return Boolean;
+   function Read_String (
+      Stream : ASS_IO.Stream_Access;
+      Length       : i32
+   ) return String;
 
-   procedure Skip_Bytes (Input_Stream : ASS_IO.Stream_Access; Length : Long);
+   procedure Skip_Bytes (
+      Stream : ASS_IO.Stream_Access;
+      Length       : Long
+   );
 
 private
 
-   Buffer_Size : constant Positive := 2**12;
+   Buffer_Size : constant Positive := 2 ** 12;
    Buffer_Last : Positive;
    Buffer_Index : Integer := Buffer_Size;
    type Buffer is array (Positive range <>) of Byte;
-   procedure Read_Buffer (Stream : not null access Ada.Streams.Root_Stream_Type'Class; Item : out Buffer);
+   procedure Read_Buffer (
+      Stream : not null access Ada.Streams.Root_Stream_Type'Class;
+      Item   : out Buffer
+   );
    for Buffer'Read use Read_Buffer;
    Buffer_Array : Buffer (1 .. Buffer_Size);
 
-   function Read_Byte (Input_Stream : ASS_IO.Stream_Access) return Byte;
+   function Read_Byte (Stream : ASS_IO.Stream_Access) return Byte;
 
-   pragma Inline (Reset_Buffer, End_Of_Buffer, Read_i8, Read_i16, Read_i32, Read_i64, Read_v64, Read_f32, Read_f64, Read_Boolean, Read_String, Skip_Bytes, Read_Buffer, Read_Byte);
+   pragma Inline (
+      Reset_Buffer,
+      End_Of_Buffer,
+      Read_i8,
+      Read_i16,
+      Read_i32,
+      Read_i64,
+      Read_v64,
+      Read_f32,
+      Read_f64,
+      Read_Boolean,
+      Read_String,
+      Skip_Bytes,
+      Read_Buffer,
+      Read_Byte
+   );
 
 end ${packagePrefix.capitalize}.Api.Internal.Byte_Reader;
 """)

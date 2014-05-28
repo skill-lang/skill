@@ -17,6 +17,10 @@ with Ada.Streams.Stream_IO;
 with Ada.Unchecked_Deallocation;
 with Interfaces;
 
+--
+--  This package provides functionality that will be used by more than one package.
+--
+
 package ${packagePrefix.capitalize}.Api.Internal is
 
    package ASS_IO renames Ada.Streams.Stream_IO;

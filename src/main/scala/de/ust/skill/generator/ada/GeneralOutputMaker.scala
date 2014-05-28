@@ -17,15 +17,9 @@ import scala.collection.mutable.MutableList
 /**
  * The parent class for all output makers.
  *
- * @author Timm Felden
+ * @author Timm Felden, Dennis Przytarski
  */
 trait GeneralOutputMaker {
-
-  val ArrayTypeName = "scala.collection.mutable.ArrayBuffer"
-  val VarArrayTypeName = "scala.collection.mutable.ArrayBuffer"
-  val ListTypeName = "scala.collection.mutable.ListBuffer"
-  val SetTypeName = "scala.collection.mutable.HashSet"
-  val MapTypeName = "scala.collection.mutable.HashMap"
 
   /**
    * The base path of the output.
@@ -60,8 +54,8 @@ trait GeneralOutputMaker {
   /**
    * Assume the existence of a translation function for types.
    */
-  protected def mapTypeToId(t: Type, _f: Field): String
-  protected def mapType(t : Type, _d: Declaration, _f: Field): String
+  protected def mapTypeToId(t: Type, f: Field): String
+  protected def mapType(t : Type, d: Declaration, f: Field): String
 
   /**
    * Assume the existence of a translation function for fields.
@@ -69,6 +63,9 @@ trait GeneralOutputMaker {
   protected def mapFileReader(d: Declaration, f: Field): String
   protected def mapFileWriter(d: Declaration, f: Field): String
 
+  /**
+   * Assume the existence of inheritance information functions for declarations
+   */
   protected def getSuperTypes(d: Declaration): MutableList[Type]
   protected def getSubTypes(d: Declaration): MutableList[Type]
 
@@ -80,7 +77,7 @@ trait GeneralOutputMaker {
   /**
    * Provides a string representation of the default value of f.
    */
-  protected def defaultValue(t: Type, _d: Declaration, _f: Field): String
+  protected def defaultValue(t: Type, d: Declaration, f: Field): String
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.

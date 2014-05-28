@@ -16,14 +16,14 @@ trait ByteWriterBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
 
-   procedure Write_Buffer
-     (Stream : not null access Ada.Streams.Root_Stream_Type'Class;
-      Item : in Buffer)
-   is
+   procedure Write_Buffer (
+      Stream : not null access Ada.Streams.Root_Stream_Type'Class;
+      Item   : in Buffer
+   ) is
       use Ada.Streams;
 
       Buffer : Stream_Element_Array (1 .. Stream_Element_Offset (Buffer_Index));
-      Last : Stream_Element_Offset := Stream_Element_Offset (Buffer_Index);
+      Last   : Stream_Element_Offset := Stream_Element_Offset (Buffer_Index);
    begin
       for I in 1 .. Last loop
          Buffer (I) := Stream_Element (Item (Integer (I)));
@@ -38,7 +38,10 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
       Buffer_Index := 0;
    end;
 
-   procedure Write_Byte (Stream : ASS_IO.Stream_Access; Next : Byte) is
+   procedure Write_Byte (
+      Stream : ASS_IO.Stream_Access;
+      Next   : Byte
+   ) is
    begin
       Buffer_Index := Buffer_Index + 1;
       Buffer_Array (Buffer_Index) := Next;
@@ -48,13 +51,19 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
       end if;
    end Write_Byte;
 
-   procedure Write_i8 (Stream : ASS_IO.Stream_Access; Value : i8) is
+   procedure Write_i8 (
+      Stream : ASS_IO.Stream_Access;
+      Value  : i8
+   ) is
       function Convert is new Ada.Unchecked_Conversion (i8, Byte);
    begin
       Write_Byte (Stream, Convert (Value));
    end Write_i8;
 
-   procedure Write_i16 (Stream : ASS_IO.Stream_Access; Value : i16) is
+   procedure Write_i16 (
+      Stream : ASS_IO.Stream_Access;
+      Value  : i16
+   ) is
       use Interfaces;
 
       function Convert is new Ada.Unchecked_Conversion (i16, Unsigned_16);
@@ -66,7 +75,10 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
       Write_Byte (Stream, Byte (B));
    end Write_i16;
 
-   procedure Write_i32 (Stream : ASS_IO.Stream_Access; Value : i32) is
+   procedure Write_i32 (
+      Stream : ASS_IO.Stream_Access;
+      Value  : i32
+   ) is
       use Interfaces;
 
       function Convert is new Ada.Unchecked_Conversion (i32, Unsigned_32);
@@ -82,7 +94,10 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
       Write_Byte (Stream, Byte (D));
    end Write_i32;
 
-   procedure Write_i64 (Stream : ASS_IO.Stream_Access; Value : i64) is
+   procedure Write_i64 (
+      Stream : ASS_IO.Stream_Access;
+      Value  : i64
+   ) is
       use Interfaces;
 
       function Convert is new Ada.Unchecked_Conversion (i64, Unsigned_64);
@@ -107,11 +122,13 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
    end Write_i64;
 
    --  optimized write v64: taken from the scala binding
-   procedure Write_v64 (Stream : ASS_IO.Stream_Access; Value : v64) is
+   procedure Write_v64 (
+      Stream : ASS_IO.Stream_Access;
+      Value  : v64
+   ) is
       use Interfaces;
 
-      function Convert is new Ada.Unchecked_Conversion
-         (Source => v64, Target => Unsigned_64);
+      function Convert is new Ada.Unchecked_Conversion (Source => v64, Target => Unsigned_64);
    begin
       if Convert (Value) < 128 then
          declare
@@ -242,27 +259,39 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
       end if;
    end Write_v64;
 
-   procedure Write_f32 (Stream : ASS_IO.Stream_Access; Value : f32) is
+   procedure Write_f32 (
+      Stream : ASS_IO.Stream_Access;
+      Value  : f32
+   ) is
       function Convert is new Ada.Unchecked_Conversion (f32, i32);
    begin
       Write_i32 (Stream, Convert (Value));
    end Write_f32;
 
-   procedure Write_f64 (Stream : ASS_IO.Stream_Access; Value : f64) is
+   procedure Write_f64 (
+      Stream : ASS_IO.Stream_Access;
+      Value  : f64
+   ) is
       function Convert is new Ada.Unchecked_Conversion (f64, i64);
    begin
       Write_i64 (Stream, Convert (Value));
    end Write_f64;
 
-   procedure Write_Boolean (Stream : ASS_IO.Stream_Access; Value : Boolean) is
+   procedure Write_Boolean (
+      Stream : ASS_IO.Stream_Access;
+      Value  : Boolean
+   ) is
    begin
       case Value is
-         when True => Write_Byte (Stream, 16#ff#);
+         when True  => Write_Byte (Stream, 16#ff#);
          when False => Write_Byte (Stream, 16#00#);
       end case;
    end Write_Boolean;
 
-   procedure Write_String (Stream : ASS_IO.Stream_Access; Value : String) is
+   procedure Write_String (
+      Stream : ASS_IO.Stream_Access;
+      Value  : String
+   ) is
    begin
       for I in Value'Range loop
          Write_Byte (Stream, Byte (Character'Pos (Value (I))));

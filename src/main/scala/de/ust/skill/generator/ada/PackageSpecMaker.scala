@@ -28,6 +28,11 @@ with System.Storage_Elements;
 
 with Ada.Text_IO;
 
+--
+--  This package provides the user types, accessor functions to the fields, the
+--  skill state and help functions (hash / comparison) for compound types.
+--
+
 package ${packagePrefix.capitalize} is
 
    type String_Access is access String;
@@ -72,7 +77,7 @@ ${
     output += s"""   function Hash (Element : ${escaped(d.getName)}_Type_Access) return Ada.Containers.Hash_Type;\r\n\r\n"""
   }
 
-  output.stripSuffix("\r\n")
+  output.stripLineEnd
 
   for (d ← IR) {
     d.getFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
@@ -109,10 +114,13 @@ ${
     d.getAllFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
       output += s"""   function Get_${f.getName.capitalize} (Object : ${escaped(d.getName)}_Type) return ${mapType(f.getType, d, f)};\r\n"""
       if (!f.isConstant)
-        output += s"""   procedure Set_${f.getName.capitalize} (Object : in out ${escaped(d.getName)}_Type; Value : ${mapType(f.getType, d, f)});\r\n"""
+        output += s"""   procedure Set_${f.getName.capitalize} (
+      Object : in out ${escaped(d.getName)}_Type;
+      Value  :        ${mapType(f.getType, d, f)}
+   );\r\n\r\n"""
     })
   }
-  output
+  output.stripLineEnd
 }
 private
 
@@ -138,7 +146,7 @@ ${
     if (fields.length <= 0) output += s"""         null;"""
     output += s"""\r\n      end record;\r\n\r\n"""
   }
-  output.stripSuffix("\r\n")
+  output.stripLineEnd
 }
    ------------------
    --  STRING POOL --
@@ -154,16 +162,25 @@ ${
    --------------------------
    --  FIELD DECLARATIONS  --
    --------------------------
+
+   --
+   --  The base type vector should be replaced by having a variant field
+   --  declaration record. The problem in the first place was that the
+   --  variable Field_Type (in File_Reader and -_Writer) needs to be a
+   --  constant. The problem could not be solved by adding the constant
+   --  declaration to the variable. Maybe it is my mistake in thinking wrong?
+   --
    package Base_Types_Vector is new Ada.Containers.Vectors (Positive, Long);
+
    type Field_Declaration (Size : Positive) is
       record
-         Name : String (1 .. Size);
-         F_Type : Long;
-         Constant_Value : Long;
+         Name                  : String (1 .. Size);
+         F_Type                : Long;
+         Constant_Value        : Long;
          Constant_Array_Length : Long;
-         Base_Types : Base_Types_Vector.Vector;
-         Known : Boolean;
-         Written : Boolean;
+         Base_Types            : Base_Types_Vector.Vector;
+         Known                 : Boolean;
+         Written               : Boolean;
       end record;
    type Field_Information is access Field_Declaration;
 
@@ -174,15 +191,15 @@ ${
    -------------------------
    type Type_Declaration (Type_Size : Positive; Super_Size : Natural) is
       record
-         id : Long;
-         Name : String (1 .. Type_Size);
-         Super_Name : String (1 .. Super_Size);
-         spsi : Positive;
-         lbpsi : Natural;
-         Fields : Fields_Vector.Vector;
+         id           : Long;
+         Name         : String (1 .. Type_Size);
+         Super_Name   : String (1 .. Super_Size);
+         spsi         : Positive;
+         lbpsi        : Natural;
+         Fields       : Fields_Vector.Vector;
          Storage_Pool : Storage_Pool_Vector.Vector;
-         Known : Boolean;
-         Written : Boolean;
+         Known        : Boolean;
+         Written      : Boolean;
       end record;
    type Type_Information is access Type_Declaration;
 
@@ -195,10 +212,10 @@ ${
    -------------------
    type Skill_State is
       record
-         File_Name : String_Access;
-         State : Skill_States := Unused;
+         File_Name   : String_Access;
+         State       : Skill_States := Unused;
          String_Pool : String_Pool_Access := new String_Pool_Vector.Vector;
-         Types : Types_Hash_Map_Access := new Types_Hash_Map.Map;
+         Types       : Types_Hash_Map_Access := new Types_Hash_Map.Map;
       end record;
 
 end ${packagePrefix.capitalize};

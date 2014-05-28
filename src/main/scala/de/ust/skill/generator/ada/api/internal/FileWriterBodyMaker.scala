@@ -17,44 +17,43 @@ trait FileWriterBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
 
-   Modus : Modus_Type;
+   Modus       : Modus_Type;
    String_Pool : String_Pool_Access;
-   Types : Types_Hash_Map_Access;
+   Types       : Types_Hash_Map_Access;
 
    Last_Types_End : Long := 0;
 
-   procedure Append (State : access Skill_State; File_Name : String) is
+   procedure Append (
+      State     : access Skill_State;
+      File_Name : String
+   ) is
       Output_File : ASS_IO.File_Type;
    begin
       Modus := Append;
 
       String_Pool := State.String_Pool;
-      Types := State.Types;
+      Types       := State.Types;
 
       ASS_IO.Open (Output_File, ASS_IO.Append_File, File_Name);
       ASS_IO.Create (Field_Data_File, ASS_IO.Out_File);
 
-      Field_Data_Stream := ASS_IO.Stream (Field_Data_File);
-      Output_Stream := ASS_IO.Stream (Output_File);
-
-      Write_String_Pool;
-      Write_Type_Block;
-      Update_Storage_Pool_Start_Index;
-
-      Byte_Writer.Finalize_Buffer (Output_Stream);
+      Run (Output_File);
 
       ASS_IO.Delete (Field_Data_File);
       ASS_IO.Flush (Output_File);
       ASS_IO.Close (Output_File);
    end Append;
 
-   procedure Write (State : access Skill_State; File_Name : String) is
+   procedure Write (
+      State     : access Skill_State;
+      File_Name : String
+   ) is
       Output_File : ASS_IO.File_Type;
    begin
       Modus := Write;
 
       String_Pool := State.String_Pool;
-      Types := State.Types;
+      Types       := State.Types;
 
       --  reset string pool, spsi and written flags
       String_Pool.Clear;
@@ -79,19 +78,24 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
       ASS_IO.Create (Output_File, ASS_IO.Out_File, File_Name);
       ASS_IO.Create (Field_Data_File, ASS_IO.Out_File);
 
+      Run (Output_File);
+
+      ASS_IO.Delete (Field_Data_File);
+      ASS_IO.Flush (Output_File);
+      ASS_IO.Close (Output_File);
+   end Write;
+
+   procedure Run (Output_File : ASS_IO.File_Type) is
+   begin
       Field_Data_Stream := ASS_IO.Stream (Field_Data_File);
-      Output_Stream := ASS_IO.Stream (Output_File);
+      Output_Stream     := ASS_IO.Stream (Output_File);
 
       Write_String_Pool;
       Write_Type_Block;
       Update_Storage_Pool_Start_Index;
 
       Byte_Writer.Finalize_Buffer (Output_Stream);
-
-      ASS_IO.Delete (Field_Data_File);
-      ASS_IO.Flush (Output_File);
-      ASS_IO.Close (Output_File);
-   end Write;
+   end Run;
 
    function Get_String_Index (Value : String) return Positive is
       Index : Natural := String_Pool.Reverse_Find_Index (Value);
@@ -103,7 +107,10 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
       return Index;
    end Get_String_Index;
 
-   procedure Put_String (Value : String; Safe : Boolean := False) is
+   procedure Put_String (
+      Value : String;
+      Safe : Boolean := False
+   ) is
       Append : Boolean := True;
    begin
       if True = Safe then
@@ -128,8 +135,8 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
 
    procedure Prepare_String_Pool_Iterator (Iterator : Types_Hash_Map.Cursor) is
       Type_Declaration : Type_Information := Types_Hash_Map.Element (Iterator);
-      Type_Name : String := Type_Declaration.Name;
-      Super_Name : String := Type_Declaration.Super_Name;
+      Type_Name        : String           := Type_Declaration.Name;
+      Super_Name       : String           := Type_Declaration.Super_Name;
    begin
       Put_String (Type_Name, Safe => True);
       Put_String (Super_Name, Safe => True);
@@ -139,7 +146,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
 
          procedure Iterate (Iterator : Cursor) is
             Field_Declaration : Field_Information := Element (Iterator);
-            Field_Name : String := Field_Declaration.Name;
+            Field_Name        : String            := Field_Declaration.Name;
          begin
             Put_String (Field_Name, Safe => True);
          end Iterate;
@@ -286,18 +293,18 @@ ${
       Prepare_String_Pool;
 
       declare
-         Current_Size : Natural := Natural (String_Pool.Length);
-         Start_Index : Natural := Last_Size + 1;
-         End_Index : Natural := Current_Size;
-         Size : Natural := Current_Size - Last_Size;
+         Current_Size    : Natural := Natural (String_Pool.Length);
+         Start_Index     : Natural := Last_Size + 1;
+         End_Index       : Natural := Current_Size;
+         Size            : Natural := Current_Size - Last_Size;
          Last_String_End : i32 := 0;
       begin
          Byte_Writer.Write_v64 (Output_Stream, Long (Size));
 
          for I in Start_Index .. End_Index loop
             declare
-               X : String := String_Pool.Element (I);
-               String_Length : i32 := X'Length + Last_String_End;
+               Value : String := String_Pool.Element (I);
+               String_Length : i32 := Value'Length + Last_String_End;
             begin
                Byte_Writer.Write_i32 (Output_Stream, String_Length);
                Last_String_End := String_Length;
@@ -321,12 +328,13 @@ ${
          use Storage_Pool_Vector;
 
          Type_Declaration : Type_Information := Types.Element ("${d.getSkillName}");
-         Size : Natural := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
+         Size             : Natural          :=
+            Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
 
          type Temp_Type is array (1 .. Size) of Skill_Type_Access;
          type Temp_Type_Access is access Temp_Type;
-         Temp : Temp_Type_Access := new Temp_Type;
-         Index : Positive := 1;
+         Temp  : Temp_Type_Access := new Temp_Type;
+         Index : Positive         := 1;
 """
       types.foreach({ t =>
         output += s"""\r\n         ${escaped(t.getName)}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");"""
@@ -353,7 +361,8 @@ ${
         output += s"""         declare
             Next_Type_Declaration : Type_Information := ${escaped(t.getName)}_Type_Declaration;
             Start_Index : Natural := Next_Type_Declaration.lbpsi;
-            End_Index : Integer := Start_Index + Natural (Next_Type_Declaration.Storage_Pool.Length) - Next_Type_Declaration.spsi;
+            End_Index : Integer :=
+               Start_Index + Natural (Next_Type_Declaration.Storage_Pool.Length) - Next_Type_Declaration.spsi;
          begin
             for I in Start_Index .. End_Index loop${if (d == t) s"\r\n               Temp (I).skill_id := Type_Declaration.spsi + I - 1;" else "" }
                declare
@@ -377,7 +386,8 @@ ${
       use Fields_Vector;
 
       Known_Unwritten_Fields_Count : Natural := 0;
-      New_Instances_Count : Natural := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
+      New_Instances_Count : Natural :=
+         Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
 
       procedure Iterate (Position : Cursor) is
          Field_Declaration : Field_Information := Element (Position);
@@ -479,9 +489,9 @@ ${
    end Count_Known_Unwritten_Fields;
 
    procedure Write_Type_Declaration (Type_Declaration : Type_Information) is
-      Type_Name : String := Type_Declaration.Name;
-      Super_Name : String := Type_Declaration.Super_Name;
-      Field_Count : Natural := Natural (Type_Declaration.Fields.Length);
+      Type_Name       : String  := Type_Declaration.Name;
+      Super_Name      : String  := Type_Declaration.Super_Name;
+      Field_Count     : Natural := Natural (Type_Declaration.Fields.Length);
       Instances_Count : Natural := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
    begin
       Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Type_Name)));
@@ -550,12 +560,15 @@ ${
       Type_Declaration.Written := True;
    end Write_Type_Declaration;
 
-   procedure Write_Field_Declaration (Type_Declaration : Type_Information; Field_Declaration : Field_Information) is
-      Type_Name : String := Type_Declaration.Name;
+   procedure Write_Field_Declaration (
+      Type_Declaration  : Type_Information;
+      Field_Declaration : Field_Information
+   ) is
+      Type_Name  : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
       Field_Type : Long := Field_Declaration.F_Type;
-      Size : Long := Field_Data_Size (Type_Declaration, Field_Declaration);
-      Base_Types : Base_Types_Vector.Vector := Field_Declaration.Base_Types;
+      Size       : Long := Field_Data_Size (Type_Declaration, Field_Declaration);
+      Base_Types : Base_Types_Vector.Vector := Field_Declaration.Base_Types;  --  see comment in package ${packagePrefix.capitalize}
    begin
       if not Field_Declaration.Written then
          Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
@@ -583,9 +596,9 @@ ${
                   use Base_Types_Vector;
 
                   procedure Iterate (Position : Cursor) is
-                     X : Long := Element (Position);
+                     Base_Type_Id : Long := Element (Position);
                   begin
-                     Byte_Writer.Write_v64 (Output_Stream, X);
+                     Byte_Writer.Write_v64 (Output_Stream, Base_Type_Id);
                   end Iterate;
                   pragma Inline (Iterate);
                begin
@@ -605,22 +618,30 @@ ${
       Field_Declaration.Written := True;
    end Write_Field_Declaration;
 
-   function Field_Data_Size (Type_Declaration : Type_Information; Field_Declaration : Field_Information) return Long is
+   function Field_Data_Size (
+      Type_Declaration  : Type_Information;
+      Field_Declaration : Field_Information
+   ) return Long is
       Current_Index : Long := Long (ASS_IO.Index (Field_Data_File));
-      rval : Long;
+      Return_Value  : Long;
    begin
       Byte_Writer.Finalize_Buffer (Output_Stream);
       Write_Field_Data (Field_Data_Stream, Type_Declaration, Field_Declaration);
       Byte_Writer.Finalize_Buffer (Field_Data_Stream);
-      rval := Long (ASS_IO.Index (Field_Data_File)) - Current_Index;
-      return rval;
+      Return_Value := Long (ASS_IO.Index (Field_Data_File)) - Current_Index;
+      return Return_Value;
    end Field_Data_Size;
 
-   procedure Write_Field_Data (Stream : ASS_IO.Stream_Access; Type_Declaration : Type_Information; Field_Declaration : Field_Information) is
-      Type_Name : String := Type_Declaration.Name;
-      Field_Name : String := Field_Declaration.Name;
-      Start_Index : Positive := 1;
-      Storage_Pool : Storage_Pool_Array_Access := new Storage_Pool_Array (1 .. Natural (Type_Declaration.Storage_Pool.Length));
+   procedure Write_Field_Data (
+      Stream            : ASS_IO.Stream_Access;
+      Type_Declaration  : Type_Information;
+      Field_Declaration : Field_Information
+   ) is
+      Type_Name    : String := Type_Declaration.Name;
+      Field_Name   : String := Field_Declaration.Name;
+      Start_Index  : Positive := 1;
+      Storage_Pool : Storage_Pool_Array_Access :=
+         new Storage_Pool_Array (1 .. Natural (Type_Declaration.Storage_Pool.Length));
 
       procedure Iterate (Position : Storage_Pool_Vector.Cursor) is
          Index : Positive := Storage_Pool_Vector.To_Index (Position);
@@ -662,7 +683,10 @@ ${
       end loop;
    end Copy_Field_Data;
 
-   procedure Write_Annotation (Stream : ASS_IO.Stream_Access; Object : Skill_Type_Access) is
+   procedure Write_Annotation (
+      Stream : ASS_IO.Stream_Access;
+      Object : Skill_Type_Access
+   ) is
       Type_Name : String := Get_Object_Type (Object);
 
       function Get_Base_Type (Type_Declaration : Type_Information) return String is
@@ -684,7 +708,10 @@ ${
       end if;
    end Write_Annotation;
 
-   procedure Write_String (Stream : ASS_IO.Stream_Access; Value : String_Access) is
+   procedure Write_String (
+      Stream : ASS_IO.Stream_Access;
+      Value  : String_Access
+   ) is
    begin
       Byte_Writer.Write_v64 (Stream, Long (Get_String_Index (Value.all)));
    end Write_String;
@@ -692,12 +719,15 @@ ${
 ${
   var output = "";
   for (d ← IR) {
-    output += s"""   procedure Write_${escaped(d.getName)}_Type (Stream : ASS_IO.Stream_Access; X : ${escaped(d.getName)}_Type_Access) is
+    output += s"""   procedure Write_${escaped(d.getName)}_Type (
+      Stream : ASS_IO.Stream_Access;
+      Object : ${escaped(d.getName)}_Type_Access
+   ) is
    begin
-      if null = X then
+      if null = Object then
          Byte_Writer.Write_v64 (Stream, 0);
       else
-         Byte_Writer.Write_v64 (Stream, Long (X.skill_id));
+         Byte_Writer.Write_v64 (Stream, Long (Object.skill_id));
       end if;
    end Write_${escaped(d.getName)}_Type;\r\n\r\n"""
   }

@@ -14,14 +14,28 @@ trait StateMakerSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}-api-internal-state_maker.ads""")
 
     out.write(s"""
+--
+--  This package puts all known user types into the types hashmap, if not
+--  already containing. All known fields will be put into the field vector
+--  of a type, if not already containing.
+--  It will be called in the API procedures Create and Read at the end.
+--
+
 package ${packagePrefix.capitalize}.Api.Internal.State_Maker is
 
    procedure Create (State : access Skill_State);
 
 private
 
-   function Has_Field (Type_Declaration : Type_Information; Field_Name : String) return Boolean;
-   function Get_Field (Type_Declaration : Type_Information; Field_Name : String) return Field_Information;
+   function Has_Field (
+      Type_Declaration : Type_Information;
+      Field_Name       : String
+   ) return Boolean;
+
+   function Get_Field (
+      Type_Declaration : Type_Information;
+      Field_Name       : String
+   ) return Field_Information;
 
 end ${packagePrefix.capitalize}.Api.Internal.State_Maker;
 """)

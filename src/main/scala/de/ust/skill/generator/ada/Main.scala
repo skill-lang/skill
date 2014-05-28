@@ -64,7 +64,7 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * A generator turns a set of skill declarations into a ada interface providing means of manipulating skill files
  * containing instances of the respective definitions.
  *
- * @author Timm Felden
+ * @author Timm Felden, Dennis Przytarski
  */
 class Main extends FakeMain
 	with PackageApiSpecMaker
@@ -87,9 +87,9 @@ class Main extends FakeMain
   var outPath: String = null
   var IR: List[Declaration] = null
 
-  override protected def mapTypeToId(t: Type, _f: Field): String = t match {
+  override protected def mapTypeToId(t: Type, f: Field): String = t match {
     case t: GroundType ⇒
-      if (_f.isConstant()) {
+      if (f.isConstant()) {
         t.getName() match {
           case "i8"         ⇒ 0.toString
           case "i16"        ⇒ 1.toString
@@ -124,7 +124,7 @@ class Main extends FakeMain
   /**
    * Translates types into ada type names.
    */
-  override protected def mapType(t : Type, _d: Declaration, _f: Field): String = t match {
+  override protected def mapType(t : Type, d: Declaration, f: Field): String = t match {
     case t: GroundType ⇒ t.getName() match {
       case "annotation" ⇒ "Skill_Type_Access"
 
@@ -142,18 +142,18 @@ class Main extends FakeMain
       case "string"     ⇒ "String_Access"
     }
 
-    case t: ConstantLengthArrayType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_Array"
-    case t: VariableLengthArrayType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_Vector.Vector"
-    case t: ListType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_List.List"
-    case t: SetType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_Set.Set"
-    case t: MapType ⇒ s"${_d.getSkillName.capitalize}_${_f.getSkillName.capitalize}_Map.Map"
+    case t: ConstantLengthArrayType ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Array"
+    case t: VariableLengthArrayType ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Vector.Vector"
+    case t: ListType ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_List.List"
+    case t: SetType ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Set.Set"
+    case t: MapType ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Map.Map"
 
     case t: Declaration ⇒ s"${escaped(t.getName())}_Type_Access"
   }
 
   protected def mapFileReader(d: Declaration, f: Field): String = {
-    def inner(t: Type, _d: Declaration, _f: Field): String = {
-      t match {
+    def inner(_t: Type, _d: Declaration, _f: Field): String = {
+      _t match {
         case t: GroundType ⇒ t.getName() match {
           case "annotation" ⇒
             s"Read_Annotation (Input_Stream)"
@@ -229,16 +229,16 @@ class Main extends FakeMain
     val x = {
       if (0 == i)
         s"""declare
-                        X : ${mapType(types.get(i+1), d, f)} := ${inner(types.get(i+1), d, f)};
-                        Y : ${mapType(types.get(i), d, f)} := ${inner(types.get(i), d, f)};
+                        Key   : ${mapType(types.get(i+1), d, f)} := ${inner(types.get(i+1), d, f)};
+                        Value : ${mapType(types.get(i), d, f)} := ${inner(types.get(i), d, f)};
                      begin
-                        Map.Insert (X, Y);
+                        Map.Insert (Key, Value);
                      end;"""
       else
         s"""declare
-                        X : ${mapType(types.get(i+1), d, f)} := ${inner(types.get(i+1), d, f)};
+                        Key : ${mapType(types.get(i+1), d, f)} := ${inner(types.get(i+1), d, f)};
                      begin
-                        Map.Insert (X, Read_Map_${types.length-i});
+                        Map.Insert (Key, Read_Map_${types.length-i});
                      end;"""
     }
     output += s"""               function Read_Map_${types.length-(i+1)} return ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map is
@@ -263,8 +263,8 @@ class Main extends FakeMain
   }
 
   protected def mapFileWriter(d: Declaration, f: Field): String = {
-    def inner(t: Type, _d: Declaration, _f: Field, value: String): String = {
-      t match {
+    def inner(_t: Type, _d: Declaration, _f: Field, value: String): String = {
+      _t match {
         case t: GroundType ⇒ t.getName() match {
           case "annotation" ⇒
             s"Write_Annotation (Stream, ${value})"
@@ -379,11 +379,17 @@ class Main extends FakeMain
     }
   }
 
+  /**
+   * Get all supertypes of a given declaration
+   */
   protected def getSuperTypes(d: Declaration): MutableList[Type] = {
     if (null == d.getSuperType) MutableList[Type]()
     else getSuperTypes (d.getSuperType) += d.getSuperType
   }
 
+  /**
+   * Get all subtypes of a given declaration
+   */
   protected def getSubTypes(d: Declaration): MutableList[Type] = {
     var rval = MutableList[Type]()
 
@@ -454,7 +460,7 @@ class Main extends FakeMain
 """
   }
 
-  override protected def defaultValue(t: Type, _d: Declaration, _f: Field) = t match {
+  override protected def defaultValue(t: Type, d: Declaration, f: Field) = t match {
     case t: GroundType ⇒ t.getSkillName() match {
       case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
       case "f32" | "f64"                        ⇒ "0.0"
@@ -462,11 +468,11 @@ class Main extends FakeMain
       case _                                    ⇒ "null"
     }
 
-    case t: ConstantLengthArrayType ⇒ s"(others => ${defaultValue(t.getBaseType, _d, _f)})"
-    case t: VariableLengthArrayType ⇒ s"New_${mapType(t, _d, _f).stripSuffix(".Vector")}"
-    case t: ListType ⇒ s"New_${mapType(t, _d, _f).stripSuffix(".List")}"
-    case t: SetType ⇒ s"New_${mapType(t, _d, _f).stripSuffix(".Set")}"
-    case t: MapType ⇒ s"New_${mapType(t, _d, _f).stripSuffix(".Map")}"
+    case t: ConstantLengthArrayType ⇒ s"(others => ${defaultValue(t.getBaseType, d, f)})"
+    case t: VariableLengthArrayType ⇒ s"New_${mapType(t, d, f).stripSuffix(".Vector")}"
+    case t: ListType ⇒ s"New_${mapType(t, d, f).stripSuffix(".List")}"
+    case t: SetType ⇒ s"New_${mapType(t, d, f).stripSuffix(".Set")}"
+    case t: MapType ⇒ s"New_${mapType(t, d, f).stripSuffix(".Map")}"
 
     case _ ⇒ "null"
   }

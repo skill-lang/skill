@@ -13,6 +13,10 @@ trait PackageApiSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}-api.ads""")
 
     out.write(s"""
+--
+--  This package is empty, but necassary for the compiler.
+--
+
 package ${packagePrefix.capitalize}.Api is
 
 end ${packagePrefix.capitalize}.Api;
