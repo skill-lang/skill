@@ -27,7 +27,7 @@ with Ada.Unchecked_Deallocation;
 --  2. type block
 --    a) it reads the type declaration name
 --      -> if the type is not present in the types hashmap, it will read the type information and insert it into the types hashmap
---    b) it reads the super type and if necassary, the local base pool start index
+--    b) it reads the super type and if necessary, the local base pool start index
 --    c) it reads the instance counter
 --    d) it reads the field counter
 --    e) depending on the instance and field counter, it will continue with one of the three cases:
@@ -38,7 +38,7 @@ with Ada.Unchecked_Deallocation;
 --    f) it reads the field data processing the queue from start to end
 --
 --  3. update storage pool start index
---    -> this is necassary to ensure that new instances will get the next correct skill-id
+--    -> this is necessary to ensure that new instances will get the next correct skill-id
 --
 
 package ${packagePrefix.capitalize}.Api.Internal.File_Reader is

@@ -39,7 +39,7 @@ with Ada.Tags;
 --    c) it copys the field data from the temporary stream to the file
 --
 --  3. update storage pool start index
---    -> this is necassary to ensure that new instances will get the next correct skill id
+--    -> this is necessary to ensure that new instances will get the next correct skill id
 --
 
 package ${packagePrefix.capitalize}.Api.Internal.File_Writer is

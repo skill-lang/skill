@@ -15,9 +15,9 @@ trait StateMakerSpecMaker extends GeneralOutputMaker {
 
     out.write(s"""
 --
---  This package puts all known user types into the types hashmap, if not
---  already containing. All known fields will be put into the field vector
---  of a type, if not already containing.
+--  This package puts all known user types into the types hashmap, if it not
+--  already contains it. All known fields will be put into the field vector
+--  of a type, if it not already contains it.
 --  It will be called in the API procedures Create and Read at the end.
 --
 
