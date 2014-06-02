@@ -213,8 +213,8 @@ ${
    type Skill_State is
       record
          File_Name   : String_Access;
-         State       : Skill_States := Unused;
-         String_Pool : String_Pool_Access := new String_Pool_Vector.Vector;
+         State       : Skill_States          := Unused;
+         String_Pool : String_Pool_Access    := new String_Pool_Vector.Vector;
          Types       : Types_Hash_Map_Access := new Types_Hash_Map.Map;
       end record;
 
