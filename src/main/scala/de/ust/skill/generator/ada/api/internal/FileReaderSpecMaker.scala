@@ -19,7 +19,7 @@ private with ${packagePrefix.capitalize}.Api.Internal.Byte_Reader;
 with Ada.Unchecked_Deallocation;
 
 --
---  This package reads a given .sf file in following order until the end of file:
+--  This package reads a given .sf file in the following order until the end of file:
 --
 --  1. String pool
 --    a) it reads all strings from the string block of the file and puts them into the string pool

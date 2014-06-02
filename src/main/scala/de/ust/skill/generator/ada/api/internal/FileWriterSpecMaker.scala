@@ -20,7 +20,7 @@ private with ${packagePrefix.capitalize}.Api.Internal.Byte_Writer;
 with Ada.Tags;
 
 --
---  This package writes a .sf file in following order:
+--  This package writes a .sf file in the following order:
 --
 --  1. String pool
 --    a) it collects all strings, it can find in following order:
