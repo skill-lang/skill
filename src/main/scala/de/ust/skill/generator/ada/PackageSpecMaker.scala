@@ -168,7 +168,7 @@ ${
    --  declaration record. The problem in the first place was that the
    --  variable Field_Type (in File_Reader and -_Writer) needs to be a
    --  constant. The problem could not be solved by adding the constant
-   --  declaration to the variable. Maybe it is my mistake in thinking wrong?
+   --  declaration to the variable. (Vielleicht auch ein Denkfehler von mir)
    --
    package Base_Types_Vector is new Ada.Containers.Vectors (Positive, Long);
 

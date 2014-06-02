@@ -61,7 +61,7 @@ Opitions:
 abstract class FakeMain extends GeneralOutputMaker { def make {} }
 
 /**
- * A generator turns a set of skill declarations into a ada interface providing means of manipulating skill files
+ * A generator turns a set of skill declarations into an ada interface providing means of manipulating skill files
  * containing instances of the respective definitions.
  *
  * @author Timm Felden, Dennis Przytarski
@@ -151,9 +151,12 @@ class Main extends FakeMain
     case t: Declaration ⇒ s"${escaped(t.getName())}_Type_Access"
   }
 
+  /**
+   * The read functions generated into the procedure Read_Queue_Vector_Iterator in package File_Reader 
+   */
   protected def mapFileReader(d: Declaration, f: Field): String = {
-    def inner(_t: Type, _d: Declaration, _f: Field): String = {
-      _t match {
+    def inner(t: Type, _d: Declaration, _f: Field): String = {
+      t match {
         case t: GroundType ⇒ t.getName() match {
           case "annotation" ⇒
             s"Read_Annotation (Input_Stream)"
@@ -262,9 +265,12 @@ class Main extends FakeMain
     }
   }
 
+  /**
+   * The write functions generated into the procedure Write_Field_Data in package File_Writer
+   */
   protected def mapFileWriter(d: Declaration, f: Field): String = {
-    def inner(_t: Type, _d: Declaration, _f: Field, value: String): String = {
-      _t match {
+    def inner(t: Type, _d: Declaration, _f: Field, value: String): String = {
+      t match {
         case t: GroundType ⇒ t.getName() match {
           case "annotation" ⇒
             s"Write_Annotation (Stream, ${value})"
@@ -484,7 +490,7 @@ class Main extends FakeMain
     val target = pTarget.replaceAll("([A-Z])", "_$0").stripPrefix("_")
 
     target match {
-      // keywords get a suffix "_2", because that way at least auto-completion will work as expected
+      // keywords get a suffix "_2"
       case "abort" | "else" | "new" | "return" | "abs" | "elsif" | "not" | "reverse" | "abstract" | "end" | "null" | 
       	"accept" | "entry" | "select" | "access" | "exception" | "of" | "separate" | "aliased" | "exit" | "or" |
       	"some" | "all" | "others" | "subtype" | "and" | "for" | "out" | "synchronized" | "array" | "function" |

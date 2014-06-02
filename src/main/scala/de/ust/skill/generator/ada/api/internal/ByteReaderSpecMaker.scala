@@ -17,7 +17,8 @@ trait ByteReaderSpecMaker extends GeneralOutputMaker {
 with Ada.Unchecked_Conversion;
 
 --
---  This package provides the necessary functions to read the skill types from a stream.
+--  This package provides the necessary functions to read the basic skill types
+--  from a stream.
 --
 
 private package ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is

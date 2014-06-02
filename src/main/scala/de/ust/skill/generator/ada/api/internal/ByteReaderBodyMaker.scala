@@ -67,7 +67,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
       A : i16 := i16 (Read_Byte (Stream));
       B : i16 := i16 (Read_Byte (Stream));
    begin
-      return A * (2**8) +
+      return A * (2 ** 8) +
              B;
    end Read_i16;
 

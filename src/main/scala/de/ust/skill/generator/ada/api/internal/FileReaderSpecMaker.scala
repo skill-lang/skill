@@ -21,10 +21,10 @@ with Ada.Unchecked_Deallocation;
 --
 --  This package reads a given .sf file in following order until the end of file:
 --
---  1. string pool
---    a) it reads all the strings from the string block of the file and puts them into the string pool
+--  1. String pool
+--    a) it reads all strings from the string block of the file and puts them into the string pool
 --
---  2. type block
+--  2. Type block
 --    a) it reads the type declaration name
 --      -> if the type is not present in the types hashmap, it will read the type information and insert it into the types hashmap
 --    b) it reads the super type and if necessary, the local base pool start index
@@ -33,11 +33,11 @@ with Ada.Unchecked_Deallocation;
 --    e) depending on the instance and field counter, it will continue with one of the three cases:
 --      -> case 1: if instance counter = 0 then assume new fields
 --      -> case 2: if instance counter > 0 and field counter = 0 then assume new objects
---      -> case 3: if instance counter > 0 and field counter > 0 then assume new fields and after that new objects
---      => when new fields are read, the field will be put into a queue
+--      -> case 3: if instance counter > 0 and field counter > 0 then assume new objects and after that new fields
+--      => when fields are read, the field will be put into a 'read field data' queue
 --    f) it reads the field data processing the queue from start to end
 --
---  3. update storage pool start index
+--  3. Update storage pool start index (spsi)
 --    -> this is necessary to ensure that new instances will get the next correct skill-id
 --
 
@@ -53,6 +53,7 @@ private
    Input_File : ASS_IO.File_Type;
    Input_Stream : ASS_IO.Stream_Access;
 
+   --  a queue item for the field data of a field
    type Queue_Item is
       record
          Type_Declaration  : Type_Information;
@@ -73,6 +74,7 @@ private
    ------------------
    --  TYPE BLOCK  --
    ------------------
+   --  PHASE 1
    procedure Read_Type_Block;
    procedure Read_Type_Declaration (Last_End : in out Long);
    procedure Read_Field_Declaration (Type_Name : String);
@@ -82,8 +84,13 @@ private
       Type_Name      : String;
       Instance_Count : Natural
    );
+
+   --  PHASE 2
    procedure Read_Queue_Vector_Iterator (Iterator : Read_Queue_Vector.Cursor);
 
+   ----------------------
+   --  READ FUNCTIONS  --
+   ----------------------
    function Read_Annotation (Input_Stream : ASS_IO.Stream_Access) return Skill_Type_Access;
    function Read_String (Input_Stream : ASS_IO.Stream_Access) return String_Access;
 
@@ -97,11 +104,14 @@ ${
    ------------
    --  SPSI  --
    ------------
+   --  SPSI: Storage Pool Start Index
+   --  Updates the spsi of each type to the next free skill id.
    procedure Update_Storage_Pool_Start_Index;
 
    ------------
    --  SKIP  --
    ------------
+   --  Restrictions will be skipped.
    procedure Skip_Restrictions;
 
 end ${packagePrefix.capitalize}.Api.Internal.File_Reader;

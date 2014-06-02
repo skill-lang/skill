@@ -15,10 +15,10 @@ trait ByteWriterSpecMaker extends GeneralOutputMaker {
 
     out.write(s"""
 with Ada.Unchecked_Conversion;
-with System.Machine_Code;
 
 --
---  This package provides the necessary procedures to write the skill types into a stream.
+--  This package provides the necessary procedures to write the basic skill
+--  types into a stream.
 --
 
 private package ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
