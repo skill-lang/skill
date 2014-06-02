@@ -32,8 +32,8 @@ with Ada.Unchecked_Deallocation;
 --    d) it reads the field counter
 --    e) depending on the instance and field counter, it will continue with one of the three cases:
 --      -> case 1: if instance counter = 0 then assume new fields
---      -> case 2: if instance counter > 0 and new! field counter = 0 then assume new objects
---      -> case 3: if instance counter > 0 and new! field counter > 0 then assume new objects and after that new fields
+--      -> case 2: if instance counter > 0 and field counter = known fields then assume new objects
+--      -> case 3: if instance counter > 0 and field counter > known fields then assume new objects and after that new fields
 --      => when fields are read, the field will be put into a field-data queue
 --    f) it reads the field data processing the queue from start to end
 --
