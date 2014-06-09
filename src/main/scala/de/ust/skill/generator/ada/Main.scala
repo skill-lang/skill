@@ -87,6 +87,9 @@ class Main extends FakeMain
   var outPath: String = null
   var IR: List[Declaration] = null
 
+  /**
+   * Translates the types into the skill type ids.
+   */
   override protected def mapTypeToId(t: Type, f: Field): String = t match {
     case t: GroundType ⇒
       if (f.isConstant()) {
@@ -122,7 +125,7 @@ class Main extends FakeMain
   }
 
   /**
-   * Translates types into ada type names.
+   * Translates the types into ada types.
    */
   override protected def mapType(t : Type, d: Declaration, f: Field): String = t match {
     case t: GroundType ⇒ t.getName() match {
@@ -152,9 +155,12 @@ class Main extends FakeMain
   }
 
   /**
-   * The read functions generated into the procedure Read_Queue_Vector_Iterator in package File_Reader 
+   * The read functions generated into the procedure Read_Queue_Vector_Iterator in package File_Reader.
    */
   protected def mapFileReader(d: Declaration, f: Field): String = {
+    /**
+     * The basis type that will be read.
+     */
     def inner(t: Type, _d: Declaration, _f: Field): String = {
       t match {
         case t: GroundType ⇒ t.getName() match {
@@ -266,9 +272,12 @@ class Main extends FakeMain
   }
 
   /**
-   * The write functions generated into the procedure Write_Field_Data in package File_Writer
+   * The write functions generated into the procedure Write_Field_Data in package File_Writer.
    */
   protected def mapFileWriter(d: Declaration, f: Field): String = {
+    /**
+     * The basis type that will be written.
+     */
     def inner(t: Type, _d: Declaration, _f: Field, value: String): String = {
       t match {
         case t: GroundType ⇒ t.getName() match {
@@ -386,7 +395,7 @@ class Main extends FakeMain
   }
 
   /**
-   * Get all supertypes of a given declaration
+   * Get all super types of a given type.
    */
   protected def getSuperTypes(d: Declaration): MutableList[Type] = {
     if (null == d.getSuperType) MutableList[Type]()
@@ -394,15 +403,17 @@ class Main extends FakeMain
   }
 
   /**
-   * Get all subtypes of a given declaration
+   * Get all sub types of a given type.
    */
   protected def getSubTypes(d: Declaration): MutableList[Type] = {
     var rval = MutableList[Type]()
 
     1 to IR.length foreach { _ =>
 	  for (_d ← IR) {
-        if (d == _d.getSuperType && -1 == rval.indexOf(_d)) rval += _d // element ist subtyp und noch nicht erfasst
-        if (-1 < rval.indexOf(_d.getSuperType) && -1 == rval.indexOf(_d)) rval += _d // element ist subtyp aus element in der liste und noch nicht erfasst
+	    // element is sub type and not collected
+        if (d == _d.getSuperType && -1 == rval.indexOf(_d)) rval += _d
+        // element is listed sub type and not collected
+        if (-1 < rval.indexOf(_d.getSuperType) && -1 == rval.indexOf(_d)) rval += _d
 	  }
     }
 
@@ -410,7 +421,20 @@ class Main extends FakeMain
   }
 
   /**
-   * provides the package prefix
+   * Get the fields as parameters of a given type.
+   */
+  def printParameters(d : Declaration): String = {
+    var output = "";
+    var hasFields = false;
+    output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
+      hasFields = true;
+      s"${f.getSkillName()} : ${mapType(f.getType, d, f)}"
+    }).mkString("; ", "; ", "")
+    if (hasFields) output else ""
+  }
+
+  /**
+   * provides the package prefix.
    */
   override protected def packagePrefix(): String = _packagePrefix
   private var _packagePrefix = ""
@@ -499,10 +523,6 @@ class Main extends FakeMain
       	"interface" | "until" | "is" | "raise" | "use" | "declare" | "range" | "delay" | "limited" | "record" |
       	"when" | "delta" | "loop" | "rem" | "while" | "digits" | "renames" | "with" | "do" | "mod" | "requeue" |
       	"xor" ⇒ return target+"_2"
-//      case "abstract" | "case" | "catch" | "class" | "def" | "do" | "else" | "extends" | "false" | "final" | "finally" |
-//        "for" | "forSome" | "if" | "implicit" | "import" | "lazy" | "match" | "new" | "null" | "object" | "override" |
-//        "package" | "private" | "protected" | "return" | "sealed" | "super" | "this" | "throw" | "trait" | "true" |
-//        "try" | "type" | "var" | "while" | "with" | "yield" | "val" ⇒ return target+"_2"
 
       // the string is fine anyway
       case _ ⇒ return target

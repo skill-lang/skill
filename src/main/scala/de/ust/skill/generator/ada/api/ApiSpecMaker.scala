@@ -39,17 +39,10 @@ package ${packagePrefix.capitalize}.Api is
   --  generated user types by the code generator
   --  please excuse that it is not pretty formatted
 ${
-  def printParameters(d : Declaration): String = {
-    var hasFields = false;
-    var output = "";
-    output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
-      hasFields = true;
-      s"${f.getSkillName()} : ${mapType(f.getType, d, f)}"
-    }).mkString("; ", "; ", "")
-    if (hasFields) output else ""
-  }
-
   var output = "";
+  /**
+   * Write the api functions and procedures of all types.
+   */
   for (d ← IR) {
     val parameters = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map(f => s"${f.getSkillName()} : ${mapType(f.getType, d, f)}").mkString("; ", "; ", "")
     output += s"""   function New_${escaped(d.getName)} (State : access Skill_State${printParameters(d)}) return ${escaped(d.getName)}_Type_Access;\r\n"""

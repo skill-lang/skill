@@ -25,7 +25,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
 
    procedure Append (
       State     : access Skill_State;
-      File_Name : String
+      File_Name :        String
    ) is
       Output_File : ASS_IO.File_Type;
    begin
@@ -46,7 +46,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
 
    procedure Write (
       State     : access Skill_State;
-      File_Name : String
+      File_Name :        String
    ) is
       Output_File : ASS_IO.File_Type;
    begin
@@ -98,7 +98,8 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
    end Run;
 
    function Get_String_Index (Value : String) return Positive is
-      Index : Natural := String_Pool.Reverse_Find_Index (Value);
+      Index                      : Natural :=
+         String_Pool.Reverse_Find_Index (Value);
       Skill_Unknown_String_Index : exception;
    begin
       if 0 = Index then
@@ -109,7 +110,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
 
    procedure Put_String (
       Value : String;
-      Safe : Boolean := False
+      Safe  : Boolean := False
    ) is
       Append : Boolean := True;
    begin
@@ -160,6 +161,9 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
             Skill_Object : Skill_Type_Access := Storage_Pool_Vector.Element (Iterator);
          begin
 ${
+  /**
+   * Write all fields of type string.
+   */
   var output = "";
   for (d ← IR) {
     var hasOutput = false;
@@ -297,14 +301,14 @@ ${
          Start_Index     : Natural := Last_Size + 1;
          End_Index       : Natural := Current_Size;
          Size            : Natural := Current_Size - Last_Size;
-         Last_String_End : i32 := 0;
+         Last_String_End : i32     := 0;
       begin
          Byte_Writer.Write_v64 (Output_Stream, Long (Size));
 
          for I in Start_Index .. End_Index loop
             declare
-               Value : String := String_Pool.Element (I);
-               String_Length : i32 := Value'Length + Last_String_End;
+               Value         : String := String_Pool.Element (I);
+               String_Length : i32    := Value'Length + Last_String_End;
             begin
                Byte_Writer.Write_i32 (Output_Stream, String_Length);
                Last_String_End := String_Length;
@@ -320,6 +324,9 @@ ${
    procedure Ensure_Type_Order is
    begin${
   var output = ""
+  /**
+   * Ensure the type order of all base types, if necessary.
+   */
   for (d ← IR) {
     if (null == d.getSuperType && 0 < getSubTypes(d).length) {
       val types = getSubTypes(d).+=:(d)
@@ -386,7 +393,7 @@ ${
       use Fields_Vector;
 
       Known_Unwritten_Fields_Count : Natural := 0;
-      New_Instances_Count : Natural :=
+      New_Instances_Count          : Natural :=
          Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
 
       procedure Iterate (Position : Cursor) is
@@ -439,6 +446,9 @@ ${
       end if;\r\n"""
   }
   var output = ""
+  /**
+   * First, write the base types and then its sub types.
+   */
   for (d ← IR) {
     if (null == d.getSuperType) {
       output += inner(d)
@@ -566,9 +576,11 @@ ${
    ) is
       Type_Name  : String := Type_Declaration.Name;
       Field_Name : String := Field_Declaration.Name;
-      Field_Type : Long := Field_Declaration.F_Type;
-      Size       : Long := Field_Data_Size (Type_Declaration, Field_Declaration);
-      Base_Types : Base_Types_Vector.Vector := Field_Declaration.Base_Types;  --  see comment in package ${packagePrefix.capitalize}
+      Field_Type : Long   := Field_Declaration.F_Type;
+      Size       : Long   := Field_Data_Size (Type_Declaration, Field_Declaration);
+
+      --  see comment in package ${packagePrefix.toLowerCase}.ads
+      Base_Types : Base_Types_Vector.Vector := Field_Declaration.Base_Types;
    begin
       if not Field_Declaration.Written then
          Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
@@ -658,6 +670,9 @@ ${
 
 ${
   var output = "";
+  /**
+   * Write the write functions of all fields.
+   */
   for (d ← IR) {
     output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isConstant && !f.isIgnored }).map({ f ⇒
       s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
@@ -718,6 +733,9 @@ ${
 
 ${
   var output = "";
+  /**
+   * Write write function of all types.
+   */
   for (d ← IR) {
     output += s"""   procedure Write_${escaped(d.getName)}_Type (
       Stream : ASS_IO.Stream_Access;
@@ -756,6 +774,9 @@ ${
    begin
 ${
   var output = "";
+  /**
+   * Write the spsi (storage pool start index) correcting function for all types.
+   */
   for (d ← IR) {
     output += s"""      if Types.Contains ("${d.getSkillName}") then
          Types.Element ("${d.getSkillName}").spsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length) + 1;

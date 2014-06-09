@@ -18,11 +18,11 @@ trait FileReaderBodyMaker extends GeneralOutputMaker {
 package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
 
    String_Pool : String_Pool_Access;
-   Types : Types_Hash_Map_Access;
+   Types       : Types_Hash_Map_Access;
 
    procedure Read (
       State     : access Skill_State;
-      File_Name : String
+      File_Name :        String
    ) is
    begin
       String_Pool := State.String_Pool;
@@ -43,9 +43,9 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
    end Read;
 
    procedure Read_String_Block is
-      Count : Long := Byte_Reader.Read_v64 (Input_Stream);
+      Count          : Long := Byte_Reader.Read_v64 (Input_Stream);
       String_Lengths : array (1 .. Count) of i32;
-      Last_End : i32 := 0;
+      Last_End       : i32  := 0;
    begin
       --  read ends and calculate lengths
       for I in String_Lengths'Range loop
@@ -187,7 +187,9 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
          Field_Type            : Long := Byte_Reader.Read_v64 (Input_Stream);
          Constant_Value        : Long := 0;
          Constant_Array_Length : Long := 0;
-         Base_Types            : Base_Types_Vector.Vector;  --  see comment in package ${packagePrefix.capitalize}
+
+         --  see comment in package ${packagePrefix.toLowerCase}.ads
+         Base_Types            : Base_Types_Vector.Vector;
       begin
          case Field_Type is
             --  const i8, i16, i32, i64, v64
@@ -256,7 +258,7 @@ ${
       output += s"""\r\n\r\n                  declare
                      Sub_Type   : Type_Information := ${escaped(d.getName)}_Type_Declaration;
                      Super_Type : Type_Information := ${escaped(t.getName)}_Type_Declaration;
-                     Index      : Natural := (Sub_Type.lbpsi - Super_Type.lbpsi) + Super_Type.spsi + I - 1;
+                     Index      : Natural          := (Sub_Type.lbpsi - Super_Type.lbpsi) + Super_Type.spsi + I - 1;
                   begin\r\n"""
       if (t == superTypes.last)
         output += s"""                     declare
@@ -273,6 +275,9 @@ ${
     output
   }
 
+  /**
+   * Write the default values of all fields for a given type.
+   */
   def printDefaultValues(d: Declaration): String = {
     var output = s"""'(\r\n                     skill_id => ${if (null == d.getSuperType) s"Natural (${escaped(d.getBaseType.getName)}_Type_Declaration.Storage_Pool.Length) + 1" else "0"}"""
     val fields = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
@@ -284,6 +289,9 @@ ${
   }
 
   var output = "";
+  /**
+   * Write the type record with the fields and their default values of all types.
+   */
   for (d ← IR) {
     output += s"""      if "${d.getSkillName}" = Type_Name then
          declare
@@ -349,6 +357,9 @@ ${
 
 ${
   var output = "";
+  /**
+   * Write the read functions of all fields.
+   */
   for (d ← IR) {
     output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
       s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
@@ -387,6 +398,9 @@ ${
 
 ${
   var output = "";
+  /**
+   * Write the read function of all types.
+   */
   for (d ← IR) {
     output += s"""   function Read_${escaped(d.getName)}_Type (Input_Stream : ASS_IO.Stream_Access) return ${escaped(d.getName)}_Type_Access is
       Index : Long := Byte_Reader.Read_v64 (Input_Stream);
@@ -404,6 +418,9 @@ ${
    begin
 ${
   var output = "";
+  /**
+   * Write the spsi (storage pool start index) correcting function for all types.
+   */
   for (d ← IR) {
     output += s"""      if Types.Contains ("${d.getSkillName}") then
          Types.Element ("${d.getSkillName}").spsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length) + 1;

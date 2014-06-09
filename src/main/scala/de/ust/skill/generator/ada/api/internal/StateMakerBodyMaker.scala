@@ -21,6 +21,9 @@ package body ${packagePrefix.capitalize}.Api.Internal.State_Maker is
       Types : access Types_Hash_Map.Map := State.Types;
    begin
 ${
+  /**
+   * Put all known missing types into the types hash map.
+   */
   var output = "";
   for (d ← IR) {
     output += s"""      if not Types.Contains ("${d.getSkillName}") then
@@ -29,7 +32,7 @@ ${
             Super_Name   : String := "${if (null == d.getSuperType) "" else d.getSuperType}";
             Fields       : Fields_Vector.Vector;
             Storage_Pool : Storage_Pool_Vector.Vector;
-            New_Type : Type_Information := new Type_Declaration'(
+            New_Type     : Type_Information := new Type_Declaration'(
                Type_Size    => Type_Name'Length,
                Super_Size   => Super_Name'Length,
                id           => Long (Natural (Types.Length) + 32),
@@ -52,6 +55,9 @@ ${
   output.stripLineEnd
 }
 ${
+  /**
+   * Put all known missing fields into the given type.
+   */
   var output = "";
   for (d ← IR) {
      output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒

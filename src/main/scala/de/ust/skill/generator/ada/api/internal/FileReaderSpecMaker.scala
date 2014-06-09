@@ -45,12 +45,12 @@ package ${packagePrefix.capitalize}.Api.Internal.File_Reader is
 
    procedure Read (
       State     : access Skill_State;
-      File_Name : String
+      File_Name :        String
    );
 
 private
 
-   Input_File : ASS_IO.File_Type;
+   Input_File   : ASS_IO.File_Type;
    Input_Stream : ASS_IO.Stream_Access;
 
    --  a queue item for the field data of a field
@@ -96,6 +96,9 @@ private
 
 ${
   var output = ""
+  /**
+   * Write read functions of all known types.
+   */
   for (d ← IR) {
     output += s"   function Read_${escaped(d.getName)}_Type (Input_Stream : ASS_IO.Stream_Access) return ${escaped(d.getName)}_Type_Access;\r\n"
   }

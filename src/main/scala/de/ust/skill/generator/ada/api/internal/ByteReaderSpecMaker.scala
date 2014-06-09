@@ -39,19 +39,19 @@ private package ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
    function Read_Boolean (Stream : ASS_IO.Stream_Access) return Boolean;
    function Read_String (
       Stream : ASS_IO.Stream_Access;
-      Length       : i32
+      Length : i32
    ) return String;
 
    procedure Skip_Bytes (
       Stream : ASS_IO.Stream_Access;
-      Length       : Long
+      Length : Long
    );
 
 private
 
-   Buffer_Size : constant Positive := 2 ** 12;
-   Buffer_Last : Positive;
-   Buffer_Index : Integer := Buffer_Size;
+   Buffer_Size  : constant Positive := 2 ** 12;
+   Buffer_Last  :          Positive;
+   Buffer_Index :          Integer  := Buffer_Size;
    type Buffer is array (Positive range <>) of Byte;
    procedure Read_Buffer (
       Stream : not null access Ada.Streams.Root_Stream_Type'Class;

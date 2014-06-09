@@ -14,7 +14,7 @@ trait PackageApiSpecMaker extends GeneralOutputMaker {
 
     out.write(s"""
 --
---  This package is empty, but necassary for the compiler.
+--  This package is empty, but necessary for the compiler.
 --
 
 package ${packagePrefix.capitalize}.Api is

@@ -64,15 +64,20 @@ trait GeneralOutputMaker {
   protected def mapFileWriter(d: Declaration, f: Field): String
 
   /**
-   * Assume the existence of inheritance information functions for declarations
+   * Assume the existence of inheritance information functions for type declarations.
    */
   protected def getSuperTypes(d: Declaration): MutableList[Type]
   protected def getSubTypes(d: Declaration): MutableList[Type]
 
   /**
+   * Assume the existence of the get field parameters function.
+   */
+  protected def printParameters(d : Declaration): String
+
+  /**
    * Assume a package prefix provider.
    */
-  protected def packagePrefix(): String
+  protected def packagePrefix: String
 
   /**
    * Provides a string representation of the default value of f.

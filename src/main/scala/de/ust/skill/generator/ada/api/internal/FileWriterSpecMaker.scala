@@ -46,20 +46,20 @@ package ${packagePrefix.capitalize}.Api.Internal.File_Writer is
 
    procedure Append (
       State     : access Skill_State;
-      File_Name : String
+      File_Name :        String
    );
    procedure Write (
       State     : access Skill_State;
-      File_Name : String
+      File_Name :        String
    );
 
 private
 
    type Modus_Type is (Append, Write);
 
-   Field_Data_File : ASS_IO.File_Type;
+   Field_Data_File   : ASS_IO.File_Type;
    Field_Data_Stream : ASS_IO.Stream_Access;
-   Output_Stream : ASS_IO.Stream_Access;
+   Output_Stream     : ASS_IO.Stream_Access;
 
    procedure Run (Output_File : ASS_IO.File_Type);
 
@@ -72,7 +72,7 @@ private
    function Get_String_Index (Value : String) return Positive;
    procedure Put_String (
       Value : String;
-      Safe : Boolean := False
+      Safe  : Boolean := False
    );
    procedure Write_String_Pool;
 
@@ -81,7 +81,7 @@ private
    ------------------
    --  PHASE 1
    --  if subtypes are used, this procedure will ensure the type order of
-   --  instantiated types.
+   --  all instantiated types.
    procedure Ensure_Type_Order;
    function Is_Type_Instantiated (Type_Declaration : Type_Information) return Boolean;
    function Count_Instantiated_Types return Long;
@@ -122,6 +122,9 @@ private
 
 ${
   var output = ""
+  /**
+   * Write the write functions of all known types.
+   */
   for (d ← IR) {
     output += s"""   procedure Write_${escaped(d.getName)}_Type (
       Stream : ASS_IO.Stream_Access;

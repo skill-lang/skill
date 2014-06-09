@@ -98,7 +98,7 @@ package body ${packagePrefix.capitalize}.Api is
          File_Reader.Read (State, File_Name);
          State_Maker.Create (State);
          State.File_Name := new String'(File_Name);
-         State.State := Read;
+         State.State     := Read;
       else
          raise Skill_State_Error;
       end if;
@@ -113,7 +113,7 @@ package body ${packagePrefix.capitalize}.Api is
       if Append = State.State or else Create = State.State or else Read = State.State or else Write = State.State then
          File_Writer.Write (State, File_Name);
          State.File_Name := new String'(File_Name);
-         State.State := Write;
+         State.State     := Write;
       else
          raise Skill_State_Error;
       end if;
@@ -126,16 +126,6 @@ ${
     }).mkString("")
     output += "\r\n      )";
     output
-  }
-
-  def printParameters(d : Declaration): String = {
-    var output = "";
-    var hasFields = false
-    output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
-      hasFields = true
-      s"${f.getSkillName()} : ${mapType(f.getType, d, f)}"
-    }).mkString("; ", "; ", "")
-    if (hasFields) output else ""
   }
 
   def printSimpleParameters(d : Declaration): String = {
@@ -158,6 +148,9 @@ ${
   }
 
   var output = ""
+  /**
+   * Write the api functions and procedures of all types.
+   */
   for (d ← IR) {
     output += s"""
    function New_${escaped(d.getName)} (State : access Skill_State${printParameters(d)}) return ${escaped(d.getName)}_Type_Access is

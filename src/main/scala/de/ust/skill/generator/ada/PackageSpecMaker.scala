@@ -26,8 +26,6 @@ with Ada.Unchecked_Conversion;
 with Interfaces;
 with System.Storage_Elements;
 
-with Ada.Text_IO;
-
 --
 --  This package provides the user types, accessor functions to the fields, the
 --  skill state and help functions (hash / comparison) for compound types.
@@ -68,6 +66,9 @@ package ${packagePrefix.capitalize} is
    function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type;
 
 ${
+  /**
+   * Write the user types.
+   */
   var output = "";
   for (d ← IR) {
     output += s"""   type ${escaped(d.getName)}_Type is new Skill_Type with private;\r\n"""
@@ -79,6 +80,9 @@ ${
 
   output.stripLineEnd
 
+  /**
+   * Write compound type fields, if necessary.
+   */
   for (d ← IR) {
     d.getFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
       f.getType match {
@@ -110,6 +114,9 @@ ${
     })
   }
 
+  /**
+   * Write accessor functions to the fields of every type.
+   */
   for (d ← IR) {
     d.getAllFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
       output += s"""   function Get_${f.getName.capitalize} (Object : ${escaped(d.getName)}_Type) return ${mapType(f.getType, d, f)};\r\n"""
@@ -133,6 +140,9 @@ private
       end record;
 
 ${
+  /**
+   * Write record types of the type declarations.
+   */
   var output = "";
   for (d ← IR) {
     val superType = if (d.getSuperType == null) "Skill" else d.getSuperType.getName
@@ -162,13 +172,11 @@ ${
    --------------------------
    --  FIELD DECLARATIONS  --
    --------------------------
-
    --
-   --  The base type vector should be replaced by having a variant field
-   --  declaration record. The problem in the first place was that the
-   --  variable Field_Type (in File_Reader and -_Writer) needs to be a
-   --  constant. The problem could not be solved by adding the constant
-   --  declaration to the variable. (Vielleicht auch ein Denkfehler von mir)
+   --  The base type vector should be replaced by a variant field declaration
+   --  record. The problem in the first place was that the variable Field_Type
+   --  (in File_Reader and -_Writer) needs to be a constant. The problem could
+   --  not be solved by adding the constant declaration to the variable.
    --
    package Base_Types_Vector is new Ada.Containers.Vectors (Positive, Long);
 

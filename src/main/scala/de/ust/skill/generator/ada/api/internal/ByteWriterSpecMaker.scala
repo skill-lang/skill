@@ -67,8 +67,8 @@ private package ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
 
 private
 
-   Buffer_Size : constant Positive := 2 ** 12;
-   Buffer_Index : Natural := 0;
+   Buffer_Size  : constant Positive := 2 ** 12;
+   Buffer_Index :          Natural  := 0;
    type Buffer is array (Positive range <>) of Byte;
    procedure Write_Buffer (
       Stream : not null access Ada.Streams.Root_Stream_Type'Class;
