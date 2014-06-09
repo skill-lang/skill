@@ -52,19 +52,19 @@ trait GeneralOutputMaker {
   }
 
   /**
-   * Assume the existence of a translation function for types.
+   * Assume the existence of a translation function for the types.
    */
   protected def mapTypeToId(t: Type, f: Field): String
   protected def mapType(t : Type, d: Declaration, f: Field): String
 
   /**
-   * Assume the existence of a translation function for fields.
+   * Assume the existence of a translation function for the fields.
    */
   protected def mapFileReader(d: Declaration, f: Field): String
   protected def mapFileWriter(d: Declaration, f: Field): String
 
   /**
-   * Assume the existence of inheritance information functions for type declarations.
+   * Assume the existence of inheritance information functions for the types.
    */
   protected def getSuperTypes(d: Declaration): MutableList[Type]
   protected def getSubTypes(d: Declaration): MutableList[Type]

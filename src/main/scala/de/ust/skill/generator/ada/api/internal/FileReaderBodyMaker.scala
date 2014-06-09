@@ -293,7 +293,7 @@ ${
 
   var output = "";
   /**
-   * Provide the type record with the fields and their default values of all types.
+   * Provide the type record information with the fields and their default values of all types.
    */
   for (d ← IR) {
     output += s"""      if "${d.getSkillName}" = Type_Name then
@@ -422,7 +422,7 @@ ${
 ${
   var output = "";
   /**
-   * Correct the spsi (storage pool start index) of all types.
+   * Correct the SPSI (storage pool start index) of all types.
    */
   for (d ← IR) {
     output += s"""      if Types.Contains ("${d.getSkillName}") then

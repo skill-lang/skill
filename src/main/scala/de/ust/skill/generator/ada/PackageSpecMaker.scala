@@ -23,7 +23,7 @@ with Interfaces;
 ${
 var output = ""
   /**
-   * Import containers only if needed.
+   * The Ada containers for compound types will be only imported if necessary.
    */
   for (d ← IR) {
     var doublyLinkedList = false;

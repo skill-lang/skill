@@ -17,7 +17,7 @@ import scala.util.matching.Regex
 import de.ust.skill.generator.ada.api.internal.PackageInternalSpecMaker
 
 /**
- * Entry point of the ada generator.
+ * Entry point of the Ada generator.
  */
 object Main {
   private def printHelp: Unit = println("""
@@ -32,7 +32,7 @@ Opitions:
 """)
 
   /**
-   * Takes an argument skill file name and generates a ada binding.
+   * Takes an argument skill file name and generates an Ada binding.
    */
   def main(args: Array[String]): Unit = {
     var m = new Main
@@ -88,7 +88,7 @@ class Main extends FakeMain
   var IR: List[Declaration] = null
 
   /**
-   * Translates the types into the skill type ids.
+   * Translates the types into the skill type id's.
    */
   override protected def mapTypeToId(t: Type, f: Field): String = t match {
     case t: GroundType ⇒

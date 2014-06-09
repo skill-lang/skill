@@ -56,7 +56,7 @@ ${
 }
 ${
   /**
-   * Put all known missing fields into the given type.
+   * Put all known missing fields into the field vector of a given type.
    */
   var output = "";
   for (d ← IR) {

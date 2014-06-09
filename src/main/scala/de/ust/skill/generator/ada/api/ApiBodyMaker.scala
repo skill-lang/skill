@@ -120,7 +120,7 @@ package body ${packagePrefix.capitalize}.Api is
    end Write;
 ${
   /**
-   * Provide the fields of a type as a comma-separated list.
+   * Provide the fields of a type as a comma-separated list used as record attributes.
    */
   def printFields(d : Declaration): String = {
     var output = s"""'(\r\n         skill_id => Natural (${if (null == d.getBaseType) escaped(d.getName) else escaped(d.getBaseType.getName)}_Type_Declaration.Storage_Pool.Length) + 1"""
@@ -158,7 +158,7 @@ ${
 
   var output = ""
   /**
-   * Provide the api functions and procedures for all types.
+   * Provide the API functions and procedures for all types.
    */
   for (d ← IR) {
     output += s"""

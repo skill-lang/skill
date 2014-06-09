@@ -781,7 +781,7 @@ ${
 ${
   var output = "";
   /**
-   * Correct the spsi (storage pool start index) of all types.
+   * Correct the SPSI (storage pool start index) of all types.
    */
   for (d ← IR) {
     output += s"""      if Types.Contains ("${d.getSkillName}") then
