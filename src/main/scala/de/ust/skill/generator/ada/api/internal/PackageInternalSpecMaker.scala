@@ -18,7 +18,7 @@ with Ada.Unchecked_Deallocation;
 with Interfaces;
 
 --
---  This package provides functionality that will be used by the subpackages.
+--  This package provides the functionality that will be used by the subpackages.
 --
 
 package ${packagePrefix.capitalize}.Api.Internal is

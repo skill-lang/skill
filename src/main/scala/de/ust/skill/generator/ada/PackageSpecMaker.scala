@@ -14,18 +14,45 @@ trait PackageSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}.ads""")
 
     out.write(s"""
-with Ada.Containers.Doubly_Linked_Lists;
-with Ada.Containers.Hashed_Maps;
-with Ada.Containers.Hashed_Sets;
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Vectors;
 with Ada.Strings.Hash;
-with Ada.Tags;
 with Ada.Unchecked_Conversion;
 with Interfaces;
-with System.Storage_Elements;
+${
+var output = ""
+  /**
+   * Import containers only if needed.
+   */
+  for (d ← IR) {
+    var doublyLinkedList = false;
+    var hashedSets = false;
+    var hashedMaps = false;
 
+    d.getFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
+      f.getType match {
+        case t: ListType ⇒ 
+          if (false == doublyLinkedList) {
+            output += "with Ada.Containers.Doubly_Linked_Lists;\r\n"
+            doublyLinkedList = true
+          }
+        case t: SetType ⇒
+          if (false == hashedSets) {
+            output += "with Ada.Containers.Hashed_Sets;\r\n"
+            hashedSets = true
+          }
+        case t: MapType ⇒
+		  if (false == hashedMaps) {
+		    output += "with Ada.Containers.Hashed_Maps;\r\n"
+		    hashedMaps = true
+		  }
+        case _ ⇒ null
+      }
+    })
+  }
+  output
+}
 --
 --  This package provides the user types, accessor functions to the fields, the
 --  skill state and help functions (hash / comparison) for compound types.
@@ -67,7 +94,7 @@ package ${packagePrefix.capitalize} is
 
 ${
   /**
-   * Write the user types.
+   * Provide the user types.
    */
   var output = "";
   for (d ← IR) {
@@ -81,7 +108,7 @@ ${
   output.stripLineEnd
 
   /**
-   * Write compound type fields, if necessary.
+   * Provide the compound types.
    */
   for (d ← IR) {
     d.getFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
@@ -115,7 +142,7 @@ ${
   }
 
   /**
-   * Write accessor functions to the fields of every type.
+   * Provide the accessor functions to the fields of every type.
    */
   for (d ← IR) {
     d.getAllFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
@@ -141,7 +168,7 @@ private
 
 ${
   /**
-   * Write record types of the type declarations.
+   * Provide the record types of the type declarations.
    */
   var output = "";
   for (d ← IR) {

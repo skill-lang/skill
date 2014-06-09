@@ -119,6 +119,9 @@ package body ${packagePrefix.capitalize}.Api is
       end if;
    end Write;
 ${
+  /**
+   * Provide the fields of a type as a comma-separated list.
+   */
   def printFields(d : Declaration): String = {
     var output = s"""'(\r\n         skill_id => Natural (${if (null == d.getBaseType) escaped(d.getName) else escaped(d.getBaseType.getName)}_Type_Declaration.Storage_Pool.Length) + 1"""
     output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
@@ -128,6 +131,9 @@ ${
     output
   }
 
+  /**
+   * Provide the fields of a type as a comma-separated list used as parameters.
+   */
   def printSimpleParameters(d : Declaration): String = {
     var output = "";
     var hasFields = false
@@ -138,6 +144,9 @@ ${
     if (hasFields) output else ""
   }
 
+  /**
+   * Push the new object also into the storage pools of the super types.
+   */
   def printSuperTypes(d: Declaration): String = {
     var output = "";
     val superTypes = getSuperTypes(d).toList.reverse
@@ -149,7 +158,7 @@ ${
 
   var output = ""
   /**
-   * Write the api functions and procedures of all types.
+   * Provide the api functions and procedures for all types.
    */
   for (d ← IR) {
     output += s"""

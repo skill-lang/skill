@@ -34,11 +34,11 @@ with Ada.Unchecked_Deallocation;
 --      -> case 1: if instance counter = 0 then assume new fields
 --      -> case 2: if instance counter > 0 and field counter = known fields then assume new objects
 --      -> case 3: if instance counter > 0 and field counter > known fields then assume new objects and after that new fields
---      => when fields are read, the field will be put into a field-data queue
+--      => when fields are read, the field will be put into a field data queue
 --    f) it reads the field data processing the queue from start to end
 --
 --  3. Update storage pool start index (spsi)
---    -> this is necessary to ensure that new instances will get the next correct skill-id
+--    -> this is necessary to ensure that new instances will get the next correct skill id
 --
 
 package ${packagePrefix.capitalize}.Api.Internal.File_Reader is
@@ -97,7 +97,7 @@ private
 ${
   var output = ""
   /**
-   * Write read functions of all known types.
+   * Read the skill id of a given object.
    */
   for (d ← IR) {
     output += s"   function Read_${escaped(d.getName)}_Type (Input_Stream : ASS_IO.Stream_Access) return ${escaped(d.getName)}_Type_Access;\r\n"

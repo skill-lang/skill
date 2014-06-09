@@ -25,13 +25,13 @@ with Ada.Tags;
 --  1. String pool
 --    a) it collects all strings, it can find in following order:
 --      go through all type declarations and
---        -> collect type name and super name
---        -> go through all field declarations and collect field name
---        -> go through storage pool and collect fields with type string (also in compound types)
+--        -> collect the type- and super name
+--        -> go through all field declarations and collect the field name
+--        -> go through storage pool and collect the fields with type string (also in compound types)
 --    b) it writes the string pool to the file
 --
 --  2. Type block
---    a) it ensures the type order of all storage pools
+--    a) it ensures the type order for all storage pools
 --      -> the code for this functionality will be only generated, if necessary
 --    b) it writes all instantiated types
 --      -> type and field declaration will be written to the file
@@ -123,7 +123,7 @@ private
 ${
   var output = ""
   /**
-   * Write the write functions of all known types.
+   * Write the skill id of a given object.
    */
   for (d ← IR) {
     output += s"""   procedure Write_${escaped(d.getName)}_Type (

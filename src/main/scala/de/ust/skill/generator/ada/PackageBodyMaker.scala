@@ -45,14 +45,14 @@ ${
   var output = "";
 
   /**
-   * Write the hash function of every type.
+   * Provide the hash function of every type.
    */
   for (d ← IR) {
     output += s"""   function Hash (Element : ${escaped(d.getName)}_Type_Access) return Ada.Containers.Hash_Type is\r\n      (Hash (Skill_Type_Access (Element)));\r\n\r\n"""
   }
 
   /**
-   * Write accessor functions to the fields of every type.
+   * Provide the accessor functions to the fields of every type.
    */
   for (d ← IR) {
     d.getAllFields.filter { f ⇒ !f.isIgnored }.foreach({ f ⇒

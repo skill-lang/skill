@@ -162,7 +162,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
          begin
 ${
   /**
-   * Write all fields of type string.
+   * Get all fields of the type string, so all strings can be collected into the string pool.
    */
   var output = "";
   for (d ← IR) {
@@ -440,6 +440,9 @@ ${
       Byte_Writer.Write_v64 (Output_Stream, Count_Instantiated_Types);
 
 ${
+  /**
+   * Consider only instantiated types to be written.
+   */
   def inner (d : Type): String = {
     s"""      if Is_Type_Instantiated (Types.Element ("${d.getSkillName}")) then
          Write_Type_Declaration (Types.Element ("${d.getSkillName}"));
@@ -579,7 +582,7 @@ ${
       Field_Type : Long   := Field_Declaration.F_Type;
       Size       : Long   := Field_Data_Size (Type_Declaration, Field_Declaration);
 
-      --  see comment in package ${packagePrefix.toLowerCase}.ads
+      --  see comment in file ${packagePrefix.toLowerCase}.ads
       Base_Types : Base_Types_Vector.Vector := Field_Declaration.Base_Types;
    begin
       if not Field_Declaration.Written then
@@ -671,7 +674,7 @@ ${
 ${
   var output = "";
   /**
-   * Write the write functions of all fields.
+   * Write the field data of all fields.
    */
   for (d ← IR) {
     output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isConstant && !f.isIgnored }).map({ f ⇒
@@ -734,7 +737,7 @@ ${
 ${
   var output = "";
   /**
-   * Write write function of all types.
+   * Write the skill id of a given object.
    */
   for (d ← IR) {
     output += s"""   procedure Write_${escaped(d.getName)}_Type (
@@ -760,6 +763,9 @@ ${
 
 ${
   var output = "";
+  /**
+   * Get the type of a given object.
+   */
   for (d ← IR) {
     output += s"""      if ${escaped(d.getName)}_Type'Tag = Object'Tag then
          return "${d.getSkillName}";
@@ -775,7 +781,7 @@ ${
 ${
   var output = "";
   /**
-   * Write the spsi (storage pool start index) correcting function for all types.
+   * Correct the spsi (storage pool start index) of all types.
    */
   for (d ← IR) {
     output += s"""      if Types.Contains ("${d.getSkillName}") then

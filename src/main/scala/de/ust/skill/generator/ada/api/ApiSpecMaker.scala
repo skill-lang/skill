@@ -41,7 +41,7 @@ package ${packagePrefix.capitalize}.Api is
 ${
   var output = "";
   /**
-   * Write the api functions and procedures of all types.
+   * Provide the api functions and procedures for all types.
    */
   for (d ← IR) {
     val parameters = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map(f => s"${f.getSkillName()} : ${mapType(f.getType, d, f)}").mkString("; ", "; ", "")
