@@ -55,7 +55,8 @@ var output = ""
 }
 --
 --  This package provides the user types, the accessor functions to the fields,
---  the skill state and help functions (hash / comparison) for compound types.
+--  the skill state and the help functions (hash / comparison) for compound
+--  types.
 --
 
 package ${packagePrefix.capitalize} is
