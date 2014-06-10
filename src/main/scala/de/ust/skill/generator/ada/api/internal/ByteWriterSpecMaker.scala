@@ -5,7 +5,6 @@
 \*                                                                            */
 package de.ust.skill.generator.ada.internal
 
-import java.io.PrintWriter
 import de.ust.skill.generator.ada.GeneralOutputMaker
 
 trait ByteWriterSpecMaker extends GeneralOutputMaker {
@@ -17,12 +16,13 @@ trait ByteWriterSpecMaker extends GeneralOutputMaker {
 with Ada.Unchecked_Conversion;
 
 --
---  This package provides the necessary procedures to write the basic skill
---  types into a stream.
+--  This package provides the procedures to write the basic skill types into a
+--  given stream.
 --
 
 private package ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
 
+   --  Writes the buffer into the stream and resets the buffer.
    procedure Finalize_Buffer (Stream : ASS_IO.Stream_Access);
 
    procedure Write_i8 (

@@ -6,8 +6,8 @@
 package de.ust.skill.generator.ada.internal
 
 import de.ust.skill.generator.ada.GeneralOutputMaker
-import scala.collection.JavaConversions._
 import de.ust.skill.ir._
+import scala.collection.JavaConversions._
 
 trait FileWriterBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -162,7 +162,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
          begin
 ${
   /**
-   * Get all fields of the type string, so all strings can be collected into the string pool.
+   * Gets all fields of type string, so all strings can be collected into the string pool.
    */
   var output = "";
   for (d ← IR) {
@@ -325,7 +325,7 @@ ${
    begin${
   var output = ""
   /**
-   * Ensure the type order of all base types, if necessary.
+   * Ensures the type order of all base types, if necessary.
    */
   for (d ← IR) {
     if (null == d.getSuperType && 0 < getSubTypes(d).length) {
@@ -418,19 +418,19 @@ ${
    function Count_Instantiated_Types return Long is
       use Types_Hash_Map;
 
-      rval : Long := 0;
+      Return_Value : Long := 0;
 
       procedure Iterate (Iterator : Cursor) is
          Type_Declaration : Type_Information := Types_Hash_Map.Element (Iterator);
       begin
          if Is_Type_Instantiated (Type_Declaration) then
-            rval := rval + 1;
+            Return_Value := Return_Value + 1;
          end if;
       end Iterate;
       pragma Inline (Iterate);
    begin
       Types.Iterate (Iterate'Access);
-      return rval;
+      return Return_Value;
    end Count_Instantiated_Types;
 
    procedure Write_Type_Block is
@@ -468,37 +468,37 @@ ${
    function Count_Known_Fields (Type_Declaration : Type_Information) return Long is
       use Fields_Vector;
 
-      rval : Long := 0;
+      Return_Value : Long := 0;
 
       procedure Iterate (Iterator : Cursor) is
          Field_Declaration : Field_Information := Fields_Vector.Element (Iterator);
       begin
          if Field_Declaration.Known then
-            rval := rval + 1;
+            Return_Value := Return_Value + 1;
          end if;
       end Iterate;
       pragma Inline (Iterate);
    begin
       Type_Declaration.Fields.Iterate (Iterate'Access);
-      return rval;
+      return Return_Value;
    end Count_Known_Fields;
 
    function Count_Known_Unwritten_Fields (Type_Declaration : Type_Information) return Long is
       use Fields_Vector;
 
-      rval : Long := 0;
+      Return_Value : Long := 0;
 
       procedure Iterate (Iterator : Cursor) is
          Field_Declaration : Field_Information := Fields_Vector.Element (Iterator);
       begin
          if Field_Declaration.Known and then not Field_Declaration.Written then
-            rval := rval + 1;
+            Return_Value := Return_Value + 1;
          end if;
       end Iterate;
       pragma Inline (Iterate);
    begin
       Type_Declaration.Fields.Iterate (Iterate'Access);
-      return rval;
+      return Return_Value;
    end Count_Known_Unwritten_Fields;
 
    procedure Write_Type_Declaration (Type_Declaration : Type_Information) is
@@ -674,7 +674,7 @@ ${
 ${
   var output = "";
   /**
-   * Write the field data of all fields.
+   * Writes the field data of all fields.
    */
   for (d ← IR) {
     output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isConstant && !f.isIgnored }).map({ f ⇒
@@ -737,7 +737,7 @@ ${
 ${
   var output = "";
   /**
-   * Write the skill id of a given object.
+   * Writes the skill id of a given object.
    */
   for (d ← IR) {
     output += s"""   procedure Write_${escaped(d.getName)}_Type (
@@ -764,7 +764,7 @@ ${
 ${
   var output = "";
   /**
-   * Get the type of a given object.
+   * Gets the type of a given object.
    */
   for (d ← IR) {
     output += s"""      if ${escaped(d.getName)}_Type'Tag = Object'Tag then
@@ -781,7 +781,7 @@ ${
 ${
   var output = "";
   /**
-   * Correct the SPSI (storage pool start index) of all types.
+   * Corrects the SPSI (storage pool start index) of all types.
    */
   for (d ← IR) {
     output += s"""      if Types.Contains ("${d.getSkillName}") then

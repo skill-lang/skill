@@ -5,16 +5,15 @@
 \*                                                                            */
 package de.ust.skill.generator.ada
 
-import java.io.File
-import java.util.Date
-import scala.collection.JavaConversions._
 import de.ust.skill.generator.ada.api._
+import de.ust.skill.generator.ada.api.internal.PackageInternalSpecMaker
 import de.ust.skill.generator.ada.internal._
 import de.ust.skill.ir._
 import de.ust.skill.parser.Parser
+import java.io.File
+import java.util.Date
+import scala.collection.JavaConversions._
 import scala.collection.mutable.MutableList
-import scala.util.matching.Regex
-import de.ust.skill.generator.ada.api.internal.PackageInternalSpecMaker
 
 /**
  * Entry point of the Ada generator.
@@ -395,7 +394,7 @@ class Main extends FakeMain
   }
 
   /**
-   * Get all super types of a given type.
+   * Gets all super types of a given type.
    */
   protected def getSuperTypes(d: Declaration): MutableList[Type] = {
     if (null == d.getSuperType) MutableList[Type]()
@@ -403,7 +402,7 @@ class Main extends FakeMain
   }
 
   /**
-   * Get all sub types of a given type.
+   * Gets all sub types of a given type.
    */
   protected def getSubTypes(d: Declaration): MutableList[Type] = {
     var rval = MutableList[Type]()
@@ -421,7 +420,7 @@ class Main extends FakeMain
   }
 
   /**
-   * Get the fields as parameters of a given type.
+   * Gets the fields as parameters of a given type.
    */
   def printParameters(d : Declaration): String = {
     var output = "";
@@ -434,7 +433,7 @@ class Main extends FakeMain
   }
 
   /**
-   * provides the package prefix.
+   * Provides the package prefix.
    */
   override protected def packagePrefix(): String = _packagePrefix
   private var _packagePrefix = ""

@@ -5,9 +5,9 @@
 \*                                                                            */
 package de.ust.skill.generator.ada.internal
 
-import scala.collection.JavaConversions._
 import de.ust.skill.ir._
 import de.ust.skill.generator.ada.GeneralOutputMaker
+import scala.collection.JavaConversions._
 
 trait FileReaderBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -252,7 +252,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
    begin
 ${
   /**
-   * Replace the "old/wrong" object by the new object in all super types.
+   * Replaces the "old/wrong" object by the new object in all super types.
    */
   def printSuperTypes(d: Declaration): String = {
     var output = "";
@@ -279,7 +279,7 @@ ${
   }
 
   /**
-   * Provide the default values of all fields of a given type.
+   * Provides the default values of all fields of a given type.
    */
   def printDefaultValues(d: Declaration): String = {
     var output = s"""'(\r\n                     skill_id => ${if (null == d.getSuperType) s"Natural (${escaped(d.getBaseType.getName)}_Type_Declaration.Storage_Pool.Length) + 1" else "0"}"""
@@ -293,7 +293,7 @@ ${
 
   var output = "";
   /**
-   * Provide the type record information with the fields and their default values of all types.
+   * Provides the type record information with the fields and their default values of all types.
    */
   for (d ← IR) {
     output += s"""      if "${d.getSkillName}" = Type_Name then
@@ -361,7 +361,7 @@ ${
 ${
   var output = "";
   /**
-   * Read the field data of all fields.
+   * Reads the field data of all fields.
    */
   for (d ← IR) {
     output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
@@ -402,7 +402,7 @@ ${
 ${
   var output = "";
   /**
-   * Read the skill id of a given object.
+   * Reads the skill id of a given object.
    */
   for (d ← IR) {
     output += s"""   function Read_${escaped(d.getName)}_Type (Input_Stream : ASS_IO.Stream_Access) return ${escaped(d.getName)}_Type_Access is
@@ -422,7 +422,7 @@ ${
 ${
   var output = "";
   /**
-   * Correct the SPSI (storage pool start index) of all types.
+   * Corrects the SPSI (storage pool start index) of all types.
    */
   for (d ← IR) {
     output += s"""      if Types.Contains ("${d.getSkillName}") then

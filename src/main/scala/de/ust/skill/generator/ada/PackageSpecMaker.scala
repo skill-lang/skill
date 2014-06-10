@@ -5,8 +5,8 @@
 \*                                                                            */
 package de.ust.skill.generator.ada
 
-import scala.collection.JavaConversions._
 import de.ust.skill.ir._
+import scala.collection.JavaConversions._
 
 trait PackageSpecMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -94,7 +94,7 @@ package ${packagePrefix.capitalize} is
 
 ${
   /**
-   * Provide the user types.
+   * Provides the user types.
    */
   var output = "";
   for (d ← IR) {
@@ -108,7 +108,7 @@ ${
   output.stripLineEnd
 
   /**
-   * Provide the compound types.
+   * Provides the compound types.
    */
   for (d ← IR) {
     d.getFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
@@ -142,7 +142,7 @@ ${
   }
 
   /**
-   * Provide the accessor functions to the fields of every type.
+   * Provides the accessor functions to the fields of every type.
    */
   for (d ← IR) {
     d.getAllFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
@@ -168,7 +168,7 @@ private
 
 ${
   /**
-   * Provide the record types of the type declarations.
+   * Provides the record types of the type declarations.
    */
   var output = "";
   for (d ← IR) {

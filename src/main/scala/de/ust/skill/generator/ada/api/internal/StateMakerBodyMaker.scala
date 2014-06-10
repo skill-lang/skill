@@ -5,9 +5,9 @@
 \*                                                                            */
 package de.ust.skill.generator.ada.internal
 
-import scala.collection.JavaConversions._
 import de.ust.skill.ir._
 import de.ust.skill.generator.ada.GeneralOutputMaker
+import scala.collection.JavaConversions._
 
 trait StateMakerBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -22,7 +22,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.State_Maker is
    begin
 ${
   /**
-   * Put all known missing types into the types hash map.
+   * Puts all known missing types into the types hash map.
    */
   var output = "";
   for (d ← IR) {
@@ -56,7 +56,7 @@ ${
 }
 ${
   /**
-   * Put all known missing fields into the field vector of a given type.
+   * Puts all known missing fields into the field vector of a given type.
    */
   var output = "";
   for (d ← IR) {

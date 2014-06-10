@@ -5,7 +5,6 @@
 \*                                                                            */
 package de.ust.skill.generator.ada.internal
 
-import java.io.PrintWriter
 import de.ust.skill.generator.ada.GeneralOutputMaker
 
 trait StateMakerSpecMaker extends GeneralOutputMaker {
@@ -15,14 +14,15 @@ trait StateMakerSpecMaker extends GeneralOutputMaker {
 
     out.write(s"""
 --
---  This package puts all known user types into the types hash map, if not
---  already containing. All known fields will be put into the field vector
---  of a type, if not already containing.
---  It will be called in the API procedures Create and Read at the end.
+--  This package puts all known missing user types into the types hash map.
+--  All known missing fields will be put into the field vector of the
+--  corresponding type. It will be called in the API procedures Create and
+--  Read at the end.
 --
 
 package ${packagePrefix.capitalize}.Api.Internal.State_Maker is
 
+   --  Puts the known types and fields into an empty skill state.
    procedure Create (State : access Skill_State);
 
 private

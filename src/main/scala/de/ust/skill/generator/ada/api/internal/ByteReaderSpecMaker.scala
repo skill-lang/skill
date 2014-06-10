@@ -5,7 +5,6 @@
 \*                                                                            */
 package de.ust.skill.generator.ada.internal
 
-import java.io.PrintWriter
 import de.ust.skill.generator.ada.GeneralOutputMaker
 
 trait ByteReaderSpecMaker extends GeneralOutputMaker {
@@ -17,8 +16,8 @@ trait ByteReaderSpecMaker extends GeneralOutputMaker {
 with Ada.Unchecked_Conversion;
 
 --
---  This package provides the necessary functions to read the basic skill types
---  from a stream.
+--  This package provides the functions to read the basic skill types from a
+--  given stream.
 --
 
 private package ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is

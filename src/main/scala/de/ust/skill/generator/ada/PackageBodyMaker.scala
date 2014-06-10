@@ -5,9 +5,7 @@
 \*                                                                            */
 package de.ust.skill.generator.ada
 
-import java.io.PrintWriter
 import scala.collection.JavaConversions._
-import de.ust.skill.ir._
 
 trait PackageBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -45,14 +43,14 @@ ${
   var output = "";
 
   /**
-   * Provide the hash function of every type.
+   * Provides the hash function of every type.
    */
   for (d ← IR) {
     output += s"""   function Hash (Element : ${escaped(d.getName)}_Type_Access) return Ada.Containers.Hash_Type is\r\n      (Hash (Skill_Type_Access (Element)));\r\n\r\n"""
   }
 
   /**
-   * Provide the accessor functions to the fields of every type.
+   * Provides the accessor functions to the fields of every type.
    */
   for (d ← IR) {
     d.getAllFields.filter { f ⇒ !f.isIgnored }.foreach({ f ⇒

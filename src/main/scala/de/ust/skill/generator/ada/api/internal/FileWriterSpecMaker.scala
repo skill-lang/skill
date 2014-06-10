@@ -5,7 +5,6 @@
 \*                                                                            */
 package de.ust.skill.generator.ada.internal
 
-import java.io.PrintWriter
 import de.ust.skill.generator.ada.GeneralOutputMaker
 
 trait FileWriterSpecMaker extends GeneralOutputMaker {
@@ -123,7 +122,7 @@ private
 ${
   var output = ""
   /**
-   * Write the skill id of a given object.
+   * Writes the skill id of a given object.
    */
   for (d ← IR) {
     output += s"""   procedure Write_${escaped(d.getName)}_Type (

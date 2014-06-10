@@ -5,8 +5,6 @@
 \*                                                                            */
 package de.ust.skill.generator.ada
 
-import java.io.PrintWriter
-
 trait PackageApiSpecMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make

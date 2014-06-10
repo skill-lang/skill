@@ -5,7 +5,6 @@
 \*                                                                            */
 package de.ust.skill.generator.ada.internal
 
-import java.io.PrintWriter
 import de.ust.skill.generator.ada.GeneralOutputMaker
 
 trait FileReaderSpecMaker extends GeneralOutputMaker {
@@ -97,7 +96,7 @@ private
 ${
   var output = ""
   /**
-   * Read the skill id of a given object.
+   * Reads the skill id of a given object.
    */
   for (d ← IR) {
     output += s"   function Read_${escaped(d.getName)}_Type (Input_Stream : ASS_IO.Stream_Access) return ${escaped(d.getName)}_Type_Access;\r\n"

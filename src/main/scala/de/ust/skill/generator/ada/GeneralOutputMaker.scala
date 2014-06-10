@@ -5,10 +5,9 @@
 \*                                                                            */
 package de.ust.skill.generator.ada
 
+import de.ust.skill.ir._
 import java.io.File
 import java.io.PrintWriter
-import de.ust.skill.ir._
-import java.util.Date
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
 import java.io.FileOutputStream

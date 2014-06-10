@@ -5,10 +5,9 @@
 \*                                                                            */
 package de.ust.skill.generator.ada.api
 
-import java.io.PrintWriter
-import scala.collection.JavaConversions._
 import de.ust.skill.generator.ada.GeneralOutputMaker
 import de.ust.skill.ir.Declaration
+import scala.collection.JavaConversions._
 
 trait SkillSpecMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -24,13 +23,18 @@ with Ada.Unchecked_Deallocation;
 
 package ${packagePrefix.capitalize}.Api is
 
+   --  Appends new data into a skill file.
    procedure Append (State : access Skill_State);
+   --  Closes the skill state.
    procedure Close (State : access Skill_State);
+   --  Fills an empty skill state with the known types.
    procedure Create (State : access Skill_State);
+   --  Reads a skill file into an emtpy skill state.
    procedure Read (
       State     : access Skill_State;
       File_Name :        String
    );
+   --  Writes all data into a skill file.
    procedure Write (
       State     : access Skill_State;
       File_Name :        String

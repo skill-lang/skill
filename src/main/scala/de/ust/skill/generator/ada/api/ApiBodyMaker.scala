@@ -5,10 +5,9 @@
 \*                                                                            */
 package de.ust.skill.generator.ada.api
 
-import java.io.PrintWriter
-import scala.collection.JavaConversions._
 import de.ust.skill.generator.ada.GeneralOutputMaker
 import de.ust.skill.ir.Declaration
+import scala.collection.JavaConversions._
 
 trait SkillBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -120,7 +119,7 @@ package body ${packagePrefix.capitalize}.Api is
    end Write;
 ${
   /**
-   * Provide the fields of a type as a comma-separated list used as record attributes.
+   * Provides the fields of a type as a comma-separated list used as record attributes.
    */
   def printFields(d : Declaration): String = {
     var output = s"""'(\r\n         skill_id => Natural (${if (null == d.getBaseType) escaped(d.getName) else escaped(d.getBaseType.getName)}_Type_Declaration.Storage_Pool.Length) + 1"""
@@ -132,7 +131,7 @@ ${
   }
 
   /**
-   * Provide the fields of a type as a comma-separated list used as parameters.
+   * Provides the fields of a type as a comma-separated list used as parameters.
    */
   def printSimpleParameters(d : Declaration): String = {
     var output = "";
@@ -145,7 +144,7 @@ ${
   }
 
   /**
-   * Push the new object also into the storage pools of the super types.
+   * Pushes the new object also into the storage pools of the super types.
    */
   def printSuperTypes(d: Declaration): String = {
     var output = "";
@@ -158,7 +157,7 @@ ${
 
   var output = ""
   /**
-   * Provide the API functions and procedures for all types.
+   * Provides the API functions and procedures for all types.
    */
   for (d ← IR) {
     output += s"""
