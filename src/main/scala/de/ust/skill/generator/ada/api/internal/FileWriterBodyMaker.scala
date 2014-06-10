@@ -162,7 +162,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
          begin
 ${
   /**
-   * Gets all fields of type string, so all strings can be collected into the string pool.
+   * Gets all data from the string fields and puts them into the string pool.
    */
   var output = "";
   for (d ← IR) {

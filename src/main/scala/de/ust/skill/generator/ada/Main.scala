@@ -60,7 +60,7 @@ Opitions:
 abstract class FakeMain extends GeneralOutputMaker { def make {} }
 
 /**
- * A generator turns a set of skill declarations into an ada interface providing means of manipulating skill files
+ * A generator turns a set of skill declarations into an Ada interface providing means of manipulating skill files
  * containing instances of the respective definitions.
  *
  * @author Timm Felden, Dennis Przytarski
@@ -124,7 +124,7 @@ class Main extends FakeMain
   }
 
   /**
-   * Translates the types into ada types.
+   * Translates the types into Ada types.
    */
   override protected def mapType(t : Type, d: Declaration, f: Field): String = t match {
     case t: GroundType ⇒ t.getName() match {
@@ -158,7 +158,7 @@ class Main extends FakeMain
    */
   protected def mapFileReader(d: Declaration, f: Field): String = {
     /**
-     * The basis type that will be read.
+     * The basis type of the field that will be read.
      */
     def inner(t: Type, _d: Declaration, _f: Field): String = {
       t match {
@@ -275,7 +275,7 @@ class Main extends FakeMain
    */
   protected def mapFileWriter(d: Declaration, f: Field): String = {
     /**
-     * The basis type that will be written.
+     * The basis type of the field that will be written.
      */
     def inner(t: Type, _d: Declaration, _f: Field, value: String): String = {
       t match {

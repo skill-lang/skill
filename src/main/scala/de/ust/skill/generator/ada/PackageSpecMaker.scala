@@ -23,7 +23,7 @@ with Interfaces;
 ${
 var output = ""
   /**
-   * The Ada containers for compound types will be only imported if necessary.
+   * Imports the Ada containers for compound types if necessary.
    */
   for (d ← IR) {
     var doublyLinkedList = false;
@@ -54,8 +54,8 @@ var output = ""
   output
 }
 --
---  This package provides the user types, accessor functions to the fields, the
---  skill state and help functions (hash / comparison) for compound types.
+--  This package provides the user types, the accessor functions to the fields,
+--  the skill state and help functions (hash / comparison) for compound types.
 --
 
 package ${packagePrefix.capitalize} is
