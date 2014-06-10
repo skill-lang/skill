@@ -23,29 +23,29 @@ with Interfaces;
 ${
 var output = ""
   /**
-   * Imports the Ada containers for compound types if necessary.
+   * Imports the Ada containers for compound types, if necessary.
    */
   for (d ← IR) {
-    var doublyLinkedList = false;
-    var hashedSets = false;
-    var hashedMaps = false;
+    var doublyLinkedListNeeded = false;
+    var hashedSetsNeeded = false;
+    var hashedMapsNeeded = false;
 
     d.getFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
       f.getType match {
         case t: ListType ⇒ 
-          if (false == doublyLinkedList) {
+          if (false == doublyLinkedListNeeded) {
             output += "with Ada.Containers.Doubly_Linked_Lists;\r\n"
-            doublyLinkedList = true
+            doublyLinkedListNeeded = true
           }
         case t: SetType ⇒
-          if (false == hashedSets) {
+          if (false == hashedSetsNeeded) {
             output += "with Ada.Containers.Hashed_Sets;\r\n"
-            hashedSets = true
+            hashedSetsNeeded = true
           }
         case t: MapType ⇒
-		  if (false == hashedMaps) {
+		  if (false == hashedMapsNeeded) {
 		    output += "with Ada.Containers.Hashed_Maps;\r\n"
-		    hashedMaps = true
+		    hashedMapsNeeded = true
 		  }
         case _ ⇒ null
       }

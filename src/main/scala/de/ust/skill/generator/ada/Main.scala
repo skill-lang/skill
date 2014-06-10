@@ -154,7 +154,7 @@ class Main extends FakeMain
   }
 
   /**
-   * The read functions generated into the procedure Read_Queue_Vector_Iterator in package File_Reader.
+   * Generates the read functions into the procedure Read_Queue_Vector_Iterator in package File_Reader.
    */
   protected def mapFileReader(d: Declaration, f: Field): String = {
     /**
@@ -271,7 +271,7 @@ class Main extends FakeMain
   }
 
   /**
-   * The write functions generated into the procedure Write_Field_Data in package File_Writer.
+   * Generates the write functions into the procedure Write_Field_Data in package File_Writer.
    */
   protected def mapFileWriter(d: Declaration, f: Field): String = {
     /**
