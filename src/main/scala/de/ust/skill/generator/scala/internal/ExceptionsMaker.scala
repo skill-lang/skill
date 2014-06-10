@@ -23,9 +23,9 @@ import ${packagePrefix}internal.streams.InStream""")
  *
  * @author Timm Felden
  */
-class SkillException(msg: String, cause: Throwable) extends Exception(msg, cause) {
-  def this(cause: Throwable) = this(cause.getMessage(), cause)
-  def this(msg: String) = this(msg, null)
+class SkillException(msg : String, cause : Throwable) extends Exception(msg, cause) {
+  def this(cause : Throwable) = this(cause.getMessage(), cause)
+  def this(msg : String) = this(msg, null)
 }
 
 /**
@@ -40,14 +40,14 @@ trait ExpectableSkillException {}
  *
  * @author Timm Felden
  */
-case class GenericAccessException(v: SkillType, t: String, f: String, cause: Throwable) extends SkillException(s"$v has no value in $t.$f", cause) with ExpectableSkillException;
+case class GenericAccessException(v : SkillType, t : String, f : String, cause : Throwable) extends SkillException(s"$v has no value in $t.$f", cause) with ExpectableSkillException;
 
 /**
  * This exception is used if byte stream related errors occur.
  *
  * @author Timm Felden
  */
-case class ParseException(in: InStream, block: Int, msg: String, cause: Throwable) extends SkillException(
+case class ParseException(in : InStream, block : Int, msg : String, cause : Throwable) extends SkillException(
   s"In block ${block + 1} @0x${in.position.toHexString}: $msg",
   cause
 );
@@ -57,14 +57,14 @@ case class ParseException(in: InStream, block: Int, msg: String, cause: Throwabl
  *
  * @author Timm Felden
  */
-class StreamException(msg: String, cause: Throwable) extends SkillException(msg, cause) {}
+class StreamException(msg : String, cause : Throwable) extends SkillException(msg, cause) {}
 
 /**
  * Thrown, if an index into a pool is invalid.
  *
  * @author Timm Felden
  */
-case class InvalidPoolIndex(index: Long, size: Long, pool: String)
+case class InvalidPoolIndex(index : Long, size : Long, pool : String)
   extends SkillException(s"invalid index $index into pool $pool(size:$size)")
   with ExpectableSkillException {}
 
@@ -73,7 +73,7 @@ case class InvalidPoolIndex(index: Long, size: Long, pool: String)
  *
  * @author Timm Felden
  */
-case class PoolSizeMissmatchError(expected: Long, actual: Long, t: String)
+case class PoolSizeMissmatchError(expected : Long, actual : Long, t : String)
   extends SkillException(s"expected: $expected, was: $actual, field type: $t")
   with ExpectableSkillException {}
 
@@ -82,7 +82,7 @@ case class PoolSizeMissmatchError(expected: Long, actual: Long, t: String)
  *
  * @author Timm Felden
  */
-case class TypeMissmatchError(t: FieldType, expected: String, fieldName: String, poolName: String)
+case class TypeMissmatchError(t : FieldType[_], expected : String, fieldName : String, poolName : String)
   extends SkillException(s"""+"\"\"\""+"""During construction of $poolName.$fieldName: Encountered incompatible type "$t" (expected: $expected)"""+"\"\"\""+""")
   with ExpectableSkillException {}
 """)

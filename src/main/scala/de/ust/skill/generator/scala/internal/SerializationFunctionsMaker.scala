@@ -25,8 +25,6 @@ trait SerializationFunctionsMaker extends GeneralOutputMaker {
     //package
     out.write(s"""package ${packagePrefix}internal
 
-import java.nio.ByteBuffer
-
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
@@ -53,7 +51,7 @@ abstract class SerializationFunctions(state : SerializableState) {
           strings.add(f.name)
           if (StringType == f.t) {
             for (i ← p.all)
-              strings.add(i.get(p, f).asInstanceOf[String])
+              strings.add(i.get(f.asInstanceOf[FieldDeclaration[String]]))
           }
         }
       }
@@ -66,10 +64,10 @@ abstract class SerializationFunctions(state : SerializableState) {
 
   @inline final def annotation(ref : SkillType, out : OutStream) {
     if (null == ref) {
-      out.put(0.toByte)
-      out.put(0.toByte)
+      out.i8(0.toByte)
+      out.i8(0.toByte)
     } else {
-      if(ref.isInstanceOf[NamedType]) string(ref.asInstanceOf[NamedType].τName, out)
+      if (ref.isInstanceOf[NamedType]) string(ref.asInstanceOf[NamedType].τName, out)
       else string(ref.getClass.getSimpleName.toLowerCase, out)
       out.v64(ref.getSkillID)
     }
@@ -79,63 +77,75 @@ abstract class SerializationFunctions(state : SerializableState) {
 object SerializationFunctions {
 
   @inline final def userRef[T <: SkillType](ref : T, out : OutStream) {
-    if (null == ref) out.put(0.toByte)
+    if (null == ref) out.i8(0.toByte)
     else out.v64(ref.getSkillID)
   }
 
-  @inline def bool(v : Boolean, out : OutStream) = out.put(if (v) -1.toByte else 0.toByte)
+  @inline def bool(v : Boolean, out : OutStream) = out.i8(if (v) -1.toByte else 0.toByte)
 
-  @inline def i8(v : Byte, out : OutStream) = out.put(v)
-  @inline def i16(v : Short, out : OutStream) = out.put(ByteBuffer.allocate(2).putShort(v).array)
-  @inline def i32(v : Int, out : OutStream) = out.put(ByteBuffer.allocate(4).putInt(v).array)
-  @inline def i64(v : Long, out : OutStream) = out.put(ByteBuffer.allocate(8).putLong(v).array)
+  @inline def i8(v : Byte, out : OutStream) = out.i8(v)
+  @inline def i16(v : Short, out : OutStream) = out.i16(v)
+  @inline def i32(v : Int, out : OutStream) = out.i32(v)
+  @inline def i64(v : Long, out : OutStream) = out.i64(v)
   @inline def v64(v : Long, out : OutStream) = out.v64(v)
 
-  @inline def f32(v : Float, out : OutStream) = out.put(ByteBuffer.allocate(4).putFloat(v).array)
-  @inline def f64(v : Double, out : OutStream) = out.put(ByteBuffer.allocate(8).putDouble(v).array)
+  @inline def f32(v : Float, out : OutStream) = out.f32(v)
+  @inline def f64(v : Double, out : OutStream) = out.f64(v)
 
-  // wraps translation functions to stream users
-  implicit def wrap[T](f : T ⇒ Array[Byte]) : (T, OutStream) ⇒ Unit = { (v : T, out : OutStream) ⇒ out.put(f(v)) }
-
-  def writeConstArray[T, S >: T](trans : (S, OutStream) ⇒ Unit)(elements : scala.collection.mutable.ArrayBuffer[T], out : OutStream) {
+  @inline def writeConstArray[T, S >: T](trans : (S, OutStream) ⇒ Unit)(elements : scala.collection.mutable.ArrayBuffer[T], out : OutStream) {
     for (e ← elements)
       trans(e, out)
   }
-  def writeVarArray[T, S >: T](trans : (S, OutStream) ⇒ Unit)(elements : scala.collection.mutable.ArrayBuffer[T], out : OutStream) {
-    v64(elements.size, out)
+  @inline def writeVarArray[T, S >: T](trans : (S, OutStream) ⇒ Unit)(elements : scala.collection.mutable.ArrayBuffer[T], out : OutStream) {
+    out.v64(elements.size)
     for (e ← elements)
       trans(e, out)
   }
-  def writeList[T, S >: T](trans : (S, OutStream) ⇒ Unit)(elements : scala.collection.mutable.ListBuffer[T], out : OutStream) {
-    v64(elements.size, out)
+  @inline def writeList[T, S >: T](trans : (S, OutStream) ⇒ Unit)(elements : scala.collection.mutable.ListBuffer[T], out : OutStream) {
+    out.v64(elements.size)
     for (e ← elements)
       trans(e, out)
   }
-  def writeSet[T, S >: T](trans : (S, OutStream) ⇒ Unit)(elements : scala.collection.mutable.HashSet[T], out : OutStream) {
-    v64(elements.size, out)
+  @inline def writeSet[T, S >: T](trans : (S, OutStream) ⇒ Unit)(elements : scala.collection.mutable.HashSet[T], out : OutStream) {
+    out.v64(elements.size)
     for (e ← elements)
       trans(e, out)
   }
   def writeMap[T, U](keys : (T, OutStream) ⇒ Unit, vals : (U, OutStream) ⇒ Unit)(elements : scala.collection.mutable.HashMap[T, U], out : OutStream) {
-    v64(elements.size, out)
+    out.v64(elements.size)
     for ((k, v) ← elements) {
       keys(k, out)
       vals(v, out)
     }
   }
 
+  // TODO this is not a good solution! (slow and fucked up, but funny)
+  def typeToSerializationFunction(t : FieldType[_]) : (Any, OutStream) ⇒ Unit = {
+    implicit def lift[T](f : (T, OutStream) ⇒ Unit) : (Any, OutStream) ⇒ Unit = { case (x, out) ⇒ f(x.asInstanceOf[T], out) }
+    t match {
+      case I8                    ⇒ i8
+      case I16                   ⇒ i16
+      case I32                   ⇒ i32
+      case I64                   ⇒ i64
+
+      case SetType(sub)          ⇒ lift(writeSet(typeToSerializationFunction(sub)))
+
+      case s : StoragePool[_, _] ⇒ userRef
+    }
+  }
+
   /**
    * TODO serialization of restrictions
    */
-  def restrictions(p : StoragePool[_, _], out : OutStream) = out.put(0.toByte)
+  def restrictions(p : StoragePool[_, _], out : OutStream) = out.i8(0.toByte)
   /**
    * TODO serialization of restrictions
    */
-  def restrictions(f : FieldDeclaration, out : OutStream) = out.put(0.toByte)
+  def restrictions(f : FieldDeclaration[_], out : OutStream) = out.i8(0.toByte)
   /**
    * serialization of types is fortunately independent of state, because field types know their ID
    */
-  def writeType(t : FieldType, out : OutStream) = t match {
+  def writeType(t : FieldType[_], out : OutStream) : Unit = t match {
     case ConstantI8(v) ⇒
       v64(t.typeID, out)
       i8(v, out)
@@ -153,25 +163,24 @@ object SerializationFunctions {
       v64(v, out)
 
     case ConstantLengthArray(l, t) ⇒
-      out.put(0x0F.toByte)
+      out.i8(0x0F.toByte)
       v64(l, out)
       v64(t.typeID, out)
 
     case VariableLengthArray(t) ⇒
-      out.put(0x11.toByte)
+      out.i8(0x11.toByte)
       v64(t.typeID, out)
     case ListType(t) ⇒
-      out.put(0x12.toByte)
+      out.i8(0x12.toByte)
       v64(t.typeID, out)
     case SetType(t) ⇒
-      out.put(0x13.toByte)
+      out.i8(0x13.toByte)
       v64(t.typeID, out)
 
-    case MapType(ts) ⇒
-      out.put(0x14.toByte)
-      v64(ts.size, out)
-      for (t ← ts)
-        v64(t.typeID, out)
+    case MapType(k, v) ⇒
+      out.i8(0x14.toByte)
+      writeType(k, out)
+      writeType(v, out)
 
     case _ ⇒
       v64(t.typeID, out)

@@ -33,7 +33,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import ${packagePrefix}_
-import ${packagePrefix}internal.streams.OutBuffer
+import ${packagePrefix}internal.streams.FileOutputStream
 import ${packagePrefix}internal.streams.OutStream
 
 /**
@@ -42,7 +42,7 @@ import ${packagePrefix}internal.streams.OutStream
  * @see SKilL §6
  * @author Timm Felden
  */
-private[internal] final class StateAppender(state : SerializableState, out : OutStream) extends SerializationFunctions(state) {
+private[internal] final class StateAppender(state : SerializableState, out : FileOutputStream) extends SerializationFunctions(state) {
   import SerializationFunctions._
 
   // save the index of the first new pool
@@ -54,7 +54,7 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
   // make lbpsi map, update data map to contain dynamic instances and create serialization skill IDs for serialization
   // index → bpsi
   val lbpsiMap = new Array[Long](state.pools.length)
-  val chunkMap = HashMap[FieldDeclaration, ChunkInfo]()
+  val chunkMap = HashMap[FieldDeclaration[_], ChunkInfo]()
   state.pools.foreach {
     case p : BasePool[_] ⇒
       makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ state.poolByName(s).newObjects.size })
@@ -77,6 +77,14 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
     p.poolIndex >= newPoolIndex || (p.dynamicSize > 0 && p.fields.exists(chunkMap.contains(_)))
   }.size, out)
 
+  // TODO see code generator
+
+  out.close
+}
+""")
+
+// TODO integrate this
+val todo = s"""
   // we have to buffer the data chunk before writing it
   val dataChunk = new OutBuffer();
 
@@ -203,11 +211,7 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
       }
     }
   }
-  out.putAll(dataChunk)
-
-  out.close
-}
-""")
+  out.putAll(dataChunk)"""
 
     //class prefix
     out.close()

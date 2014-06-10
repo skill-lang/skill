@@ -51,7 +51,7 @@ trait Access[T <: SkillType] extends Iterable[T] {
   /**
    * @return an iterator over all field declarations, even those provided by the binary skill file
    */
-  def allFields : Iterator[FieldDeclaration]
+  def allFields : Iterator[FieldDeclaration[_]]
 
   override def size : Int
   override def foreach[U](f : T ⇒ U) : Unit

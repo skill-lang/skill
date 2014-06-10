@@ -10,7 +10,7 @@ import de.ust.skill.generator.scala.GeneralOutputMaker
 trait SkillTypeMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
+    val packageName = if (this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.') + 1) else this.packageName;
     val out = open("internal/SkillType.scala")
     //package & imports
     out.write(s"""package ${packagePrefix}internal
@@ -42,25 +42,32 @@ class SkillType private[$packageName] (protected var skillID : Long) {
 
   /**
    * reflective setter
+   *
+   * @param field a field declaration instance as obtained from the storage pools iterator
+   * @param value the new value of the field
+   *
+   * @note if field is not a distributed field of this type, then anything may happen
    */
-  def set[@specialized T](acc : Access[_ <: SkillType], field : FieldDeclaration, value : T) {
-    acc.asInstanceOf[StoragePool[_ <: SkillType, _ <: SkillType]].unknownFieldData(field).put(this, value)
+  def set[@specialized T](field : FieldDeclaration[T], value : T) {
+    // TODO make skillID a global constant and add this case!
+    field.asInstanceOf[DistributedField[T]].set(this, value)
   }
 
   /**
    * reflective getter
+   *
+   * @param field a field declaration instance as obtained from the storage pools iterator
+   *
+   * @note if field is not a distributed field of this type, then anything may happen
    */
-  def get(acc : Access[_ <: SkillType], field : FieldDeclaration) : Any = {
-    try {
-      acc.asInstanceOf[StoragePool[_ <: SkillType, _ <: SkillType]].unknownFieldData(field)(this)
-    } catch {
-      case e : Exception ⇒ this+" is not in:\\n"+acc.asInstanceOf[StoragePool[_ <: SkillType, _ <: SkillType]].unknownFieldData(field).mkString("\\n")
-    }
+  def get[@specialized T](field : FieldDeclaration[T]) : T = {
+    // TODO make skillID a global constant and add this case!
+    field.asInstanceOf[DistributedField[T]].get(this)
   }
 }
 
 object SkillType {
-  final class SubType private[$packageName] (val τName : String, skillID : Long) extends SkillType(skillID)  with NamedType{
+  final class SubType private[coloredGraph] (val τName : String, skillID : Long) extends SkillType(skillID) with NamedType {
     override def prettyString : String = τName+"(this: "+this+")"
     override def toString = τName+"#"+skillID
   }

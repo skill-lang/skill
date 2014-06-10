@@ -16,153 +16,107 @@ trait FileOutputStreamMaker extends GeneralOutputMaker {
     out.write(s"""package ${packagePrefix}internal.streams;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileChannel.MapMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-/**
- * BufferedOutputStream based output stream.
- *
- * @author Timm Felden
- */
 final public class FileOutputStream extends OutStream {
 
-	private final int BUFFERSIZE = 8 * 1024;
-	private final byte[] buffer = new byte[BUFFERSIZE];
-	private int capacity = 0;
+	private final FileChannel file;
 
-	private void flush() throws IOException {
-		if (0 != capacity) {
-			out.write(buffer, 0, capacity);
-			capacity = 0;
-		}
+	private FileOutputStream(FileChannel file) {
+		// the size is smaller then 4KiB, because headers are expected to be 1KiB at most
+		super(ByteBuffer.allocate(1024));
+		this.file = file;
 	}
 
-	private final OutputStream out;
-
-	private FileOutputStream(OutputStream out) {
-		this.out = out;
-	}
-
-	/**
-	 * @return a new file output stream, that is setup to append to the target
-	 *         fileoutput stream, that is setup to write the target file
-	 * @throws IOException
-	 *             propagated error
-	 * 
-	 */
-	public static FileOutputStream append(Path target) throws IOException {
-		return new FileOutputStream(Files.newOutputStream(target, StandardOpenOption.APPEND, StandardOpenOption.WRITE));
-	}
-
-	/**
-	 * @return a new file output stream, that is setup to write the target file
-	 * @throws IOException
-	 *             propagated error
-	 */
 	public static FileOutputStream write(Path target) throws IOException {
 		Files.deleteIfExists(target);
-		return new FileOutputStream(Files.newOutputStream(target, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
-				StandardOpenOption.TRUNCATE_EXISTING));
+		return new FileOutputStream(FileChannel.open(target, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+				StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.READ));
 	}
 
+	public static FileOutputStream append(Path target) throws IOException {
+		return new FileOutputStream(FileChannel.open(target, StandardOpenOption.WRITE, StandardOpenOption.APPEND,
+				StandardOpenOption.READ));
+	}
+
+	/**
+	 * creates a new buffer, if required
+	 */
 	@Override
-	public void put(byte data) throws Exception {
-		if (capacity == BUFFERSIZE)
+	protected void refresh() throws IOException {
+		if (null == buffer)
+			buffer = ByteBuffer.allocate(BUFFERSIZE);
+		else if (0 != buffer.position()) {
 			flush();
-		buffer[capacity++] = data;
+			buffer = ByteBuffer.allocate(BUFFERSIZE);
+		}
 	}
 
-	@Override
-	public void put(byte[] data) throws Exception {
-		flush();
-		out.write(data);
+	private void flush() throws IOException {
+		if (null != buffer) {
+			final int p = buffer.position();
+			buffer.limit(p);
+			position += p;
+			buffer.position(0);
+			assert (p == buffer.remaining());
+			file.write(buffer);
+		}
 	}
 
-	@Override
-	public void close() throws Exception {
-		flush();
-		out.close();
-	}
-
-	@Override
-	public void v64(long v) throws Exception {
-		if (capacity + 9 >= BUFFERSIZE)
-			flush();
-
-		if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
-			buffer[capacity++] = (byte) v;
-			return;
-		} else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (v >> 7);
-			return;
-		} else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (0x80L | v >> 7);
-			buffer[capacity++] = (byte) (v >> 14);
-			return;
-		} else if (0L == (v & 0xFFFFFFFFF0000000L)) {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (0x80L | v >> 7);
-			buffer[capacity++] = (byte) (0x80L | v >> 14);
-			buffer[capacity++] = (byte) (v >> 21);
-			return;
-		} else if (0L == (v & 0xFFFFFFF800000000L)) {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (0x80L | v >> 7);
-			buffer[capacity++] = (byte) (0x80L | v >> 14);
-			buffer[capacity++] = (byte) (0x80L | v >> 21);
-			buffer[capacity++] = (byte) (v >> 28);
-			return;
-		} else if (0L == (v & 0xFFFFFC0000000000L)) {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (0x80L | v >> 7);
-			buffer[capacity++] = (byte) (0x80L | v >> 14);
-			buffer[capacity++] = (byte) (0x80L | v >> 21);
-			buffer[capacity++] = (byte) (0x80L | v >> 28);
-			buffer[capacity++] = (byte) (v >> 35);
-			return;
-		} else if (0L == (v & 0xFFFE000000000000L)) {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (0x80L | v >> 7);
-			buffer[capacity++] = (byte) (0x80L | v >> 14);
-			buffer[capacity++] = (byte) (0x80L | v >> 21);
-			buffer[capacity++] = (byte) (0x80L | v >> 28);
-			buffer[capacity++] = (byte) (0x80L | v >> 35);
-			buffer[capacity++] = (byte) (v >> 42);
-			return;
-		} else if (0L == (v & 0xFF00000000000000L)) {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (0x80L | v >> 7);
-			buffer[capacity++] = (byte) (0x80L | v >> 14);
-			buffer[capacity++] = (byte) (0x80L | v >> 21);
-			buffer[capacity++] = (byte) (0x80L | v >> 28);
-			buffer[capacity++] = (byte) (0x80L | v >> 35);
-			buffer[capacity++] = (byte) (0x80L | v >> 42);
-			buffer[capacity++] = (byte) (v >> 49);
-			return;
+	/**
+	 * put an array of bytes into the stream
+	 * 
+	 * @note you may not reuse data after putting it to a stream, because the
+	 *       actual put might be a deferred operation
+	 * @param data
+	 *            the data to be written
+	 */
+	public void put(byte[] data) throws IOException {
+		if (data.length > BUFFERSIZE) {
+			if (null != buffer) {
+				flush();
+				buffer = null;
+			}
+			file.write(ByteBuffer.wrap(data), position);
 		} else {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (0x80L | v >> 7);
-			buffer[capacity++] = (byte) (0x80L | v >> 14);
-			buffer[capacity++] = (byte) (0x80L | v >> 21);
-			buffer[capacity++] = (byte) (0x80L | v >> 28);
-			buffer[capacity++] = (byte) (0x80L | v >> 35);
-			buffer[capacity++] = (byte) (0x80L | v >> 42);
-			buffer[capacity++] = (byte) (0x80L | v >> 49);
-			buffer[capacity++] = (byte) (v >> 56);
-			return;
+			if (null == buffer || buffer.position() + data.length > BUFFERSIZE)
+				refresh();
+			buffer.put(data);
 		}
 	}
 
-	@Override
-	public void putAll(OutBuffer stream) throws Exception {
-		flush();
-		for (OutBuffer.Data d = stream.head; d != null; d = d.next) {
-			out.write(d.data, 0, d.used);
+	/**
+	 * Creates a map as usually used for writing field data chunks concurrently.
+	 * 
+	 * @param basePosition
+	 *            absolute start index of the mapped region
+	 * @param begin
+	 *            begin offset of the mapped region
+	 * @param end
+	 *            end offset of the mapped region
+	 */
+	synchronized public MappedOutStream map(long basePosition, long begin, long end) throws IOException {
+		if (null != buffer) {
+			flush();
+			buffer = null;
 		}
+		long p = basePosition + end;
+		position = position < p ? p : position;
+		return new MappedOutStream(file.map(MapMode.READ_WRITE, basePosition + begin, end - begin));
+	}
+
+	/**
+	 * signal the stream to close
+	 */
+	public void close() throws IOException {
+		flush();
+		file.force(false);
+		file.close();
 	}
 }
 """)

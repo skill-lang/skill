@@ -123,19 +123,19 @@ sealed class $Name private[$packageName] (skillID : Long) ${
 
     // generic get
     out.write(s"""
-  override def get(acc : Access[_ <: SkillType], field : FieldDeclaration) : Any = field.name match {
+  override def get[@specialized T](field : FieldDeclaration[T]) : T = field.name match {
 ${
-      (for(f <- t.getAllFields.filterNot(_.isIgnored)) yield s"""    case "${f.getSkillName}" ⇒ _${f.getName}""").mkString("\n")
+      (for(f <- t.getAllFields.filterNot(_.isIgnored)) yield s"""    case "${f.getSkillName}" ⇒ _${f.getName}.asInstanceOf[T]""").mkString("\n")
 }${
       (for(f <- t.getAllFields.filter(_.isIgnored)) yield s"""    case "${f.getSkillName}" ⇒ throw new IllegalAccessError("${f.getName} is ignored")""").mkString("\n")
 }
-    case _ ⇒ super.get(acc, field)
+    case _ ⇒ super.get(field)
   }
 """)
 
     // generic set
     out.write(s"""
-  override def set[@specialized T](acc : Access[_ <: SkillType], field : FieldDeclaration, value : T) : Unit = field.name match {
+  override def set[@specialized T](field : FieldDeclaration[T], value : T) : Unit = field.name match {
 ${
   (
     for(f <- t.getAllFields.filterNot{t ⇒ t.isIgnored || t.isConstant()}) 
@@ -152,7 +152,7 @@ ${
       yield s"""    case "${f.getSkillName}" ⇒ throw new IllegalAccessError("${f.getName} is constant!")"""
   ).mkString("\n")
 }
-    case _ ⇒ super.set(acc, field, value)
+    case _ ⇒ super.set(field, value)
   }
 """)
       

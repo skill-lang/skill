@@ -27,30 +27,93 @@ trait TypeInfoMaker extends GeneralOutputMaker {
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
 import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
 
 import ${packagePrefix}api._
+import ${packagePrefix}internal.streams.FileInputStream
+import ${packagePrefix}internal.streams.InStream
+""")
 
+    // TODO distribute
+    //@inline def readSingleField(t : FieldType[T]) : T = t match {
+    //      case I8  ⇒ in.i8
+    //      case I16 ⇒ in.i16
+    //      case I32 ⇒ in.i32
+    //      case I64 ⇒ in.i64
+    //      case V64 ⇒ in.v64
+    //      case Annotation ⇒ (in.v64, in.v64) match {
+    //        case (0L, _) ⇒ null
+    //        case (t, i)  ⇒ pools(String.get(t)).getByID(i)
+    //      }
+    //      case BoolType   ⇒ in.i8 != 0
+    //      case F32        ⇒ in.f32
+    //      case F64        ⇒ in.f64
+    //      case StringType ⇒ String.get(in.v64)
+    //
+    //      case d : ConstantLengthArray ⇒
+    //        (for (i ← 0 until d.length.toInt)
+    //          yield readSingleField(d.groundType)).to[ArrayBuffer]
+    //
+    //      case d : VariableLengthArray ⇒
+    //        (for (i ← 0 until in.v64.toInt)
+    //          yield readSingleField(d.groundType)).to[ArrayBuffer]
+    //
+    //      case d : SetType ⇒
+    //        (for (i ← 0 until in.v64.toInt)
+    //          yield readSingleField(d.groundType)).to[HashSet]
+    //
+    //      case d : ListType ⇒
+    //        (for (i ← 0 until in.v64.toInt)
+    //          yield readSingleField(d.groundType)).to[ListBuffer]
+    //
+    //      // map parsing is recursive on the ground types
+    //      case d : MapType ⇒ parseMap(d.groundType)
+    //
+    //      // user types are just references, easy pray
+    //      case d : StoragePool[_, _] ⇒ in.v64 match {
+    //        case 0     ⇒ null
+    //        case index ⇒ d.getByID(index)
+    //      }
+    //
+    //      case d ⇒ throw new IllegalStateException("unsupported or unexpected type: "+d)
+    //    }
+
+    out.write("""
 /**
+ * @param typeID the skill type ID as obtained from the read file or as it would appear in the to be written file
+ * @param T the scala type to represent instances of this field type
+ *
  * @note representation of the type system relies on invariants and heavy abuse of type erasure
  *
  * @author Timm Felden
  */
-sealed abstract class FieldType(val typeID : Long) {
+sealed abstract class FieldType[T : Manifest](val typeID : Long) {
+  private[internal] val m = manifest
   def toString() : String
 
   override def equals(obj : Any) = obj match {
-    case o : FieldType ⇒ o.typeID == typeID
-    case _             ⇒ false
+    case o : FieldType[_] ⇒ o.typeID == typeID
+    case _                ⇒ false
   }
   override def hashCode = typeID.toInt
+
+  /**
+   * Takes one T out of the stream.
+   *
+   * @note this function has to be implemented by FieldTypes because of limits of the scala type system
+   * (and any other sane type system)
+   */
+  def readSingleField(in : InStream) : T;
 }
 
-sealed abstract class ConstantInteger[T](typeID : Long) extends FieldType(typeID) {
+sealed abstract class ConstantInteger[T : Manifest](typeID : Long) extends FieldType[T](typeID) {
   def value : T
 
   def expect(arg : T) = assert(arg == value)
+
+  final override def readSingleField(in : InStream) = value
 }
 
 case class ConstantI8(value : Byte) extends ConstantInteger[Byte](0) {
@@ -89,45 +152,67 @@ case class ConstantV64(value : Long) extends ConstantInteger[Long](4) {
   }
 }
 
-sealed abstract class IntegerType(typeID : Long) extends FieldType(typeID);
+sealed abstract class IntegerType[T : Manifest](typeID : Long) extends FieldType[T](typeID);
 
-case object I8 extends IntegerType(7) {
+case object I8 extends IntegerType[Byte](7) {
+  override def readSingleField(in : InStream) = in.i8
+
   override def toString() : String = "i8"
 }
-case object I16 extends IntegerType(8) {
+case object I16 extends IntegerType[Short](8) {
+  override def readSingleField(in : InStream) = in.i16
+
   override def toString() : String = "i16"
 }
-case object I32 extends IntegerType(9) {
+case object I32 extends IntegerType[Int](9) {
+  override def readSingleField(in : InStream) = in.i32
+
   override def toString() : String = "i32"
 }
-case object I64 extends IntegerType(10) {
+case object I64 extends IntegerType[Long](10) {
+  override def readSingleField(in : InStream) = in.i64
+
   override def toString() : String = "i64"
 }
-case object V64 extends IntegerType(11) {
+case object V64 extends IntegerType[Long](11) {
+  override def readSingleField(in : InStream) = in.v64
+
   override def toString() : String = "v64"
 }
 
-case object Annotation extends FieldType(5) {
+case object Annotation extends FieldType[SkillType](5) {
+  override def readSingleField(in : InStream) = ??? // is Annotation in fact the state itself?
+
   override def toString() : String = "annotation"
 }
 
-case object BoolType extends FieldType(6) {
+case object BoolType extends FieldType[Boolean](6) {
+  override def readSingleField(in : InStream) = in.i8 != 0
+
   override def toString() : String = "bool"
 }
-case object F32 extends FieldType(12) {
+case object F32 extends FieldType[Float](12) {
+  override def readSingleField(in : InStream) = in.f32
+
   override def toString() : String = "f32"
 }
-case object F64 extends FieldType(13) {
+case object F64 extends FieldType[Double](13) {
+  override def readSingleField(in : InStream) = in.f64
+
   override def toString() : String = "f64"
 }
 
-case object StringType extends FieldType(14) {
+case object StringType extends FieldType[String](14) {
+  override def readSingleField(in : InStream) = ??? // maybe StringPool is the string type
+
   override def toString = "string"
 }
 
-sealed abstract class CompoundType(typeID : Long) extends FieldType(typeID);
+sealed abstract class CompoundType[T : Manifest](typeID : Long) extends FieldType[T](typeID);
 
-case class ConstantLengthArray(val length : Long, val groundType : FieldType) extends CompoundType(15) {
+case class ConstantLengthArray[T : Manifest](val length : Long, val groundType : FieldType[T]) extends CompoundType[ArrayBuffer[T]](15) {
+  override def readSingleField(in : InStream) = (for (i ← 0 until length.toInt) yield groundType.readSingleField(in)).to
+
   override def toString() : String = groundType+"["+length+"]"
   override def equals(obj : Any) = obj match {
     case ConstantLengthArray(l, g) ⇒ l == length && g == groundType
@@ -135,7 +220,9 @@ case class ConstantLengthArray(val length : Long, val groundType : FieldType) ex
   }
 }
 
-case class VariableLengthArray(val groundType : FieldType) extends CompoundType(17) {
+case class VariableLengthArray[T : Manifest](val groundType : FieldType[T]) extends CompoundType[ArrayBuffer[T]](17) {
+  override def readSingleField(in : InStream) = (for (i ← 0 until in.v64.toInt) yield groundType.readSingleField(in)).to
+
   override def toString() : String = groundType+"[]"
   override def equals(obj : Any) = obj match {
     case VariableLengthArray(g) ⇒ g == groundType
@@ -143,34 +230,47 @@ case class VariableLengthArray(val groundType : FieldType) extends CompoundType(
   }
 }
 
-case class ListType(val groundType : FieldType) extends CompoundType(18) {
+case class ListType[T : Manifest](val groundType : FieldType[T]) extends CompoundType[ListBuffer[T]](18) {
+  override def readSingleField(in : InStream) = (for (i ← 0 until in.v64.toInt) yield groundType.readSingleField(in)).to
+
   override def toString() : String = "list<"+groundType+">"
   override def equals(obj : Any) = obj match {
     case ListType(g) ⇒ g == groundType
     case _           ⇒ false
   }
 }
-case class SetType(val groundType : FieldType) extends CompoundType(19) {
+case class SetType[T : Manifest](val groundType : FieldType[T]) extends CompoundType[HashSet[T]](19) {
+  override def readSingleField(in : InStream) = (for (i ← 0 until in.v64.toInt) yield groundType.readSingleField(in)).to
+
   override def toString() : String = "set<"+groundType+">"
   override def equals(obj : Any) = obj match {
     case SetType(g) ⇒ g == groundType
     case _          ⇒ false
   }
 }
-case class MapType(val groundType : Seq[FieldType]) extends CompoundType(20) {
-  override def toString() : String = groundType.mkString("map<", ", ", ">")
+case class MapType[K : Manifest, V : Manifest](val keyType : FieldType[K], val valueType : FieldType[V]) extends CompoundType[HashMap[K, V]](20) {
+  override def readSingleField(in : InStream) = (0 until in.v64.toInt).foldLeft(HashMap[K, V]()) {
+    case (m, i) ⇒
+      m(keyType.readSingleField(in)) = valueType.readSingleField(in); m
+  }
+
+  override def toString() : String = s"map<$keyType, $valueType>"
   override def equals(obj : Any) = obj match {
-    case MapType(g : Seq[_]) ⇒ groundType.sameElements(g)
-    case _                   ⇒ false
+    case MapType(k, v) ⇒ k.equals(keyType) && v.equals(valueType)
+    case _             ⇒ false
   }
 }
 
-case class TypeDefinitionIndex(index : Long) extends FieldType(32 + index) {
-  override def toString() : String = s"<type definition index: $$index>"
+case class TypeDefinitionIndex[T : Manifest](index : Long) extends FieldType[T](32 + index) {
+  override def readSingleField(in : InStream) = ???
+
+  override def toString() : String = s"<type definition index: $index>"
 }
 
-case class TypeDefinitionName(name : String) extends FieldType(-1) {
-  override def toString() : String = s"<type definition name: $$name>"
+case class TypeDefinitionName[T : Manifest](name : String) extends FieldType[T](-1) {
+  override def readSingleField(in : InStream) = ???
+
+  override def toString() : String = s"<type definition name: $name>"
   override def equals(obj : Any) = obj match {
     case TypeDefinitionName(n) ⇒ n.equals(name)
     case t : StoragePool[_, _] ⇒ t.name.equals(name)
@@ -181,12 +281,12 @@ case class TypeDefinitionName(name : String) extends FieldType(-1) {
 /**
  * Contains type information and instances of user defined types.
  */
-sealed abstract class StoragePool[T <: B : ClassTag, B <: SkillType](
+sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
   private[internal] val poolIndex : Long,
   val name : String,
-  private[internal] val knownFields : HashMap[String, FieldType],
+  private[internal] val knownFields : HashMap[String, FieldType[_]],
   private[internal] val superPool : Option[StoragePool[_ <: B, B]])
-    extends FieldType(32 + poolIndex)
+    extends FieldType[T](32 + poolIndex)
     with Access[T] {
 
   val superName = superPool.map(_.name)
@@ -220,35 +320,34 @@ sealed abstract class StoragePool[T <: B : ClassTag, B <: SkillType](
   /**
    * the actual field data; contains fields by index
    */
-  private[internal] val fields = new ArrayBuffer[FieldDeclaration](knownFields.size);
+  private[internal] val fields = new ArrayBuffer[FieldDeclaration[_]](knownFields.size);
+  //! each pool has a magic field 0: v64 skillID
+  locally {
+    fields += new KnownField[Long](V64, "skillid", 0L, this)
+  }
 
   /**
    * Adds a new field, checks consistency and updates field data if required.
    */
-  final private[internal] def addField(f : FieldDeclaration) {
-    if (knownFields.contains(f.name)) {
+  final private[internal] def addField[T](ID : Int, t : FieldType[T], name : String) : FieldDeclaration[T] = {
+    if (knownFields.contains(name)) {
       // type-check
-      if (!f.t.equals(knownFields(f.name)))
-        throw TypeMissmatchError(f.t, knownFields(f.name).toString, f.name, name);
+      if (!t.equals(knownFields(name)))
+        throw TypeMissmatchError(t, knownFields(name).toString, name, this.name);
+
+      val f = new KnownField[T](t.asInstanceOf[FieldType[T]], name, ID, this)
+      fields += f
+      return f
 
     } else {
-      // add generic pool
-      putFieldMap(f, new HashMap[SkillType, Any])
+      val f = new DistributedField[T](t.asInstanceOf[FieldType[T]], name, ID, this)(t.m)
+      fields += f
+      return f
     }
 
-    fields += f
-  }
-  private def putFieldMap(f : FieldDeclaration, m : HashMap[SkillType, Any]) {
-    unknownFieldData.put(f, m)
-    subPools.foreach(_.putFieldMap(f, m))
   }
 
   final def allFields = fields.iterator
-
-  /**
-   * this map is used to store deserialized field data for each field and instance
-   */
-  private[internal] val unknownFieldData = new HashMap[FieldDeclaration, HashMap[SkillType, Any]];
 
   /**
    * All stored objects, which have exactly the type T. Objects are stored as arrays of field entries. The types of the
@@ -264,10 +363,10 @@ sealed abstract class StoragePool[T <: B : ClassTag, B <: SkillType](
   /**
    * called after a prepare append operation to write empty the new objects buffer and to set blocks correctly
    */
-  final protected def updateAfterPrepareAppend(chunkMap : HashMap[FieldDeclaration, ChunkInfo]) : Unit = {
+  final protected def updateAfterPrepareAppend(chunkMap : HashMap[FieldDeclaration[_], ChunkInfo]) : Unit = {
     val newInstances = !newDynamicInstances.isEmpty
     val newPool = blockInfos.isEmpty
-    val newField = fields.exists(_.dataChunks.isEmpty)
+    val newField = fields.exists(_.noDataChunk)
     if (newPool || newInstances || newField) {
 
       //build block chunk
@@ -282,13 +381,13 @@ sealed abstract class StoragePool[T <: B : ClassTag, B <: SkillType](
       if (newInstances || !newPool) {
         //build field chunks
         for (f ← fields) {
-          if (f.dataChunks.isEmpty) {
+          if (f.noDataChunk) {
             val c = new BulkChunkInfo(-1, -1, dynamicSize)
-            f.dataChunks += c
+            f.addChunk(c)
             chunkMap.put(f, c)
           } else if (newInstances) {
             val c = new SimpleChunkInfo(-1, -1, lbpsi, lcount)
-            f.dataChunks += c
+            f.addChunk(c)
             chunkMap.put(f, c)
           }
         }
@@ -330,15 +429,20 @@ sealed abstract class StoragePool[T <: B : ClassTag, B <: SkillType](
    */
   private[internal] val blockInfos = new ListBuffer[BlockInfo]()
 
+  /**
+   * Read a single reference of this type.
+   */
+  final override def readSingleField(in : InStream) : T = getByID(in.v64)
+
   final override def toString = name
   final override def equals(obj : Any) = obj match {
     case TypeDefinitionName(n) ⇒ n == name
-    case t : FieldType         ⇒ t.typeID == typeID
+    case t : FieldType[_]      ⇒ t.typeID == typeID
     case _                     ⇒ false
   }
 }
 
-sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String, knownFields : HashMap[String, FieldType])
+sealed class BasePool[T <: SkillType : Manifest](poolIndex : Long, name : String, knownFields : HashMap[String, FieldType[_]])
     extends StoragePool[T, T](poolIndex, name, knownFields, None) {
 
   /**
@@ -392,11 +496,11 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
    * prepare an append operation by moving all new instances into the data array.
    * @param chunkMap field data that has to be written to the file is appended here
    */
-  def prepareAppend(chunkMap : HashMap[FieldDeclaration, ChunkInfo]) {
+  def prepareAppend(chunkMap : HashMap[FieldDeclaration[_], ChunkInfo]) {
     val newInstances = !newDynamicInstances.isEmpty
 
     // check if we have to append at all
-    if (!fields.exists(_.dataChunks.isEmpty) && !newInstances)
+    if (!fields.exists(_.noDataChunk) && !newInstances)
       if (!fields.isEmpty && !blockInfos.isEmpty)
         return ;
 
@@ -430,7 +534,7 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
    *
    * @note base pool data access can not fail, because this would yeald an arary store exception at an earlier stage
    */
-  override def getByID(index : Long) : T = (if(0==index) null else data(index.toInt - 1)).asInstanceOf[T]
+  override def getByID(index : Long) : T = (if (0 == index) null else data(index.toInt - 1)).asInstanceOf[T]
 
   final override def foreach[U](f : T ⇒ U) {
     for (i ← 0 until data.length)
@@ -448,7 +552,7 @@ sealed class BasePool[T <: SkillType : ClassTag](poolIndex : Long, name : String
   }
 }
 
-sealed class SubPool[T <: B : ClassTag, B <: SkillType](poolIndex : Long, name : String, knownFields : HashMap[String, FieldType], superPool : StoragePool[_ <: B, B])
+sealed class SubPool[T <: B : Manifest, B <: SkillType](poolIndex : Long, name : String, knownFields : HashMap[String, FieldType[_]], superPool : StoragePool[_ <: B, B])
     extends StoragePool[T, B](poolIndex, name, knownFields, Some(superPool)) {
 
   override val basePool = superPool.basePool
@@ -474,7 +578,7 @@ sealed class SubPool[T <: B : ClassTag, B <: SkillType](poolIndex : Long, name :
 
   override def allInTypeOrder : Iterator[T] = subPools.foldLeft(staticInstances)(_ ++ _.staticInstances)
 
-  override def getByID(index : Long) : T = (if(0==index) null else basePool.data(index.toInt - 1)).asInstanceOf[T]
+  override def getByID(index : Long) : T = (if (0 == index) null else basePool.data(index.toInt - 1)).asInstanceOf[T]
 
   final override def updateAfterCompress(LBPSIs : Array[Long]) {
     blockInfos.clear
@@ -501,7 +605,7 @@ final class ${t.getCapitalName}StoragePool(poolIndex : Long${
       }(
       poolIndex,
       "${t.getSkillName}",
-      HashMap[String, FieldType](${
+      HashMap[String, FieldType[_]](${
         if (t.getFields.isEmpty) ""
         else (for (f ← t.getFields) yield s"""\n        "${f.getSkillName}" -> ${mapToFieldType(f.getType)}""").mkString("", ",", "\n      ")
       })${
@@ -555,7 +659,7 @@ final class ${t.getCapitalName}SubPool(poolIndex : Long, name : String, superPoo
     extends SubPool[$typeName.SubType, ${packagePrefix}${t.getBaseType.getCapitalName}](
       poolIndex,
       name,
-      HashMap[String, FieldType](),
+      HashMap[String, FieldType[_]](),
       superPool
     ) {
 
@@ -594,7 +698,7 @@ final class ${t.getCapitalName}SubPool(poolIndex : Long, name : String, superPoo
       case "f64"        ⇒ "F64"
       case "string"     ⇒ "StringType"
 
-      case s            ⇒ s"""TypeDefinitionName("$s")"""
+      case s            ⇒ s"""TypeDefinitionName[${mapType(t)}]("$s")"""
     }
 
     t match {
@@ -604,7 +708,7 @@ final class ${t.getCapitalName}SubPool(poolIndex : Long, name : String, superPoo
       case t : ListType                ⇒ s"ListType(${mapGroundType(t.getBaseType)})"
       case t : SetType                 ⇒ s"SetType(${mapGroundType(t.getBaseType)})"
       case t : MapType                 ⇒ s"MapType(Seq[FieldType](${t.getBaseTypes.map(mapGroundType).mkString(", ")}))"
-      case t : Declaration             ⇒ s"""TypeDefinitionName("${t.getSkillName}")"""
+      case t : Declaration             ⇒ s"""TypeDefinitionName[${mapType(t)}]("${t.getSkillName}")"""
     }
   }
 }

@@ -23,13 +23,12 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
 import ${packagePrefix}api._
+import ${packagePrefix}internal.streams.FileOutputStream
 import ${packagePrefix}internal.streams.InStream
-import ${packagePrefix}internal.streams.OutStream
-import ${packagePrefix}internal.streams.OutBuffer
 """)
 
     out.write("""
-final class StringPool(in: InStream) extends StringAccess {
+final class StringPool(in : InStream) extends StringAccess {
   import SerializationFunctions.v64
 
   /**
@@ -51,7 +50,7 @@ final class StringPool(in: InStream) extends StringAccess {
    */
   private[internal] var idMap = ArrayBuffer[String](null)
 
-  override def get(index: Long): String = {
+  override def get(index : Long) : String = {
     if (0L == index)
       return null
 
@@ -72,8 +71,8 @@ final class StringPool(in: InStream) extends StringAccess {
       case s ⇒ s;
     }
   }
-  override def add(string: String) = newStrings += string
-  override def all: Iterator[String] = (1 until stringPositions.size).map(get(_)).iterator ++ newStrings.iterator
+  override def add(string : String) = newStrings += string
+  override def all : Iterator[String] = (1 until stringPositions.size).map(get(_)).iterator ++ newStrings.iterator
   override def size = stringPositions.size + newStrings.size
 
   /**
@@ -81,7 +80,7 @@ final class StringPool(in: InStream) extends StringAccess {
    *
    * writes the string block and provides implementation of the ws.string(Long ⇀ String) function
    */
-  private[internal] def prepareAndWrite(out: OutStream, ws: StateWriter) {
+  private[internal] def prepareAndWrite(out : FileOutputStream, ws : StateWriter) {
     val serializationIDs = ws.stringIDs
 
     // ensure all strings are present
@@ -107,34 +106,27 @@ final class StringPool(in: InStream) extends StringAccess {
     //@note idMap access performance hack
     v64(idMap.size - 1, out)
 
-    //@note OutBuffer performance hack
     //@note idMap access performance hack
     if (1 != idMap.size) {
-      //end & data
+      // offsets
       val end = ByteBuffer.allocate(4 * (idMap.size - 1))
-
-      // unroll first loop step, to eliminate null checks in out buffer :)
-      var off = idMap(1).length
-      end.putInt(off)
-      val data = new OutBuffer(idMap(1).getBytes)
-
-      for (i ← 2 until idMap.size) {
-        val s = idMap(i).getBytes
-        off += s.length
+      var off = 0
+      for (i ← 1 until idMap.size) {
+        off += idMap(i).getBytes.length
         end.putInt(off)
-        data.put(s)
       }
-
-      //write back
       out.put(end.array)
-      out.putAll(data)
+
+      // data
+      for (i ← 1 until idMap.size)
+        out.put(idMap(i).getBytes)
     }
   }
 
   /**
    * prepares serialization of the string pool and appends new Strings to the output stream.
    */
-  private[internal] def prepareAndAppend(out: OutStream, as: StateAppender) {
+  private[internal] def prepareAndAppend(out : FileOutputStream, as : StateAppender) {
     val serializationIDs = as.stringIDs
 
     // ensure all strings are present
@@ -146,8 +138,7 @@ final class StringPool(in: InStream) extends StringAccess {
       serializationIDs.put(idMap(i), i)
     }
 
-    val data = new OutBuffer()
-    var offsets = ArrayBuffer[Int]()
+    var todo = ArrayBuffer[Array[Byte]]()
 
     // instert new strings to the map;
     //  this is the place where duplications with lazy strings will be detected and eliminated
@@ -156,21 +147,25 @@ final class StringPool(in: InStream) extends StringAccess {
       if (!serializationIDs.contains(s)) {
         serializationIDs.put(s, idMap.size)
         idMap += s
-        data.put(s.getBytes)
-        offsets += data.size.toInt
+        todo += s.getBytes
       }
 
-    //count
-    val count = offsets.size
-    v64(count, out)
+    // count
+    val count = todo.size
+    out.v64(count)
 
-    //end & data
+    var off = 0
+    // end
     val end = ByteBuffer.allocate(4 * count)
-    offsets.foreach(end.putInt(_))
-
-    //write back
+    for (s ← todo) {
+      off += s.length
+      end.putInt(off)
+    }
     out.put(end.array)
-    out.putAll(data)
+
+    // data
+    for (s ← todo)
+      out.put(s)
   }
 }
 """)

@@ -26,15 +26,18 @@ trait StateWriterMaker extends GeneralOutputMaker {
     //package
     out.write(s"""package ${packagePrefix}internal
 
-import java.util.Arrays
-import java.nio.ByteBuffer
+import java.util.concurrent.Callable
+import java.util.concurrent.Future
+import java.util.concurrent.FutureTask
+import java.util.concurrent.Semaphore
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.WrappedArray
+import scala.concurrent.ExecutionContext
 
-import ${packagePrefix}internal.streams.OutBuffer
-import ${packagePrefix}internal.streams.OutStream
+import ${packagePrefix}internal.streams.FileOutputStream
+import ${packagePrefix}internal.streams.MappedOutStream
 
 /**
  * Holds state of a write operation.
@@ -42,7 +45,7 @@ import ${packagePrefix}internal.streams.OutStream
  * @see SKilL §6
  * @author Timm Felden
  */
-private[internal] final class StateWriter(state : SerializableState, out : OutStream) extends SerializationFunctions(state) {
+private[internal] final class StateWriter(state : SerializableState, out : FileOutputStream) extends SerializationFunctions(state) {
   import SerializationFunctions._
 
   // make lbpsi map, update data map to contain dynamic instances and create serialization skill IDs for serialization
@@ -67,103 +70,103 @@ private[internal] final class StateWriter(state : SerializableState, out : OutSt
   // write count of the type block
   v64(state.pools.size, out)
 
-  // we have to buffer the data chunk before writing it
-  val dataChunk = new OutBuffer();
-
-  // @note performance hack: requires at least 1 instance in order to work correctly
-  @inline def genericPutField(p : StoragePool[_ <: SkillType, _ <: SkillType], f : FieldDeclaration, instances : Iterable[SkillType]) {
-    f.t match {
-      case I8         ⇒ for (i ← instances) i8(i.get(p, f).asInstanceOf[Byte], dataChunk)
-      case I16        ⇒ for (i ← instances) i16(i.get(p, f).asInstanceOf[Short], dataChunk)
-      case I32        ⇒ for (i ← instances) i32(i.get(p, f).asInstanceOf[Int], dataChunk)
-      case I64        ⇒ for (i ← instances) i64(i.get(p, f).asInstanceOf[Long], dataChunk)
-      case V64        ⇒ for (i ← instances) v64(i.get(p, f).asInstanceOf[Long], dataChunk)
-
-      case StringType ⇒ for (i ← instances) string(i.get(p, f).asInstanceOf[String], dataChunk)
-    }
-  }
+  // calculate offsets
+  // TODO this code can be simplified a lot using ".par 
+  val offsets = new HashMap[StoragePool[_ <: SkillType, _ <: SkillType], HashMap[FieldDeclaration[_], Future[Long]]]
   for (p ← state.pools) {
-    p match {${
-      (for (d ← IR) yield {
-        val sName = d.getSkillName
-        val fields = d.getFields.filterNot(_.isIgnored)
-        s"""
-      case p : ${d.getCapitalName}StoragePool ⇒
-        val outData = ${
-          if (null == d.getSuperType) "p.data"
-          else s"WrappedArray.make[_root_.${packagePrefix}${d.getCapitalName}](p.data).view(p.blockInfos.last.bpsi.toInt - 1, p.blockInfos.last.bpsi.toInt - 1 + p.blockInfos.last.count.toInt)"
-        }
-        val fields = p.fields
-
-        string("$sName", out)
-        ${
-          if (null == d.getSuperType) "out.put(0.toByte)"
-          else s"""string("${d.getSuperType.getSkillName}", out)
-        out.v64(lbpsiMap(p.poolIndex.toInt))"""
-        }
-        out.v64(outData.length)
-        restrictions(p, out)
-
-        out.${
-          if (fields.size < 127) s"put(${fields.size}.toByte)"
-          else s"v64(${fields.size})"
-        }
-${
-          if (fields.size != 0) s"""
-        val fieldSize = outData.length
-        for (f ← fields if p.knownFields.contains(f.name)) {
-          restrictions(f, out)
-          writeType(f.t, out)
-          string(f.name, out)
-
-          // data
-          f.name match {${
-            (for (f ← fields) yield s"""
-            case "${f.getSkillName()}" ⇒ locally {
-              ${writeField(d, f)}
-            }""").mkString("")
-          }
-          }
-          // end
-          v64(dataChunk.size, out)
-        }"""
-          else ""
-        }"""
-      }
-      ).mkString("")
+    val vs = new HashMap[FieldDeclaration[_], Future[Long]]
+    for (f ← p.fields) {
+      val v = new FutureTask(new Callable[Long]() {
+        def call : Long = FieldOffsetCalculator.offset(p, f)
+      })
+      vs.put(f, v)
+      ExecutionContext.Implicits.global.execute(v)
     }
-      case p : StoragePool[SkillType, SkillType] @unchecked ⇒ locally {
-        // generic write
-        string(p.name, out)
-        p.superName match {
-          case Some(sn) ⇒
-            string(sn, out)
-            v64(lbpsiMap(p.poolIndex.toInt), out)
-          case None ⇒
-            out.put(0.toByte)
-        }
-        v64(p.dynamicSize, out)
-        restrictions(p, out)
+    offsets.put(p, vs)
+  }
 
-        v64(p.fields.size, out)
-        for (f ← p.fields) {
-          restrictions(f, out)
-          writeType(f.t, out)
-          string(f.name, out)
+  // create type definitions
+  // @note performance hack: requires at least 1 instance in order to work correctly
+  @inline def genericPutField[T](p : StoragePool[_ <: SkillType, _ <: SkillType], f : FieldDeclaration[T], dataChunk : MappedOutStream) {
+    f.t match {
+      case I8         ⇒ for (i ← p) dataChunk.i8(i.get(f).asInstanceOf[Byte])
+      case I16        ⇒ for (i ← p) dataChunk.i16(i.get(f).asInstanceOf[Short])
+      case I32        ⇒ for (i ← p) dataChunk.i32(i.get(f).asInstanceOf[Int])
+      case I64        ⇒ for (i ← p) dataChunk.i64(i.get(f).asInstanceOf[Long])
+      case V64        ⇒ for (i ← p) dataChunk.v64(i.get(f).asInstanceOf[Long])
 
-          // data
-          if (p.dynamicSize > 0) {
-            genericPutField(p, f, p)
-          }
+      case StringType ⇒ for (i ← p) string(i.get(f).asInstanceOf[String], dataChunk)
 
-          // end
-          v64(dataChunk.size, out)
-        }
-      }
+      case other ⇒
+        val den = typeToSerializationFunction(other); for (i ← p) den(i.get(f), dataChunk)
     }
   }
-  out.putAll(dataChunk)
 
+  case class Task[B <: SkillType](val p : StoragePool[_ <: B, B], val f : FieldDeclaration[_], val begin : Long, val end : Long);
+  val data = new ArrayBuffer[Task[_ <: SkillType]];
+  var offset = 0L
+  for (p ← state.pools) {
+    val vs = offsets(p)
+    val fields = p.fields.view(1, p.fields.size) // ignore field 0 (skillID)
+    string(p.name, out)
+    val LCount = p.blockInfos.last.count
+    out.v64(LCount)
+    restrictions(p, out)
+    p.superName match {
+      case Some(sn) ⇒
+        string(sn, out)
+        if (0L != LCount)
+          out.v64(lbpsiMap(p.poolIndex.toInt))
+
+      case None ⇒
+        out.i8(0.toByte)
+    }
+
+    out.v64(fields.size)
+    for (f ← fields) {
+      out.v64(f.index)
+      string(f.name, out)
+      writeType(f.t, out)
+      restrictions(f, out)
+      val end = offset + vs(f).get
+      out.v64(end)
+      data += Task(p.asInstanceOf[StoragePool[SkillType, SkillType]], f, offset, end)
+      offset = end
+    }
+  }
+
+  // write field data
+  val barrier = new Semaphore(0)
+  val baseOffset = out.position
+  for ((Task(p, f, begin, end)) ← data) {
+    val dataChunk = out.map(baseOffset, begin, end)
+    ExecutionContext.Implicits.global.execute(new Runnable {
+      override def run = {
+        p match {${
+      (for (d ← IR) yield {
+        val fields = d.getFields.filterNot(_.isIgnored)
+        if (fields.isEmpty) ""
+        else s"""
+          case pool : ${d.getCapitalName}StoragePool ⇒
+            val outData = pool.data
+            f.name match {${
+          (for (f ← fields) yield s"""
+              case "${f.getSkillName()}" ⇒ ${writeField(d, f)}""").mkString("")
+        }
+              case _ ⇒ genericPutField(p, f, dataChunk)
+            }"""
+      }
+      ).mkString
+    }
+
+          case _ ⇒ genericPutField(p, f, dataChunk)
+        }
+        barrier.release(1)
+      }
+    }
+    )
+  }
+  barrier.acquire(data.size)
   out.close
 }
 """)

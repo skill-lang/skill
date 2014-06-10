@@ -28,8 +28,8 @@ import de.ust.skill.generator.scala.internal.TypeInfoMaker
 import de.ust.skill.generator.scala.internal.streams.FileInputStreamMaker
 import de.ust.skill.generator.scala.internal.streams.FileOutputStreamMaker
 import de.ust.skill.generator.scala.internal.streams.InStreamMaker
-import de.ust.skill.generator.scala.internal.streams.OutBufferMaker
 import de.ust.skill.generator.scala.internal.streams.OutStreamMaker
+import de.ust.skill.generator.scala.internal.streams.MappedOutStreamMaker
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
@@ -101,7 +101,7 @@ class Main extends FakeMain
     with FileParserMaker
     with InStreamMaker
     with InternalInstancePropertiesMaker
-    with OutBufferMaker
+    with MappedOutStreamMaker
     with OutStreamMaker
     with RestrictionsMaker
     with SerializableStateMaker
@@ -248,16 +248,12 @@ class Main extends FakeMain
     val fName = escaped(f.getName)
     f.getType match {
       case t : GroundType ⇒ t.getSkillName match {
+        case "annotation" | "string" ⇒ s"for(i ← outData) ${f.getType.getSkillName}(i.$fName, dataChunk)"
+        case _                       ⇒ s"for(i ← outData) dataChunk.${f.getType.getSkillName}(i.$fName)"
 
-        case "i64" ⇒
-          s"""val target = ByteBuffer.allocate(8 * fieldSize)
-                for(i ← outData) target.putLong(i.$fName)
-                dataChunk.put(target.array)"""
-
-        case _ ⇒ s"for(i ← outData) ${f.getType.getSkillName}(i.$fName, dataChunk)"
       }
 
-      case t : Declaration ⇒ s"""for(i ← outData) userRef(i.$fName, dataChunk)"""
+      case t : Declaration ⇒ s"""for(i ← outData) dataChunk.v64(i.$fName.getSkillID)"""
 
       case t : ConstantLengthArrayType ⇒ s"for(i ← outData) writeConstArray(${
         t.getBaseType() match {

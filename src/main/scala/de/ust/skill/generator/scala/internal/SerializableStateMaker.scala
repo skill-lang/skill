@@ -80,14 +80,14 @@ ${
   }
 
   @inline private def finalizePools {
-    @inline def eliminatePreliminaryTypesIn(t : FieldType) : FieldType = t match {
+    @inline def eliminatePreliminaryTypesIn[T](t : FieldType[T]) : FieldType[T] = t match {
       case TypeDefinitionIndex(i) ⇒ try {
-        pools(i.toInt)
+        pools(i.toInt).asInstanceOf[FieldType[T]]
       } catch {
         case e : Exception ⇒ throw new IllegalStateException(s"inexistent user type $$i (user types: $${poolByName.mkString})", e)
       }
       case TypeDefinitionName(n) ⇒ try {
-        poolByName(n)
+        poolByName(n).asInstanceOf[FieldType[T]]
       } catch {
         case e : Exception ⇒ throw new IllegalStateException(s"inexistent user type $$n (user types: $${poolByName.mkString})", e)
       }
@@ -95,14 +95,14 @@ ${
       case VariableLengthArray(t)    ⇒ VariableLengthArray(eliminatePreliminaryTypesIn(t))
       case ListType(t)               ⇒ ListType(eliminatePreliminaryTypesIn(t))
       case SetType(t)                ⇒ SetType(eliminatePreliminaryTypesIn(t))
-      case MapType(ts)               ⇒ MapType(for (t ← ts) yield eliminatePreliminaryTypesIn(t))
+      case MapType(k, v)             ⇒ MapType(eliminatePreliminaryTypesIn(k), eliminatePreliminaryTypesIn(v))
       case t                         ⇒ t
     }
     for (p ← pools) {
       val fieldMap = p.fields.map { _.name }.zip(p.fields).toMap
 
       for ((n, t) ← p.knownFields if !fieldMap.contains(n)) {
-        p.addField(new FieldDeclaration(eliminatePreliminaryTypesIn(t), n, p.fields.size))
+        p.addField(p.fields.size, eliminatePreliminaryTypesIn(t), n)
       }
     }
   }
@@ -122,7 +122,7 @@ ${
       (for (t ← IR) yield s"""      ${t.getCapitalName},""").mkString("\n")
     }
       new StringPool(null),
-      Array[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.map(_.getCapitalName).mkString(",")}),
+      Array[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.map(_.getCapitalName).mkString(", ")}),
       None
     )
   }
