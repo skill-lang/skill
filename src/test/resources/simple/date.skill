@@ -1,6 +1,0 @@
-date {
-	i8 timezone
-	i8 day
-	i8 month
-	i8 year
-}
