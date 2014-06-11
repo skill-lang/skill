@@ -114,9 +114,10 @@ final class StringPool(in: InStream) extends StringAccess {
       val end = ByteBuffer.allocate(4 * (idMap.size - 1))
 
       // unroll first loop step, to eliminate null checks in out buffer :)
-      var off = idMap(1).length
+      val firstS = idMap(1).getBytes
+      var off = firstS.length
       end.putInt(off)
-      val data = new OutBuffer(idMap(1).getBytes)
+      val data = new OutBuffer(firstS)
 
       for (i ← 2 until idMap.size) {
         val s = idMap(i).getBytes
