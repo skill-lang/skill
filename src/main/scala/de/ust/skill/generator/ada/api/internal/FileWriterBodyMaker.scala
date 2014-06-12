@@ -64,7 +64,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
             Type_Declaration : Type_Information := Element (Position);
          begin
             for I in 1 .. Natural (Type_Declaration.Fields.Length) loop
-               Type_Declaration.Fields (I).Written := False;
+               Type_Declaration.Fields.Element(I).Written := False;
             end loop;
 
             Type_Declaration.spsi := 1;
