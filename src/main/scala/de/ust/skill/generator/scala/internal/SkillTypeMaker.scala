@@ -67,7 +67,7 @@ class SkillType private[$packageName] (protected var skillID : Long) {
 }
 
 object SkillType {
-  final class SubType private[coloredGraph] (val τName : String, skillID : Long) extends SkillType(skillID) with NamedType {
+  final class SubType private[$packageName] (val τName : String, skillID : Long) extends SkillType(skillID) with NamedType {
     override def prettyString : String = τName+"(this: "+this+")"
     override def toString = τName+"#"+skillID
   }

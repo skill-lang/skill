@@ -7,9 +7,7 @@ package de.ust.skill.generator.scala
 
 import java.io.File
 import java.util.Date
-
 import scala.collection.JavaConversions.asScalaBuffer
-
 import de.ust.skill.generator.scala.api.AccessMaker
 import de.ust.skill.generator.scala.api.SkillStateMaker
 import de.ust.skill.generator.scala.internal.ExceptionsMaker
@@ -40,6 +38,8 @@ import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.parser.Parser
+import de.ust.skill.generator.scala.internal.FieldOffsetCalculatorMaker
+import de.ust.skill.generator.scala.internal.streams.MappedInStreamMaker
 
 /**
  * Entry point of the scala generator.
@@ -95,12 +95,14 @@ class Main extends FakeMain
     with AccessMaker
     with ExceptionsMaker
     with FieldDeclarationMaker
+    with FieldOffsetCalculatorMaker
     with FieldParserMaker
     with FileInputStreamMaker
     with FileOutputStreamMaker
     with FileParserMaker
     with InStreamMaker
     with InternalInstancePropertiesMaker
+    with MappedInStreamMaker
     with MappedOutStreamMaker
     with OutStreamMaker
     with RestrictionsMaker
