@@ -238,7 +238,7 @@ sealed abstract class StoragePool[T <: B : ClassTag, B <: SkillType](
 
     fields += f
   }
-  private def putFieldMap(f : FieldDeclaration, m : HashMap[SkillType, Any]) {
+  final protected def putFieldMap(f : FieldDeclaration, m : HashMap[SkillType, Any]) {
     unknownFieldData.put(f, m)
     subPools.foreach(_.putFieldMap(f, m))
   }
