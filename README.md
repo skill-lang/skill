@@ -11,6 +11,6 @@ This repository contains implementations for (alphatical order):
 
 Languag|Supported features|Testsuite
 -------|------------------|---------
-Ada 2012 |mainly core features| TBD
+Ada 2012 |mainly core features|https://github.com/skill-lang/skillAdaTestSuite
 Scala 2.10 |nearly full features|https://github.com/skill-lang/skillScalaTestSuite
 
