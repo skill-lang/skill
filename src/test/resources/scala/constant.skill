@@ -1,0 +1,3 @@
+Constant {
+	const i32 x = 7;
+}
