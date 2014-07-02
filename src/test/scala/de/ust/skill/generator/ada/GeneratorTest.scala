@@ -30,4 +30,5 @@ class GeneratorTest extends FunSuite {
   test("number")(check("number.skill", "number"))
   test("subtypes")(check("subtypesExample.skill", "subtypes"))
   test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
+  test("utf8 handling")(check("utf8.skill", "utf8"))
 }
