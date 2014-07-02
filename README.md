@@ -9,8 +9,8 @@ http://www2.informatik.uni-stuttgart.de/cgi-bin/NCSTRL/NCSTRL_view.pl?id=TR-2013
 
 This repository contains implementations for (alphatical order):
 
-Languag|Supported features
-------|------------------
-Ada  |mainly core features
-Scala|nearly full features
+Languag|Supported features|Testsuite
+-------|------------------|---------
+Ada  |mainly core features| TBD
+Scala|nearly full features|https://github.com/skill-lang/skillScalaTestSuite
 
