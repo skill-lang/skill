@@ -12,6 +12,6 @@ This repository contains implementations for (alphatical order):
 Languag|Supported Features|Kernel|Testsuite
 -------|------------------|------|---------
 Ada 2012 |mainly core features|_generated_|https://github.com/skill-lang/skillAdaTestSuite
-Scala 2.10 |nearly full features|_generated_|https://github.com/skill-lang/skillScalaTestSuite
 Java 7 |mainly core features| TBD | TBD
+Scala 2.10 |nearly full features|_generated_|https://github.com/skill-lang/skillScalaTestSuite
 
