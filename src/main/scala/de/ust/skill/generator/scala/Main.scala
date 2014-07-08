@@ -212,9 +212,9 @@ class Main extends FakeMain
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
 
     _header = s"""/*  ___ _  ___ _ _                                                            *\\
-** / __| |/ (_) | |       ${headerLine1.get} **
-** \\__ \\ ' <| | | |__     ${headerLine2.get} **
-** |___/_|\\_\\_|_|____|    ${headerLine3.get} **
+ * / __| |/ (_) | |       ${headerLine1.get} *
+ * \\__ \\ ' <| | | |__     ${headerLine2.get} *
+ * |___/_|\\_\\_|_|____|    ${headerLine3.get} *
 \\*                                                                            */
 """
   }
