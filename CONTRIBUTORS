@@ -1,0 +1,9 @@
+This file contains all contributors in historical order.
+It is used for the simplification of the LICENSE file.
+Authors are responsible for the description of their contribution.
+
+Format: [name];[email];[contribution]
+
+Timm Felden;feldentm@informatik.uni-stuttgart.de;Front-End, Scala Binding and Maintenance
+
+Dennis Przytarski;dennis@przytarski.com;Ada-Binding
