@@ -93,67 +93,44 @@ final public class FileOutputStream extends OutStream {
 
 		if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
 			buffer[capacity++] = (byte) v;
-			return;
-		} else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (v >> 7);
-			return;
-		} else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (0x80L | v >> 7);
-			buffer[capacity++] = (byte) (v >> 14);
-			return;
-		} else if (0L == (v & 0xFFFFFFFFF0000000L)) {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (0x80L | v >> 7);
-			buffer[capacity++] = (byte) (0x80L | v >> 14);
-			buffer[capacity++] = (byte) (v >> 21);
-			return;
-		} else if (0L == (v & 0xFFFFFFF800000000L)) {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (0x80L | v >> 7);
-			buffer[capacity++] = (byte) (0x80L | v >> 14);
-			buffer[capacity++] = (byte) (0x80L | v >> 21);
-			buffer[capacity++] = (byte) (v >> 28);
-			return;
-		} else if (0L == (v & 0xFFFFFC0000000000L)) {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (0x80L | v >> 7);
-			buffer[capacity++] = (byte) (0x80L | v >> 14);
-			buffer[capacity++] = (byte) (0x80L | v >> 21);
-			buffer[capacity++] = (byte) (0x80L | v >> 28);
-			buffer[capacity++] = (byte) (v >> 35);
-			return;
-		} else if (0L == (v & 0xFFFE000000000000L)) {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (0x80L | v >> 7);
-			buffer[capacity++] = (byte) (0x80L | v >> 14);
-			buffer[capacity++] = (byte) (0x80L | v >> 21);
-			buffer[capacity++] = (byte) (0x80L | v >> 28);
-			buffer[capacity++] = (byte) (0x80L | v >> 35);
-			buffer[capacity++] = (byte) (v >> 42);
-			return;
-		} else if (0L == (v & 0xFF00000000000000L)) {
-			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (0x80L | v >> 7);
-			buffer[capacity++] = (byte) (0x80L | v >> 14);
-			buffer[capacity++] = (byte) (0x80L | v >> 21);
-			buffer[capacity++] = (byte) (0x80L | v >> 28);
-			buffer[capacity++] = (byte) (0x80L | v >> 35);
-			buffer[capacity++] = (byte) (0x80L | v >> 42);
-			buffer[capacity++] = (byte) (v >> 49);
-			return;
 		} else {
 			buffer[capacity++] = (byte) (0x80L | v);
-			buffer[capacity++] = (byte) (0x80L | v >> 7);
-			buffer[capacity++] = (byte) (0x80L | v >> 14);
-			buffer[capacity++] = (byte) (0x80L | v >> 21);
-			buffer[capacity++] = (byte) (0x80L | v >> 28);
-			buffer[capacity++] = (byte) (0x80L | v >> 35);
-			buffer[capacity++] = (byte) (0x80L | v >> 42);
-			buffer[capacity++] = (byte) (0x80L | v >> 49);
-			buffer[capacity++] = (byte) (v >> 56);
-			return;
+			if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
+				buffer[capacity++] = (byte) (v >> 7);
+			} else {
+				buffer[capacity++] = (byte) (0x80L | v >> 7);
+				if (0L == (v & 0xFFFFFFFFFFE00000L)) {
+					buffer[capacity++] = (byte) (v >> 14);
+				} else {
+					buffer[capacity++] = (byte) (0x80L | v >> 14);
+					if (0L == (v & 0xFFFFFFFFF0000000L)) {
+						buffer[capacity++] = (byte) (v >> 21);
+					} else {
+						buffer[capacity++] = (byte) (0x80L | v >> 21);
+						if (0L == (v & 0xFFFFFFF800000000L)) {
+							buffer[capacity++] = (byte) (v >> 28);
+						} else {
+							buffer[capacity++] = (byte) (0x80L | v >> 28);
+							if (0L == (v & 0xFFFFFC0000000000L)) {
+								buffer[capacity++] = (byte) (v >> 35);
+							} else {
+								buffer[capacity++] = (byte) (0x80L | v >> 35);
+								if (0L == (v & 0xFFFE000000000000L)) {
+									buffer[capacity++] = (byte) (v >> 42);
+								} else {
+									buffer[capacity++] = (byte) (0x80L | v >> 42);
+									if (0L == (v & 0xFF00000000000000L)) {
+										buffer[capacity++] = (byte) (v >> 49);
+									} else {
+										buffer[capacity++] = (byte) (0x80L | v >> 49);
+										buffer[capacity++] = (byte) (v >> 56);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 

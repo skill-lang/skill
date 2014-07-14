@@ -119,58 +119,44 @@ final public class OutBuffer extends OutStream {
 
 		if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
 			data[off++] = (byte) v;
-		} else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
-			data[off++] = (byte) (0x80L | v);
-			data[off++] = (byte) (v >> 7);
-		} else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
-			data[off++] = (byte) (0x80L | v);
-			data[off++] = (byte) (0x80L | v >> 7);
-			data[off++] = (byte) (v >> 14);
-		} else if (0L == (v & 0xFFFFFFFFF0000000L)) {
-			data[off++] = (byte) (0x80L | v);
-			data[off++] = (byte) (0x80L | v >> 7);
-			data[off++] = (byte) (0x80L | v >> 14);
-			data[off++] = (byte) (v >> 21);
-		} else if (0L == (v & 0xFFFFFFF800000000L)) {
-			data[off++] = (byte) (0x80L | v);
-			data[off++] = (byte) (0x80L | v >> 7);
-			data[off++] = (byte) (0x80L | v >> 14);
-			data[off++] = (byte) (0x80L | v >> 21);
-			data[off++] = (byte) (v >> 28);
-		} else if (0L == (v & 0xFFFFFC0000000000L)) {
-			data[off++] = (byte) (0x80L | v);
-			data[off++] = (byte) (0x80L | v >> 7);
-			data[off++] = (byte) (0x80L | v >> 14);
-			data[off++] = (byte) (0x80L | v >> 21);
-			data[off++] = (byte) (0x80L | v >> 28);
-			data[off++] = (byte) (v >> 35);
-		} else if (0L == (v & 0xFFFE000000000000L)) {
-			data[off++] = (byte) (0x80L | v);
-			data[off++] = (byte) (0x80L | v >> 7);
-			data[off++] = (byte) (0x80L | v >> 14);
-			data[off++] = (byte) (0x80L | v >> 21);
-			data[off++] = (byte) (0x80L | v >> 28);
-			data[off++] = (byte) (0x80L | v >> 35);
-			data[off++] = (byte) (v >> 42);
-		} else if (0L == (v & 0xFF00000000000000L)) {
-			data[off++] = (byte) (0x80L | v);
-			data[off++] = (byte) (0x80L | v >> 7);
-			data[off++] = (byte) (0x80L | v >> 14);
-			data[off++] = (byte) (0x80L | v >> 21);
-			data[off++] = (byte) (0x80L | v >> 28);
-			data[off++] = (byte) (0x80L | v >> 35);
-			data[off++] = (byte) (0x80L | v >> 42);
-			data[off++] = (byte) (v >> 49);
 		} else {
 			data[off++] = (byte) (0x80L | v);
-			data[off++] = (byte) (0x80L | v >> 7);
-			data[off++] = (byte) (0x80L | v >> 14);
-			data[off++] = (byte) (0x80L | v >> 21);
-			data[off++] = (byte) (0x80L | v >> 28);
-			data[off++] = (byte) (0x80L | v >> 35);
-			data[off++] = (byte) (0x80L | v >> 42);
-			data[off++] = (byte) (0x80L | v >> 49);
-			data[off++] = (byte) (v >> 56);
+			if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
+				data[off++] = (byte) (v >> 7);
+			} else {
+				data[off++] = (byte) (0x80L | v >> 7);
+				if (0L == (v & 0xFFFFFFFFFFE00000L)) {
+					data[off++] = (byte) (v >> 14);
+				} else {
+					data[off++] = (byte) (0x80L | v >> 14);
+					if (0L == (v & 0xFFFFFFFFF0000000L)) {
+						data[off++] = (byte) (v >> 21);
+					} else {
+						data[off++] = (byte) (0x80L | v >> 21);
+						if (0L == (v & 0xFFFFFFF800000000L)) {
+							data[off++] = (byte) (v >> 28);
+						} else {
+							data[off++] = (byte) (0x80L | v >> 28);
+							if (0L == (v & 0xFFFFFC0000000000L)) {
+								data[off++] = (byte) (v >> 35);
+							} else {
+								data[off++] = (byte) (0x80L | v >> 35);
+								if (0L == (v & 0xFFFE000000000000L)) {
+									data[off++] = (byte) (v >> 42);
+								} else {
+									data[off++] = (byte) (0x80L | v >> 42);
+									if (0L == (v & 0xFF00000000000000L)) {
+										data[off++] = (byte) (v >> 49);
+									} else {
+										data[off++] = (byte) (0x80L | v >> 49);
+										data[off++] = (byte) (v >> 56);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 		size += off - tail.used;
 		tail.used = off;
