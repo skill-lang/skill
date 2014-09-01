@@ -1,0 +1,13 @@
+Airplane {
+	const i64 x = 42;
+	auto i32 y;
+	i16 id;
+	string name;
+	bool operational;
+}
+
+Helicopter {
+	i8 id;
+	string name;
+	bool operational;
+}

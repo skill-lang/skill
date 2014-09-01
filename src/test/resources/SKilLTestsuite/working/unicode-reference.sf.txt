@@ -1,0 +1,7 @@
+created using "unicode-characters.skill"
+
+the file contains one instance, with the three fields containing content as 
+specified.
+
+the idea is to check unicode support by using 1-3 bytes single character strings
+

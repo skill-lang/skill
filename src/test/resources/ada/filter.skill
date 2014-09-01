@@ -1,0 +1,33 @@
+/** stores results for a race pair and informaiton about the pair */
+RacePair {
+  Shared shared;
+  CallSite cs1;
+  TSS tss1;
+  CallSite cs2;
+  TSS tss2;
+  i32[] results;
+}
+
+/** optional filter descriptions */
+Filter {
+  v64 index;
+  string description;
+}
+
+/** information on shared heap locations */
+Shared {
+  v64 nodeID;
+  string location;
+}
+
+/** a call site */
+CallSite {
+  v64 nodeID;
+  string location;
+}
+
+/** name of an abstract thread */
+TSS {
+  v64 nodeID;
+  string name;
+}

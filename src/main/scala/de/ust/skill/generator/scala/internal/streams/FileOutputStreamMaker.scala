@@ -23,6 +23,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
+/**
+ * BufferedOutputStream based output stream.
+ *
+ * @author Timm Felden
+ */
 final public class FileOutputStream extends OutStream {
 
 	private final FileChannel file;
@@ -39,14 +44,24 @@ final public class FileOutputStream extends OutStream {
 				StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.READ));
 	}
 
+	/**
+	 * @return a new file output stream, that is setup to append to the target
+	 *         fileoutput stream, that is setup to write the target file
+	 * @throws IOException
+	 *             propagated error
+	 * 
+	 */
 	public static FileOutputStream append(Path target) throws IOException {
 		return new FileOutputStream(FileChannel.open(target, StandardOpenOption.WRITE, StandardOpenOption.APPEND,
 				StandardOpenOption.READ));
 	}
 
-	/**
-	 * creates a new buffer, if required
-	 */
+	public static FileOutputStream write(Path target) throws IOException {
+		Files.deleteIfExists(target);
+		return new FileOutputStream(Files.newOutputStream(target, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+				StandardOpenOption.TRUNCATE_EXISTING));
+	}
+
 	@Override
 	protected void refresh() throws IOException {
 		if (null == buffer)

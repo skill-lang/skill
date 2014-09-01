@@ -1,0 +1,3 @@
+include "date.skill"
+/** Test the implementation of annotations. */
+Test { annotation f; }
