@@ -137,14 +137,6 @@ final public class Field {
 		return restrictions;
 	}
 
-	public boolean hasAccessHint() {
-		return hints.contains(Hint.access);
-	}
-
-	public boolean hasModificationHint() {
-		return hints.contains(Hint.modification);
-	}
-
 	public boolean isUnique() {
 		return hints.contains(Hint.unique);
 	}
@@ -154,11 +146,11 @@ final public class Field {
 	}
 
 	public boolean isDistributed() {
-		return hints.contains(Hint.distributed) || isLazy();
+        return hints.contains(Hint.distributed) || isOnDemand();
 	}
 
-	public boolean isLazy() {
-		return hints.contains(Hint.lazy);
+    public boolean isOnDemand() {
+        return hints.contains(Hint.ondemand);
 	}
 
 	public boolean isIgnored() {
