@@ -4,11 +4,13 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.lang.Long
 import java.nio.file.FileSystems
+
 import scala.collection.JavaConversions._
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-import scala.collection.mutable.LinkedList
 import scala.util.parsing.combinator.RegexParsers
+
 import de.ust.skill.ir
 import de.ust.skill.ir.Hint
 import de.ust.skill.ir.Restriction
@@ -19,15 +21,18 @@ import de.ust.skill.ir.restriction.MonotoneRestriction
 import de.ust.skill.ir.restriction.NullableRestriction
 import de.ust.skill.ir.restriction.SingletonRestriction
 import de.ust.skill.ir.restriction.UniqueRestriction
-import scala.collection.mutable.ArrayBuffer
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
  * @see #process
  * @see SKilL V1.0 Appendix A
  * @author Timm Felden
+ * @param delimitWithUnderscore if true, underscores in words are used as delimiters. This will influence name
+ * equivalence
  */
-final class Parser {
+final class Parser(delimitWithUnderscore:Boolean = true) {
+  def stringToName(name:String) = new Name(name, delimitWithUnderscore)
+
   val tc = new ir.TypeContext
 
   /**
@@ -110,7 +115,7 @@ final class Parser {
      */
     private def userType = opt(changeModifier) ~ typeDescription ~ id ~ opt(rep((":" | "with" | "extends") ~> id)) ~!
       ("{" ~> rep(field) <~ "}") ^^ {
-        case c ~ d ~ n ~ s ~ b ⇒ Definition(c, d, n, s.flatMap(_.headOption), s.map(_.drop(1)).getOrElse(List()), b)
+        case c ~ d ~ n ~ s ~ b ⇒ Definition(c, d, new Name(n, delimitWithUnderscore), s.flatMap(_.headOption), s.map(_.drop(1)).getOrElse(List()), b)
     }
 
     /**
@@ -353,13 +358,13 @@ final class Parser {
   /**
    * Turns the AST into IR.
    */
-  private def buildIR(defs: LinkedList[Definition]): java.util.List[ir.Declaration] = {
+  private def buildIR(defs: List[Definition]): java.util.List[ir.Declaration] = {
     // create declarations
     // skillname ⇀ subtypes
-    var subtypes = new HashMap[String, LinkedList[Definition]]
+    var subtypes = new HashMap[String, List[Definition]]
     // skillname ⇀ definition
-    val definitionNames = new HashMap[String, Definition];
-    for(d <- defs) definitionNames.put(d.name.toLowerCase, d);
+    val definitionNames = new HashMap[Name, Definition];
+    for(d <- defs) definitionNames.put(d.name, d);
     if (defs.size != definitionNames.size) {
       ParseException(s"I got ${defs.size - definitionNames.size} duplicate definition${
         if(1==defs.size - definitionNames.size)""else"s"
@@ -368,20 +373,23 @@ final class Parser {
 
     // build sub-type relation
     for(d <- defs if d.parent.isDefined) {
-      val p = definitionNames.get(d.parent.get.toLowerCase).getOrElse(ParseException(s"""The type "${d.parent.get}" parent of ${d.name} is unknown!
+      val p = definitionNames.get(stringToName(d.parent.get)).getOrElse(
+          ParseException(s"""The type "${d.parent.get}" parent of ${d.name} is unknown!
 Did you forget to include ${d.parent.get}.skill?
-Known types are: ${definitionNames.keySet.mkString(", ")}"""))
-      val parent = p.name.toLowerCase
+Known types are: ${definitionNames.keySet.mkString(", ")}""")
+      )
+
+      val parent = p.name.lowercase
       if (!subtypes.contains(parent)) {
-        subtypes.put(parent, LinkedList[Definition]())
+        subtypes.put(parent, List[Definition]())
       }
-      subtypes(parent) ++=  LinkedList[Definition](d)
+      subtypes(parent) ++=  List[Definition](d)
     }
 
     // create declarations
     val rval = definitionNames.map({ case (n, f) ⇒ (f, ir.Declaration.newDeclaration(
         tc,
-        f.name,
+        f.name.ir,
         f.description.comment.map(_.text.head).getOrElse(""),
         f.description.restrictions,
         f.description.hints
@@ -409,9 +417,9 @@ Known types are: ${definitionNames.keySet.mkString(", ")}"""))
       case e: ir.ParseException ⇒ ParseException(s"${node.name}: ${e.getMessage()}")
     }
     def initialize(name: String) {
-      val definition = definitionNames(name)
+      val definition = definitionNames(stringToName(name))
       val superDecl = if(definition.parent.isEmpty) null
-      else rval(definitionNames(definition.parent.get.toLowerCase))
+      else rval(definitionNames(stringToName(definition.parent.get)))
       rval(definition).initialize(
         superDecl,
         try { definition.body.map(mkField(_)) } catch {
@@ -419,9 +427,9 @@ Known types are: ${definitionNames.keySet.mkString(", ")}"""))
         }
       )
       //initialize children
-      subtypes.getOrElse(name.toLowerCase, LinkedList()).foreach { d ⇒ initialize(d.name.toLowerCase) }
+      subtypes.getOrElse(name.toLowerCase, List()).foreach { d ⇒ initialize(d.name.lowercase) }
     }
-    definitionNames.values.filter(_.parent.isEmpty).foreach { d ⇒ initialize(d.name.toLowerCase) }
+    definitionNames.values.filter(_.parent.isEmpty).foreach { d ⇒ initialize(d.name.lowercase) }
 
     // we initialized in type order starting at base types; if some types have not been initialized, then they are cyclic!
     if(rval.values.exists(!_.isInitialized))

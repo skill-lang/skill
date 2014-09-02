@@ -89,10 +89,5 @@ public abstract class Type implements Comparable<Type> {
 	 * @return the name of the type as it occurred in the declaration; for
 	 *         built-in types, this is equal to the skill name
 	 */
-	abstract public String getName();
-
-	/**
-	 * @return returns the type with a capitalized first letter
-	 */
-	abstract public String getCapitalName();
+    abstract public Name getName();
 }

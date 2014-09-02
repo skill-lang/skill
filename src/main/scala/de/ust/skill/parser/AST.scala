@@ -7,6 +7,7 @@ package de.ust.skill.parser
 
 import de.ust.skill.ir.Restriction
 import de.ust.skill.ir.Hint
+import scala.collection.JavaConversions._
 
 /**
  * The AST is used to turn skill definitions into Java IR.
@@ -47,17 +48,52 @@ final class Data(val isAuto : Boolean, t : Type, name : String) extends Field(t,
 
 final class View(val declaredInType : Option[String], val oldName : String, val target : Field) extends Field(target.t, target.name);
 
+/**
+ * Representation of skill names.
+ *
+ * TODO propper treatment of parts
+ */
+final class Name(source : String, delimitWithUnderscores : Boolean) {
+  // @note this may not be correct if more then two _ are used
+  val parts : List[String] = source.split("_").to.map { s ⇒ if (s.isEmpty()) "_" else s }.to
+
+  lazy val camelCase : String = if (delimitWithUnderscores) parts.foldLeft("")(_ + _) else source;
+
+  val lowercase : String = if (delimitWithUnderscores) parts.foldLeft("")(_ + _.toLowerCase) else source.toLowerCase;
+
+  lazy val CapitalCase : String = if (delimitWithUnderscores)
+    parts.tail.foldLeft(parts.head.capitalize)(_ + _)
+  else
+    source.capitalize;
+
+  lazy val ADA_STYLE : String = if (delimitWithUnderscores)
+    parts.tail.foldLeft(parts.head.toUpperCase)(_+"_"+_.toUpperCase)
+  else
+    source.toUpperCase();
+
+  def ir = new de.ust.skill.ir.Name(parts, lowercase);
+
+  override def equals(o : Any) = o match {
+    case o : Name ⇒ o.lowercase == lowercase
+    case _        ⇒ false
+  }
+
+  override def hashCode = lowercase.hashCode
+
+  override def toString = lowercase
+}
+
 final case class Definition(
     val change : Option[ChangeModifier.ChangeModifier],
     val description : Description,
-    val name : String, val parent : Option[String], val interfaces : List[String], val body : List[Field]) extends Declaration {
+    val name : Name, val parent : Option[String], val interfaces : List[String], val body : List[Field]) extends Declaration {
 
   override def equals(other : Any) = other match {
     case Definition(Some(ChangeModifier.set), d, n, p, i, b) if change.isDefined ⇒
-      change.get == ChangeModifier.set && n.toLowerCase == name.toLowerCase
+      change.get == ChangeModifier.set && n == name
 
     case Definition(None, d, n, p, i, b) if !change.isDefined ⇒
-      n.toLowerCase == name.toLowerCase
+      n == name
 
     case _ ⇒ false
   }

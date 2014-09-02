@@ -14,9 +14,7 @@ import java.util.Set;
 final public class Declaration extends Type implements ReferenceType {
 
 	// names
-	private final String name;
-	private final String skillName;
-	private final String capitalName;
+    private final Name name;
 
 	/**
 	 * super type is the type above this type. base type is the base type of the
@@ -51,15 +49,9 @@ final public class Declaration extends Type implements ReferenceType {
 	 * @note the declaration has to be completed, i.e. it has to be evaluated in
 	 *       pre-order over the type hierarchy.
 	 */
-	private Declaration(String name, String comment, List<Restriction> restrictions, List<Hint> hints)
+    private Declaration(Name name, String comment, List<Restriction> restrictions, List<Hint> hints)
 			throws ParseException {
 		this.name = name;
-		this.skillName = name.toLowerCase();
-		{
-			char[] ch = name.toCharArray();
-			ch[0] = Character.toUpperCase(ch[0]);
-			this.capitalName = new String(ch);
-		}
 		skillCommentImage = null == comment ? "" : comment;
 		this.restrictions = restrictions;
 		this.hints = Collections.unmodifiableSet(new HashSet<Hint>(hints));
@@ -73,9 +65,9 @@ final public class Declaration extends Type implements ReferenceType {
 	 * @throws ParseException
 	 *             if the declaration is already present
 	 */
-	public static Declaration newDeclaration(TypeContext tc, String name, String comment,
+    public static Declaration newDeclaration(TypeContext tc, Name name, String comment,
 			List<Restriction> restrictions, List<Hint> hints) throws ParseException {
-		String skillName = name.toLowerCase();
+        String skillName = name.getSkillName();
 		if (tc.types.containsKey(skillName))
 			throw new ParseException("Duplicate declaration of type " + name);
 
@@ -159,7 +151,7 @@ final public class Declaration extends Type implements ReferenceType {
 	 * @return pretty parsable representation of this type
 	 */
 	public String prettyPrint() {
-		StringBuilder sb = new StringBuilder(name);
+        StringBuilder sb = new StringBuilder(name.getSkillName());
 		if (null != superType) {
 			sb.append(":").append(superType.name);
 		}
@@ -173,16 +165,11 @@ final public class Declaration extends Type implements ReferenceType {
 
 	@Override
 	public String getSkillName() {
-		return skillName;
+        return name.getSkillName();
 	}
 
 	@Override
-	public String getCapitalName() {
-		return capitalName;
-	}
-
-	@Override
-	public String getName() {
+    public Name getName() {
 		return name;
 	}
 
