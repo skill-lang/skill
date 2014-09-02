@@ -37,10 +37,10 @@ import ${packagePrefix}internal.NamedType
         out.write(s"/*${t.getSkillComment()}*/\n")
 
       //class prefix
-      val Name = t.getCapitalName;
+      val Name = t.getName.capital;
       out.write(s"""
 sealed class $Name private[$packageName] (skillID : Long) ${
-        if (null != t.getSuperType()) { s"extends ${t.getSuperType().getCapitalName()}" }
+        if (null != t.getSuperType()) { s"extends ${t.getSuperType().getName.capital}" }
         else { "extends SkillType" }
       }(skillID) {""")
 
@@ -67,7 +67,7 @@ sealed class $Name private[$packageName] (skillID : Long) ${
 		  ""
 		else
 	      s"""
-  protected var _${f.getName} : ${mapType(f.getType())} = ${defaultValue(f)}"""
+  protected var _${f.getName} : ${mapType(f.getType())} = ${defaultValue(f.getType)}"""
 	  }
 
       def makeGetterImplementation:String = {
@@ -155,16 +155,16 @@ ${
     case _ ⇒ super.set(field, value)
   }
 """)
-      
+
       // pretty string
     out.write(s"""  override def prettyString : String = "${t.getName()}"+""")
-    
+
     val prettyStringArgs = (for(f <- t.getAllFields)
       yield if(f.isIgnored) s"""+", ${f.getName()}: <<ignored>>" """
       else if (!f.isConstant) s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+_${f.getName()}"""
       else s"""+", const ${f.getName()}: ${f.constantValue()}""""
       ).mkString(""""(this: "+this""", "", """+")"""")
-      
+
       out.write(prettyStringArgs)
 
     // toString

@@ -40,37 +40,36 @@ package body ${packagePrefix.capitalize} is
    end;
 
 ${
-  var output = "";
+      var output = "";
 
-  /**
-   * Provides the hash function of every type.
-   */
-  for (d ← IR) {
-    output += s"""   function Hash (Element : ${escaped(d.getName)}_Type_Access) return Ada.Containers.Hash_Type is\r\n      (Hash (Skill_Type_Access (Element)));\r\n\r\n"""
-  }
-
-  /**
-   * Provides the accessor functions to the fields of every type.
-   */
-  for (d ← IR) {
-    d.getAllFields.filter { f ⇒ !f.isIgnored }.foreach({ f ⇒
-      if (f.isConstant) {
-        output += s"""   function Get_${f.getName.capitalize} (Object : ${escaped(d.getName)}_Type) return ${mapType(f.getType, d, f)} is\r\n      (${f.constantValue});\r\n\r\n"""
+      /**
+       * Provides the hash function of every type.
+       */
+      for (d ← IR) {
+        output += s"""   function Hash (Element : ${escaped(d.getName.ada)}_Type_Access) return Ada.Containers.Hash_Type is\r\n      (Hash (Skill_Type_Access (Element)));\r\n\r\n"""
       }
-      else {
-        output += s"""   function Get_${f.getName.capitalize} (Object : ${escaped(d.getName)}_Type) return ${mapType(f.getType, d, f)} is\r\n      (Object.${f.getSkillName});\r\n\r\n"""
-        output += s"""   procedure Set_${f.getName.capitalize} (
-      Object : in out ${escaped(d.getName)}_Type;
+
+      /**
+       * Provides the accessor functions to the fields of every type.
+       */
+      for (d ← IR) {
+        d.getAllFields.filter { f ⇒ !f.isIgnored }.foreach({ f ⇒
+          if (f.isConstant) {
+            output += s"""   function Get_${f.getName.capitalize} (Object : ${escaped(d.getName.ada)}_Type) return ${mapType(f.getType, d, f)} is\r\n      (${f.constantValue});\r\n\r\n"""
+          } else {
+            output += s"""   function Get_${f.getName.capitalize} (Object : ${escaped(d.getName.ada)}_Type) return ${mapType(f.getType, d, f)} is\r\n      (Object.${f.getSkillName});\r\n\r\n"""
+            output += s"""   procedure Set_${f.getName.capitalize} (
+      Object : in out ${escaped(d.getName.ada)}_Type;
       Value  :        ${mapType(f.getType, d, f)}
    ) is
    begin
       Object.${f.getSkillName} := Value;
    end Set_${f.getName.capitalize};\r\n\r\n"""
+          }
+        })
       }
-    })
-  }
-  output.stripLineEnd.stripLineEnd
-}
+      output.stripLineEnd.stripLineEnd
+    }
 
 end ${packagePrefix.capitalize};
 """)

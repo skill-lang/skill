@@ -54,8 +54,8 @@ object FieldParser {
     t match {
 ${
       (for (t ← IR)
-        yield s"""      case p : ${t.getCapitalName}StoragePool ⇒
-        val d = ${if(t.getSuperType()!= null) s"WrappedArray.make[${packagePrefix}${t.getCapitalName}](p.data)" else "p.data"}
+        yield s"""      case p : ${t.getName.capital}StoragePool ⇒
+        val d = ${if (t.getSuperType() != null) s"WrappedArray.make[${packagePrefix}${t.getName.capital}](p.data)" else "p.data"}
         f.name match {
 ${
         (for (f ← t.getAllFields)
@@ -119,7 +119,7 @@ ${
     out.close()
   }
 
-  private def readField(f: Field): String = {
+  private def readField(f : Field) : String = {
     val t = f.getType
     val (prelude, action, result) = readSingleField(t)
     s"""$prelude
@@ -141,10 +141,10 @@ ${
             }"""
   }
 
-  private def readSingleField(t: Type): (String, String, String) = t match {
-    case t: Declaration ⇒ (s"""
-            val ref = pools("${t.getSkillName}").asInstanceOf[${t.getCapitalName}StoragePool]""", "", "ref.getByID(in.v64)")
-    case t: GroundType ⇒ ("", "", t.getSkillName match {
+  private def readSingleField(t : Type) : (String, String, String) = t match {
+    case t : Declaration ⇒ (s"""
+            val ref = pools("${t.getSkillName}").asInstanceOf[${t.getName.capital}StoragePool]""", "", "ref.getByID(in.v64)")
+    case t : GroundType ⇒ ("", "", t.getSkillName match {
       case "annotation" ⇒ """(in.v64, in.v64) match {
                   case (0L, _) ⇒ null
                   case (t, i)  ⇒ pools(String.get(t)).getByID(i)
@@ -153,7 +153,7 @@ ${
       case n        ⇒ "in."+n
     })
 
-    case t: SetType ⇒
+    case t : SetType ⇒
       val (p, r, s) = readSingleField(t.getBaseType)
       (p, s"""
                   val r = new HashSet[${mapType(t.getBaseType)}]

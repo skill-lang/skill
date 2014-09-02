@@ -47,9 +47,9 @@ object FileParser {
     @inline def newPool[T <: B, B <: SkillType](name : String, superPool : StoragePool[_ >: T <: B, B], restrictions : HashSet[Restriction]) : StoragePool[T, B] = {
       val p = (name match {
 ${
-      (for (t ← IR) yield s"""        case "${t.getSkillName}" ⇒ new ${t.getCapitalName}StoragePool(types.size${
+      (for (t ← IR) yield s"""        case "${t.getSkillName}" ⇒ new ${t.getName.capital}StoragePool(types.size${
         if (null == t.getSuperType) ""
-        else s""", poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${t.getSuperType.getCapitalName}StoragePool]"""
+        else s""", poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${t.getSuperType.getName.capital}StoragePool]"""
       })""").mkString("\n")
     }
         case _ ⇒
@@ -327,7 +327,7 @@ ${
 
     new SerializableState(
 ${
-      (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(newPool[${mapType(t)}, ${mapType(t.getBaseType)}]("${t.getSkillName}", null, null)).asInstanceOf[${t.getCapitalName}StoragePool],""").mkString("\n")
+      (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(newPool[${mapType(t)}, ${mapType(t.getBaseType)}]("${t.getSkillName}", null, null)).asInstanceOf[${t.getName.capital}StoragePool],""").mkString("\n")
     }
       String,
       types.to,

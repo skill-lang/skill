@@ -591,17 +591,17 @@ sealed class SubPool[T <: B : Manifest, B <: SkillType](poolIndex : Long, name :
 """)
 
     for (t ← IR) {
-      val typeName = "_root_."+packagePrefix + t.getCapitalName
+      val typeName = "_root_."+packagePrefix + t.getName.capital
       val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
 
       out.write(s"""
-final class ${t.getCapitalName}StoragePool(poolIndex : Long${
+final class ${t.getName.capital}StoragePool(poolIndex : Long${
         if (t.getSuperType == null) ""
-        else s",\nsuperPool: ${t.getSuperType.getCapitalName}StoragePool"
+        else s",\nsuperPool: ${t.getSuperType.getName.capital}StoragePool"
       })
     extends ${
         if (t.getSuperType == null) s"BasePool[$typeName]"
-        else s"SubPool[$typeName, ${packagePrefix}${t.getBaseType.getCapitalName}]"
+        else s"SubPool[$typeName, ${packagePrefix}${t.getBaseType.getName.capital}]"
       }(
       poolIndex,
       "${t.getSkillName}",
@@ -613,11 +613,11 @@ final class ${t.getCapitalName}StoragePool(poolIndex : Long${
         else ",\nsuperPool"
       }
     )
-    with ${t.getCapitalName}Access {
+    with ${t.getName.capital}Access {
 
   override def makeSubPool(poolIndex : Long, name : String) = ${
-        if (isSingleton) s"""throw new SkillException("${t.getCapitalName} is a Singleton and can therefore not have any subtypes.")"""
-        else s"new ${t.getCapitalName}SubPool(poolIndex, name, this)"
+        if (isSingleton) s"""throw new SkillException("${t.getName.capital} is a Singleton and can therefore not have any subtypes.")"""
+        else s"new ${t.getName.capital}SubPool(poolIndex, name, this)"
       }
 
   override def insertInstance(skillID : Long) = {
@@ -655,15 +655,15 @@ ${
       if (!isSingleton) {
         // create a sub pool
         out.write(s"""
-final class ${t.getCapitalName}SubPool(poolIndex : Long, name : String, superPool : StoragePool[_ <: $typeName, ${packagePrefix}${t.getBaseType.getCapitalName}])
-    extends SubPool[$typeName.SubType, ${packagePrefix}${t.getBaseType.getCapitalName}](
+final class ${t.getName.capital}SubPool(poolIndex : Long, name : String, superPool : StoragePool[_ <: $typeName, ${packagePrefix}${t.getBaseType.getName.capital}])
+    extends SubPool[$typeName.SubType, ${packagePrefix}${t.getBaseType.getName.capital}](
       poolIndex,
       name,
       HashMap[String, FieldType[_]](),
       superPool
     ) {
 
-  override def makeSubPool(poolIndex : Long, name : String) = new ${t.getCapitalName}SubPool(poolIndex, name, this)
+  override def makeSubPool(poolIndex : Long, name : String) = new ${t.getName.capital}SubPool(poolIndex, name, this)
 
   override def insertInstance(skillID : Long) = {
     val i = skillID.toInt - 1

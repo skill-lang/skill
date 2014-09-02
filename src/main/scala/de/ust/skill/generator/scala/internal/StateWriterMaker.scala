@@ -147,7 +147,7 @@ private[internal] final class StateWriter(state : SerializableState, out : FileO
         val fields = d.getFields.filterNot(_.isIgnored)
         if (fields.isEmpty) ""
         else s"""
-          case pool : ${d.getCapitalName}StoragePool ⇒
+          case pool : ${d.getName.capital}StoragePool ⇒
             val outData = pool.data
             f.name match {${
           (for (f ← fields) yield s"""

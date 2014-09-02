@@ -12,35 +12,29 @@ import java.io.BufferedWriter
 import java.io.OutputStreamWriter
 import java.io.FileOutputStream
 import scala.collection.mutable.MutableList
+import de.ust.skill.generator.common.Generator
+
+import scala.collection.JavaConversions._
 
 /**
  * The parent class for all output makers.
  *
  * @author Timm Felden, Dennis Przytarski
  */
-trait GeneralOutputMaker {
+trait GeneralOutputMaker extends Generator {
 
-  /**
-   * The base path of the output.
-   */
-  var outPath: String
+  override def getLanguageName = "ada";
 
-  /**
-   * The intermediate representation of the (known) output type system.
-   */
-  var IR: List[Declaration]
+  private[ada] def header : String
 
-  /**
-   * Makes the output; has to invoke super.make!!!
-   */
-  def make: Unit;
-
-  private[ada] def header: String
+  // remove special stuff for now
+  final def setIR(IR : List[Declaration]) = this.IR = TypeContext.removeSpecialDeclarations(IR).to
+  var IR : List[UserType] = _
 
   /**
    * Creates the correct PrintWriter for the argument file.
    */
-  protected def open(path: String) = {
+  override protected def open(path : String) = {
     val f = new File(s"$outPath$packagePath/$path")
     f.getParentFile.mkdirs
     f.createNewFile
@@ -53,40 +47,40 @@ trait GeneralOutputMaker {
   /**
    * Assume the existence of a translation function for the types.
    */
-  protected def mapTypeToId(t: Type, f: Field): String
-  protected def mapType(t : Type, d: Declaration, f: Field): String
+  protected def mapTypeToId(t : Type, f : Field) : String
+  protected def mapType(t : Type, d : UserType, f : Field) : String
 
   /**
    * Assume the existence of a translation function for the fields.
    */
-  protected def mapFileReader(d: Declaration, f: Field): String
-  protected def mapFileWriter(d: Declaration, f: Field): String
+  protected def mapFileReader(d : UserType, f : Field) : String
+  protected def mapFileWriter(d : UserType, f : Field) : String
 
   /**
    * Assume the existence of inheritance information functions for the types.
    */
-  protected def getSuperTypes(d: Declaration): MutableList[Type]
-  protected def getSubTypes(d: Declaration): MutableList[Type]
+  protected def getSuperTypes(d : UserType) : MutableList[Type]
+  protected def getSubTypes(d : UserType) : MutableList[Type]
 
   /**
    * Assume the existence of the get field parameters function.
    */
-  protected def printParameters(d : Declaration): String
+  protected def printParameters(d : UserType) : String
 
   /**
    * Assume a package prefix provider.
    */
-  protected def packagePrefix: String
-
-  /**
-   * Provides a string representation of the default value of f.
-   */
-  protected def defaultValue(t: Type, d: Declaration, f: Field): String
+  protected def packagePrefix : String
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
-  protected def escaped(target: String): String
+  protected def escaped(target : Name) : String = escaped(target.ada)
+
+  /**
+   * Provides a string representation of the default value of f.
+   */
+  protected def defaultValue(t : Type, d : UserType, f : Field) : String
 
   private lazy val packagePath = if (packagePrefix.length > 0) {
     packagePrefix.replace(".", "/")

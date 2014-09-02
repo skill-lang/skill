@@ -14,13 +14,23 @@ import java.util.Date
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
 import java.io.FileOutputStream
+import de.ust.skill.generator.common.Generator
+import scala.collection.JavaConversions._
+import de.ust.skill.ir.TypeContext
+import de.ust.skill.ir.UserType
 
 /**
  * The parent class for all output makers.
  *
  * @author Timm Felden
  */
-trait GeneralOutputMaker {
+trait GeneralOutputMaker extends Generator {
+
+  // remove special stuff
+  final def setIR(IR : List[Declaration]) = this.IR = TypeContext.removeSpecialDeclarations(IR).to
+  var IR : List[UserType] = _
+
+  override def getLanguageName = "scala";
 
   val ArrayTypeName = "scala.collection.mutable.ArrayBuffer"
   val VarArrayTypeName = "scala.collection.mutable.ArrayBuffer"
@@ -28,27 +38,12 @@ trait GeneralOutputMaker {
   val SetTypeName = "scala.collection.mutable.HashSet"
   val MapTypeName = "scala.collection.mutable.HashMap"
 
-  /**
-   * The base path of the output.
-   */
-  var outPath : String
-
-  /**
-   * The intermediate representation of the (known) output type system.
-   */
-  var IR : List[Declaration]
-
-  /**
-   * Makes the output; has to invoke super.make!!!
-   */
-  def make : Unit;
-
   private[scala] def header : String
 
   /**
    * Creates the correct PrintWriter for the argument file.
    */
-  protected def open(path : String) = {
+  override protected def open(path : String) = {
     val f = new File(s"$outPath$packagePath$path")
     f.getParentFile.mkdirs
     f.createNewFile
@@ -66,34 +61,24 @@ trait GeneralOutputMaker {
   /**
    * creates argument list of a constructor call, not including potential skillID or braces
    */
-  protected def makeConstructorArguments(t : Declaration) : String
+  protected def makeConstructorArguments(t : UserType) : String
   /**
    * creates argument list of a constructor call, including a trailing comma for insertion into an argument list
    */
-  protected def appendConstructorArguments(t : Declaration) : String
+  protected def appendConstructorArguments(t : UserType) : String
 
   /**
    * turns a declaration and a field into a string writing that field into an outStream
    * @note the used iterator is "outData"
    * @note the used target OutStream is "dataChunk"
    */
-  protected def writeField(d : Declaration, f : Field) : String
+  protected def writeField(d : UserType, f : Field) : String
 
   /**
    * Assume a package prefix provider.
    */
   protected def packagePrefix() : String
   protected def packageName = packagePrefix.substring(0, packagePrefix.length - 1)
-
-  /**
-   * Provides a string representation of the default value of f.
-   */
-  protected def defaultValue(f : Field) : String
-
-  /**
-   * Tries to escape a string without decreasing the usability of the generated identifier.
-   */
-  protected def escaped(target : String) : String
 
   private lazy val packagePath = if (packagePrefix.length > 0) {
     packagePrefix.replace(".", "/")

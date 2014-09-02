@@ -38,7 +38,7 @@ import ${packagePrefix}internal.streams.FileOutputStream
  */
 final class SerializableState(
 ${
-      (for (t ← IR) yield s"  val ${t.getCapitalName} : ${t.getCapitalName}Access,").mkString("\n")
+      (for (t ← IR) yield s"  val ${t.getName.capital} : ${t.getName.capital}Access,").mkString("\n")
     }
   val String : StringAccess,
   val pools : Array[StoragePool[_ <: SkillType, _ <: SkillType]],
@@ -115,14 +115,19 @@ object SerializableState {
   def create() : SerializableState = {
 ${
       var i = -1
-      (for (t ← IR) yield s"""    val ${t.getCapitalName} = new ${t.getCapitalName}StoragePool(${i += 1; i}${if (null == t.getSuperType) "" else {", " + t.getSuperType.getCapitalName}})""").mkString("\n")
+      (for (t ← IR)
+        yield s"""    val ${t.getName.capital} = new ${t.getName.capital}StoragePool(${i += 1; i}${
+        if (null == t.getSuperType) ""
+        else { ", "+t.getSuperType.getName.capital }
+      })"""
+      ).mkString("\n")
     }
     new SerializableState(
 ${
-      (for (t ← IR) yield s"""      ${t.getCapitalName},""").mkString("\n")
+      (for (t ← IR) yield s"""      ${t.getName.capital},""").mkString("\n")
     }
       new StringPool(null),
-      Array[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.map(_.getCapitalName).mkString(", ")}),
+      Array[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.map(_.getName.capital).mkString(", ")}),
       None
     )
   }
@@ -132,15 +137,15 @@ ${
     out.close()
   }
 
-  private def fieldType(t: Type): String = t match {
-    case t: Declaration             ⇒ s"""userTypes("${t.getSkillName}")"""
+  private def fieldType(t : Type) : String = t match {
+    case t : Declaration             ⇒ s"""userTypes("${t.getSkillName}")"""
 
-    case t: GroundType              ⇒ t.getSkillName.capitalize+"Info"
+    case t : GroundType              ⇒ t.getSkillName.capitalize+"Info"
 
-    case t: ConstantLengthArrayType ⇒ s"new ConstantLengthArrayInfo(${t.getLength}, ${fieldType(t.getBaseType)})"
-    case t: VariableLengthArrayType ⇒ s"new VariableLengthArrayInfo(${fieldType(t.getBaseType)})"
-    case t: ListType                ⇒ s"new ListInfo(${fieldType(t.getBaseType)})"
-    case t: SetType                 ⇒ s"new SetInfo(${fieldType(t.getBaseType)})"
-    case t: MapType                 ⇒ s"new MapInfo(${t.getBaseTypes.map(fieldType(_)).mkString("List(", ",", ")")})"
+    case t : ConstantLengthArrayType ⇒ s"new ConstantLengthArrayInfo(${t.getLength}, ${fieldType(t.getBaseType)})"
+    case t : VariableLengthArrayType ⇒ s"new VariableLengthArrayInfo(${fieldType(t.getBaseType)})"
+    case t : ListType                ⇒ s"new ListInfo(${fieldType(t.getBaseType)})"
+    case t : SetType                 ⇒ s"new SetInfo(${fieldType(t.getBaseType)})"
+    case t : MapType                 ⇒ s"new MapInfo(${t.getBaseTypes.map(fieldType(_)).mkString("List(", ",", ")")})"
   }
 }

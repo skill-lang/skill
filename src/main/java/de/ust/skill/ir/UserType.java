@@ -10,14 +10,14 @@ import java.util.Set;
  * 
  * @author Timm Felden
  */
-final public class Definition extends Declaration {
+final public class UserType extends Declaration {
 
 	/**
 	 * super type is the type above this type. base type is the base type of the
 	 * formed type tree. This can even be <i>this</i>.
 	 */
-	private Definition superType = null, baseType = null;
-	private final List<Definition> children = new ArrayList<>();
+	private UserType superType = null, baseType = null;
+	private final List<UserType> children = new ArrayList<>();
 
 	// fields
 	private List<Field> fields = null;
@@ -32,7 +32,7 @@ final public class Definition extends Declaration {
 	 * @note the declaration has to be completed, i.e. it has to be evaluated in
 	 *       pre-order over the type hierarchy.
 	 */
-    private Definition(Name name, String comment, List<Restriction> restrictions, List<Hint> hints)
+    private UserType(Name name, String comment, List<Restriction> restrictions, List<Hint> hints)
 			throws ParseException {
         super(name, comment, restrictions, hints);
 
@@ -45,13 +45,13 @@ final public class Definition extends Declaration {
 	 * @throws ParseException
 	 *             if the declaration is already present
 	 */
-    public static Definition newDeclaration(TypeContext tc, Name name, String comment,
+    public static UserType newDeclaration(TypeContext tc, Name name, String comment,
 			List<Restriction> restrictions, List<Hint> hints) throws ParseException {
         String skillName = name.getSkillName();
 		if (tc.types.containsKey(skillName))
 			throw new ParseException("Duplicate declaration of type " + name);
 
-		Definition rval = new Definition(name, comment, restrictions, hints);
+		UserType rval = new UserType(name, comment, restrictions, hints);
 		tc.types.put(skillName, rval);
 		return rval;
 	}
@@ -70,7 +70,7 @@ final public class Definition extends Declaration {
 	 *             thrown if the declaration is illegal, e.g. because it
 	 *             contains illegal hints
 	 */
-	public void initialize(Definition SuperType, List<Field> Fields) throws ParseException {
+	public void initialize(UserType SuperType, List<Field> Fields) throws ParseException {
 		assert !isInitialized() : "multiple initialization";
 		assert null != Fields : "no fields supplied";
 		// check for duplicate fields
@@ -98,11 +98,11 @@ final public class Definition extends Declaration {
 		Hint.checkDeclaration(this, this.hints);
 	}
 
-	public Definition getBaseType() {
+	public UserType getBaseType() {
 		return baseType;
 	}
 
-	public Definition getSuperType() {
+	public UserType getSuperType() {
 		return superType;
 	}
 

@@ -21,7 +21,7 @@ import de.ust.skill.ir.Type
 trait StateAppenderMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
+    val packageName = if (this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.') + 1) else this.packageName;
     val out = open("internal/StateAppender.scala")
     //package
     out.write(s"""package ${packagePrefix}internal
@@ -83,8 +83,8 @@ private[internal] final class StateAppender(state : SerializableState, out : Fil
 }
 """)
 
-// TODO integrate this
-val todo = s"""
+    // TODO integrate this
+    val todo = s"""
   // we have to buffer the data chunk before writing it
   val dataChunk = new OutBuffer();
 
@@ -102,22 +102,24 @@ val todo = s"""
   }
   for (p ← state.pools) {
     p match {${
-    (for (t ← IR) yield {
-      val sName = t.getSkillName
-      val fields = t.getFields.filterNot(_.isIgnored)
-      s"""
-      case p : ${t.getCapitalName}StoragePool ⇒
+      (for (t ← IR) yield {
+        val sName = t.getSkillName
+        val fields = t.getFields.filterNot(_.isIgnored)
+        s"""
+      case p : ${t.getName.capital}StoragePool ⇒
         val newPool = p.poolIndex >= newPoolIndex
         val fields = p.fields.filter(chunkMap.contains(_))
         if (newPool || (0 != fields.size && p.dynamicSize > 0)) {
           string("$sName", out)
           if (newPool) {
             ${
-        if (null == t.getSuperType) "out.put(0.toByte)"
-        else s"""string("${t.getSuperType.getSkillName}", out)"""
-      }
-          }${if(null == t.getSuperType)"" else """
-          out.v64(lbpsiMap(p.poolIndex.toInt))"""}
+          if (null == t.getSuperType) "out.put(0.toByte)"
+          else s"""string("${t.getSuperType.getSkillName}", out)"""
+        }
+          }${
+          if (null == t.getSuperType) "" else """
+          out.v64(lbpsiMap(p.poolIndex.toInt))"""
+        }
           val count = p.blockInfos.last.count
           out.v64(count)
 
@@ -141,7 +143,7 @@ val todo = s"""
 
                 case sci : SimpleChunkInfo ⇒
                   fieldSize = count.toInt
-                  p.data.view(sci.bpsi.toInt, (sci.bpsi + sci.count).toInt).iterator.asInstanceOf[Iterator[_root_.${packagePrefix}${t.getCapitalName}]]
+                  p.data.view(sci.bpsi.toInt, (sci.bpsi + sci.count).toInt).iterator.asInstanceOf[Iterator[_root_.${packagePrefix}${t.getName.capital}]]
 
               }
               f.name match {${

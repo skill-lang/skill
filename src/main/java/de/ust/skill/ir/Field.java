@@ -5,6 +5,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Representation of a field declaration. TODO F
+ * 
+ * @author Timm Felden
+ */
 final public class Field {
 	private final boolean auto;
 	private final boolean isConstant;
@@ -161,8 +166,8 @@ final public class Field {
 	 * @return true, iff the field's type has an ignore hint
 	 */
 	public boolean hasIgnoredType() {
-		if (type instanceof Definition)
-			return ((Definition) type).isIgnored();
+		if (type instanceof UserType)
+			return ((UserType) type).isIgnored();
 		return false;
 	}
 }

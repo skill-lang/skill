@@ -7,7 +7,7 @@ package de.ust.skill.generator.scala
 
 import java.io.File
 import java.util.Date
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions._
 import de.ust.skill.generator.scala.api.AccessMaker
 import de.ust.skill.generator.scala.api.SkillStateMaker
 import de.ust.skill.generator.scala.internal.ExceptionsMaker
@@ -40,6 +40,8 @@ import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.parser.Parser
 import de.ust.skill.generator.scala.internal.FieldOffsetCalculatorMaker
 import de.ust.skill.generator.scala.internal.streams.MappedInStreamMaker
+import de.ust.skill.generator.common.Generator
+import de.ust.skill.ir.UserType
 
 /**
  * Entry point of the scala generator.
@@ -72,7 +74,7 @@ Opitions:
       m.outPath = args(args.length - 1)
 
       //parse argument code
-      m.IR = Parser.process(new File(skillPath)).toList
+      m.setIR(Parser.process(new File(skillPath)).to)
 
       // create output using maker chain
       m.make;
@@ -87,7 +89,7 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
 
 /**
  * A generator turns a set of skill declarations into a scala interface providing means of manipulating skill files
- * containing instances of the respective definitions.
+ * containing instances of the respective UserTypes.
  *
  * @author Timm Felden
  */
@@ -116,14 +118,11 @@ class Main extends FakeMain
     with TypeInfoMaker
     with TypesMaker {
 
-  var outPath : String = null
-  var IR : List[Declaration] = null
-
   /**
    * Translates types into scala type names.
    */
   override protected def mapType(t : Type) : String = t match {
-    case t : GroundType ⇒ t.getName() match {
+    case t : GroundType ⇒ t.getName.lower match {
       case "annotation" ⇒ "SkillType"
 
       case "bool"       ⇒ "Boolean"
@@ -155,11 +154,45 @@ class Main extends FakeMain
   /**
    * creates argument list of a constructor call, not including potential skillID or braces
    */
-  override protected def makeConstructorArguments(t : Declaration) = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", ")
-  override protected def appendConstructorArguments(t : Declaration) = {
+  override protected def makeConstructorArguments(t : UserType) = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", ")
+  override protected def appendConstructorArguments(t : UserType) = {
     val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
     if (r.isEmpty) ""
     else r.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", ", ", ", "")
+  }
+
+  /**
+   * Provide a nice file header:)
+   */
+  override private[scala] def header : String = _header
+  private lazy val _header = {
+    // create header from options
+    val headerLineLength = 51
+    val headerLine1 = Some((headerInfo.line1 match {
+      case Some(s) ⇒ s
+      case None    ⇒ headerInfo.license.map("LICENSE: "+_).getOrElse("Your SKilL Scala Binding")
+    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
+    val headerLine2 = Some((headerInfo.line2 match {
+      case Some(s) ⇒ s
+      case None ⇒ "generated: "+(headerInfo.date match {
+        case Some(s) ⇒ s
+        case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
+      })
+    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
+    val headerLine3 = Some((headerInfo.line3 match {
+      case Some(s) ⇒ s
+      case None ⇒ "by: "+(headerInfo.userName match {
+        case Some(s) ⇒ s
+        case None    ⇒ System.getProperty("user.name")
+      })
+    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
+
+    s"""/*  ___ _  ___ _ _                                                            *\\
+ * / __| |/ (_) | |       ${headerLine1.get} *
+ * \\__ \\ ' <| | | |__     ${headerLine2.get} *
+ * |___/_|\\_\\_|_|____|    ${headerLine3.get} *
+\\*                                                                            */
+"""
   }
 
   /**
@@ -168,58 +201,18 @@ class Main extends FakeMain
   override protected def packagePrefix() : String = _packagePrefix
   private var _packagePrefix = ""
 
-  override private[scala] def header : String = _header
-  private var _header = ""
-
-  private def setOptions(args : Array[String]) {
-    var index = 0
-    var headerLine1 : Option[String] = None
-    var headerLine2 : Option[String] = None
-    var headerLine3 : Option[String] = None
-    var userName : Option[String] = None
-    var date : Option[String] = None
-
-    while (index < args.length) args(index) match {
-      case "-p"    ⇒ _packagePrefix = args(index + 1)+"."; index += 2;
-      case "-u"    ⇒ userName = Some(args(index + 1)); index += 2;
-      case "-date" ⇒ date = Some(args(index + 1)); index += 2;
-      case "-h1"   ⇒ headerLine1 = Some(args(index + 1)); index += 2;
-      case "-h2"   ⇒ headerLine2 = Some(args(index + 1)); index += 2;
-      case "-h3"   ⇒ headerLine3 = Some(args(index + 1)); index += 2;
-
-      case unknown ⇒ sys.error(s"unkown Argument: $unknown")
-    }
-
-    // create header from options
-    val headerLineLength = 51
-    headerLine1 = Some((headerLine1 match {
-      case Some(s) ⇒ s
-      case None    ⇒ "Your SKilL Scala Binding"
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    headerLine2 = Some((headerLine2 match {
-      case Some(s) ⇒ s
-      case None ⇒ "generated: "+(date match {
-        case Some(s) ⇒ s
-        case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    headerLine3 = Some((headerLine3 match {
-      case Some(s) ⇒ s
-      case None ⇒ "by: "+(userName match {
-        case Some(s) ⇒ s
-        case None    ⇒ System.getProperty("user.name")
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-
-    _header = s"""/*  ___ _  ___ _ _                                                            *\\
- * / __| |/ (_) | |       ${headerLine1.get} *
- * \\__ \\ ' <| | | |__     ${headerLine2.get} *
- * |___/_|\\_\\_|_|____|    ${headerLine3.get} *
-\\*                                                                            */
-"""
+  override def setPackage(names : List[String]) {
+    _packagePrefix = names.foldRight("")(_+"."+_)
   }
 
-  override protected def defaultValue(f : Field) = f.getType() match {
+  override def setOptions(args : Array[String]) {
+    var index = 0
+    while (index < args.length) args(index) match {
+      case unknown ⇒ sys.error(s"unkown Argument: $unknown")
+    }
+  }
+
+  override protected def defaultValue(t : Type) = t match {
     case t : GroundType ⇒ t.getSkillName() match {
       case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
       case "f32" | "f64"                        ⇒ "0.0f"
@@ -246,7 +239,7 @@ class Main extends FakeMain
     case _ ⇒ target
   }
 
-  protected def writeField(d : Declaration, f : Field) : String = {
+  protected def writeField(d : UserType, f : Field) : String = {
     val fName = escaped(f.getName)
     f.getType match {
       case t : GroundType ⇒ t.getSkillName match {

@@ -36,7 +36,7 @@ public abstract class Type implements Comparable<Type> {
 		}
 
 		// we have to compare declarations
-		Definition t = (Definition) this, s = (Definition) o;
+		UserType t = (UserType) this, s = (UserType) o;
 
 		if ((l = (t.getBaseType() == null)) | (r = (s.getBaseType() == null))) {
 			if (l && r)
@@ -47,11 +47,11 @@ public abstract class Type implements Comparable<Type> {
 		}
 
 		if (t.getBaseType() == s.getBaseType()) {
-			Stack<Definition> left = new Stack<>(), right = new Stack<>();
+			Stack<UserType> left = new Stack<>(), right = new Stack<>();
 			// collect super types
-			for (Definition i = t; i != null; i = i.getSuperType())
+			for (UserType i = t; i != null; i = i.getSuperType())
 				left.push(i);
-			for (Definition i = s; i != null; i = i.getSuperType())
+			for (UserType i = s; i != null; i = i.getSuperType())
 				right.push(i);
 
 			// pop common super classes (can not be null, because this is not

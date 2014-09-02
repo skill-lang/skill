@@ -8,6 +8,7 @@ package de.ust.skill.generator.ada.api
 import de.ust.skill.generator.ada.GeneralOutputMaker
 import de.ust.skill.ir.Declaration
 import scala.collection.JavaConversions._
+import de.ust.skill.ir.UserType
 
 trait SkillBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -118,95 +119,98 @@ package body ${packagePrefix.capitalize}.Api is
       end if;
    end Write;
 ${
-  /**
-   * Provides the fields of a given type as a comma-separated list used as record attributes.
-   */
-  def printFields(d : Declaration): String = {
-    var output = s"""'(\r\n         skill_id => Natural (${if (null == d.getBaseType) escaped(d.getName) else escaped(d.getBaseType.getName)}_Type_Declaration.Storage_Pool.Length) + 1"""
-    output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
-      s",\r\n         ${f.getSkillName} => ${f.getSkillName}"
-    }).mkString("")
-    output += "\r\n      )";
-    output
-  }
+      /**
+       * Provides the fields of a given type as a comma-separated list used as record attributes.
+       */
+      def printFields(d : UserType) : String = {
+        var output = s"""'(\r\n         skill_id => Natural (${
+          if (null == d.getBaseType) escaped(d.getName.ada)
+          else escaped(d.getBaseType.getName.ada)
+        }_Type_Declaration.Storage_Pool.Length) + 1"""
+        output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f ⇒
+          s",\r\n         ${f.getSkillName} => ${f.getSkillName}"
+        }).mkString("")
+        output += "\r\n      )";
+        output
+      }
 
-  /**
-   * Provides the fields of a given type as a comma-separated list used as parameters.
-   */
-  def printSimpleParameters(d : Declaration): String = {
-    var output = "";
-    var hasFields = false
-    output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f =>
-      hasFields = true
-      f.getSkillName()
-    }).mkString(", ", ", ", "")
-    if (hasFields) output else ""
-  }
+      /**
+       * Provides the fields of a given type as a comma-separated list used as parameters.
+       */
+      def printSimpleParameters(d : UserType) : String = {
+        var output = "";
+        var hasFields = false
+        output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f ⇒
+          hasFields = true
+          f.getSkillName()
+        }).mkString(", ", ", ", "")
+        if (hasFields) output else ""
+      }
 
-  /**
-   * Pushes the new object also into the storage pools of the super types.
-   */
-  def printSuperTypes(d: Declaration): String = {
-    var output = "";
-    val superTypes = getSuperTypes(d).toList.reverse
-    superTypes.foreach({ t =>
-      output += s"""\r\n      ${escaped(t.getName)}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));"""
-    })
-    output
-  }
+      /**
+       * Pushes the new object also into the storage pools of the super types.
+       */
+      def printSuperTypes(d : UserType) : String = {
+        var output = "";
+        val superTypes = getSuperTypes(d).toList.reverse
+        superTypes.foreach({ t ⇒
+          output += s"""\r\n      ${escaped(t.getName.ada)}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));"""
+        })
+        output
+      }
 
-  var output = ""
-  /**
-   * Provides the API functions and procedures for all types.
-   */
-  for (d ← IR) {
-    output += s"""
-   function New_${escaped(d.getName)} (State : access Skill_State${printParameters(d)}) return ${escaped(d.getName)}_Type_Access is
-      ${escaped(d.getName)}_Type_Declaration : Type_Information := State.Types.Element ("${d.getSkillName}");${
-  var output = "" 
-  val superTypes = getSuperTypes(d).toList.reverse
-  superTypes.foreach({ t =>
-    output += s"""\r\n      ${escaped(t.getName)}_Type_Declaration : Type_Information := State.Types.Element ("${t.getSkillName}");"""
-  })
-  output
-}
-      New_Object : ${escaped(d.getName)}_Type_Access := new ${escaped(d.getName)}_Type${printFields(d)};
+      var output = ""
+      /**
+       * Provides the API functions and procedures for all types.
+       */
+      for (d ← IR) {
+        output += s"""
+   function New_${escaped(d.getName.ada)} (State : access Skill_State${printParameters(d)}) return ${escaped(d.getName.ada)}_Type_Access is
+      ${escaped(d.getName.ada)}_Type_Declaration : Type_Information := State.Types.Element ("${d.getSkillName}");${
+          var output = ""
+          val superTypes = getSuperTypes(d).toList.reverse
+          superTypes.foreach({ t ⇒
+            output += s"""\r\n      ${escaped(t.getName.ada)}_Type_Declaration : Type_Information := State.Types.Element ("${t.getSkillName}");"""
+          })
+          output
+        }
+      New_Object : ${escaped(d.getName.ada)}_Type_Access := new ${escaped(d.getName.ada)}_Type${printFields(d)};
    begin
-      ${escaped(d.getName)}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));${printSuperTypes(d)}
+      ${escaped(d.getName.ada)}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));${printSuperTypes(d)}
       return New_Object;
-   end New_${escaped(d.getName)};
+   end New_${escaped(d.getName.ada)};
 
-   procedure New_${escaped(d.getName)} (State : access Skill_State${printParameters(d)}) is
-      New_Object : ${escaped(d.getName)}_Type_Access := New_${escaped(d.getName)} (State${printSimpleParameters(d)});
+   procedure New_${escaped(d.getName.ada)} (State : access Skill_State${printParameters(d)}) is
+      New_Object : ${escaped(d.getName.ada)}_Type_Access := New_${escaped(d.getName.ada)} (State${printSimpleParameters(d)});
    begin
       null;
-   end New_${escaped(d.getName)};
+   end New_${escaped(d.getName.ada)};
 
-   function ${escaped(d.getName)}s_Size (State : access Skill_State) return Natural is
+   function ${escaped(d.getName.ada)}s_Size (State : access Skill_State) return Natural is
       (Natural (State.Types.Element ("${d.getSkillName}").Storage_Pool.Length));
 
-   function Get_${escaped(d.getName)} (State : access Skill_State; Index : Natural) return ${escaped(d.getName)}_Type_Access is
-      (${escaped(d.getName)}_Type_Access (State.Types.Element ("${d.getSkillName}").Storage_Pool.Element (Index)));
+   function Get_${escaped(d.getName.ada)} (State : access Skill_State; Index : Natural) return ${escaped(d.getName.ada)}_Type_Access is
+      (${escaped(d.getName.ada)}_Type_Access (State.Types.Element ("${d.getSkillName}").Storage_Pool.Element (Index)));
 
-   function Get_${escaped(d.getName)}s (State : access Skill_State) return ${escaped(d.getName)}_Type_Accesses is
+   function Get_${escaped(d.getName.ada)}s (State : access Skill_State) return ${escaped(d.getName.ada)}_Type_Accesses is
       use Storage_Pool_Vector;
 
       Type_Declaration : Type_Information := State.Types.Element ("${d.getSkillName}");
       Length : Natural := Natural (Type_Declaration.Storage_Pool.Length);
-      rval : ${escaped(d.getName)}_Type_Accesses := new ${escaped(d.getName)}_Type_Array (1 .. Length);
+      rval : ${escaped(d.getName.ada)}_Type_Accesses := new ${escaped(d.getName.ada)}_Type_Array (1 .. Length);
 
       procedure Iterate (Position : Cursor) is
       begin
-         rval (To_Index (Position)) := ${escaped(d.getName)}_Type_Access (Element (Position));
+         rval (To_Index (Position)) := ${escaped(d.getName.ada)}_Type_Access (Element (Position));
       end Iterate;
       pragma Inline (Iterate);
    begin
       Type_Declaration.Storage_Pool.Iterate (Iterate'Access);
       return rval;
-   end Get_${escaped(d.getName)}s;\r\n"""
-  }
-  output
-}
+   end Get_${escaped(d.getName.ada)}s;\r\n"""
+      }
+      output
+    }
 end ${packagePrefix.capitalize}.Api;
 """)
 

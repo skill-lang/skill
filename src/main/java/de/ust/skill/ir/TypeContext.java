@@ -96,12 +96,12 @@ public final class TypeContext {
         // TODO implementation! π_t
     }
 
-    public static List<Definition> removeSpecialDeclarations(List<Declaration> IR) {
-        List<Definition> rval = new ArrayList<>(IR.size());
+    public static List<UserType> removeSpecialDeclarations(List<Declaration> IR) {
+        List<UserType> rval = new ArrayList<>(IR.size());
         List<Declaration> l = removeEnums(removeInterfaces(removeTypedefs(IR)));
         // type check by copy to make java happy
         for (Declaration d : l)
-            rval.add((Definition) d);
+            rval.add((UserType) d);
         return rval;
     }
 }

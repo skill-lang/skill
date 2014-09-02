@@ -251,20 +251,20 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
    ) is
    begin
 ${
-  /**
-   * Replaces the "old/wrong" object by the new object in all super types.
-   */
-  def printSuperTypes(d: Declaration): String = {
-    var output = "";
-    val superTypes = getSuperTypes(d).toList.reverse
-    superTypes.foreach({ t =>
-      output += s"""\r\n\r\n                  declare
+      /**
+       * Replaces the "old/wrong" object by the new object in all super types.
+       */
+      def printSuperTypes(d : UserType) : String = {
+        var output = "";
+        val superTypes = getSuperTypes(d).toList.reverse
+        superTypes.foreach({ t ⇒
+          output += s"""\r\n\r\n                  declare
                      Sub_Type   : Type_Information := ${escaped(d.getName)}_Type_Declaration;
                      Super_Type : Type_Information := ${escaped(t.getName)}_Type_Declaration;
                      Index      : Natural          := (Sub_Type.lbpsi - Super_Type.lbpsi) + Super_Type.spsi + I - 1;
                   begin\r\n"""
-      if (t == superTypes.last)
-        output += s"""                     declare
+          if (t == superTypes.last)
+            output += s"""                     declare
                         procedure Free is new Ada.Unchecked_Deallocation (${escaped(t.getName)}_Type, ${escaped(t.getName)}_Type_Access);
                         Old_Object : ${t.getName}_Type_Access :=
                            ${escaped(t.getName)}_Type_Access (Super_Type.Storage_Pool.Element (Index));
@@ -272,67 +272,67 @@ ${
                         Object.skill_id := Old_Object.skill_id;
                         Free (Old_Object);
                      end;\r\n"""
-      output += s"""                     Super_Type.Storage_Pool.Replace_Element (Index, Object);
+          output += s"""                     Super_Type.Storage_Pool.Replace_Element (Index, Object);
                   end;"""
-    })
-    output
-  }
+        })
+        output
+      }
 
-  /**
-   * Provides the default values of all fields of a given type.
-   */
-  def printDefaultValues(d: Declaration): String = {
-    var output = s"""'(\r\n                     skill_id => ${if (null == d.getSuperType) s"Natural (${escaped(d.getBaseType.getName)}_Type_Declaration.Storage_Pool.Length) + 1" else "0"}"""
-    val fields = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
-    output += fields.map({ f ⇒
-      s""",\r\n                     ${f.getSkillName} => ${defaultValue(f.getType, d, f)}"""
-    }).mkString("")
-    output += "\r\n                  )";
-    output
-  }
+      /**
+       * Provides the default values of all fields of a given type.
+       */
+      def printDefaultValues(d : UserType) : String = {
+        var output = s"""'(\r\n                     skill_id => ${if (null == d.getSuperType) s"Natural (${escaped(d.getBaseType.getName)}_Type_Declaration.Storage_Pool.Length) + 1" else "0"}"""
+        val fields = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
+        output += fields.map({ f ⇒
+          s""",\r\n                     ${f.getSkillName} => ${defaultValue(f.getType, d, f)}"""
+        }).mkString("")
+        output += "\r\n                  )";
+        output
+      }
 
-  var output = "";
-  /**
-   * Provides the type record information with the fields and their default values of all types.
-   */
-  for (d ← IR) {
-    output += s"""      if "${d.getSkillName}" = Type_Name then
+      var output = "";
+      /**
+       * Provides the type record information with the fields and their default values of all types.
+       */
+      for (d ← IR) {
+        output += s"""      if "${d.getSkillName}" = Type_Name then
          declare
 ${
-  var output = s"""            ${escaped(d.getName)}_Type_Declaration : Type_Information := Types.Element ("${d.getSkillName}");\r\n"""
-  val superTypes = getSuperTypes(d).toList.reverse
-  superTypes.foreach({ t =>
-    output += s"""            ${t.getName}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");\r\n"""
-  })
-  output.stripLineEnd
-}
+          var output = s"""            ${escaped(d.getName)}_Type_Declaration : Type_Information := Types.Element ("${d.getSkillName}");\r\n"""
+          val superTypes = getSuperTypes(d).toList.reverse
+          superTypes.foreach({ t ⇒
+            output += s"""            ${t.getName}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");\r\n"""
+          })
+          output.stripLineEnd
+        }
          begin
             for I in 1 .. Instance_Count loop
                declare
 """
-    output += d.getFields.filter({ f ⇒ !f.isIgnored }).map({ f ⇒
-      f.getType match {
-        case t: VariableLengthArrayType ⇒
-          s"               New_${mapType(f.getType, d, f).stripSuffix(".Vector")} : ${mapType(f.getType, d, f)};\r\n"
-        case t: ListType ⇒
-          s"               New_${mapType(f.getType, d, f).stripSuffix(".List")} : ${mapType(f.getType, d, f)};\r\n"
-        case t: SetType ⇒
-          s"               New_${mapType(f.getType, d, f).stripSuffix(".Set")} : ${mapType(f.getType, d, f)};\r\n"
-        case t: MapType ⇒
-          s"               New_${mapType(f.getType, d, f).stripSuffix(".Map")} : ${mapType(f.getType, d, f)};\r\n"
-        case _ ⇒ ""
-      }
-    }).mkString("")
-    output += s"""                  Object : Skill_Type_Access := new ${escaped(d.getName)}_Type${printDefaultValues(d)};
+        output += d.getFields.filter({ f ⇒ !f.isIgnored }).map({ f ⇒
+          f.getType match {
+            case t : VariableLengthArrayType ⇒
+              s"               New_${mapType(f.getType, d, f).stripSuffix(".Vector")} : ${mapType(f.getType, d, f)};\r\n"
+            case t : ListType ⇒
+              s"               New_${mapType(f.getType, d, f).stripSuffix(".List")} : ${mapType(f.getType, d, f)};\r\n"
+            case t : SetType ⇒
+              s"               New_${mapType(f.getType, d, f).stripSuffix(".Set")} : ${mapType(f.getType, d, f)};\r\n"
+            case t : MapType ⇒
+              s"               New_${mapType(f.getType, d, f).stripSuffix(".Map")} : ${mapType(f.getType, d, f)};\r\n"
+            case _ ⇒ ""
+          }
+        }).mkString("")
+        output += s"""                  Object : Skill_Type_Access := new ${escaped(d.getName)}_Type${printDefaultValues(d)};
                begin
                   ${escaped(d.getName)}_Type_Declaration.Storage_Pool.Append (Object);${printSuperTypes(d)}
                end;
             end loop;
          end;
       end if;\r\n"""
-  }
-  output.stripSuffix("\r\n")
-}
+      }
+      output.stripSuffix("\r\n")
+    }
    end Create_Objects;
 
    procedure Read_Queue_Vector_Iterator (Iterator : Read_Queue_Vector.Cursor) is
@@ -359,13 +359,13 @@ ${
       Type_Declaration.Storage_Pool.Iterate (Iterate'Access);
 
 ${
-  var output = "";
-  /**
-   * Reads the field data of all fields.
-   */
-  for (d ← IR) {
-    output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
-      s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
+      var output = "";
+      /**
+       * Reads the field data of all fields.
+       */
+      for (d ← IR) {
+        output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
+          s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
          for I in Item.Start_Index .. Item.End_Index loop
             declare
                Object : ${escaped(d.getName)}_Type_Access := ${escaped(d.getName)}_Type_Access (Storage_Pool (I));
@@ -373,10 +373,11 @@ ${
             end;
          end loop;
          Skip_Bytes := False;
-      end if;\r\n"""}).mkString("")
-  }
-  output.stripSuffix("\r\n")
-}
+      end if;\r\n"""
+        }).mkString("")
+      }
+      output.stripSuffix("\r\n")
+    }
 
       if True = Skip_Bytes then
          Byte_Reader.Skip_Bytes (Input_Stream, Item.Data_Length);
@@ -400,12 +401,12 @@ ${
       (new String'(String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream)))));
 
 ${
-  var output = "";
-  /**
-   * Reads the skill id of a given object.
-   */
-  for (d ← IR) {
-    output += s"""   function Read_${escaped(d.getName)}_Type (Input_Stream : ASS_IO.Stream_Access) return ${escaped(d.getName)}_Type_Access is
+      var output = "";
+      /**
+       * Reads the skill id of a given object.
+       */
+      for (d ← IR) {
+        output += s"""   function Read_${escaped(d.getName)}_Type (Input_Stream : ASS_IO.Stream_Access) return ${escaped(d.getName)}_Type_Access is
       Index : Long := Byte_Reader.Read_v64 (Input_Stream);
    begin
       if 0 = Index then
@@ -414,23 +415,23 @@ ${
          return ${escaped(d.getName)}_Type_Access (Types.Element ("${if (null == d.getSuperType) d.getSkillName else d.getBaseType.getSkillName}").Storage_Pool.Element (Positive (Index)));
       end if;
    end Read_${escaped(d.getName)}_Type;\r\n\r\n"""
-  }
-  output.stripSuffix("\r\n")
-}
+      }
+      output.stripSuffix("\r\n")
+    }
    procedure Update_Storage_Pool_Start_Index is
    begin
 ${
-  var output = "";
-  /**
-   * Corrects the SPSI (storage pool start index) of all types.
-   */
-  for (d ← IR) {
-    output += s"""      if Types.Contains ("${d.getSkillName}") then
+      var output = "";
+      /**
+       * Corrects the SPSI (storage pool start index) of all types.
+       */
+      for (d ← IR) {
+        output += s"""      if Types.Contains ("${d.getSkillName}") then
          Types.Element ("${d.getSkillName}").spsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length) + 1;
       end if;\r\n"""
-  }
-  output.stripSuffix("\r\n")
-}
+      }
+      output.stripSuffix("\r\n")
+    }
    end Update_Storage_Pool_Start_Index;
 
    procedure Skip_Restrictions is

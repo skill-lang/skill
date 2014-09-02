@@ -21,38 +21,38 @@ with Ada.Strings.Hash;
 with Ada.Unchecked_Conversion;
 with Interfaces;
 ${
-var output = ""
-  /**
-   * Imports the Ada containers for compound types, if necessary.
-   */
-  for (d ← IR) {
-    var doublyLinkedListNeeded = false;
-    var hashedSetsNeeded = false;
-    var hashedMapsNeeded = false;
+      var output = ""
+      /**
+       * Imports the Ada containers for compound types, if necessary.
+       */
+      for (d ← IR) {
+        var doublyLinkedListNeeded = false;
+        var hashedSetsNeeded = false;
+        var hashedMapsNeeded = false;
 
-    d.getFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
-      f.getType match {
-        case t: ListType ⇒ 
-          if (false == doublyLinkedListNeeded) {
-            output += "with Ada.Containers.Doubly_Linked_Lists;\r\n"
-            doublyLinkedListNeeded = true
+        d.getFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
+          f.getType match {
+            case t : ListType ⇒
+              if (false == doublyLinkedListNeeded) {
+                output += "with Ada.Containers.Doubly_Linked_Lists;\r\n"
+                doublyLinkedListNeeded = true
+              }
+            case t : SetType ⇒
+              if (false == hashedSetsNeeded) {
+                output += "with Ada.Containers.Hashed_Sets;\r\n"
+                hashedSetsNeeded = true
+              }
+            case t : MapType ⇒
+              if (false == hashedMapsNeeded) {
+                output += "with Ada.Containers.Hashed_Maps;\r\n"
+                hashedMapsNeeded = true
+              }
+            case _ ⇒ null
           }
-        case t: SetType ⇒
-          if (false == hashedSetsNeeded) {
-            output += "with Ada.Containers.Hashed_Sets;\r\n"
-            hashedSetsNeeded = true
-          }
-        case t: MapType ⇒
-		  if (false == hashedMapsNeeded) {
-		    output += "with Ada.Containers.Hashed_Maps;\r\n"
-		    hashedMapsNeeded = true
-		  }
-        case _ ⇒ null
+        })
       }
-    })
-  }
-  output
-}
+      output
+    }
 --
 --  This package provides the user types, the accessor functions to the fields,
 --  the skill state and the help functions (hash / comparison) for compound
@@ -94,69 +94,70 @@ package ${packagePrefix.capitalize} is
    function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type;
 
 ${
-  /**
-   * Provides the user types.
-   */
-  var output = "";
-  for (d ← IR) {
-    output += s"""   type ${escaped(d.getName)}_Type is new Skill_Type with private;\r\n"""
-    output += s"""   type ${escaped(d.getName)}_Type_Access is access all ${escaped(d.getName)}_Type;\r\n"""
-    output += s"""   type ${escaped(d.getName)}_Type_Array is array (Natural range <>) of ${escaped(d.getName)}_Type_Access;\r\n"""
-    output += s"""   type ${escaped(d.getName)}_Type_Accesses is access ${escaped(d.getName)}_Type_Array;\r\n"""
-    output += s"""   function Hash (Element : ${escaped(d.getName)}_Type_Access) return Ada.Containers.Hash_Type;\r\n\r\n"""
-  }
-
-  output.stripLineEnd
-
-  /**
-   * Provides the compound types.
-   */
-  for (d ← IR) {
-    d.getFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
-      f.getType match {
-        case t: ConstantLengthArrayType ⇒
-          output += s"   type ${mapType(f.getType, d, f)} is array (1 .. ${t.getLength}) of ${mapType(t.getBaseType, d, f)};\r\n"
-        case t: VariableLengthArrayType ⇒
-          output += s"   package ${mapType(f.getType, d, f).stripSuffix(".Vector")} is new Ada.Containers.Vectors (Positive, ${mapType(t.getBaseType, d, f)});\r\n"
-        case t: ListType ⇒
-          output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".List")} is new Ada.Containers.Doubly_Linked_Lists (${mapType(t.getBaseType, d, f)}, "=");\r\n"""
-        case t: SetType ⇒
-          output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Set")} is new Ada.Containers.Hashed_Sets (${mapType(t.getBaseType, d, f)}, Hash, "=");\r\n"""
-        case t: MapType ⇒ {
-          val types = t.getBaseTypes().reverse
-          types.slice(0, types.length-1).zipWithIndex.foreach({ case (t, i) =>
-            val x = {
-              if (0 == i)
-                mapType(types.get(i), d, f)
-              else
-                s"""${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-i}.Map"""
-            }
-
-            output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)} is new Ada.Containers.Hashed_Maps (${mapType(types.get(i+1), d, f)}, ${x}, Hash, "=");\r\n"""
-            output += s"""   function "=" (Left, Right : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}.Map) return Boolean renames ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length-(i+1)}."=";\r\n""";
-          })
-          output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Map")} renames ${mapType(f.getType, d, f).stripSuffix(".Map")}_1;\r\n"""
-        }
-        case _ ⇒ null
+      /**
+       * Provides the user types.
+       */
+      var output = "";
+      for (d ← IR) {
+        output += s"""   type ${escaped(d.getName.ada)}_Type is new Skill_Type with private;\r\n"""
+        output += s"""   type ${escaped(d.getName.ada)}_Type_Access is access all ${escaped(d.getName.ada)}_Type;\r\n"""
+        output += s"""   type ${escaped(d.getName.ada)}_Type_Array is array (Natural range <>) of ${escaped(d.getName.ada)}_Type_Access;\r\n"""
+        output += s"""   type ${escaped(d.getName.ada)}_Type_Accesses is access ${escaped(d.getName.ada)}_Type_Array;\r\n"""
+        output += s"""   function Hash (Element : ${escaped(d.getName.ada)}_Type_Access) return Ada.Containers.Hash_Type;\r\n\r\n"""
       }
-    })
-  }
 
-  /**
-   * Provides the accessor functions to the fields of every type.
-   */
-  for (d ← IR) {
-    d.getAllFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
-      output += s"""   function Get_${f.getName.capitalize} (Object : ${escaped(d.getName)}_Type) return ${mapType(f.getType, d, f)};\r\n"""
-      if (!f.isConstant)
-        output += s"""   procedure Set_${f.getName.capitalize} (
-      Object : in out ${escaped(d.getName)}_Type;
+      output.stripLineEnd
+
+      /**
+       * Provides the compound types.
+       */
+      for (d ← IR) {
+        d.getFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
+          f.getType match {
+            case t : ConstantLengthArrayType ⇒
+              output += s"   type ${mapType(f.getType, d, f)} is array (1 .. ${t.getLength}) of ${mapType(t.getBaseType, d, f)};\r\n"
+            case t : VariableLengthArrayType ⇒
+              output += s"   package ${mapType(f.getType, d, f).stripSuffix(".Vector")} is new Ada.Containers.Vectors (Positive, ${mapType(t.getBaseType, d, f)});\r\n"
+            case t : ListType ⇒
+              output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".List")} is new Ada.Containers.Doubly_Linked_Lists (${mapType(t.getBaseType, d, f)}, "=");\r\n"""
+            case t : SetType ⇒
+              output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Set")} is new Ada.Containers.Hashed_Sets (${mapType(t.getBaseType, d, f)}, Hash, "=");\r\n"""
+            case t : MapType ⇒ {
+              val types = t.getBaseTypes().reverse
+              types.slice(0, types.length - 1).zipWithIndex.foreach({
+                case (t, i) ⇒
+                  val x = {
+                    if (0 == i)
+                      mapType(types.get(i), d, f)
+                    else
+                      s"""${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length - i}.Map"""
+                  }
+
+                  output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length - (i + 1)} is new Ada.Containers.Hashed_Maps (${mapType(types.get(i + 1), d, f)}, ${x}, Hash, "=");\r\n"""
+                  output += s"""   function "=" (Left, Right : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length - (i + 1)}.Map) return Boolean renames ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length - (i + 1)}."=";\r\n""";
+              })
+              output += s"""   package ${mapType(f.getType, d, f).stripSuffix(".Map")} renames ${mapType(f.getType, d, f).stripSuffix(".Map")}_1;\r\n"""
+            }
+            case _ ⇒ null
+          }
+        })
+      }
+
+      /**
+       * Provides the accessor functions to the fields of every type.
+       */
+      for (d ← IR) {
+        d.getAllFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
+          output += s"""   function Get_${f.getName.capitalize} (Object : ${escaped(d.getName.ada)}_Type) return ${mapType(f.getType, d, f)};\r\n"""
+          if (!f.isConstant)
+            output += s"""   procedure Set_${f.getName.capitalize} (
+      Object : in out ${escaped(d.getName.ada)}_Type;
       Value  :        ${mapType(f.getType, d, f)}
    );\r\n\r\n"""
-    })
-  }
-  output.stripLineEnd
-}
+        })
+      }
+      output.stripLineEnd
+    }
 private
 
    type Skill_States is (Unused, Append, Create, Read, Write);
@@ -168,24 +169,24 @@ private
       end record;
 
 ${
-  /**
-   * Provides the record types of the type declarations.
-   */
-  var output = "";
-  for (d ← IR) {
-    val superType = if (d.getSuperType == null) "Skill" else d.getSuperType.getName
-    output += s"""   type ${escaped(d.getName)}_Type is new ${superType}_Type with\r\n      record\r\n"""
-    val fields = d.getFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
-    output += fields.map({ f ⇒
-      var comment = "";
-      if (f.isAuto()) comment = "  --  auto aka not serialized"
-      s"""         ${f.getSkillName} : ${mapType(f.getType, d, f)};${comment}"""
-    }).mkString("\r\n")
-    if (fields.length <= 0) output += s"""         null;"""
-    output += s"""\r\n      end record;\r\n\r\n"""
-  }
-  output.stripLineEnd
-}
+      /**
+       * Provides the record types of the type declarations.
+       */
+      var output = "";
+      for (d ← IR) {
+        val superType = if (d.getSuperType == null) "Skill" else d.getSuperType.getName
+        output += s"""   type ${escaped(d.getName.ada)}_Type is new ${superType}_Type with\r\n      record\r\n"""
+        val fields = d.getFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
+        output += fields.map({ f ⇒
+          var comment = "";
+          if (f.isAuto()) comment = "  --  auto aka not serialized"
+          s"""         ${f.getSkillName} : ${mapType(f.getType, d, f)};${comment}"""
+        }).mkString("\r\n")
+        if (fields.length <= 0) output += s"""         null;"""
+        output += s"""\r\n      end record;\r\n\r\n"""
+      }
+      output.stripLineEnd
+    }
    ------------------
    --  STRING POOL --
    ------------------
