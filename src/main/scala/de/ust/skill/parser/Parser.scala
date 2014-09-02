@@ -106,7 +106,10 @@ final class Parser(delimitWithUnderscore:Boolean = true) {
      * creates a shorthand for a more complex type
      */
     private def typedef = opt(comment) ~ ("typedef" ~> id) ~ rep(fieldRestriction|hint) ~ fieldType <~ ";" ^^ {
-      case c ~ name ~ desc ~ target ⇒ null
+      case c ~ name ~ specs ~ target ⇒ Typedef(
+          stringToName(name),
+          new Description(c, specs.collect{case r:Restriction⇒r}, specs.collect{case h:Hint⇒h}),
+          target)
     };
 
     /**
@@ -358,7 +361,7 @@ final class Parser(delimitWithUnderscore:Boolean = true) {
   /**
    * Turns the AST into IR.
    */
-  private def buildIR(defs: List[Definition]): java.util.List[ir.Declaration] = {
+  private def buildIR(defs: List[Definition]): java.util.List[ir.Definition] = {
     // create declarations
     // skillname ⇀ subtypes
     var subtypes = new HashMap[String, List[Definition]]
@@ -387,7 +390,7 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
     }
 
     // create declarations
-    val rval = definitionNames.map({ case (n, f) ⇒ (f, ir.Declaration.newDeclaration(
+    val rval = definitionNames.map({ case (n, f) ⇒ (f, ir.Definition.newDeclaration(
         tc,
         f.name.ir,
         f.description.comment.map(_.text.head).getOrElse(""),
@@ -408,7 +411,7 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
     }
     def mkField(node: Field): ir.Field = try {
       node match {
-        case f: Data     ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto, 
+        case f: Data     ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto,
             f.description.comment.map(_.text.head).getOrElse(""), f.description.restrictions, f.description.hints)
         case f: Constant ⇒ new ir.Field(mkType(f.t), f.name, f.value,
             f.description.comment.map(_.text.head).getOrElse(""), f.description.restrictions, f.description.hints)
@@ -446,8 +449,10 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
       Seq(d)
     }
 
-    (for(d <- rval.values if null == d.getSuperType)
-      yield getInTypeOrder(d)).toSeq.foldLeft(Seq[ir.Declaration]())(_ ++ _)
+    // TODO type order
+//    (for(d <- rval.values if null == d.getSuperType)
+//      yield getInTypeOrder(d)).toSeq.foldLeft(Seq[ir.Definition]())(_ ++ _)
+    ???
   }
 }
 
@@ -457,7 +462,7 @@ object Parser {
   /**
    * returns an unsorted list of declarations
    */
-  def process(input: File): java.util.List[ir.Declaration] = {
+  def process(input: File): java.util.List[ir.Definition] = {
     val p = new Parser
     p.buildIR(p.parseAll(input).to)
   }

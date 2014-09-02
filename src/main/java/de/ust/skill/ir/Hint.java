@@ -17,7 +17,7 @@ public enum Hint {
 	 * @throws ParseException
 	 *             if there is any illegal usage of a hint
 	 */
-	static void checkDeclaration(final Declaration d, Set<Hint> hints) throws ParseException {
+	static void checkDeclaration(final Definition d, Set<Hint> hints) throws ParseException {
 		if (hints.contains(distributed))
 			throw new ParseException("Illegal hint !distributed on type declaration " + d);
         if (hints.contains(ondemand))

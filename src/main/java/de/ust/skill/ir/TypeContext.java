@@ -1,6 +1,8 @@
 package de.ust.skill.ir;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,71 +13,95 @@ import java.util.Set;
  * @author Timm Felden
  */
 public final class TypeContext {
-	/**
-	 * Mark ground types which create reference like fields.
-	 * 
-	 * @author Timm Felden
-	 */
-	private static final class PointerType extends GroundType implements ReferenceType {
-		PointerType(TypeContext tc, String name) {
-			super(tc, name);
-		}
-	}
+    /**
+     * Mark ground types which create reference like fields.
+     * 
+     * @author Timm Felden
+     */
+    private static final class PointerType extends GroundType implements ReferenceType {
+        PointerType(TypeContext tc, String name) {
+            super(tc, name);
+        }
+    }
 
-	protected final Map<String, Type> types = new HashMap<>();
+    protected final Map<String, Type> types = new HashMap<>();
 
-	public TypeContext() {
-		new PointerType(this, "annotation");
+    public TypeContext() {
+        new PointerType(this, "annotation");
 
-		new GroundType(this, "bool");
+        new GroundType(this, "bool");
 
-		new GroundType(this, "i8");
-		new GroundType(this, "i16");
-		new GroundType(this, "i32");
-		new GroundType(this, "i64");
+        new GroundType(this, "i8");
+        new GroundType(this, "i16");
+        new GroundType(this, "i32");
+        new GroundType(this, "i64");
 
-		new GroundType(this, "v64");
+        new GroundType(this, "v64");
 
-		new GroundType(this, "f32");
-		new GroundType(this, "f64");
+        new GroundType(this, "f32");
+        new GroundType(this, "f64");
 
-		new PointerType(this, "string");
-	}
+        new PointerType(this, "string");
+    }
 
-	/**
-	 * unification has to be done in the constructor or a factory method and
-	 * must not be made visible to a client
-	 * 
-	 * @param t
-	 *            the type to be unified
-	 * @return t, if t does not yet exist or the existing instance of the type
-	 */
-	protected final Type unifyType(Type t) {
-		if (types.containsKey(t.getSkillName()))
-			return types.get(t.getSkillName());
+    /**
+     * unification has to be done in the constructor or a factory method and
+     * must not be made visible to a client
+     * 
+     * @param t
+     *            the type to be unified
+     * @return t, if t does not yet exist or the existing instance of the type
+     */
+    protected final Type unifyType(Type t) {
+        if (types.containsKey(t.getSkillName()))
+            return types.get(t.getSkillName());
 
-		types.put(t.getSkillName(), t);
-		return t;
-	}
+        types.put(t.getSkillName(), t);
+        return t;
+    }
 
-	/**
-	 * @param skillName
-	 *            the skill name of the type, i.e. no whitespace, only lowercase
-	 *            letters
-	 * @return the respective type, if it exists, null otherwise
-	 * @throws ParseException
-	 *             if the argument type name is not the name of a known type.
-	 */
-	public Type get(String skillName) throws ParseException {
-		if (!types.containsKey(skillName))
-			throw new ParseException("Type " + skillName + " is not a known type.");
-		return types.get(skillName);
-	}
+    /**
+     * @param skillName
+     *            the skill name of the type, i.e. no whitespace, only lowercase
+     *            letters
+     * @return the respective type, if it exists, null otherwise
+     * @throws ParseException
+     *             if the argument type name is not the name of a known type.
+     */
+    public Type get(String skillName) throws ParseException {
+        if (!types.containsKey(skillName))
+            throw new ParseException("Type " + skillName + " is not a known type.");
+        return types.get(skillName);
+    }
 
-	/**
-	 * @return the set of all known (skill) type names
-	 */
-	public Set<String> allTypeNames() {
-		return types.keySet();
-	}
+    /**
+     * @return the set of all known (skill) type names
+     */
+    public Set<String> allTypeNames() {
+        return types.keySet();
+    }
+
+    public static List<Declaration> removeInterfaces(List<Declaration> IR) {
+        throw new Error();
+        // TODO implementation! π_i
+    }
+
+    public static List<Declaration> removeEnums(List<Declaration> IR) {
+        throw new Error();
+        // TODO implementation! π_e
+    }
+
+    public static List<Declaration> removeTypedefs(List<Declaration> IR) {
+        throw new Error();
+        // TODO implementation! π_t
+    }
+
+    public static List<Definition> removeSpecialDeclarations(List<Declaration> IR) {
+        List<Definition> rval = new ArrayList<>(IR.size());
+        List<Declaration> l = removeEnums(removeInterfaces(removeTypedefs(IR)));
+        // type check by copy to make java happy
+        for (Declaration d : l)
+            rval.add((Definition) d);
+        return rval;
+    }
 }

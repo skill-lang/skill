@@ -161,8 +161,8 @@ final public class Field {
 	 * @return true, iff the field's type has an ignore hint
 	 */
 	public boolean hasIgnoredType() {
-		if (type instanceof Declaration)
-			return ((Declaration) type).isIgnored();
+		if (type instanceof Definition)
+			return ((Definition) type).isIgnored();
 		return false;
 	}
 }

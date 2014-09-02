@@ -105,17 +105,18 @@ object ChangeModifier extends Enumeration {
 }
 
 final case class EnumDefinition(
-    val comment : Option[Comment],
-    val name : String,
-    val instances : List[String],
-    val body : List[Field]) extends Declaration {
-
-}
+  comment : Option[Comment],
+  name : String,
+  instances : List[String],
+  body : List[Field]) extends Declaration;
 
 final case class InterfaceDefinition(
-    val comment : Option[Comment],
-    val name : String,
-    val superType : List[String],
-    val body : List[Field]) extends Declaration {
+  comment : Option[Comment],
+  name : String,
+  superType : List[String],
+  body : List[Field]) extends Declaration;
 
-}
+final case class Typedef(
+  name : Name,
+  description : Description,
+  target : Type) extends Declaration;
