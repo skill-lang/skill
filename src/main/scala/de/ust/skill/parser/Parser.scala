@@ -11,6 +11,8 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.util.parsing.combinator.RegexParsers
 
+import org.scalatest.enablers.Definition
+
 import de.ust.skill.ir
 import de.ust.skill.ir.Hint
 import de.ust.skill.ir.Restriction
@@ -30,8 +32,8 @@ import de.ust.skill.ir.restriction.UniqueRestriction
  * @param delimitWithUnderscore if true, underscores in words are used as delimiters. This will influence name
  * equivalence
  */
-final class Parser(delimitWithUnderscore : Boolean = true) {
-  def stringToName(name : String) = new Name(name, delimitWithUnderscore)
+final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase : Boolean = true) {
+  implicit def stringToName(name : String) = new Name(name, delimitWithUnderscore, delimitWithCamelCase)
 
   val tc = new ir.TypeContext
 
@@ -91,22 +93,14 @@ final class Parser(delimitWithUnderscore : Boolean = true) {
     /**
      * Declarations add or modify user defined types.
      */
-    private def declaration : Parser[Declaration] = namespace | typedef | enumType | interfaceType | fieldChange | userType
-
-    /**
-     * Creates a new name space.
-     */
-    private def namespace = typeDescription ~ ("namespace" ~> id) ~ ("{" ~> declaration <~ "}") ^^ {
-      case desc ~ name ~ decl ⇒
-        ???
-    }
+    private def declaration : Parser[Declaration] = typedef | enumType | interfaceType | fieldChange | userType
 
     /**
      * creates a shorthand for a more complex type
      */
     private def typedef = opt(comment) ~ ("typedef" ~> id) ~ rep(fieldRestriction | hint) ~ fieldType <~ ";" ^^ {
       case c ~ name ~ specs ~ target ⇒ Typedef(
-        stringToName(name),
+        name,
         new Description(c, specs.collect { case r : Restriction ⇒ r }, specs.collect { case h : Hint ⇒ h }),
         target)
     };
@@ -115,9 +109,9 @@ final class Parser(delimitWithUnderscore : Boolean = true) {
      * A declaration may start with a description, is followed by modifiers and a name, might have a super class and has
      * a body.
      */
-    private def userType = opt(changeModifier) ~ typeDescription ~ id ~ opt(rep((":" | "with" | "extends") ~> id)) ~!
+    private def userType = opt(changeModifier) ~ typeDescription ~ id ~ rep((":" | "with" | "extends") ~> id) ~!
       ("{" ~> rep(field) <~ "}") ^^ {
-        case c ~ d ~ n ~ s ~ b ⇒ Definition(c, d, new Name(n, delimitWithUnderscore), s.flatMap(_.headOption), s.map(_.drop(1)).getOrElse(List()), b)
+        case c ~ d ~ n ~ s ~ b ⇒ UserType(c, d, n, s.map(stringToName), b)
       }
 
     /**
@@ -133,14 +127,14 @@ final class Parser(delimitWithUnderscore : Boolean = true) {
      * creates an enum definition
      */
     private def enumType = opt(comment) ~ ("enum" ~> id) ~ ("{" ~> repsep(id, ",") <~ ";") ~ (rep(field) <~ "}") ^^ {
-      case c ~ n ~ i ~ f ⇒ new EnumDefinition(c, n, i, f)
+      case c ~ n ~ i ~ f ⇒ new EnumDefinition(c, n, i.map(stringToName), f)
     }
 
     /**
      * creates an interface definition
      */
     private def interfaceType = opt(comment) ~ ("interface" ~> id) ~ rep((":" | "with" | "extends") ~> id) ~ ("{" ~> rep(field) <~ "}") ^^ {
-      case c ~ n ~ i ~ f ⇒ new InterfaceDefinition(c, n, i, f)
+      case c ~ n ~ i ~ f ⇒ new InterfaceDefinition(c, n, i.map(stringToName), f)
     }
 
     /**
@@ -361,100 +355,147 @@ final class Parser(delimitWithUnderscore : Boolean = true) {
   /**
    * Turns the AST into IR.
    */
-  private def buildIR(defs : List[Declaration]) : java.util.List[ir.Declaration] = ???
-  //  {
-  //    // create declarations
-  //    // skillname ⇀ subtypes
-  //    var subtypes = new HashMap[String, List[Definition]]
-  //    // skillname ⇀ definition
-  //    val definitionNames = new HashMap[Name, Definition];
-  //    for(d <- defs) definitionNames.put(d.name, d);
-  //    if (defs.size != definitionNames.size) {
-  //      ParseException(s"I got ${defs.size - definitionNames.size} duplicate definition${
-  //        if(1==defs.size - definitionNames.size)""else"s"
-  //          }.")
-  //    }
-  //
-  //    // build sub-type relation
-  //    for(d <- defs if d.parent.isDefined) {
-  //      val p = definitionNames.get(stringToName(d.parent.get)).getOrElse(
-  //          ParseException(s"""The type "${d.parent.get}" parent of ${d.name} is unknown!
-  //Did you forget to include ${d.parent.get}.skill?
-  //Known types are: ${definitionNames.keySet.mkString(", ")}""")
-  //      )
-  //
-  //      val parent = p.name.lowercase
-  //      if (!subtypes.contains(parent)) {
-  //        subtypes.put(parent, List[Definition]())
-  //      }
-  //      subtypes(parent) ++=  List[Definition](d)
-  //    }
-  //
-  //    // create declarations
-  //    val rval = definitionNames.map({ case (n, f) ⇒ (f, ir.Definition.newDeclaration(
-  //        tc,
-  //        f.name.ir,
-  //        f.description.comment.map(_.text.head).getOrElse(""),
-  //        f.description.restrictions,
-  //        f.description.hints
-  //        )) })
-  //
-  //    // type order initialization of types
-  //    def mkType(t: Type): ir.Type = t match {
-  //      case t: ConstantLengthArrayType ⇒ ir.ConstantLengthArrayType.make(tc, mkType(t.baseType), t.length)
-  //      case t: ArrayType               ⇒ ir.VariableLengthArrayType.make(tc, mkType(t.baseType))
-  //      case t: ListType                ⇒ ir.ListType.make(tc, mkType(t.baseType))
-  //      case t: SetType                 ⇒ ir.SetType.make(tc, mkType(t.baseType))
-  //      case t: MapType                 ⇒ ir.MapType.make(tc, t.baseTypes.map { mkType(_) })
-  //
-  //      // base types are something special, because they have already been created
-  //      case t: BaseType                ⇒ tc.get(t.name.toLowerCase)
-  //    }
-  //    def mkField(node: Field): ir.Field = try {
-  //      node match {
-  //        case f: Data     ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto,
-  //            f.description.comment.map(_.text.head).getOrElse(""), f.description.restrictions, f.description.hints)
-  //        case f: Constant ⇒ new ir.Field(mkType(f.t), f.name, f.value,
-  //            f.description.comment.map(_.text.head).getOrElse(""), f.description.restrictions, f.description.hints)
-  //      }
-  //    } catch {
-  //      case e: ir.ParseException ⇒ ParseException(s"${node.name}: ${e.getMessage()}")
-  //    }
-  //    def initialize(name: String) {
-  //      val definition = definitionNames(stringToName(name))
-  //      val superDecl = if(definition.parent.isEmpty) null
-  //      else rval(definitionNames(stringToName(definition.parent.get)))
-  //      rval(definition).initialize(
-  //        superDecl,
-  //        try { definition.body.map(mkField(_)) } catch {
-  //          case e: ir.ParseException ⇒ ParseException(s"In $name.${e.getMessage}")
-  //        }
-  //      )
-  //      //initialize children
-  //      subtypes.getOrElse(name.toLowerCase, List()).foreach { d ⇒ initialize(d.name.lowercase) }
-  //    }
-  //    definitionNames.values.filter(_.parent.isEmpty).foreach { d ⇒ initialize(d.name.lowercase) }
-  //
-  //    // we initialized in type order starting at base types; if some types have not been initialized, then they are cyclic!
-  //    if(rval.values.exists(!_.isInitialized))
-  //      ParseException("there are cyclic type definitions including: " + rval.values.filter(!_.isInitialized).mkString(", "))
-  //
-  //    assume(defs.size == rval.values.size, "we lost some definitions")
-  //    assume(rval.values.forall{_.isInitialized}, s"we missed some initializations: ${rval.values.filter(!_.isInitialized).mkString(", ")}")
-  //
-  //    // create type ordered sequence
-  //    def getInTypeOrder(d:ir.Declaration):Seq[ir.Declaration] = if(subtypes.contains(d.getSkillName)){
-  //      (for(sub <- subtypes(d.getSkillName))
-  //        yield getInTypeOrder(rval(sub))).foldLeft(Seq(d))(_ ++ _)
-  //    }else{ 
-  //      Seq(d)
-  //    }
-  //
-  //    // TODO type order
-  ////    (for(d <- rval.values if null == d.getSuperType)
-  ////      yield getInTypeOrder(d)).toSeq.foldLeft(Seq[ir.Definition]())(_ ++ _)
-  //    ???
-  //  }
+  private def buildIR(defs : ArrayBuffer[Declaration]) : java.util.List[ir.Declaration] = {
+
+    // split types by kind
+    val userTypes = defs.collect { case t : UserType ⇒ t }
+    val enums = defs.collect { case t : EnumDefinition ⇒ t }
+    val interfaces = defs.collect { case t : InterfaceDefinition ⇒ t }
+    val typedefs = defs.collect { case t : Typedef ⇒ t }
+
+    // TODO what about typedefs???
+    // TODO the implementation assumes that there is no typedef in the middle of a type hierarchy!
+
+    // create declarations
+    // skillname ⇀ subtypes
+    // may contain user types and interfaces
+    var subtypes = new HashMap[Name, List[Declaration]];
+
+    // the direct super type that is a user type and not an interface
+    // in fact they type may not exist for interfaces, in that case an annotation will be used for representation
+    var parent = new HashMap[Declaration, Option[UserType]];
+
+    // skillname ⇀ definition
+    val definitionNames = new HashMap[Name, Declaration];
+    for (d ← defs)
+      definitionNames.put(d.name, d)
+
+    if (defs.size != definitionNames.size) {
+      ParseException(s"I got ${defs.size - definitionNames.size} duplicate definition${
+        if (1 == defs.size - definitionNames.size) ""
+        else"s"
+      }.")
+    }
+
+    // build sub-type relation
+    for (d ← userTypes; parent ← d.superTypes) {
+      val p = definitionNames.get(parent).getOrElse(
+        ParseException(s"""The type "${parent}" parent of ${d.name} is unknown!
+Did you forget to include ${parent}.skill?
+Known types are: ${definitionNames.keySet.mkString(", ")}""")
+      );
+
+      if (!subtypes.contains(parent)) {
+        subtypes.put(parent, List[Declaration]())
+      }
+      subtypes(parent) ++= List[Declaration](d)
+    }
+    for (d ← interfaces; parent ← d.superTypes) {
+      val p = definitionNames.get(parent).getOrElse(
+        ParseException(s"""The type "${parent}" parent of ${d.name} is unknown!
+Did you forget to include ${parent}.skill?
+Known types are: ${definitionNames.keySet.mkString(", ")}""")
+      );
+
+      if (!subtypes.contains(parent)) {
+        subtypes.put(parent, List[Declaration]())
+      }
+      subtypes(parent) ++= List[Declaration](d)
+    }
+
+    for ((k, v) ← subtypes) {
+      println(s"$k ⇒ ${v.map(_.name.CapitalCase).mkString("{", ", ", "}")}")
+      println(s"$k ⇒ ${v.map(_.name.ADA_STYLE).mkString("{", ", ", "}")}")
+    }
+
+    // build and check parent relation
+    ???
+
+    // build base type relation
+    ???
+
+    // build and check super interface relation
+    ???
+
+    // create declarations
+    val rval = definitionNames.map({
+      case (n, f : UserType) ⇒ (f, ir.UserType.newDeclaration(
+        tc,
+        f.name.ir,
+        f.description.comment.map(_.text.head).getOrElse(""),
+        f.description.restrictions,
+        f.description.hints
+      ))
+      // TODO match error!
+    });
+
+    // type order initialization of types
+    def mkType(t : Type) : ir.Type = t match {
+      case t : ConstantLengthArrayType ⇒ ir.ConstantLengthArrayType.make(tc, mkType(t.baseType), t.length)
+      case t : ArrayType               ⇒ ir.VariableLengthArrayType.make(tc, mkType(t.baseType))
+      case t : ListType                ⇒ ir.ListType.make(tc, mkType(t.baseType))
+      case t : SetType                 ⇒ ir.SetType.make(tc, mkType(t.baseType))
+      case t : MapType                 ⇒ ir.MapType.make(tc, t.baseTypes.map { mkType(_) })
+
+      // base types are something special, because they have already been created
+      case t : BaseType                ⇒ tc.get(t.name.toLowerCase)
+    }
+    def mkField(node : Field) : ir.Field = try {
+      node match {
+        case f : Data ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto,
+          f.description.comment.map(_.text.head).getOrElse(""), f.description.restrictions, f.description.hints)
+        case f : Constant ⇒ new ir.Field(mkType(f.t), f.name, f.value,
+          f.description.comment.map(_.text.head).getOrElse(""), f.description.restrictions, f.description.hints)
+      }
+    } catch {
+      case e : ir.ParseException ⇒ ParseException(s"${node.name}: ${e.getMessage()}")
+    }
+    //    def initialize(name : String) {
+    //      val definition = definitionNames(stringToName(name));
+    //      val superDecl = if (definition.parent.isEmpty) null
+    //      else rval(definitionNames(definition.parent.get));
+    //
+    //      rval(definition).initialize(
+    //        superDecl,
+    //        try { definition.body.map(mkField(_)) }
+    //        catch { case e : ir.ParseException ⇒ ParseException(s"In $name.${e.getMessage}") s }
+    //      );
+    //
+    //      //initialize children
+    //      subtypes.getOrElse(name.toLowerCase, List()).foreach { d ⇒ initialize(d.name.lowercase) }
+    //    }
+    //    definitionNames.values.filter(_.parent.isEmpty).foreach { d ⇒ initialize(d.name.lowercase) }
+    //
+    //    // we initialized in type order starting at base types; if some types have not been initialized, then they are cyclic!
+    //    if (rval.values.exists(!_.isInitialized))
+    //      ParseException("there are cyclic type definitions including: "+rval.values.filter(!_.isInitialized).mkString(", "))
+    //
+    //    assume(defs.size == rval.values.size, "we lost some definitions")
+    //    assume(rval.values.forall { _.isInitialized }, s"we missed some initializations: ${rval.values.filter(!_.isInitialized).mkString(", ")}")
+    //
+    //    // create type ordered sequence
+    //    def getInTypeOrder(d : ir.Declaration) : Seq[ir.Declaration] = if (subtypes.contains(d.getSkillName)) {
+    //      (for (sub ← subtypes(d.getSkillName))
+    //        yield getInTypeOrder(rval(sub))).foldLeft(Seq(d))(_ ++ _)
+    //    } else {
+    //      Seq(d)
+    //    }
+
+    // TODO type order
+    //    (for(d <- rval.values if null == d.getSuperType)
+    //      yield getInTypeOrder(d)).toSeq.foldLeft(Seq[ir.Definition]())(_ ++ _)
+    ???
+  }
 }
 
 object Parser {
@@ -462,6 +503,8 @@ object Parser {
 
   /**
    * returns an unsorted list of declarations
+   *
+   * TODO the result HAS TO BE A TYPE CONTEXT!
    */
   def process(input : File) : java.util.List[ir.Declaration] = {
     val p = new Parser

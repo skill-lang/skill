@@ -7,8 +7,10 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Contains the known types of a context. A context can be thought of as a
- * single front-end run.
+ * The Type Context corresponding to a given SKilL specification. The context
+ * provides information about sub types, parent user types, implemented
+ * interfaces, and so on. Furthermore, the context can be used to remove certain
+ * kinds of types from the list of types.
  * 
  * @author Timm Felden
  */
