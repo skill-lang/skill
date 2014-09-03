@@ -124,7 +124,7 @@ class Main extends FakeMain
   /**
    * Translates the types into Ada types.
    */
-  override protected def mapType(t : Type, d : UserType, f : Field) : String = t match {
+  override protected def mapType(t : Type, d : Declaration, f : Field) : String = t match {
     case t : GroundType ⇒ t.getName.lower match {
       case "annotation" ⇒ "Skill_Type_Access"
 
@@ -481,7 +481,7 @@ class Main extends FakeMain
     }
   }
 
-  override protected def defaultValue(t : Type, d : UserType, f : Field) = t match {
+  override protected def defaultValue(f : Field) = f.getType match {
     case t : GroundType ⇒ t.getSkillName() match {
       case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
       case "f32" | "f64"                        ⇒ "0.0"
@@ -489,11 +489,11 @@ class Main extends FakeMain
       case _                                    ⇒ "null"
     }
 
-    case t : ConstantLengthArrayType ⇒ s"(others => ${defaultValue(t.getBaseType, d, f)})"
-    case t : VariableLengthArrayType ⇒ s"New_${mapType(t, d, f).stripSuffix(".Vector")}"
-    case t : ListType                ⇒ s"New_${mapType(t, d, f).stripSuffix(".List")}"
-    case t : SetType                 ⇒ s"New_${mapType(t, d, f).stripSuffix(".Set")}"
-    case t : MapType                 ⇒ s"New_${mapType(t, d, f).stripSuffix(".Map")}"
+    case t : ConstantLengthArrayType ⇒ s"(others => ${defaultValue(f)})"
+    case t : VariableLengthArrayType ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".Vector")}"
+    case t : ListType                ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".List")}"
+    case t : SetType                 ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".Set")}"
+    case t : MapType                 ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".Map")}"
 
     case _                           ⇒ "null"
   }

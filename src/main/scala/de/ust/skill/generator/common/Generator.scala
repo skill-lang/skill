@@ -3,6 +3,7 @@ package de.ust.skill.generator.common
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Type
 import java.io.PrintWriter
+import de.ust.skill.ir.Field
 
 /**
  * every code generator shares these properties.
@@ -55,10 +56,8 @@ trait Generator {
 
   /**
    * Provides a string representation of the default value of f.
-   *
-   * TODO add declaration and field, to account for @default
    */
-  protected def defaultValue(t : Type) : String;
+  protected def defaultValue(f : Field) : String;
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.

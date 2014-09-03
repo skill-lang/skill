@@ -76,8 +76,10 @@ final public class UserType extends Declaration {
 		// check for duplicate fields
 		{
 			Set<String> names = new HashSet<>();
-			for (Field f : Fields)
+			for (Field f : Fields){
 				names.add(f.name);
+                f.setDeclaredIn(this);
+			}
 			if (names.size() != Fields.size())
 				throw new ParseException("Type " + name + " contains duplicate field definitions.");
 		}

@@ -67,7 +67,7 @@ sealed class $Name private[$packageName] (skillID : Long) ${
 		  ""
 		else
 	      s"""
-  protected var _${f.getName} : ${mapType(f.getType())} = ${defaultValue(f.getType)}"""
+  protected var _${f.getName} : ${mapType(f.getType())} = ${defaultValue(f)}"""
 	  }
 
       def makeGetterImplementation:String = {

@@ -285,7 +285,7 @@ ${
         var output = s"""'(\r\n                     skill_id => ${if (null == d.getSuperType) s"Natural (${escaped(d.getBaseType.getName)}_Type_Declaration.Storage_Pool.Length) + 1" else "0"}"""
         val fields = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
         output += fields.map({ f ⇒
-          s""",\r\n                     ${f.getSkillName} => ${defaultValue(f.getType, d, f)}"""
+          s""",\r\n                     ${f.getSkillName} => ${defaultValue(f)}"""
         }).mkString("")
         output += "\r\n                  )";
         output

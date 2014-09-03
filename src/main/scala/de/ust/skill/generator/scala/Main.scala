@@ -212,7 +212,7 @@ class Main extends FakeMain
     }
   }
 
-  override protected def defaultValue(t : Type) = t match {
+  override protected def defaultValue(f : Field) = f.getType match {
     case t : GroundType ⇒ t.getSkillName() match {
       case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
       case "f32" | "f64"                        ⇒ "0.0f"

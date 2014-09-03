@@ -18,6 +18,8 @@ final public class Field {
 	protected final String name, skillName;
 	protected final Type type;
 
+    private Declaration declaredIn;
+
 	/**
 	 * The restrictions applying to this field.
 	 */
@@ -170,4 +172,18 @@ final public class Field {
 			return ((UserType) type).isIgnored();
 		return false;
 	}
+
+    /**
+     * @return the enclosing declaration.
+     */
+    public Declaration getDeclaredIn() {
+        return declaredIn;
+    }
+
+    /**
+     * Invoked during construction of the enclosing declaration.
+     */
+    void setDeclaredIn(Declaration declaredIn) {
+        this.declaredIn = declaredIn;
+    }
 }

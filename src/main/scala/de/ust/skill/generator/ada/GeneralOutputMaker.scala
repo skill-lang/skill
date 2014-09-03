@@ -48,7 +48,7 @@ trait GeneralOutputMaker extends Generator {
    * Assume the existence of a translation function for the types.
    */
   protected def mapTypeToId(t : Type, f : Field) : String
-  protected def mapType(t : Type, d : UserType, f : Field) : String
+  protected def mapType(t : Type, d : Declaration, f : Field) : String
 
   /**
    * Assume the existence of a translation function for the fields.
@@ -76,11 +76,6 @@ trait GeneralOutputMaker extends Generator {
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
   protected def escaped(target : Name) : String = escaped(target.ada)
-
-  /**
-   * Provides a string representation of the default value of f.
-   */
-  protected def defaultValue(t : Type, d : UserType, f : Field) : String
 
   private lazy val packagePath = if (packagePrefix.length > 0) {
     packagePrefix.replace(".", "/")
