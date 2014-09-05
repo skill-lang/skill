@@ -429,6 +429,8 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
       println(s"$k ⇒ ${v.map(_.name.ADA_STYLE).mkString("{", ", ", "}")}")
     }
 
+    DoxygenPrinter(defs)
+
     // build and check parent relation
     ???
 
