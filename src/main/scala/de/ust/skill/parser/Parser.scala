@@ -33,7 +33,7 @@ import de.ust.skill.ir.restriction.UniqueRestriction
  * equivalence
  */
 final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase : Boolean = true) {
-  implicit def stringToName(name : String) = new Name(name, delimitWithUnderscore, delimitWithCamelCase)
+  def stringToName(name : String) = new Name(name, delimitWithUnderscore, delimitWithCamelCase)
 
   val tc = new ir.TypeContext
 
@@ -43,10 +43,12 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
    * Grammar as explained in the paper.
    */
   final class FileParser extends RegexParsers {
+    var currentFile : File = _
+
     /**
      * Usual identifiers including arbitrary unicode characters.
      */
-    private def id = """[a-zA-Z_\u007f-\uffff][\w\u007f-\uffff]*""".r
+    private def id = positioned[Name]("""[a-zA-Z_\u007f-\uffff][\w\u007f-\uffff]*""".r ^^ stringToName)
     /**
      * Skill integer literals
      */
@@ -83,7 +85,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * Files may start with an arbitrary of lines starting with '#'
      * Theses lines sereve as true comments and do not affect the specification.
      */
-    private def headComment = rep("""#[^\n]*\n""".r)
+    private def headComment = rep("""^#[^\r\n]*[\r\n]*""".r)
 
     /**
      * Includes are just strings containing relative paths to *our* path.
@@ -100,6 +102,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      */
     private def typedef = opt(comment) ~ ("typedef" ~> id) ~ rep(fieldRestriction | hint) ~ fieldType <~ ";" ^^ {
       case c ~ name ~ specs ~ target ⇒ Typedef(
+        currentFile,
         name,
         new Description(c, specs.collect { case r : Restriction ⇒ r }, specs.collect { case h : Hint ⇒ h }),
         target)
@@ -111,7 +114,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      */
     private def userType = opt(changeModifier) ~ typeDescription ~ id ~ rep((":" | "with" | "extends") ~> id) ~!
       ("{" ~> rep(field) <~ "}") ^^ {
-        case c ~ d ~ n ~ s ~ b ⇒ UserType(c, d, n, s.map(stringToName), b)
+        case c ~ d ~ n ~ s ~ b ⇒ UserType(currentFile, c, d, n, s, b)
       }
 
     /**
@@ -127,14 +130,14 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * creates an enum definition
      */
     private def enumType = opt(comment) ~ ("enum" ~> id) ~ ("{" ~> repsep(id, ",") <~ ";") ~ (rep(field) <~ "}") ^^ {
-      case c ~ n ~ i ~ f ⇒ new EnumDefinition(c, n, i.map(stringToName), f)
+      case c ~ n ~ i ~ f ⇒ new EnumDefinition(currentFile, c, n, i, f)
     }
 
     /**
      * creates an interface definition
      */
     private def interfaceType = opt(comment) ~ ("interface" ~> id) ~ rep((":" | "with" | "extends") ~> id) ~ ("{" ~> rep(field) <~ "}") ^^ {
-      case c ~ n ~ i ~ f ⇒ new InterfaceDefinition(c, n, i.map(stringToName), f)
+      case c ~ n ~ i ~ f ⇒ new InterfaceDefinition(currentFile, c, n, i, f)
     }
 
     /**
@@ -202,7 +205,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * @note the implementation is more liberal then the specification of the specification language, because some illegal arguments are dropped
      */
     private def typeRestriction : Parser[Restriction] = "@" ~> id >> {
-      _.toLowerCase match {
+      _.lowercase match {
         case "unique"    ⇒ opt("(" ~ ")") ^^ { _ ⇒ new UniqueRestriction }
 
         case "singleton" ⇒ opt("(" ~ ")") ^^ { _ ⇒ new SingletonRestriction }
@@ -221,7 +224,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
       }
     }
     private def fieldRestriction : Parser[Restriction] = "@" ~> id >> {
-      _.toLowerCase match {
+      _.lowercase match {
 
         case "nonnull" ⇒ opt("(" ~ ")") ^^ { _ ⇒ new NullableRestriction }
 
@@ -287,7 +290,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * hints as defined in the paper. Because hints can be ignored by the generator, it is safe to allow arbitrary
      * identifiers and to warn if the identifier is not a known hint.
      */
-    private def hint = "!" ~> id ^^ { n ⇒ Hint.valueOf(n.toLowerCase) }
+    private def hint = "!" ~> id ^^ { n ⇒ Hint.valueOf(n.lowercase) }
 
     /**
      * Description of a field.
@@ -306,6 +309,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * The <b>main</b> function of the parser, which turn a string into a list of includes and declarations.
      */
     def process(in : File) : (List[String], List[Declaration]) = {
+      currentFile = in;
       val lines = scala.io.Source.fromFile(in, "utf-8").getLines.mkString("\n")
 
       parseAll(file, lines) match {
@@ -340,6 +344,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
 
           // add definitions
           rval = rval ++ result._2
+          println(s"acc: $file ⇒ ${rval.size}")
         } catch {
           case e : FileNotFoundException ⇒ ParseException(
             s"The include $file could not be resolved to an existing file: ${e.getMessage()} \nWD: ${
@@ -381,10 +386,15 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
       definitionNames.put(d.name, d)
 
     if (defs.size != definitionNames.size) {
+      val duplicates = defs.groupBy(l ⇒ l.name).collect {
+        case l if l._2.size > 1 ⇒ (l._1, l._2.map {
+          d ⇒ s"${d.name}@${d.name.pos} in ${d.declaredIn.getName}"
+        }.mkString("\n    ", "\n    ", ""))
+      }
       ParseException(s"I got ${defs.size - definitionNames.size} duplicate definition${
         if (1 == defs.size - definitionNames.size) ""
         else"s"
-      }.")
+      }.\n${duplicates.mkString("\n")}")
     }
 
     // build sub-type relation
@@ -413,6 +423,7 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
       subtypes(parent) ++= List[Declaration](d)
     }
 
+    println(s"there are ${defs.size} definitions:")
     for ((k, v) ← subtypes) {
       println(s"$k ⇒ ${v.map(_.name.CapitalCase).mkString("{", ", ", "}")}")
       println(s"$k ⇒ ${v.map(_.name.ADA_STYLE).mkString("{", ", ", "}")}")
@@ -448,13 +459,13 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
       case t : MapType                 ⇒ ir.MapType.make(tc, t.baseTypes.map { mkType(_) })
 
       // base types are something special, because they have already been created
-      case t : BaseType                ⇒ tc.get(t.name.toLowerCase)
+      case t : BaseType                ⇒ tc.get(t.name.lowercase)
     }
     def mkField(node : Field) : ir.Field = try {
       node match {
-        case f : Data ⇒ new ir.Field(mkType(f.t), f.name, f.isAuto,
+        case f : Data ⇒ new ir.Field(mkType(f.t), f.name.source, f.isAuto,
           f.description.comment.map(_.text.head).getOrElse(""), f.description.restrictions, f.description.hints)
-        case f : Constant ⇒ new ir.Field(mkType(f.t), f.name, f.value,
+        case f : Constant ⇒ new ir.Field(mkType(f.t), f.name.source, f.value,
           f.description.comment.map(_.text.head).getOrElse(""), f.description.restrictions, f.description.hints)
       }
     } catch {

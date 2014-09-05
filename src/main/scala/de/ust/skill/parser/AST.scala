@@ -9,6 +9,8 @@ import de.ust.skill.ir.Restriction
 import de.ust.skill.ir.Hint
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
+import scala.util.parsing.input.Positional
+import java.io.File
 
 /**
  * The AST is used to turn skill definitions into Java IR.
@@ -16,7 +18,7 @@ import scala.collection.mutable.ArrayBuffer
  * @author Timm Felden
  */
 sealed abstract class Node;
-sealed abstract class Declaration(val name : Name) extends Node;
+sealed abstract class Declaration(val name : Name, val declaredIn : File) extends Node;
 
 final class Description(val comment : Option[Comment], val restrictions : List[Restriction],
                         val hints : List[Hint]) extends Node;
@@ -35,26 +37,24 @@ final class ListType(val baseType : BaseType) extends Type;
 sealed class ArrayType(val baseType : BaseType) extends Type;
 final class ConstantLengthArrayType(baseType : BaseType, val length : Long) extends ArrayType(baseType);
 
-final class BaseType(val name : String) extends Type {
-  override def toString : String = name
+final class BaseType(val name : Name) extends Type {
+  override def toString : String = name.source
 }
 
-sealed abstract class Field(val t : Type, val name : String) extends Node {
+sealed abstract class Field(val t : Type, val name : Name) extends Node {
   var description : Description = new Description(None, List[Restriction](), List[Hint]());
 }
 
-final class Constant(t : Type, name : String, val value : Long) extends Field(t, name);
+final class Constant(t : Type, name : Name, val value : Long) extends Field(t, name);
 
-final class Data(val isAuto : Boolean, t : Type, name : String) extends Field(t, name);
+final class Data(val isAuto : Boolean, t : Type, name : Name) extends Field(t, name);
 
-final class View(val declaredInType : Option[String], val oldName : String, val target : Field) extends Field(target.t, target.name);
+final class View(val declaredInType : Option[Name], val oldName : Name, val target : Field) extends Field(target.t, target.name);
 
 /**
  * Representation of skill names.
- *
- * TODO propper treatment of parts
  */
-final class Name(source : String, delimitWithUnderscores : Boolean, delimitWithCamelCase : Boolean) {
+final class Name(val source : String, delimitWithUnderscores : Boolean, delimitWithCamelCase : Boolean) extends Positional {
   // @note this may not be correct if more then two _ are used
   val parts : List[String] = {
     var rval = ArrayBuffer(source)
@@ -87,6 +87,8 @@ final class Name(source : String, delimitWithUnderscores : Boolean, delimitWithC
 
   lazy val ADA_STYLE : String = parts.tail.foldLeft(parts.head.toUpperCase)(_+"_"+_.toUpperCase)
 
+  lazy val c_style : String = parts.tail.foldLeft(parts.head.toUpperCase)(_+"_"+_.toLowerCase)
+
   def ir = new de.ust.skill.ir.Name(parts, lowercase);
 
   override def equals(o : Any) = o match {
@@ -105,15 +107,16 @@ object ChangeModifier extends Enumeration {
 }
 
 final case class UserType(
+    _declaredIn : File,
     change : Option[ChangeModifier.ChangeModifier],
     description : Description,
-    _name : Name, superTypes : List[Name], body : List[Field]) extends Declaration(_name) {
+    _name : Name, superTypes : List[Name], body : List[Field]) extends Declaration(_name, _declaredIn) {
 
   override def equals(other : Any) = other match {
-    case UserType(Some(ChangeModifier.set), _, n, _, _) if change.isDefined ⇒
+    case UserType(_, Some(ChangeModifier.set), _, n, _, _) if change.isDefined ⇒
       change.get == ChangeModifier.set && n == name
 
-    case UserType(None, _, n, _, _) if !change.isDefined ⇒
+    case UserType(_, None, _, n, _, _) if !change.isDefined ⇒
       n == name
 
     case _ ⇒ false
@@ -121,18 +124,21 @@ final case class UserType(
 };
 
 final case class EnumDefinition(
+  _declaredIn : File,
   comment : Option[Comment],
   _name : Name,
   instances : List[Name],
-  body : List[Field]) extends Declaration(_name);
+  body : List[Field]) extends Declaration(_name, _declaredIn);
 
 final case class InterfaceDefinition(
+  _declaredIn : File,
   comment : Option[Comment],
   _name : Name,
   superTypes : List[Name],
-  body : List[Field]) extends Declaration(_name);
+  body : List[Field]) extends Declaration(_name, _declaredIn);
 
 final case class Typedef(
+  _declaredIn : File,
   _name : Name,
   description : Description,
-  target : Type) extends Declaration(_name);
+  target : Type) extends Declaration(_name, _declaredIn);
