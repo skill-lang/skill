@@ -23,13 +23,14 @@ object DoxygenPrinter {
 ${t.description.comment.map(s ⇒ "/**\n"+s.text.mkString+"\n*/").getOrElse("")}
 class ${t.name.CapitalCase} ${
       if (t.superTypes.isEmpty) ""
-      else t.superTypes.map(_.CapitalCase).mkString(": ", ", ", "")
+      else t.superTypes.map(_.CapitalCase).mkString(": virtual protected ", ", virtual protected ", "")
     }{
   public:${
       (
         for (f ← t.body)
           yield s"""
 
+${f.description.comment.map { s ⇒ "    /**\n"+s.text.mkString.replace('<', '⟨').replace('>', '⟩')+"\n*/" }.getOrElse("")}
    ${mapType(f.t)} ${f.name.camelCase};"""
       ).mkString
     }
@@ -39,14 +40,15 @@ class ${t.name.CapitalCase} ${
 ${t.comment.map(s ⇒ "/**\n"+s.text.mkString+"\n*/").getOrElse("")}
 class ${t.name.CapitalCase} ${
       if (t.superTypes.isEmpty) ""
-      else t.superTypes.map(_.CapitalCase).mkString(": ", ", ", "")
+      else t.superTypes.map(_.CapitalCase).mkString(": virtual protected ", ", virtual protected ", "")
     }{
   public:${
       (
         for (f ← t.body)
           yield s"""
 
-   virtual ${mapType(f.t)} ${f.name.camelCase} = 0;"""
+${f.description.comment.map(s ⇒ "    /**\n"+s.text.mkString+"\n*/").getOrElse("")}
+   ${mapType(f.t)} ${f.name.camelCase};"""
       ).mkString
     }
 };
