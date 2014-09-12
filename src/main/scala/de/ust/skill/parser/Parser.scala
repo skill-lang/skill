@@ -4,15 +4,12 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.lang.Long
 import java.nio.file.FileSystems
-
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.util.parsing.combinator.RegexParsers
-
 import org.scalatest.enablers.Definition
-
 import de.ust.skill.ir
 import de.ust.skill.ir.Hint
 import de.ust.skill.ir.Restriction
@@ -23,6 +20,7 @@ import de.ust.skill.ir.restriction.MonotoneRestriction
 import de.ust.skill.ir.restriction.NullableRestriction
 import de.ust.skill.ir.restriction.SingletonRestriction
 import de.ust.skill.ir.restriction.UniqueRestriction
+import scala.annotation.tailrec
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -32,7 +30,7 @@ import de.ust.skill.ir.restriction.UniqueRestriction
  * @param delimitWithUnderscore if true, underscores in words are used as delimiters. This will influence name
  * equivalence
  */
-final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase : Boolean = true) {
+final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase : Boolean = true, verboseOutput : Boolean = false) {
   def stringToName(name : String) = new Name(name, delimitWithUnderscore, delimitWithCamelCase)
 
   val tc = new ir.TypeContext
@@ -344,7 +342,8 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
 
           // add definitions
           rval = rval ++ result._2
-          println(s"acc: $file ⇒ ${rval.size}")
+          if (verboseOutput)
+            println(s"acc: $file ⇒ ${rval.size}")
         } catch {
           case e : FileNotFoundException ⇒ ParseException(
             s"The include $file could not be resolved to an existing file: ${e.getMessage()} \nWD: ${
@@ -359,97 +358,51 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
 
   /**
    * Turns the AST into IR.
+   *
+   * TODO the type checking should be separated and IR building should start over with the original AST and the
+   * knowledge, that it is in fact correct
    */
   private def buildIR(defs : ArrayBuffer[Declaration]) : java.util.List[ir.Declaration] = {
 
-    // split types by kind
-    val userTypes = defs.collect { case t : UserType ⇒ t }
-    val enums = defs.collect { case t : EnumDefinition ⇒ t }
-    val interfaces = defs.collect { case t : InterfaceDefinition ⇒ t }
-    val typedefs = defs.collect { case t : Typedef ⇒ t }
-
-    // TODO what about typedefs???
-    // TODO the implementation assumes that there is no typedef in the middle of a type hierarchy!
-
-    // create declarations
-    // skillname ⇀ subtypes
-    // may contain user types and interfaces
-    var subtypes = new HashMap[Name, List[Declaration]];
-
-    // the direct super type that is a user type and not an interface
-    // in fact they type may not exist for interfaces, in that case an annotation will be used for representation
-    var parent = new HashMap[Declaration, Option[UserType]];
+    // run the type checker to get information about the type hierarchy
+    val (_, baseType, parent, superInterfaces) = TypeCheck(defs)
 
     // skillname ⇀ definition
     val definitionNames = new HashMap[Name, Declaration];
-    for (d ← defs)
-      definitionNames.put(d.name, d)
-
-    if (defs.size != definitionNames.size) {
-      val duplicates = defs.groupBy(l ⇒ l.name).collect {
-        case l if l._2.size > 1 ⇒ (l._1, l._2.map {
-          d ⇒ s"${d.name}@${d.name.pos} in ${d.declaredIn.getName}"
-        }.mkString("\n    ", "\n    ", ""))
-      }
-      ParseException(s"I got ${defs.size - definitionNames.size} duplicate definition${
-        if (1 == defs.size - definitionNames.size) ""
-        else"s"
-      }.\n${duplicates.mkString("\n")}")
-    }
-
-    // build sub-type relation
-    for (d ← userTypes; parent ← d.superTypes) {
-      val p = definitionNames.get(parent).getOrElse(
-        ParseException(s"""The type "${parent}" parent of ${d.name} is unknown!
-Did you forget to include ${parent}.skill?
-Known types are: ${definitionNames.keySet.mkString(", ")}""")
-      );
-
-      if (!subtypes.contains(parent)) {
-        subtypes.put(parent, List[Declaration]())
-      }
-      subtypes(parent) ++= List[Declaration](d)
-    }
-    for (d ← interfaces; parent ← d.superTypes) {
-      val p = definitionNames.get(parent).getOrElse(
-        ParseException(s"""The type "${parent}" parent of ${d.name} is unknown!
-Did you forget to include ${parent}.skill?
-Known types are: ${definitionNames.keySet.mkString(", ")}""")
-      );
-
-      if (!subtypes.contains(parent)) {
-        subtypes.put(parent, List[Declaration]())
-      }
-      subtypes(parent) ++= List[Declaration](d)
-    }
-
-    println(s"there are ${defs.size} definitions:")
-    for ((k, v) ← subtypes) {
-      println(s"$k ⇒ ${v.map(_.name.CapitalCase).mkString("{", ", ", "}")}")
-      println(s"$k ⇒ ${v.map(_.name.ADA_STYLE).mkString("{", ", ", "}")}")
-    }
-
-    DoxygenPrinter(defs)
-
-    // build and check parent relation
-    ???
-
-    // build base type relation
-    ???
-
-    // build and check super interface relation
-    ???
+    for (d ← defs) definitionNames.put(d.name, d)
 
     // create declarations
     val rval = definitionNames.map({
-      case (n, f : UserType) ⇒ (f, ir.UserType.newDeclaration(
+      case (_, f : UserType) ⇒
+        (f, ir.UserType.newDeclaration(
+          tc,
+          f.name.ir,
+          f.description.comment.map(_.text.head).getOrElse(""),
+          f.description.restrictions,
+          f.description.hints
+        ))
+
+      case (_, f : InterfaceDefinition) ⇒
+        (f, ir.InterfaceType.newDeclaration(
+          tc,
+          f.name.ir,
+          f.comment.map(_.text.head).getOrElse("")
+        ))
+
+      case (_, f : EnumDefinition) ⇒ (f, ir.EnumType.newDeclaration(
+        tc,
+        f.name.ir,
+        f.comment.map(_.text.head).getOrElse(""),
+        f.instances.map(_.ir)
+      ))
+
+      case (_, f : Typedef) ⇒ (f, ir.UserType.newDeclaration(
         tc,
         f.name.ir,
         f.description.comment.map(_.text.head).getOrElse(""),
         f.description.restrictions,
         f.description.hints
       ))
-      // TODO match error!
     });
 
     // type order initialization of types
@@ -507,7 +460,7 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
     // TODO type order
     //    (for(d <- rval.values if null == d.getSuperType)
     //      yield getInTypeOrder(d)).toSeq.foldLeft(Seq[ir.Definition]())(_ ++ _)
-    ???
+    rval.map(_._2).to
   }
 }
 
