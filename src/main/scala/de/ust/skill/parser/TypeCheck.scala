@@ -68,8 +68,6 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
       subtypes(parent) ++= List[Declaration](d)
     }
 
-    DoxygenPrinter(defs)
-
     // build and check parent relation
     // TODO should also work with multiple steps of interface inheritance
     for (
@@ -97,6 +95,12 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
     // build and check super interface relation
     val superInterfaces = HashMap[Declaration, List[InterfaceDefinition]]()
     for (d ← userTypes) {
+      val is = d.superTypes.map(definitionNames(_)).collect { case d : InterfaceDefinition ⇒ d }
+      superInterfaces(d) = is
+      if (d.superTypes.size != is.size + parent.get(d).size)
+        throw ParseException(s"Type ${d.name} inherits something thats neither a user type nor an interface.")
+    }
+    for (d ← interfaces) {
       val is = d.superTypes.map(definitionNames(_)).collect { case d : InterfaceDefinition ⇒ d }
       superInterfaces(d) = is
       if (d.superTypes.size != is.size + parent.get(d).size)

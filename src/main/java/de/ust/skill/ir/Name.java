@@ -2,6 +2,7 @@ package de.ust.skill.ir;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -46,32 +47,65 @@ final public class Name implements Comparable<Name> {
 
     private String ada;
 
+    /**
+     * @return ADA_STYLE
+     */
     public String ada() {
         if (null == ada) {
-            throw new Error();
+            Iterator<String> it = parts.iterator();
+            StringBuilder sb = new StringBuilder(it.next().toUpperCase());
+            while (it.hasNext())
+                sb.append("_").append(it.next().toUpperCase());
+            camel = sb.toString();
         }
         return ada;
     }
 
     private String camel;
 
+    /**
+     * @return firstPartLowerCaseCamelCase
+     */
     public String camel() {
         if (null == camel) {
-            throw new Error();
+            Iterator<String> it = parts.iterator();
+            StringBuilder sb = new StringBuilder(it.next());
+            while (it.hasNext())
+                sb.append(capitalize(it.next()));
+            camel = sb.toString();
         }
         return camel;
     }
 
     private String capital;
 
+    /**
+     * @return CapitalizedCamelCase
+     */
     public String capital() {
         if (null == capital) {
-            throw new Error();
+            StringBuilder sb = new StringBuilder();
+            for (String s : parts)
+                sb.append(capitalize(s));
+            camel = sb.toString();
         }
         return capital;
     }
 
+    /**
+     * @return skillstylealllowercase
+     */
     public String lower() {
         return skillName;
+    }
+
+    /**
+     * Capitalizes a string.
+     */
+    private static String capitalize(String arg) {
+        if (Character.isUpperCase(arg.charAt(0)))
+            return arg;
+
+        return Character.toUpperCase(arg.charAt(0)) + arg.substring(1);
     }
 }

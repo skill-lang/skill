@@ -35,6 +35,14 @@ public abstract class Declaration extends Type implements ReferenceType {
         this.hints = Collections.unmodifiableSet(new HashSet<Hint>(hints));
     }
 
+    /**
+     * Declarations will depend on other declarations, thus they need to be
+     * initialized, after all declarations have been allocated.
+     * 
+     * @return true, iff initialized
+     */
+    public abstract boolean isInitialized();
+
 	/**
 	 * @return pretty parsable representation of this type
 	 */

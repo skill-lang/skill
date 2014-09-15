@@ -37,7 +37,7 @@ final class ListType(val baseType : BaseType) extends Type;
 sealed class ArrayType(val baseType : BaseType) extends Type;
 final class ConstantLengthArrayType(baseType : BaseType, val length : Long) extends ArrayType(baseType);
 
-final class BaseType(val name : Name) extends Type {
+final case class BaseType(val name : Name) extends Type {
   override def toString : String = name.source
 }
 

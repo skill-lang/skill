@@ -31,13 +31,13 @@ trait Generator {
    * This corresponds to the -hN, -u, -license, -date options.
    */
   case class HeaderInfo(
-    line1 : Option[String],
-    line2 : Option[String],
-    line3 : Option[String],
-    license : Option[String],
-    userName : Option[String],
-    date : Option[String])
-  var headerInfo : HeaderInfo = _;
+    line1 : Option[String] = None,
+    line2 : Option[String] = None,
+    line3 : Option[String] = None,
+    license : Option[String] = None,
+    userName : Option[String] = None,
+    date : Option[String] = None)
+  var headerInfo : HeaderInfo = HeaderInfo();
 
   /**
    * Set output package/namespace/...

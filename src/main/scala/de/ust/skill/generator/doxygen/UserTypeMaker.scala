@@ -5,6 +5,9 @@
 \*                                                                            */
 package de.ust.skill.generator.doxygen
 
+import de.ust.skill.ir.UserType
+
+import scala.collection.JavaConversions._
 /**
  * Creates user type equivalents.
  *
@@ -13,18 +16,41 @@ package de.ust.skill.generator.doxygen
 trait UserTypeMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-api.ads""")
 
-    out.write(s"""
---
---  This package is empty, but necessary for the compiler.
---
+    for (t ← IR.collect { case t : UserType ⇒ t }) {
+      val out = open(s"""src/${t.getName.capital}.h""")
 
-package ${packagePrefix.capitalize}.Api is
+      out.write(s"""
+// user type doxygen documentation
+#include <string>
+#include <list>
+#include <set>
+#include <map>
+#include <stdint.h>
 
-end ${packagePrefix.capitalize}.Api;
+/**
+ ${t.getSkillComment()}
+ */
+class ${t.getName.capital} ${
+        val ts = t.getAllSuperTypes()
+        if (ts.isEmpty) ""
+        else ts.map(_.getName().capital).mkString(": virtual protected ", ", virtual protected ", "")
+      }{
+  public:${
+        (
+          for (f ← t.getFields())
+            yield s"""
+
+   /**
+    ${f.getSkillComment()}
+    */
+   ${mapType(f.getType())} ${f.getName};"""
+        ).mkString
+      }
+};
 """)
 
-    out.close()
+      out.close()
+    }
   }
 }

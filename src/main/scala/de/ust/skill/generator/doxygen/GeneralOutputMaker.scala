@@ -28,8 +28,8 @@ trait GeneralOutputMaker extends Generator {
   private[doxygen] def header : String
 
   // remove special stuff for now
-  final def setIR(IR : List[Declaration]) = this.IR = TypeContext.removeSpecialDeclarations(IR).to
-  var IR : List[UserType] = _
+  final def setIR(IR : List[Declaration]) = this.IR = IR.to
+  var IR : List[Declaration] = _
 
   /**
    * Creates the correct PrintWriter for the argument file.
@@ -45,21 +45,9 @@ trait GeneralOutputMaker extends Generator {
   }
 
   /**
-   * Assume the existence of a translation function for the types.
+   * Assume the existence of a translation function for types.
    */
-  protected def mapTypeToId(t : Type, f : Field) : String
-  protected def mapType(t : Type, d : Declaration, f : Field) : String
-
-  /**
-   * Assume the existence of inheritance information functions for the types.
-   */
-  protected def getSuperTypes(d : UserType) : MutableList[Type]
-  protected def getSubTypes(d : UserType) : MutableList[Type]
-
-  /**
-   * Assume the existence of the get field parameters function.
-   */
-  protected def printParameters(d : UserType) : String
+  protected def mapType(t : Type) : String
 
   /**
    * Assume a package prefix provider.

@@ -21,6 +21,8 @@ import de.ust.skill.ir.restriction.NullableRestriction
 import de.ust.skill.ir.restriction.SingletonRestriction
 import de.ust.skill.ir.restriction.UniqueRestriction
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.Stack
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -372,38 +374,88 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     for (d ← defs) definitionNames.put(d.name, d)
 
     // create declarations
-    val rval = definitionNames.map({
-      case (_, f : UserType) ⇒
-        (f, ir.UserType.newDeclaration(
+    val toIRByName = definitionNames.map({
+      case (n, f : UserType) ⇒
+        (n, ir.UserType.newDeclaration(
           tc,
-          f.name.ir,
+          n.ir,
           f.description.comment.map(_.text.head).getOrElse(""),
           f.description.restrictions,
           f.description.hints
         ))
 
-      case (_, f : InterfaceDefinition) ⇒
-        (f, ir.InterfaceType.newDeclaration(
+      case (n, f : InterfaceDefinition) ⇒
+        (n, ir.InterfaceType.newDeclaration(
           tc,
-          f.name.ir,
+          n.ir,
           f.comment.map(_.text.head).getOrElse("")
         ))
 
-      case (_, f : EnumDefinition) ⇒ (f, ir.EnumType.newDeclaration(
-        tc,
-        f.name.ir,
-        f.comment.map(_.text.head).getOrElse(""),
-        f.instances.map(_.ir)
-      ))
+      case (n, f : EnumDefinition) ⇒
+        (n, ir.EnumType.newDeclaration(
+          tc,
+          n.ir,
+          f.comment.map(_.text.head).getOrElse(""),
+          f.instances.map(_.ir)
+        ))
 
-      case (_, f : Typedef) ⇒ (f, ir.UserType.newDeclaration(
-        tc,
-        f.name.ir,
-        f.description.comment.map(_.text.head).getOrElse(""),
-        f.description.restrictions,
-        f.description.hints
-      ))
+      case (n, f : Typedef) ⇒
+        (n, ir.Typedef.newDeclaration(
+          tc,
+          n.ir,
+          f.description.comment.map(_.text.head).getOrElse(""),
+          f.description.restrictions,
+          f.description.hints
+        ))
     });
+    def toIR(d : Declaration) = toIRByName(d.name)
+
+    // topological sort results into a list, in order to be able to intialize it correctly
+    /**
+     *  using topological sort and lexical order to make the order total. This will cause generated bindings to be more
+     *  stable and thus to work better with version control systems.
+     */
+    def topologicalSort(nodes : Iterable[Declaration]) : ListBuffer[Declaration] = {
+      val rval : ListBuffer[Declaration] = nodes.to
+
+      // create paths on two stack and pop them while they are equal
+      @inline def comparePath(a : Declaration, b : Declaration) = {
+        @inline def mkStack(arg : Declaration) = {
+          var a : Option[Declaration] = Some(arg)
+          val s = Stack[Declaration]()
+          while (a.isDefined) {
+            s.push(a.get)
+            a = parent.get(a.get)
+          }
+          s
+        }
+        val sa = mkStack(a)
+        val sb = mkStack(b)
+
+        while (!(sa.isEmpty || sb.isEmpty) && sa.top == sb.top) {
+          sa.pop
+          sb.pop
+        }
+        if (sa.isEmpty)
+          true
+        else if (sb.isEmpty)
+          false
+        else
+          sa.top.name.lowercase < sb.top.name.lowercase
+      }
+
+      // see SKilL Spec V1.0 §10.2.3
+      rval.sortWith { (a, b) ⇒
+        val Ba = baseType(a)
+        val Bb = baseType(b)
+        (Ba, Bb) match {
+          case (b, t) if t == b ⇒ comparePath(a, b)
+          case (i : InterfaceDefinition, t) if !t.isInstanceOf[InterfaceDefinition] ⇒ true
+          case (t, i : InterfaceDefinition) if !t.isInstanceOf[InterfaceDefinition] ⇒ false
+          case (t, u) ⇒ t.name.lowercase < u.name.lowercase
+        }
+      }
+    }
 
     // type order initialization of types
     def mkType(t : Type) : ir.Type = t match {
@@ -416,6 +468,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
       // base types are something special, because they have already been created
       case t : BaseType                ⇒ tc.get(t.name.lowercase)
     }
+    // turn an AST field into an ir.Field
     def mkField(node : Field) : ir.Field = try {
       node match {
         case f : Data ⇒ new ir.Field(mkType(f.t), f.name.source, f.isAuto,
@@ -426,28 +479,46 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     } catch {
       case e : ir.ParseException ⇒ ParseException(s"${node.name}: ${e.getMessage()}")
     }
-    //    def initialize(name : String) {
-    //      val definition = definitionNames(stringToName(name));
-    //      val superDecl = if (definition.parent.isEmpty) null
-    //      else rval(definitionNames(definition.parent.get));
-    //
-    //      rval(definition).initialize(
-    //        superDecl,
-    //        try { definition.body.map(mkField(_)) }
-    //        catch { case e : ir.ParseException ⇒ ParseException(s"In $name.${e.getMessage}") s }
-    //      );
-    //
-    //      //initialize children
-    //      subtypes.getOrElse(name.toLowerCase, List()).foreach { d ⇒ initialize(d.name.lowercase) }
-    //    }
-    //    definitionNames.values.filter(_.parent.isEmpty).foreach { d ⇒ initialize(d.name.lowercase) }
-    //
-    //    // we initialized in type order starting at base types; if some types have not been initialized, then they are cyclic!
-    //    if (rval.values.exists(!_.isInitialized))
-    //      ParseException("there are cyclic type definitions including: "+rval.values.filter(!_.isInitialized).mkString(", "))
-    //
-    //    assume(defs.size == rval.values.size, "we lost some definitions")
-    //    assume(rval.values.forall { _.isInitialized }, s"we missed some initializations: ${rval.values.filter(!_.isInitialized).mkString(", ")}")
+    // initialize the arguments ir companion
+    def initialize(d : Declaration) {
+      d match {
+        case definition : UserType ⇒ toIR(definition).asInstanceOf[ir.UserType].initialize(
+          parent.get(definition).map(toIR(_).asInstanceOf[ir.UserType]).getOrElse(null),
+          superInterfaces(definition).map(toIR(_).asInstanceOf[ir.InterfaceType]).to,
+          try { definition.body.map(mkField(_)) }
+          catch { case e : ir.ParseException ⇒ ParseException(s"In ${d.name}.${e.getMessage}", e) }
+        )
+
+        case definition : InterfaceDefinition ⇒ toIR(definition).asInstanceOf[ir.InterfaceType].initialize(
+          parent.get(definition).map(toIR(_).asInstanceOf[ir.UserType]).getOrElse(null),
+          superInterfaces(definition).map(toIR(_).asInstanceOf[ir.InterfaceType]).to,
+          try { definition.body.map(mkField(_)) }
+          catch { case e : ir.ParseException ⇒ ParseException(s"In ${d.name}.${e.getMessage}") }
+        )
+
+        case definition : EnumDefinition ⇒ toIR(definition).asInstanceOf[ir.EnumType].initialize(
+          try { definition.body.map(mkField(_)) }
+          catch { case e : ir.ParseException ⇒ ParseException(s"In ${d.name}.${e.getMessage}") }
+        )
+
+        case definition : Typedef ⇒ toIR(definition).asInstanceOf[ir.Typedef].initialize(
+          mkType(definition.target)
+        )
+      }
+    }
+    val ordered = topologicalSort(defs)
+    for (t ← ordered)
+      initialize(t)
+
+    val rval = ordered.map(toIR(_))
+
+    // we initialized in type order starting at base types; if some types have not been initialized, then they are cyclic!
+    if (rval.exists(!_.isInitialized))
+      ParseException("there are cyclic type definitions including: "+rval.filter(!_.isInitialized).mkString(", "))
+
+    assume(defs.size == rval.size, "we lost some definitions")
+    assume(rval.forall { _.isInitialized }, s"we missed some initializations: ${rval.filter(!_.isInitialized).mkString(", ")}")
+
     //
     //    // create type ordered sequence
     //    def getInTypeOrder(d : ir.Declaration) : Seq[ir.Declaration] = if (subtypes.contains(d.getSkillName)) {
@@ -460,10 +531,9 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     // TODO type order
     //    (for(d <- rval.values if null == d.getSuperType)
     //      yield getInTypeOrder(d)).toSeq.foldLeft(Seq[ir.Definition]())(_ ++ _)
-    rval.map(_._2).to
+    rval.to
   }
 }
-
 object Parser {
   import Parser._
 

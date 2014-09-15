@@ -45,7 +45,6 @@ Opitions:
       printHelp
     } else {
 
-      m.setOptions(args.slice(0, args.length - 2)).ensuring(m._packagePrefix != "", "You have to specify a non-empty package name!")
       val skillPath = args(args.length - 2)
       m.outPath = args(args.length - 1)
 
@@ -73,109 +72,33 @@ class Main extends FakeMain
     with UserTypeMaker {
 
   /**
-   * Translates the types into the skill type id's.
-   */
-  override protected def mapTypeToId(t : Type, f : Field) : String = t match {
-    case t : GroundType ⇒
-      if (f.isConstant()) {
-        t.getName.lower match {
-          case "i8"  ⇒ 0.toString
-          case "i16" ⇒ 1.toString
-          case "i32" ⇒ 2.toString
-          case "i64" ⇒ 3.toString
-          case "v64" ⇒ 4.toString
-        }
-      } else {
-        t.getName.lower match {
-          case "annotation" ⇒ 5.toString
-          case "bool"       ⇒ 6.toString
-          case "i8"         ⇒ 7.toString
-          case "i16"        ⇒ 8.toString
-          case "i32"        ⇒ 9.toString
-          case "i64"        ⇒ 10.toString
-          case "v64"        ⇒ 11.toString
-          case "f32"        ⇒ 12.toString
-          case "f64"        ⇒ 13.toString
-          case "string"     ⇒ 14.toString
-        }
-      }
-
-    case t : ConstantLengthArrayType ⇒ 15.toString
-    case t : VariableLengthArrayType ⇒ 17.toString
-    case t : ListType                ⇒ 18.toString
-    case t : SetType                 ⇒ 19.toString
-    case t : MapType                 ⇒ 20.toString
-
-    case t : Declaration             ⇒ s"""Long (Types.Element ("${t.getSkillName}").id)"""
-  }
-
-  /**
    * Translates the types into Ada types.
    */
-  override protected def mapType(t : Type, d : Declaration, f : Field) : String = t match {
+  override protected def mapType(t : Type) : String = t match {
     case t : GroundType ⇒ t.getName.lower match {
-      case "annotation" ⇒ "Skill_Type_Access"
+      case "annotation" ⇒ "void*"
 
-      case "bool"       ⇒ "Boolean"
+      case "bool"       ⇒ "bool"
 
-      case "i8"         ⇒ "i8"
-      case "i16"        ⇒ "i16"
-      case "i32"        ⇒ "i32"
-      case "i64"        ⇒ "i64"
+      case "i8"         ⇒ "int8_t"
+      case "i16"        ⇒ "int16_t"
+      case "i32"        ⇒ "int32_t"
+      case "i64"        ⇒ "int64_t"
       case "v64"        ⇒ "v64"
 
-      case "f32"        ⇒ "f32"
-      case "f64"        ⇒ "f64"
+      case "f32"        ⇒ "float"
+      case "f64"        ⇒ "double"
 
-      case "string"     ⇒ "String_Access"
+      case "string"     ⇒ "std::string"
     }
 
-    case t : ConstantLengthArrayType ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Array"
-    case t : VariableLengthArrayType ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Vector.Vector"
-    case t : ListType                ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_List.List"
-    case t : SetType                 ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Set.Set"
-    case t : MapType                 ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Map.Map"
+    case t : ConstantLengthArrayType ⇒ s"${mapType(t.getBaseType())}[${t.getLength()}]"
+    case t : VariableLengthArrayType ⇒ s"${mapType(t.getBaseType())}[]"
+    case t : ListType                ⇒ s"std::list<${mapType(t.getBaseType())}>"
+    case t : SetType                 ⇒ s"std::set<${mapType(t.getBaseType())}>"
+    case t : MapType                 ⇒ t.getBaseTypes().map(mapType(_)).reduceRight { (n, r) ⇒ s"std::map<$n, $r>" }
 
-    case t : Declaration             ⇒ s"${escaped(t.getName.ada)}_Type_Access"
-  }
-
-  /**
-   * Gets all super types of a given type.
-   */
-  protected def getSuperTypes(d : UserType) : MutableList[Type] = {
-    if (null == d.getSuperType) MutableList[Type]()
-    else getSuperTypes(d.getSuperType) += d.getSuperType
-  }
-
-  /**
-   * Gets all sub types of a given type.
-   */
-  protected def getSubTypes(d : UserType) : MutableList[Type] = {
-    var rval = MutableList[Type]()
-
-    1 to IR.length foreach { _ ⇒
-      for (_d ← IR) {
-        // element is sub type and not collected
-        if (d == _d.getSuperType && -1 == rval.indexOf(_d)) rval += _d
-        // element is listed sub type and not collected
-        if (-1 < rval.indexOf(_d.getSuperType) && -1 == rval.indexOf(_d)) rval += _d
-      }
-    }
-
-    rval
-  }
-
-  /**
-   * Gets the fields as parameters of a given type.
-   */
-  def printParameters(d : UserType) : String = {
-    var output = "";
-    var hasFields = false;
-    output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f ⇒
-      hasFields = true;
-      s"${f.getSkillName()} : ${mapType(f.getType, d, f)}"
-    }).mkString("; ", "; ", "")
-    if (hasFields) output else ""
+    case t : Declaration             ⇒ escaped(t.getName.capital)
   }
 
   /**

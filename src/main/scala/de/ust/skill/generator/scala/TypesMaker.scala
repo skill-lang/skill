@@ -7,7 +7,7 @@ package de.ust.skill.generator.scala
 
 import java.io.PrintWriter
 
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions._
 
 import de.ust.skill.ir._
 import de.ust.skill.ir.restriction._

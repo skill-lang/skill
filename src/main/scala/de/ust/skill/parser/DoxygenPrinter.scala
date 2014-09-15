@@ -73,5 +73,4 @@ typedef ${mapType(t.target)} ${t.name.CapitalCase};
     case t : ArrayType               ⇒ s"${t.baseType}[]"
     case t : BaseType                ⇒ t.name.CapitalCase
   }
-  //${f.description.comment.map(s ⇒ "/**\n"+s.text.mkString.replace("<", "[").replace(">", "]").replace("*/, "* /")+"\n*/").getOrElse("")}
 }
