@@ -60,6 +60,7 @@ enum ${t.name.CapitalCase} {
 };
 """
     case t : Typedef ⇒ s"""
+${t.description.comment.map(s ⇒ "/**\n"+s.text.mkString+"\n*/").getOrElse("")}
 typedef ${mapType(t.target)} ${t.name.CapitalCase};
 """
   }
