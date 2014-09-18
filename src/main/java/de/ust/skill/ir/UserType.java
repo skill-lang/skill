@@ -77,7 +77,7 @@ final public class UserType extends Declaration {
         assert null != Fields : "no fields supplied";
         // check for duplicate fields
         {
-            Set<String> names = new HashSet<>();
+            Set<Name> names = new HashSet<>();
             for (Field f : Fields) {
                 names.add(f.name);
                 f.setDeclaredIn(this);
@@ -121,7 +121,7 @@ final public class UserType extends Declaration {
     public List<Declaration> getAllSuperTypes() {
         ArrayList<Declaration> rval = new ArrayList<Declaration>();
         rval.addAll(interfaces);
-        if (null == superType)
+        if (null != superType)
             rval.add(superType);
 
         return rval;
@@ -140,6 +140,7 @@ final public class UserType extends Declaration {
      *         in super types
      */
     public List<Field> getAllFields() {
+        assert isInitialized() : "you can not obtain fields of type " + name + " because it is not initialized";
         if (null != superType) {
             List<Field> f = superType.getAllFields();
             f.addAll(fields);

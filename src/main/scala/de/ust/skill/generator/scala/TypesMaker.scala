@@ -49,7 +49,7 @@ sealed class $Name private[$packageName] (skillID : Long) ${
     	out.write(s"""
   private[$packageName] def this(skillID : Long${appendConstructorArguments(t)}) {
     this(skillID)
-    ${relevantFields.map{f ⇒ s"_${f.getName()} = ${escaped(f.getName)}"}.mkString("\n    ")}
+    ${relevantFields.map{f ⇒ s"_${f.getName()} = ${escaped(f.getName.camel)}"}.mkString("\n    ")}
   }
 """)
 	}
@@ -59,8 +59,8 @@ sealed class $Name private[$packageName] (skillID : Long) ${
 	///////////////////////
 	for(f <- t.getFields if !f.isConstant){
       val name = f.getName()
-      val name_ = escaped(name)
-      val Name = name.capitalize
+      val name_ = escaped(name.camel)
+      val Name = name.capital
 
       def makeField:String = {
 		if(f.isIgnored)

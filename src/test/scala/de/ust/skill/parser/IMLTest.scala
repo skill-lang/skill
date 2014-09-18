@@ -13,10 +13,10 @@ import de.ust.skill.generator;
 @RunWith(classOf[JUnitRunner])
 class IMLTest extends FunSuite {
   val filename = new File("/home/feldentm/Desktop/iml.sf/specification/iml-all.skill")
-
-  test("parse iml.sf") {
-    assert(100 < Parser.process(filename).size)
-  }
+  //
+  //  test("parse iml.sf") {
+  //    assert(100 < Parser.process(filename).size)
+  //  }
 
   test("create doxygen") {
     generator.doxygen.Main.main(Array("/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",

@@ -14,6 +14,10 @@ import java.util.List;
  */
 final public class Name implements Comparable<Name> {
 
+    /**
+     * Names with equal skillNames are equal. Thus all comparison is deferred to
+     * skillName.
+     */
     final private String skillName;
     final private List<String> parts;
 
@@ -41,6 +45,18 @@ final public class Name implements Comparable<Name> {
     @Override
     public int compareTo(Name o) {
         return skillName.compareTo(o.skillName);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Name)
+            return skillName.equals(((Name) o).skillName);
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return skillName.hashCode();
     }
 
     // different naming conventions, alphabetical order

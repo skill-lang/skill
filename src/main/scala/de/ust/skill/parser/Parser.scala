@@ -418,6 +418,16 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     def topologicalSort(nodes : Iterable[Declaration]) : ListBuffer[Declaration] = {
       val rval : ListBuffer[Declaration] = nodes.to
 
+      // interfaces are strictly smaller
+      @inline def compareType(a : Declaration, b : Declaration) = {
+        if (a.isInstanceOf[InterfaceDefinition] && !b.isInstanceOf[InterfaceDefinition])
+          true
+        else if (!a.isInstanceOf[InterfaceDefinition] && b.isInstanceOf[InterfaceDefinition])
+          false
+        else
+          a.name < b.name
+      }
+
       // create paths on two stack and pop them while they are equal
       @inline def comparePath(a : Declaration, b : Declaration) = {
         @inline def mkStack(arg : Declaration) = {
@@ -441,19 +451,22 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
         else if (sb.isEmpty)
           false
         else
-          sa.top.name.lowercase < sb.top.name.lowercase
+          compareType(sa.top, sb.top)
       }
 
       // see SKilL Spec V1.0 §10.2.3
       rval.sortWith { (a, b) ⇒
         val Ba = baseType(a)
         val Bb = baseType(b)
-        (Ba, Bb) match {
-          case (b, t) if t == b ⇒ comparePath(a, b)
-          case (i : InterfaceDefinition, t) if !t.isInstanceOf[InterfaceDefinition] ⇒ true
-          case (t, i : InterfaceDefinition) if !t.isInstanceOf[InterfaceDefinition] ⇒ false
-          case (t, u) ⇒ t.name.lowercase < u.name.lowercase
-        }
+
+        val r =
+          if (Ba == Bb)
+            comparePath(a, b)
+          else
+            compareType(Ba, Bb)
+
+        println(s"${a.name} ${if (r) "<" else ">"} ${b.name}")
+        r
       }
     }
 
@@ -468,37 +481,75 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
       // base types are something special, because they have already been created
       case t : BaseType                ⇒ tc.get(t.name.lowercase)
     }
-    // turn an AST field into an ir.Field
-    def mkField(node : Field) : ir.Field = try {
-      node match {
-        case f : Data ⇒ new ir.Field(mkType(f.t), f.name.source, f.isAuto,
-          f.description.comment.map(_.text.head).getOrElse(""), f.description.restrictions, f.description.hints)
-        case f : Constant ⇒ new ir.Field(mkType(f.t), f.name.source, f.value,
-          f.description.comment.map(_.text.head).getOrElse(""), f.description.restrictions, f.description.hints)
+
+    // turns all AST fields of a Declaration into ir.Fields
+    val translatedFields = HashMap[Name, HashMap[Name, ir.Field]]()
+    def mkFields(d : Declaration, fields : List[Field]) = try {
+      // turn an AST field into an ir.Field
+      def mkField(node : Field) : ir.Field = try {
+        node match {
+          case f : Data ⇒ new ir.Field(mkType(f.t), f.name.ir, f.isAuto,
+            f.description.comment.map(_.ir).getOrElse(""), f.description.restrictions, f.description.hints)
+          case f : Constant ⇒ new ir.Field(mkType(f.t), f.name.ir, f.value,
+            f.description.comment.map(_.ir).getOrElse(""), f.description.restrictions, f.description.hints)
+          case f : View ⇒ new ir.View(
+            f.declaredInType.map(translatedFields.applyOrElse(_,
+              { n : Name ⇒ throw ParseException(s"Type $n has not yet been process and can therefore not be a super type usable in a view!") }
+            ).applyOrElse(f.oldName,
+                { n : Name ⇒ throw ParseException(s"$n is not a field can therefore not be the target of a view!") }
+              )).getOrElse {
+              // we have no explicit type so we have to do a lookup
+              def find(d : ir.Declaration) : Option[ir.Field] = d match {
+                case t : ir.UserType      ⇒ t.getAllFields().filter(_.getSkillName == f.oldName.lowercase).headOption
+                case t : ir.InterfaceType ⇒ t.getAllFields().filter(_.getSkillName == f.oldName.lowercase).headOption
+              }
+              (d match {
+                case t : UserType            ⇒ (for (s ← t.superTypes.map(definitionNames).map(toIR); f ← find(s)) yield f).headOption
+                case t : InterfaceDefinition ⇒ (for (s ← t.superTypes.map(definitionNames).map(toIR); f ← find(s)) yield f).headOption
+                case _                       ⇒ ???
+              }).getOrElse(
+                throw ParseException(s"None of the super types of ${d.name} contains a field ${f.name} that can be used in a view.")
+              )
+            },
+            mkType(f.t),
+            f.name.ir,
+            f.description.comment.map(_.ir).getOrElse(""))
+        }
+      } catch {
+        case e : ir.ParseException ⇒ ParseException(s"${node.name}: ${e.getMessage()}")
       }
-    } catch {
-      case e : ir.ParseException ⇒ ParseException(s"${node.name}: ${e.getMessage()}")
-    }
+
+      // sort fields before views to ensure that viewed field is already transformed
+      val fs = fields.sortWith {
+        case (f : View, g : View) ⇒ f.name < g.name
+        case (f : View, _)        ⇒ true
+        case (_, f : View)        ⇒ false
+        case (f, g)               ⇒ f.name < g.name
+      }
+      translatedFields(d.name) = HashMap[Name, ir.Field]()
+      for (f ← fs) yield {
+        val r = mkField(f)
+        translatedFields(d.name)(f.name) = r
+        r
+      }
+    } catch { case e : ir.ParseException ⇒ ParseException(s"In ${d.name}.${e.getMessage}", e) }
     // initialize the arguments ir companion
     def initialize(d : Declaration) {
       d match {
         case definition : UserType ⇒ toIR(definition).asInstanceOf[ir.UserType].initialize(
           parent.get(definition).map(toIR(_).asInstanceOf[ir.UserType]).getOrElse(null),
           superInterfaces(definition).map(toIR(_).asInstanceOf[ir.InterfaceType]).to,
-          try { definition.body.map(mkField(_)) }
-          catch { case e : ir.ParseException ⇒ ParseException(s"In ${d.name}.${e.getMessage}", e) }
+          mkFields(d, definition.body)
         )
 
         case definition : InterfaceDefinition ⇒ toIR(definition).asInstanceOf[ir.InterfaceType].initialize(
           parent.get(definition).map(toIR(_).asInstanceOf[ir.UserType]).getOrElse(null),
           superInterfaces(definition).map(toIR(_).asInstanceOf[ir.InterfaceType]).to,
-          try { definition.body.map(mkField(_)) }
-          catch { case e : ir.ParseException ⇒ ParseException(s"In ${d.name}.${e.getMessage}") }
+          mkFields(d, definition.body)
         )
 
         case definition : EnumDefinition ⇒ toIR(definition).asInstanceOf[ir.EnumType].initialize(
-          try { definition.body.map(mkField(_)) }
-          catch { case e : ir.ParseException ⇒ ParseException(s"In ${d.name}.${e.getMessage}") }
+          mkFields(d, definition.body)
         )
 
         case definition : Typedef ⇒ toIR(definition).asInstanceOf[ir.Typedef].initialize(
@@ -507,8 +558,17 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
       }
     }
     val ordered = topologicalSort(defs)
-    for (t ← ordered)
+
+    // DEBUG
+    val pos = ordered.map(_.name).zipWithIndex.toMap
+    println((ordered.map(_.name).map(definitionNames).collect {
+      case d : UserType            ⇒ d.superTypes.filter(pos(_) > pos(d.name)).mkString(s"${d.name} : ", ", ", "\n")
+      case d : InterfaceDefinition ⇒ d.superTypes.filter(pos(_) > pos(d.name)).mkString(s"${d.name} : ", ", ", "\n")
+    }).mkString)
+
+    for (t ← ordered) try {
       initialize(t)
+    } catch { case e : Exception ⇒ throw ParseException(s"Initialization of type ${t.name} failed.\nSee ${t.declaredIn}", e) }
 
     val rval = ordered.map(toIR(_))
 
@@ -519,18 +579,6 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     assume(defs.size == rval.size, "we lost some definitions")
     assume(rval.forall { _.isInitialized }, s"we missed some initializations: ${rval.filter(!_.isInitialized).mkString(", ")}")
 
-    //
-    //    // create type ordered sequence
-    //    def getInTypeOrder(d : ir.Declaration) : Seq[ir.Declaration] = if (subtypes.contains(d.getSkillName)) {
-    //      (for (sub ← subtypes(d.getSkillName))
-    //        yield getInTypeOrder(rval(sub))).foldLeft(Seq(d))(_ ++ _)
-    //    } else {
-    //      Seq(d)
-    //    }
-
-    // TODO type order
-    //    (for(d <- rval.values if null == d.getSuperType)
-    //      yield getInTypeOrder(d)).toSeq.foldLeft(Seq[ir.Definition]())(_ ++ _)
     rval.to
   }
 }

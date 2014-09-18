@@ -49,6 +49,7 @@ final public class EnumType extends Declaration {
         return rval;
     }
 
+    @Override
     public boolean isInitialized() {
         return null != fields;
     }
@@ -68,7 +69,7 @@ final public class EnumType extends Declaration {
         assert null != Fields : "no fields supplied";
         // check for duplicate fields
         {
-            Set<String> names = new HashSet<>();
+            Set<Name> names = new HashSet<>();
             for (Field f : Fields) {
                 names.add(f.name);
                 f.setDeclaredIn(this);

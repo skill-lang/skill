@@ -148,9 +148,9 @@ ${
        */
       for (d ← IR) {
         d.getAllFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
-          output += s"""   function Get_${f.getName.capitalize} (Object : ${escaped(d.getName.ada)}_Type) return ${mapType(f.getType, d, f)};\r\n"""
+          output += s"""   function Get_${f.getName.ada} (Object : ${escaped(d.getName.ada)}_Type) return ${mapType(f.getType, d, f)};\r\n"""
           if (!f.isConstant)
-            output += s"""   procedure Set_${f.getName.capitalize} (
+            output += s"""   procedure Set_${f.getName.ada} (
       Object : in out ${escaped(d.getName.ada)}_Type;
       Value  :        ${mapType(f.getType, d, f)}
    );\r\n\r\n"""

@@ -154,11 +154,11 @@ class Main extends FakeMain
   /**
    * creates argument list of a constructor call, not including potential skillID or braces
    */
-  override protected def makeConstructorArguments(t : UserType) = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", ")
+  override protected def makeConstructorArguments(t : UserType) = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map({ f ⇒ s"${escaped(f.getName.camel)} : ${mapType(f.getType())}" }).mkString(", ")
   override protected def appendConstructorArguments(t : UserType) = {
     val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
     if (r.isEmpty) ""
-    else r.map({ f ⇒ s"${escaped(f.getName)} : ${mapType(f.getType())}" }).mkString(", ", ", ", "")
+    else r.map({ f ⇒ s"${escaped(f.getName.camel)} : ${mapType(f.getType())}" }).mkString(", ", ", ", "")
   }
 
   /**
@@ -240,7 +240,7 @@ class Main extends FakeMain
   }
 
   protected def writeField(d : UserType, f : Field) : String = {
-    val fName = escaped(f.getName)
+    val fName = escaped(f.getName.camel)
     f.getType match {
       case t : GroundType ⇒ t.getSkillName match {
         case "annotation" | "string" ⇒ s"for(i ← outData) ${f.getType.getSkillName}(i.$fName, dataChunk)"

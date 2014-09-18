@@ -23,7 +23,10 @@ sealed abstract class Declaration(val name : Name, val declaredIn : File) extend
 final class Description(val comment : Option[Comment], val restrictions : List[Restriction],
                         val hints : List[Hint]) extends Node;
 
-final class Comment(val text : List[String], val tags : List[CommentTag]) extends Node;
+final class Comment(val text : List[String], val tags : List[CommentTag]) extends Node {
+  def ir : String = text.mkString
+}
+
 final class CommentTag(val name : String, val text : List[String]) extends Node;
 
 sealed abstract class Type extends Node;
@@ -49,7 +52,7 @@ final class Constant(t : Type, name : Name, val value : Long) extends Field(t, n
 
 final class Data(val isAuto : Boolean, t : Type, name : Name) extends Field(t, name);
 
-final class View(val declaredInType : Option[Name], val oldName : Name, val target : Field) extends Field(target.t, target.name);
+final case class View(val declaredInType : Option[Name], val oldName : Name, val target : Field) extends Field(target.t, target.name);
 
 /**
  * Representation of skill names.
@@ -99,6 +102,8 @@ final class Name(val source : String, delimitWithUnderscores : Boolean, delimitW
   override def hashCode = lowercase.hashCode
 
   override def toString = CapitalCase
+
+  def <(arg : Name) = lowercase < arg.lowercase
 }
 
 object ChangeModifier extends Enumeration {

@@ -41,6 +41,7 @@ final public class Typedef extends Declaration {
         return rval;
     }
 
+    @Override
     public boolean isInitialized() {
         return null != target;
     }
