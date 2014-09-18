@@ -70,7 +70,7 @@ final public class InterfaceType extends Declaration {
      *             thrown if the declaration is illegal, e.g. because it
      *             contains illegal hints
      */
-    public void initialize(UserType superType, List<InterfaceType> superInterfaces, List<Field> Fields)
+    public void initialize(Type superType, List<InterfaceType> superInterfaces, List<Field> Fields)
             throws ParseException {
         this.superInterfaces = superInterfaces;
         assert !isInitialized() : "multiple initialization";
@@ -85,6 +85,12 @@ final public class InterfaceType extends Declaration {
             if (names.size() != Fields.size())
                 throw new ParseException("Type " + name + " contains duplicate field definitions.");
         }
+
+        this.superType = superType;
+        if (superType instanceof UserType)
+            baseType = ((UserType) superType).getBaseType();
+        else
+            baseType = superType;
 
         this.fields = Fields;
     }

@@ -412,62 +412,62 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
 
     // topological sort results into a list, in order to be able to intialize it correctly
     /**
-     *  using topological sort and lexical order to make the order total. This will cause generated bindings to be more
-     *  stable and thus to work better with version control systems.
+     *  tarjan with lexical order of edges; not exactly the solution described in the TR but it works well
      */
     def topologicalSort(nodes : Iterable[Declaration]) : ListBuffer[Declaration] = {
-      val rval : ListBuffer[Declaration] = nodes.to
+      // create edges, subtypes in alphabetical order
+      val edges = defs.map(_ -> ArrayBuffer[Declaration]()).toMap
+      nodes.foreach {
+        case t : UserType ⇒ t.superTypes.map(definitionNames).foreach(edges(_) += t)
+        case t : InterfaceDefinition ⇒ t.superTypes.map(definitionNames).foreach(edges(_) += t)
+        case t : Typedef if (t.target.isInstanceOf[BaseType]) ⇒ definitionNames.get(t.target.asInstanceOf[BaseType].name).foreach(edges(_) += t)
+        case _ ⇒
+      }
+      for ((_, e) ← edges)
+        e.sortWith(_.name.lowercase > _.name.lowercase)
 
-      // interfaces are strictly smaller
-      @inline def compareType(a : Declaration, b : Declaration) = {
-        if (a.isInstanceOf[InterfaceDefinition] && !b.isInstanceOf[InterfaceDefinition])
-          true
-        else if (!a.isInstanceOf[InterfaceDefinition] && b.isInstanceOf[InterfaceDefinition])
-          false
-        else
-          a.name < b.name
+      // L ← Empty list that will contain the sorted nodes
+      val L = ListBuffer[Declaration]()
+
+      val marked = HashSet[Declaration]()
+      val temporary = HashSet[Declaration]()
+      val unmarked : HashSet[Declaration] = nodes.to
+
+      // function visit(node n)
+      def visit(n : Declaration) {
+        // if n has a temporary mark then stop (not a DAG)
+        if (temporary.contains(n))
+          throw ParseException(s"The type hierarchy contains a cicle involving type ${n.name}.\n See ${n.declaredIn}")
+
+        //    if n is not marked (i.e. has not been visited yet) then
+        if (marked(n))
+          return ;
+
+        //        mark n temporarily
+        temporary += n
+
+        edges(n).foreach(visit)
+        //        for each node m with an edge from n to m do
+        //            visit(m)
+
+        //        mark n permanently
+        marked += n
+        //        unmark n temporarily
+        temporary -= n
+        //        add n to head of L
+        L.prepend(n)
       }
 
-      // create paths on two stack and pop them while they are equal
-      @inline def comparePath(a : Declaration, b : Declaration) = {
-        @inline def mkStack(arg : Declaration) = {
-          var a : Option[Declaration] = Some(arg)
-          val s = Stack[Declaration]()
-          while (a.isDefined) {
-            s.push(a.get)
-            a = parent.get(a.get)
-          }
-          s
-        }
-        val sa = mkStack(a)
-        val sb = mkStack(b)
-
-        while (!(sa.isEmpty || sb.isEmpty) && sa.top == sb.top) {
-          sa.pop
-          sb.pop
-        }
-        if (sa.isEmpty)
-          true
-        else if (sb.isEmpty)
-          false
-        else
-          compareType(sa.top, sb.top)
+      //  while there are unmarked nodes do
+      //    select an unmarked node n
+      //    visit(n)
+      while (!unmarked.isEmpty) {
+        val n = unmarked.head
+        unmarked.-=(n)
+        visit(n)
       }
 
-      // see SKilL Spec V1.0 §10.2.3
-      rval.sortWith { (a, b) ⇒
-        val Ba = baseType(a)
-        val Bb = baseType(b)
-
-        val r =
-          if (Ba == Bb)
-            comparePath(a, b)
-          else
-            compareType(Ba, Bb)
-
-        println(s"${a.name} ${if (r) "<" else ">"} ${b.name}")
-        r
-      }
+      L
     }
 
     // type order initialization of types
@@ -543,7 +543,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
         )
 
         case definition : InterfaceDefinition ⇒ toIR(definition).asInstanceOf[ir.InterfaceType].initialize(
-          parent.get(definition).map(toIR(_).asInstanceOf[ir.UserType]).getOrElse(null),
+          parent.get(definition).map(toIR(_).asInstanceOf[ir.UserType]).getOrElse(tc.get("annotation")),
           superInterfaces(definition).map(toIR(_).asInstanceOf[ir.InterfaceType]).to,
           mkFields(d, definition.body)
         )
@@ -559,13 +559,6 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     }
     val ordered = topologicalSort(defs)
 
-    // DEBUG
-    val pos = ordered.map(_.name).zipWithIndex.toMap
-    println((ordered.map(_.name).map(definitionNames).collect {
-      case d : UserType            ⇒ d.superTypes.filter(pos(_) > pos(d.name)).mkString(s"${d.name} : ", ", ", "\n")
-      case d : InterfaceDefinition ⇒ d.superTypes.filter(pos(_) > pos(d.name)).mkString(s"${d.name} : ", ", ", "\n")
-    }).mkString)
-
     for (t ← ordered) try {
       initialize(t)
     } catch { case e : Exception ⇒ throw ParseException(s"Initialization of type ${t.name} failed.\nSee ${t.declaredIn}", e) }
@@ -574,7 +567,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
 
     // we initialized in type order starting at base types; if some types have not been initialized, then they are cyclic!
     if (rval.exists(!_.isInitialized))
-      ParseException("there are cyclic type definitions including: "+rval.filter(!_.isInitialized).mkString(", "))
+      ParseException("there are uninitialized definitions including:\n "+rval.filter(!_.isInitialized).map(_.prettyPrint).mkString("\n "))
 
     assume(defs.size == rval.size, "we lost some definitions")
     assume(rval.forall { _.isInitialized }, s"we missed some initializations: ${rval.filter(!_.isInitialized).mkString(", ")}")
