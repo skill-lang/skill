@@ -103,7 +103,7 @@ final public class Name implements Comparable<Name> {
             StringBuilder sb = new StringBuilder();
             for (String s : parts)
                 sb.append(capitalize(s));
-            camel = sb.toString();
+            capital = sb.toString();
         }
         return capital;
     }
