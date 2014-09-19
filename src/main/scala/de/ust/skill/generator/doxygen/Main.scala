@@ -69,10 +69,13 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * @author Timm Felden, Dennis Przytarski
  */
 class Main extends FakeMain
+    with EnumTypeMaker
+    with InterfaceTypeMaker
+    with TypedefMaker
     with UserTypeMaker {
 
-  override def comment(d : Declaration) = d.getComment.format("/*!\n", " * ", 80, " */\n")
-  override def comment(f : Field) = f.getComment.format("    /*!\n", "     * ", 80, "     */\n")
+  override def comment(d : Declaration) = d.getComment.format("/*!\n", " * ", 80, " */\n").replace('<', '⟨').replace('>', '⟩')
+  override def comment(f : Field) = f.getComment.format("    /*!\n", "     * ", 80, "     */\n").replace('<', '⟨').replace('>', '⟩')
 
   /**
    * Translates the types into Ada types.

@@ -14,7 +14,7 @@ final public class EnumType extends Declaration {
 
     // fields
     private List<Field> fields = null;
-    private List<Name> instances;
+    private final List<Name> instances;
 
     /**
      * Creates a declaration of type name.
@@ -96,7 +96,7 @@ final public class EnumType extends Declaration {
     public String prettyPrint() {
         StringBuilder sb = new StringBuilder("enum ").append(name.getSkillName());
         sb.append("{");
-        for (Name i : instances) {
+        for (Name i : getInstances()) {
             sb.append(i).append(", ");
         }
         sb.append(";\n");
@@ -115,5 +115,9 @@ final public class EnumType extends Declaration {
     @Override
     public boolean isReadOnly() {
         return false;
+    }
+
+    public List<Name> getInstances() {
+        return instances;
     }
 }
