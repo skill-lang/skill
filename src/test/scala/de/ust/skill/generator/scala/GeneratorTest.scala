@@ -8,6 +8,7 @@ package de.ust.skill.generator.scala
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+import de.ust.skill.main.CommandLine
 
 /**
  * @author Timm Felden
@@ -16,7 +17,7 @@ import org.scalatest.junit.JUnitRunner
 class GeneratorTest extends FunSuite {
 
   def check(src : String, out : String) {
-    Main.main(Array[String]("-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/scala/"+src, "testsuites/scala/src/main/scala/"))
+    CommandLine.main(Array[String]("-L", "scala", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/scala/"+src, "testsuites"))
   }
 
   test("benchmark: colored graph")(check("benchmarks.coloredGraph.skill", "benchmarks.coloredGraph"))
@@ -52,10 +53,4 @@ class GeneratorTest extends FunSuite {
     check("nodeExample.tool3.skill", "toolchains.node.tool3")
     check("nodeExample.viewer.skill", "toolchains.node.viewer")
   }
-
-  test("check _root_ bug")(
-    assert(intercept[AssertionError] {
-      Main.main(Array[String]("-u", "<<some developer>>", "-h2", "<<debug>>", "src/test/resources/scala/date.skill", "testsuites/scala/src/main/scala/"))
-    }.getMessage === "assertion failed: You have to specify a non-empty package name!")
-  )
 }

@@ -17,45 +17,6 @@ import scala.collection.mutable.MutableList
 import de.ust.skill.generator.common.Generator
 
 /**
- * Entry point of the Ada generator.
- */
-object Main {
-  private def printHelp : Unit = println("""
-usage:
-  [options] skillPath outPath
-
-Opitions:
-  -p packageName      set a package name used by all emitted code.
-  -h1|h2|h3 content   overrides the content of the respective header line
-  -u userName         set a user name
-  -date date          set a custom date
-""")
-
-  /**
-   * Takes an argument skill file name and generates an Ada binding.
-   */
-  def main(args : Array[String]) : Unit = {
-    var m = new Main
-
-    //processing command line arguments
-    if (2 > args.length) {
-      printHelp
-    } else {
-
-      m.setOptions(args.slice(0, args.length - 2)).ensuring(m._packagePrefix != "", "You have to specify a non-empty package name!")
-      val skillPath = args(args.length - 2)
-      m.outPath = args(args.length - 1)
-
-      //parse argument code
-      m.setIR(Parser.process(new File(skillPath)).toList)
-
-      // create output using maker chain
-      m.make;
-    }
-  }
-}
-
-/**
  * Fake Main implementation required to make trait stacking work.
  */
 abstract class FakeMain extends GeneralOutputMaker { def make {} }
@@ -483,6 +444,11 @@ class Main extends FakeMain
       case unknown ⇒ sys.error(s"unkown Argument: $unknown")
     }
   }
+
+  override def printHelp : Unit = println("""
+Opitions (ada):
+  (none)
+""")
 
   override protected def defaultValue(f : Field) = f.getType match {
     case t : GroundType ⇒ t.getSkillName() match {

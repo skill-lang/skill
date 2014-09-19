@@ -14,59 +14,18 @@ import de.ust.skill.generator.common.Generator
 import java.util.Date
 
 /**
- * Entry point of the Doxygen generator.
- *
- * The used language is C++ (or rather something that doxygen recoginezes as C++).
- *
- * @note Using C++ has the effect, that neither interfaces nor enums with fields can be represented correctly.
- * @note None of the languages supported by doxygen seems to provide all required features. We may fix this by
- * switching to scaladoc or by hoping that doxygen will support scala or swift eventually.
- */
-object Main {
-  private def printHelp : Unit = println("""
-usage:
-  [options] skillPath outPath
-
-Opitions:
-  -p packageName      set a package name used by all emitted code.
-  -h1|h2|h3 content   overrides the content of the respective header line
-  -u userName         set a user name
-  -date date          set a custom date
-""")
-
-  /**
-   * Takes an argument skill file name and generates an Ada binding.
-   */
-  def main(args : Array[String]) : Unit = {
-    var m = new Main
-
-    //processing command line arguments
-    if (2 > args.length) {
-      printHelp
-    } else {
-
-      val skillPath = args(args.length - 2)
-      m.outPath = args(args.length - 1)
-
-      //parse argument code
-      m.setIR(Parser.process(new File(skillPath)).toList)
-
-      // create output using maker chain
-      m.make;
-    }
-  }
-}
-
-/**
  * Fake Main implementation required to make trait stacking work.
  */
 abstract class FakeMain extends GeneralOutputMaker { def make {} }
 
 /**
- * A generator turns a set of skill declarations into an Ada interface providing means of manipulating skill files
- * containing instances of the respective UserTypes.
+ * The used language is C++ (or rather something that doxygen recoginezes as C++).
  *
- * @author Timm Felden, Dennis Przytarski
+ * @note Using C++ has the effect, that neither interfaces nor enums with fields can be represented correctly.
+ * @note None of the languages supported by doxygen seems to provide all required features. We may fix this by
+ * switching to scaladoc or by hoping that doxygen will support scala or swift eventually.
+ *
+ * @author Timm Felden
  */
 class Main extends FakeMain
     with EnumTypeMaker
@@ -155,6 +114,11 @@ class Main extends FakeMain
       case unknown ⇒ sys.error(s"unkown Argument: $unknown")
     }
   }
+
+  override def printHelp : Unit = println("""
+Opitions (doxygen):
+  (none)
+""")
 
   // unused
   override protected def defaultValue(f : Field) = ???
