@@ -1,0 +1,25 @@
+# this is a true comment, that will be completely ignored
+
+/**
+ this is a class comment with
+ * ugly formatting
+     * but completely legal.
+
+ * We want to have this in a single line.
+*/
+T {
+/*
+
+ * * <- the only real star here!
+
+ */
+  string commentWithStar;
+
+/* funny
+ *
+* formated comment
+.
+*/
+  string commentWithoutStars;
+
+}

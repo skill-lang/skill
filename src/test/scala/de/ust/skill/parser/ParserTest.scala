@@ -41,7 +41,7 @@ class ParserTest extends FunSuite {
   test("type ordered IR") {
     val IR = Parser.process("/typeOrderIR.skill")
     val order = IR.map(_.getSkillName).mkString("")
-    assert(order == "abdc" || order == "acbd", order + " is not in type order!")
+    assert(order == "abdc" || order == "acbd", order+" is not in type order!")
   }
 
   test("regression: casing of user types") {
@@ -55,6 +55,26 @@ class ParserTest extends FunSuite {
   test("regression: report missing types") {
     val e = intercept[de.ust.skill.ir.ParseException] { check("/failures/missingTypeCausedBySpelling.skill") }
     assert("""The type "MessSage" is unknown!
-Known types are: message, datedmessage""" === e.getMessage())
+  Known types are: message, datedmessage""" === e.getMessage())
+  }
+
+  test("regression: comments - declaration") {
+    val d = Parser.process("/comments.skill").get(0)
+    assert(d.getComment.format("/**\n", " *", 120, " */") === """/**
+ * this is a class comment with ugly formatting but completely legal. We want to have this in a single line.
+ */""")
+  }
+
+  test("regression: comments - field") {
+    val d = Parser.process("/comments.skill").get(0).asInstanceOf[de.ust.skill.ir.UserType]
+    for (f ← d.getFields()) {
+      println(f.getComment)
+      if (f.getName().camel == "commentWithStar") assert(f.getComment.format("/**\n", " *", 120, " */") === """/**
+ * * <- the only real star here!
+ */""")
+      else if (f.getName().camel == "commentWithoutStars") assert(f.getComment.format("/**\n", " *", 120, " */") === """/**
+ * funny formated comment .
+ */""")
+    }
   }
 }
