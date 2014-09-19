@@ -44,7 +44,7 @@ class ${t.getName.capital} ${
    /**
     ${f.getSkillComment()}
     */
-   ${mapType(f.getType())} ${f.getName};"""
+   ${mapType(f.getType())} ${f.getName.camel};"""
         ).mkString
       }
 };
