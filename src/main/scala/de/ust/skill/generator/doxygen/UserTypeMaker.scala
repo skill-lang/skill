@@ -28,10 +28,9 @@ trait UserTypeMaker extends GeneralOutputMaker {
 #include <map>
 #include <stdint.h>
 
-/**
- ${t.getSkillComment()}
- */
-class ${t.getName.capital} ${
+${
+        comment(t)
+      }class ${t.getName.capital} ${
         val ts = t.getAllSuperTypes()
         if (ts.isEmpty) ""
         else ts.map(_.getName().capital).mkString(": virtual protected ", ", virtual protected ", "")
@@ -41,10 +40,9 @@ class ${t.getName.capital} ${
           for (f ← t.getFields())
             yield s"""
 
-   /**
-    ${f.getSkillComment()}
-    */
-   ${mapType(f.getType())} ${f.getName.camel};"""
+${
+            comment(f)
+          }    ${mapType(f.getType())} ${f.getName.camel};"""
         ).mkString
       }
 };

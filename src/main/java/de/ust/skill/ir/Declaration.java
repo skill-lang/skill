@@ -26,11 +26,11 @@ public abstract class Declaration extends Type implements ReferenceType {
 	/**
 	 * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
 	 */
-    protected final String skillCommentImage;
+    protected final Comment comment;
 
-    protected Declaration(Name name, String comment, List<Restriction> restrictions, List<Hint> hints) {
+    protected Declaration(Name name, Comment comment, List<Restriction> restrictions, List<Hint> hints) {
         this.name = name;
-        skillCommentImage = null == comment ? "" : comment;
+        this.comment = comment;
         this.restrictions = restrictions;
         this.hints = Collections.unmodifiableSet(new HashSet<Hint>(hints));
     }
@@ -65,8 +65,8 @@ public abstract class Declaration extends Type implements ReferenceType {
 	 * 
 	 * @note can contain newline characters!!!
 	 */
-	public String getSkillComment() {
-		return skillCommentImage;
+    public Comment getComment() {
+        return comment;
 	}
 
 	public List<Restriction> getRestrictions() {

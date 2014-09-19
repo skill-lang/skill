@@ -20,7 +20,7 @@ object DoxygenPrinter {
 
   def pretty(d : Declaration) : String = d match {
     case t : UserType ⇒ s"""
-${t.description.comment.map(s ⇒ "/**\n"+s.text.mkString+"\n*/").getOrElse("")}
+${t.description.comment.format("/**\n", " * ", 80, "\n */")}
 class ${t.name.CapitalCase} ${
       if (t.superTypes.isEmpty) ""
       else t.superTypes.map(_.CapitalCase).mkString(": virtual protected ", ", virtual protected ", "")
@@ -30,14 +30,14 @@ class ${t.name.CapitalCase} ${
         for (f ← t.body)
           yield s"""
 
-${f.description.comment.map { s ⇒ "    /**\n"+s.text.mkString.replace('<', '⟨').replace('>', '⟩')+"\n*/" }.getOrElse("")}
+${f.description.comment.format("  /**\n", "   * ", 80, "\n   */").replace('<', '⟨').replace('>', '⟩')}
    ${mapType(f.t)} ${f.name.camelCase};"""
       ).mkString
     }
 };
 """
     case t : InterfaceDefinition ⇒ s"""
-${t.comment.map(s ⇒ "/**\n"+s.text.mkString+"\n*/").getOrElse("")}
+${t.comment.format("/**\n", " * ", 80, "\n */")}
 class ${t.name.CapitalCase} ${
       if (t.superTypes.isEmpty) ""
       else t.superTypes.map(_.CapitalCase).mkString(": virtual protected ", ", virtual protected ", "")
@@ -47,20 +47,20 @@ class ${t.name.CapitalCase} ${
         for (f ← t.body)
           yield s"""
 
-${f.description.comment.map(s ⇒ "    /**\n"+s.text.mkString+"\n*/").getOrElse("")}
+${f.description.comment.format("  /**\n", "   * ", 80, "\n   */").replace('<', '⟨').replace('>', '⟩')}
    ${mapType(f.t)} ${f.name.camelCase};"""
       ).mkString
     }
 };
 """
     case t : EnumDefinition ⇒ s"""
-${t.comment.map(s ⇒ "/**\n"+s.text.mkString+"\n*/").getOrElse("")}
+${t.comment.format("/**\n", " * ", 80, "\n */")}
 enum ${t.name.CapitalCase} {
   ${t.instances.map { i ⇒ i.camelCase }.mkString(", ")}
 };
 """
     case t : Typedef ⇒ s"""
-${t.description.comment.map(s ⇒ "/**\n"+s.text.mkString+"\n*/").getOrElse("")}
+${t.description.comment.format("/**\n", " * ", 80, "\n */")}
 typedef ${mapType(t.target)} ${t.name.CapitalCase};
 """
   }

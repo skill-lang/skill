@@ -11,6 +11,8 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.input.Positional
 import java.io.File
+import scala.collection.mutable.ListBuffer
+import de.ust.skill.ir.Comment
 
 /**
  * The AST is used to turn skill definitions into Java IR.
@@ -20,14 +22,8 @@ import java.io.File
 sealed abstract class Node;
 sealed abstract class Declaration(val name : Name, val declaredIn : File) extends Node;
 
-final class Description(val comment : Option[Comment], val restrictions : List[Restriction],
+final class Description(val comment : Comment, val restrictions : List[Restriction],
                         val hints : List[Hint]) extends Node;
-
-final class Comment(val text : List[String], val tags : List[CommentTag]) extends Node {
-  def ir : String = text.mkString
-}
-
-final class CommentTag(val name : String, val text : List[String]) extends Node;
 
 sealed abstract class Type extends Node;
 
@@ -45,7 +41,7 @@ final case class BaseType(val name : Name) extends Type {
 }
 
 sealed abstract class Field(val t : Type, val name : Name) extends Node {
-  var description : Description = new Description(None, List[Restriction](), List[Hint]());
+  var description : Description = new Description(Comment.NoComment.get, List[Restriction](), List[Hint]());
 }
 
 final class Constant(t : Type, name : Name, val value : Long) extends Field(t, name);
@@ -130,14 +126,14 @@ final case class UserType(
 
 final case class EnumDefinition(
   _declaredIn : File,
-  comment : Option[Comment],
+  comment : Comment,
   _name : Name,
   instances : List[Name],
   body : List[Field]) extends Declaration(_name, _declaredIn);
 
 final case class InterfaceDefinition(
   _declaredIn : File,
-  comment : Option[Comment],
+  comment : Comment,
   _name : Name,
   superTypes : List[Name],
   body : List[Field]) extends Declaration(_name, _declaredIn);

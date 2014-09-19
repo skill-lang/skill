@@ -20,7 +20,7 @@ final public class Typedef extends Declaration {
      * @note the declaration has to be completed, i.e. it has to be evaluated in
      *       pre-order over the type hierarchy.
      */
-    private Typedef(Name name, String comment, List<Restriction> restrictions, List<Hint> hints) throws ParseException {
+    private Typedef(Name name, Comment comment, List<Restriction> restrictions, List<Hint> hints) throws ParseException {
         super(name, comment, restrictions, hints);
     }
 
@@ -30,7 +30,7 @@ final public class Typedef extends Declaration {
      * @throws ParseException
      *             if the declaration is already present
      */
-    public static Typedef newDeclaration(TypeContext tc, Name name, String comment, List<Restriction> restrictions,
+    public static Typedef newDeclaration(TypeContext tc, Name name, Comment comment, List<Restriction> restrictions,
             List<Hint> hints) throws ParseException {
         String skillName = name.getSkillName();
         if (tc.types.containsKey(skillName))

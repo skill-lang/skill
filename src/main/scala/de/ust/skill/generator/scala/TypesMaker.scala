@@ -33,8 +33,7 @@ import ${packagePrefix}internal.NamedType
       val relevantFields = fields.filter(!_.isIgnored)
 
       //class comment
-      if (t.getSkillComment.size > 0)
-        out.write(s"/*${t.getSkillComment()}*/\n")
+      out.write(comment(t))
 
       //class prefix
       val Name = t.getName.capital;

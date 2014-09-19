@@ -33,7 +33,7 @@ final public class InterfaceType extends Declaration {
      * @note the declaration has to be completed, i.e. it has to be evaluated in
      *       pre-order over the type hierarchy.
      */
-    private InterfaceType(Name name, String comment) throws ParseException {
+    private InterfaceType(Name name, Comment comment) throws ParseException {
         super(name, comment, Collections.<Restriction> emptyList(), Collections.<Hint> emptyList());
 
         superType = baseType = null;
@@ -45,7 +45,7 @@ final public class InterfaceType extends Declaration {
      * @throws ParseException
      *             if the declaration is already present
      */
-    public static InterfaceType newDeclaration(TypeContext tc, Name name, String comment) throws ParseException {
+    public static InterfaceType newDeclaration(TypeContext tc, Name name, Comment comment) throws ParseException {
         String skillName = name.getSkillName();
         if (tc.types.containsKey(skillName))
             throw new ParseException("Duplicate declaration of type " + name);

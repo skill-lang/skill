@@ -25,7 +25,7 @@ final public class EnumType extends Declaration {
      * @note the declaration has to be completed, i.e. it has to be evaluated in
      *       pre-order over the type hierarchy.
      */
-    private EnumType(Name name, String comment, List<Name> instances) throws ParseException {
+    private EnumType(Name name, Comment comment, List<Name> instances) throws ParseException {
         super(name, comment, Collections.<Restriction> emptyList(), Collections.<Hint> emptyList());
         this.instances = instances;
     }
@@ -36,7 +36,7 @@ final public class EnumType extends Declaration {
      * @throws ParseException
      *             if the declaration is already present
      */
-    public static EnumType newDeclaration(TypeContext tc, Name name, String comment, List<Name> instances)
+    public static EnumType newDeclaration(TypeContext tc, Name name, Comment comment, List<Name> instances)
             throws ParseException {
         assert !instances.isEmpty() : "enums must have at least one instance";
 

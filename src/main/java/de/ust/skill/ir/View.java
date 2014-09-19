@@ -15,7 +15,7 @@ public class View extends Field {
 
     final private Field target;
 
-    public View(Field target, Type type, Name name, String comment) throws ParseException {
+    public View(Field target, Type type, Name name, Comment comment) throws ParseException {
         super(type, name, target.isAuto(), comment, target.restrictions, unhide(target.hints));
         this.target = target;
     }

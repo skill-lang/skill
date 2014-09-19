@@ -23,6 +23,7 @@ import de.ust.skill.ir.restriction.UniqueRestriction
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.Stack
+import de.ust.skill.ir.Comment
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -104,7 +105,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
       case c ~ name ~ specs ~ target ⇒ Typedef(
         currentFile,
         name,
-        new Description(c, specs.collect { case r : Restriction ⇒ r }, specs.collect { case h : Hint ⇒ h }),
+        new Description(c.getOrElse(Comment.NoComment.get), specs.collect { case r : Restriction ⇒ r }, specs.collect { case h : Hint ⇒ h }),
         target)
     };
 
@@ -130,14 +131,14 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * creates an enum definition
      */
     private def enumType = opt(comment) ~ ("enum" ~> id) ~ ("{" ~> repsep(id, ",") <~ ";") ~ (rep(field) <~ "}") ^^ {
-      case c ~ n ~ i ~ f ⇒ new EnumDefinition(currentFile, c, n, i, f)
+      case c ~ n ~ i ~ f ⇒ new EnumDefinition(currentFile, c.getOrElse(Comment.NoComment.get), n, i, f)
     }
 
     /**
      * creates an interface definition
      */
     private def interfaceType = opt(comment) ~ ("interface" ~> id) ~ rep((":" | "with" | "extends") ~> id) ~ ("{" ~> rep(field) <~ "}") ^^ {
-      case c ~ n ~ i ~ f ⇒ new InterfaceDefinition(currentFile, c, n, i, f)
+      case c ~ n ~ i ~ f ⇒ new InterfaceDefinition(currentFile, c.getOrElse(Comment.NoComment.get), n, i, f)
     }
 
     /**
@@ -191,12 +192,53 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * Comments are first class citizens of our language, because we want to emit them in the output binding.
      *
      * The intermediate representation is without the leading "/°" and trailing "°/" (where °=*)
-     *
-     * TODO
      */
-    private def comment = """/\*([^\*/]|/|\*+[^\*/])*\*+/""".r ^^ { s ⇒
-      new Comment(List(s.substring(2, s.size - 2)),
-        List())
+    private def comment : Parser[Comment] = """/\*+""".r ~> ("""([^\*/]|/|\*+[^\*/])*\*+/""".r) ^^ { s ⇒
+      // scan s to split it into pieces
+      @inline def scan(last : Int) : ListBuffer[String] = {
+        var begin = 0;
+        var next = 0;
+        // we have to insert a line break, because the whitespace handling may have removed one
+        var r = ListBuffer[String]("\n")
+        while (next < last) {
+          s.charAt(next) match {
+            case ' ' | '\t' | 0x0B | '\f' | '\r' ⇒
+              if (begin != next)
+                r.append(s.substring(begin, next))
+              begin = next + 1;
+            case '\n' ⇒
+              if (begin != next)
+                r.append(s.substring(begin, next))
+              r.append("\n")
+              begin = next + 1;
+            case _ ⇒
+          }
+          next += 1
+        }
+        if (begin != last) r.append(s.substring(begin, last))
+        r
+      }
+
+      val ws = scan(s.size - 2)
+
+      val r = new Comment
+
+      @tailrec def parse(ws : ListBuffer[String], text : ListBuffer[String]) : Unit =
+        if (ws.isEmpty) r.init(text)
+        else (ws.head, ws.tail) match {
+          case ("\n", ws) if (ws.isEmpty)     ⇒ r.init(text)
+          case ("\n", ws) if (ws.head == "*") ⇒ parse(ws.tail, text)
+          case ("\n", ws)                     ⇒ parse(ws, text)
+          case (w, ws) if w.matches("""\*?@.+""") ⇒
+            val end = if (w.contains(":")) w.lastIndexOf(':') else w.size
+            val tag = w.substring(w.indexOf('@') + 1, end).toLowerCase
+            r.init(text, tag); parse(ws, ListBuffer[String]())
+          case (w, ws) ⇒ text.append(w); parse(ws, text)
+        }
+
+      parse(ws, ListBuffer[String]())
+
+      r
     }
 
     /**
@@ -296,13 +338,13 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * Description of a field.
      */
     private def fieldDescription = opt(comment) ~ rep(fieldRestriction | hint) ^^ {
-      case c ~ specs ⇒ new Description(c, specs.collect { case r : Restriction ⇒ r }, specs.collect { case h : Hint ⇒ h })
+      case c ~ specs ⇒ new Description(c.getOrElse(Comment.NoComment.get), specs.collect { case r : Restriction ⇒ r }, specs.collect { case h : Hint ⇒ h })
     }
     /**
      * Description of a declration.
      */
     private def typeDescription = opt(comment) ~ rep(typeRestriction | hint) ^^ {
-      case c ~ specs ⇒ new Description(c, specs.collect { case r : Restriction ⇒ r }, specs.collect { case h : Hint ⇒ h })
+      case c ~ specs ⇒ new Description(c.getOrElse(Comment.NoComment.get), specs.collect { case r : Restriction ⇒ r }, specs.collect { case h : Hint ⇒ h })
     }
 
     /**
@@ -379,7 +421,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
         (n, ir.UserType.newDeclaration(
           tc,
           n.ir,
-          f.description.comment.map(_.text.head).getOrElse(""),
+          f.description.comment,
           f.description.restrictions,
           f.description.hints
         ))
@@ -388,14 +430,14 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
         (n, ir.InterfaceType.newDeclaration(
           tc,
           n.ir,
-          f.comment.map(_.text.head).getOrElse("")
+          f.comment
         ))
 
       case (n, f : EnumDefinition) ⇒
         (n, ir.EnumType.newDeclaration(
           tc,
           n.ir,
-          f.comment.map(_.text.head).getOrElse(""),
+          f.comment,
           f.instances.map(_.ir)
         ))
 
@@ -403,7 +445,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
         (n, ir.Typedef.newDeclaration(
           tc,
           n.ir,
-          f.description.comment.map(_.text.head).getOrElse(""),
+          f.description.comment,
           f.description.restrictions,
           f.description.hints
         ))
@@ -489,9 +531,9 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
       def mkField(node : Field) : ir.Field = try {
         node match {
           case f : Data ⇒ new ir.Field(mkType(f.t), f.name.ir, f.isAuto,
-            f.description.comment.map(_.ir).getOrElse(""), f.description.restrictions, f.description.hints)
+            f.description.comment, f.description.restrictions, f.description.hints)
           case f : Constant ⇒ new ir.Field(mkType(f.t), f.name.ir, f.value,
-            f.description.comment.map(_.ir).getOrElse(""), f.description.restrictions, f.description.hints)
+            f.description.comment, f.description.restrictions, f.description.hints)
           case f : View ⇒ new ir.View(
             f.declaredInType.map(translatedFields.applyOrElse(_,
               { n : Name ⇒ throw ParseException(s"Type $n has not yet been process and can therefore not be a super type usable in a view!") }
@@ -513,7 +555,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
             },
             mkType(f.t),
             f.name.ir,
-            f.description.comment.map(_.ir).getOrElse(""))
+            f.description.comment)
         }
       } catch {
         case e : ir.ParseException ⇒ ParseException(s"${node.name}: ${e.getMessage()}")

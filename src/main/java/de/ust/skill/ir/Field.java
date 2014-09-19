@@ -30,9 +30,9 @@ public class Field {
      */
     protected final Set<Hint> hints;
     /**
-     * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
+     * The comment from Specification.
      */
-    private final String skillCommentImage;
+    private final Comment comment;
 
     /**
      * Constructor for constant fields.
@@ -44,7 +44,7 @@ public class Field {
      *             if the argument type is not an integer or if illegal hints
      *             are used
      */
-    public Field(Type type, Name name, long value, String comment, List<Restriction> restrictions, List<Hint> hints)
+    public Field(Type type, Name name, long value, Comment comment, List<Restriction> restrictions, List<Hint> hints)
             throws ParseException {
         assert (null != type);
         assert (null != name);
@@ -58,7 +58,7 @@ public class Field {
         constantValue = value;
         this.name = name;
         this.type = type;
-        skillCommentImage = null == comment ? "" : comment;
+        this.comment = comment;
         this.restrictions = restrictions;
         this.hints = Collections.unmodifiableSet(new HashSet<Hint>(hints));
         Hint.checkField(this, this.hints);
@@ -73,7 +73,7 @@ public class Field {
      * @throws ParseException
      *             if illegal hints are used
      */
-    public Field(Type type, Name name, boolean isAuto, String comment, List<Restriction> restrictions,
+    public Field(Type type, Name name, boolean isAuto, Comment comment, List<Restriction> restrictions,
             Collection<Hint> hints) throws ParseException {
         assert (null != type);
         assert (null != name);
@@ -83,7 +83,7 @@ public class Field {
         auto = isAuto;
         this.name = name;
         this.type = type;
-        skillCommentImage = null == comment ? "" : comment;
+        this.comment = comment;
         this.restrictions = restrictions;
         this.hints = Collections.unmodifiableSet(new HashSet<Hint>(hints));
         Hint.checkField(this, this.hints);
@@ -128,14 +128,8 @@ public class Field {
         return sb.toString();
     }
 
-    /**
-     * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
-     * This may require further transformation depending on the target language.
-     * 
-     * @note can contain newline characters!!!
-     */
-    public String getSkillComment() {
-        return skillCommentImage;
+    public Comment getComment() {
+        return comment;
     }
 
     public List<Restriction> getRestrictions() {

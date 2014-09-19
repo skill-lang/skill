@@ -32,7 +32,8 @@ final public class UserType extends Declaration {
      * @note the declaration has to be completed, i.e. it has to be evaluated in
      *       pre-order over the type hierarchy.
      */
-    private UserType(Name name, String comment, List<Restriction> restrictions, List<Hint> hints) throws ParseException {
+    private UserType(Name name, Comment comment, List<Restriction> restrictions, List<Hint> hints)
+            throws ParseException {
         super(name, comment, restrictions, hints);
 
         superType = baseType = null;
@@ -44,7 +45,7 @@ final public class UserType extends Declaration {
      * @throws ParseException
      *             if the declaration is already present
      */
-    public static UserType newDeclaration(TypeContext tc, Name name, String comment, List<Restriction> restrictions,
+    public static UserType newDeclaration(TypeContext tc, Name name, Comment comment, List<Restriction> restrictions,
             List<Hint> hints) throws ParseException {
         String skillName = name.getSkillName();
         if (tc.types.containsKey(skillName))

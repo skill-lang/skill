@@ -70,6 +70,16 @@ trait Generator {
   protected def open(path : String) : PrintWriter;
 
   /**
+   * Transform a comment of a declaration into the language's comment system
+   */
+  protected def comment(d : Declaration) : String;
+
+  /**
+   * Transform a comment of a field into the language's comment system
+   */
+  protected def comment(d : Field) : String;
+
+  /**
    * Makes the output. Use trait stacking, i.e. traits must invoke super.make!!!
    *
    * This function is called after options have been set.

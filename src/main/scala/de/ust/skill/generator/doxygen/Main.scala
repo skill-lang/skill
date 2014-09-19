@@ -71,6 +71,9 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
 class Main extends FakeMain
     with UserTypeMaker {
 
+  override def comment(d : Declaration) = d.getComment.format("/*!\n", " * ", 80, " */\n")
+  override def comment(f : Field) = f.getComment.format("    /*!\n", "     * ", 80, "     */\n")
+
   /**
    * Translates the types into Ada types.
    */

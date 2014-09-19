@@ -84,6 +84,9 @@ class Main extends FakeMain
     with StateMakerBodyMaker
     with StateMakerSpecMaker {
 
+  override def comment(d : Declaration) = d.getComment.format("", "-- ", 80, "")
+  override def comment(f : Field) = f.getComment.format("", "    -- ", 80, "")
+
   /**
    * Translates the types into the skill type id's.
    */
