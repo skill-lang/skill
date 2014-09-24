@@ -1,6 +1,7 @@
 package de.ust.skill.ir;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,7 +11,7 @@ import java.util.Set;
  * 
  * @author Timm Felden
  */
-final public class UserType extends Declaration {
+final public class UserType extends Declaration implements WithFields {
 
     /**
      * super type is the type above this type. base type is the base type of the
@@ -32,11 +33,20 @@ final public class UserType extends Declaration {
      * @note the declaration has to be completed, i.e. it has to be evaluated in
      *       pre-order over the type hierarchy.
      */
-    private UserType(Name name, Comment comment, List<Restriction> restrictions, List<Hint> hints)
+    private UserType(Name name, Comment comment, Collection<Restriction> restrictions, Collection<Hint> hints)
             throws ParseException {
         super(name, comment, restrictions, hints);
 
         superType = baseType = null;
+    }
+
+    @Override
+    UserType copy(TypeContext tc) {
+        try {
+            return newDeclaration(tc, name, comment, restrictions, hints);
+        } catch (ParseException e) {
+            throw new Error("can not happen", e);
+        }
     }
 
     /**
@@ -45,8 +55,8 @@ final public class UserType extends Declaration {
      * @throws ParseException
      *             if the declaration is already present
      */
-    public static UserType newDeclaration(TypeContext tc, Name name, Comment comment, List<Restriction> restrictions,
-            List<Hint> hints) throws ParseException {
+    public static UserType newDeclaration(TypeContext tc, Name name, Comment comment,
+            Collection<Restriction> restrictions, Collection<Hint> hints) throws ParseException {
         String skillName = name.getSkillName();
         if (tc.types.containsKey(skillName))
             throw new ParseException("Duplicate declaration of type " + name);
@@ -128,9 +138,11 @@ final public class UserType extends Declaration {
         return rval;
     }
 
-    /**
-     * @return the fields added in this type
+    /*
+     * (non-Javadoc)
+     * @see de.ust.skill.ir.WithFields#getFields()
      */
+    @Override
     public List<Field> getFields() {
         assert isInitialized() : this.name + " has not been initialized";
         return fields;

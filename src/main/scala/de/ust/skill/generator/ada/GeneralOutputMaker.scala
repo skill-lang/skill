@@ -28,7 +28,7 @@ trait GeneralOutputMaker extends Generator {
   private[ada] def header : String
 
   // remove special stuff for now
-  final def setIR(IR : List[Declaration]) = this.IR = TypeContext.removeSpecialDeclarations(IR).to
+  final def setTC(tc : TypeContext) = this.IR = tc.removeSpecialDeclarations.getUsertypes.to
   var IR : List[UserType] = _
 
   /**

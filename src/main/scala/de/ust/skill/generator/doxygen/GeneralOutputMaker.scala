@@ -28,8 +28,8 @@ trait GeneralOutputMaker extends Generator {
   private[doxygen] def header : String
 
   // remove special stuff for now
-  final def setIR(IR : List[Declaration]) = this.IR = IR.to
-  var IR : List[Declaration] = _
+  final def setTC(tc : TypeContext) = this.tc = tc;
+  var tc : TypeContext = _
 
   /**
    * Creates the correct PrintWriter for the argument file.

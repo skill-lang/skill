@@ -15,7 +15,7 @@ class IMLTest extends FunSuite {
   val filename = new File("/home/feldentm/Desktop/iml.sf/specification/iml-all.skill")
 
   test("parse iml.sf") {
-    assert(100 < Parser.process(filename).size)
+    assert(100 < Parser.process(filename).allTypeNames.size)
   }
 
   test("create doxygen") {

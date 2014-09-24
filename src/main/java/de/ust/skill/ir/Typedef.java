@@ -1,5 +1,6 @@
 package de.ust.skill.ir;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -20,8 +21,18 @@ final public class Typedef extends Declaration {
      * @note the declaration has to be completed, i.e. it has to be evaluated in
      *       pre-order over the type hierarchy.
      */
-    private Typedef(Name name, Comment comment, List<Restriction> restrictions, List<Hint> hints) throws ParseException {
+    private Typedef(Name name, Comment comment, List<Restriction> restrictions, Collection<Hint> hints)
+            throws ParseException {
         super(name, comment, restrictions, hints);
+    }
+
+    @Override
+    Typedef copy(TypeContext tc) {
+        try {
+            return newDeclaration(tc, name, comment, restrictions, hints);
+        } catch (ParseException e) {
+            throw new Error("can not happen", e);
+        }
     }
 
     /**
@@ -31,7 +42,7 @@ final public class Typedef extends Declaration {
      *             if the declaration is already present
      */
     public static Typedef newDeclaration(TypeContext tc, Name name, Comment comment, List<Restriction> restrictions,
-            List<Hint> hints) throws ParseException {
+            Collection<Hint> hints) throws ParseException {
         String skillName = name.getSkillName();
         if (tc.types.containsKey(skillName))
             throw new ParseException("Duplicate declaration of type " + name);

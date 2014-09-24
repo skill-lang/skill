@@ -16,7 +16,7 @@ import de.ust.skill.ir.Typedef
 trait TypedefMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val ts = IR.collect { case t : Typedef ⇒ t }
+    val ts = tc.getTypedefs
     if (ts.isEmpty) return
 
     val out = open(s"""src/_typedefs.h""")

@@ -18,7 +18,7 @@ class ParserTest extends FunSuite {
   implicit private def basePath(path : String) : File = new File("src/test/resources"+path);
 
   private def check(filename : String) = {
-    assert(0 != Parser.process(filename).size)
+    assert(0 != Parser.process(filename).allTypeNames.size)
   }
 
   test("good hints") { check("/hints.skill") }
@@ -36,16 +36,16 @@ class ParserTest extends FunSuite {
   test("example2a")(check("/example2a.skill"))
   test("example2b")(check("/example2b.skill"))
   test("unicode")(check("/unicode.skill"))
-  test("empty")(assert(0 === Parser.process("/empty.skill").size))
+  test("empty")(assert(0 === Parser.process("/empty.skill").allTypeNames.size))
 
   test("type ordered IR") {
-    val IR = Parser.process("/typeOrderIR.skill")
+    val IR = Parser.process("/typeOrderIR.skill").getUsertypes()
     val order = IR.map(_.getSkillName).mkString("")
     assert(order == "abdc" || order == "acbd", order+" is not in type order!")
   }
 
   test("regression: casing of user types") {
-    val ir = Parser.process("/regressionCasing.skill")
+    val ir = Parser.process("/regressionCasing.skill").getUsertypes
     assert(2 === ir.size)
     // note: this is a valid test, because IR has to be in type order
     assert(ir.get(0).getSkillName === "message")
@@ -59,14 +59,14 @@ class ParserTest extends FunSuite {
   }
 
   test("regression: comments - declaration") {
-    val d = Parser.process("/comments.skill").get(0)
+    val d = Parser.process("/comments.skill").getUsertypes.get(0)
     assert(d.getComment.format("/**\n", " *", 120, " */") === """/**
  * this is a class comment with ugly formatting but completely legal. We want to have this in a single line.
  */""")
   }
 
   test("regression: comments - field") {
-    val d = Parser.process("/comments.skill").get(0).asInstanceOf[de.ust.skill.ir.UserType]
+    val d = Parser.process("/comments.skill").getUsertypes.get(0)
     for (f ← d.getFields()) {
       println(f.getComment)
       if (f.getName().camel == "commentWithStar") assert(f.getComment.format("/**\n", " *", 120, " */") === """/**

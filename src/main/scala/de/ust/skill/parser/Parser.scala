@@ -23,6 +23,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.Stack
 import de.ust.skill.ir.Comment
+import de.ust.skill.ir.TypeContext
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -405,7 +406,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
    * TODO the type checking should be separated and IR building should start over with the original AST and the
    * knowledge, that it is in fact correct
    */
-  private def buildIR(defs : ArrayBuffer[Declaration]) : java.util.List[ir.Declaration] = {
+  private def buildIR(defs : ArrayBuffer[Declaration]) : TypeContext = {
 
     // run the type checker to get information about the type hierarchy
     val (_, baseType, parent, superInterfaces) = TypeCheck(defs)
@@ -613,18 +614,17 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     assume(defs.size == rval.size, "we lost some definitions")
     assume(rval.forall { _.isInitialized }, s"we missed some initializations: ${rval.filter(!_.isInitialized).mkString(", ")}")
 
-    rval.to
+    tc.setDefs(ordered.map(toIR).to)
+    tc
   }
 }
 object Parser {
   import Parser._
 
   /**
-   * returns an unsorted list of declarations
-   *
-   * TODO the result HAS TO BE A TYPE CONTEXT!
+   * @return a type context containing all type information obtained from the argument file
    */
-  def process(input : File) : java.util.List[ir.Declaration] = {
+  def process(input : File) : TypeContext = {
     val p = new Parser
     p.buildIR(p.parseAll(input).to)
   }

@@ -63,10 +63,10 @@ Opitions:
     assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
 
     // invoke generators
-    val IR = Parser.process(new File(skillPath))
+    val tc = Parser.process(new File(skillPath))
 
     for ((n, m) ← languages) {
-      m.setIR(IR.to)
+      m.setTC(tc)
       m.setPackage(packageName)
       m.headerInfo = header
       m.outPath = outPath

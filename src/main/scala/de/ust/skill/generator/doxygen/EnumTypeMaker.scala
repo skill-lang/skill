@@ -17,7 +17,7 @@ trait EnumTypeMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    for (t ← IR.collect { case t : EnumType ⇒ t }) {
+    for (t ← tc.getEnums) {
       val out = open(s"""src/${t.getName.capital}.h""")
 
       out.write(s"""

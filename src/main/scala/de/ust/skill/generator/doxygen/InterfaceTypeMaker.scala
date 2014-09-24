@@ -17,7 +17,7 @@ trait InterfaceTypeMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    for (t ← IR.collect { case t : InterfaceType ⇒ t }) {
+    for (t ← tc.getInterfaces) {
       val out = open(s"""src/${t.getName.capital}.h""")
 
       out.write(s"""

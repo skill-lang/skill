@@ -27,7 +27,7 @@ import de.ust.skill.ir.UserType
 trait GeneralOutputMaker extends Generator {
 
   // remove special stuff
-  final def setIR(IR : List[Declaration]) = this.IR = TypeContext.removeSpecialDeclarations(IR).to
+  final def setTC(tc : TypeContext) = this.IR = tc.removeSpecialDeclarations.getUsertypes.to
   var IR : List[UserType] = _
 
   override def getLanguageName = "scala";

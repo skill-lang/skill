@@ -10,7 +10,7 @@ import java.util.Set;
  * 
  * @author Timm Felden
  */
-final public class EnumType extends Declaration {
+final public class EnumType extends Declaration implements WithFields {
 
     // fields
     private List<Field> fields = null;
@@ -28,6 +28,15 @@ final public class EnumType extends Declaration {
     private EnumType(Name name, Comment comment, List<Name> instances) throws ParseException {
         super(name, comment, Collections.<Restriction> emptyList(), Collections.<Hint> emptyList());
         this.instances = instances;
+    }
+
+    @Override
+    EnumType copy(TypeContext tc) {
+        try {
+            return newDeclaration(tc, name, comment, instances);
+        } catch (ParseException e) {
+            throw new Error("can not happen", e);
+        }
     }
 
     /**
@@ -84,6 +93,7 @@ final public class EnumType extends Declaration {
     /**
      * @return the fields added in this type
      */
+    @Override
     public List<Field> getFields() {
         assert isInitialized() : this.name + " has not been initialized";
         return fields;

@@ -11,7 +11,7 @@ import java.util.Set;
  * 
  * @author Timm Felden
  */
-final public class InterfaceType extends Declaration {
+final public class InterfaceType extends Declaration implements WithFields {
 
     /**
      * super type is the type above this type. base type is the base type of the
@@ -37,6 +37,15 @@ final public class InterfaceType extends Declaration {
         super(name, comment, Collections.<Restriction> emptyList(), Collections.<Hint> emptyList());
 
         superType = baseType = null;
+    }
+
+    @Override
+    InterfaceType copy(TypeContext tc) {
+        try {
+            return newDeclaration(tc, name, comment);
+        } catch (ParseException e) {
+            throw new Error("can not happen", e);
+        }
     }
 
     /**
@@ -118,6 +127,7 @@ final public class InterfaceType extends Declaration {
     /**
      * @return the fields added in this type
      */
+    @Override
     public List<Field> getFields() {
         assert isInitialized() : this.name + " has not been initialized";
         return fields;
@@ -170,5 +180,9 @@ final public class InterfaceType extends Declaration {
             return ((UserType) baseType).isReadOnly();
 
         return false;
+    }
+
+    public List<InterfaceType> getSuperInterfaces() {
+        return superInterfaces;
     }
 }

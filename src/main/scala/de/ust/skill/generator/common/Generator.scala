@@ -4,6 +4,7 @@ import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Type
 import java.io.PrintWriter
 import de.ust.skill.ir.Field
+import de.ust.skill.ir.TypeContext
 
 /**
  * Use this to create a 5 lines header that looks similar in all languages.
@@ -36,9 +37,10 @@ trait Generator {
   var outPath : String = _;
 
   /**
-   * set IR of the known specifation.
+   * Set the type context. This is a function to make clear that generators may in fact project a type context prior to
+   * using it.
    */
-  def setIR(IR : List[Declaration]);
+  def setTC(tc : TypeContext);
 
   var headerInfo : HeaderInfo = HeaderInfo();
 

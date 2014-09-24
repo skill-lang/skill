@@ -17,7 +17,7 @@ trait UserTypeMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    for (t ← IR.collect { case t : UserType ⇒ t }) {
+    for (t ← tc.getUsertypes) {
       val out = open(s"""src/${t.getName.capital}.h""")
 
       out.write(s"""
