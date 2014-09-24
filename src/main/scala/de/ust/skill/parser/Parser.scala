@@ -9,7 +9,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.util.parsing.combinator.RegexParsers
-import org.scalatest.enablers.Definition
 import de.ust.skill.ir
 import de.ust.skill.ir.Hint
 import de.ust.skill.ir.Restriction

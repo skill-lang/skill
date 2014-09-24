@@ -30,6 +30,7 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
 class Main extends FakeMain
     with EnumTypeMaker
     with InterfaceTypeMaker
+    with MakedocMaker
     with TypedefMaker
     with UserTypeMaker {
 
