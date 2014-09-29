@@ -12,30 +12,25 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
+/**
+ * non generic front-end tests, mostly regressions
+ * @author Timm Felden
+ */
 @RunWith(classOf[JUnitRunner])
 class ParserTest extends FunSuite {
 
-  implicit private def basePath(path : String) : File = new File("src/test/resources"+path);
+  implicit private def basePath(path : String) : File = new File("src/test/resources/frontend"+path);
 
   private def check(filename : String) = {
     assert(0 != Parser.process(filename).allTypeNames.size)
   }
 
-  test("good hints") { check("/hints.skill") }
   test("bad hints") { intercept[IllegalArgumentException] { check("/badHints.skill") } }
   test("restrictions") {
     val e = intercept[de.ust.skill.ir.ParseException] { check("/restrictions.skill") }
     assert("notahint() is either not supported or an invalid restriction name" === e.getMessage())
   }
 
-  test("test")(check("/test.skill"))
-  test("test2")(check("/test2.skill"))
-  test("test3")(check("/test3.skill"))
-  test("test4")(check("/test4.skill"))
-  test("example1")(check("/example1.skill"))
-  test("example2a")(check("/example2a.skill"))
-  test("example2b")(check("/example2b.skill"))
-  test("unicode")(check("/unicode.skill"))
   test("empty")(assert(0 === Parser.process("/empty.skill").removeSpecialDeclarations().getUsertypes().size))
 
   test("type ordered IR") {

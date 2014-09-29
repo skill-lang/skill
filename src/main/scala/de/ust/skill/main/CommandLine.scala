@@ -13,6 +13,8 @@ import scala.collection.JavaConversions._
  * Command line interface to the skill compilers
  * @author Timm Felden
  * @todo add option to suppress implicit naming conventions
+ * @todo add an option to tell the generators to make the equivalent of a library (jar, whatever) and use this option
+ * for generic testing
  */
 object CommandLine {
   private def printHelp(gens : Iterable[Generator]) : Unit = {

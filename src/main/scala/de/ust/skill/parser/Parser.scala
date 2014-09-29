@@ -332,7 +332,11 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * hints as defined in the paper. Because hints can be ignored by the generator, it is safe to allow arbitrary
      * identifiers and to warn if the identifier is not a known hint.
      */
-    private def hint = "!" ~> id ^^ { n ⇒ Hint.valueOf(n.lowercase) }
+    private def hint = "!" ~> id ^^ { n ⇒
+      try {
+        Hint.valueOf(n.lowercase)
+      } catch { case e : IllegalArgumentException ⇒ throw ParseException(s"$n is not the name of a hint.") }
+    }
 
     /**
      * Description of a field.
