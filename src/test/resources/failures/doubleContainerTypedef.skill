@@ -1,0 +1,8 @@
+# This file contains a field that expands to i8[][] names.
+#
+
+typedef str i8[];
+
+Err {
+  str[] names;
+}

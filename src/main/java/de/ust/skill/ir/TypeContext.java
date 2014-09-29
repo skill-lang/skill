@@ -115,12 +115,12 @@ public final class TypeContext {
     }
 
     public TypeContext removeInterfaces() {
-        throw new Error();
+        throw new Error("TODO implementation! π_i");
         // TODO implementation! π_i
     }
 
     public TypeContext removeEnums() {
-        throw new Error();
+        throw new Error("TODO implementation! π_e");
         // TODO implementation! π_e
     }
 

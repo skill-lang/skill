@@ -10,6 +10,6 @@ Not a useful input, but demonstrating some properties of hints.
 !ignore
 !IgnorE
 hint {
-  !lazy !distributed !lazy !ignore
+  !OndEmanD !distributed !onDEMAND !ignore
   i64 data;	
 }

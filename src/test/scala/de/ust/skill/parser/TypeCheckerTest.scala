@@ -23,17 +23,23 @@ import de.ust.skill.ir
 @RunWith(classOf[JUnitRunner])
 class TypeCheckerTest extends FunSuite {
 
-  implicit private def basePath(path: String): File = new File("src/test/resources"+path);
-  private def check(filename: String) = Parser.process(filename)
+  implicit private def basePath(path : String) : File = new File("src/test/resources"+path);
+  private def check(filename : String) = Parser.process(filename)
 
-  def fail[E <: Exception](f: ⇒ Unit)(implicit manifest: scala.reflect.Manifest[E]): E = try {
+  def fail[E <: Exception](f : ⇒ Unit)(implicit manifest : scala.reflect.Manifest[E]) : E = try {
     f;
     fail(s"expected ${manifest.runtimeClass.getName()}, but no exception was thrown");
   } catch {
-    case e: TestFailedException ⇒ throw e
-    case e: E ⇒
+    case e : TestFailedException ⇒ throw e
+    case e : E ⇒
       println(e.getMessage()); e
-    case e: Throwable ⇒ e.printStackTrace(); assert(e.getClass() === manifest.runtimeClass); null.asInstanceOf[E]
+    case e : Throwable ⇒ e.printStackTrace(); assert(e.getClass() === manifest.runtimeClass); null.asInstanceOf[E]
+  }
+
+  def failOn(fileName : String) = test("failOn: "+fileName) {
+    fail[ir.ParseException] {
+      check("/failures/"+fileName)
+    }
   }
 
   test("duplicateDefinition") {
@@ -48,11 +54,10 @@ class TypeCheckerTest extends FunSuite {
     }
   }
 
-  test("cyclic definitions") {
-    fail[ir.ParseException] {
-      check("/failures/cyclicDefinitions.skill")
-    }
-  }
+  failOn("cyclicDefinitions.skill")
+  failOn("cyclicDefinitions2.skill")
+  failOn("cyclicDefinitions3.skill")
+  failOn("cyclicDefinitions4.skill")
 
   test("duplicateField") {
     fail[ir.ParseException] {
@@ -105,6 +110,17 @@ class TypeCheckerTest extends FunSuite {
   test("nesting is illegal") {
     fail[ir.ParseException] {
       check("/failures/compound.skill")
+    }
+  }
+
+  test("typedef - nested array") {
+    fail[ir.ParseException] {
+      check("/failures/doubleContainerTypedef.skill")
+    }
+  }
+  test("typedef - nested map") {
+    fail[ir.ParseException] {
+      check("/failures/doubleContainerTypedefMap.skill")
     }
   }
 

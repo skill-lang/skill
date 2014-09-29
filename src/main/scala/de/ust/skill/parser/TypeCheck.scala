@@ -3,6 +3,7 @@ package de.ust.skill.parser
 import scala.collection.mutable.ArrayBuffer
 import scala.annotation.tailrec
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
 
 object TypeCheck {
 
@@ -84,10 +85,18 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
     // build base type relation
     val baseType = HashMap[Declaration, Declaration]()
     for (d ← defs) {
+      // collect seen types for cycle detection
+      val seen = HashSet[Declaration]()
+
       @tailrec
-      def base(d : Declaration) : Declaration = parent.get(d) match {
-        case Some(p) ⇒ base(p)
-        case None    ⇒ d
+      def base(d : Declaration) : Declaration = {
+        if (seen.contains(d))
+          throw ParseException(s"The super type relation contains a cycle involving regular type ${d.name.CapitalCase}")
+        seen += d
+        parent.get(d) match {
+          case Some(p) ⇒ base(p)
+          case None    ⇒ d
+        }
       }
       baseType(d) = base(d)
     }

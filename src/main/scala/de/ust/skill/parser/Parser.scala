@@ -526,7 +526,6 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     }
 
     // turns all AST fields of a Declaration into ir.Fields
-    val translatedFields = HashMap[Name, HashMap[Name, ir.Field]]()
     def mkFields(d : Declaration, fields : List[Field]) = try {
       // turn an AST field into an ir.Field
       def mkField(node : Field) : ir.Field = try {
@@ -579,13 +578,10 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
         case (_, f : View)        ⇒ false
         case (f, g)               ⇒ f.name < g.name
       }
-      translatedFields(d.name) = HashMap[Name, ir.Field]()
-      for (f ← fs) yield {
-        val r = mkField(f)
-        translatedFields(d.name)(f.name) = r
-        r
-      }
+      for (f ← fs)
+        yield mkField(f)
     } catch { case e : ir.ParseException ⇒ ParseException(s"In ${d.name}.${e.getMessage}", e) }
+
     // initialize the arguments ir companion
     def initialize(d : Declaration) {
       d match {
@@ -625,13 +621,15 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     assume(defs.size == rval.size, "we lost some definitions")
     assume(rval.forall { _.isInitialized }, s"we missed some initializations: ${rval.filter(!_.isInitialized).mkString(", ")}")
 
-    println(s"types: ${ordered.size}")
-    @inline def fieldCount(c : Int, d : Declaration) = d match {
-      case d : UserType            ⇒ c + d.body.size
-      case d : InterfaceDefinition ⇒ c + d.body.size
-      case _                       ⇒ c
+    if (verboseOutput) {
+      println(s"types: ${ordered.size}")
+      @inline def fieldCount(c : Int, d : Declaration) = d match {
+        case d : UserType            ⇒ c + d.body.size
+        case d : InterfaceDefinition ⇒ c + d.body.size
+        case _                       ⇒ c
+      }
+      println(s"fields: ${ordered.foldLeft(0)(fieldCount)}")
     }
-    println(s"fields: ${ordered.foldLeft(0)(fieldCount)}")
 
     tc.setDefs(ordered.map(toIR).to)
     tc
@@ -643,8 +641,8 @@ object Parser {
   /**
    * @return a type context containing all type information obtained from the argument file
    */
-  def process(input : File) : TypeContext = {
-    val p = new Parser
+  def process(input : File, delimitWithUnderscore : Boolean = true, delimitWithCamelCase : Boolean = true, verboseOutput : Boolean = false) : TypeContext = {
+    val p = new Parser(delimitWithUnderscore, delimitWithCamelCase)
     p.buildIR(p.parseAll(input).to)
   }
 

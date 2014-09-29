@@ -9,6 +9,11 @@ import scala.annotation.tailrec
 import scala.collection.mutable.HashMap
 import scala.collection.JavaConversions._
 
+/**
+ * Command line interface to the skill compilers
+ * @author Timm Felden
+ * @todo add option to suppress implicit naming conventions
+ */
 object CommandLine {
   private def printHelp(gens : Iterable[Generator]) : Unit = {
     println("""

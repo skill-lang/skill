@@ -36,7 +36,7 @@ class ParserTest extends FunSuite {
   test("example2a")(check("/example2a.skill"))
   test("example2b")(check("/example2b.skill"))
   test("unicode")(check("/unicode.skill"))
-  test("empty")(assert(0 === Parser.process("/empty.skill").allTypeNames.size))
+  test("empty")(assert(0 === Parser.process("/empty.skill").removeSpecialDeclarations().getUsertypes().size))
 
   test("type ordered IR") {
     val IR = Parser.process("/typeOrderIR.skill").getUsertypes()
@@ -53,9 +53,10 @@ class ParserTest extends FunSuite {
   }
 
   test("regression: report missing types") {
-    val e = intercept[de.ust.skill.ir.ParseException] { check("/failures/missingTypeCausedBySpelling.skill") }
-    assert("""The type "MessSage" is unknown!
-  Known types are: message, datedmessage""" === e.getMessage())
+    val e = intercept[de.ust.skill.ir.ParseException] { Parser.process("/failures/missingTypeCausedBySpelling.skill", false, false).allTypeNames.size }
+    assert("""The type "MessSage" parent of DatedMessage is unknown!
+Did you forget to include MessSage.skill?
+Known types are: Message, DatedMessage""" === e.getMessage())
   }
 
   test("regression: comments - declaration") {
