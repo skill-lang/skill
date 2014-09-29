@@ -1,5 +1,6 @@
 package de.ust.skill.ir;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -12,14 +13,14 @@ import java.util.Set;
  * @author Timm Felden
  */
 public class Field {
-    private final boolean auto;
-    private final boolean isConstant;
-    private final long constantValue;
+    protected final boolean auto;
+    protected final boolean isConstant;
+    protected final long constantValue;
 
     protected final Name name;
     protected final Type type;
 
-    private Declaration declaredIn;
+    protected Declaration declaredIn;
 
     /**
      * The restrictions applying to this field.
@@ -32,7 +33,7 @@ public class Field {
     /**
      * The comment from Specification.
      */
-    private final Comment comment;
+    protected final Comment comment;
 
     /**
      * Constructor for constant fields.
@@ -87,6 +88,27 @@ public class Field {
         this.restrictions = restrictions;
         this.hints = Collections.unmodifiableSet(new HashSet<Hint>(hints));
         Hint.checkField(this, this.hints);
+    }
+
+    protected Field(boolean auto, boolean isConstant, long constantValue, Name name, Type type, Declaration declaredIn,
+            ArrayList<Restriction> restrictions, HashSet<Hint> hints, Comment comment) {
+        this.auto = auto;
+        this.isConstant = isConstant;
+        this.constantValue = constantValue;
+        this.name = name;
+        this.type = type;
+        this.declaredIn = declaredIn;
+        this.restrictions = restrictions;
+        this.hints = hints;
+        this.comment = comment;
+    }
+
+    public Field cloneWith(Type newType, Collection<Restriction> nrs, Collection<Hint> nhs) {
+        ArrayList<Restriction> rs = new ArrayList<>(nrs);
+        rs.addAll(restrictions);
+        HashSet<Hint> hs = new HashSet<>(nhs);
+        hs.addAll(hints);
+        return new Field(auto, isConstant, constantValue, name, newType, declaredIn, rs, hs, comment);
     }
 
     public Name getName() {

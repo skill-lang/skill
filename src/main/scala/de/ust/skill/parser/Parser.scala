@@ -460,9 +460,10 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
       // create edges, subtypes in alphabetical order
       val edges = defs.map(_ -> ArrayBuffer[Declaration]()).toMap
       nodes.foreach {
-        case t : UserType ⇒ t.superTypes.map(definitionNames).foreach(edges(_) += t)
+        case t : UserType            ⇒ t.superTypes.map(definitionNames).foreach(edges(_) += t)
         case t : InterfaceDefinition ⇒ t.superTypes.map(definitionNames).foreach(edges(_) += t)
-        case t : Typedef if (t.target.isInstanceOf[BaseType]) ⇒ definitionNames.get(t.target.asInstanceOf[BaseType].name).foreach(edges(_) += t)
+        case t : Typedef if (t.target.isInstanceOf[BaseType]) ⇒
+          definitionNames.get(t.target.asInstanceOf[BaseType].name).foreach(edges(_) += t)
         case _ ⇒
       }
       for ((_, e) ← edges)
@@ -534,28 +535,38 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
             f.description.comment, f.description.restrictions, f.description.hints)
           case f : Constant ⇒ new ir.Field(mkType(f.t), f.name.ir, f.value,
             f.description.comment, f.description.restrictions, f.description.hints)
-          case f : View ⇒ new ir.View(
-            f.declaredInType.map(translatedFields.applyOrElse(_,
-              { n : Name ⇒ throw ParseException(s"Type $n has not yet been process and can therefore not be a super type usable in a view!") }
-            ).applyOrElse(f.oldName,
-                { n : Name ⇒ throw ParseException(s"$n is not a field can therefore not be the target of a view!") }
-              )).getOrElse {
+          case f : View ⇒
+            val declaredIn : Name = f.declaredInType.getOrElse {
               // we have no explicit type so we have to do a lookup
-              def find(d : ir.Declaration) : Option[ir.Field] = d match {
-                case t : ir.UserType      ⇒ t.getAllFields().filter(_.getSkillName == f.oldName.lowercase).headOption
-                case t : ir.InterfaceType ⇒ t.getAllFields().filter(_.getSkillName == f.oldName.lowercase).headOption
+              def find(d : ir.Declaration) : Option[ir.Declaration] = d match {
+                case t : ir.UserType if t.getFields().exists(_.getSkillName == f.oldName.lowercase) ⇒ Some(d)
+                case t : ir.UserType ⇒ (for (s ← t.getAllSuperTypes().map(find); if s.isDefined) yield s).headOption.flatten
+
+                case t : ir.InterfaceType if t.getFields().exists(_.getSkillName == f.oldName.lowercase) ⇒ Some(d)
+                case t : ir.InterfaceType ⇒ (for (s ← t.getAllSuperTypes().map(find); if s.isDefined) yield s).headOption.flatten
+
+                case _ ⇒ None
               }
               (d match {
-                case t : UserType            ⇒ (for (s ← t.superTypes.map(definitionNames).map(toIR); f ← find(s)) yield f).headOption
-                case t : InterfaceDefinition ⇒ (for (s ← t.superTypes.map(definitionNames).map(toIR); f ← find(s)) yield f).headOption
-                case _                       ⇒ ???
-              }).getOrElse(
-                throw ParseException(s"None of the super types of ${d.name} contains a field ${f.name} that can be used in a view.")
+                case t : UserType ⇒
+                  (for (s ← t.superTypes.map(definitionNames).map(toIR); f ← find(s)) yield f.getName).headOption
+                case t : InterfaceDefinition ⇒
+                  (for (s ← t.superTypes.map(definitionNames).map(toIR); f ← find(s)) yield f.getName).headOption
+                case _ ⇒ ???
+              }).map(new Name(_)).getOrElse(
+                throw ParseException(
+                  s"None of the super types of ${d.name} contains a field ${f.name} that can be used in a view.")
               )
-            },
-            mkType(f.t),
-            f.name.ir,
-            f.description.comment)
+            };
+            val fs = toIR(definitionNames(declaredIn)).asInstanceOf[ir.WithFields].getFields().toList
+            val target = fs.find(_.getName() == f.target.name.ir).getOrElse(
+              throw ParseException(
+                s"""The view of ${d.name} can not refer to a field ${declaredIn.CapitalCase}.${f.name}, because it seems not to exist:
+ ${fs.map(_.getName).mkString(", ")}"""
+              )
+            );
+
+            new ir.View(declaredIn.ir, target, mkType(f.t), f.name.ir, f.description.comment)
         }
       } catch {
         case e : ir.ParseException ⇒ ParseException(s"${node.name}: ${e.getMessage()}")
@@ -613,6 +624,14 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
 
     assume(defs.size == rval.size, "we lost some definitions")
     assume(rval.forall { _.isInitialized }, s"we missed some initializations: ${rval.filter(!_.isInitialized).mkString(", ")}")
+
+    println(s"types: ${ordered.size}")
+    @inline def fieldCount(c : Int, d : Declaration) = d match {
+      case d : UserType            ⇒ c + d.body.size
+      case d : InterfaceDefinition ⇒ c + d.body.size
+      case _                       ⇒ c
+    }
+    println(s"fields: ${ordered.foldLeft(0)(fieldCount)}")
 
     tc.setDefs(ordered.map(toIR).to)
     tc

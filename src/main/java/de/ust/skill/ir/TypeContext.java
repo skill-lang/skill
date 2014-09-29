@@ -150,19 +150,22 @@ public final class TypeContext {
         // initialize remaining types
         try {
             for (Declaration d : defs) {
-                if (d instanceof UserType)
-                    ((UserType) d).initialize((UserType) σ.substitute(tc, ((UserType) d).getSuperType()),
-                            substituteTypes(σ, tc, ((UserType) d).getSuperInterfaces()),
-                            substituteFields(σ, tc, ((WithFields) d).getFields()));
+                if (d instanceof UserType) {
+                    UserType t = (UserType) types.get(d.getSkillName());
+                    ((UserType) d).initialize((UserType) σ.substitute(tc, t.getSuperType()),
+                            substituteTypes(σ, tc, t.getSuperInterfaces()), substituteFields(σ, tc, t.getFields()));
 
-                else if (d instanceof InterfaceType)
-                    ((InterfaceType) d).initialize(σ.substitute(tc, ((InterfaceType) d).getSuperType()),
-                            substituteTypes(σ, tc, ((InterfaceType) d).getSuperInterfaces()),
-                            substituteFields(σ, tc, ((WithFields) d).getFields()));
-                else if (d instanceof EnumType)
-                    ((EnumType) d).initialize(substituteFields(σ, tc, ((WithFields) d).getFields()));
-                else
-                    ((Typedef) d).initialize(σ.substitute(tc, ((Typedef) d).getTarget()));
+                } else if (d instanceof InterfaceType) {
+                    InterfaceType t = (InterfaceType) types.get(d.getSkillName());
+                    ((InterfaceType) d).initialize(σ.substitute(tc, t.getSuperType()),
+                            substituteTypes(σ, tc, t.getSuperInterfaces()), substituteFields(σ, tc, t.getFields()));
+                } else if (d instanceof EnumType) {
+                    EnumType t = (EnumType) types.get(d.getSkillName());
+                    ((EnumType) d).initialize(substituteFields(σ, tc, t.getFields()));
+                } else {
+                    Typedef t = (Typedef) types.get(d.getSkillName());
+                    ((Typedef) d).initialize(σ.substitute(tc, t.getTarget()));
+                }
             }
         } catch (ParseException e) {
             throw new Error("can not happen", e);
@@ -182,7 +185,8 @@ public final class TypeContext {
         return rval;
     }
 
-    private static List<Field> substituteFields(TypedefSubstitution σ, TypeContext tc, List<Field> fs) {
+    private static List<Field> substituteFields(TypedefSubstitution σ, TypeContext tc, List<Field> fs)
+            throws ParseException {
         List<Field> rval = new ArrayList<>();
         for (Field f : fs)
             rval.add(σ.substitute(tc, f));

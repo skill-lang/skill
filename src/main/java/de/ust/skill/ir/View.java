@@ -1,5 +1,6 @@
 package de.ust.skill.ir;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -13,11 +14,19 @@ import java.util.Set;
 // TODO ensure that all Fields works correctly here:)
 public class View extends Field {
 
-    final private Field target;
+    final private Name typeName, field;
 
-    public View(Field target, Type type, Name name, Comment comment) throws ParseException {
+    public View(Name declaredIn, Field target, Type type, Name name, Comment comment) throws ParseException {
         super(type, name, target.isAuto(), comment, target.restrictions, unhide(target.hints));
-        this.target = target;
+        typeName = declaredIn;
+        field = target.getName();
+    }
+
+    protected View(Name typeName, Name field, boolean auto, boolean isConstant, long constantValue, Name name,
+            Type newType, Declaration declaredIn, ArrayList<Restriction> rs, HashSet<Hint> hs, Comment comment) {
+        super(auto, isConstant, constantValue, name, newType, declaredIn, rs, hs, comment);
+        this.typeName = typeName;
+        this.field = field;
     }
 
     /**
@@ -32,8 +41,21 @@ public class View extends Field {
         return hints;
     }
 
-    public Field getTarget() {
-        return target;
+    public Name targetType() {
+        return typeName;
+    }
+
+    public Name targetField() {
+        return field;
+    }
+
+    @Override
+    public View cloneWith(Type newType, Collection<Restriction> nrs, Collection<Hint> nhs) {
+        ArrayList<Restriction> rs = new ArrayList<>(nrs);
+        rs.addAll(restrictions);
+        HashSet<Hint> hs = new HashSet<>(nhs);
+        hs.addAll(hints);
+        return new View(typeName, field, auto, isConstant, constantValue, name, newType, declaredIn, rs, hs, comment);
     }
 
 }

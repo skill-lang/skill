@@ -13,15 +13,15 @@ import de.ust.skill.main.CommandLine
 @RunWith(classOf[JUnitRunner])
 class IMLTest extends FunSuite {
   val filename = new File("/home/feldentm/Desktop/iml.sf/specification/iml-all.skill")
-
-  test("parse iml.sf") {
-    assert(100 < Parser.process(filename).allTypeNames.size)
-  }
-
-  test("create doxygen") {
-    CommandLine.main(Array("-p", "iml", "-L", "doxygen", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
-      "/home/feldentm/Desktop/iml.sf/generated/doxygen"))
-  }
+  //
+  //  test("parse iml.sf") {
+  //    assert(100 < Parser.process(filename).allTypeNames.size)
+  //  }
+  //
+  //  test("create doxygen") {
+  //    CommandLine.main(Array("-p", "iml", "-L", "doxygen", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
+  //      "/home/feldentm/Desktop/iml.sf/generated/doxygen"))
+  //  }
 
   test("create scala") {
     CommandLine.main(Array("-p", "iml", "-L", "scala", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",

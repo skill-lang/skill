@@ -54,6 +54,8 @@ final case class View(val declaredInType : Option[Name], val oldName : Name, val
  * Representation of skill names.
  */
 final class Name(val source : String, delimitWithUnderscores : Boolean, delimitWithCamelCase : Boolean) extends Positional {
+  def this(irSource : de.ust.skill.ir.Name) = this(irSource.cStyle, true, false);
+
   // @note this may not be correct if more then two _ are used
   val parts : List[String] = {
     var rval = ArrayBuffer(source)

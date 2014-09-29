@@ -1,5 +1,7 @@
 package de.ust.skill.ir;
 
+import de.ust.skill.ir.internal.Substitution;
+
 /**
  * @author Timm Felden
  */
@@ -23,4 +25,9 @@ public class SetType extends ContainerType implements SingleBaseTypeContainer {
 	public String getSkillName() {
 		return "set<" + baseType.getSkillName() + ">";
 	}
+
+    @Override
+    public Type substituteBase(TypeContext tc, Substitution substitution) throws ParseException {
+        return make(tc, substitution.substitute(tc, baseType));
+    }
 }

@@ -1,5 +1,7 @@
 package de.ust.skill.ir;
 
+import de.ust.skill.ir.internal.Substitution;
+
 /**
  * The length of the array is a constant, which is known at compile time.
  * 
@@ -34,4 +36,9 @@ public class ConstantLengthArrayType extends ContainerType  implements SingleBas
 	public String getSkillName() {
 		return baseType.getSkillName() + "[" + length + "]";
 	}
+
+    @Override
+    public Type substituteBase(TypeContext tc, Substitution substitution) throws ParseException {
+        return make(tc, substitution.substitute(tc, baseType), length);
+    }
 }

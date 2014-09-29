@@ -102,4 +102,8 @@ final public class Typedef extends Declaration {
 
         return false;
     }
+
+    public Collection<Hint> getHints() {
+        return hints;
+    }
 }

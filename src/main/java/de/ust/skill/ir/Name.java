@@ -59,6 +59,11 @@ final public class Name implements Comparable<Name> {
         return skillName.hashCode();
     }
 
+    @Override
+    public String toString() {
+        return skillName;
+    }
+
     // different naming conventions, alphabetical order
 
     private String ada;
@@ -72,9 +77,24 @@ final public class Name implements Comparable<Name> {
             StringBuilder sb = new StringBuilder(it.next().toUpperCase());
             while (it.hasNext())
                 sb.append("_").append(it.next().toUpperCase());
-            camel = sb.toString();
+            ada = sb.toString();
         }
         return ada;
+    }
+
+    private String cStyle;
+    /**
+     * @return c_style, i.e. lower_case_with_under_scores
+     */
+    public String cStyle() {
+        if (null == cStyle) {
+            Iterator<String> it = parts.iterator();
+            StringBuilder sb = new StringBuilder(it.next().toLowerCase());
+            while (it.hasNext())
+                sb.append("_").append(it.next().toLowerCase());
+            cStyle = sb.toString();
+        }
+        return cStyle;
     }
 
     private String camel;
