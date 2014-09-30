@@ -79,8 +79,10 @@ Opitions:
       m.outPath = outPath
 
       print(s"run $n: ")
-      m.make
-      println("-done-")
+      try {
+        m.make
+        println("-done-")
+      } catch { case e : Exception ⇒ println("FAILED:"); e.printStackTrace() }
     }
   }
 

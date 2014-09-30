@@ -81,7 +81,7 @@ sealed class $Name private[$packageName] (skillID : Long) ${
           s"""throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
         else
           s"{ ${//non-null check
-          if(!"annotation".equals(f.getType().getName()) && f.getType().isInstanceOf[ReferenceType] && f.getRestrictions().collect({case r:NullableRestriction⇒r}).isEmpty)
+          if(f.getType().isInstanceOf[ReferenceType] && !"annotation".equals(f.getType().getName()) && f.getRestrictions().collect({case r:NullableRestriction⇒r}).isEmpty)
             s"""require($Name != null, "$name is specified to be nonnull!"); """
           else
             ""
@@ -107,17 +107,10 @@ sealed class $Name private[$packageName] (skillID : Long) ${
         }_$name = $Name }"
       }
 
-      if ("annotation".equals(f.getType().getName())) { 
-        out.write(s"""$makeField
-  final def $name_ : SkillType = $makeGetterImplementation
-  final def ${name_}_=($Name : SkillType): Unit = $makeSetterImplementation
-""")
-      } else {
-        out.write(s"""$makeField
+      out.write(s"""$makeField
   final def $name_ = $makeGetterImplementation
-  final def ${name_}_=($Name : ${mapType(f.getType())}) = $makeSetterImplementation
+  final def ${name_}_=($Name : ${mapType(f.getType())}): Unit = $makeSetterImplementation
 """)
-      }
     }
 
     // generic get
