@@ -1,9 +1,13 @@
 package de.ust.skill.ir.internal;
 
+import java.util.List;
+
+import de.ust.skill.ir.Declaration;
 import de.ust.skill.ir.Field;
 import de.ust.skill.ir.ParseException;
 import de.ust.skill.ir.Type;
 import de.ust.skill.ir.TypeContext;
+import de.ust.skill.ir.UserType;
 
 /**
  * Type substitution that can be used to modify a type context. The substitution
@@ -30,5 +34,23 @@ abstract public class Substitution {
      */
     public abstract Type substitute(TypeContext tc, Type t) throws ParseException;
 
+    /**
+     * decides to drop a type from the type context
+     */
     public abstract boolean drop(Type t);
+
+    /**
+     * hook used to add new types before initialization of types
+     */
+    public abstract void addTypes(TypeContext tc, List<Declaration> defs) throws ParseException;
+
+    /**
+     * initialize a user type inside of tc
+     */
+    public void initialize(TypeContext fromTC, TypeContext tc, UserType d) throws ParseException {
+        UserType t = (UserType) fromTC.types.get(d.getSkillName());
+        d.initialize((UserType) substitute(tc, t.getSuperType()),
+                TypeContext.substituteTypes(this, tc, t.getSuperInterfaces()),
+                TypeContext.substituteFields(this, tc, t.getFields()));
+    }
 }

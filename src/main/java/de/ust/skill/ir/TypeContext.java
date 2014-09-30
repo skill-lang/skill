@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import de.ust.skill.ir.internal.EnumSubstitution;
+import de.ust.skill.ir.internal.InterfaceSubstitution;
+import de.ust.skill.ir.internal.Substitution;
 import de.ust.skill.ir.internal.TypedefSubstitution;
 
 /**
@@ -29,7 +32,7 @@ public final class TypeContext {
         }
     }
 
-    protected final Map<String, Type> types = new HashMap<>();
+    public final Map<String, Type> types = new HashMap<>();
     /**
      * all user declarations in type order
      */
@@ -88,7 +91,7 @@ public final class TypeContext {
     }
 
     /**
-     * @return the set of all known (skill) type names
+     * @return the set of all known (skill) type names, including built-in types
      */
     public Set<String> allTypeNames() {
         return types.keySet();
@@ -114,14 +117,37 @@ public final class TypeContext {
         }
     }
 
+    /**
+     * @return an equivalent type context that is guaranteed not to have
+     *         interface types
+     * @note calling this function twice is efficient
+     * @note field definitions will be distributed to their implementers
+     * @note types will be replaced by the super type
+     * @todo move fields
+     */
     public TypeContext removeInterfaces() {
-        throw new Error("TODO implementation! π_i");
-        // TODO implementation! π_i
+        if (typedefs.isEmpty())
+            return this;
+
+        return substitute(new InterfaceSubstitution());
+        // TODO add fields that were removed from interfaces
     }
 
+    /**
+     * The intended translation of an enum is to create an abstract class and a
+     * namespace for each enum type and to add singletons into that namespace
+     * for each instance of the enum.
+     * 
+     * @return an equivalent type context that is guaranteed not to have
+     *         interface types
+     * @note the resulting singletons will contain ':' characters in their name,
+     *       because name spaces did not find their way into the standard
+     */
     public TypeContext removeEnums() {
-        throw new Error("TODO implementation! π_e");
-        // TODO implementation! π_e
+        if (typedefs.isEmpty())
+            return this;
+
+        return substitute(new EnumSubstitution(enums));
     }
 
     /**
@@ -138,8 +164,12 @@ public final class TypeContext {
 
     /**
      * creates a clone of this applying the substitution σ
+     * 
+     * @note this is kind of a silver bullet implementation, because it is the
+     *       generalization of the three available substitutions, although they
+     *       are quite different; saves a lot of code though
      */
-    private TypeContext substitute(TypedefSubstitution σ) {
+    private TypeContext substitute(Substitution σ) {
         TypeContext tc = new TypeContext();
         List<Declaration> defs = new ArrayList<>(declarations.size());
         // copy types
@@ -147,13 +177,14 @@ public final class TypeContext {
             if (!σ.drop(d))
                 defs.add(d.copy(tc));
 
-        // initialize remaining types
         try {
+            // append new types
+            σ.addTypes(tc, defs);
+
+            // initialize remaining types
             for (Declaration d : defs) {
                 if (d instanceof UserType) {
-                    UserType t = (UserType) types.get(d.getSkillName());
-                    ((UserType) d).initialize((UserType) σ.substitute(tc, t.getSuperType()),
-                            substituteTypes(σ, tc, t.getSuperInterfaces()), substituteFields(σ, tc, t.getFields()));
+                    σ.initialize(this, tc, (UserType) d);
 
                 } else if (d instanceof InterfaceType) {
                     InterfaceType t = (InterfaceType) types.get(d.getSkillName());
@@ -177,16 +208,16 @@ public final class TypeContext {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends Declaration> List<T> substituteTypes(TypedefSubstitution σ, TypeContext tc, List<T> ts)
+    public static <T extends Declaration> List<T> substituteTypes(Substitution σ, TypeContext tc, List<T> ts)
             throws ParseException {
         List<T> rval = new ArrayList<>();
         for (T t : ts)
-            rval.add((T) σ.substitute(tc, t));
+            if (!σ.drop(t))
+                rval.add((T) σ.substitute(tc, t));
         return rval;
     }
 
-    private static List<Field> substituteFields(TypedefSubstitution σ, TypeContext tc, List<Field> fs)
-            throws ParseException {
+    public static List<Field> substituteFields(Substitution σ, TypeContext tc, List<Field> fs) throws ParseException {
         List<Field> rval = new ArrayList<>();
         for (Field f : fs)
             rval.add(σ.substitute(tc, f));

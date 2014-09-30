@@ -2,8 +2,10 @@ package de.ust.skill.ir.internal;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import de.ust.skill.ir.ContainerType;
+import de.ust.skill.ir.Declaration;
 import de.ust.skill.ir.Field;
 import de.ust.skill.ir.Hint;
 import de.ust.skill.ir.ParseException;
@@ -20,6 +22,11 @@ import de.ust.skill.ir.Typedef;
 public class TypedefSubstitution extends Substitution {
 
     public TypedefSubstitution() {
+    }
+
+    @Override
+    public void addTypes(TypeContext tc, List<Declaration> defs) throws ParseException {
+        // no types are added by us
     }
 
     @Override
@@ -52,11 +59,18 @@ public class TypedefSubstitution extends Substitution {
         if (null == t)
             return null;
 
-        if (t instanceof ContainerType){
-            return ((ContainerType) t).substituteBase(tc, this);
-        }
+        // follow typedefs until we reach a targets
+        // @note this is not correct in general, but works fine for now; a
+        // future revision should add a substitution method to all types
+        Type target = t;
+        while (target instanceof Typedef)
+            target = ((Typedef) target).getTarget();
 
-        return tc.get((t instanceof Typedef ? ((Typedef) t).getTarget() : t).getSkillName());
+        // convert base types to argument type context
+        if (target instanceof ContainerType) {
+            return ((ContainerType) target).substituteBase(tc, this);
+        }
+        return tc.get(target.getSkillName());
     }
 
 }
