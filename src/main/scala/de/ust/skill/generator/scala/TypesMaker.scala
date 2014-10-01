@@ -32,13 +32,11 @@ import ${packagePrefix}internal.NamedType
       val fields = t.getAllFields.filter(!_.isConstant)
       val relevantFields = fields.filter(!_.isIgnored)
 
-      //class comment
-      out.write(comment(t))
-
-      //class prefix
-      val Name = t.getName.capital;
+      //class declaration
       out.write(s"""
-sealed class $Name private[$packageName] (skillID : Long) ${
+${
+        comment(t)
+}sealed class ${t.getName.capital} private[$packageName] (skillID : Long) ${
         if (null != t.getSuperType()) { s"extends ${t.getSuperType().getName.capital}" }
         else { "extends SkillType" }
       }(skillID) {""")
@@ -56,7 +54,7 @@ sealed class $Name private[$packageName] (skillID : Long) ${
 	///////////////////////
 	// getters & setters //
 	///////////////////////
-	for(f <- t.getFields if !f.isConstant){
+	for(f <- t.getFields if !f.isConstant && !f.isInstanceOf[View]){
       val name = f.getName()
       val name_ = escaped(name.camel)
       val Name = name.capital
@@ -163,15 +161,15 @@ ${
 
     // toString
     out.write(s"""
-  override def toString = "$Name#"+skillID
+  override def toString = "${t.getName.capital}#"+skillID
 }
 """)
 
       out.write(s"""
-object $Name {
-  def unapply(self : $Name) = ${(for (f ← t.getAllFields) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
+object ${t.getName.capital} {
+  def unapply(self : ${t.getName.capital}) = ${(for (f ← t.getAllFields) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
 
-  final class SubType private[$packageName] (val τName : String, skillID : Long) extends $Name(skillID) with NamedType{
+  final class SubType private[$packageName] (val τName : String, skillID : Long) extends ${t.getName.capital}(skillID) with NamedType{
     override def prettyString : String = τName+$prettyStringArgs
     override def toString = τName+"#"+skillID
   }

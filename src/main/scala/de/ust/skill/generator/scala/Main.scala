@@ -42,6 +42,7 @@ import de.ust.skill.generator.scala.internal.FieldOffsetCalculatorMaker
 import de.ust.skill.generator.scala.internal.streams.MappedInStreamMaker
 import de.ust.skill.generator.common.Generator
 import de.ust.skill.ir.UserType
+import de.ust.skill.ir.View
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -118,9 +119,12 @@ class Main extends FakeMain
   /**
    * creates argument list of a constructor call, not including potential skillID or braces
    */
-  override protected def makeConstructorArguments(t : UserType) = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map({ f ⇒ s"${escaped(f.getName.camel)} : ${mapType(f.getType())}" }).mkString(", ")
+  override protected def makeConstructorArguments(t : UserType) = (
+    for (f ← t.getAllFields if !(f.isConstant || f.isIgnored || f.isInstanceOf[View]))
+      yield s"${escaped(f.getName.camel)} : ${mapType(f.getType())}"
+  ).mkString(", ")
   override protected def appendConstructorArguments(t : UserType) = {
-    val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
+    val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored || f.isInstanceOf[View] }
     if (r.isEmpty) ""
     else r.map({ f ⇒ s"${escaped(f.getName.camel)} : ${mapType(f.getType())}" }).mkString(", ", ", ", "")
   }
@@ -217,7 +221,7 @@ Opitions (scala):
 
       }
 
-      case t : Declaration ⇒ s"""for(i ← outData) dataChunk.v64(i.$fName.getSkillID)"""
+      case t : Declaration ⇒ s"""for(i ← outData) userRef(i.$fName, dataChunk)"""
 
       case t : ConstantLengthArrayType ⇒ s"for(i ← outData) writeConstArray(${
         t.getBaseType() match {

@@ -18,6 +18,7 @@ import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.Type
+import de.ust.skill.ir.View
 trait StateWriterMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
@@ -150,7 +151,7 @@ private[internal] final class StateWriter(state : SerializableState, out : FileO
           case pool : ${d.getName.capital}StoragePool ⇒
             val outData = pool.data
             f.name match {${
-          (for (f ← fields) yield s"""
+          (for (f ← fields if !f.isInstanceOf[View]) yield s"""
               case "${f.getSkillName()}" ⇒ ${writeField(d, f)}""").mkString("")
         }
               case _ ⇒ genericPutField(p, f, dataChunk)
