@@ -3,9 +3,7 @@ A {
 }
 
 B : A {
-  /** 
-   this definition is legal according to TR13§3.7
-   furthermore, this will result in a field differnt to A.a.
-   */
+  /** we know that as are Bs in Bs :) */
+  view a as 
   B a;
 }
