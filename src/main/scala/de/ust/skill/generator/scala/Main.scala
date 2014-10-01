@@ -79,8 +79,8 @@ class Main extends FakeMain
     with TypeInfoMaker
     with TypesMaker {
 
-  override def comment(d : Declaration) = d.getComment.format("/*!\n * ", " * ", 120, "\n */\n")
-  override def comment(f : Field) = f.getComment.format("  /*!\n * ", "   * ", 120, "\n   */\n")
+  override def comment(d : Declaration) = d.getComment.format("/**\n", " * ", 120, "\n */\n")
+  override def comment(f : Field) = f.getComment.format("  /**\n", "   * ", 120, "\n   */\n")
 
   /**
    * Translates types into scala type names.
@@ -112,7 +112,7 @@ class Main extends FakeMain
       types.tail.fold(types.head)({ (U, t) ⇒ s"$MapTypeName[$t, $U]" });
     }
 
-    case t : Declaration ⇒ "_root_."+packagePrefix + t.getName()
+    case t : Declaration ⇒ "_root_."+packagePrefix + t.getName.capital
   }
 
   /**

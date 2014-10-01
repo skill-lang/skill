@@ -56,12 +56,6 @@ final public class FileOutputStream extends OutStream {
 				StandardOpenOption.READ));
 	}
 
-	public static FileOutputStream write(Path target) throws IOException {
-		Files.deleteIfExists(target);
-		return new FileOutputStream(Files.newOutputStream(target, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
-				StandardOpenOption.TRUNCATE_EXISTING));
-	}
-
 	@Override
 	protected void refresh() throws IOException {
 		if (null == buffer)

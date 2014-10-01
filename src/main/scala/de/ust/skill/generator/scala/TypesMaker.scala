@@ -117,9 +117,11 @@ sealed class $Name private[$packageName] (skillID : Long) ${
     out.write(s"""
   override def get[@specialized T](field : FieldDeclaration[T]) : T = field.name match {
 ${
-      (for(f <- t.getAllFields.filterNot(_.isIgnored)) yield s"""    case "${f.getSkillName}" ⇒ _${f.getName}.asInstanceOf[T]""").mkString("\n")
+      (for(f <- t.getAllFields.filterNot(_.isIgnored))
+        yield s"""    case "${f.getSkillName}" ⇒ _${f.getName}.asInstanceOf[T]""").mkString("\n")
 }${
-      (for(f <- t.getAllFields.filter(_.isIgnored)) yield s"""    case "${f.getSkillName}" ⇒ throw new IllegalAccessError("${f.getName} is ignored")""").mkString("\n")
+      (for(f <- t.getAllFields.filter(_.isIgnored))
+        yield s"""    case "${f.getSkillName}" ⇒ throw new IllegalAccessError("${f.getName} is ignored")""").mkString("\n")
 }
     case _ ⇒ super.get(field)
   }
@@ -167,7 +169,7 @@ ${
 
       out.write(s"""
 object $Name {
-  def unapply(self : $Name) = ${(for (f ← t.getAllFields) yield "self."+f.getName).mkString("Some(", ", ", ")")}
+  def unapply(self : $Name) = ${(for (f ← t.getAllFields) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
 
   final class SubType private[$packageName] (val τName : String, skillID : Long) extends $Name(skillID) with NamedType{
     override def prettyString : String = τName+$prettyStringArgs
