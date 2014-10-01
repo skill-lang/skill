@@ -36,6 +36,8 @@ class GeneratorTest extends FunSuite {
 
   test("hints: ignore")(check("hintIgnore.skill", "hints.ignore"))
 
+  test("views: simple retyping")(check("views.skill", "views.retyping"))
+
   test("node")(check("node.skill", "node"))
   test("number")(check("number.skill", "number"))
   test("subtypes")(check("subtypesExample.skill", "subtypes"))
