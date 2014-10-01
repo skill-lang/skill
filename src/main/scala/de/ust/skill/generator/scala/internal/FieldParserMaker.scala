@@ -128,7 +128,7 @@ ${
                 val low = c.bpsi.toInt
                 val high = (c.bpsi + c.count).toInt
                 for (i ← low until high) {$action
-                  d(i).${f.getName} = $result
+                  d(i).${escaped(f.getName.camel)} = $result
                 }
 
               case bci : BulkChunkInfo ⇒
@@ -136,7 +136,7 @@ ${
                   bi ← t.blockInfos;
                   i ← bi.bpsi.toInt until (bi.bpsi + bi.count).toInt
                 ) {$action
-                  d(i).${f.getName} = $result
+                  d(i).${escaped(f.getName.camel)} = $result
                 }
             }"""
   }
