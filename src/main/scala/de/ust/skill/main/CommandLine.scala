@@ -8,6 +8,7 @@ import de.ust.skill.generator.common.HeaderInfo
 import scala.annotation.tailrec
 import scala.collection.mutable.HashMap
 import scala.collection.JavaConversions._
+import de.ust.skill.ir.TypeContext
 
 /**
  * Command line interface to the skill compilers
@@ -57,26 +58,19 @@ Opitions:
 
     val (header, packageName, languages) = parseOptions(args.view(0, args.length - 2).to, known)
 
-    //      m.setOptions(args.slice(0, args.length - 2)).ensuring(m._packagePrefix != "", "You have to specify a non-empty package name!")
-    //      val skillPath = args(args.length - 2)
-    //      m.outPath = args(args.length - 1)
-    //
-    //      //parse argument code
-    //      m.setIR(Parser.process(new File(skillPath)).to)
-    //
-    //      // create output using maker chain
-    //      m.make;
-
     assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
 
     // invoke generators
     val tc = Parser.process(new File(skillPath))
 
+    println(s"Parsed $skillPath -- found ${tc.allTypeNames.size - (new TypeContext().allTypeNames.size)} types.")
+    println(s"Generating sources into ${new File(outPath).getAbsolutePath()}")
+
     for ((n, m) ← languages) {
       m.setTC(tc)
       m.setPackage(packageName)
       m.headerInfo = header
-      m.outPath = outPath
+      m.outPath = outPath+"/"+n
 
       print(s"run $n: ")
       try {
