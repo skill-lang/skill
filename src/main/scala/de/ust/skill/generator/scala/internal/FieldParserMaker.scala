@@ -55,7 +55,7 @@ object FieldParser {
 ${
       (for (t ← IR)
         yield s"""      case p : ${t.getName.capital}StoragePool ⇒
-        val d = ${if (t.getSuperType() != null) s"WrappedArray.make[${packagePrefix}${t.getName.capital}](p.data)" else "p.data"}
+        val d = p.data
         f.name match {
 ${
         (for (f ← t.getAllFields)
@@ -161,7 +161,7 @@ ${
                   r.sizeHint(count)
                   for (i ← 0 until count) r.add($s)""", "r")
 
-    case _ ⇒ ("", "", "readSingleField(f.t).asInstanceOf["+mapType(t)+"]")
+    case _ ⇒ ("", "", "f.t.readSingleField(in).asInstanceOf["+mapType(t)+"]")
   }
 
 }
