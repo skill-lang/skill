@@ -576,6 +576,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
       }
 
       // sort fields before views to ensure that viewed field is already transformed
+      // @note that this will also sort fields in alphabetical order; this is nice, because it stabilizes API over changes
       val fs = fields.sortWith {
         case (f : View, g : View) ⇒ f.name < g.name
         case (f : View, _)        ⇒ true

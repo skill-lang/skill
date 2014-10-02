@@ -711,7 +711,7 @@ final class ${t.getName.capital}SubPool(poolIndex : Long, name : String, superPo
       case t : VariableLengthArrayType ⇒ s"VariableLengthArray(${mapGroundType(t.getBaseType)})"
       case t : ListType                ⇒ s"ListType(${mapGroundType(t.getBaseType)})"
       case t : SetType                 ⇒ s"SetType(${mapGroundType(t.getBaseType)})"
-      case t : MapType                 ⇒ s"MapType(Seq[FieldType](${t.getBaseTypes.map(mapGroundType).mkString(", ")}))"
+      case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"MapType($k,$v)")
       case t : Declaration             ⇒ s"""TypeDefinitionName[${mapType(t)}]("${t.getSkillName}")"""
     }
   }
