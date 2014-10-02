@@ -34,7 +34,7 @@ class GeneratorTest extends FunSuite {
   test("restrictions: range")(check("restrictions.range.skill", "restrictions.range"))
   test("restrictions: singleton")(check("restrictions.singleton.skill", "restrictions.singleton"))
 
-  test("hints: ignore")(check("hintIgnore.skill", "hints.ignore"))
+  test("hints: ignore")(check("hints.ignore.skill", "hints.ignore"))
 
   test("views: simple retyping")(check("views.skill", "views.retyping"))
 

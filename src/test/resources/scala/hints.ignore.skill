@@ -4,5 +4,5 @@ Date { /** seconds since 1.1.1970 UTC */ !ignore v64 date; }
 /** A simple Node which may refer to another node. */
 !ignore
 Node { 
-  @nullable Node node; 
+  Node node; 
 }
