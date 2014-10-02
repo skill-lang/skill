@@ -29,6 +29,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.WrappedArray
 import scala.reflect.ClassTag
 
 import ${packagePrefix}api._
@@ -568,10 +569,13 @@ sealed class SubPool[T <: B : Manifest, B <: SkillType](poolIndex : Long, name :
       true
     }
   }
+
   /**
    * the base type data store
+   * @note that type checks are deferred to the wrapped array, because it is assumed that they wont ever fail and the
+   * jvm will realize that fact
    */
-  private[internal] def data = basePool.data
+  private[internal] def data = WrappedArray.make[T](basePool.data)
 
   override def all : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
   override def iterator : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
