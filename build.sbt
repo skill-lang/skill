@@ -14,9 +14,7 @@ libraryDependencies ++= Seq(
 	"org.scalatest" % "scalatest_2.11" % "2.2.0" % "test"
 )
 
-testOptions in Test <+= (target in Test) map {
-  t => Tests.Argument(TestFrameworks.ScalaTest, "junitxml(directory=\"%s\")" format (t / "test-reports"))
-}
+(testOptions in Test) += Tests.Argument(TestFrameworks.ScalaTest, "-u", "target/test-reports")
 
 org.scalastyle.sbt.ScalastylePlugin.Settings
 
