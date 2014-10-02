@@ -9,9 +9,9 @@ http://www2.informatik.uni-stuttgart.de/cgi-bin/NCSTRL/NCSTRL_view.pl?id=TR-2013
 
 This repository contains implementations for (alphatical order):
 
-Languag|Supported Features|Kernel|Testsuite
--------|------------------|------|---------
-Ada 2012 |mainly core features|_generated_|https://github.com/skill-lang/skillAdaTestSuite
-Java 7 |mainly core features| TBD | TBD
-Scala 2.10 |nearly full features|_generated_|https://github.com/skill-lang/skillScalaTestSuite
+Languag|Supported Features|Testsuite|Notes
+-------|------------------|---------|-----
+Ada 2012 |mainly core features|https://github.com/skill-lang/skillAdaTestSuite | currently moving to SKilL V1.0
+Java 7 |mainly core features| TBD | requires library
+Scala 2.10 |nearly full features|https://github.com/skill-lang/skillScalaTestSuite | currently moving to SKilL V1.0
 
