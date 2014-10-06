@@ -470,6 +470,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
           definitionNames.get(t.target.asInstanceOf[BaseType].name).foreach(edges(_) += t)
         case _ ⇒
       }
+      //@note lexical order in edges
       for ((_, e) ← edges)
         e.sortWith(_.name.lowercase > _.name.lowercase)
 
@@ -478,7 +479,6 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
 
       val marked = HashSet[Declaration]()
       val temporary = HashSet[Declaration]()
-      val unmarked : HashSet[Declaration] = nodes.to
 
       // function visit(node n)
       def visit(n : Declaration) {
@@ -508,11 +508,9 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
       //  while there are unmarked nodes do
       //    select an unmarked node n
       //    visit(n)
-      while (!unmarked.isEmpty) {
-        val n = unmarked.head
-        unmarked.-=(n)
-        visit(n)
-      }
+      // @note we do not use the unmarked set, because we known which nodes are roots of the DAG and the resulting order
+      // has to be created in that way
+      nodes.filter { p ⇒ p == baseType(p) }.toSeq.sortWith(_.name.lowercase > _.name.lowercase).foreach(visit)
 
       L
     }
