@@ -403,7 +403,13 @@ class Main extends FakeMain
   private var _packagePrefix = ""
 
   override def setPackage(names : List[String]) {
-    _packagePrefix = names.foldRight("")(_+"."+_)
+    if (names.isEmpty)
+      return ;
+
+    if (names.size > 1)
+      System.err.println("The Ada package system does not support nested packages with the expected meaning, dropping prefixes...");
+
+    _packagePrefix = names.last
   }
 
   override private[ada] def header : String = _header
@@ -472,22 +478,18 @@ Opitions (ada):
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
-  protected def escaped(pTarget : String) : String = {
-    val target = pTarget.replaceAll("([A-Z])", "_$0").stripPrefix("_")
+  protected def escaped(target : String) : String = target.toLowerCase match {
+    // keywords get a suffix "_2"
+    case "abort" | "else" | "new" | "return" | "abs" | "elsif" | "not" | "reverse" | "abstract" | "end" | "null" |
+      "accept" | "entry" | "select" | "access" | "exception" | "of" | "separate" | "aliased" | "exit" | "or" |
+      "some" | "all" | "others" | "subtype" | "and" | "for" | "out" | "synchronized" | "array" | "function" |
+      "overriding" | "at" | "tagged" | "generic" | "package" | "task" | "begin" | "goto" | "pragma" | "terminate" |
+      "body" | "private" | "then" | "if" | "procedure" | "type" | "case" | "in" | "protected" | "constant" |
+      "interface" | "until" | "is" | "raise" | "use" | "declare" | "range" | "delay" | "limited" | "record" |
+      "when" | "delta" | "loop" | "rem" | "while" | "digits" | "renames" | "with" | "do" | "mod" | "requeue" |
+      "xor" ⇒ return target+"_2"
 
-    target match {
-      // keywords get a suffix "_2"
-      case "abort" | "else" | "new" | "return" | "abs" | "elsif" | "not" | "reverse" | "abstract" | "end" | "null" |
-        "accept" | "entry" | "select" | "access" | "exception" | "of" | "separate" | "aliased" | "exit" | "or" |
-        "some" | "all" | "others" | "subtype" | "and" | "for" | "out" | "synchronized" | "array" | "function" |
-        "overriding" | "at" | "tagged" | "generic" | "package" | "task" | "begin" | "goto" | "pragma" | "terminate" |
-        "body" | "private" | "then" | "if" | "procedure" | "type" | "case" | "in" | "protected" | "constant" |
-        "interface" | "until" | "is" | "raise" | "use" | "declare" | "range" | "delay" | "limited" | "record" |
-        "when" | "delta" | "loop" | "rem" | "while" | "digits" | "renames" | "with" | "do" | "mod" | "requeue" |
-        "xor" ⇒ return target+"_2"
-
-      // the string is fine anyway
-      case _ ⇒ return target
-    }
+    // the string is fine anyway
+    case _ ⇒ return target
   }
 }
