@@ -120,18 +120,18 @@ private
    );
 
 ${
-  var output = ""
-  /**
-   * Writes the skill id of a given object.
-   */
-  for (d ← IR) {
-    output += s"""   procedure Write_${escaped(d.getName)}_Type (
+      var output = ""
+      /**
+       * Writes the skill id of a given object.
+       */
+      for (d ← IR) {
+        output += s"""   procedure Write_${d.getName.ada}_Type (
       Stream : ASS_IO.Stream_Access;
-      Object : ${escaped(d.getName)}_Type_Access
+      Object : ${d.getName.ada}_Type_Access
    );\r\n"""
-  }
-  output
-}
+      }
+      output
+    }
    function Get_Object_Type (Object : Skill_Type_Access) return String;
 
    ------------

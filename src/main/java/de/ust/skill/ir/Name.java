@@ -74,9 +74,9 @@ final public class Name implements Comparable<Name> {
     public String ada() {
         if (null == ada) {
             Iterator<String> it = parts.iterator();
-            StringBuilder sb = new StringBuilder(it.next().toUpperCase());
+            StringBuilder sb = new StringBuilder(capitalize(it.next()));
             while (it.hasNext())
-                sb.append("_").append(it.next().toUpperCase());
+                sb.append("_").append(capitalize(it.next()));
             ada = sb.toString();
         }
         return ada;

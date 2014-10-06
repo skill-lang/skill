@@ -74,6 +74,7 @@ trait GeneralOutputMaker extends Generator {
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
+   * @note currently unused, because emitted names can not alias predefined types or keywords anyway
    */
   protected def escaped(target : Name) : String = escaped(target.ada)
 

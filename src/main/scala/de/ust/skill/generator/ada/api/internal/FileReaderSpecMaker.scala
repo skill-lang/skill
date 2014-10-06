@@ -94,15 +94,15 @@ private
    function Read_String (Input_Stream : ASS_IO.Stream_Access) return String_Access;
 
 ${
-  var output = ""
-  /**
-   * Reads the skill id of a given object.
-   */
-  for (d ← IR) {
-    output += s"   function Read_${escaped(d.getName)}_Type (Input_Stream : ASS_IO.Stream_Access) return ${escaped(d.getName)}_Type_Access;\r\n"
-  }
-  output
-}
+      var output = ""
+      /**
+       * Reads the skill id of a given object.
+       */
+      for (d ← IR) {
+        output += s"   function Read_${d.getName.ada}_Type (Input_Stream : ASS_IO.Stream_Access) return ${d.getName.ada}_Type_Access;\r\n"
+      }
+      output
+    }
    ------------
    --  SPSI  --
    ------------

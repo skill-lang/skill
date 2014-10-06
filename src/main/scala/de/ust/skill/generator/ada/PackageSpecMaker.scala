@@ -99,11 +99,11 @@ ${
        */
       var output = "";
       for (d ← IR) {
-        output += s"""   type ${escaped(d.getName.ada)}_Type is new Skill_Type with private;\r\n"""
-        output += s"""   type ${escaped(d.getName.ada)}_Type_Access is access all ${escaped(d.getName.ada)}_Type;\r\n"""
-        output += s"""   type ${escaped(d.getName.ada)}_Type_Array is array (Natural range <>) of ${escaped(d.getName.ada)}_Type_Access;\r\n"""
-        output += s"""   type ${escaped(d.getName.ada)}_Type_Accesses is access ${escaped(d.getName.ada)}_Type_Array;\r\n"""
-        output += s"""   function Hash (Element : ${escaped(d.getName.ada)}_Type_Access) return Ada.Containers.Hash_Type;\r\n\r\n"""
+        output += s"""   type ${d.getName.ada}_Type is new Skill_Type with private;\r\n"""
+        output += s"""   type ${d.getName.ada}_Type_Access is access all ${d.getName.ada}_Type;\r\n"""
+        output += s"""   type ${d.getName.ada}_Type_Array is array (Natural range <>) of ${d.getName.ada}_Type_Access;\r\n"""
+        output += s"""   type ${d.getName.ada}_Type_Accesses is access ${d.getName.ada}_Type_Array;\r\n"""
+        output += s"""   function Hash (Element : ${d.getName.ada}_Type_Access) return Ada.Containers.Hash_Type;\r\n\r\n"""
       }
 
       output.stripLineEnd
@@ -148,10 +148,10 @@ ${
        */
       for (d ← IR) {
         d.getAllFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
-          output += s"""   function Get_${f.getName.ada} (Object : ${escaped(d.getName.ada)}_Type) return ${mapType(f.getType, d, f)};\r\n"""
+          output += s"""   function Get_${f.getName.ada} (Object : ${d.getName.ada}_Type) return ${mapType(f.getType, d, f)};\r\n"""
           if (!f.isConstant)
             output += s"""   procedure Set_${f.getName.ada} (
-      Object : in out ${escaped(d.getName.ada)}_Type;
+      Object : in out ${d.getName.ada}_Type;
       Value  :        ${mapType(f.getType, d, f)}
    );\r\n\r\n"""
         })
@@ -175,7 +175,7 @@ ${
       var output = "";
       for (d ← IR) {
         val superType = if (d.getSuperType == null) "Skill" else d.getSuperType.getName
-        output += s"""   type ${escaped(d.getName.ada)}_Type is new ${superType}_Type with\r\n      record\r\n"""
+        output += s"""   type ${d.getName.ada}_Type is new ${superType}_Type with\r\n      record\r\n"""
         val fields = d.getFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
         output += fields.map({ f ⇒
           var comment = "";

@@ -125,7 +125,7 @@ ${
       def printFields(d : UserType) : String = {
         var output = s"""'(\r\n         skill_id => Natural (${
           if (null == d.getBaseType) d.getName.ada
-          else escaped(d.getBaseType.getName.ada)
+          else d.getBaseType.getName.ada
         }_Type_Declaration.Storage_Pool.Length) + 1"""
         output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f ⇒
           s",\r\n         ${f.getSkillName} => ${f.getSkillName}"
@@ -154,7 +154,7 @@ ${
         var output = "";
         val superTypes = getSuperTypes(d).toList.reverse
         superTypes.foreach({ t ⇒
-          output += s"""\r\n      ${escaped(t.getName.ada)}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));"""
+          output += s"""\r\n      ${t.getName.ada}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));"""
         })
         output
       }
@@ -170,7 +170,7 @@ ${
           var output = ""
           val superTypes = getSuperTypes(d).toList.reverse
           superTypes.foreach({ t ⇒
-            output += s"""\r\n      ${escaped(t.getName.ada)}_Type_Declaration : Type_Information := State.Types.Element ("${t.getSkillName}");"""
+            output += s"""\r\n      ${t.getName.ada}_Type_Declaration : Type_Information := State.Types.Element ("${t.getSkillName}");"""
           })
           output
         }
