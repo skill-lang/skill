@@ -637,6 +637,15 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     }
 
     tc.setDefs(ordered.map(toIR).to)
+
+    // for now, sanity check typedefs by creating a typedef projection
+    try {
+      tc.removeTypedefs
+    } catch {
+      case e : ir.ParseException ⇒
+        throw new ir.ParseException("Failed to project away typedefs, see argument exception for a reason", e)
+    }
+
     tc
   }
 }

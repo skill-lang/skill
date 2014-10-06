@@ -28,6 +28,9 @@ public class SetType extends ContainerType implements SingleBaseTypeContainer {
 
     @Override
     public Type substituteBase(TypeContext tc, Substitution substitution) throws ParseException {
-        return make(tc, substitution.substitute(tc, baseType));
+        Type sub = substitution.substitute(tc, baseType);
+        if (sub instanceof ContainerType)
+            throw new ParseException("Can not substitute a containertype into a map: " + sub);
+        return make(tc, sub);
     }
 }

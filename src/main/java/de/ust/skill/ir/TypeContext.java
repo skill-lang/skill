@@ -125,7 +125,7 @@ public final class TypeContext {
      * @note types will be replaced by the super type
      * @todo move fields
      */
-    public TypeContext removeInterfaces() {
+    public TypeContext removeInterfaces() throws ParseException {
         if (typedefs.isEmpty())
             return this;
 
@@ -143,7 +143,7 @@ public final class TypeContext {
      * @note the resulting singletons will contain ':' characters in their name,
      *       because name spaces did not find their way into the standard
      */
-    public TypeContext removeEnums() {
+    public TypeContext removeEnums() throws ParseException {
         if (typedefs.isEmpty())
             return this;
 
@@ -155,7 +155,7 @@ public final class TypeContext {
      *         typedefs
      * @note calling this function twice is efficient
      */
-    public TypeContext removeTypedefs() {
+    public TypeContext removeTypedefs() throws ParseException {
         if (typedefs.isEmpty())
             return this;
 
@@ -169,7 +169,7 @@ public final class TypeContext {
      *       generalization of the three available substitutions, although they
      *       are quite different; saves a lot of code though
      */
-    private TypeContext substitute(Substitution σ) {
+    private TypeContext substitute(Substitution σ) throws ParseException {
         TypeContext tc = new TypeContext();
         List<Declaration> defs = new ArrayList<>(declarations.size());
         // copy types
@@ -177,29 +177,25 @@ public final class TypeContext {
             if (!σ.drop(d))
                 defs.add(d.copy(tc));
 
-        try {
-            // append new types
-            σ.addTypes(tc, defs);
+        // append new types
+        σ.addTypes(tc, defs);
 
-            // initialize remaining types
-            for (Declaration d : defs) {
-                if (d instanceof UserType) {
-                    σ.initialize(this, tc, (UserType) d);
+        // initialize remaining types
+        for (Declaration d : defs) {
+            if (d instanceof UserType) {
+                σ.initialize(this, tc, (UserType) d);
 
-                } else if (d instanceof InterfaceType) {
-                    InterfaceType t = (InterfaceType) types.get(d.getSkillName());
-                    ((InterfaceType) d).initialize(σ.substitute(tc, t.getSuperType()),
-                            substituteTypes(σ, tc, t.getSuperInterfaces()), substituteFields(σ, tc, t.getFields()));
-                } else if (d instanceof EnumType) {
-                    EnumType t = (EnumType) types.get(d.getSkillName());
-                    ((EnumType) d).initialize(substituteFields(σ, tc, t.getFields()));
-                } else {
-                    Typedef t = (Typedef) types.get(d.getSkillName());
-                    ((Typedef) d).initialize(σ.substitute(tc, t.getTarget()));
-                }
+            } else if (d instanceof InterfaceType) {
+                InterfaceType t = (InterfaceType) types.get(d.getSkillName());
+                ((InterfaceType) d).initialize(σ.substitute(tc, t.getSuperType()),
+                        substituteTypes(σ, tc, t.getSuperInterfaces()), substituteFields(σ, tc, t.getFields()));
+            } else if (d instanceof EnumType) {
+                EnumType t = (EnumType) types.get(d.getSkillName());
+                ((EnumType) d).initialize(substituteFields(σ, tc, t.getFields()));
+            } else {
+                Typedef t = (Typedef) types.get(d.getSkillName());
+                ((Typedef) d).initialize(σ.substitute(tc, t.getTarget()));
             }
-        } catch (ParseException e) {
-            throw new Error("can not happen", e);
         }
 
         tc.setDefs(defs);
@@ -228,7 +224,7 @@ public final class TypeContext {
      * @return a type context that is equivalent to this except that it contains
      *         only user types
      */
-    public TypeContext removeSpecialDeclarations() {
+    public TypeContext removeSpecialDeclarations() throws ParseException {
         return removeTypedefs().removeInterfaces().removeEnums();
     }
 

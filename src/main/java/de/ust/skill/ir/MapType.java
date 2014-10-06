@@ -40,8 +40,12 @@ public class MapType extends ContainerType {
     @Override
     public Type substituteBase(TypeContext tc, Substitution substitution) throws ParseException {
         ArrayList<Type> bs = new ArrayList<>(baseTypes.size());
-        for (Type t : baseTypes)
-            bs.add(substitution.substitute(tc, t));
+        for (Type t : baseTypes) {
+            Type sub = substitution.substitute(tc, t);
+            if (sub instanceof ContainerType)
+                throw new ParseException("Can not substitute a containertype into a map: " + sub);
+            bs.add(sub);
+        }
         return make(tc, bs);
     }
 }
