@@ -28,7 +28,6 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * @author Timm Felden, Dennis Przytarski
  */
 class Main extends FakeMain
-    with PackageApiSpecMaker
     with PackageBodyMaker
     with PackageInternalSpecMaker
     with PackageSpecMaker
