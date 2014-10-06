@@ -450,21 +450,23 @@ Opitions (ada):
   (none)
 """)
 
-  override protected def defaultValue(f : Field) = f.getType match {
-    case t : GroundType ⇒ t.getSkillName() match {
+  override protected def defaultValue(f : Field) = {
+    def defaultValue(t : Type) = t.getSkillName() match {
       case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
       case "f32" | "f64"                        ⇒ "0.0"
       case "bool"                               ⇒ "False"
       case _                                    ⇒ "null"
     }
+    f.getType match {
+      case t : GroundType              ⇒ defaultValue(t)
+      case t : ConstantLengthArrayType ⇒ s"(others => ${defaultValue(t.getBaseType())})"
+      case t : VariableLengthArrayType ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".Vector")}"
+      case t : ListType                ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".List")}"
+      case t : SetType                 ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".Set")}"
+      case t : MapType                 ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".Map")}"
 
-    case t : ConstantLengthArrayType ⇒ s"(others => ${defaultValue(f)})"
-    case t : VariableLengthArrayType ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".Vector")}"
-    case t : ListType                ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".List")}"
-    case t : SetType                 ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".Set")}"
-    case t : MapType                 ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".Map")}"
-
-    case _                           ⇒ "null"
+      case _                           ⇒ "null"
+    }
   }
 
   /**

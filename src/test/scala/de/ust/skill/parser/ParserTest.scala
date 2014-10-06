@@ -25,10 +25,12 @@ class ParserTest extends FunSuite {
     assert(0 != Parser.process(filename).allTypeNames.size)
   }
 
-  test("bad hints") { intercept[IllegalArgumentException] { check("/badHints.skill") } }
+  test("bad hints") {
+    val e = intercept[de.ust.skill.ir.ParseException] { check("/ParseException/badHints.skill") }
+    assert("NotAHint is not the name of a hint." === e.getMessage())
+  }
   test("restrictions") {
-    val e = intercept[de.ust.skill.ir.ParseException] { check("/restrictions.skill") }
-    assert("notahint() is either not supported or an invalid restriction name" === e.getMessage())
+    check("/restrictions.skill")
   }
 
   test("empty")(assert(0 === Parser.process("/empty.skill").removeSpecialDeclarations().getUsertypes().size))
@@ -48,7 +50,7 @@ class ParserTest extends FunSuite {
   }
 
   test("regression: report missing types") {
-    val e = intercept[de.ust.skill.ir.ParseException] { Parser.process("/failures/missingTypeCausedBySpelling.skill", false, false).allTypeNames.size }
+    val e = intercept[de.ust.skill.ir.ParseException] { Parser.process("/ParseException/missingTypeCausedBySpelling.skill", false, false).allTypeNames.size }
     assert("""The type "MessSage" parent of DatedMessage is unknown!
 Did you forget to include MessSage.skill?
 Known types are: Message, DatedMessage""" === e.getMessage())
