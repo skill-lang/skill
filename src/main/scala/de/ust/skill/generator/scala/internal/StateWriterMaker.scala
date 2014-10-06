@@ -149,7 +149,7 @@ private[internal] final class StateWriter(state : SerializableState, out : FileO
         if (fields.isEmpty) ""
         else s"""
           case pool : ${d.getName.capital}StoragePool ⇒
-            val outData = pool.data
+            val outData = pool.${if(d.getSuperType()!=null)"all"else"data"}
             f.name match {${
           (for (f ← fields if !f.isInstanceOf[View]) yield s"""
               case "${f.getSkillName()}" ⇒ ${writeField(d, f)}""").mkString("")
