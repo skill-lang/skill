@@ -111,7 +111,7 @@ class Main extends FakeMain
     case t : SetType                 ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Set.Set"
     case t : MapType                 ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Map.Map"
 
-    case t : Declaration             ⇒ s"${escaped(t.getName.ada)}_Type_Access"
+    case t : Declaration             ⇒ s"${t.getName.ada}_Type_Access"
   }
 
   /**
@@ -132,7 +132,7 @@ class Main extends FakeMain
             s"Read_String (Input_Stream)"
         }
         case t : Declaration ⇒
-          s"""Read_${escaped(t.getName.lower)}_Type (Input_Stream)"""
+          s"""Read_${t.getName.ada}_Type (Input_Stream)"""
       }
     }
 
@@ -250,7 +250,7 @@ class Main extends FakeMain
             s"Write_String (Stream, ${value})"
         }
         case t : Declaration ⇒
-          s"""Write_${escaped(t.getName.ada)}_Type (Stream, ${value})"""
+          s"""Write_${t.getName.ada}_Type (Stream, ${value})"""
       }
     }
 

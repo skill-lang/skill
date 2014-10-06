@@ -302,7 +302,7 @@ ${
           var output = s"""            ${d.getName.ada}_Type_Declaration : Type_Information := Types.Element ("${d.getSkillName}");\r\n"""
           val superTypes = getSuperTypes(d).toList.reverse
           superTypes.foreach({ t ⇒
-            output += s"""            ${t.getName}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");\r\n"""
+            output += s"""            ${t.getName.ada}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");\r\n"""
           })
           output.stripLineEnd
         }
