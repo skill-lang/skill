@@ -43,20 +43,20 @@ package ${packagePrefix.capitalize}.Api is
   --  generated user types by the code generator
   --  please excuse that it is not pretty formatted
 ${
-  var output = "";
-  /**
-   * Provides the API functions and procedures for all types.
-   */
-  for (d ← IR) {
-    val parameters = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map(f => s"${f.getSkillName()} : ${mapType(f.getType, d, f)}").mkString("; ", "; ", "")
-    output += s"""   function New_${escaped(d.getName)} (State : access Skill_State${printParameters(d)}) return ${escaped(d.getName)}_Type_Access;\r\n"""
-    output += s"""   procedure New_${escaped(d.getName)} (State : access Skill_State${printParameters(d)});\r\n"""
-    output += s"""   function ${escaped(d.getName)}s_Size (State : access Skill_State) return Natural;\r\n"""
-    output += s"""   function Get_${escaped(d.getName)} (State : access Skill_State; Index : Natural) return ${escaped(d.getName)}_Type_Access;\r\n"""
-    output += s"""   function Get_${escaped(d.getName)}s (State : access Skill_State) return ${escaped(d.getName)}_Type_Accesses;\r\n"""
-  }
-  output
-}
+      var output = "";
+      /**
+       * Provides the API functions and procedures for all types.
+       */
+      for (d ← IR) {
+        val parameters = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map(f ⇒ s"${f.getSkillName()} : ${mapType(f.getType, d, f)}").mkString("; ", "; ", "")
+        output += s"""   function New_${d.getName.ada} (State : access Skill_State${printParameters(d)}) return ${d.getName.ada}_Type_Access;\r\n"""
+        output += s"""   procedure New_${d.getName.ada} (State : access Skill_State${printParameters(d)});\r\n"""
+        output += s"""   function ${d.getName.ada}s_Size (State : access Skill_State) return Natural;\r\n"""
+        output += s"""   function Get_${d.getName.ada} (State : access Skill_State; Index : Natural) return ${d.getName.ada}_Type_Access;\r\n"""
+        output += s"""   function Get_${d.getName.ada}s (State : access Skill_State) return ${d.getName.ada}_Type_Accesses;\r\n"""
+      }
+      output
+    }
 end ${packagePrefix.capitalize}.Api;
 """)
 

@@ -124,7 +124,7 @@ ${
        */
       def printFields(d : UserType) : String = {
         var output = s"""'(\r\n         skill_id => Natural (${
-          if (null == d.getBaseType) escaped(d.getName.ada)
+          if (null == d.getBaseType) d.getName.ada
           else escaped(d.getBaseType.getName.ada)
         }_Type_Declaration.Storage_Pool.Length) + 1"""
         output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f ⇒
@@ -165,8 +165,8 @@ ${
        */
       for (d ← IR) {
         output += s"""
-   function New_${escaped(d.getName.ada)} (State : access Skill_State${printParameters(d)}) return ${escaped(d.getName.ada)}_Type_Access is
-      ${escaped(d.getName.ada)}_Type_Declaration : Type_Information := State.Types.Element ("${d.getSkillName}");${
+   function New_${d.getName.ada} (State : access Skill_State${printParameters(d)}) return ${d.getName.ada}_Type_Access is
+      ${d.getName.ada}_Type_Declaration : Type_Information := State.Types.Element ("${d.getSkillName}");${
           var output = ""
           val superTypes = getSuperTypes(d).toList.reverse
           superTypes.foreach({ t ⇒
@@ -174,40 +174,40 @@ ${
           })
           output
         }
-      New_Object : ${escaped(d.getName.ada)}_Type_Access := new ${escaped(d.getName.ada)}_Type${printFields(d)};
+      New_Object : ${d.getName.ada}_Type_Access := new ${d.getName.ada}_Type${printFields(d)};
    begin
-      ${escaped(d.getName.ada)}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));${printSuperTypes(d)}
+      ${d.getName.ada}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));${printSuperTypes(d)}
       return New_Object;
-   end New_${escaped(d.getName.ada)};
+   end New_${d.getName.ada};
 
-   procedure New_${escaped(d.getName.ada)} (State : access Skill_State${printParameters(d)}) is
-      New_Object : ${escaped(d.getName.ada)}_Type_Access := New_${escaped(d.getName.ada)} (State${printSimpleParameters(d)});
+   procedure New_${d.getName.ada} (State : access Skill_State${printParameters(d)}) is
+      New_Object : ${d.getName.ada}_Type_Access := New_${d.getName.ada} (State${printSimpleParameters(d)});
    begin
       null;
-   end New_${escaped(d.getName.ada)};
+   end New_${d.getName.ada};
 
-   function ${escaped(d.getName.ada)}s_Size (State : access Skill_State) return Natural is
+   function ${d.getName.ada}s_Size (State : access Skill_State) return Natural is
       (Natural (State.Types.Element ("${d.getSkillName}").Storage_Pool.Length));
 
-   function Get_${escaped(d.getName.ada)} (State : access Skill_State; Index : Natural) return ${escaped(d.getName.ada)}_Type_Access is
-      (${escaped(d.getName.ada)}_Type_Access (State.Types.Element ("${d.getSkillName}").Storage_Pool.Element (Index)));
+   function Get_${d.getName.ada} (State : access Skill_State; Index : Natural) return ${d.getName.ada}_Type_Access is
+      (${d.getName.ada}_Type_Access (State.Types.Element ("${d.getSkillName}").Storage_Pool.Element (Index)));
 
-   function Get_${escaped(d.getName.ada)}s (State : access Skill_State) return ${escaped(d.getName.ada)}_Type_Accesses is
+   function Get_${d.getName.ada}s (State : access Skill_State) return ${d.getName.ada}_Type_Accesses is
       use Storage_Pool_Vector;
 
       Type_Declaration : Type_Information := State.Types.Element ("${d.getSkillName}");
       Length : Natural := Natural (Type_Declaration.Storage_Pool.Length);
-      rval : ${escaped(d.getName.ada)}_Type_Accesses := new ${escaped(d.getName.ada)}_Type_Array (1 .. Length);
+      rval : ${d.getName.ada}_Type_Accesses := new ${d.getName.ada}_Type_Array (1 .. Length);
 
       procedure Iterate (Position : Cursor) is
       begin
-         rval (To_Index (Position)) := ${escaped(d.getName.ada)}_Type_Access (Element (Position));
+         rval (To_Index (Position)) := ${d.getName.ada}_Type_Access (Element (Position));
       end Iterate;
       pragma Inline (Iterate);
    begin
       Type_Declaration.Storage_Pool.Iterate (Iterate'Access);
       return rval;
-   end Get_${escaped(d.getName.ada)}s;\r\n"""
+   end Get_${d.getName.ada}s;\r\n"""
       }
       output
     }
