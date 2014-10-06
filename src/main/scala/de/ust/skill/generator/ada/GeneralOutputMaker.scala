@@ -35,7 +35,7 @@ trait GeneralOutputMaker extends Generator {
    * Creates the correct PrintWriter for the argument file.
    */
   override protected def open(path : String) = {
-    val f = new File(s"$outPath$packagePath/$path")
+    val f = new File(s"$outPath/src/$packagePath/$path")
     f.getParentFile.mkdirs
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
