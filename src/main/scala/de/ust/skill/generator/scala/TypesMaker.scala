@@ -167,9 +167,11 @@ ${
 
       out.write(s"""
 object ${t.getName.capital} {
-  def unapply(self : ${t.getName.capital}) = ${(for (f ← t.getAllFields) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
-
-  final class SubType private[$packageName] (val τName : String, skillID : Long) extends ${t.getName.capital}(skillID) with NamedType{
+${ // create unapply method if the type has fields, that can be matched
+  if(t.getAllFields().isEmpty())""
+  else s"""  def unapply(self : ${t.getName.capital}) = ${(for (f ← t.getAllFields) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
+"""
+}  final class SubType private[$packageName] (val τName : String, skillID : Long) extends ${t.getName.capital}(skillID) with NamedType{
     override def prettyString : String = τName+$prettyStringArgs
     override def toString = τName+"#"+skillID
   }
