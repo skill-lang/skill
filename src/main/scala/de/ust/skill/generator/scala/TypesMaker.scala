@@ -107,7 +107,7 @@ ${
 
       out.write(s"""$makeField
   final def $name_ = $makeGetterImplementation
-  final def ${name_}_=($Name : ${mapType(f.getType())}): Unit = $makeSetterImplementation
+  final def ${name_}_=($Name : ${mapType(f.getType())}): scala.Unit = $makeSetterImplementation
 """)
     }
 
@@ -127,7 +127,7 @@ ${
 
     // generic set
     out.write(s"""
-  override def set[@specialized T](field : FieldDeclaration[T], value : T) : Unit = field.name match {
+  override def set[@specialized T](field : FieldDeclaration[T], value : T) : scala.Unit = field.name match {
 ${
   (
     for(f <- t.getAllFields.filterNot{t ⇒ t.isIgnored || t.isConstant()}) 
