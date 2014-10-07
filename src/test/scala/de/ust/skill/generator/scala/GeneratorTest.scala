@@ -44,6 +44,8 @@ class GeneratorTest extends FunSuite {
   test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
   test("datedMessage")(check("datedMessage.skill", "datedMessage"))
 
+  test("escapingg: Unit")(check("unit.skill", "unit"))
+
   /**
    * generate code for a more complex example that makes use of a set of tools to modify very simple nodes.
    * these tools enrich nodes with custom fields.
