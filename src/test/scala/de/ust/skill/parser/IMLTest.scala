@@ -20,12 +20,12 @@ class IMLTest extends FunSuite {
 
   test("create doxygen") {
     CommandLine.main(Array("-p", "iml", "-L", "doxygen", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
-      "/home/feldentm/Desktop/iml.sf/generated/doxygen"))
+      "/home/feldentm/Desktop/iml.sf/generated"))
   }
 
   test("create scala") {
     CommandLine.main(Array("-p", "iml", "-L", "scala", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
-      "/home/feldentm/Desktop/iml.sf/generated/scala"))
+      "/home/feldentm/Desktop/iml.sf/generated"))
   }
   //
   //  test("create ada") {
