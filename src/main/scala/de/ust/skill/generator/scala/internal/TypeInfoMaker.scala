@@ -262,10 +262,13 @@ case class MapType[K : Manifest, V : Manifest](val keyType : FieldType[K], val v
   }
 }
 
+// TODO remove this type; it is not necessary in SKilL V1.0 because field declaration can be deserialized at the end of a type block, after all type definitions observable in that block are known
 case class TypeDefinitionIndex[T : Manifest](index : Long) extends FieldType[T](32 + index) {
   override def readSingleField(in : InStream) = ???
 
   override def toString() : String = s"<type definition index: $index>"
+  
+  ???
 }
 
 case class TypeDefinitionName[T : Manifest](name : String) extends FieldType[T](-1) {
