@@ -12,18 +12,19 @@ import de.ust.skill.main.CommandLine
 
 @RunWith(classOf[JUnitRunner])
 class IMLTest extends FunSuite {
+  // TODO ignore all testes iff the file is not presenet
   val filename = new File("/home/feldentm/Desktop/iml.sf/specification/iml-all.skill")
 
-  test("parse iml.sf") {
+  ignore("parse iml.sf") {
     assert(100 < Parser.process(filename).allTypeNames.size)
   }
 
-  test("create doxygen") {
+  ignore("create doxygen") {
     CommandLine.main(Array("-p", "iml", "-L", "doxygen", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
       "/home/feldentm/Desktop/iml.sf/generated"))
   }
 
-  test("create scala") {
+  ignore("create scala") {
     CommandLine.main(Array("-p", "iml", "-L", "scala", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
       "/home/feldentm/Desktop/iml.sf/generated"))
   }

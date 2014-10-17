@@ -99,6 +99,7 @@ ${
        */
       var output = "";
       for (d ← IR) {
+        output += comment(d)
         output += s"""   type ${d.getName.ada}_Type is new Skill_Type with private;\r\n"""
         output += s"""   type ${d.getName.ada}_Type_Access is access all ${d.getName.ada}_Type;\r\n"""
         output += s"""   type ${d.getName.ada}_Type_Array is array (Natural range <>) of ${d.getName.ada}_Type_Access;\r\n"""
@@ -148,12 +149,15 @@ ${
        */
       for (d ← IR) {
         d.getAllFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
+          output += comment(f)
           output += s"""   function Get_${f.getName.ada} (Object : ${d.getName.ada}_Type) return ${mapType(f.getType, d, f)};\r\n"""
-          if (!f.isConstant)
+          if (!f.isConstant) {
+            output += comment(f)
             output += s"""   procedure Set_${f.getName.ada} (
       Object : in out ${d.getName.ada}_Type;
       Value  :        ${mapType(f.getType, d, f)}
    );\r\n\r\n"""
+          }
         })
       }
       output.stripLineEnd
