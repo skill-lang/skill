@@ -1,0 +1,3 @@
+#! number
+
+Number { i64 number; }

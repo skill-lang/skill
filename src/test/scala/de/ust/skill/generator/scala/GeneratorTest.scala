@@ -11,6 +11,8 @@ import org.scalatest.junit.JUnitRunner
 import de.ust.skill.main.CommandLine
 
 /**
+ * Scala specific tests.
+ *
  * @author Timm Felden
  */
 @RunWith(classOf[JUnitRunner])
@@ -23,13 +25,8 @@ class GeneratorTest extends FunSuite {
   test("benchmark: colored graph")(check("benchmarks.coloredGraph.skill", "benchmarks.coloredGraph"))
   test("benchmark: graph")(check("benchmarks.graph.skill", "benchmarks.graph"))
 
-  test("annotation")(check("annotation.skill", "annotation"))
   test("blocks")(check("blocks.skill", "block"))
-  test("container")(check("container.skill", "container"))
   test("date")(check("date.skill", "date"))
-  test("graph")(check("graph.skill", "graph"))
-  test("float")(check("float.skill", "floatTest"))
-  test("unicode")(check("unicode.skill", "unicode"))
 
   test("restrictions: range")(check("restrictions.range.skill", "restrictions.range"))
   test("restrictions: singleton")(check("restrictions.singleton.skill", "restrictions.singleton"))
@@ -39,8 +36,6 @@ class GeneratorTest extends FunSuite {
   test("views: simple retyping")(check("views.skill", "views.retyping"))
 
   test("node")(check("node.skill", "node"))
-  test("number")(check("number.skill", "number"))
-  test("subtypes")(check("subtypesExample.skill", "subtypes"))
   test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
   test("datedMessage")(check("datedMessage.skill", "datedMessage"))
 

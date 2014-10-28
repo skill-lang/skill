@@ -1,3 +1,5 @@
+#! graph
+
 /** a graph of colored nodes */
 Node {
   string color;

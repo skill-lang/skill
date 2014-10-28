@@ -1,3 +1,5 @@
+#! floats
+
 /** check some float values. */
 @singleton
 FloatTest {

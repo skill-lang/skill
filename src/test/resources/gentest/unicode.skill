@@ -1,3 +1,5 @@
+#! unicode
+
 /** this test is used to check unicode handling inside of strings;
     only one instance but no @singleton to keep things simple;
     all fields contain one character. */
