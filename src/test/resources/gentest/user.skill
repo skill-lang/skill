@@ -1,0 +1,15 @@
+#! user
+# The standard user example as commonly used by the SKilL specification.
+
+/** A user has a name and an age. */
+User {
+
+  /**
+   * Full name of the user ignoring regional specifics like give or family
+   * names.
+   */
+  string name;
+
+  /** The current age of the user. */
+  v64 age;
+}

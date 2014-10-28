@@ -1,0 +1,17 @@
+#! annotation
+# checks for correct implementation of annotation field types.
+
+/** Test the implementation of annotations. */
+Test {
+
+  /** can point to anything, there are binary files exlpoiting this property. */
+  annotation f;
+}
+
+/** A simple date test with known Translation */
+Date {
+
+  /** seconds since 1.1.1970 UTC */
+  v64 date;
+}
+
