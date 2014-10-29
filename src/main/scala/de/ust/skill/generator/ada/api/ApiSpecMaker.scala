@@ -18,7 +18,7 @@ trait SkillSpecMaker extends GeneralOutputMaker {
 with Ada.Unchecked_Deallocation;
 
 --
---  This package provides the API for the skill state.
+--  This package provides the API for Skill_State
 --
 
 package ${packagePrefix.capitalize}.Api is
@@ -40,22 +40,21 @@ package ${packagePrefix.capitalize}.Api is
       File_Name :        String
    );
 
-  --  generated user types by the code generator
-  --  please excuse that it is not pretty formatted
+  --  type access functionality for each user types
+  --  provides new, size and get operations.
 ${
-      var output = "";
       /**
        * Provides the API functions and procedures for all types.
        */
-      for (d ← IR) {
+      (for (d ← IR) yield {
         val parameters = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map(f ⇒ s"${f.getSkillName()} : ${mapType(f.getType, d, f)}").mkString("; ", "; ", "")
-        output += s"""   function New_${d.getName.ada} (State : access Skill_State${printParameters(d)}) return ${d.getName.ada}_Type_Access;\r\n"""
-        output += s"""   procedure New_${d.getName.ada} (State : access Skill_State${printParameters(d)});\r\n"""
-        output += s"""   function ${d.getName.ada}s_Size (State : access Skill_State) return Natural;\r\n"""
-        output += s"""   function Get_${d.getName.ada} (State : access Skill_State; Index : Natural) return ${d.getName.ada}_Type_Access;\r\n"""
-        output += s"""   function Get_${d.getName.ada}s (State : access Skill_State) return ${d.getName.ada}_Type_Accesses;\r\n"""
-      }
-      output
+        s"""   function New_${d.getName.ada} (State : access Skill_State${printParameters(d)}) return ${d.getName.ada}_Type_Access;
+   procedure New_${d.getName.ada} (State : access Skill_State${printParameters(d)});
+   function ${d.getName.ada}s_Size (State : access Skill_State) return Natural;
+   function Get_${d.getName.ada} (State : access Skill_State; Index : Natural) return ${d.getName.ada}_Type_Access;
+   function Get_${d.getName.ada}s (State : access Skill_State) return ${d.getName.ada}_Type_Accesses;
+"""
+      }).mkString("\n")
     }
 end ${packagePrefix.capitalize}.Api;
 """)

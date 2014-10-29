@@ -63,9 +63,10 @@ package ${packagePrefix.capitalize} is
 
    type String_Access is access String;
 
-   -------------
-   --  TYPES  --
-   -------------
+   ----------------------
+   --  Built-In Types  --
+   ----------------------
+
    type i8 is new Interfaces.Integer_8;
    type i16 is new Interfaces.Integer_16;
    subtype Short is i16;
@@ -78,8 +79,13 @@ package ${packagePrefix.capitalize} is
    type f64 is new Interfaces.IEEE_Float_64;
    subtype Double is f64;
 
+   type Skill_State is limited private;
+   type Skill_Type is abstract tagged private;
+   type Skill_Type_Access is access all Skill_Type'Class;
+   function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type;
+
    -------------
-   --  SKILL  --
+   --  Utils  --
    -------------
    function Hash (Element : Short_Short_Integer) return Ada.Containers.Hash_Type;
    function Hash (Element : Short) return Ada.Containers.Hash_Type;
@@ -88,10 +94,9 @@ package ${packagePrefix.capitalize} is
    function Hash (Element : String_Access) return Ada.Containers.Hash_Type;
    function "=" (Left, Right : String_Access) return Boolean;
 
-   type Skill_State is limited private;
-   type Skill_Type is abstract tagged private;
-   type Skill_Type_Access is access all Skill_Type'Class;
-   function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type;
+   -----------------------
+   --  Specified Types  --
+   -----------------------
 
 ${
       /**
@@ -144,6 +149,12 @@ ${
         })
       }
 
+      output += """
+   ------------------------------
+   --  Field Access Functions  --
+   ------------------------------
+"""
+
       /**
        * Provides the accessor functions to the fields of every type.
        */
@@ -162,6 +173,7 @@ ${
       }
       output.stripLineEnd
     }
+
 private
 
    type Skill_States is (Unused, Append, Create, Read, Write);
