@@ -3,7 +3,7 @@
 ** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
-package de.ust.skill.generator.scala
+package de.ust.skill.generator.ada
 
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -24,9 +24,9 @@ class GenericTests extends FunSuite {
 
   def check(path : File, out : String) {
     import scala.reflect.io.Directory
-    Directory(new File("testsuites/scala/src/main/scala/", out)).deleteRecursively
+    Directory(new File("testsuites/ada/src/", out)).deleteRecursively
 
-    CommandLine.main(Array[String]("-L", "scala", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, path.getPath, "testsuites"))
+    CommandLine.main(Array[String]("-L", "ada", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, path.getPath, "testsuites"))
   }
 
   def makeTest(path : File, name : String) = test("generic: "+name)(check(path, name))
