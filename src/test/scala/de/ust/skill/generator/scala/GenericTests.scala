@@ -49,7 +49,7 @@ import common.CommonTest
  * Tests the file reading capabilities.
  */
 class Generic${name}ReadTest extends CommonTest {
-  @inline def read(s: String) = SkillState.read("src/test/resources/"+s)
+  @inline def read(s: String) = SkillState.read("../../"+s)
 """)
     rval
   }
@@ -75,10 +75,10 @@ class Generic${name}ReadTest extends CommonTest {
       val out = newTestFile(name, "Read")
       for (f ← targets) f.getParent match {
         case "accept" ⇒ out.write(s"""
-  test("$name - read (accept): ${f.getName}") { Assert.assertNotNull(read("${f.getName}")) }
+  test("$name - read (accept): ${f.getName}") { Assert.assertNotNull(read("${f.getPath}")) }
       """)
         case _ ⇒ out.write(s"""
-  test("$name - read (reject): ${f.getName}") { intercept[ParseException] { Assert.assertNotNull(read("${f.getName}")) } }
+  test("$name - read (reject): ${f.getName}") { intercept[ParseException] { Assert.assertNotNull(read("${f.getPath}")) } }
       """)
       }
       closeTestFile(out)
