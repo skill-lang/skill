@@ -7,14 +7,12 @@ package de.ust.skill.generator.ada
 
 import java.io.File
 import java.nio.file.Files
-
 import scala.reflect.io.Directory
 import scala.reflect.io.Path.jfile2path
-
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-
 import de.ust.skill.main.CommandLine
+import org.scalatest.junit.JUnitRunner
 
 /**
  * Generic tests built for scala.
