@@ -170,16 +170,14 @@ class Main extends FakeMain
     _packagePrefix = names.foldRight("")(_+"."+_)
   }
 
-  override def setOptions(args : Array[String]) {
-    var index = 0
-    while (index < args.length) args(index) match {
-      case unknown ⇒ sys.error(s"unkown Argument: $unknown")
-    }
+  override def setOption(option : String, value : String) = option.toLowerCase match {
+    case "revealskillid" ⇒ revealSkillID = ("true" == value)
+    case unknown         ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
   override def printHelp : Unit = println("""
 Opitions (scala):
-  (none)
+  revealSkillID: true/false  if set to true, the generated binding will reveal SKilL IDs in the API
 """)
 
   override protected def defaultValue(f : Field) = f.getType match {

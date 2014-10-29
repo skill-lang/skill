@@ -32,6 +32,12 @@ trait GeneralOutputMaker extends Generator {
 
   override def getLanguageName = "scala";
 
+  // options
+  /**
+   * if set to true, the generated binding will reveal the values of skill IDs.
+   */
+  protected var revealSkillID = false;
+
   val ArrayTypeName = "scala.collection.mutable.ArrayBuffer"
   val VarArrayTypeName = "scala.collection.mutable.ArrayBuffer"
   val ListTypeName = "scala.collection.mutable.ListBuffer"

@@ -5,12 +5,18 @@
 \*                                                                            */
 package de.ust.skill.generator.scala
 
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
+import java.nio.file.Files
+import scala.reflect.io.Directory
+import scala.reflect.io.Path.jfile2path
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
 import de.ust.skill.main.CommandLine
-import java.io.File
-import java.nio.file.Files
+import org.scalatest.junit.JUnitRunner
 
 /**
  * Generic tests built for scala.
@@ -22,11 +28,77 @@ import java.nio.file.Files
 @RunWith(classOf[JUnitRunner])
 class GenericTests extends FunSuite {
 
+  def newTestFile(packagePath : String, name : String) = {
+    val f = new File(s"testsuites/scala/src/test/scala/$packagePath/$name.generated.scala")
+    f.getParentFile.mkdirs
+    f.createNewFile
+    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
+
+    rval.write(s"""
+package $packagePath
+
+import org.junit.Assert
+
+import $packagePath.api.SkillState
+import $packagePath.internal.ParseException
+import $packagePath.internal.PoolSizeMissmatchError
+import $packagePath.internal.TypeMissmatchError
+import common.CommonTest
+
+/**
+ * Tests the file reading capabilities.
+ */
+class Generic${name}ReadTest extends CommonTest {
+  @inline def read(s: String) = SkillState.read("src/test/resources/"+s)
+""")
+    rval
+  }
+
+  def closeTestFile(out : java.io.PrintWriter) {
+    out.write("""
+}
+""")
+    out.close
+  }
+
+  def makeGenBinaryTests(name : String) {
+    // find all relevant sf-files
+    val base = new File("src/test/resources/genbinary")
+    def collect(f : File) : Seq[File] =
+      (for (path ← f.listFiles if path.isDirectory) yield collect(path)).flatten ++
+        f.listFiles.filterNot(_.isDirectory)
+
+    val targets = collect(new File(base, "<all>")) ++ collect(if (new File(base, name).exists) new File(base, name) else new File(base, "<empty>"))
+
+    // generate read tests
+    locally {
+      val out = newTestFile(name, "Read")
+      for (f ← targets) f.getParent match {
+        case "accept" ⇒ out.write(s"""
+  test("$name - read (accept): ${f.getName}") { Assert.assertNotNull(read("${f.getName}")) }
+      """)
+        case _ ⇒ out.write(s"""
+  test("$name - read (reject): ${f.getName}") { intercept[ParseException] { Assert.assertNotNull(read("${f.getName}")) } }
+      """)
+      }
+      closeTestFile(out)
+    }
+
+    //    mit generischem binding sf parsen um an zu erwartende daten zu kommen
+
+    //    mit parser spec parsen um an lesbare daten zu kommen:)
+
+    //    test generieren, der sicherstellt, dass sich die daten da raus lesen lassen
+
+  }
+
   def check(path : File, out : String) {
     import scala.reflect.io.Directory
     Directory(new File("testsuites/scala/src/main/scala/", out)).deleteRecursively
 
     CommandLine.main(Array[String]("-L", "scala", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, path.getPath, "testsuites"))
+
+    makeGenBinaryTests(out)
   }
 
   def makeTest(path : File, name : String) = test("generic: "+name)(check(path, name))

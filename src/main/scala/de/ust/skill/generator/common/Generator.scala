@@ -40,7 +40,7 @@ trait Generator {
    * Set the type context. This is a function to make clear that generators may in fact project a type context prior to
    * using it.
    */
-  def setTC(tc : TypeContext);
+  def setTC(tc : TypeContext) : Unit;
 
   var headerInfo : HeaderInfo = HeaderInfo();
 
@@ -53,11 +53,9 @@ trait Generator {
   def setPackage(names : List[String]) : Unit;
 
   /**
-   * Process options passed to this generator only.
-   *
-   * This corresponds to all --L $getLanguageName [...] -- options.
+   * Sets an option to a new value.
    */
-  def setOptions(args : Array[String]) : Unit;
+  def setOption(option : String, value : String) : Unit;
 
   /**
    * Prints help for language specific options.

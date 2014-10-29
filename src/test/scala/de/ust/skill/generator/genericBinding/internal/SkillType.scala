@@ -1,28 +1,18 @@
 /*  ___ _  ___ _ _                                                            *\
-** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
-** |___/_|\_\_|_|____|    see LICENSE                                         **
+ * / __| |/ (_) | |       Your SKilL Scala Binding                            *
+ * \__ \ ' <| | | |__     generated: 29.10.2014                               *
+ * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
-package de.ust.skill.generator.scala.internal
+package de.ust.skill.generator.genericBinding.internal
 
-import de.ust.skill.generator.scala.GeneralOutputMaker
-
-trait SkillTypeMaker extends GeneralOutputMaker {
-  abstract override def make {
-    super.make
-    val packageName = if (this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.') + 1) else this.packageName;
-    val out = open("internal/SkillType.scala")
-    //package & imports
-    out.write(s"""package ${packagePrefix}internal
-
-import ${packagePrefix}api.Access
+import de.ust.skill.generator.genericBinding.api.Access
 
 /**
  * The top of the skill type hierarchy.
  * @author Timm Felden
  */
-class SkillType private[$packageName] (protected var skillID : Long) {
-  ${if (revealSkillID) "" else "private[internal] "}final def getSkillID = skillID
+class SkillType private[genericBinding] (protected var skillID : Long) {
+  final def getSkillID = skillID
   private[internal] final def setSkillID(newID : Long) = skillID = newID
 
   /**
@@ -38,7 +28,7 @@ class SkillType private[$packageName] (protected var skillID : Long) {
   /**
    * provides a pretty representation of this
    */
-  def prettyString : String = s"<some fully generic type#$$skillID>"
+  def prettyString : String = s"<some fully generic type#$skillID>"
 
   /**
    * reflective setter
@@ -67,7 +57,7 @@ class SkillType private[$packageName] (protected var skillID : Long) {
 }
 
 object SkillType {
-  final class SubType private[$packageName] (val τName : String, skillID : Long) extends SkillType(skillID) with NamedType {
+  final class SubType private[genericBinding] (val τName : String, skillID : Long) extends SkillType(skillID) with NamedType {
     override def prettyString : String = τName+"(this: "+this+")"
     override def toString = τName+"#"+skillID
   }
@@ -75,9 +65,4 @@ object SkillType {
 
 trait NamedType {
   val τName : String;
-}
-""")
-
-    out.close()
-  }
 }

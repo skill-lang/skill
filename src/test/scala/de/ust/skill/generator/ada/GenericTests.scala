@@ -5,12 +5,16 @@
 \*                                                                            */
 package de.ust.skill.generator.ada
 
-import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-import de.ust.skill.main.CommandLine
 import java.io.File
 import java.nio.file.Files
+
+import scala.reflect.io.Directory
+import scala.reflect.io.Path.jfile2path
+
+import org.junit.runner.RunWith
+import org.scalatest.FunSuite
+
+import de.ust.skill.main.CommandLine
 
 /**
  * Generic tests built for scala.

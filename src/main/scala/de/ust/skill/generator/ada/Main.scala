@@ -442,12 +442,8 @@ class Main extends FakeMain
 """
   }
 
-  override def setOptions(args : Array[String]) {
-    var index = 0
-
-    while (index < args.length) args(index) match {
-      case unknown ⇒ sys.error(s"unkown Argument: $unknown")
-    }
+  override def setOption(option : String, value : String) = option match {
+    case unknown ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
   override def printHelp : Unit = println("""

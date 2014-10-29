@@ -5,3 +5,7 @@ the first level contains directories for each test and an "<all>" directory,
 
 the second level contains "accept" and "fail" directories that contains files
  that shall be accepted or rejected respectively
+
+the "<empty>" folder will be used iff there is no folder with a matching name.
+ this is basically a starting point for new tests. "<empty>" tests will check
+ against "<all>"
