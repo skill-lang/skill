@@ -73,11 +73,11 @@ class Generic${name}ReadTest extends CommonTest {
     // generate read tests
     locally {
       val out = newTestFile(name, "Read")
-      for (f ← targets) f.getParent match {
-        case "accept" ⇒ out.write(s"""
+      for (f ← targets) {
+        if (f.getPath.contains("accept")) out.write(s"""
   test("$name - read (accept): ${f.getName}") { Assert.assertNotNull(read("${f.getPath}")) }
       """)
-        case _ ⇒ out.write(s"""
+        else out.write(s"""
   test("$name - read (reject): ${f.getName}") { intercept[ParseException] { Assert.assertNotNull(read("${f.getPath}")) } }
       """)
       }
