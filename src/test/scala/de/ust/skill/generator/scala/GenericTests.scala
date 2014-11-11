@@ -71,7 +71,7 @@ class Generic${name}ReadTest extends CommonTest {
     val targets = (
       collect(new File(base, "<all>"))
       ++ collect(if (new File(base, name).exists) new File(base, name) else new File(base, "<empty>"))
-    ).filter(_.endsWith(".sf"))
+    ).filter(_.getName.endsWith(".sf"))
 
     // generate read tests
     locally {
@@ -79,10 +79,10 @@ class Generic${name}ReadTest extends CommonTest {
       for (f ← targets) {
         if (f.getPath.contains("accept")) out.write(s"""
   test("$name - read (accept): ${f.getName}") { Assert.assertNotNull(read("${f.getPath}")) }
-      """)
+""")
         else out.write(s"""
   test("$name - read (reject): ${f.getName}") { intercept[ParseException] { Assert.assertNotNull(read("${f.getPath}")) } }
-      """)
+""")
       }
       closeTestFile(out)
     }
