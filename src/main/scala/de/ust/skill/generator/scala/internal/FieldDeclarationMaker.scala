@@ -26,7 +26,7 @@ import ${packagePrefix}internal.streams.MappedInStream
  *
  * @param begin position of the first byte of the first instance's data
  * @param end position of the last byte, i.e. the first byte that is not read
- * @param bpsi the index of the first instance
+ * @param bpso the offset of the first instance
  * @param count the number of instances in this chunk
  *
  * @note indices of recipient of the field data is not necessarily continuous; make use of staticInstances!
@@ -35,17 +35,17 @@ import ${packagePrefix}internal.streams.MappedInStream
  * @author Timm Felden
  */
 sealed abstract class ChunkInfo(var begin : Long, var end : Long, val count : Long);
-final class SimpleChunkInfo(begin : Long, end : Long, val bpsi : Long, count : Long) extends ChunkInfo(begin, end, count);
+final class SimpleChunkInfo(begin : Long, end : Long, val bpo : Long, count : Long) extends ChunkInfo(begin, end, count);
 final class BulkChunkInfo(begin : Long, end : Long, count : Long) extends ChunkInfo(begin, end, count);
 
 /**
  * Blocks contain information about the type of an index range.
  *
- * @param bpsi the index of the first instance
+ * @param bpo the offset of the first instance
  * @param count the number of instances in this chunk
  * @author Timm Felden
  */
-case class BlockInfo(val bpsi : Long, val count : Long);
+case class BlockInfo(val bpo : Long, val count : Long);
 
 /**
  * A field decalariation, as it occurs during parsing of a type blocks header.
@@ -71,6 +71,7 @@ sealed abstract class FieldDeclaration[@specialized T](var t : FieldType[T], val
     c.end += offset
   }
   private[internal] def noDataChunk = dataChunks.isEmpty
+  private[internal] def lastChunk = dataChunks.last
 
   override def toString = t.toString+" "+name
   override def equals(obj : Any) = obj match {
@@ -87,8 +88,6 @@ sealed abstract class FieldDeclaration[@specialized T](var t : FieldType[T], val
  */
 final class KnownField[@specialized T](t : FieldType[T], name : String, index : Long, owner : StoragePool[_, _])
     extends FieldDeclaration[T](t, name, index, owner) {
-
-  private[internal] def lastChunk = dataChunks.last
 
 }
 

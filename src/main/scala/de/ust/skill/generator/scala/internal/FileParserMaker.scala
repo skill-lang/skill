@@ -140,14 +140,10 @@ ${
           val count = in.v64.toInt
           (for (i ← 0 until count; if i < 7 || 1 == (i % 2))
             yield in.v64 match {
-            case 0 ⇒ throw new ParseException(in, blockCounter, "Types can not be nullable restricted!", null)
-            case 1 ⇒ throw new ParseException(in, blockCounter, "Types can not be range restricted!", null)
-            case 2 ⇒ Unique
-            case 3 ⇒ throw new ParseException(in, blockCounter, "Types can not be constant length pointer restricted!", null)
-            case 4 ⇒ Singleton
-            case 5 ⇒ throw new ParseException(in, blockCounter, "Types can not be coding restricted!", null)
-            case 6 ⇒ Monotone
-            case i ⇒ throw new ParseException(in, blockCounter, "Found unknown type restriction $$i. Please regenerate your binding, if possible.", null)
+            case 0 ⇒ Unique
+            case 1 ⇒ Singleton
+            case 2 ⇒ Monotone
+            case i ⇒ throw new ParseException(in, blockCounter, s"Found unknown type restriction $$i. Please regenerate your binding, if possible.", null)
           }
           ).toSet[Restriction].to
         }
@@ -156,23 +152,19 @@ ${
           (for (i ← 0 until count; if i < 7 || 1 == (i % 2))
             yield in.v64 match {
             case 0 ⇒ Nullable
-            case 1 ⇒ t match {
-              case null ⇒ throw new Error("Range Restrictions can not be serialized in TR13!")
-              case I8   ⇒ Range(in.i8, in.i8)
-              case I16  ⇒ Range(in.i16, in.i16)
-              case I32  ⇒ Range(in.i32, in.i32)
-              case I64  ⇒ Range(in.i64, in.i64)
-              case V64  ⇒ Range(in.v64, in.v64)
-              case F32  ⇒ Range(in.f32, in.f32)
-              case F64  ⇒ Range(in.f64, in.f64)
-              case t    ⇒ throw new ParseException(in, blockCounter, "Type $$t can not be range restricted!", null)
+            case 3 ⇒ t match {
+              case I8  ⇒ Range(in.i8, in.i8)
+              case I16 ⇒ Range(in.i16, in.i16)
+              case I32 ⇒ Range(in.i32, in.i32)
+              case I64 ⇒ Range(in.i64, in.i64)
+              case V64 ⇒ Range(in.v64, in.v64)
+              case F32 ⇒ Range(in.f32, in.f32)
+              case F64 ⇒ Range(in.f64, in.f64)
+              case t   ⇒ throw new ParseException(in, blockCounter, s"Type $$t can not be range restricted!", null)
             }
-            case 2 ⇒ throw new ParseException(in, blockCounter, "Fields can not be unique restricted!", null)
-            case 3 ⇒ ConstantLengthPointer
-            case 4 ⇒ throw new ParseException(in, blockCounter, "Fields can not be singleton restricted!", null)
             case 5 ⇒ Coding(String.get(in.v64))
-            case 6 ⇒ throw new ParseException(in, blockCounter, "Fields can not be monotone restricted!", null)
-            case i ⇒ throw new ParseException(in, blockCounter, "Found unknown field restriction $$i. Please regenerate your binding, if possible.", null)
+            case 7 ⇒ ConstantLengthPointer
+            case i ⇒ throw new ParseException(in, blockCounter, s"Found unknown field restriction $$i. Please regenerate your binding, if possible.", null)
           }
           ).toSet[Restriction].to
         }
@@ -187,7 +179,6 @@ ${
           var count = in.v64
 
           var definition : StoragePool[T, B] = null
-          var lbpsi = 1L // bpsi is 1 if the first legal index is one
           if (poolByName.contains(name)) {
             definition = poolByName(name).asInstanceOf[StoragePool[T, B]]
 
@@ -196,15 +187,14 @@ ${
             val superDef = superDefinition
             definition = newPool[T, B](name, superDef, rest)
           }
-          if (0L != count && definition.superPool.isDefined)
-            lbpsi = in.v64
 
-          // adjust lbpsi
-          // @note -1 is due to conversion between index<->array offset
-          lbpsi += definition.basePool.data.length - 1
+          val bpo = definition.basePool.data.length + (
+            if (0L != count && definition.superPool.isDefined) in.v64
+            else 0L
+          )
 
           // store block info and prepare resize
-          definition.blockInfos += BlockInfo(lbpsi, count)
+          definition.blockInfos += BlockInfo(bpo, count)
           resizeQueue += definition
 
           // read field part
@@ -229,7 +219,7 @@ ${
             } else {
               // known field
               val end = in.v64
-              fields(ID).addChunk(new SimpleChunkInfo(offset, end, lbpsi, count))
+              fields(ID).addChunk(new SimpleChunkInfo(offset, end, bpo, count))
 
               offset = end
             }
@@ -254,8 +244,8 @@ ${
         // create instances from stack
         for (p ← resizeStack) {
           val bi = p.blockInfos.last
-          var i = bi.bpsi
-          val high = bi.bpsi + bi.count
+          var i = bi.bpo
+          val high = bi.bpo + bi.count
           while (i < high && p.insertInstance(i + 1))
             i += 1;
         }
@@ -294,9 +284,11 @@ ${
 
           f.addOffsetToLastChunk(fileOffset)
 
-          // TODO move to KnownField
+          // TODO move to Field implementations
           if (f.isInstanceOf[KnownField[T]])
             FieldParser.parseThisField(in, p, f.asInstanceOf[KnownField[T]], poolByName, String)
+          else
+            in.jump(f.lastChunk.end)
         }
         for ((p, fID) ← fieldDataQueue) {
           processField(p, fID)

@@ -37,7 +37,7 @@ object FieldOffsetCalculator {
 
     case SetType(t) ⇒
       val b = p.blockInfos.last
-      p.basePool.data.view(b.bpsi.toInt, (b.bpsi + b.count).toInt).foldLeft(0L) {
+      p.basePool.data.view(b.bpo.toInt, (b.bpo + b.count).toInt).foldLeft(0L) {
         case (sum, i) ⇒
           val xs = i.get(f).asInstanceOf[Iterable[_]];
           sum + encodeSingleV64(xs.size) + encode(xs, t)
@@ -124,7 +124,7 @@ object FieldOffsetCalculator {
   @inline private[this] def encodeRefs(p : StoragePool[_ <: SkillType, _ <: SkillType], f : FieldDeclaration[_]) : Long = {
     var result = 0L
     val b = p.blockInfos.last
-    for (i ← p.basePool.data.view(b.bpsi.toInt, (b.bpsi + b.count).toInt)) {
+    for (i ← p.basePool.data.view(b.bpo.toInt, (b.bpo + b.count).toInt)) {
       val v = i.get(f).asInstanceOf[SkillType].getSkillID
       if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
         result += 1

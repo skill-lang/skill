@@ -267,7 +267,7 @@ case class TypeDefinitionIndex[T : Manifest](index : Long) extends FieldType[T](
   override def readSingleField(in : InStream) = ???
 
   override def toString() : String = s"<type definition index: $index>"
-  
+
   ???
 }
 
@@ -375,11 +375,11 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
 
       //build block chunk
       val lcount = newDynamicInstances.size
-      //@ note this is the index into the data array and NOT the written lbpsi
-      val lbpsi = if (0 == lcount) 0L
+      //@ note this is the index into the data array and NOT the written lbpo
+      val lbpo = if (0 == lcount) 0L
       else newDynamicInstances.next.getSkillID - 1
 
-      blockInfos += new BlockInfo(lbpsi, lcount)
+      blockInfos += new BlockInfo(lbpo, lcount)
 
       //@note: if this does not hold for p; then it will not hold for p.subPools either!
       if (newInstances || !newPool) {
@@ -390,7 +390,7 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
             f.addChunk(c)
             chunkMap.put(f, c)
           } else if (newInstances) {
-            val c = new SimpleChunkInfo(-1, -1, lbpsi, lcount)
+            val c = new SimpleChunkInfo(-1, -1, lbpo, lcount)
             f.addChunk(c)
             chunkMap.put(f, c)
           }
@@ -467,7 +467,7 @@ sealed class BasePool[T <: SkillType : Manifest](poolIndex : Long, name : String
     if (null != data(i))
       false
     else {
-      val r = (new SkillType(skillID)).asInstanceOf[T]
+      val r = (new SkillType.SubType(this, skillID)).asInstanceOf[T]
       data(i) = r
       staticData += r
       true
@@ -580,8 +580,8 @@ sealed class SubPool[T <: B : Manifest, B <: SkillType](poolIndex : Long, name :
    */
   private[internal] def data = WrappedArray.make[T](basePool.data)
 
-  override def all : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
-  override def iterator : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
+  override def all : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpo.toInt, (block.bpo + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
+  override def iterator : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpo.toInt, (block.bpo + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
 
   override def allInTypeOrder : Iterator[T] = subPools.foldLeft(staticInstances)(_ ++ _.staticInstances)
 

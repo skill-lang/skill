@@ -69,15 +69,15 @@ ${
           case _ ⇒
             c match {
               case c : SimpleChunkInfo ⇒
-                val low = c.bpsi.toInt
-                val high = (c.bpsi + c.count).toInt
+                val low = c.bpo.toInt
+                val high = (c.bpo + c.count).toInt
                 for (i ← low until high)
                   d(i).set(f, f.t.readSingleField(in))
 
               case bci : BulkChunkInfo ⇒
                 for (
                   bi ← t.blockInfos;
-                  i ← bi.bpsi.toInt until (bi.bpsi + bi.count).toInt
+                  i ← bi.bpo.toInt until (bi.bpo + bi.count).toInt
                 ) d(i).set(f, f.t.readSingleField(in))
             }
         }""").mkString("\n")
@@ -85,15 +85,15 @@ ${
       case _ ⇒
         c match {
           case c : SimpleChunkInfo ⇒
-            val low = c.bpsi.toInt
-            val high = (c.bpsi + c.count).toInt
+            val low = c.bpo.toInt
+            val high = (c.bpo + c.count).toInt
             for (i ← low until high)
               t.getByID(i + 1).set(f, f.t.readSingleField(in))
 
           case bci : BulkChunkInfo ⇒
             for (
               bi ← t.blockInfos;
-              i ← bi.bpsi.toInt until (bi.bpsi + bi.count).toInt
+              i ← bi.bpo.toInt until (bi.bpo + bi.count).toInt
             ) t.getByID(i + 1).set(f, f.t.readSingleField(in))
         }
     }
@@ -125,8 +125,8 @@ ${
     s"""$prelude
             c match {
               case c : SimpleChunkInfo ⇒
-                val low = c.bpsi.toInt
-                val high = (c.bpsi + c.count).toInt
+                val low = c.bpo.toInt
+                val high = (c.bpo + c.count).toInt
                 for (i ← low until high) {$action
                   d(i).${escaped(f.getName.camel)} = $result
                 }
@@ -134,7 +134,7 @@ ${
               case bci : BulkChunkInfo ⇒
                 for (
                   bi ← t.blockInfos;
-                  i ← bi.bpsi.toInt until (bi.bpsi + bi.count).toInt
+                  i ← bi.bpo.toInt until (bi.bpo + bi.count).toInt
                 ) {$action
                   d(i).${escaped(f.getName.camel)} = $result
                 }
