@@ -68,7 +68,10 @@ class Generic${name}ReadTest extends CommonTest {
       (for (path ← f.listFiles if path.isDirectory) yield collect(path)).flatten ++
         f.listFiles.filterNot(_.isDirectory)
 
-    val targets = collect(new File(base, "<all>")) ++ collect(if (new File(base, name).exists) new File(base, name) else new File(base, "<empty>"))
+    val targets = (
+      collect(new File(base, "<all>"))
+      ++ collect(if (new File(base, name).exists) new File(base, name) else new File(base, "<empty>"))
+    ).filter(_.endsWith(".sf"))
 
     // generate read tests
     locally {
