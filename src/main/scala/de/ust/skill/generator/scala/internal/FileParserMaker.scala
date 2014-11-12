@@ -56,6 +56,12 @@ ${
           if (null == superPool) new BasePool[SkillType.SubType](types.size, name, HashMap())
           else superPool.makeSubPool(types.size, name)
       }).asInstanceOf[StoragePool[T, B]]
+
+      // check super type expectations
+      if (p.superPool.getOrElse(null) != superPool)
+        throw ParseException(in, blockCounter, s"${""}""The super type of $$name stored in the file does not match the specification!
+  expected $${p.superPool.map(_.name).getOrElse("<none>")}, but was $${if (null == superPool) "<none>" else superPool}"${""}"", null)
+
       types += p
       poolByName.put(name, p)
       p
@@ -304,6 +310,7 @@ ${
       processFieldData
     }
 
+    // process stream
     while (!in.eof) {
       try {
         stringBlock
@@ -317,6 +324,7 @@ ${
       seenTypes = HashSet()
     }
 
+    // finish state
     new SerializableState(
 ${
       (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(newPool[${mapType(t)}, ${mapType(t.getBaseType)}]("${t.getSkillName}", null, null)).asInstanceOf[${t.getName.capital}StoragePool],""").mkString("\n")
