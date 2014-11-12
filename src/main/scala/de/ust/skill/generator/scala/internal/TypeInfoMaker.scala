@@ -567,7 +567,7 @@ sealed class SubPool[T <: B : Manifest, B <: SkillType](poolIndex : Long, name :
     if (null != data(i))
       false
     else {
-      val r = (new SkillType(skillID)).asInstanceOf[T]
+      val r = (new SkillType.SubType(this, skillID)).asInstanceOf[T]
       data(i) = r
       staticData += r
       true
