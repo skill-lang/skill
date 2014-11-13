@@ -606,7 +606,7 @@ sealed class SubPool[T <: B : Manifest, B <: SkillType](poolIndex : Long, name :
       val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
 
       out.write(s"""
-final class ${t.getName.capital}StoragePool(stringType : StringType(_), annotation : Annotation(_), poolIndex : Long${
+final class ${t.getName.capital}StoragePool(stringType : StringType, annotation : Annotation, poolIndex : Long${
         if (t.getSuperType == null) ""
         else s",\nsuperPool: ${t.getSuperType.getName.capital}StoragePool"
       })
