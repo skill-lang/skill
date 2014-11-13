@@ -330,7 +330,12 @@ ${
     // finish state
     new SerializableState(
 ${
-      (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(newPool[${mapType(t)}, ${mapType(t.getBaseType)}]("${t.getSkillName}", null, null)).asInstanceOf[${t.getName.capital}StoragePool],""").mkString("\n")
+      (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(
+        newPool[${mapType(t)}, ${mapType(t.getBaseType)}]("${t.getSkillName}", ${
+        if (null == t.getSuperType) ""
+        else s"""poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${t.getSuperType.getName.capital}StoragePool]"""
+      }, null)
+      ).asInstanceOf[${t.getName.capital}StoragePool],""").mkString("\n")
     }
       String,
       types.to,
