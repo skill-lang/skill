@@ -119,7 +119,7 @@ object SerializableState {
     val strings = new StringPool(null)
     val types = new ArrayBuffer[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.size});
     val annotation = Annotation(types)
-    val stringType = StringType(String)
+    val stringType = StringType(strings)
 
     // create type information
 ${
