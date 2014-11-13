@@ -52,23 +52,27 @@ final class StringPool(in : InStream) extends StringAccess {
 
   override def get(index : Long) : String = {
     if (0L == index)
-      return null
+      return null;
 
-    idMap(index.toInt) match {
-      case null ⇒ {
-        if (index > stringPositions.size)
-          throw InvalidPoolIndex(index, stringPositions.size, "string")
+    try {
+      idMap(index.toInt) match {
+        case null ⇒ {
+          if (index > stringPositions.size)
+            throw InvalidPoolIndex(index, stringPositions.size, "string")
 
-        val off = stringPositions(index.toInt)
-        in.push(off._1)
-        var chars = in.bytes(off._2)
-        in.pop
+          val off = stringPositions(index.toInt)
+          in.push(off._1)
+          var chars = in.bytes(off._2)
+          in.pop
 
-        val result = new String(chars, "UTF-8")
-        idMap(index.toInt) = result
-        result
+          val result = new String(chars, "UTF-8")
+          idMap(index.toInt) = result
+          result
+        }
+        case s ⇒ s;
       }
-      case s ⇒ s;
+    } catch {
+      case e : IndexOutOfBoundsException ⇒ throw InvalidPoolIndex(index, stringPositions.size, "string")
     }
   }
   override def add(string : String) = newStrings += string

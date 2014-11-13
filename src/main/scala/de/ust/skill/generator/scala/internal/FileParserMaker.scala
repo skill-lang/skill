@@ -141,7 +141,8 @@ ${
           if (0 == superID)
             null
           else if (superID > types.size)
-            throw new ParseException(in, blockCounter, s"Type $$name refers to an ill-formed super type.", null)
+            throw new ParseException(in, blockCounter, s""${""}"Type $$name refers to an ill-formed super type.
+  found: $$superID  current number of other types $${types.size}""${""}", null)
           else
             types(superID.toInt - 1).asInstanceOf[StoragePool[_ >: T <: B, B]]
         }
@@ -295,7 +296,7 @@ ${
 
           // TODO move to Field implementations
           if (f.isInstanceOf[KnownField[T]])
-            FieldParser.parseThisField(in, p, f.asInstanceOf[KnownField[T]], poolByName, String)
+            FieldParser.parseThisField(in, p, f.asInstanceOf[KnownField[T]], types, String)
           else
             in.jump(f.lastChunk.end)
         }

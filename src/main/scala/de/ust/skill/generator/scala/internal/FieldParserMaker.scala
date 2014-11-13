@@ -21,6 +21,7 @@ trait FieldParserMaker extends GeneralOutputMaker {
 
 import java.nio.ByteBuffer
 
+import scala.collection.mutable.AbstractSeq
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
@@ -39,13 +40,19 @@ object FieldParser {
   /**
    * Parse a field assuming that in is at the right position and the last chunk of f is to be processed.
    */
-  def parseThisField[T](in : InStream, t : StoragePool[_ <: SkillType, _ <: SkillType], f : KnownField[T], pools : HashMap[String, StoragePool[_ <: SkillType, _ <: SkillType]], String : StringAccess) {
+  def parseThisField[T](in : InStream, t : StoragePool[_ <: SkillType, _ <: SkillType], f : KnownField[T],
+                        pools : AbstractSeq[StoragePool[_ <: SkillType, _ <: SkillType]], String : StringAccess) {
 
     val c = f.lastChunk
     if (in.position != c.begin)
-      throw new SkillException("@begin of data chunk: expected position(0x$${in.position.toHexString}) to be 0x$${c.begin.toHexString}")
+      throw new SkillException(
+        "@begin of data chunk: expected position(0x$${in.position.toHexString}) to be 0x$${c.begin.toHexString}"
+      )
 
-    // partial fields, refer to TR14§???
+    ${
+      //TODO turn this thing into an option, because users may get annoyed by intended partial fields
+      "// partial fields, refer to TR14§???"
+    }
     if (0 != c.count && c.begin == c.end && f.t.typeID > 4) {
       System.err.println(s"[SKilL TR14] detected partial field: $$f");
       return
@@ -146,9 +153,9 @@ ${
             val ref = pools("${t.getSkillName}").asInstanceOf[${t.getName.capital}StoragePool]""", "", "ref.getByID(in.v64)")
     case t : GroundType ⇒ ("", "", t.getSkillName match {
       case "annotation" ⇒ """(in.v64, in.v64) match {
-                  case (0L, _) ⇒ null
-                  case (t, i)  ⇒ pools(String.get(t)).getByID(i)
-                }"""
+                    case (0L, _) ⇒ null
+                    case (t, i)  ⇒ pools(t.toInt - 1).getByID(i)
+                  }"""
       case "string" ⇒ "String.get(in.v64)"
       case n        ⇒ "in."+n
     })
