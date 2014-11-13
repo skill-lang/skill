@@ -28,6 +28,8 @@ trait SerializableStateMaker extends GeneralOutputMaker {
 import java.nio.file.Files
 import java.nio.file.Path
 
+import scala.collection.mutable.ArrayBuffer
+
 import ${packagePrefix}api._
 import ${packagePrefix}internal.streams.FileOutputStream
 
@@ -123,7 +125,7 @@ object SerializableState {
 ${
       var i = -1
       (for (t ← IR)
-        yield s"""    val ${t.getName.capital} = new ${t.getName.capital}StoragePool(${i += 1; i}${
+        yield s"""    val ${t.getName.capital} = new ${t.getName.capital}StoragePool(stringType, annotation, ${i += 1; i}${
         if (null == t.getSuperType) ""
         else { ", "+t.getSuperType.getName.capital }
       })
