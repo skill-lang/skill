@@ -21,7 +21,6 @@ trait FieldParserMaker extends GeneralOutputMaker {
 
 import java.nio.ByteBuffer
 
-import scala.collection.mutable.AbstractSeq
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
