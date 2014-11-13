@@ -332,7 +332,7 @@ ${
 ${
       (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(
         newPool[${mapType(t)}, ${mapType(t.getBaseType)}]("${t.getSkillName}", ${
-        if (null == t.getSuperType) ""
+        if (null == t.getSuperType) "null"
         else s"""poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${t.getSuperType.getName.capital}StoragePool]"""
       }, null)
       ).asInstanceOf[${t.getName.capital}StoragePool],""").mkString("\n")
