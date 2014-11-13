@@ -113,20 +113,28 @@ object SerializableState {
    * Creates a new and empty serializable state.
    */
   def create() : SerializableState = {
+    // initialization order of type information has to match file parser and can not be done in place
+    val strings = new StringPool(null)
+    val types = ArrayBuffer[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.size});
+    val annotation = Annotation(types)
+    val stringType = StringType(String)
+
+    // create type information
 ${
       var i = -1
       (for (t ← IR)
         yield s"""    val ${t.getName.capital} = new ${t.getName.capital}StoragePool(${i += 1; i}${
         if (null == t.getSuperType) ""
         else { ", "+t.getSuperType.getName.capital }
-      })"""
+      })
+    types += ${t.getName.capital}"""
       ).mkString("\n")
     }
     new SerializableState(
 ${
       (for (t ← IR) yield s"""      ${t.getName.capital},""").mkString("\n")
     }
-      new StringPool(null),
+      strings,
       Array[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.map(_.getName.capital).mkString(", ")}),
       None
     )
