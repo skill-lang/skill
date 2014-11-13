@@ -58,7 +58,7 @@ object FileParser {
       case 2            ⇒ ConstantI32(in.i32)
       case 3            ⇒ ConstantI64(in.i64)
       case 4            ⇒ ConstantV64(in.v64)
-      case 5            ⇒ Annotation
+      case 5            ⇒ Annotation(types)
       case 6            ⇒ BoolType
       case 7            ⇒ I8
       case 8            ⇒ I16
@@ -67,7 +67,7 @@ object FileParser {
       case 11           ⇒ V64
       case 12           ⇒ F32
       case 13           ⇒ F64
-      case 14           ⇒ StringType
+      case 14           ⇒ StringType(String)
       case 15           ⇒ ConstantLengthArray(in.v64, fieldType)
       case 17           ⇒ VariableLengthArray(fieldType)
       case 18           ⇒ ListType(fieldType)

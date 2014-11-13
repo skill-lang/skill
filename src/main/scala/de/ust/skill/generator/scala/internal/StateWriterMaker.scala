@@ -96,7 +96,7 @@ private[internal] final class StateWriter(state : SerializableState, out : FileO
       case I64        ⇒ for (i ← p) dataChunk.i64(i.get(f).asInstanceOf[Long])
       case V64        ⇒ for (i ← p) dataChunk.v64(i.get(f).asInstanceOf[Long])
 
-      case StringType ⇒ for (i ← p) string(i.get(f).asInstanceOf[String], dataChunk)
+      case StringType(_) ⇒ for (i ← p) string(i.get(f).asInstanceOf[String], dataChunk)
 
       case other ⇒
         val den = typeToSerializationFunction(other); for (i ← p) den(i.get(f), dataChunk)

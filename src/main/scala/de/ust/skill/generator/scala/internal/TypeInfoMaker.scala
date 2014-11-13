@@ -181,8 +181,11 @@ case object V64 extends IntegerType[Long](11) {
   override def toString() : String = "v64"
 }
 
-case object Annotation extends FieldType[SkillType](5) {
-  override def readSingleField(in : InStream) = ??? // is Annotation in fact the state itself?
+case class Annotation(types : ArrayBuffer[StoragePool[_ <: SkillType, _ <: SkillType]]) extends FieldType[SkillType](5) {
+  override def readSingleField(in : InStream) : SkillType = (in.v64, in.v64) match {
+    case (0, _) ⇒ null
+    case (t, f) ⇒ types(t.toInt - 1).getByID(f)
+  }
 
   override def toString() : String = "annotation"
 }
@@ -203,8 +206,8 @@ case object F64 extends FieldType[Double](13) {
   override def toString() : String = "f64"
 }
 
-case object StringType extends FieldType[String](14) {
-  override def readSingleField(in : InStream) = ??? // maybe StringPool is the string type
+case class StringType(strings : StringPool) extends FieldType[String](14) {
+  override def readSingleField(in : InStream) = strings.get(in.v64)
 
   override def toString = "string"
 }
