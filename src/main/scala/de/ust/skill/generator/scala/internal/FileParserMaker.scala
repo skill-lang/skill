@@ -23,6 +23,7 @@ import scala.collection.mutable.Queue
 import scala.collection.mutable.Stack
 
 import ${packagePrefix}api.SkillState
+import ${packagePrefix}internal
 import ${packagePrefix}internal.streams.FileInputStream
 import ${packagePrefix}internal.streams.InStream
 
@@ -43,11 +44,13 @@ object FileParser {
 
     // STORAGE POOLS
     val types = ArrayBuffer[StoragePool[_ <: SkillType, _ <: SkillType]]();
+    val Annotation = internal.Annotation(types)
+    val StringType = internal.StringType(String)
     val poolByName = HashMap[String, StoragePool[_ <: SkillType, _ <: SkillType]]();
     @inline def newPool[T <: B, B <: SkillType](name : String, superPool : StoragePool[_ >: T <: B, B], restrictions : HashSet[Restriction]) : StoragePool[T, B] = {
       val p = (name match {
 ${
-      (for (t ← IR) yield s"""        case "${t.getSkillName}" ⇒ new ${t.getName.capital}StoragePool(types.size${
+      (for (t ← IR) yield s"""        case "${t.getSkillName}" ⇒ new ${t.getName.capital}StoragePool(StringType, Annotation, types.size${
         if (null == t.getSuperType) ""
         else s""", poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${t.getSuperType.getName.capital}StoragePool]"""
       })""").mkString("\n")
@@ -77,7 +80,7 @@ ${
       case 2            ⇒ ConstantI32(in.i32)
       case 3            ⇒ ConstantI64(in.i64)
       case 4            ⇒ ConstantV64(in.v64)
-      case 5            ⇒ Annotation(types)
+      case 5            ⇒ Annotation
       case 6            ⇒ BoolType
       case 7            ⇒ I8
       case 8            ⇒ I16
@@ -86,7 +89,7 @@ ${
       case 11           ⇒ V64
       case 12           ⇒ F32
       case 13           ⇒ F64
-      case 14           ⇒ StringType(String)
+      case 14           ⇒ StringType
       case 15           ⇒ ConstantLengthArray(in.v64, fieldType)
       case 17           ⇒ VariableLengthArray(fieldType)
       case 18           ⇒ ListType(fieldType)

@@ -15,6 +15,7 @@ import scala.collection.mutable.Queue
 import scala.collection.mutable.Stack
 
 import de.ust.skill.generator.genericBinding.api.SkillState
+import de.ust.skill.generator.genericBinding.internal
 import de.ust.skill.generator.genericBinding.internal.streams.FileInputStream
 import de.ust.skill.generator.genericBinding.internal.streams.InStream
 
@@ -48,6 +49,10 @@ object FileParser {
       p
     }
 
+    // STATE SENSITIVE TYPES
+    val Annotation = internal.Annotation(types)
+    val StringType = internal.StringType(String)
+
     /**
      * Turns a field type into a preliminary type information. In case of user types, the declaration of the respective
      *  user type may follow after the field declaration.
@@ -58,7 +63,7 @@ object FileParser {
       case 2            ⇒ ConstantI32(in.i32)
       case 3            ⇒ ConstantI64(in.i64)
       case 4            ⇒ ConstantV64(in.v64)
-      case 5            ⇒ Annotation(types)
+      case 5            ⇒ Annotation
       case 6            ⇒ BoolType
       case 7            ⇒ I8
       case 8            ⇒ I16
@@ -67,7 +72,7 @@ object FileParser {
       case 11           ⇒ V64
       case 12           ⇒ F32
       case 13           ⇒ F64
-      case 14           ⇒ StringType(String)
+      case 14           ⇒ StringType
       case 15           ⇒ ConstantLengthArray(in.v64, fieldType)
       case 17           ⇒ VariableLengthArray(fieldType)
       case 18           ⇒ ListType(fieldType)

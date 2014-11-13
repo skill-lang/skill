@@ -606,7 +606,7 @@ sealed class SubPool[T <: B : Manifest, B <: SkillType](poolIndex : Long, name :
       val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
 
       out.write(s"""
-final class ${t.getName.capital}StoragePool(poolIndex : Long${
+final class ${t.getName.capital}StoragePool(stringType : StringType(_), annotation : Annotation(_), poolIndex : Long${
         if (t.getSuperType == null) ""
         else s",\nsuperPool: ${t.getSuperType.getName.capital}StoragePool"
       })
@@ -698,7 +698,7 @@ final class ${t.getName.capital}SubPool(poolIndex : Long, name : String, superPo
 
   private def mapToFieldType(t : Type) : String = {
     def mapGroundType(t : Type) = t.getSkillName match {
-      case "annotation" ⇒ "Annotation"
+      case "annotation" ⇒ "annotation"
       case "bool"       ⇒ "BoolType"
       case "i8"         ⇒ "I8"
       case "i16"        ⇒ "I16"
@@ -707,7 +707,7 @@ final class ${t.getName.capital}SubPool(poolIndex : Long, name : String, superPo
       case "v64"        ⇒ "V64"
       case "f32"        ⇒ "F32"
       case "f64"        ⇒ "F64"
-      case "string"     ⇒ "StringType"
+      case "string"     ⇒ "stringType"
 
       case s            ⇒ s"""TypeDefinitionName[${mapType(t)}]("$s")"""
     }
