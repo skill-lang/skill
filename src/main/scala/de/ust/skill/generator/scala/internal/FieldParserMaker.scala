@@ -39,9 +39,9 @@ import ${packagePrefix}internal.streams.InStream
 object FieldParser {
   /**
    * Parse a field assuming that in is at the right position and the last chunk of f is to be processed.
+   * This function is expected to perform bulk read optimizations wherever possible.
    */
-  def parseThisField[T](in : InStream, t : StoragePool[_ <: SkillType, _ <: SkillType], f : KnownField[T],
-                        pools : AbstractSeq[StoragePool[_ <: SkillType, _ <: SkillType]], String : StringAccess) {
+  def parseThisField[T](in : InStream, t : StoragePool[_ <: SkillType, _ <: SkillType], f : KnownField[T]) {
 
     val c = f.lastChunk
     if (in.position != c.begin)
@@ -112,7 +112,7 @@ ${
   /**
    * Reads an array of single fields of type t.
    */
-  private[this] def readArray[T](size : Long, t : FieldType[T], in : InStream, pools : HashMap[String, StoragePool[_, _ <: SkillType]], strings : ArrayBuffer[String]) : ArrayBuffer[T] = {
+  private[this] def readArray[T](size : Long, t : FieldType[T], in : InStream) : ArrayBuffer[T] = {
     val result = new ArrayBuffer[T](size.toInt)
     for (i ← 0 until size.toInt) {
       result += t.readSingleField(in)
@@ -150,15 +150,15 @@ ${
 
   private def readSingleField(t : Type) : (String, String, String) = t match {
     case t : Declaration ⇒ (s"""
-            val ref = pools("${t.getSkillName}").asInstanceOf[${t.getName.capital}StoragePool]""", "", "ref.getByID(in.v64)")
-    case t : GroundType ⇒ ("", "", t.getSkillName match {
-      case "annotation" ⇒ """(in.v64, in.v64) match {
+            val ref = f.t.asInstanceOf[${t.getName.capital}StoragePool]""", "", "ref.getByID(in.v64)")
+    case t : GroundType ⇒ t.getSkillName match {
+      case "annotation" ⇒ ("val r = f.t.asInstanceOf[Annotation].types", "", """(in.v64, in.v64) match {
                     case (0L, _) ⇒ null
-                    case (t, i)  ⇒ pools(t.toInt - 1).getByID(i)
-                  }"""
-      case "string" ⇒ "String.get(in.v64)"
-      case n        ⇒ "in."+n
-    })
+                    case (t, i)  ⇒ r(t.toInt - 1).getByID(i)
+                  }""")
+      case "string" ⇒ ("val r = f.t.asInstanceOf[StringType].strings", "", "r.get(in.v64)")
+      case n        ⇒ ("", "", "in."+n)
+    }
 
     case t : SetType ⇒
       val (p, r, s) = readSingleField(t.getBaseType)

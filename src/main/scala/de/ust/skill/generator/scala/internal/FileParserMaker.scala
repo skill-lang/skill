@@ -296,7 +296,7 @@ ${
 
           // TODO move to Field implementations
           if (f.isInstanceOf[KnownField[T]])
-            FieldParser.parseThisField(in, p, f.asInstanceOf[KnownField[T]], types, String)
+            FieldParser.parseThisField(in, p, f.asInstanceOf[KnownField[T]])
           else
             in.jump(f.lastChunk.end)
         }
