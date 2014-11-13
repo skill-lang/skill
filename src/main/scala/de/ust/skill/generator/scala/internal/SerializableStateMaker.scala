@@ -117,7 +117,7 @@ object SerializableState {
   def create() : SerializableState = {
     // initialization order of type information has to match file parser and can not be done in place
     val strings = new StringPool(null)
-    val types = ArrayBuffer[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.size});
+    val types = new ArrayBuffer[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.size});
     val annotation = Annotation(types)
     val stringType = StringType(String)
 
