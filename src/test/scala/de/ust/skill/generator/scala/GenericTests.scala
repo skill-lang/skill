@@ -39,7 +39,7 @@ package $packagePath
 
 import org.junit.Assert
 
-import $packagePath.api.SkillState
+import $packagePath.api.SkillFile
 import $packagePath.internal.ParseException
 import $packagePath.internal.PoolSizeMissmatchError
 import $packagePath.internal.TypeMissmatchError
@@ -49,7 +49,7 @@ import common.CommonTest
  * Tests the file reading capabilities.
  */
 class Generic${name}ReadTest extends CommonTest {
-  @inline def read(s: String) = SkillState.read("../../"+s)
+  @inline def read(s: String) = SkillFile.open("../../"+s)
 """)
     rval
   }

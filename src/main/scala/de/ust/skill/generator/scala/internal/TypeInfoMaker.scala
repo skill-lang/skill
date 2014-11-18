@@ -33,6 +33,7 @@ import scala.collection.mutable.WrappedArray
 import scala.reflect.ClassTag
 
 import ${packagePrefix}api._
+import ${packagePrefix}internal.restrictions._
 import ${packagePrefix}internal.streams.FileInputStream
 import ${packagePrefix}internal.streams.InStream
 """)
@@ -337,22 +338,24 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
   /**
    * Adds a new field, checks consistency and updates field data if required.
    */
-  final private[internal] def addField[T](ID : Int, t : FieldType[T], name : String) : FieldDeclaration[T] = {
+  final private[internal] def addField[T](ID : Int, t : FieldType[T], name : String,
+                                          restrictions : HashSet[FieldRestriction[_]]) : FieldDeclaration[T] = {
     if (knownFields.contains(name)) {
       // type-check
       if (!t.equals(knownFields(name)))
         throw TypeMissmatchError(t, knownFields(name).toString, name, this.name);
 
       val f = new KnownField[T](t.asInstanceOf[FieldType[T]], name, ID, this)
+      restrictions.foreach(f.addRestriction(_))
       fields += f
       return f
 
     } else {
       val f = new DistributedField[T](t.asInstanceOf[FieldType[T]], name, ID, this)(t.m)
+      restrictions.foreach(f.addRestriction(_))
       fields += f
       return f
     }
-
   }
 
   final def allFields = fields.iterator

@@ -18,19 +18,22 @@ import de.ust.skill.ir.ListType
 import de.ust.skill.ir.restriction.MonotoneRestriction
 import de.ust.skill.ir.restriction.SingletonRestriction
 
-trait SerializableStateMaker extends GeneralOutputMaker {
+trait StateMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("internal/SerializableState.scala")
+    val out = open("internal/State.scala")
 
     out.write(s"""package ${packagePrefix}internal
 
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashSet
 
 import ${packagePrefix}api._
+import ${packagePrefix}internal.streams.FileInputStream
 import ${packagePrefix}internal.streams.FileOutputStream
 
 /**
@@ -38,48 +41,21 @@ import ${packagePrefix}internal.streams.FileOutputStream
  *
  * @author Timm Felden
  */
-final class SerializableState(
+final class State private[internal] (
 ${
       (for (t ← IR) yield s"  val ${t.getName.capital} : ${t.getName.capital}Access,").mkString("\n")
     }
   val String : StringAccess,
   val pools : Array[StoragePool[_ <: SkillType, _ <: SkillType]],
-  var fromPath : Option[Path])
-    extends SkillState {
+  var path : Path,
+  val mode : WriteMode)
+    extends SkillFile {
 
   val poolByName = pools.map(_.name).zip(pools).toSeq.toMap
 
   finalizePools;
 
   def all = pools.iterator.asInstanceOf[Iterator[Access[_ <: SkillType]]]
-
-  def write(target : Path) : Unit = {
-    new StateWriter(this, FileOutputStream.write(target))
-    if (fromPath.isEmpty)
-      fromPath = Some(target)
-  }
-  // @note: this is more tricky then append, because the state has to be prepared before the file is deleted
-  def write() : Unit = ???
-
-  def append() : Unit = new StateAppender(this, FileOutputStream.append(fromPath.getOrElse(throw new IllegalStateException("The state was not created using a read operation, thus append is not possible!"))))
-  def append(target : Path) : Unit = {
-    if (fromPath.isEmpty) {
-      // append and write is the same operation, if we did not read a file
-      write(target)
-    } else if (target.equals(fromPath.get)) {
-      append
-    } else {
-      // copy the read file to the target location
-      Files.deleteIfExists(target)
-      Files.copy(fromPath.get, target)
-      // append to the target file
-      new StateAppender(this, FileOutputStream.append(target))
-    }
-  }
-
-  def checkRestrictions() : Boolean = {
-    ???
-  }
 
   @inline private def finalizePools {
     @inline def eliminatePreliminaryTypesIn[T](t : FieldType[T]) : FieldType[T] = t match {
@@ -104,42 +80,77 @@ ${
       val fieldMap = p.fields.map { _.name }.zip(p.fields).toMap
 
       for ((n, t) ← p.knownFields if !fieldMap.contains(n)) {
-        p.addField(p.fields.size, eliminatePreliminaryTypesIn(t), n)
+        p.addField(p.fields.size, eliminatePreliminaryTypesIn(t), n, HashSet())
       }
     }
   }
+
+  // TODO type restrictions
+  // TODO check funktion umdrehen (field iteriert)!!
+  def check : Boolean = pools.par.forall(_.allFields.forall(_.check))
+
+  def flush : Unit = {
+    check;
+    mode match {
+      case Write  ⇒ new StateWriter(this, FileOutputStream.write(path))
+      case Append ⇒ new StateAppender(this, FileOutputStream.append(path))
+    }
+  }
+
+  def close : Unit = {
+    flush;
+    // TODO invalidate state?
+  }
 }
 
-object SerializableState {
+object State {
   /**
-   * Creates a new and empty serializable state.
+   * Opens a file and sets correct modes. This may involve reading data from the file.
    */
-  def create() : SerializableState = {
-    // initialization order of type information has to match file parser and can not be done in place
-    val strings = new StringPool(null)
-    val types = new ArrayBuffer[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.size});
-    val annotation = Annotation(types)
-    val stringType = StringType(strings)
+  def open(path : Path, modes : Seq[Mode]) : State = {
+    // determine open mode
+    // @note read is preferred over create, because empty files are legal and the file has been created by now if it did not exist yet
+    // @note write is preferred over append, because usage is more inuitive
+    val openMode = modes.collect {
+      case m : OpenMode ⇒ m
+    }.ensuring(_.size <= 1, throw new IOException("You can either create or read a file.")).headOption.getOrElse(Read)
+    val writeMode = modes.collect {
+      case m : WriteMode ⇒ m
+    }.ensuring(_.size <= 1, throw new IOException("You can either write or append to a file.")).headOption.getOrElse(Write)
 
-    // create type information
+    // create the state 
+    openMode match {
+      case Create ⇒
+
+        // initialization order of type information has to match file parser and can not be done in place
+        val strings = new StringPool(null)
+        val types = new ArrayBuffer[StoragePool[_ <: SkillType, _ <: SkillType]](2);
+        val annotation = Annotation(types)
+        val stringType = StringType(strings)
+
+        // create type information
 ${
       var i = -1
       (for (t ← IR)
-        yield s"""    val ${t.getName.capital} = new ${t.getName.capital}StoragePool(stringType, annotation, ${i += 1; i}${
+        yield s"""        val ${t.getName.capital} = new ${t.getName.capital}StoragePool(stringType, annotation, ${i += 1; i}${
         if (null == t.getSuperType) ""
         else { ", "+t.getSuperType.getName.capital }
       })
-    types += ${t.getName.capital}"""
+        types += ${t.getName.capital}"""
       ).mkString("\n")
     }
-    new SerializableState(
+        new State(
 ${
-      (for (t ← IR) yield s"""      ${t.getName.capital},""").mkString("\n")
+      (for (t ← IR) yield s"""          ${t.getName.capital},""").mkString("\n")
     }
-      strings,
-      Array[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.map(_.getName.capital).mkString(", ")}),
-      None
-    )
+          strings,
+          Array[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.map(_.getName.capital).mkString(", ")}),
+          path,
+          writeMode
+        )
+      case Read ⇒
+        FileParser.read(new FileInputStream(path), writeMode)
+    }
   }
 }
 """)

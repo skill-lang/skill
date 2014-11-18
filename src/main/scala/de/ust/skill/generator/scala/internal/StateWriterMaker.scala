@@ -46,7 +46,7 @@ import ${packagePrefix}internal.streams.MappedOutStream
  * @see SKilL §6
  * @author Timm Felden
  */
-private[internal] final class StateWriter(state : SerializableState, out : FileOutputStream) extends SerializationFunctions(state) {
+private[internal] final class StateWriter(state : State, out : FileOutputStream) extends SerializationFunctions(state) {
   import SerializationFunctions._
 
   // make lbpsi map, update data map to contain dynamic instances and create serialization skill IDs for serialization

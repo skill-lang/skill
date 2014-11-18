@@ -36,7 +36,7 @@ import ${packagePrefix}internal.streams.OutStream
  * @see SKilL §6.4
  * @author Timm Felden
  */
-abstract class SerializationFunctions(state : SerializableState) {
+abstract class SerializationFunctions(state : State) {
   import SerializationFunctions._
 
   //collect String instances from known string types; this is needed, because strings are something special on the jvm
@@ -47,12 +47,10 @@ abstract class SerializationFunctions(state : SerializableState) {
     for (p ← state.pools) {
       strings.add(p.name)
       for (f ← p.fields) {
-        if (p.knownFields.contains(f.name)) {
-          strings.add(f.name)
-          if (StringType == f.t) {
-            for (i ← p.all)
-              strings.add(i.get(f.asInstanceOf[FieldDeclaration[String]]))
-          }
+        strings.add(f.name)
+        if (f.t.isInstanceOf[StringType]) {
+          for (i ← p.all)
+            strings.add(i.get(f.asInstanceOf[FieldDeclaration[String]]))
         }
       }
     }

@@ -15,12 +15,18 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
     //package
     out.write(s"""package ${packagePrefix}internal
 
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
+
 import java.nio.MappedByteBuffer
 import java.util.Arrays
-import ${packagePrefix}internal.streams.MappedInStream
 
+import ${packagePrefix}internal.streams.MappedInStream
+import ${packagePrefix}internal.restrictions.FieldRestriction
+""");
+    out.write("""
 /**
  * Chunks contain information on where some field data can be found.
  *
@@ -48,7 +54,7 @@ final class BulkChunkInfo(begin : Long, end : Long, count : Long) extends ChunkI
 case class BlockInfo(val bpo : Long, val count : Long);
 
 /**
- * A field decalariation, as it occurs during parsing of a type blocks header.
+ * A field declaration, as it occurs during parsing of a type blocks header.
  *
  * @author Timm Felden
  * @param t the actual type of the field; can be an intermediate type, while parsing a block
@@ -57,8 +63,13 @@ case class BlockInfo(val bpo : Long, val count : Long);
  * @param T the scala type of t
  *
  * @note index 0 is used for the skillID
+ * @note specialized in everything but unit
  */
-sealed abstract class FieldDeclaration[@specialized T](var t : FieldType[T], val name : String, val index : Long, val owner : StoragePool[_, _]) {
+trait FieldDeclaration[@specialized(Boolean, Byte, Char, Double, Float, Int, Long, Short) T] {
+  var t : FieldType[T];
+  def name : String;
+  def index : Long;
+  def owner : StoragePool[_ <: SkillType, _ <: SkillType];
 
   /**
    *  Data chunk information, as it is required for later parsing.
@@ -73,6 +84,13 @@ sealed abstract class FieldDeclaration[@specialized T](var t : FieldType[T], val
   private[internal] def noDataChunk = dataChunks.isEmpty
   private[internal] def lastChunk = dataChunks.last
 
+  /**
+   * Restriction handling.
+   */
+  val restrictions = HashSet[FieldRestriction[T]]();
+  def addRestriction[U](r : FieldRestriction[U]) = restrictions += r.asInstanceOf[FieldRestriction[T]]
+  def check = restrictions.forall(_.check(owner, this))
+
   override def toString = t.toString+" "+name
   override def equals(obj : Any) = obj match {
     case f : FieldDeclaration[T] ⇒ name == f.name && t == f.t
@@ -86,18 +104,24 @@ sealed abstract class FieldDeclaration[@specialized T](var t : FieldType[T], val
  *
  * @note the name is a bit miss-leading, as it excludes distributed and lazy known fields
  */
-final class KnownField[@specialized T](t : FieldType[T], name : String, index : Long, owner : StoragePool[_, _])
-    extends FieldDeclaration[T](t, name, index, owner) {
-
-}
+final class KnownField[@specialized(Boolean, Byte, Char, Double, Float, Int, Long, Short) T](
+  override var t : FieldType[T],
+  override val name : String,
+  override val index : Long,
+  override val owner : StoragePool[_ <: SkillType, _ <: SkillType])
+    extends FieldDeclaration[T];
 
 /**
  * The fields data is distributed into an array holding its instances.
  *
  * TODO sicherstellen, dass distributed felder vom generierten serialisierungscode ausgenommen sind!!
  */
-sealed class DistributedField[@specialized T : Manifest](t : FieldType[T], name : String, index : Long, owner : StoragePool[_, _])
-    extends FieldDeclaration[T](t, name, index, owner) with Iterable[T] {
+sealed class DistributedField[@specialized(Boolean, Byte, Char, Double, Float, Int, Long, Short) T : Manifest](
+  override var t : FieldType[T],
+  override val name : String,
+  override val index : Long,
+  override val owner : StoragePool[_ <: SkillType, _ <: SkillType])
+    extends FieldDeclaration[T] {
 
   // data held as in storage pools
   protected var data = Array[T]()

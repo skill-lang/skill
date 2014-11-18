@@ -42,7 +42,7 @@ import ${packagePrefix}internal.streams.OutStream
  * @see SKilL §6
  * @author Timm Felden
  */
-private[internal] final class StateAppender(state : SerializableState, out : FileOutputStream) extends SerializationFunctions(state) {
+private[internal] final class StateAppender(state : State, out : FileOutputStream) extends SerializationFunctions(state) {
   import SerializationFunctions._
 
   // save the index of the first new pool

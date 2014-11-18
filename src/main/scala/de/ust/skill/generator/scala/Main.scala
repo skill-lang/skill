@@ -9,14 +9,13 @@ import java.io.File
 import java.util.Date
 import scala.collection.JavaConversions._
 import de.ust.skill.generator.scala.api.AccessMaker
-import de.ust.skill.generator.scala.api.SkillStateMaker
 import de.ust.skill.generator.scala.internal.ExceptionsMaker
 import de.ust.skill.generator.scala.internal.FieldDeclarationMaker
 import de.ust.skill.generator.scala.internal.FieldParserMaker
 import de.ust.skill.generator.scala.internal.FileParserMaker
 import de.ust.skill.generator.scala.internal.InternalInstancePropertiesMaker
 import de.ust.skill.generator.scala.internal.RestrictionsMaker
-import de.ust.skill.generator.scala.internal.SerializableStateMaker
+import de.ust.skill.generator.scala.internal.StateMaker
 import de.ust.skill.generator.scala.internal.SerializationFunctionsMaker
 import de.ust.skill.generator.scala.internal.SkillTypeMaker
 import de.ust.skill.generator.scala.internal.StateAppenderMaker
@@ -43,6 +42,7 @@ import de.ust.skill.generator.scala.internal.streams.MappedInStreamMaker
 import de.ust.skill.generator.common.Generator
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.View
+import de.ust.skill.generator.scala.api.SkillFileMaker
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -70,9 +70,9 @@ class Main extends FakeMain
     with MappedOutStreamMaker
     with OutStreamMaker
     with RestrictionsMaker
-    with SerializableStateMaker
+    with StateMaker
     with SerializationFunctionsMaker
-    with SkillStateMaker
+    with SkillFileMaker
     with SkillTypeMaker
     with StateAppenderMaker
     with StateWriterMaker

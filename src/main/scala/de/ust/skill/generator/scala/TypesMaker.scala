@@ -78,12 +78,7 @@ ${
         if(f.isIgnored)
           s"""throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
         else
-          s"{ ${//non-null check
-          if(f.getType().isInstanceOf[ReferenceType] && !"annotation".equals(f.getType().getName()) && f.getRestrictions().collect({case r:NullableRestriction⇒r}).isEmpty)
-            s"""require($Name != null, "$name is specified to be nonnull!"); """
-          else
-            ""
-          }${ //@range check
+          s"{ ${ //@range check
             if(f.getType().isInstanceOf[GroundType]){
               if(f.getType().asInstanceOf[GroundType].isInteger)
                 f.getRestrictions.collect{case r:IntRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLow}L <= $Name && $Name <= ${r.getHigh}L, "$name has to be in range [${r.getLow};${r.getHigh}]"); """}.mkString("")
