@@ -1,11 +1,11 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 29.10.2014                               *
+ * \__ \ ' <| | | |__     generated: 19.11.2014                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.internal
 
-import de.ust.skill.generator.genericBinding.api.Access
+import _root_.de.ust.skill.generator.genericBinding.api.Access
 
 /**
  * The top of the skill type hierarchy.
@@ -57,12 +57,13 @@ class SkillType private[genericBinding] (protected var skillID : Long) {
 }
 
 object SkillType {
-  final class SubType private[genericBinding] (val τName : String, skillID : Long) extends SkillType(skillID) with NamedType {
+  final class SubType private[genericBinding] (val τPool : StoragePool[_, _], skillID : Long) extends SkillType(skillID) with NamedType {
+    override def τName = τPool.name
     override def prettyString : String = τName+"(this: "+this+")"
     override def toString = τName+"#"+skillID
   }
 }
 
 trait NamedType {
-  val τName : String;
+  def τName : String;
 }

@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 29.10.2014                               *
+ * \__ \ ' <| | | |__     generated: 19.11.2014                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.internal
@@ -11,9 +11,9 @@ import java.nio.ByteBuffer
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
-import de.ust.skill.generator.genericBinding._
-import de.ust.skill.generator.genericBinding.internal.streams.FileOutputStream
-import de.ust.skill.generator.genericBinding.internal.streams.OutStream
+import _root_.de.ust.skill.generator.genericBinding._
+import _root_.de.ust.skill.generator.genericBinding.internal.streams.FileOutputStream
+import _root_.de.ust.skill.generator.genericBinding.internal.streams.OutStream
 
 /**
  * Holds state of a write operation.
@@ -21,7 +21,7 @@ import de.ust.skill.generator.genericBinding.internal.streams.OutStream
  * @see SKilL §6
  * @author Timm Felden
  */
-private[internal] final class StateAppender(state : SerializableState, out : FileOutputStream) extends SerializationFunctions(state) {
+private[internal] final class StateAppender(state : State, out : FileOutputStream) extends SerializationFunctions(state) {
   import SerializationFunctions._
 
   // save the index of the first new pool

@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 29.10.2014                               *
+ * \__ \ ' <| | | |__     generated: 19.11.2014                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.internal
@@ -15,8 +15,8 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.WrappedArray
 import scala.concurrent.ExecutionContext
 
-import de.ust.skill.generator.genericBinding.internal.streams.FileOutputStream
-import de.ust.skill.generator.genericBinding.internal.streams.MappedOutStream
+import _root_.de.ust.skill.generator.genericBinding.internal.streams.FileOutputStream
+import _root_.de.ust.skill.generator.genericBinding.internal.streams.MappedOutStream
 
 /**
  * Holds state of a write operation.
@@ -24,7 +24,7 @@ import de.ust.skill.generator.genericBinding.internal.streams.MappedOutStream
  * @see SKilL §6
  * @author Timm Felden
  */
-private[internal] final class StateWriter(state : SerializableState, out : FileOutputStream) extends SerializationFunctions(state) {
+private[internal] final class StateWriter(state : State, out : FileOutputStream) extends SerializationFunctions(state) {
   import SerializationFunctions._
 
   // make lbpsi map, update data map to contain dynamic instances and create serialization skill IDs for serialization
@@ -68,11 +68,11 @@ private[internal] final class StateWriter(state : SerializableState, out : FileO
   // @note performance hack: requires at least 1 instance in order to work correctly
   @inline def genericPutField[T](p : StoragePool[_ <: SkillType, _ <: SkillType], f : FieldDeclaration[T], dataChunk : MappedOutStream) {
     f.t match {
-      case I8            ⇒ for (i ← p) dataChunk.i8(i.get(f).asInstanceOf[Byte])
-      case I16           ⇒ for (i ← p) dataChunk.i16(i.get(f).asInstanceOf[Short])
-      case I32           ⇒ for (i ← p) dataChunk.i32(i.get(f).asInstanceOf[Int])
-      case I64           ⇒ for (i ← p) dataChunk.i64(i.get(f).asInstanceOf[Long])
-      case V64           ⇒ for (i ← p) dataChunk.v64(i.get(f).asInstanceOf[Long])
+      case I8         ⇒ for (i ← p) dataChunk.i8(i.get(f).asInstanceOf[Byte])
+      case I16        ⇒ for (i ← p) dataChunk.i16(i.get(f).asInstanceOf[Short])
+      case I32        ⇒ for (i ← p) dataChunk.i32(i.get(f).asInstanceOf[Int])
+      case I64        ⇒ for (i ← p) dataChunk.i64(i.get(f).asInstanceOf[Long])
+      case V64        ⇒ for (i ← p) dataChunk.v64(i.get(f).asInstanceOf[Long])
 
       case StringType(_) ⇒ for (i ← p) string(i.get(f).asInstanceOf[String], dataChunk)
 

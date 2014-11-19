@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 29.10.2014                               *
+ * \__ \ ' <| | | |__     generated: 19.11.2014                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.internal
@@ -14,10 +14,10 @@ import scala.collection.mutable.HashSet
 import scala.collection.mutable.Queue
 import scala.collection.mutable.Stack
 
-import de.ust.skill.generator.genericBinding.api.SkillState
-import de.ust.skill.generator.genericBinding.internal
-import de.ust.skill.generator.genericBinding.internal.streams.FileInputStream
-import de.ust.skill.generator.genericBinding.internal.streams.InStream
+import _root_.de.ust.skill.generator.genericBinding.api.WriteMode
+import _root_.de.ust.skill.generator.genericBinding.internal
+import _root_.de.ust.skill.generator.genericBinding.internal.streams.FileInputStream
+import _root_.de.ust.skill.generator.genericBinding.internal.streams.InStream
 
 /**
  * The parser implementation is based on the denotational semantics given in TR14§6.
@@ -26,7 +26,7 @@ import de.ust.skill.generator.genericBinding.internal.streams.InStream
  */
 object FileParser {
 
-  def file(in : FileInputStream) : SkillState = {
+  def read(in : FileInputStream, mode : WriteMode) : State = {
     // ERROR REPORTING
     var blockCounter = 0;
     var seenTypes = HashSet[String]();
@@ -36,22 +36,30 @@ object FileParser {
 
     // STORAGE POOLS
     val types = ArrayBuffer[StoragePool[_ <: SkillType, _ <: SkillType]]();
+    val Annotation = internal.Annotation(types)
+    val StringType = internal.StringType(String)
     val poolByName = HashMap[String, StoragePool[_ <: SkillType, _ <: SkillType]]();
-    @inline def newPool[T <: B, B <: SkillType](name : String, superPool : StoragePool[_ >: T <: B, B], restrictions : HashSet[Restriction]) : StoragePool[T, B] = {
+    @inline def newPool[T <: B, B <: SkillType](name : String, superPool : StoragePool[_ >: T <: B, B],
+                                                rs : HashSet[restrictions.TypeRestriction]) : StoragePool[T, B] = {
       val p = (name match {
 
         case _ ⇒
           if (null == superPool) new BasePool[SkillType.SubType](types.size, name, HashMap())
           else superPool.makeSubPool(types.size, name)
       }).asInstanceOf[StoragePool[T, B]]
+
+      // check super type expectations
+      if (p.superPool.getOrElse(null) != superPool)
+        throw ParseException(in, blockCounter,
+          s"""The super type of $name stored in the file does not match the specification!
+  expected ${p.superPool.map(_.name).getOrElse("<none>")}, but was ${
+            if (null == superPool) "<none>" else superPool
+          }""", null)
+
       types += p
       poolByName.put(name, p)
       p
     }
-
-    // STATE SENSITIVE TYPES
-    val Annotation = internal.Annotation(types)
-    val StringType = internal.StringType(String)
 
     /**
      * Turns a field type into a preliminary type information. In case of user types, the declaration of the respective
@@ -108,65 +116,64 @@ object FileParser {
 
     @inline def typeBlock {
       // deferred pool resize requests
-      val resizeQueue = new Queue[StoragePool[_ <: SkillType, _ <: SkillType]]
+      val resizeQueue = new Queue[StoragePool[_ <: SkillType, _ <: SkillType]];
       // deferred field declaration appends: pool, ID, type, name, block
-      val fieldInsertionQueue = new Queue[(StoragePool[_ <: SkillType, _ <: SkillType], Int, FieldType[_], String, BulkChunkInfo)]
+      val fieldInsertionQueue = new Queue[(StoragePool[_ <: SkillType, _ <: SkillType], Int, FieldType[_],
+                                           HashSet[restrictions.FieldRestriction[_]], String, BulkChunkInfo)];
+
       // field data updates: pool x fieldID
-      val fieldDataQueue = new Queue[(StoragePool[_ <: SkillType, _ <: SkillType], Int)]
-      var offset = 0L
+      val fieldDataQueue = new Queue[(StoragePool[_ <: SkillType, _ <: SkillType], Int)];
+      var offset = 0L;
 
       @inline def typeDefinition[T <: B, B <: SkillType] {
         // read type part
         val name = String.get(in.v64)
+        if (null == name)
+          throw new ParseException(in, blockCounter, "corrupted file: nullptr in typename", null)
 
         @inline def superDefinition : StoragePool[_ >: T <: B, B] = {
           val superID = in.v64;
           if (0 == superID)
             null
           else if (superID > types.size)
-            throw new ParseException(in, blockCounter, s"Type $name refers to an ill-formed super type.", null)
+            throw new ParseException(in, blockCounter, s"""Type $name refers to an ill-formed super type.
+  found: $superID  current number of other types ${types.size}""", null)
           else
             types(superID.toInt - 1).asInstanceOf[StoragePool[_ >: T <: B, B]]
         }
-        @inline def typeRestrictions : HashSet[Restriction] = {
+        @inline def typeRestrictions : HashSet[restrictions.TypeRestriction] = {
           val count = in.v64.toInt
           (for (i ← 0 until count; if i < 7 || 1 == (i % 2))
             yield in.v64 match {
-            case 0 ⇒ throw new ParseException(in, blockCounter, "Types can not be nullable restricted!", null)
-            case 1 ⇒ throw new ParseException(in, blockCounter, "Types can not be range restricted!", null)
-            case 2 ⇒ Unique
-            case 3 ⇒ throw new ParseException(in, blockCounter, "Types can not be constant length pointer restricted!", null)
-            case 4 ⇒ Singleton
-            case 5 ⇒ throw new ParseException(in, blockCounter, "Types can not be coding restricted!", null)
-            case 6 ⇒ Monotone
-            case i ⇒ throw new ParseException(in, blockCounter, "Found unknown type restriction $i. Please regenerate your binding, if possible.", null)
+            //            case 0 ⇒ Unique
+            //            case 1 ⇒ Singleton
+            //            case 2 ⇒ Monotone
+            case i ⇒ throw new ParseException(in, blockCounter,
+              s"Found unknown type restriction $i. Please regenerate your binding, if possible.", null)
           }
-          ).toSet[Restriction].to
+          ).toSet[restrictions.TypeRestriction].to
         }
-        @inline def fieldRestrictions(t : FieldType[_]) : HashSet[Restriction] = {
+        @inline def fieldRestrictions(t : FieldType[_]) : HashSet[restrictions.FieldRestriction[_]] = {
           val count = in.v64.toInt
           (for (i ← 0 until count; if i < 7 || 1 == (i % 2))
             yield in.v64 match {
-            case 0 ⇒ Nullable
-            case 1 ⇒ t match {
-              case null ⇒ throw new Error("Range Restrictions can not be serialized in TR13!")
-              case I8   ⇒ Range(in.i8, in.i8)
-              case I16  ⇒ Range(in.i16, in.i16)
-              case I32  ⇒ Range(in.i32, in.i32)
-              case I64  ⇒ Range(in.i64, in.i64)
-              case V64  ⇒ Range(in.v64, in.v64)
-              case F32  ⇒ Range(in.f32, in.f32)
-              case F64  ⇒ Range(in.f64, in.f64)
-              case t    ⇒ throw new ParseException(in, blockCounter, "Type $t can not be range restricted!", null)
+            case 0 ⇒ restrictions.NonNull
+            case 3 ⇒ t match {
+              case I8  ⇒ restrictions.Range(in.i8, in.i8)
+              case I16 ⇒ restrictions.Range(in.i16, in.i16)
+              case I32 ⇒ restrictions.Range(in.i32, in.i32)
+              case I64 ⇒ restrictions.Range(in.i64, in.i64)
+              case V64 ⇒ restrictions.Range(in.v64, in.v64)
+              case F32 ⇒ restrictions.Range(in.f32, in.f32)
+              case F64 ⇒ restrictions.Range(in.f64, in.f64)
+              case t   ⇒ throw new ParseException(in, blockCounter, s"Type $t can not be range restricted!", null)
             }
-            case 2 ⇒ throw new ParseException(in, blockCounter, "Fields can not be unique restricted!", null)
-            case 3 ⇒ ConstantLengthPointer
-            case 4 ⇒ throw new ParseException(in, blockCounter, "Fields can not be singleton restricted!", null)
-            case 5 ⇒ Coding(String.get(in.v64))
-            case 6 ⇒ throw new ParseException(in, blockCounter, "Fields can not be monotone restricted!", null)
-            case i ⇒ throw new ParseException(in, blockCounter, "Found unknown field restriction $i. Please regenerate your binding, if possible.", null)
+            //            case 5 ⇒ Coding(String.get(in.v64))
+            //            case 7 ⇒ ConstantLengthPointer
+            case i ⇒ throw new ParseException(in, blockCounter,
+              s"Found unknown field restriction $i. Please regenerate your binding, if possible.", null)
           }
-          ).toSet[Restriction].to
+          ).toSet[restrictions.FieldRestriction[_]].to
         }
 
         // type duplication error detection
@@ -179,7 +186,6 @@ object FileParser {
           var count = in.v64
 
           var definition : StoragePool[T, B] = null
-          var lbpsi = 1L // bpsi is 1 if the first legal index is one
           if (poolByName.contains(name)) {
             definition = poolByName(name).asInstanceOf[StoragePool[T, B]]
 
@@ -188,15 +194,14 @@ object FileParser {
             val superDef = superDefinition
             definition = newPool[T, B](name, superDef, rest)
           }
-          if (0L != count && definition.superPool.isDefined)
-            lbpsi = in.v64
 
-          // adjust lbpsi
-          // @note -1 is due to conversion between index<->array offset
-          lbpsi += definition.basePool.data.length - 1
+          val bpo = definition.basePool.data.length + (
+            if (0L != count && definition.superPool.isDefined) in.v64
+            else 0L
+          )
 
           // store block info and prepare resize
-          definition.blockInfos += BlockInfo(lbpsi, count)
+          definition.blockInfos += BlockInfo(bpo, count)
           resizeQueue += definition
 
           // read field part
@@ -210,26 +215,32 @@ object FileParser {
             if (ID == totalFieldCount) {
               // new field
               val name = String.get(in.v64)
+              if (null == name)
+                throw new ParseException(in, blockCounter, "corrupted file: nullptr in fieldname", null)
+
               val t = fieldType
               val rest = fieldRestrictions(t)
               val end = in.v64
 
-              fieldInsertionQueue += ((definition, ID, t, name, new BulkChunkInfo(offset, end, count + definition.dynamicSize)))
+              fieldInsertionQueue += ((definition, ID, t, rest, name,
+                new BulkChunkInfo(offset, end, count + definition.dynamicSize)))
 
               offset = end
               totalFieldCount += 1
             } else {
               // known field
               val end = in.v64
-              fields(ID).addChunk(new SimpleChunkInfo(offset, end, lbpsi, count))
+              fields(ID).addChunk(new SimpleChunkInfo(offset, end, bpo, count))
 
               offset = end
             }
             fieldDataQueue += ((definition, ID))
           }
         } catch {
-          case e : java.nio.BufferUnderflowException            ⇒ throw ParseException(in, blockCounter, "unexpected end of file", e)
-          case e : Exception if !e.isInstanceOf[ParseException] ⇒ throw ParseException(in, blockCounter, e.getMessage, e)
+          case e : java.nio.BufferUnderflowException ⇒
+            throw ParseException(in, blockCounter, "unexpected end of file", e)
+          case e : Exception if !e.isInstanceOf[ParseException] ⇒
+            throw ParseException(in, blockCounter, e.getMessage, e)
         }
       }
       @inline def resizePools {
@@ -246,27 +257,31 @@ object FileParser {
         // create instances from stack
         for (p ← resizeStack) {
           val bi = p.blockInfos.last
-          var i = bi.bpsi
-          val high = bi.bpsi + bi.count
+          var i = bi.bpo
+          val high = bi.bpo + bi.count
           while (i < high && p.insertInstance(i + 1))
             i += 1;
         }
       }
       @inline def insertFields {
-        for ((p, id, t, name, block) ← fieldInsertionQueue) {
-          p.addField(id, eliminatePreliminaryTypesIn(t), name).addChunk(block)
+        for ((p, id, t, rs, name, block) ← fieldInsertionQueue) {
+          p.addField(id, eliminatePreliminaryTypesIn(t), name, rs).addChunk(block)
         }
       }
       @inline def eliminatePreliminaryTypesIn[T](t : FieldType[T]) : FieldType[T] = t match {
         case TypeDefinitionIndex(i) ⇒ try {
           types(i.toInt).asInstanceOf[FieldType[T]]
         } catch {
-          case e : Exception ⇒ throw ParseException(in, blockCounter, s"inexistent user type $i (user types: ${types.zipWithIndex.map(_.swap).toMap.mkString})", e)
+          case e : Exception ⇒ throw ParseException(in, blockCounter,
+            s"inexistent user type $i (user types: ${
+              types.zipWithIndex.map(_.swap).toMap.mkString
+            })", e)
         }
         case TypeDefinitionName(n) ⇒ try {
           poolByName(n).asInstanceOf[FieldType[T]]
         } catch {
-          case e : Exception ⇒ throw ParseException(in, blockCounter, s"inexistent user type $n (user types: ${poolByName.mkString})", e)
+          case e : Exception ⇒ throw ParseException(in, blockCounter,
+            s"inexistent user type $n (user types: ${poolByName.mkString})", e)
         }
         case ConstantLengthArray(l, t) ⇒ ConstantLengthArray(l, eliminatePreliminaryTypesIn(t))
         case VariableLengthArray(t)    ⇒ VariableLengthArray(eliminatePreliminaryTypesIn(t))
@@ -286,9 +301,11 @@ object FileParser {
 
           f.addOffsetToLastChunk(fileOffset)
 
-          // TODO move to KnownField
+          // TODO move to Field implementations
           if (f.isInstanceOf[KnownField[T]])
-            FieldParser.parseThisField(in, p, f.asInstanceOf[KnownField[T]], poolByName, String)
+            FieldParser.parseThisField(in, p, f.asInstanceOf[KnownField[T]])
+          else
+            in.jump(f.lastChunk.end)
         }
         for ((p, fID) ← fieldDataQueue) {
           processField(p, fID)
@@ -304,29 +321,33 @@ object FileParser {
       processFieldData
     }
 
+    // process stream
     while (!in.eof) {
       try {
         stringBlock
         typeBlock
       } catch {
         case e : SkillException ⇒ throw e
-        case e : Exception      ⇒ throw new ParseException(in, blockCounter, "unexpected foreign exception", e)
+        case e : Exception      ⇒ throw ParseException(in, blockCounter, "unexpected foreign exception", e)
       }
 
       blockCounter += 1
       seenTypes = HashSet()
     }
 
-    new SerializableState(
+    // finish state
+    val r = new State(
 
       String,
       types.to,
-      in match {
-        case in : streams.FileInputStream ⇒ Some(in.path)
-        case _                            ⇒ None
-      }
+      in.path,
+      mode
     )
+    try {
+      r.check
+    } catch {
+      case e : SkillException ⇒ throw ParseException(in, blockCounter, "Post serialization check failed!", e)
+    }
+    r
   }
-
-  def read(path : Path) = file(new FileInputStream(path))
 }

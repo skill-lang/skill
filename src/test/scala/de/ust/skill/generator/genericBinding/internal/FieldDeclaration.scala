@@ -1,22 +1,27 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 29.10.2014                               *
+ * \__ \ ' <| | | |__     generated: 19.11.2014                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.internal
 
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
+
 import java.nio.MappedByteBuffer
 import java.util.Arrays
-import de.ust.skill.generator.genericBinding.internal.streams.MappedInStream
+
+import _root_.de.ust.skill.generator.genericBinding.internal.streams.MappedInStream
+import _root_.de.ust.skill.generator.genericBinding.internal.restrictions.FieldRestriction
 
 /**
  * Chunks contain information on where some field data can be found.
  *
  * @param begin position of the first byte of the first instance's data
  * @param end position of the last byte, i.e. the first byte that is not read
- * @param bpsi the index of the first instance
+ * @param bpso the offset of the first instance
  * @param count the number of instances in this chunk
  *
  * @note indices of recipient of the field data is not necessarily continuous; make use of staticInstances!
@@ -25,20 +30,20 @@ import de.ust.skill.generator.genericBinding.internal.streams.MappedInStream
  * @author Timm Felden
  */
 sealed abstract class ChunkInfo(var begin : Long, var end : Long, val count : Long);
-final class SimpleChunkInfo(begin : Long, end : Long, val bpsi : Long, count : Long) extends ChunkInfo(begin, end, count);
+final class SimpleChunkInfo(begin : Long, end : Long, val bpo : Long, count : Long) extends ChunkInfo(begin, end, count);
 final class BulkChunkInfo(begin : Long, end : Long, count : Long) extends ChunkInfo(begin, end, count);
 
 /**
  * Blocks contain information about the type of an index range.
  *
- * @param bpsi the index of the first instance
+ * @param bpo the offset of the first instance
  * @param count the number of instances in this chunk
  * @author Timm Felden
  */
-case class BlockInfo(val bpsi : Long, val count : Long);
+case class BlockInfo(val bpo : Long, val count : Long);
 
 /**
- * A field decalariation, as it occurs during parsing of a type blocks header.
+ * A field declaration, as it occurs during parsing of a type blocks header.
  *
  * @author Timm Felden
  * @param t the actual type of the field; can be an intermediate type, while parsing a block
@@ -47,8 +52,13 @@ case class BlockInfo(val bpsi : Long, val count : Long);
  * @param T the scala type of t
  *
  * @note index 0 is used for the skillID
+ * @note specialized in everything but unit
  */
-sealed abstract class FieldDeclaration[@specialized T](var t : FieldType[T], val name : String, val index : Long, val owner : StoragePool[_, _]) {
+trait FieldDeclaration[@specialized(Boolean, Byte, Char, Double, Float, Int, Long, Short) T] {
+  var t : FieldType[T];
+  def name : String;
+  def index : Long;
+  def owner : StoragePool[_ <: SkillType, _ <: SkillType];
 
   /**
    *  Data chunk information, as it is required for later parsing.
@@ -61,6 +71,17 @@ sealed abstract class FieldDeclaration[@specialized T](var t : FieldType[T], val
     c.end += offset
   }
   private[internal] def noDataChunk = dataChunks.isEmpty
+  private[internal] def lastChunk = dataChunks.last
+
+  /**
+   * Restriction handling.
+   */
+  val restrictions = HashSet[FieldRestriction[T]]();
+  def addRestriction[U](r : FieldRestriction[U]) = restrictions += r.asInstanceOf[FieldRestriction[T]]
+  def check {
+    if(!restrictions.isEmpty)
+      owner.all.foreach { x => restrictions.foreach(_.check(x.get(this))) }
+  }
 
   override def toString = t.toString+" "+name
   override def equals(obj : Any) = obj match {
@@ -75,20 +96,24 @@ sealed abstract class FieldDeclaration[@specialized T](var t : FieldType[T], val
  *
  * @note the name is a bit miss-leading, as it excludes distributed and lazy known fields
  */
-final class KnownField[@specialized T](t : FieldType[T], name : String, index : Long, owner : StoragePool[_, _])
-    extends FieldDeclaration[T](t, name, index, owner) {
-
-  private[internal] def lastChunk = dataChunks.last
-
-}
+final class KnownField[@specialized(Boolean, Byte, Char, Double, Float, Int, Long, Short) T](
+  override var t : FieldType[T],
+  override val name : String,
+  override val index : Long,
+  override val owner : StoragePool[_ <: SkillType, _ <: SkillType])
+    extends FieldDeclaration[T];
 
 /**
  * The fields data is distributed into an array holding its instances.
  *
  * TODO sicherstellen, dass distributed felder vom generierten serialisierungscode ausgenommen sind!!
  */
-sealed class DistributedField[@specialized T : Manifest](t : FieldType[T], name : String, index : Long, owner : StoragePool[_, _])
-    extends FieldDeclaration[T](t, name, index, owner) with Iterable[T] {
+sealed class DistributedField[@specialized(Boolean, Byte, Char, Double, Float, Int, Long, Short) T : Manifest](
+  override var t : FieldType[T],
+  override val name : String,
+  override val index : Long,
+  override val owner : StoragePool[_ <: SkillType, _ <: SkillType])
+    extends FieldDeclaration[T] {
 
   // data held as in storage pools
   protected var data = Array[T]()

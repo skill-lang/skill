@@ -1,14 +1,14 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 29.10.2014                               *
+ * \__ \ ' <| | | |__     generated: 19.11.2014                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.api
 
 import scala.reflect.ClassTag
 
-import de.ust.skill.generator.genericBinding.internal.SkillType
-import de.ust.skill.generator.genericBinding.internal.FieldDeclaration
+import _root_.de.ust.skill.generator.genericBinding.internal.SkillType
+import _root_.de.ust.skill.generator.genericBinding.internal.FieldDeclaration
 
 /**
  * @author Timm Felden

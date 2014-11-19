@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 29.10.2014                               *
+ * \__ \ ' <| | | |__     generated: 19.11.2014                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.internal
@@ -12,9 +12,10 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.WrappedArray
 import scala.reflect.ClassTag
 
-import de.ust.skill.generator.genericBinding.api._
-import de.ust.skill.generator.genericBinding.internal.streams.FileInputStream
-import de.ust.skill.generator.genericBinding.internal.streams.InStream
+import _root_.de.ust.skill.generator.genericBinding.api._
+import _root_.de.ust.skill.generator.genericBinding.internal.restrictions._
+import _root_.de.ust.skill.generator.genericBinding.internal.streams.FileInputStream
+import _root_.de.ust.skill.generator.genericBinding.internal.streams.InStream
 
 /**
  * @param typeID the skill type ID as obtained from the read file or as it would appear in the to be written file
@@ -226,7 +227,7 @@ case class TypeDefinitionName[T : Manifest](name : String) extends FieldType[T](
 sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
   private[internal] val poolIndex : Long,
   val name : String,
-  private[internal] val knownFields : HashMap[String, FieldType[_]],
+  private[internal] val knownFields : HashMap[String, (FieldType[_], HashSet[FieldRestriction[_]])],
   private[internal] val superPool : Option[StoragePool[_ <: B, B]])
     extends FieldType[T](32 + poolIndex)
     with Access[T] {
@@ -271,22 +272,26 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
   /**
    * Adds a new field, checks consistency and updates field data if required.
    */
-  final private[internal] def addField[T](ID : Int, t : FieldType[T], name : String) : FieldDeclaration[T] = {
+  final private[internal] def addField[T](ID : Int, t : FieldType[T], name : String,
+                                          restrictions : HashSet[FieldRestriction[_]]) : FieldDeclaration[T] = {
     if (knownFields.contains(name)) {
       // type-check
-      if (!t.equals(knownFields(name)))
+      val (knownType, knownRs) = knownFields(name)
+      if (!t.equals(knownType))
         throw TypeMissmatchError(t, knownFields(name).toString, name, this.name);
 
       val f = new KnownField[T](t.asInstanceOf[FieldType[T]], name, ID, this)
+      restrictions.foreach(f.addRestriction(_))
+      knownRs.foreach(f.addRestriction(_))
       fields += f
       return f
 
     } else {
       val f = new DistributedField[T](t.asInstanceOf[FieldType[T]], name, ID, this)(t.m)
+      restrictions.foreach(f.addRestriction(_))
       fields += f
       return f
     }
-
   }
 
   final def allFields = fields.iterator
@@ -313,11 +318,11 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
 
       //build block chunk
       val lcount = newDynamicInstances.size
-      //@ note this is the index into the data array and NOT the written lbpsi
-      val lbpsi = if (0 == lcount) 0L
+      //@ note this is the index into the data array and NOT the written lbpo
+      val lbpo = if (0 == lcount) 0L
       else newDynamicInstances.next.getSkillID - 1
 
-      blockInfos += new BlockInfo(lbpsi, lcount)
+      blockInfos += new BlockInfo(lbpo, lcount)
 
       //@note: if this does not hold for p; then it will not hold for p.subPools either!
       if (newInstances || !newPool) {
@@ -328,7 +333,7 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
             f.addChunk(c)
             chunkMap.put(f, c)
           } else if (newInstances) {
-            val c = new SimpleChunkInfo(-1, -1, lbpsi, lcount)
+            val c = new SimpleChunkInfo(-1, -1, lbpo, lcount)
             f.addChunk(c)
             chunkMap.put(f, c)
           }
@@ -384,7 +389,10 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
   }
 }
 
-sealed class BasePool[T <: SkillType : Manifest](poolIndex : Long, name : String, knownFields : HashMap[String, FieldType[_]])
+sealed class BasePool[T <: SkillType : Manifest](
+  poolIndex : Long,
+  name : String,
+  knownFields : HashMap[String, (FieldType[_], HashSet[FieldRestriction[_]])])
     extends StoragePool[T, T](poolIndex, name, knownFields, None) {
 
   /**
@@ -405,7 +413,7 @@ sealed class BasePool[T <: SkillType : Manifest](poolIndex : Long, name : String
     if (null != data(i))
       false
     else {
-      val r = (new SkillType(skillID)).asInstanceOf[T]
+      val r = (new SkillType.SubType(this, skillID)).asInstanceOf[T]
       data(i) = r
       staticData += r
       true
@@ -494,7 +502,11 @@ sealed class BasePool[T <: SkillType : Manifest](poolIndex : Long, name : String
   }
 }
 
-sealed class SubPool[T <: B : Manifest, B <: SkillType](poolIndex : Long, name : String, knownFields : HashMap[String, FieldType[_]], superPool : StoragePool[_ <: B, B])
+sealed class SubPool[T <: B : Manifest, B <: SkillType](
+  poolIndex : Long,
+  name : String,
+  knownFields : HashMap[String, (FieldType[_], HashSet[FieldRestriction[_]])],
+  superPool : StoragePool[_ <: B, B])
     extends StoragePool[T, B](poolIndex, name, knownFields, Some(superPool)) {
 
   override val basePool = superPool.basePool
@@ -504,7 +516,7 @@ sealed class SubPool[T <: B : Manifest, B <: SkillType](poolIndex : Long, name :
     if (null != data(i))
       false
     else {
-      val r = (new SkillType(skillID)).asInstanceOf[T]
+      val r = (new SkillType.SubType(this, skillID)).asInstanceOf[T]
       data(i) = r
       staticData += r
       true
@@ -518,8 +530,8 @@ sealed class SubPool[T <: B : Manifest, B <: SkillType](poolIndex : Long, name :
    */
   private[internal] def data = WrappedArray.make[T](basePool.data)
 
-  override def all : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
-  override def iterator : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpsi.toInt, (block.bpsi + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
+  override def all : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpo.toInt, (block.bpo + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
+  override def iterator : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpo.toInt, (block.bpo + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
 
   override def allInTypeOrder : Iterator[T] = subPools.foldLeft(staticInstances)(_ ++ _.staticInstances)
 

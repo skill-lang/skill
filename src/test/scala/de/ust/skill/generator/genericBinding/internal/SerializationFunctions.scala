@@ -1,14 +1,15 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 29.10.2014                               *
+ * \__ \ ' <| | | |__     generated: 19.11.2014                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.internal
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.language.implicitConversions
 
-import de.ust.skill.generator.genericBinding.internal.streams.OutStream
+import _root_.de.ust.skill.generator.genericBinding.internal.streams.OutStream
 
 /**
  * Provides serialization functions;
@@ -16,7 +17,7 @@ import de.ust.skill.generator.genericBinding.internal.streams.OutStream
  * @see SKilL §6.4
  * @author Timm Felden
  */
-abstract class SerializationFunctions(state : SerializableState) {
+abstract class SerializationFunctions(state : State) {
   import SerializationFunctions._
 
   //collect String instances from known string types; this is needed, because strings are something special on the jvm
@@ -27,12 +28,10 @@ abstract class SerializationFunctions(state : SerializableState) {
     for (p ← state.pools) {
       strings.add(p.name)
       for (f ← p.fields) {
-        if (p.knownFields.contains(f.name)) {
-          strings.add(f.name)
-          if (StringType == f.t) {
-            for (i ← p.all)
-              strings.add(i.get(f.asInstanceOf[FieldDeclaration[String]]))
-          }
+        strings.add(f.name)
+        if (f.t.isInstanceOf[StringType]) {
+          for (i ← p.all)
+            strings.add(i.get(f.asInstanceOf[FieldDeclaration[String]]))
         }
       }
     }
