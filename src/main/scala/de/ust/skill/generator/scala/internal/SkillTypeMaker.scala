@@ -15,7 +15,7 @@ trait SkillTypeMaker extends GeneralOutputMaker {
     //package & imports
     out.write(s"""package ${packagePrefix}internal
 
-import ${packagePrefix}api.Access
+import _root_.${packagePrefix}api.Access
 
 /**
  * The top of the skill type hierarchy.

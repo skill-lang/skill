@@ -20,10 +20,10 @@ trait TypesMaker extends GeneralOutputMaker {
     //package
     out.write(s"""package ${this.packageName}
 
-import ${packagePrefix}api.Access
-import ${packagePrefix}internal.FieldDeclaration
-import ${packagePrefix}internal.SkillType
-import ${packagePrefix}internal.NamedType
+import _root_.${packagePrefix}api.Access
+import _root_.${packagePrefix}internal.FieldDeclaration
+import _root_.${packagePrefix}internal.SkillType
+import _root_.${packagePrefix}internal.NamedType
 """)
 
     val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;

@@ -22,10 +22,10 @@ import scala.collection.mutable.HashSet
 import scala.collection.mutable.Queue
 import scala.collection.mutable.Stack
 
-import ${packagePrefix}api.WriteMode
-import ${packagePrefix}internal
-import ${packagePrefix}internal.streams.FileInputStream
-import ${packagePrefix}internal.streams.InStream
+import _root_.${packagePrefix}api.WriteMode
+import _root_.${packagePrefix}internal
+import _root_.${packagePrefix}internal.streams.FileInputStream
+import _root_.${packagePrefix}internal.streams.InStream
 
 /**
  * The parser implementation is based on the denotational semantics given in TR14§6.

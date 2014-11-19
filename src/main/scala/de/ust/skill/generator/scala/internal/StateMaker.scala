@@ -32,9 +32,9 @@ import java.nio.file.Path
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
 
-import ${packagePrefix}api._
-import ${packagePrefix}internal.streams.FileInputStream
-import ${packagePrefix}internal.streams.FileOutputStream
+import _root_.${packagePrefix}api._
+import _root_.${packagePrefix}internal.streams.FileInputStream
+import _root_.${packagePrefix}internal.streams.FileOutputStream
 
 /**
  * This class is used to handle objects in a serializable state.

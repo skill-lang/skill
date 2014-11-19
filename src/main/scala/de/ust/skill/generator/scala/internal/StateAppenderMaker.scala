@@ -32,9 +32,9 @@ import java.nio.ByteBuffer
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
-import ${packagePrefix}_
-import ${packagePrefix}internal.streams.FileOutputStream
-import ${packagePrefix}internal.streams.OutStream
+import _root_.${packagePrefix}_
+import _root_.${packagePrefix}internal.streams.FileOutputStream
+import _root_.${packagePrefix}internal.streams.OutStream
 
 /**
  * Holds state of a write operation.

@@ -28,7 +28,7 @@ trait SerializationFunctionsMaker extends GeneralOutputMaker {
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
-import ${packagePrefix}internal.streams.OutStream
+import _root_.${packagePrefix}internal.streams.OutStream
 
 /**
  * Provides serialization functions;

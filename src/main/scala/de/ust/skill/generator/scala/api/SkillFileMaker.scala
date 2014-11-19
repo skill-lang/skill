@@ -23,9 +23,9 @@ import java.io.File
 
 import scala.collection.mutable.ArrayBuffer
 
-import ${packagePrefix}internal.FileParser
-import ${packagePrefix}internal.State
-import ${packagePrefix}internal.SkillType
+import _root_.${packagePrefix}internal.FileParser
+import _root_.${packagePrefix}internal.State
+import _root_.${packagePrefix}internal.SkillType
 
 /**
  * The public interface to the in-memory representation of a SKilL file.

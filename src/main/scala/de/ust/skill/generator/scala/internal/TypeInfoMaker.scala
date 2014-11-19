@@ -32,10 +32,10 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.WrappedArray
 import scala.reflect.ClassTag
 
-import ${packagePrefix}api._
-import ${packagePrefix}internal.restrictions._
-import ${packagePrefix}internal.streams.FileInputStream
-import ${packagePrefix}internal.streams.InStream
+import _root_.${packagePrefix}api._
+import _root_.${packagePrefix}internal.restrictions._
+import _root_.${packagePrefix}internal.streams.FileInputStream
+import _root_.${packagePrefix}internal.streams.InStream
 """)
 
     // TODO distribute
@@ -669,8 +669,8 @@ ${
       if (!isSingleton) {
         // create a sub pool
         out.write(s"""
-final class ${t.getName.capital}SubPool(poolIndex : Long, name : String, superPool : StoragePool[_ <: $typeName, ${packagePrefix}${t.getBaseType.getName.capital}])
-    extends SubPool[$typeName.SubType, ${packagePrefix}${t.getBaseType.getName.capital}](
+final class ${t.getName.capital}SubPool(poolIndex : Long, name : String, superPool : StoragePool[_ <: $typeName, _root_.${packagePrefix}${t.getBaseType.getName.capital}])
+    extends SubPool[$typeName.SubType, _root_.${packagePrefix}${t.getBaseType.getName.capital}](
       poolIndex,
       name,
       HashMap[String, FieldType[_]](),

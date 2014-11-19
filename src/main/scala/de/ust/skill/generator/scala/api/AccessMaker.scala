@@ -18,8 +18,8 @@ trait AccessMaker extends GeneralOutputMaker {
 
 import scala.reflect.ClassTag
 
-import ${packagePrefix}internal.SkillType
-import ${packagePrefix}internal.FieldDeclaration
+import _root_.${packagePrefix}internal.SkillType
+import _root_.${packagePrefix}internal.FieldDeclaration
 
 /**
  * @author Timm Felden
