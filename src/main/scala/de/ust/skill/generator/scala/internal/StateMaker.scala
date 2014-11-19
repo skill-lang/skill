@@ -79,15 +79,16 @@ ${
     for (p ← pools) {
       val fieldMap = p.fields.map { _.name }.zip(p.fields).toMap
 
-      for ((n, t) ← p.knownFields if !fieldMap.contains(n)) {
+      for ((n, (t, _)) ← p.knownFields if !fieldMap.contains(n)) {
         p.addField(p.fields.size, eliminatePreliminaryTypesIn(t), n, HashSet())
       }
     }
   }
 
   // TODO type restrictions
-  // TODO check funktion umdrehen (field iteriert)!!
-  def check : Boolean = pools.par.forall(_.allFields.forall(_.check))
+  def check : Unit = for (p ← pools.par; f ← p.allFields) try { f.check } catch {
+    case e : SkillException ⇒ throw new SkillException(s"check failed in $${p.name}.$${f.name}:\\n  $${e.getMessage}", e)
+  }
 
   def flush : Unit = {
     check;

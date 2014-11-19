@@ -89,7 +89,10 @@ trait FieldDeclaration[@specialized(Boolean, Byte, Char, Double, Float, Int, Lon
    */
   val restrictions = HashSet[FieldRestriction[T]]();
   def addRestriction[U](r : FieldRestriction[U]) = restrictions += r.asInstanceOf[FieldRestriction[T]]
-  def check = restrictions.forall(_.check(owner, this))
+  def check {
+    if(!restrictions.isEmpty)
+      owner.all.foreach { x => restrictions.foreach(_.check(x.get(this))) }
+  }
 
   override def toString = t.toString+" "+name
   override def equals(obj : Any) = obj match {

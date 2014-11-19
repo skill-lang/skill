@@ -16,6 +16,10 @@ import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.restriction.SingletonRestriction
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.restriction.NullableRestriction
+import de.ust.skill.ir.restriction.IntRangeRestriction
+import de.ust.skill.ir.restriction.FloatRangeRestriction
 
 trait TypeInfoMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -293,7 +297,7 @@ case class TypeDefinitionName[T : Manifest](name : String) extends FieldType[T](
 sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
   private[internal] val poolIndex : Long,
   val name : String,
-  private[internal] val knownFields : HashMap[String, FieldType[_]],
+  private[internal] val knownFields : HashMap[String, (FieldType[_], HashSet[FieldRestriction[_]])],
   private[internal] val superPool : Option[StoragePool[_ <: B, B]])
     extends FieldType[T](32 + poolIndex)
     with Access[T] {
@@ -342,11 +346,13 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
                                           restrictions : HashSet[FieldRestriction[_]]) : FieldDeclaration[T] = {
     if (knownFields.contains(name)) {
       // type-check
-      if (!t.equals(knownFields(name)))
+      val (knownType, knownRs) = knownFields(name)
+      if (!t.equals(knownType))
         throw TypeMissmatchError(t, knownFields(name).toString, name, this.name);
 
       val f = new KnownField[T](t.asInstanceOf[FieldType[T]], name, ID, this)
       restrictions.foreach(f.addRestriction(_))
+      knownRs.foreach(f.addRestriction(_))
       fields += f
       return f
 
@@ -453,7 +459,10 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
   }
 }
 
-sealed class BasePool[T <: SkillType : Manifest](poolIndex : Long, name : String, knownFields : HashMap[String, FieldType[_]])
+sealed class BasePool[T <: SkillType : Manifest](
+  poolIndex : Long,
+  name : String,
+  knownFields : HashMap[String, (FieldType[_], HashSet[FieldRestriction[_]])])
     extends StoragePool[T, T](poolIndex, name, knownFields, None) {
 
   /**
@@ -563,7 +572,11 @@ sealed class BasePool[T <: SkillType : Manifest](poolIndex : Long, name : String
   }
 }
 
-sealed class SubPool[T <: B : Manifest, B <: SkillType](poolIndex : Long, name : String, knownFields : HashMap[String, FieldType[_]], superPool : StoragePool[_ <: B, B])
+sealed class SubPool[T <: B : Manifest, B <: SkillType](
+  poolIndex : Long,
+  name : String,
+  knownFields : HashMap[String, (FieldType[_], HashSet[FieldRestriction[_]])],
+  superPool : StoragePool[_ <: B, B])
     extends StoragePool[T, B](poolIndex, name, knownFields, Some(superPool)) {
 
   override val basePool = superPool.basePool
@@ -619,9 +632,9 @@ final class ${t.getName.capital}StoragePool(stringType : StringType, annotation 
       }(
       poolIndex,
       "${t.getSkillName}",
-      HashMap[String, FieldType[_]](${
+      HashMap[String, (FieldType[_], HashSet[FieldRestriction[_]])](${
         if (t.getFields.isEmpty) ""
-        else (for (f ← t.getFields) yield s"""\n        "${f.getSkillName}" -> ${mapToFieldType(f.getType)}""").mkString("", ",", "\n      ")
+        else (for (f ← t.getFields) yield s"""\n        "${f.getSkillName}" -> (${mapToFieldType(f.getType)}, HashSet(${mkFieldRestrictions(f)}))""").mkString("", ",", "\n      ")
       })${
         if (t.getSuperType == null) ""
         else ",\nsuperPool"
@@ -673,7 +686,7 @@ final class ${t.getName.capital}SubPool(poolIndex : Long, name : String, superPo
     extends SubPool[$typeName.SubType, _root_.${packagePrefix}${t.getBaseType.getName.capital}](
       poolIndex,
       name,
-      HashMap[String, FieldType[_]](),
+      HashMap[String, (FieldType[_], HashSet[FieldRestriction[_]])](),
       superPool
     ) {
 
@@ -724,5 +737,16 @@ final class ${t.getName.capital}SubPool(poolIndex : Long, name : String, superPo
       case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"MapType($k,$v)")
       case t : Declaration             ⇒ s"""TypeDefinitionName[${mapType(t)}]("${t.getSkillName}")"""
     }
+  }
+
+  private def mkFieldRestrictions(f : Field) : String = {
+    f.getRestrictions.map(_ match {
+      case r : NullableRestriction ⇒ "restrictions.NonNull"
+      case r : IntRangeRestriction ⇒ s"restrictions.Range(${r.getLow}L.to${mapType(f.getType)}, ${r.getHigh}L.to${mapType(f.getType)})"
+      case r : FloatRangeRestriction ⇒ f.getType.getSkillName match {
+        case "f32" ⇒ s"restrictions.Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
+        case "f64" ⇒ s"restrictions.Range(${r.getLowDouble}, ${r.getHighDouble})"
+      }
+    }).mkString(", ")
   }
 }

@@ -49,11 +49,12 @@ ${
    * Checks restrictions in types. Restrictions are checked before write/append, where an error is raised if they do not
    * hold.
    */
-  def check : Boolean
+  def check : Unit
 
   /**
    * Check consistency and write changes to disk.
    * @note this will not sync the file to disk, but it will block until all in-memory changes are written to buffers.
+   * @note if check fails, then the state is guaranteed to be unmodified compared to the state before flush
    */
   def flush : Unit
 

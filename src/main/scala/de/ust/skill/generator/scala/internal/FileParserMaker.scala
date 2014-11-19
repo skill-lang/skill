@@ -162,8 +162,8 @@ ${
             //            case 0 ⇒ Unique
             //            case 1 ⇒ Singleton
             //            case 2 ⇒ Monotone
-            case i ⇒ throw new ParseException(in, blockCounter, 
-                       s"Found unknown type restriction $$i. Please regenerate your binding, if possible.", null)
+            case i ⇒ throw new ParseException(in, blockCounter,
+              s"Found unknown type restriction $$i. Please regenerate your binding, if possible.", null)
           }
           ).toSet[restrictions.TypeRestriction].to
         }
@@ -185,7 +185,7 @@ ${
             //            case 5 ⇒ Coding(String.get(in.v64))
             //            case 7 ⇒ ConstantLengthPointer
             case i ⇒ throw new ParseException(in, blockCounter,
-                       s"Found unknown field restriction $$i. Please regenerate your binding, if possible.", null)
+              s"Found unknown field restriction $$i. Please regenerate your binding, if possible.", null)
           }
           ).toSet[restrictions.FieldRestriction[_]].to
         }
@@ -237,7 +237,7 @@ ${
               val end = in.v64
 
               fieldInsertionQueue += ((definition, ID, t, rest, name,
-                                       new BulkChunkInfo(offset, end, count + definition.dynamicSize)))
+                new BulkChunkInfo(offset, end, count + definition.dynamicSize)))
 
               offset = end
               totalFieldCount += 1
@@ -286,16 +286,16 @@ ${
         case TypeDefinitionIndex(i) ⇒ try {
           types(i.toInt).asInstanceOf[FieldType[T]]
         } catch {
-          case e : Exception ⇒ throw ParseException(in, blockCounter, 
-                                 s"inexistent user type $$i (user types: $${
-                                   types.zipWithIndex.map(_.swap).toMap.mkString
-                                 })", e)
+          case e : Exception ⇒ throw ParseException(in, blockCounter,
+            s"inexistent user type $$i (user types: $${
+              types.zipWithIndex.map(_.swap).toMap.mkString
+            })", e)
         }
         case TypeDefinitionName(n) ⇒ try {
           poolByName(n).asInstanceOf[FieldType[T]]
         } catch {
           case e : Exception ⇒ throw ParseException(in, blockCounter,
-                                 s"inexistent user type $$n (user types: $${poolByName.mkString})", e)
+            s"inexistent user type $$n (user types: $${poolByName.mkString})", e)
         }
         case ConstantLengthArray(l, t) ⇒ ConstantLengthArray(l, eliminatePreliminaryTypesIn(t))
         case VariableLengthArray(t)    ⇒ VariableLengthArray(eliminatePreliminaryTypesIn(t))
@@ -342,7 +342,7 @@ ${
         typeBlock
       } catch {
         case e : SkillException ⇒ throw e
-        case e : Exception      ⇒ throw new ParseException(in, blockCounter, "unexpected foreign exception", e)
+        case e : Exception      ⇒ throw ParseException(in, blockCounter, "unexpected foreign exception", e)
       }
 
       blockCounter += 1
@@ -350,7 +350,7 @@ ${
     }
 
     // finish state
-    new State(
+    val r = new State(
 ${
       (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(
         newPool[${mapType(t)}, ${mapType(t.getBaseType)}]("${t.getSkillName}", ${
@@ -363,7 +363,13 @@ ${
       types.to,
       in.path,
       mode
-    ).ensuring(_.check, throw ParseException(in, blockCounter, "Post serialization check failed!", null))
+    )
+    try {
+      r.check
+    } catch {
+      case e : SkillException ⇒ throw ParseException(in, blockCounter, "Post serialization check failed!", e)
+    }
+    r
   }
 }
 """)
