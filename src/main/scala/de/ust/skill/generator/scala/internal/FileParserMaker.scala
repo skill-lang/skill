@@ -99,8 +99,7 @@ ${
       case 17           ⇒ VariableLengthArray(fieldType)
       case 18           ⇒ ListType(fieldType)
       case 19           ⇒ SetType(fieldType)
-      case 20           ⇒ MapType(fieldType, fieldType) // <- TR14
-      // TR13: MapType((0 until in.v64.toInt).map { n ⇒ groundType }.toSeq)
+      case 20           ⇒ MapType(fieldType, fieldType)
       case i if i >= 32 ⇒ TypeDefinitionIndex(i - 32)
       case id           ⇒ throw ParseException(in, blockCounter, s"Invalid type ID: $$id", null)
     }

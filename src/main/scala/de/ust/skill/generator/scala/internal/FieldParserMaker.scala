@@ -161,7 +161,7 @@ ${
 
     case t : SetType ⇒
       val (p, r, s) = readSingleField(t.getBaseType)
-      (p, s"""
+      (p.replace("f.t.", s"f.t.asInstanceOf[SetType[${mapType(t.getBaseType)}]].groundType."), s"""
                   val r = new HashSet[${mapType(t.getBaseType)}]
                   val count = in.v64.toInt
                   r.sizeHint(count)
