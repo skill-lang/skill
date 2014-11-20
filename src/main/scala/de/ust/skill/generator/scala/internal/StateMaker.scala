@@ -107,7 +107,10 @@ ${
   def changePath(newPath : Path) : Unit = mode match {
     case Write                       ⇒ path = newPath
     case Append if (path == newPath) ⇒ //nothing to do
-    case Append                      ⇒ Files.copy(path, newPath); path = newPath
+    case Append ⇒
+      Files.deleteIfExists(newPath);
+      Files.copy(path, newPath);
+      path = newPath
   }
 
   def changeMode(writeMode : Mode) : Unit = (mode, writeMode) match {

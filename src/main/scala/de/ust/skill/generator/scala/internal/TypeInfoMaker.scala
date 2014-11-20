@@ -348,7 +348,7 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
       // type-check
       val (knownType, knownRs) = knownFields(name)
       if (!t.equals(knownType))
-        throw TypeMissmatchError(t, knownFields(name).toString, name, this.name);
+        throw TypeMissmatchError(t, knownType.toString, name, this.name);
 
       val f = new KnownField[T](t.asInstanceOf[FieldType[T]], name, ID, this)
       restrictions.foreach(f.addRestriction(_))
