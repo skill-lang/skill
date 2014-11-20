@@ -78,7 +78,7 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
     val vs = new HashMap[FieldDeclaration[_], Future[Long]]
     for (f ← p.fields) {
       val v = new FutureTask(new Callable[Long]() {
-        def call : Long = FieldOffsetCalculator.offset(p, f)
+        def call : Long = offset(p, f)
       })
       vs.put(f, v)
       ExecutionContext.Implicits.global.execute(v)

@@ -14,7 +14,6 @@ import de.ust.skill.generator.scala.api.AccessMaker
 import de.ust.skill.generator.scala.api.SkillFileMaker
 import de.ust.skill.generator.scala.internal.ExceptionsMaker
 import de.ust.skill.generator.scala.internal.FieldDeclarationMaker
-import de.ust.skill.generator.scala.internal.FieldOffsetCalculatorMaker
 import de.ust.skill.generator.scala.internal.FieldParserMaker
 import de.ust.skill.generator.scala.internal.FileParserMaker
 import de.ust.skill.generator.scala.internal.InternalInstancePropertiesMaker
@@ -53,7 +52,6 @@ class Main extends FakeMain
     with AccessMaker
     with ExceptionsMaker
     with FieldDeclarationMaker
-    with FieldOffsetCalculatorMaker
     with FieldParserMaker
     with FileParserMaker
     with InternalInstancePropertiesMaker
