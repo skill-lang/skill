@@ -150,7 +150,8 @@ abstract class SerializationFunctions(state : State) {
 
   @inline private[this] def encodeV64(p : StoragePool[_ <: SkillType, _ <: SkillType], f : FieldDeclaration[_]) : Long = {
     var result = 0L
-    for (i ← p.all) {
+    val b = p.blockInfos.last
+    for (i ← p.basePool.data.view(b.bpo.toInt, (b.bpo + b.count).toInt)) {
       val v = i.get(f).asInstanceOf[Long]
       if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
         result += 1
@@ -388,14 +389,14 @@ object SerializationFunctions {
   }
 
   /**
-   * creates an lbpsi map by recursively adding the local base pool start index to the map and adding all sub pools
+   * creates an lbpo map by recursively adding the local base pool offset to the map and adding all sub pools
    *  afterwards
    */
-  final def makeLBPSIMap[T <: B, B <: SkillType](pool : StoragePool[T, B], lbpsiMap : Array[Long], next : Long, size : String ⇒ Long) : Long = {
+  final def makeLBPOMap[T <: B, B <: SkillType](pool : StoragePool[T, B], lbpsiMap : Array[Long], next : Long, size : StoragePool[_, _] ⇒ Long) : Long = {
     lbpsiMap(pool.poolIndex.toInt) = next
-    var result = next + size(pool.name)
+    var result = next + size(pool)
     for (sub ← pool.subPools) {
-      result = makeLBPSIMap(sub, lbpsiMap, result, size)
+      result = makeLBPOMap(sub, lbpsiMap, result, size)
     }
     result
   }

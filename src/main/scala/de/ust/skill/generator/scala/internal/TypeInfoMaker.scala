@@ -390,14 +390,14 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
       val lcount = newDynamicInstances.size
       //@ note this is the index into the data array and NOT the written lbpo
       val lbpo = if (0 == lcount) 0L
-      else newDynamicInstances.next.getSkillID - 1
+      else newDynamicInstances.next.getSkillID - 1L
 
       blockInfos += new BlockInfo(lbpo, lcount)
 
       //@note: if this does not hold for p; then it will not hold for p.subPools either!
       if (newInstances || !newPool) {
         //build field chunks
-        for (f ← fields) {
+        for (f ← fields if f.index != 0) {
           if (f.noDataChunk) {
             val c = new BulkChunkInfo(-1, -1, dynamicSize)
             f.addChunk(c)

@@ -26,15 +26,18 @@ trait StateAppenderMaker extends GeneralOutputMaker {
     //package
     out.write(s"""package ${packagePrefix}internal
 
-import java.util.Arrays
-import java.nio.ByteBuffer
+import java.util.concurrent.Callable
+import java.util.concurrent.Future
+import java.util.concurrent.FutureTask
+import java.util.concurrent.Semaphore
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.WrappedArray
+import scala.concurrent.ExecutionContext
 
+import de.ust.skill.common.jvm.streams.MappedOutStream
 import de.ust.skill.common.jvm.streams.FileOutputStream
-
-import _root_.${packagePrefix}_
 
 /**
  * Holds state of a write operation.
@@ -57,11 +60,19 @@ private[internal] final class StateAppender(state : State, out : FileOutputStrea
   val chunkMap = HashMap[FieldDeclaration[_], ChunkInfo]()
   state.pools.foreach {
     case p : BasePool[_] ⇒
-      makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ state.poolByName(s).newObjects.size })
+      makeLBPOMap(p, lbpsiMap, 0, _.newObjects.size)
       //@note it is very important to prepare after the creation of the lbpsi map
       p.prepareAppend(chunkMap)
     case _ ⇒
   }
+
+  // locate relevant pools
+  val rPools = state.pools.filter { p ⇒
+    p.poolIndex >= newPoolIndex || (p.dynamicSize > 0 && p.fields.exists(chunkMap.contains(_)))
+  }
+
+  // locate relevant fields
+  val rFields = chunkMap.keySet.toArray
 
   /**
    * ****************
@@ -73,147 +84,106 @@ private[internal] final class StateAppender(state : State, out : FileOutputStrea
   state.String.asInstanceOf[StringPool].prepareAndAppend(out, this)
 
   // write count of the type block
-  v64(state.pools.filter { p ⇒
-    p.poolIndex >= newPoolIndex || (p.dynamicSize > 0 && p.fields.exists(chunkMap.contains(_)))
-  }.size, out)
+  v64(rPools.size, out)
 
-  // TODO see code generator
+  // calculate offsets
+  val offsets = HashMap[StoragePool[_ <: SkillType, _ <: SkillType], HashMap[FieldDeclaration[_], Future[Long]]]();
+  for (p ← rPools) offsets(p) = HashMap()
+  for (f ← rFields) {
+    val v = new FutureTask(new Callable[Long]() {
+      def call : Long = offset(f.owner, f)
+    })
+    ExecutionContext.Implicits.global.execute(v)
+    offsets(f.owner)(f) = v
+  }
 
+  // @note performance hack: requires at least 1 instance in order to work correctly
+  @inline def genericPutField[T](p : TraversableOnce[SkillType], f : FieldDeclaration[T], dataChunk : MappedOutStream) {
+    f.t match {
+      case I8            ⇒ for (i ← p) dataChunk.i8(i.get(f).asInstanceOf[Byte])
+      case I16           ⇒ for (i ← p) dataChunk.i16(i.get(f).asInstanceOf[Short])
+      case I32           ⇒ for (i ← p) dataChunk.i32(i.get(f).asInstanceOf[Int])
+      case I64           ⇒ for (i ← p) dataChunk.i64(i.get(f).asInstanceOf[Long])
+      case V64           ⇒ for (i ← p) dataChunk.v64(i.get(f).asInstanceOf[Long])
+
+      case StringType(_) ⇒ for (i ← p) string(i.get(f).asInstanceOf[String], dataChunk)
+
+      case other ⇒
+        val den = typeToSerializationFunction(other); for (i ← p) den(i.get(f), dataChunk)
+    }
+  }
+
+  case class Task(val is : TraversableOnce[SkillType], val f : FieldDeclaration[_], val begin : Long, val end : Long);
+  val data = new ArrayBuffer[Task];
+  var offset = 0L
+  for (p ← rPools) {
+    // generic append
+    val newPool = p.poolIndex >= newPoolIndex
+    val fields = p.fields.filter(chunkMap.contains(_))
+    if (newPool || (0 != fields.size && p.dynamicSize > 0)) {
+
+      string(p.name, out)
+      val count = p.blockInfos.last.count
+      v64(count, out)
+
+      if (newPool) {
+        restrictions(p, out)
+        p.superName match {
+          case Some(sn) ⇒
+            string(sn, out)
+            out.v64(lbpsiMap(p.poolIndex.toInt))
+          case None ⇒
+            out.i8(0)
+        }
+      } else for (sn ← p.superName) {
+        out.v64(lbpsiMap(p.poolIndex.toInt))
+      }
+
+      if (newPool && 0 == count) {
+        out.i8(0);
+      } else {
+        val vs = offsets(p)
+        out.v64(fields.size)
+        for (f ← fields) {
+          out.v64(f.index)
+          val outData = f.lastChunk match {
+            case bci : BulkChunkInfo ⇒
+              string(f.name, out)
+              writeType(f.t, out)
+              restrictions(f, out)
+
+              p.all
+
+            case sci : SimpleChunkInfo ⇒
+              p.basePool.data.view(sci.bpo.toInt, (sci.bpo + sci.count).toInt)
+          }
+          // put end offset and enqueue data
+          val end = offset + vs(f).get
+          out.v64(end)
+          data += Task(outData, f, offset, end)
+          offset = end
+        }
+      }
+    }
+  }
+
+  // write field data
+  val barrier = new Semaphore(0)
+  val baseOffset = out.position
+  for ((Task(fieldData, f, begin, end)) ← data) {
+    val dataChunk = out.map(baseOffset, begin, end)
+    ExecutionContext.Implicits.global.execute(new Runnable {
+      override def run = {
+        genericPutField(fieldData, f, dataChunk)
+        barrier.release(1)
+      }
+    }
+    )
+  }
+  barrier.acquire(data.size)
   out.close
 }
 """)
-
-    // TODO integrate this
-    val todo = s"""
-  // we have to buffer the data chunk before writing it
-  val dataChunk = new OutBuffer();
-
-  // @note performance hack: requires at least 1 instance in order to work correctly
-  @inline def genericPutField(p : StoragePool[_ <: SkillType, _ <: SkillType], f : FieldDeclaration, instances : TraversableOnce[SkillType]) {
-    f.t match {
-      case I8         ⇒ for (i ← instances) i8(i.get(p, f).asInstanceOf[Byte], dataChunk)
-      case I16        ⇒ for (i ← instances) i16(i.get(p, f).asInstanceOf[Short], dataChunk)
-      case I32        ⇒ for (i ← instances) i32(i.get(p, f).asInstanceOf[Int], dataChunk)
-      case I64        ⇒ for (i ← instances) i64(i.get(p, f).asInstanceOf[Long], dataChunk)
-      case V64        ⇒ for (i ← instances) v64(i.get(p, f).asInstanceOf[Long], dataChunk)
-
-      case StringType ⇒ for (i ← instances) string(i.get(p, f).asInstanceOf[String], dataChunk)
-    }
-  }
-  for (p ← state.pools) {
-    p match {${
-      (for (t ← IR) yield {
-        val sName = t.getSkillName
-        val fields = t.getFields.filterNot(_.isIgnored)
-        s"""
-      case p : ${t.getName.capital}StoragePool ⇒
-        val newPool = p.poolIndex >= newPoolIndex
-        val fields = p.fields.filter(chunkMap.contains(_))
-        if (newPool || (0 != fields.size && p.dynamicSize > 0)) {
-          string("$sName", out)
-          if (newPool) {
-            ${
-          if (null == t.getSuperType) "out.put(0.toByte)"
-          else s"""string("${t.getSuperType.getSkillName}", out)"""
-        }
-          }${
-          if (null == t.getSuperType) "" else """
-          out.v64(lbpsiMap(p.poolIndex.toInt))"""
-        }
-          val count = p.blockInfos.last.count
-          out.v64(count)
-
-          if (newPool)
-            restrictions(p, out)
-
-          if (newPool && 0 == count) {
-            out.put(0.toByte);
-          } else {
-            out.v64(fields.size)
-            for (f ← fields) {
-            var fieldSize = 0
-              val outData = f.dataChunks.last match {
-                case bci : BulkChunkInfo ⇒
-                  fieldSize = p.size
-                  restrictions(f, out)
-                  writeType(f.t, out)
-                  string(f.name, out)
-
-                  p.all
-
-                case sci : SimpleChunkInfo ⇒
-                  fieldSize = count.toInt
-                  p.data.view(sci.bpsi.toInt, (sci.bpsi + sci.count).toInt).iterator.asInstanceOf[Iterator[_root_.${packagePrefix}${t.getName.capital}]]
-
-              }
-              f.name match {${
-          (for (f ← fields) yield s"""
-                case "${f.getSkillName()}" ⇒ locally {
-                  ${writeField(t, f)}
-                }""").mkString("")
-        }
-                case _ ⇒ if (outData.size > 0) genericPutField(p, f, outData)
-              }
-              // end
-              out.v64(dataChunk.size)
-            }
-          }
-        }"""
-      }
-      ).mkString("")
-    }
-      case _ ⇒ locally {
-        // generic append
-        val newPool = p.poolIndex >= newPoolIndex
-        val fields = p.fields.filter(chunkMap.contains(_))
-        if (newPool || (0 != fields.size && p.dynamicSize > 0)) {
-
-          string(p.name, out)
-          if (newPool) {
-            p.superName match {
-              case Some(sn) ⇒
-                string(sn, out)
-                out.v64(lbpsiMap(p.poolIndex.toInt))
-              case None ⇒
-                out.put(0.toByte)
-            }
-          } else for (sn ← p.superName) {
-            out.v64(lbpsiMap(p.poolIndex.toInt))
-          }
-          val count = p.blockInfos.tail.size
-          v64(count, out)
-
-          if (newPool)
-            restrictions(p, out)
-
-          if (newPool && 0 == count) {
-            out.put(0.toByte);
-          } else {
-            out.v64(fields.size)
-            for (f ← fields) {
-              val outData = f.dataChunks.last match {
-                case bci : BulkChunkInfo ⇒
-                  restrictions(f, out)
-                  writeType(f.t, out)
-                  string(f.name, out)
-
-                  p.all
-
-                case sci : SimpleChunkInfo ⇒
-                  p.basePool.data.view(sci.bpsi.toInt, (sci.bpsi + sci.count).toInt)
-
-              }
-
-              if (outData.size > 0) genericPutField(p, f, outData)
-              // end
-              v64(dataChunk.size, out)
-            }
-          }
-        }
-      }
-    }
-  }
-  out.putAll(dataChunk)"""
 
     //class prefix
     out.close()

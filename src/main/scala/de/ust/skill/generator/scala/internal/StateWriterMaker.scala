@@ -55,7 +55,7 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
   val lbpsiMap = new Array[Long](state.pools.length)
   state.pools.par.foreach {
     case p : BasePool[_] ⇒
-      makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ state.poolByName(s).staticSize })
+      makeLBPOMap(p, lbpsiMap, 0, _.staticSize)
       p.compress(lbpsiMap)
     case _ ⇒
   }
@@ -72,7 +72,6 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
   v64(state.pools.size, out)
 
   // calculate offsets
-  // TODO this code can be simplified a lot using ".par 
   val offsets = new HashMap[StoragePool[_ <: SkillType, _ <: SkillType], HashMap[FieldDeclaration[_], Future[Long]]]
   for (p ← state.pools) {
     val vs = new HashMap[FieldDeclaration[_], Future[Long]]
@@ -87,7 +86,6 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
   }
 
   // create type definitions
-  // @note performance hack: requires at least 1 instance in order to work correctly
   @inline def genericPutField[T](p : StoragePool[_ <: SkillType, _ <: SkillType], f : FieldDeclaration[T], dataChunk : MappedOutStream) {
     f.t match {
       case I8         ⇒ for (i ← p) dataChunk.i8(i.get(f).asInstanceOf[Byte])
