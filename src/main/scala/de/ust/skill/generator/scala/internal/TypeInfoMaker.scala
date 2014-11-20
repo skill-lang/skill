@@ -36,10 +36,10 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.WrappedArray
 import scala.reflect.ClassTag
 
+import de.ust.skill.common.jvm.streams.InStream
+
 import _root_.${packagePrefix}api._
 import _root_.${packagePrefix}internal.restrictions._
-import _root_.${packagePrefix}internal.streams.FileInputStream
-import _root_.${packagePrefix}internal.streams.InStream
 """)
 
     // TODO distribute

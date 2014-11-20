@@ -27,10 +27,11 @@ import scala.collection.mutable.HashSet
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.WrappedArray
 
+import de.ust.skill.common.jvm.streams.InStream
+
 import _root_.${packagePrefix}api.Access
 import _root_.${packagePrefix}api.StringAccess
 import _root_.${packagePrefix}internal._
-import _root_.${packagePrefix}internal.streams.InStream
 
 /**
  * The field parser is able to turn field data from a type block data chunk into an array of field entries

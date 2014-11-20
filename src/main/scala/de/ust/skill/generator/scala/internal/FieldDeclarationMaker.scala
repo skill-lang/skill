@@ -23,7 +23,8 @@ import scala.collection.mutable.HashSet
 import java.nio.MappedByteBuffer
 import java.util.Arrays
 
-import _root_.${packagePrefix}internal.streams.MappedInStream
+import de.ust.skill.common.jvm.streams.MappedInStream
+
 import _root_.${packagePrefix}internal.restrictions.FieldRestriction
 """);
     out.write("""

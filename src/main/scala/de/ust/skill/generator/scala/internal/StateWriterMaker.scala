@@ -37,8 +37,8 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.WrappedArray
 import scala.concurrent.ExecutionContext
 
-import _root_.${packagePrefix}internal.streams.FileOutputStream
-import _root_.${packagePrefix}internal.streams.MappedOutStream
+import de.ust.skill.common.jvm.streams.MappedOutStream
+import de.ust.skill.common.jvm.streams.FileOutputStream
 
 /**
  * Holds state of a write operation.

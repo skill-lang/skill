@@ -22,9 +22,10 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
+import de.ust.skill.common.jvm.streams.InStream
+import de.ust.skill.common.jvm.streams.FileOutputStream
+
 import _root_.${packagePrefix}api._
-import _root_.${packagePrefix}internal.streams.FileOutputStream
-import _root_.${packagePrefix}internal.streams.InStream
 """)
 
     out.write("""

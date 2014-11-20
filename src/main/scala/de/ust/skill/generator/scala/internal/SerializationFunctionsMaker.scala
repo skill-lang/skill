@@ -29,7 +29,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.language.implicitConversions
 
-import _root_.${packagePrefix}internal.streams.OutStream
+import de.ust.skill.common.jvm.streams.OutStream
 
 /**
  * Provides serialization functions;

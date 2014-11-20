@@ -5,28 +5,27 @@
 \*                                                                            */
 package de.ust.skill.generator.scala
 
-import java.io.File
 import java.util.Date
+
 import scala.collection.JavaConversions._
+
+import de.ust.skill.generator.common.Generator
 import de.ust.skill.generator.scala.api.AccessMaker
+import de.ust.skill.generator.scala.api.SkillFileMaker
 import de.ust.skill.generator.scala.internal.ExceptionsMaker
 import de.ust.skill.generator.scala.internal.FieldDeclarationMaker
+import de.ust.skill.generator.scala.internal.FieldOffsetCalculatorMaker
 import de.ust.skill.generator.scala.internal.FieldParserMaker
 import de.ust.skill.generator.scala.internal.FileParserMaker
 import de.ust.skill.generator.scala.internal.InternalInstancePropertiesMaker
 import de.ust.skill.generator.scala.internal.RestrictionsMaker
-import de.ust.skill.generator.scala.internal.StateMaker
 import de.ust.skill.generator.scala.internal.SerializationFunctionsMaker
 import de.ust.skill.generator.scala.internal.SkillTypeMaker
 import de.ust.skill.generator.scala.internal.StateAppenderMaker
+import de.ust.skill.generator.scala.internal.StateMaker
 import de.ust.skill.generator.scala.internal.StateWriterMaker
 import de.ust.skill.generator.scala.internal.StringPoolMaker
 import de.ust.skill.generator.scala.internal.TypeInfoMaker
-import de.ust.skill.generator.scala.internal.streams.FileInputStreamMaker
-import de.ust.skill.generator.scala.internal.streams.FileOutputStreamMaker
-import de.ust.skill.generator.scala.internal.streams.InStreamMaker
-import de.ust.skill.generator.scala.internal.streams.OutStreamMaker
-import de.ust.skill.generator.scala.internal.streams.MappedOutStreamMaker
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
@@ -35,14 +34,9 @@ import de.ust.skill.ir.ListType
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.parser.Parser
-import de.ust.skill.generator.scala.internal.FieldOffsetCalculatorMaker
-import de.ust.skill.generator.scala.internal.streams.MappedInStreamMaker
-import de.ust.skill.generator.common.Generator
 import de.ust.skill.ir.UserType
+import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.View
-import de.ust.skill.generator.scala.api.SkillFileMaker
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -61,14 +55,8 @@ class Main extends FakeMain
     with FieldDeclarationMaker
     with FieldOffsetCalculatorMaker
     with FieldParserMaker
-    with FileInputStreamMaker
-    with FileOutputStreamMaker
     with FileParserMaker
-    with InStreamMaker
     with InternalInstancePropertiesMaker
-    with MappedInStreamMaker
-    with MappedOutStreamMaker
-    with OutStreamMaker
     with RestrictionsMaker
     with StateMaker
     with SerializationFunctionsMaker
@@ -76,6 +64,7 @@ class Main extends FakeMain
     with SkillTypeMaker
     with StateAppenderMaker
     with StateWriterMaker
+    with StreamsMaker
     with StringPoolMaker
     with TypeInfoMaker
     with TypesMaker {
