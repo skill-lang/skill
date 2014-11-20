@@ -46,6 +46,18 @@ ${
   def all : Iterator[Access[_ <: SkillType]]
 
   /**
+   * changes output path
+   * @note in append mode, the old file will be copied to the new path; this may take some time
+   */
+  def changePath(path : Path) : Unit
+  /**
+   * change mode
+   * @note currently only append -> write is supported; if you want to change write -> append, you are probably looking
+   * for open(Create, Append) instead
+   */
+  def changeMode(writeMode : Mode) : Unit
+
+  /**
    * Checks restrictions in types. Restrictions are checked before write/append, where an error is raised if they do not
    * hold.
    */

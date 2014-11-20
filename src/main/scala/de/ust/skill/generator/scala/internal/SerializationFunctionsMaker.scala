@@ -47,7 +47,7 @@ abstract class SerializationFunctions(state : State) {
     val strings = state.String
     for (p ← state.pools) {
       strings.add(p.name)
-      for (f ← p.fields) {
+      for (f ← p.fields if f.index != 0) {
         strings.add(f.name)
         if (f.t.isInstanceOf[StringType]) {
           for (i ← p.all)

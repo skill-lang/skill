@@ -49,7 +49,7 @@ ${
   val String : StringAccess,
   val pools : Array[StoragePool[_ <: SkillType, _ <: SkillType]],
   var path : Path,
-  val mode : WriteMode)
+  var mode : WriteMode)
     extends SkillFile {
 
   val poolByName = pools.map(_.name).zip(pools).toSeq.toMap
@@ -102,6 +102,21 @@ ${
   def close : Unit = {
     flush;
     // TODO invalidate state?
+  }
+
+  def changePath(newPath : Path) : Unit = mode match {
+    case Write                       ⇒ path = newPath
+    case Append if (path == newPath) ⇒ //nothing to do
+    case Append                      ⇒ Files.copy(path, newPath); path = newPath
+  }
+
+  def changeMode(writeMode : Mode) : Unit = (mode, writeMode) match {
+    case (Append, Write) ⇒ mode = Write
+    case (Write, Append) ⇒
+      throw new IllegalArgumentException(
+        "Cannot change write mode from Write to Append, try to use open(<path>, Create, Append) instead."
+      )
+    case _ ⇒
   }
 }
 
