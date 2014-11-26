@@ -307,8 +307,9 @@ sealed class DistributedField[@specialized(Boolean, Byte, Char, Double, Float, I
   }
 
   private def mapToFieldType(t : Type) : String = {
+    //@note it is possible to pass <null> to the case classes, because they will be replaced anyway
     def mapGroundType(t : Type) = t.getSkillName match {
-      case "annotation" ⇒ "annotation"
+      case "annotation" ⇒ "Annotation(null)"
       case "bool"       ⇒ "BoolType"
       case "i8"         ⇒ "I8"
       case "i16"        ⇒ "I16"
@@ -317,7 +318,7 @@ sealed class DistributedField[@specialized(Boolean, Byte, Char, Double, Float, I
       case "v64"        ⇒ "V64"
       case "f32"        ⇒ "F32"
       case "f64"        ⇒ "F64"
-      case "string"     ⇒ "stringType"
+      case "string"     ⇒ "StringType(null)"
 
       case s            ⇒ s"""TypeDefinitionName[${mapType(t)}]("$s")"""
     }
