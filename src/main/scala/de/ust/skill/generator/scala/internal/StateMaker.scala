@@ -59,7 +59,7 @@ ${
   def all = pools.iterator.asInstanceOf[Iterator[Access[_ <: SkillType]]]
 
   @inline private def finalizePools {
-    @inline def eliminatePreliminaryTypesIn[T](t : FieldType[T]) : FieldType[T] = t match {
+    def eliminatePreliminaryTypesIn[T](t : FieldType[T]) : FieldType[T] = t match {
       case TypeDefinitionIndex(i) ⇒ try {
         pools(i.toInt).asInstanceOf[FieldType[T]]
       } catch {
@@ -80,8 +80,8 @@ ${
     for (p ← pools) {
       val fieldMap = p.fields.map { _.name }.zip(p.fields).toMap
 
-      for ((n, (t, _)) ← p.knownFields if !fieldMap.contains(n)) {
-        p.addField(p.fields.size, eliminatePreliminaryTypesIn(t), n, HashSet())
+      for (n ← p.knownFields if !fieldMap.contains(n)) {
+        p.addKnownField(n, eliminatePreliminaryTypesIn)
       }
     }
   }
@@ -169,7 +169,7 @@ ${
           writeMode
         )
       case Read ⇒
-        FileParser.read(new FileInputStream(path), writeMode)
+        FileParser.read(FileInputStream.open(path), writeMode)
     }
   }
 }

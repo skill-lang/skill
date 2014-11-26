@@ -22,14 +22,14 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
-import de.ust.skill.common.jvm.streams.InStream
+import de.ust.skill.common.jvm.streams.FileInputStream
 import de.ust.skill.common.jvm.streams.FileOutputStream
 
 import _root_.${packagePrefix}api._
 """)
 
     out.write("""
-final class StringPool(in : InStream) extends StringAccess {
+final class StringPool(in : FileInputStream) extends StringAccess {
   import SerializationFunctions.v64
 
   /**
@@ -67,7 +67,9 @@ final class StringPool(in : InStream) extends StringAccess {
           in.pop
 
           val result = new String(chars, "UTF-8")
-          idMap(index.toInt) = result
+          this.synchronized {
+            idMap(index.toInt) = result
+          }
           result
         }
         case s ⇒ s;

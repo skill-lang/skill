@@ -7,6 +7,19 @@ package de.ust.skill.generator.scala.internal
 
 import java.io.PrintWriter
 import de.ust.skill.generator.scala.GeneralOutputMaker
+import scala.collection.JavaConversions._
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.restriction.IntRangeRestriction
+import de.ust.skill.ir.restriction.FloatRangeRestriction
+import de.ust.skill.ir.restriction.NullableRestriction
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -19,6 +32,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
+import scala.collection.mutable.WrappedArray
 
 import java.nio.MappedByteBuffer
 import java.util.Arrays
@@ -33,7 +47,7 @@ import _root_.${packagePrefix}internal.restrictions.FieldRestriction
  *
  * @param begin position of the first byte of the first instance's data
  * @param end position of the last byte, i.e. the first byte that is not read
- * @param bpso the offset of the first instance
+ * @param bpo the offset of the first instance
  * @param count the number of instances in this chunk
  *
  * @note indices of recipient of the field data is not necessarily continuous; make use of staticInstances!
@@ -66,17 +80,17 @@ case class BlockInfo(val bpo : Long, val count : Long);
  * @note index 0 is used for the skillID
  * @note specialized in everything but unit
  */
-trait FieldDeclaration[@specialized(Boolean, Byte, Char, Double, Float, Int, Long, Short) T] {
-  var t : FieldType[T];
-  def name : String;
-  def index : Long;
-  def owner : StoragePool[_ <: SkillType, _ <: SkillType];
+sealed abstract class FieldDeclaration[T](
+    var t : FieldType[T],
+    val name : String,
+    val index : Long,
+    val owner : StoragePool[_ <: SkillType, _ <: SkillType]) {
 
   /**
    *  Data chunk information, as it is required for later parsing.
    */
   protected val dataChunks = ListBuffer[ChunkInfo]();
-  private[internal] def addChunk(ci : ChunkInfo) : Unit = dataChunks += ci
+  private[internal] final def addChunk(ci : ChunkInfo) : Unit = dataChunks.append(ci)
   private[internal] def addOffsetToLastChunk(offset : Long) {
     val c = dataChunks.last
     c.begin += offset
@@ -91,8 +105,8 @@ trait FieldDeclaration[@specialized(Boolean, Byte, Char, Double, Float, Int, Lon
   val restrictions = HashSet[FieldRestriction[T]]();
   def addRestriction[U](r : FieldRestriction[U]) = restrictions += r.asInstanceOf[FieldRestriction[T]]
   def check {
-    if(!restrictions.isEmpty)
-      owner.all.foreach { x => restrictions.foreach(_.check(x.get(this))) }
+    if (!restrictions.isEmpty)
+      owner.all.foreach { x ⇒ restrictions.foreach(_.check(x.get(this))) }
   }
 
   override def toString = t.toString+" "+name
@@ -101,6 +115,24 @@ trait FieldDeclaration[@specialized(Boolean, Byte, Char, Double, Float, Int, Lon
     case _                       ⇒ false
   }
   override def hashCode = name.hashCode ^ t.hashCode
+
+  /**
+   * Read data from a mapped input stream and set it accordingly
+   */
+  def read(in : MappedInStream) : Unit
+
+  /**
+   * reflective get
+   * @note it is silently assumed, that owner.contains(i)
+   * @note known fields provide .get methods that are generally faster, because they exist without boxing
+   */
+  def getR(i : SkillType) : T;
+  /**
+   * reflective set
+   * @note it is silently assumed, that owner.contains(i)
+   * @note known fields provide .get methods that are generally faster, because they exist without boxing
+   */
+  def setR(i : SkillType, v : T) : Unit;
 }
 
 /**
@@ -108,58 +140,112 @@ trait FieldDeclaration[@specialized(Boolean, Byte, Char, Double, Float, Int, Lon
  *
  * @note the name is a bit miss-leading, as it excludes distributed and lazy known fields
  */
-final class KnownField[@specialized(Boolean, Byte, Char, Double, Float, Int, Long, Short) T](
-  override var t : FieldType[T],
-  override val name : String,
-  override val index : Long,
-  override val owner : StoragePool[_ <: SkillType, _ <: SkillType])
-    extends FieldDeclaration[T];
+sealed trait KnownField[B <: SkillType, @specialized T] {
+  def get(i : B) : T
+  def set(i : B, v : T) : Unit
+}
 
 /**
- * The fields data is distributed into an array holding its instances.
- *
- * TODO sicherstellen, dass distributed felder vom generierten serialisierungscode ausgenommen sind!!
+ * This trait marks auto fields, i.e. fields that wont be touched by serialization.
+ */
+trait AutoField {
+  final def read(in : MappedInStream) = throw new NoSuchMethodError("one can not read auto fields!")
+}
+
+/**
+ * Special skillID auto field.
+ */
+final class KnownField_SkillID(owner : StoragePool[_ <: SkillType, _ <: SkillType])
+    extends FieldDeclaration[Long](V64, "skillid", 0, owner)
+    with KnownField[SkillType, Long]
+    with AutoField {
+
+  override def get(i : SkillType) = i.getSkillID
+  override def set(i : SkillType, v : Long) = throw new NoSuchMethodError("setting skillIDs is not legal")
+  override def getR(i : SkillType) = i.getSkillID
+  override def setR(i : SkillType, v : Long) = throw new NoSuchMethodError("setting skillIDs is not legal")
+}
+""")
+
+    for (t ← IR; f ← t.getFields)
+      out.write(s"""
+/**
+ * ${f.getType.toString} ${t.getName.capital}.${f.getName.camel}
+ */
+final class KnownField_${t.getName.capital}_${f.getName.camel}(
+  index : Long,
+  owner : StoragePool[_ <: SkillType, _ <: SkillType])
+    extends FieldDeclaration[${mapType(f.getType)}](${mapToFieldType(f.getType)},
+      "${f.getSkillName}",
+      index,
+      owner) with KnownField[${mapType(t)}, ${mapType(f.getType)}] {
+
+  def read(in : MappedInStream) {
+    val is = dataChunks.last match {
+      case c : SimpleChunkInfo ⇒ owner.basePool.data.view(c.bpo.toInt, (c.bpo + c.count).toInt)
+      case bci : BulkChunkInfo ⇒ owner.all
+    }
+    for (i ← is)
+      i.asInstanceOf[${mapType(t)}].${f.getName.camel} = t.readSingleField(in)
+  }
+
+  override def get(i : ${mapType(t)}) = i.${f.getName.camel}
+  override def set(i : ${mapType(t)}, v : ${mapType(f.getType)}) = i.${f.getName.camel} = v
+
+  override def getR(i : SkillType) = i.asInstanceOf[${mapType(t)}].${f.getName.camel}
+  override def setR(i : SkillType, v : ${mapType(f.getType)}) : Unit = i.asInstanceOf[${mapType(t)}].${f.getName.camel} = v
+}
+""")
+
+    out.write("""
+/**
+ * The fields data is distributed into an array (for now its a hash map) holding its instances.
  */
 sealed class DistributedField[@specialized(Boolean, Byte, Char, Double, Float, Int, Long, Short) T : Manifest](
-  override var t : FieldType[T],
-  override val name : String,
-  override val index : Long,
-  override val owner : StoragePool[_ <: SkillType, _ <: SkillType])
-    extends FieldDeclaration[T] {
+  t : FieldType[T],
+  name : String,
+  index : Long,
+  owner : StoragePool[_ <: SkillType, _ <: SkillType])
+    extends FieldDeclaration[T](t, name, index, owner) {
 
   // data held as in storage pools
-  protected var data = Array[T]()
+  // @note see paper notes for O(1) implementation
+  protected var data = HashMap[SkillType, T]() //Array[T]()
   protected var newData = HashMap[SkillType, T]()
 
-  /**
-   * resizes the data array, but leaves data unchanged
-   */
-  override def addChunk(ci : ChunkInfo) {
-    dataChunks += ci
-    val d = data
-    data = new Array[T](data.length + ci.count.toInt)
-    for (i ← 0 until d.length)
-      data(i) = d(i)
+  override def read(in : MappedInStream) {
+    val d : WrappedArray[_ <: SkillType] = owner match {
+      case p : BasePool[_]   ⇒ p.data
+      case p : SubPool[_, _] ⇒ p.data
+    }
+    lastChunk match {
+      case c : SimpleChunkInfo ⇒
+        val low = c.bpo.toInt
+        val high = (c.bpo + c.count).toInt
+        for (i ← low until high) {
+          data(d(i)) = t.readSingleField(in)
+        }
+      case bci : BulkChunkInfo ⇒
+        for (
+          bi ← owner.blockInfos;
+          i ← bi.bpo.toInt until (bi.bpo + bi.count).toInt
+        ) {
+          data(d(i)) = t.readSingleField(in)
+        }
+    }
   }
 
-  private[internal] def read(part : MappedInStream) {
-    // TODO parse current part
-  }
-
-  /**
-   * direct access
-   */
-  private[internal] def get(ref : SkillType) : T = {
+  override def getR(ref : SkillType) : T = {
     if (-1 == ref.getSkillID)
       return newData(ref)
     else
-      return data(ref.getSkillID.toInt - 1)
+      return data(ref)
   }
-  private[internal] def set(ref : SkillType, value : T) {
+  override def setR(ref : SkillType, value : T) {
     if (-1 == ref.getSkillID)
       newData.put(ref, value)
     else
-      data(ref.getSkillID.toInt - 1) = value
+      data(ref) = value
   }
 
   def iterator = data.iterator ++ newData.valuesIterator
@@ -167,10 +253,16 @@ sealed class DistributedField[@specialized(Boolean, Byte, Char, Double, Float, I
 
 ///**
 // * The field is distributed and loaded on demand.
+// * Unknown fields are lazy as well.
+// * @note implementation abuses a distributed field that can be accessed iff there are no data chunks to be processed
+// * @todo implementation is a complete mess; remove and rewrite!
 // */
-//
-//final class LazyField[@specialized T : Manifest](t : FieldType[T], name : String, index : Long)
-//    extends DistributedField[T](t, name, index) {
+//final class LazyField[T : Manifest](
+//  t : FieldType[T],
+//  name : String,
+//  index : Long,
+//  owner : StoragePool[_ <: SkillType, _ <: SkillType])
+//    extends DistributedField[T](t, name, index, owner) {
 //
 //  // pending parts that have to be loaded
 //  private var parts = ListBuffer[MappedInStream]()
@@ -186,10 +278,7 @@ sealed class DistributedField[@specialized(Boolean, Byte, Char, Double, Float, I
 //    parts += part
 //  }
 //
-//  /**
-//   * direct access
-//   */
-//  private[internal] def get(ref : SkillType) : T = {
+//  override def getR(ref : SkillType) : T = {
 //    if (-1 == ref.getSkillID)
 //      return newData(ref)
 //
@@ -199,9 +288,11 @@ sealed class DistributedField[@specialized(Boolean, Byte, Char, Double, Float, I
 //    return data(ref.getSkillID.toInt - 1)
 //  }
 //
-//  // TODO set
+//  override def setR(ref : SkillType, v : T) {
+//    ???
+//  }
 //
-//  def iterator = {
+//  override def iterator = {
 //    if (!isLoaded)
 //      load
 //
@@ -213,5 +304,43 @@ sealed class DistributedField[@specialized(Boolean, Byte, Char, Double, Float, I
 
     //class prefix
     out.close()
+  }
+
+  private def mapToFieldType(t : Type) : String = {
+    def mapGroundType(t : Type) = t.getSkillName match {
+      case "annotation" ⇒ "annotation"
+      case "bool"       ⇒ "BoolType"
+      case "i8"         ⇒ "I8"
+      case "i16"        ⇒ "I16"
+      case "i32"        ⇒ "I32"
+      case "i64"        ⇒ "I64"
+      case "v64"        ⇒ "V64"
+      case "f32"        ⇒ "F32"
+      case "f64"        ⇒ "F64"
+      case "string"     ⇒ "stringType"
+
+      case s            ⇒ s"""TypeDefinitionName[${mapType(t)}]("$s")"""
+    }
+
+    t match {
+      case t : GroundType              ⇒ mapGroundType(t)
+      case t : ConstantLengthArrayType ⇒ s"ConstantLengthArray(${t.getLength}, ${mapGroundType(t.getBaseType)})"
+      case t : VariableLengthArrayType ⇒ s"VariableLengthArray(${mapGroundType(t.getBaseType)})"
+      case t : ListType                ⇒ s"ListType(${mapGroundType(t.getBaseType)})"
+      case t : SetType                 ⇒ s"SetType(${mapGroundType(t.getBaseType)})"
+      case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"MapType($k,$v)")
+      case t : Declaration             ⇒ s"""TypeDefinitionName[${mapType(t)}]("${t.getSkillName}")"""
+    }
+  }
+
+  private def mkFieldRestrictions(f : Field) : String = {
+    f.getRestrictions.map(_ match {
+      case r : NullableRestriction ⇒ "restrictions.NonNull"
+      case r : IntRangeRestriction ⇒ s"restrictions.Range(${r.getLow}L.to${mapType(f.getType)}, ${r.getHigh}L.to${mapType(f.getType)})"
+      case r : FloatRangeRestriction ⇒ f.getType.getSkillName match {
+        case "f32" ⇒ s"restrictions.Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
+        case "f64" ⇒ s"restrictions.Range(${r.getLowDouble}, ${r.getHighDouble})"
+      }
+    }).mkString(", ")
   }
 }

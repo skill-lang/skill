@@ -14,7 +14,6 @@ import de.ust.skill.generator.scala.api.AccessMaker
 import de.ust.skill.generator.scala.api.SkillFileMaker
 import de.ust.skill.generator.scala.internal.ExceptionsMaker
 import de.ust.skill.generator.scala.internal.FieldDeclarationMaker
-import de.ust.skill.generator.scala.internal.FieldParserMaker
 import de.ust.skill.generator.scala.internal.FileParserMaker
 import de.ust.skill.generator.scala.internal.InternalInstancePropertiesMaker
 import de.ust.skill.generator.scala.internal.RestrictionsMaker
@@ -52,7 +51,6 @@ class Main extends FakeMain
     with AccessMaker
     with ExceptionsMaker
     with FieldDeclarationMaker
-    with FieldParserMaker
     with FileParserMaker
     with InternalInstancePropertiesMaker
     with RestrictionsMaker
@@ -67,8 +65,8 @@ class Main extends FakeMain
     with TypeInfoMaker
     with TypesMaker {
 
-  override def comment(d : Declaration) = d.getComment.format("/**\n", " * ", 120, "\n */\n")
-  override def comment(f : Field) = f.getComment.format("  /**\n", "   * ", 120, "\n   */\n")
+  override def comment(d : Declaration) = d.getComment.format("/**\n", " * ", 120, " */\n")
+  override def comment(f : Field) = f.getComment.format("  /**\n", "   * ", 120, "   */\n")
 
   /**
    * Translates types into scala type names.
@@ -95,7 +93,7 @@ class Main extends FakeMain
     case t : VariableLengthArrayType ⇒ s"$VarArrayTypeName[${mapType(t.getBaseType())}]"
     case t : ListType                ⇒ s"$ListTypeName[${mapType(t.getBaseType())}]"
     case t : SetType                 ⇒ s"$SetTypeName[${mapType(t.getBaseType())}]"
-    case t : MapType                 ⇒ t.getBaseTypes().map(mapType).reduceRight((k, v) ⇒ s"$MapTypeName[$k,$v]")
+    case t : MapType                 ⇒ t.getBaseTypes().map(mapType).reduceRight((k, v) ⇒ s"$MapTypeName[$k, $v]")
 
     case t : Declaration             ⇒ "_root_."+packagePrefix + t.getName.capital
   }

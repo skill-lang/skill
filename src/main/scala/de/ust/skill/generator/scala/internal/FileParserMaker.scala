@@ -21,6 +21,10 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.Queue
 import scala.collection.mutable.Stack
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import de.ust.skill.common.jvm.streams.FileInputStream
 
@@ -58,7 +62,7 @@ ${
       })""").mkString("\n")
     }
         case _ ⇒
-          if (null == superPool) new BasePool[SkillType.SubType](types.size, name, HashMap())
+          if (null == superPool) new BasePool[SkillType.SubType](types.size, name, Set())
           else superPool.makeSubPool(types.size, name)
       }).asInstanceOf[StoragePool[T, B]]
 
@@ -241,7 +245,7 @@ ${
               offset = end
               totalFieldCount += 1
             } else {
-              // known field
+              // seen field
               val end = in.v64
               fields(ID).addChunk(new SimpleChunkInfo(offset, end, bpo, count))
 
@@ -306,23 +310,31 @@ ${
       @inline def processFieldData {
         // we have to add the file offset to all begins and ends we encounter
         val fileOffset = in.position
+        var dataEnd = fileOffset
+
+        // awaiting async read operations
+        val asyncReads = ArrayBuffer[Future[Unit]]();
 
         //process field data declarations in order of appearance and update offsets to absolute positions
         @inline def processField[T](p : StoragePool[_ <: SkillType, _ <: SkillType], index : Int) {
           val f = p.fields(index).asInstanceOf[FieldDeclaration[T]]
           f.t = eliminatePreliminaryTypesIn[T](f.t.asInstanceOf[FieldType[T]])
 
+          // make begin/end absolute
           f.addOffsetToLastChunk(fileOffset)
 
-          // TODO move to Field implementations
-          if (f.isInstanceOf[KnownField[T]])
-            FieldParser.parseThisField(in, p, f.asInstanceOf[KnownField[T]])
-          else
-            in.jump(f.lastChunk.end)
+          val map = in.map(0L, f.lastChunk.begin, f.lastChunk.end)
+          asyncReads.append(Future(f.read(map)))
+          dataEnd = Math.max(dataEnd, f.lastChunk.end)
         }
         for ((p, fID) ← fieldDataQueue) {
           processField(p, fID)
         }
+        in.jump(dataEnd)
+
+        // await async reads
+        for (f ← asyncReads)
+          Await.ready(f, Duration.Inf)
       }
 
       val count = in.v64.toInt

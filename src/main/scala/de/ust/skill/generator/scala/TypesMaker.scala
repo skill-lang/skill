@@ -102,49 +102,13 @@ ${
 
       out.write(s"""$makeField
   final def $name_ = $makeGetterImplementation
-  final def ${name_}_=($Name : ${mapType(f.getType())}): scala.Unit = $makeSetterImplementation
+  final def ${name_}_=($Name : ${mapType(f.getType())}) : scala.Unit = $makeSetterImplementation
 """)
     }
 
-    // generic get
-    out.write(s"""
-  override def get[@specialized T](field : FieldDeclaration[T]) : T = field.name match {
-${
-      (for(f <- t.getAllFields.filterNot(_.isIgnored))
-        yield s"""    case "${f.getSkillName}" ⇒ _${f.getName}.asInstanceOf[T]""").mkString("\n")
-}${
-      (for(f <- t.getAllFields.filter(_.isIgnored))
-        yield s"""    case "${f.getSkillName}" ⇒ throw new IllegalAccessError("${f.getName} is ignored")""").mkString("\n")
-}
-    case _ ⇒ super.get(field)
-  }
-""")
-
-    // generic set
-    out.write(s"""
-  override def set[@specialized T](field : FieldDeclaration[T], value : T) : scala.Unit = field.name match {
-${
-  (
-    for(f <- t.getAllFields.filterNot{t ⇒ t.isIgnored || t.isConstant()}) 
-      yield s"""    case "${f.getSkillName}" ⇒ _${f.getName} = value.asInstanceOf[${mapType(f.getType)}]"""
-  ).mkString("\n")
-}${
-  (
-    for(f <- t.getAllFields.filter(_.isIgnored)) 
-      yield s"""    case "${f.getSkillName}" ⇒ throw new IllegalAccessError("${f.getName} is ignored!")"""
-  ).mkString("\n")
-}${
-  (
-    for(f <- t.getAllFields.filter(_.isConstant)) 
-      yield s"""    case "${f.getSkillName}" ⇒ throw new IllegalAccessError("${f.getName} is constant!")"""
-  ).mkString("\n")
-}
-    case _ ⇒ super.set(field, value)
-  }
-""")
-
       // pretty string
-    out.write(s"""  override def prettyString : String = "${t.getName()}"+""")
+    out.write(s"""
+  override def prettyString : String = "${t.getName()}"+""")
 
     val prettyStringArgs = (for(f <- t.getAllFields)
       yield if(f.isIgnored) s"""+", ${f.getName()}: <<ignored>>" """
@@ -166,7 +130,7 @@ ${ // create unapply method if the type has fields, that can be matched
   if(t.getAllFields().isEmpty())""
   else s"""  def unapply(self : ${t.getName.capital}) = ${(for (f ← t.getAllFields) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
 """
-}  final class SubType private[$packageName] (val τName : String, skillID : Long) extends ${t.getName.capital}(skillID) with NamedType{
+}  final class SubType private[$packageName] (val τName : String, skillID : Long) extends ${t.getName.capital}(skillID) with NamedType {
     override def prettyString : String = τName+$prettyStringArgs
     override def toString = τName+"#"+skillID
   }

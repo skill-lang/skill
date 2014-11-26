@@ -48,9 +48,8 @@ class SkillType private[$packageName] (protected var skillID : Long) {
    *
    * @note if field is not a distributed field of this type, then anything may happen
    */
-  def set[@specialized T](field : FieldDeclaration[T], value : T) {
-    if(0L==field.index) setSkillID(value.asInstanceOf[Long])
-    else field.asInstanceOf[DistributedField[T]].set(this, value)
+  final def set[@specialized T](field : FieldDeclaration[T], value : T) {
+    field.setR(this, value)
   }
 
   /**
@@ -60,10 +59,7 @@ class SkillType private[$packageName] (protected var skillID : Long) {
    *
    * @note if field is not a distributed field of this type, then anything may happen
    */
-  def get[@specialized T](field : FieldDeclaration[T]) : T = {
-    if(0L==field.index) getSkillID.asInstanceOf[T]
-    else field.asInstanceOf[DistributedField[T]].get(this)
-  }
+  final def get[@specialized T](field : FieldDeclaration[T]) : T = field.getR(this)
 }
 
 object SkillType {
