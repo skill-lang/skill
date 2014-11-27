@@ -300,7 +300,7 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
   private[internal] def addField[T](ID : Int, t : FieldType[T], name : String,
                                     restrictions : HashSet[FieldRestriction[_]]) : FieldDeclaration[T] = {
 
-    val f = new DistributedField[T](t.asInstanceOf[FieldType[T]], name, ID, this)(t.m)
+    val f = new LazyField[T](t.asInstanceOf[FieldType[T]], name, ID, this)(t.m)
     restrictions.foreach(f.addRestriction(_))
     fields += f
     return f

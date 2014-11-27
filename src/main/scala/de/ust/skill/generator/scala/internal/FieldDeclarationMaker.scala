@@ -97,8 +97,8 @@ sealed abstract class FieldDeclaration[T](
     c.begin += offset
     c.end += offset
   }
-  private[internal] def noDataChunk = dataChunks.isEmpty
-  private[internal] def lastChunk = dataChunks.last
+  private[internal] final def noDataChunk = dataChunks.isEmpty
+  private[internal] final def lastChunk = dataChunks.last
 
   /**
    * Restriction handling.
@@ -257,55 +257,86 @@ sealed class DistributedField[@specialized(Boolean, Byte, Char, Double, Float, I
   def iterator = data.iterator ++ newData.valuesIterator
 }
 
-///**
-// * The field is distributed and loaded on demand.
-// * Unknown fields are lazy as well.
-// * @note implementation abuses a distributed field that can be accessed iff there are no data chunks to be processed
-// * @todo implementation is a complete mess; remove and rewrite!
-// */
-//final class LazyField[T : Manifest](
-//  t : FieldType[T],
-//  name : String,
-//  index : Long,
-//  owner : StoragePool[_ <: SkillType, _ <: SkillType])
-//    extends DistributedField[T](t, name, index, owner) {
-//
-//  // pending parts that have to be loaded
-//  private var parts = ListBuffer[MappedInStream]()
-//  private def isLoaded = parts.isEmpty
-//  // executes pending read operations
-//  private def load {
-//    // TODO not correct in case of multiple pending cis...add an argument to read!
-//    for (part ← parts)
-//      super.read(part)
-//  }
-//
-//  override def read(part : MappedInStream) {
-//    parts += part
-//  }
-//
-//  override def getR(ref : SkillType) : T = {
-//    if (-1 == ref.getSkillID)
-//      return newData(ref)
-//
-//    if (!isLoaded)
-//      load
-//
-//    return data(ref.getSkillID.toInt - 1)
-//  }
-//
-//  override def setR(ref : SkillType, v : T) {
-//    ???
-//  }
-//
-//  override def iterator = {
-//    if (!isLoaded)
-//      load
-//
-//    super.iterator
-//  }
-//
-//}
+/**
+ * The field is distributed and loaded on demand.
+ * Unknown fields are lazy as well.
+ *
+ * @note implementation abuses a distributed field that can be accessed iff there are no data chunks to be processed
+ */
+final class LazyField[T : Manifest](
+  t : FieldType[T],
+  name : String,
+  index : Long,
+  owner : StoragePool[_ <: SkillType, _ <: SkillType])
+    extends DistributedField[T](t, name, index, owner) {
+
+  // pending parts that have to be loaded
+  private var parts = ListBuffer[MappedInStream]()
+  private def isLoaded = parts.isEmpty
+
+  // executes pending read operations
+  private def load {
+    val d : WrappedArray[_ <: SkillType] = owner match {
+      case p : BasePool[_]   ⇒ p.data
+      case p : SubPool[_, _] ⇒ p.data
+    }
+
+    for (chunk ← dataChunks) {
+      val in = parts.head
+      parts.remove(0)
+      chunk match {
+        case c : SimpleChunkInfo ⇒
+          val low = c.bpo.toInt
+          val high = (c.bpo + c.count).toInt
+          for (i ← low until high) {
+            data(d(i)) = t.readSingleField(in)
+          }
+        case bci : BulkChunkInfo ⇒
+          var count = bci.count;
+          for (
+            bi ← owner.blockInfos; if ({ count -= bi.count; count >= 0 });
+            i ← bi.bpo.toInt until (bi.bpo + bi.count).toInt
+          ) {
+            data(d(i)) = t.readSingleField(in)
+          }
+      }
+    }
+  }
+
+  override def read(part : MappedInStream) {
+    parts += part
+  }
+
+  override def getR(ref : SkillType) : T = {
+    if (-1 == ref.getSkillID)
+      return newData(ref)
+
+    if (!isLoaded)
+      load
+
+    return super.getR(ref)
+  }
+
+  override def setR(ref : SkillType, v : T) {
+    if (-1 == ref.getSkillID)
+      newData(ref) = v
+    else {
+
+      if (!isLoaded)
+        load
+
+      return super.setR(ref, v)
+    }
+  }
+
+  override def iterator = {
+    if (!isLoaded)
+      load
+
+    super.iterator
+  }
+
+}
 """)
 
     //class prefix
@@ -335,7 +366,7 @@ sealed class DistributedField[@specialized(Boolean, Byte, Char, Double, Float, I
       case t : VariableLengthArrayType ⇒ s"VariableLengthArray(${mapGroundType(t.getBaseType)})"
       case t : ListType                ⇒ s"ListType(${mapGroundType(t.getBaseType)})"
       case t : SetType                 ⇒ s"SetType(${mapGroundType(t.getBaseType)})"
-      case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"MapType($k,$v)")
+      case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"MapType($k, $v)")
       case t : Declaration             ⇒ s"""TypeDefinitionName[${mapType(t)}]("${t.getSkillName}")"""
     }
   }

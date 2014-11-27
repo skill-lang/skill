@@ -324,10 +324,11 @@ ${
 
           // make begin/end absolute
           f.addOffsetToLastChunk(fileOffset)
+          val last = f.lastChunk
 
-          val map = in.map(0L, f.lastChunk.begin, f.lastChunk.end)
+          val map = in.map(0L, last.begin, last.end)
           asyncReads.append(Future(Try(f.read(map))))
-          dataEnd = Math.max(dataEnd, f.lastChunk.end)
+          dataEnd = Math.max(dataEnd, last.end)
         }
         for ((p, fID) ← fieldDataQueue) {
           processField(p, fID)
