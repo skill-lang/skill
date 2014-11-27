@@ -13,6 +13,7 @@ trait FileParserMaker extends GeneralOutputMaker {
     //package & imports
     out.write(s"""package ${packagePrefix}internal
 
+import java.nio.BufferUnderflowException
 import java.nio.file.Path
 
 import scala.Array.canBuildFrom
@@ -327,7 +328,16 @@ ${
           val last = f.lastChunk
 
           val map = in.map(0L, last.begin, last.end)
-          asyncReads.append(Future(Try(f.read(map))))
+          asyncReads.append(Future(Try(try {
+            f.read(map)
+            // map was not consumed
+            if (!f.isInstanceOf[LazyField[_]] && !map.eof)
+              throw PoolSizeMissmatchError(blockCounter, last.begin, last.end, f)
+          } catch {
+            case e : BufferUnderflowException ⇒
+              throw PoolSizeMissmatchError(blockCounter, last.begin, last.end, f)
+          }
+          )))
           dataEnd = Math.max(dataEnd, last.end)
         }
         for ((p, fID) ← fieldDataQueue) {
@@ -336,11 +346,16 @@ ${
         in.jump(dataEnd)
 
         // await async reads
-        for (f ← asyncReads)
-          Await.ready(f, Duration.Inf).foreach {
-            case Failure(e) ⇒ throw ParseException(in, blockCounter, "reading field data failed, see propagated exception", e)
-            case _          ⇒
+        for (f ← asyncReads) {
+          Await.result(f, Duration.Inf) match {
+            case Failure(e) ⇒
+              e.printStackTrace()
+              println("throw")
+              if (e.isInstanceOf[SkillException]) throw e
+              else throw ParseException(in, blockCounter, "unexpected exception while reading field data (see below)", e)
+            case _ ⇒
           }
+        }
       }
 
       val count = in.v64.toInt
