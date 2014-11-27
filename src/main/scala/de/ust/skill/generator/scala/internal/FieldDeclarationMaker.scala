@@ -20,6 +20,7 @@ import de.ust.skill.ir.MapType
 import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
 import de.ust.skill.ir.restriction.NullableRestriction
+import de.ust.skill.ir.View
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -167,7 +168,7 @@ final class KnownField_SkillID(owner : StoragePool[_ <: SkillType, _ <: SkillTyp
 }
 """)
 
-    for (t ← IR; f ← t.getFields)
+    for (t ← IR; f ← t.getFields; if !f.isInstanceOf[View])
       out.write(s"""
 /**
  * ${f.getType.toString} ${t.getName.capital}.${f.getName.camel}

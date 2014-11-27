@@ -20,6 +20,7 @@ import de.ust.skill.ir.Field
 import de.ust.skill.ir.restriction.NullableRestriction
 import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
+import de.ust.skill.ir.View
 
 trait TypeInfoMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -561,10 +562,11 @@ sealed class SubPool[T <: B : Manifest, B <: SkillType](
   }
 }
 """)
-    // TODO [[ -> (${mapToFieldType(f.getType)}, HashSet(${mkFieldRestrictions(f)})) ]]
+    
     for (t ← IR) {
       val typeName = "_root_."+packagePrefix + t.getName.capital
       val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
+      val fields = t.getFields.filterNot(_.isInstanceOf[View])
 
       out.write(s"""
 final class ${t.getName.capital}StoragePool(stringType : StringType, annotation : Annotation, poolIndex : Long${
@@ -578,8 +580,8 @@ final class ${t.getName.capital}StoragePool(stringType : StringType, annotation 
       poolIndex,
       "${t.getSkillName}",
       Set(${
-        if (t.getFields.isEmpty) ""
-        else (for (f ← t.getFields) yield s"""\n        "${f.getSkillName}"""").mkString("", ",", "\n      ")
+        if (fields.isEmpty) ""
+        else (for (f ← fields) yield s"""\n        "${f.getSkillName}"""").mkString("", ",", "\n      ")
       })${
         if (t.getSuperType == null) ""
         else ",\nsuperPool"
@@ -590,7 +592,7 @@ final class ${t.getName.capital}StoragePool(stringType : StringType, annotation 
   override def addField[T](ID : Int, t : FieldType[T], name : String,
                            restrictions : HashSet[FieldRestriction[_]]) : FieldDeclaration[T] = {
     val f = (name match {${
-        (for (f ← t.getFields)
+        (for (f ← fields)
           yield s"""
       case "${f.getSkillName}" ⇒ new KnownField_${t.getName.capital}_${f.getName.camel}(ID, this)"""
         ).mkString("")
@@ -608,11 +610,11 @@ final class ${t.getName.capital}StoragePool(stringType : StringType, annotation 
     return f
   }
   override def addKnownField[T](name : String, mkType : FieldType[T] ⇒ FieldType[T]) {${
-        if (t.getFields.isEmpty) "/* no known fields */"
+        if (fields.isEmpty) "/* no known fields */"
         else s"""
     val f = (name match {
 ${
-          (for (f ← t.getFields)
+          (for (f ← fields)
             yield s"""      case "${f.getSkillName}" ⇒ new KnownField_${t.getName.capital}_${f.getName.camel}(fields.size, this)"""
           ).mkString("\n")
         }
