@@ -68,20 +68,20 @@ trait StringAccess {
     for (t ← IR) {
       if (t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty)
         out.write(s"""
-trait ${t.getName.capital}Access extends Access[$packagePrefix${t.getName.capital}] {
+trait ${t.getName.capital}Access extends Access[${mapType(t)}] {
   /**
    * create a new ${t.getName} instance
    */
-  def apply(${makeConstructorArguments(t)}) : _root_.$packagePrefix${t.getName.capital}
+  def apply(${makeConstructorArguments(t)}) : ${mapType(t)}
 }
 """)
       else
         out.write(s"""
-trait ${t.getName.capital}Access extends Access[$packagePrefix${t.getName.capital}] {
+trait ${t.getName.capital}Access extends Access[${mapType(t)}] {
   /**
    * @return the instance
    */
-  def get: $packagePrefix${t.getName.capital}
+  def get: ${mapType(t)}
 }
 """)
     }
