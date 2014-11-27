@@ -181,14 +181,19 @@ final class KnownField_${t.getName.capital}_${f.getName.camel}(
       index,
       owner) with KnownField[${mapType(t)}, ${mapType(f.getType)}] {
 
-  def read(in : MappedInStream) {
+  def read(in : MappedInStream) {${
+        // skip ignored fields
+        if (f.isIgnored()) ""
+        else
+          s"""
     val is = dataChunks.last match {
       case c : SimpleChunkInfo ⇒ owner.basePool.data.view(c.bpo.toInt, (c.bpo + c.count).toInt)
       case bci : BulkChunkInfo ⇒ owner.all
     }
     for (i ← is)
       i.asInstanceOf[${mapType(t)}].${f.getName.camel} = t.readSingleField(in)
-  }
+  """
+      }}
 
   override def get(i : ${mapType(t)}) = i.${f.getName.camel}
   override def set(i : ${mapType(t)}, v : ${mapType(f.getType)}) = i.${f.getName.camel} = v
