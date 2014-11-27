@@ -7,3 +7,5 @@ Format: [name];[email];[contribution]
 Timm Felden;feldentm@informatik.uni-stuttgart.de;Front-End, Scala Binding and Maintenance
 
 Dennis Przytarski;dennis@przytarski.com;Ada-Binding
+
+Fabian Harth; - ;C-Binding

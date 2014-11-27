@@ -1,0 +1,8 @@
+/** check all basic types; integer types, float types, boolean, and string. */
+Constant {
+  const i8 i8 = 1;
+  const i16 i16 = 2;
+  const i32 i32 = 3;
+  const i64 i64 = 4;
+  const v64 v64 = 5;
+}

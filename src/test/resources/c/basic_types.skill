@@ -1,0 +1,12 @@
+/** check all basic types; integer types, float types, boolean, and string. */
+Basic {
+  i8 i8;
+  i16 i16;
+  i32 i32;
+  i64 i64;
+  v64 v64;
+  f32 f32;
+  f64 f64;
+  string string;
+  bool bool;
+}

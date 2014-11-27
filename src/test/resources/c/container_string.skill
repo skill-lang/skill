@@ -1,0 +1,7 @@
+Container {
+  string[3] arr;
+  string[] varr;
+  list<string> l;
+  set<string> s;
+  map<string, string, string> f;
+}
