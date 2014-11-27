@@ -25,6 +25,8 @@ import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Try
+import scala.util.Failure
 
 import de.ust.skill.common.jvm.streams.FileInputStream
 
@@ -313,7 +315,7 @@ ${
         var dataEnd = fileOffset
 
         // awaiting async read operations
-        val asyncReads = ArrayBuffer[Future[Unit]]();
+        val asyncReads = ArrayBuffer[Future[Try[Unit]]]();
 
         //process field data declarations in order of appearance and update offsets to absolute positions
         @inline def processField[T](p : StoragePool[_ <: SkillType, _ <: SkillType], index : Int) {
@@ -324,7 +326,7 @@ ${
           f.addOffsetToLastChunk(fileOffset)
 
           val map = in.map(0L, f.lastChunk.begin, f.lastChunk.end)
-          asyncReads.append(Future(f.read(map)))
+          asyncReads.append(Future(Try(f.read(map))))
           dataEnd = Math.max(dataEnd, f.lastChunk.end)
         }
         for ((p, fID) ← fieldDataQueue) {
@@ -334,7 +336,10 @@ ${
 
         // await async reads
         for (f ← asyncReads)
-          Await.ready(f, Duration.Inf)
+          Await.ready(f, Duration.Inf).foreach {
+            case Failure(e) ⇒ throw ParseException(in, blockCounter, "reading field data failed, see propagated exception", e)
+            case _          ⇒
+          }
       }
 
       val count = in.v64.toInt
