@@ -67,7 +67,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
                Type_Declaration.Fields.Element(I).Written := False;
             end loop;
 
-            Type_Declaration.spsi := 1;
+            Type_Declaration.spsi := 0;
             Type_Declaration.Written := False;
          end Iterate;
          pragma Inline (Iterate);
@@ -98,8 +98,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
    end Run;
 
    function Get_String_Index (Value : String) return Positive is
-      Index                      : Natural :=
-         String_Pool.Reverse_Find_Index (Value);
+      Index : Natural := String_Pool.Reverse_Find_Index (Value);
       Skill_Unknown_String_Index : exception;
    begin
       if 0 = Index then
@@ -174,19 +173,19 @@ ${
 """
         d.getFields.filter({ f ⇒ "string" == f.getType.getSkillName }).foreach({ f ⇒
           hasOutput = true;
-          output += s"                  Put_String (Object.${f.getSkillName}.all, Safe => True);\r\n"
+          output += s"                  Put_String (Object.${f.getName.ada}.all, Safe => True);\r\n"
         })
         d.getFields.foreach({ f ⇒
           f.getType match {
             case t : ConstantLengthArrayType ⇒
-              if ("string" == t.getBaseType.getName) {
+              if ("string" == t.getBaseType.getSkillName) {
                 hasOutput = true;
                 output += s"""\r\n                  for I in Object.${f.getSkillName}'Range loop
                      Put_String (Object.${f.getSkillName} (I).all, Safe => True);
                   end loop;\r\n""";
               }
             case t : VariableLengthArrayType ⇒
-              if ("string" == t.getBaseType.getName) {
+              if ("string" == t.getBaseType.getSkillName) {
                 hasOutput = true;
                 output += s"""\r\n                  declare
                      use ${mapType(t, d, f).stripSuffix(".Vector")};
@@ -203,7 +202,7 @@ ${
                   end;\r\n"""
               }
             case t : ListType ⇒
-              if ("string" == t.getBaseType.getName) {
+              if ("string" == t.getBaseType.getSkillName) {
                 hasOutput = true;
                 output += s"""\r\n                  declare
                      use ${mapType(t, d, f).stripSuffix(".List")};
@@ -220,7 +219,7 @@ ${
                   end;\r\n"""
               }
             case t : SetType ⇒
-              if ("string" == t.getBaseType.getName) {
+              if ("string" == t.getBaseType.getSkillName) {
                 hasOutput = true;
                 output += s"""\r\n                  declare
                      use ${mapType(t, d, f).stripSuffix(".Set")};
@@ -238,7 +237,7 @@ ${
               }
             case t : MapType ⇒
               val types = t.getBaseTypes().reverse
-              if (types.map({ x ⇒ x.getName }).contains("string")) {
+              if (types.map({ x ⇒ x.getSkillName }).contains("string")) {
                 hasOutput = true;
                 output += s"                  declare\r\n"
                 types.slice(0, types.length - 1).zipWithIndex.foreach({
@@ -246,13 +245,13 @@ ${
                     val x = {
                       var output = ""
                       if (0 == i) {
-                        if ("string" == types.get(i + 1).getName) output += s"Put_String (Key (Position).all, Safe => True);"
-                        if ("string" == types.get(i).getName) {
+                        if ("string" == types.get(i + 1).getSkillName) output += s"Put_String (Key (Position).all, Safe => True);"
+                        if ("string" == types.get(i).getSkillName) {
                           if (!output.isEmpty) output += "\r\n                     "
                           output += s"Put_String (Element (Position).all, Safe => True);"
                         }
                       } else {
-                        if ("string" == types.get(i + 1).getName) output += s"Put_String (Key (Position).all, Safe => True);\r\n                           "
+                        if ("string" == types.get(i + 1).getSkillName) output += s"Put_String (Key (Position).all, Safe => True);\r\n                           "
                         output += s"Read_Map_${types.length - i} (Element (Position));"
                       }
                       if (output.isEmpty) "null;" else output
@@ -336,25 +335,27 @@ ${
 
          Type_Declaration : Type_Information := Types.Element ("${d.getSkillName}");
          Size             : Natural          :=
-            Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
+            Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi;
 
          type Temp_Type is array (1 .. Size) of Skill_Type_Access;
          type Temp_Type_Access is access Temp_Type;
          Temp  : Temp_Type_Access := new Temp_Type;
          Index : Positive         := 1;
+         First_Object : Boolean := False;
 """
           types.foreach({ t ⇒
             output += s"""\r\n         ${t.getName.ada}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");"""
           })
           output += "\r\n      begin\r\n"
           types.foreach({ t ⇒
-            output += s"""         ${t.getName.ada}_Type_Declaration.lbpsi := 0;
-         for I in Type_Declaration.spsi .. Natural (Type_Declaration.Storage_Pool.Length) loop
+            output += s"""         First_Object := True;
+         for I in Type_Declaration.spsi + 1 .. Natural (Type_Declaration.Storage_Pool.Length) loop
             declare
                Object : Skill_Type_Access := Type_Declaration.Storage_Pool.Element (I);
             begin
-               if 0 = ${t.getName.ada}_Type_Declaration.lbpsi then
-                  ${t.getName.ada}_Type_Declaration.lbpsi := Index;
+               if First_Object then
+                  ${t.getName.ada}_Type_Declaration.lbpsi := Index - 1;
+                  First_Object := False;
                end if;
                if "${t.getSkillName}" = Get_Object_Type (Object) then
                   Temp (Index) := Object;
@@ -367,13 +368,13 @@ ${
           types.foreach({ t ⇒
             output += s"""         declare
             Next_Type_Declaration : Type_Information := ${t.getName.ada}_Type_Declaration;
-            Start_Index : Natural := Next_Type_Declaration.lbpsi;
+            Start_Index : Natural := Next_Type_Declaration.lbpsi + 1;
             End_Index : Integer :=
-               Start_Index + Natural (Next_Type_Declaration.Storage_Pool.Length) - Next_Type_Declaration.spsi;
+               Start_Index + Natural (Next_Type_Declaration.Storage_Pool.Length) - Next_Type_Declaration.spsi - 1;
          begin
-            for I in Start_Index .. End_Index loop${if (d == t) s"\r\n               Temp (I).skill_id := Type_Declaration.spsi + I - 1;" else ""}
+            for I in Start_Index .. End_Index loop${if (d == t) s"\r\n               Temp (I).skill_id := Type_Declaration.spsi + I;" else ""}
                declare
-                  Index : Natural := Next_Type_Declaration.spsi - Start_Index + I;
+                  Index : Natural := Next_Type_Declaration.spsi - Start_Index + I + 1;
                begin
                   Next_Type_Declaration.Storage_Pool.Replace_Element (Index, Temp (I));
                end;
@@ -394,7 +395,7 @@ ${
 
       Known_Unwritten_Fields_Count : Natural := 0;
       New_Instances_Count          : Natural :=
-         Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
+         Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi;
 
       procedure Iterate (Position : Cursor) is
          Field_Declaration : Field_Information := Element (Position);
@@ -505,24 +506,23 @@ ${
       Type_Name       : String  := Type_Declaration.Name;
       Super_Name      : String  := Type_Declaration.Super_Name;
       Field_Count     : Natural := Natural (Type_Declaration.Fields.Length);
-      Instances_Count : Natural := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi + 1;
+      Instances_Count : Natural := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi;
    begin
       Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Type_Name)));
+      Byte_Writer.Write_v64 (Output_Stream, Long (Instances_Count));
 
-      if 0 < Super_Name'Length then
-         if not Type_Declaration.Written then
+      if not Type_Declaration.Written then
+         Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
+
+         if 0 < Super_Name'Length then
             Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Super_Name)));
-         end if;
-         Byte_Writer.Write_v64 (Output_Stream, Long (Type_Declaration.lbpsi));
-      else
-         if not Type_Declaration.Written then
+         else
             Byte_Writer.Write_v64 (Output_Stream, 0);
          end if;
       end if;
 
-      Byte_Writer.Write_v64 (Output_Stream, Long (Instances_Count));
-      if not Type_Declaration.Written then
-         Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
+      if 0 < Super_Name'Length then
+         Byte_Writer.Write_v64 (Output_Stream, Long (Type_Declaration.lbpsi));
       end if;
 
       if Write = Modus then
@@ -582,11 +582,13 @@ ${
       Field_Type : Long   := Field_Declaration.F_Type;
       Size       : Long   := Field_Data_Size (Type_Declaration, Field_Declaration);
 
-      --  see comment in file ${packagePrefix.toLowerCase}.ads
+      --  see comment in file date.ads
       Base_Types : Base_Types_Vector.Vector := Field_Declaration.Base_Types;
    begin
+      Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.id);
+
       if not Field_Declaration.Written then
-         Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
+         Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Field_Name)));
          Byte_Writer.Write_v64 (Output_Stream, Long (Field_Type));
 
          case Field_Type is
@@ -610,21 +612,27 @@ ${
                declare
                   use Base_Types_Vector;
 
+                  Base_Types_Length : Positive := Positive (Base_Types.Length);
+
                   procedure Iterate (Position : Cursor) is
                      Base_Type_Id : Long := Element (Position);
+                     Index : Positive := Positive (To_Index (Position));
                   begin
                      Byte_Writer.Write_v64 (Output_Stream, Base_Type_Id);
+
+                     if Base_Types_Length > Index + 1 then
+                        Byte_Writer.Write_v64 (Output_Stream, 20);
+                     end if;
                   end Iterate;
                   pragma Inline (Iterate);
                begin
-                  Byte_Writer.Write_v64 (Output_Stream, Long (Base_Types.Length));
                   Base_Types.Iterate (Iterate'Access);
                end;
 
             when others => null;
          end case;
 
-         Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Field_Name)));
+         Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
       end if;
 
       Last_Types_End := Last_Types_End + Size;
@@ -668,7 +676,7 @@ ${
       Type_Declaration.Storage_Pool.Iterate (Iterate'Access);
 
       if Field_Declaration.Written then
-         Start_Index := Type_Declaration.spsi;
+         Start_Index := Type_Declaration.spsi + 1;
       end if;
 
 ${
@@ -786,7 +794,7 @@ ${
        */
       for (d ← IR) {
         output += s"""      if Types.Contains ("${d.getSkillName}") then
-         Types.Element ("${d.getSkillName}").spsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length) + 1;
+         Types.Element ("${d.getSkillName}").spsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length);
       end if;\r\n"""
       }
       output.stripSuffix("\r\n")

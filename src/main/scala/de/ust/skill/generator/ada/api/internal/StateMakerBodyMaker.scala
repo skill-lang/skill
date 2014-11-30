@@ -38,8 +38,8 @@ ${
                id           => Long (Natural (Types.Length) + 32),
                Name         => Type_Name,
                Super_Name   => Super_Name,
-               spsi         => 1,
-               lbpsi        => 1,
+               spsi         => 0,
+               lbpsi        => 0,
                Fields       => Fields,
                Storage_Pool => Storage_Pool,
                Known        => True,
@@ -67,6 +67,7 @@ ${
             Field_Name : String := "${f.getSkillName}";
             Base_Types : Base_Types_Vector.Vector;
             New_Field  : Field_Information := new Field_Declaration'(
+               id                    => Long (Natural (Types.Element (Type_Name).Fields.Length) + 1),
                Size                  => Field_Name'Length,
                Name                  => Field_Name,
                F_Type                => ${mapTypeToId(f.getType, f)},

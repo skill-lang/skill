@@ -85,7 +85,11 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
       Instance_Count : Natural;
       Field_Count    : Long;
    begin
+      Instance_Count := Natural (Byte_Reader.Read_v64 (Input_Stream));
+
       if not Types.Contains (Type_Name) then
+         Skip_Restrictions;
+
          declare
             procedure Free is new Ada.Unchecked_Deallocation (String, String_Access);
 
@@ -105,8 +109,8 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
                   id           => Long (Natural (Types.Length) + 32),
                   Name         => Type_Name,
                   Super_Name   => Super_Name.all,
-                  spsi         => 1,
-                  lbpsi        => 1,
+                  spsi         => 0,
+                  lbpsi        => 0,
                   Fields       => New_Type_Fields,
                   Storage_Pool => New_Type_Storage_Pool,
                   Known        => False,
@@ -117,19 +121,10 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
                Types.Insert (New_Type.Name, New_Type);
             end;
          end;
+      end if;
 
-         if 0 /= Types.Element (Type_Name).Super_Name'Length then
-            Types.Element (Type_Name).lbpsi := Positive (Byte_Reader.Read_v64 (Input_Stream));
-         end if;
-
-         Instance_Count := Natural (Byte_Reader.Read_v64 (Input_Stream));
-         Skip_Restrictions;
-      else
-         if 0 /= Types.Element (Type_Name).Super_Name'Length then
-            Types.Element (Type_Name).lbpsi := Positive (Byte_Reader.Read_v64 (Input_Stream));
-         end if;
-
-         Instance_Count := Natural (Byte_Reader.Read_v64 (Input_Stream));
+      if 0 /= Types.Element (Type_Name).Super_Name'Length then
+         Types.Element (Type_Name).lbpsi := Natural (Byte_Reader.Read_v64 (Input_Stream));
       end if;
 
       Field_Count := Byte_Reader.Read_v64 (Input_Stream);
@@ -149,40 +144,58 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
          end if;
 
          for I in 1 .. Field_Count loop
-            if (Known_Fields < Field_Count and then Known_Fields < I) or 0 = Instance_Count then
-               Read_Field_Declaration (Type_Name);
-               Start_Index := 1;
-            end if;
-
-            Field_Index := I;
-            if 0 = Instance_Count then
-               Field_Index := Field_Index + Known_Fields;
-            end if;
-
             declare
-               Field_End         : Long              := Byte_Reader.Read_v64 (Input_Stream);
-               Data_Length       : Long              := Field_End - Last_End;
-               Field_Declaration : Field_Information :=
-                  Types.Element (Type_Name).Fields.Element (Positive (Field_Index));
-               Item              : Queue_Item        := (
-                  Type_Declaration  => Types.Element (Type_Name),
-                  Field_Declaration => Field_Declaration,
-                  Start_Index       => Start_Index,
-                  End_Index         => End_Index,
-                  Data_Length       => Data_Length
-               );
+               Field_Id : Long := Long (Byte_Reader.Read_v64 (Input_Stream));
             begin
-               Last_End := Field_End;
-               Read_Queue.Append (Item);
+               if (Known_Fields < Field_Count and then Known_Fields < I) or 0 = Instance_Count then
+                  Read_Field_Declaration (Type_Name, Field_Id);
+                  Start_Index := 1;
+               end if;
+
+               Field_Index := I;
+               if 0 = Instance_Count then
+                  Field_Index := Field_Index + Known_Fields;
+               end if;
+
+               declare
+                  Field_End         : Long              := Byte_Reader.Read_v64 (Input_Stream);
+                  Data_Length       : Long              := Field_End - Last_End;
+                  Field_Declaration : Field_Information :=
+                     Types.Element (Type_Name).Fields.Element (Positive (Field_Index));
+                  Item              : Queue_Item        := (
+                     Type_Declaration  => Types.Element (Type_Name),
+                     Field_Declaration => Field_Declaration,
+                     Start_Index       => Start_Index,
+                     End_Index         => End_Index,
+                     Data_Length       => Data_Length
+                  );
+               begin
+                  Last_End := Field_End;
+                  Read_Queue.Append (Item);
+               end;
             end;
          end loop;
       end;
    end Read_Type_Declaration;
 
-   procedure Read_Field_Declaration (Type_Name : String) is
-   begin
-      Skip_Restrictions;
+   procedure Read_Field_Declaration (Type_Name : String; Field_Id : Long) is
+      Field_Name : String := String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream)));
 
+      procedure Read_Map_Definition (Base_Types : in out Base_Types_Vector.Vector) is
+      begin
+         Base_Types.Append (Byte_Reader.Read_v64 (Input_Stream));
+
+         declare
+            Next_Type : Long := Byte_Reader.Read_v64 (Input_Stream);
+         begin
+            if 20 = Next_Type then
+               Read_Map_Definition (Base_Types);
+            else
+               Base_Types.Append (Next_Type);
+            end if;
+         end;
+      end Read_Map_Definition;
+   begin
       declare
          Field_Type            : Long := Byte_Reader.Read_v64 (Input_Stream);
          Constant_Value        : Long := 0;
@@ -208,22 +221,14 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
             when 17 .. 19 => Base_Types.Append (Byte_Reader.Read_v64 (Input_Stream));
 
             --  map
-            when 20 =>
-               declare
-                  Base_Types_Count : Long := Byte_Reader.Read_v64 (Input_Stream);
-               begin
-                  for I in 1 .. Base_Types_Count loop
-                     Base_Types.Append (Byte_Reader.Read_v64 (Input_Stream));
-                  end loop;
-               end;
+            when 20 => Read_Map_Definition (Base_Types);
 
             when others => null;
          end case;
 
          declare
-            Field_Name : String := String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream)));
-
             New_Field : Field_Information := new Field_Declaration'(
+               id                    => Field_Id,
                Size                  => Field_Name'Length,
                Name                  => Field_Name,
                F_Type                => Field_Type,
@@ -237,6 +242,8 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
             Types.Element (Type_Name).Fields.Append (New_Field);
          end;
       end;
+
+      Skip_Restrictions;
    end Read_Field_Declaration;
 
    procedure Read_Field_Data is
@@ -261,12 +268,12 @@ ${
           output += s"""\r\n\r\n                  declare
                      Sub_Type   : Type_Information := ${d.getName.ada}_Type_Declaration;
                      Super_Type : Type_Information := ${t.getName.ada}_Type_Declaration;
-                     Index      : Natural          := (Sub_Type.lbpsi - Super_Type.lbpsi) + Super_Type.spsi + I - 1;
+                     Index      : Natural          := (Sub_Type.lbpsi - Super_Type.lbpsi) + Super_Type.spsi + I;
                   begin\r\n"""
           if (t == superTypes.last)
             output += s"""                     declare
                         procedure Free is new Ada.Unchecked_Deallocation (${t.getName.ada}_Type, ${t.getName.ada}_Type_Access);
-                        Old_Object : ${t.getName}_Type_Access :=
+                        Old_Object : ${t.getName.ada}_Type_Access :=
                            ${t.getName.ada}_Type_Access (Super_Type.Storage_Pool.Element (Index));
                      begin
                         Object.skill_id := Old_Object.skill_id;
@@ -427,7 +434,7 @@ ${
        */
       for (d ← IR) {
         output += s"""      if Types.Contains ("${d.getSkillName}") then
-         Types.Element ("${d.getSkillName}").spsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length) + 1;
+         Types.Element ("${d.getSkillName}").spsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length);
       end if;\r\n"""
       }
       output.stripSuffix("\r\n")
