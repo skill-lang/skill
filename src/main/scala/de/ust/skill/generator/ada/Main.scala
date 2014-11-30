@@ -377,7 +377,7 @@ class Main extends FakeMain
       }
     }
 
-    rval
+    rval.distinct
   }
 
   /**
