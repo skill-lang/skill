@@ -370,16 +370,14 @@ class Main extends FakeMain
   protected def getSubTypes(d : UserType) : MutableList[Type] = {
     var rval = MutableList[Type]()
 
-    1 to IR.length foreach { _ ⇒
-      for (_d ← IR) {
-        // element is sub type and not collected
-        if (d == _d.getSuperType && -1 == rval.indexOf(_d)) rval += _d
-        // element is listed sub type and not collected
-        if (-1 < rval.indexOf(_d.getSuperType) && -1 == rval.indexOf(_d)) rval += _d
+    IR.reverse.foreach { _d =>
+      if (d == _d.getSuperType && -1 == rval.indexOf(_d)) {
+        rval += _d
+        rval ++= getSubTypes(_d)
       }
     }
 
-    rval
+    rval.distinct
   }
 
   /**
