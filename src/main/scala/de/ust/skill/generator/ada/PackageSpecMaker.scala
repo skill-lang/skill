@@ -227,6 +227,7 @@ ${
 
    type Field_Declaration (Size : Positive) is
       record
+         id                    : Long;
          Name                  : String (1 .. Size);
          F_Type                : Long;
          Constant_Value        : Long;
@@ -247,7 +248,7 @@ ${
          id           : Long;
          Name         : String (1 .. Type_Size);
          Super_Name   : String (1 .. Super_Size);
-         spsi         : Positive;
+         spsi         : Natural;
          lbpsi        : Natural;
          Fields       : Fields_Vector.Vector;
          Storage_Pool : Storage_Pool_Vector.Vector;

@@ -5,7 +5,7 @@ name := "skill"
 
 version := "0.3"
 
-scalaVersion := "2.11.2"
+scalaVersion := "2.11.4"
 
 javacOptions ++= Seq("-encoding", "UTF-8")
 
