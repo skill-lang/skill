@@ -154,6 +154,13 @@ trait AutoField {
 }
 
 /**
+ * This trait marks ignored fields.
+ */
+trait IgnoredField {
+  final def read(in : MappedInStream) {};
+}
+
+/**
  * Special skillID auto field.
  */
 final class KnownField_SkillID(owner : StoragePool[_ <: SkillType, _ <: SkillType])
@@ -179,21 +186,22 @@ final class KnownField_${t.getName.capital}_${f.getName.camel}(
     extends FieldDeclaration[${mapType(f.getType)}](${mapToFieldType(f.getType)},
       "${f.getSkillName}",
       index,
-      owner) with KnownField[${mapType(t)}, ${mapType(f.getType)}] {
+      owner) with KnownField[${mapType(t)}, ${mapType(f.getType)}]${
+        // mark ignored fields as ignored; read function is inherited
+        if (f.isIgnored()) """
+    with IgnoredField {"""
+        else // generate a read function 
+          s""" {
 
-  def read(in : MappedInStream) {${
-        // skip ignored fields
-        if (f.isIgnored()) ""
-        else
-          s"""
+  def read(in : MappedInStream) {
     val is = dataChunks.last match {
       case c : SimpleChunkInfo ⇒ owner.basePool.data.view(c.bpo.toInt, (c.bpo + c.count).toInt)
       case bci : BulkChunkInfo ⇒ owner.all
     }
     for (i ← is)
       i.asInstanceOf[${mapType(t)}].${f.getName.camel} = t.readSingleField(in)
-  """
-      }}
+  }
+"""}
 
   override def get(i : ${mapType(t)}) = i.${f.getName.camel}
   override def set(i : ${mapType(t)}, v : ${mapType(f.getType)}) = i.${f.getName.camel} = v

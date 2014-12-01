@@ -331,7 +331,7 @@ ${
           asyncReads.append(Future(Try(try {
             f.read(map)
             // map was not consumed
-            if (!f.isInstanceOf[LazyField[_]] && !map.eof)
+            if (!map.eof && !(f.isInstanceOf[LazyField[_]] || f.isInstanceOf[IgnoredField]))
               throw PoolSizeMissmatchError(blockCounter, last.begin, last.end, f)
           } catch {
             case e : BufferUnderflowException ⇒
