@@ -61,16 +61,16 @@ final class StringPool(in : FileInputStream) extends StringAccess {
           if (index > stringPositions.size)
             throw InvalidPoolIndex(index, stringPositions.size, "string")
 
-          val off = stringPositions(index.toInt)
-          in.push(off._1)
-          var chars = in.bytes(off._2)
-          in.pop
-
-          val result = new String(chars, "UTF-8")
           this.synchronized {
+            val off = stringPositions(index.toInt)
+            in.push(off._1)
+            var chars = in.bytes(off._2)
+            in.pop
+
+            val result = new String(chars, "UTF-8")
             idMap(index.toInt) = result
+            result
           }
-          result
         }
         case s ⇒ s;
       }
