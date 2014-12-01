@@ -96,9 +96,6 @@ class Generic${name}ReadTest extends CommonTest {
   }
 
   def check(path : File, out : String) {
-    import scala.reflect.io.Directory
-    Directory(new File("testsuites/scala/src/main/scala/", out)).deleteRecursively
-
     CommandLine.main(Array[String]("-L", "scala", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, path.getPath, "testsuites"))
 
     makeGenBinaryTests(out)
