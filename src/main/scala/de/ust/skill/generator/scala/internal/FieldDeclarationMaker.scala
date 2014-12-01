@@ -202,6 +202,11 @@ final class KnownField_${t.getName.capital}_${f.getName.camel}(
       i.asInstanceOf[${mapType(t)}].${f.getName.camel} = t.readSingleField(in)
   }
 """}
+  ${
+    if(f.getRestrictions.isEmpty())""
+    else s"""  restrictions ++= HashSet(${mkFieldRestrictions(f)})
+"""
+  }
 
   override def get(i : ${mapType(t)}) = i.${f.getName.camel}
   override def set(i : ${mapType(t)}, v : ${mapType(f.getType)}) = i.${f.getName.camel} = v
@@ -381,11 +386,11 @@ final class LazyField[T : Manifest](
 
   private def mkFieldRestrictions(f : Field) : String = {
     f.getRestrictions.map(_ match {
-      case r : NullableRestriction ⇒ "restrictions.NonNull"
-      case r : IntRangeRestriction ⇒ s"restrictions.Range(${r.getLow}L.to${mapType(f.getType)}, ${r.getHigh}L.to${mapType(f.getType)})"
+      case r : NullableRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.NonNull"
+      case r : IntRangeRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLow}L.to${mapType(f.getType)}, ${r.getHigh}L.to${mapType(f.getType)})"
       case r : FloatRangeRestriction ⇒ f.getType.getSkillName match {
-        case "f32" ⇒ s"restrictions.Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
-        case "f64" ⇒ s"restrictions.Range(${r.getLowDouble}, ${r.getHighDouble})"
+        case "f32" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
+        case "f64" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowDouble}, ${r.getHighDouble})"
       }
     }).mkString(", ")
   }
