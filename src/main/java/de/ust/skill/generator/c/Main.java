@@ -70,12 +70,15 @@ public class Main {
             // Declarations are sorted alphabetically by their name.
             // This is just so that generating the same binding twice does not create a different result.
             // The order is not relevant for its functionality.
-            Collections.sort ( declarations, new Comparator<Declaration> () {
-                @Override
-                public int compare ( Declaration d1, Declaration d2 ) {
-                    return d1.getName ().compareTo ( d2.getName () );
-                }
-            } );
+            // TODO
+            //! @bug eine dreiste Lüge!!
+            
+//            Collections.sort ( declarations, new Comparator<Declaration> () {
+//                @Override
+//                public int compare ( Declaration d1, Declaration d2 ) {
+//                    return d1.getName ().compareTo ( d2.getName () );
+//                }
+//            } );
             
             Generator generator = new Generator ( outPath, prefix, declarations, safe );
 

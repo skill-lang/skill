@@ -534,7 +534,7 @@ int64_t ${declaration.name}_write_${field.name} ( ${prefix}skill_state state, ${
     return ${prefix}write_v64 ( out, target->skill_id );
     <#elseif field.is_annotation>
     int64_t bytes_written = 0;
-    skill_type annotation = ( (${prefix}${declaration.name}) instance )->_${field.name};
+    ${prefix}skill_type annotation = ( (${prefix}${declaration.name}) instance )->_${field.name};
     if ( annotation == 0 ) {
         bytes_written += ${prefix}write_v64 ( out, 0 );
         bytes_written += ${prefix}write_v64 ( out, 0 );
@@ -616,7 +616,7 @@ int64_t ${declaration.name}_write_${field.name} ( ${prefix}skill_state state, ${
     }
     <#else>
     for ( i = 0; i < array->len; i++ ) {
-        bytes_written += ${field.base_type.write_method} ( out, g_array_index ( array, ${field.base_type.c_type}, i );
+        bytes_written += ${field.base_type.write_method} ( out, g_array_index ( array, ${field.base_type.c_type}, i ));
     }
     </#if>
     return bytes_written;

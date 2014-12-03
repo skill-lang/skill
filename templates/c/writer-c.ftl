@@ -112,6 +112,7 @@ static void collect_strings ( ${prefix}skill_state state, ${prefix}string_access
     } else {
         instances = ${prefix}storage_pool_get_instances ( state->${declaration.name} );
     }
+    {
     ${prefix}${declaration.name} current_instance;
     for ( instance_iterator = instances; instance_iterator; instance_iterator = instance_iterator->next ) {
         current_instance = (${prefix}${declaration.name}) instance_iterator->data;
@@ -158,6 +159,7 @@ static void collect_strings ( ${prefix}skill_state state, ${prefix}string_access
         </#if>
         </#if>
         </#list>
+    }
     }
     g_list_free ( instances );
     </#if>
