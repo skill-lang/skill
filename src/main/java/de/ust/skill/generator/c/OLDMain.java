@@ -15,7 +15,7 @@ import de.ust.skill.parser.Parser;
  *
  * @author Fabian Harth, Timm Felden
  */
-public class Main {
+public class OLDMain {
 
     /**
      * Help text to print out on the console, if the input parameters were not
@@ -69,7 +69,7 @@ public class Main {
             List<UserType> declarations = new ArrayList<>(Parser.process(targetfile, true, true, false)
                     .removeSpecialDeclarations().getUsertypes());
 
-            Generator generator = new Generator(outPath, prefix, declarations, safe);
+            OLDGenerator generator = new OLDGenerator(outPath, prefix, declarations, safe);
 
             // create output using maker chain
             generator.make();

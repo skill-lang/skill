@@ -1,0 +1,210 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
+package de.ust.skill.generator.c
+
+import de.ust.skill.ir._
+import de.ust.skill.parser.Parser
+import java.io.File
+import java.util.Date
+import scala.collection.JavaConversions._
+import scala.collection.mutable.MutableList
+import de.ust.skill.generator.common.Generator
+import java.io.PrintWriter
+import java.io.OutputStreamWriter
+import java.io.BufferedWriter
+import java.io.FileOutputStream
+
+/**
+ * Fake Main implementation required to make trait stacking work.
+ */
+abstract class FakeMain extends GeneralOutputMaker { def make {} }
+
+/**
+ * A generator turns a set of skill declarations into an Ada interface providing means of manipulating skill files
+ * containing instances of the respective UserTypes.
+ *
+ * @author Timm Felden, Fabian Harth
+ */
+class Main extends FakeMain
+    with MakefileMaker {
+
+  override def comment(d : Declaration) = d.getComment.format("", "//! ", 80, "")
+  override def comment(f : Field) = f.getComment.format("", "//! ", 80, "")
+
+  /**
+   * Translates the types into C99 types.
+   */
+  override protected def mapType(t : Type) : String = t match {
+    case t : GroundType ⇒ t.getName.lower match {
+      case "annotation" ⇒ "Skill_Type_Access"
+
+      case "bool"       ⇒ "Boolean"
+
+      case "i8"         ⇒ "i8"
+      case "i16"        ⇒ "i16"
+      case "i32"        ⇒ "i32"
+      case "i64"        ⇒ "i64"
+      case "v64"        ⇒ "v64"
+
+      case "f32"        ⇒ "f32"
+      case "f64"        ⇒ "f64"
+
+      case "string"     ⇒ "String_Access"
+    }
+
+    case t : ConstantLengthArrayType ⇒ ???
+    case t : VariableLengthArrayType ⇒ ???
+    case t : ListType                ⇒ ???
+    case t : SetType                 ⇒ ???
+    case t : MapType                 ⇒ ???
+
+    case t : Declaration             ⇒ s"${t.getName.ada}_Type_Access"
+  }
+
+  /**
+   * Gets all super types of a given type.
+   */
+  protected def getSuperTypes(d : UserType) : MutableList[Type] = {
+    if (null == d.getSuperType) MutableList[Type]()
+    else getSuperTypes(d.getSuperType) += d.getSuperType
+  }
+
+  /**
+   * Gets all sub types of a given type.
+   */
+  protected def getSubTypes(d : UserType) : MutableList[Type] = {
+    var rval = MutableList[Type]()
+
+    IR.reverse.foreach { _d ⇒
+      if (d == _d.getSuperType && -1 == rval.indexOf(_d)) {
+        rval += _d
+        rval ++= getSubTypes(_d)
+      }
+    }
+
+    rval.distinct
+  }
+
+  /**
+   * Gets the fields as parameters of a given type.
+   */
+  def printParameters(d : UserType) : String = {
+    var output = "";
+    var hasFields = false;
+    output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f ⇒
+      hasFields = true;
+      s"${f.getSkillName()} : ${mapType(f.getType)}"
+    }).mkString("; ", "; ", "")
+    if (hasFields) output else ""
+  }
+
+  /**
+   * Provides the package prefix.
+   */
+  override protected def packagePrefix() : String = _packagePrefix
+  private var _packagePrefix = ""
+
+  override def setPackage(names : List[String]) {
+    if (names.isEmpty)
+      return ;
+
+    if (names.size > 1)
+      System.err.println("The Ada package system does not support nested packages with the expected meaning, dropping prefixes...");
+
+    _packagePrefix = names.last
+  }
+
+  override private[c] def header : String = _header
+  private lazy val _header = {
+    // create header from options
+    val headerLineLength = 51
+    val headerLine1 = Some((headerInfo.line1 match {
+      case Some(s) ⇒ s
+      case None    ⇒ headerInfo.license.map("LICENSE: "+_).getOrElse("Your SKilL Scala Binding")
+    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
+    val headerLine2 = Some((headerInfo.line2 match {
+      case Some(s) ⇒ s
+      case None ⇒ "generated: "+(headerInfo.date match {
+        case Some(s) ⇒ s
+        case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
+      })
+    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
+    val headerLine3 = Some((headerInfo.line3 match {
+      case Some(s) ⇒ s
+      case None ⇒ "by: "+(headerInfo.userName match {
+        case Some(s) ⇒ s
+        case None    ⇒ System.getProperty("user.name")
+      })
+    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
+
+    s"""--  ___ _  ___ _ _                                                            --
+-- / __| |/ (_) | |       ${headerLine1.get} --
+-- \\__ \\ ' <| | | |__     ${headerLine2.get} --
+-- |___/_|\\_\\_|_|____|    ${headerLine3.get} --
+--                                                                            --
+"""
+  }
+
+  var outPostfix = s"/genereted/${
+    if (packagePrefix.isEmpty()) ""
+    else packagePrefix.replace('.', '/')+"/"
+  }"
+
+  /**
+   * Creates the correct PrintWriter for the argument file.
+   */
+  override protected def open(path : String) = {
+    val f = new File(outPath + outPostfix + path)
+    f.getParentFile.mkdirs
+    f.createNewFile
+    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
+      new FileOutputStream(f), "UTF-8")))
+    rval.write(header)
+    rval
+  }
+
+  override def setOption(option : String, value : String) = option.toLowerCase match {
+    case "gendir" ⇒
+      outPostfix = value
+      if (!outPostfix.startsWith("/"))
+        outPostfix = "/"+outPostfix
+      if (!outPostfix.endsWith("/"))
+        outPostfix = outPostfix+"/"
+    case unknown ⇒ sys.error(s"unkown Argument: $unknown")
+  }
+
+  override def printHelp : Unit = println("""
+Opitions (C):
+  genDir                 replace default sub-directory for generated sources
+""")
+
+  /**
+   * Tries to escape a string without decreasing the usability of the generated identifier.
+   */
+  protected def escaped(target : String) : String = target match {
+    case "auto" | "_Bool" | "break" | "case" | "char" | "_Complex" | "const" | "continue" | "default" | "do" | "double"
+      | "else" | "enum" | "extern" | "float" | "for" | "goto" | "if" | "_Imaginary" | "inline" | "int" | "long" |
+      "register" | "restrict" | "return" | "short" | "signed" | "sizeof" | "static" | "struct" | "switch" | "typedef"
+      | "union" | "unsigned" | "void" | "volatile" | "while" ⇒ return target.toUpperCase
+
+    // the string is fine anyway
+    case _ ⇒ return target
+  }
+
+  override protected def defaultValue(f : Field) = f.getType match {
+    case t : GroundType ⇒ t.getSkillName() match {
+      case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
+      case "f32" | "f64"                        ⇒ "0.0f"
+      case "bool"                               ⇒ "false"
+      case _                                    ⇒ "null"
+    }
+
+    // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
+    // @note some collections use 0 as empty (e.g. list)))
+
+    case _ ⇒ "0"
+  }
+}

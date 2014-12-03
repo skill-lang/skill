@@ -26,7 +26,7 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
-public class Generator {
+public class OLDGenerator {
 
     private final String outPath;
 
@@ -38,7 +38,7 @@ public class Generator {
 
     protected Map<String, Object> rootMap;
 
-    public Generator(String outPath, String prefix, List<UserType> declarations, boolean safe) {
+    public OLDGenerator(String outPath, String prefix, List<UserType> declarations, boolean safe) {
 
         this.outPath = outPath;
         if (!prefix.equals("")) {

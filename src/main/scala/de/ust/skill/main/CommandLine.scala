@@ -102,17 +102,17 @@ Opitions:
 
       case "-L" ⇒ args.next match {
         case "all" ⇒ actual ++= known
-        case lang ⇒ actual(lang) = known.get(lang).getOrElse(
+        case lang ⇒ actual(lang.toLowerCase) = known.get(lang.toLowerCase).getOrElse(
           error(s"Language $lang is not known and can therefore not be used!")
         )
       }
 
-      case option if option.matches("""-O@\w+:\w+=\w+""") ⇒ locally {
+      case option if option.matches("""-O@\w+:\w+=.+""") ⇒ locally {
         implicit class Regex(sc : StringContext) {
           def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ ⇒ "x") : _*)
         }
-        val r"""-O@(\w+)${ lang }:(\w+)${ opt }=(\w+)${ value }""" = option
-        known.get(lang).getOrElse(
+        val r"""-O@(\w+)${ lang }:(\w+)${ opt }=(.+)${ value }""" = option
+        known.get(lang.toLowerCase).getOrElse(
           error(s"Language $lang is not known and can therefore not provided with options!")
         ).setOption(opt, value)
 

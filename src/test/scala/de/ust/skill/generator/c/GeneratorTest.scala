@@ -9,6 +9,7 @@ import java.io.File
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+import de.ust.skill.main.CommandLine
 
 /**
  * Scala specific tests.
@@ -19,7 +20,6 @@ import org.scalatest.junit.JUnitRunner
 class GeneratorTest extends FunSuite {
 
   private val sourceRootFolder = new File("src/test/resources/c/");
-  private val targetRootFolder = new File("testsuites/c/src/generated");
 
   private def deleteFiles(target : File) {
     if (target.isDirectory) {
@@ -28,10 +28,9 @@ class GeneratorTest extends FunSuite {
     target.delete()
   }
 
-  def check(prefix : String, sourceFile : String, targetDir : String) {
-    deleteFiles(new File(targetRootFolder, targetDir))
-    Main.main(Array(
-      "-p", prefix, sourceRootFolder.getAbsolutePath()+"/"+sourceFile, targetRootFolder.getAbsolutePath()+"/"+targetDir))
+  def check(prefix : String, src : String, target : String) {
+    deleteFiles(new File(s"testsuites/c/src/generated/$target"))
+    CommandLine.main(Array[String]("-L", "C", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", prefix, s"-O@C:GenDir=/src/generated/$target/", "src/test/resources/c/"+src, "testsuites"))
   }
 
   test("annotation")(check("", "annotation.skill", "annotation"))
