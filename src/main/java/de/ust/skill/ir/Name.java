@@ -69,7 +69,7 @@ final public class Name implements Comparable<Name> {
     private String ada;
 
     /**
-     * @return ADA_STYLE
+     * @return Ada_Style
      */
     public String ada() {
         if (null == ada) {

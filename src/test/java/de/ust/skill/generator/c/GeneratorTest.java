@@ -16,10 +16,11 @@ public class GeneratorTest {
         deleteFolderContents ( targetRootFolder );
     }
 
-    private void generateBinding ( String prefix, String sourceFile, String targetDir ) throws Exception {
+    private static void generateBinding(String prefix, String sourceFile, String targetDir) throws Exception {
         Main.main ( new String[]{"-p", prefix, sourceRootFolder.getAbsolutePath () + "/" + sourceFile, targetRootFolder.getAbsolutePath () + "/" + targetDir} );
     }
 
+    @SuppressWarnings("static-method")
     @Test
     public void doGenerateBindings () throws Exception {
         generateBinding ( "", "date.skill", "date" );
