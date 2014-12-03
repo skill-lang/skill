@@ -1,0 +1,4 @@
+/** A simple Node which may refer to another node. */
+Node { 
+  @nullable Node node;
+}

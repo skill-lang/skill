@@ -1,0 +1,4 @@
+A { A a; }
+B : A { B b; }
+C : A { C c; }
+D : B { D d; }

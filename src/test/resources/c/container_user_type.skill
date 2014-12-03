@@ -1,0 +1,16 @@
+Container {
+  Type1[3] arr;
+  Type2[] varr;
+  list<Type3> l;
+  set<Type3> s;
+  map<Type1, Type2, Type3> f;
+}
+
+Type1{
+}
+
+Type2{
+}
+
+Type3{
+}

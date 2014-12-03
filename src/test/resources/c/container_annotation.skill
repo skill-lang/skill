@@ -1,0 +1,16 @@
+Container {
+  annotation[3] arr;
+  annotation[] varr;
+  list<annotation> l;
+  set<annotation> s;
+  map<annotation, annotation, annotation> f;
+}
+
+Type1{
+}
+
+Type2{
+}
+
+Type3{
+}

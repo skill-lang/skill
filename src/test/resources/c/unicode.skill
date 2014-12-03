@@ -1,0 +1,11 @@
+/** some arguably legal unicode characters. */
+∀ {
+  ∃ π;
+  ∀ λ;
+}
+
+/** usually illegal unicode characters. */
+∃ {
+  ∃ ☢;
+  ∀ ⇀;
+}
