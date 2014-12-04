@@ -42,6 +42,11 @@ trait GeneralOutputMaker extends Generator {
   protected def packagePrefix : String
 
   /**
+   * Rename package prefix; we may change the implementation in the future.
+   */
+  protected def prefix = packagePrefix
+
+  /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
    * @note currently unused, because emitted names can not alias predefined types or keywords anyway
    */
@@ -52,4 +57,9 @@ trait GeneralOutputMaker extends Generator {
   } else {
     ""
   }
+
+  /**
+   * flag that controls omission of runtime safety checks
+   */
+  protected var unsafe = false
 }

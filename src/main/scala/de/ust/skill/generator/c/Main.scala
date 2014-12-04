@@ -16,6 +16,7 @@ import java.io.PrintWriter
 import java.io.OutputStreamWriter
 import java.io.BufferedWriter
 import java.io.FileOutputStream
+import de.ust.skill.generator.c.api.ApiHeaderMaker
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -29,6 +30,7 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * @author Timm Felden, Fabian Harth
  */
 class Main extends FakeMain
+    with ApiHeaderMaker
     with MakefileMaker {
 
   override def comment(d : Declaration) = d.getComment.format("", "//! ", 80, "")
@@ -39,29 +41,29 @@ class Main extends FakeMain
    */
   override protected def mapType(t : Type) : String = t match {
     case t : GroundType ⇒ t.getName.lower match {
-      case "annotation" ⇒ "Skill_Type_Access"
+      case "annotation" ⇒ "skill_type"
 
-      case "bool"       ⇒ "Boolean"
+      case "bool"       ⇒ "bool"
 
-      case "i8"         ⇒ "i8"
-      case "i16"        ⇒ "i16"
-      case "i32"        ⇒ "i32"
-      case "i64"        ⇒ "i64"
-      case "v64"        ⇒ "v64"
+      case "i8"         ⇒ "int8_t"
+      case "i16"        ⇒ "int16_t"
+      case "i32"        ⇒ "int32_t"
+      case "i64"        ⇒ "int64_t"
+      case "v64"        ⇒ "int64_t"
 
-      case "f32"        ⇒ "f32"
-      case "f64"        ⇒ "f64"
+      case "f32"        ⇒ "float"
+      case "f64"        ⇒ "double"
 
-      case "string"     ⇒ "String_Access"
+      case "string"     ⇒ "char*"
     }
 
-    case t : ConstantLengthArrayType ⇒ ???
-    case t : VariableLengthArrayType ⇒ ???
-    case t : ListType                ⇒ ???
-    case t : SetType                 ⇒ ???
-    case t : MapType                 ⇒ ???
+    case t : ConstantLengthArrayType ⇒ "GArray*"
+    case t : VariableLengthArrayType ⇒ "GArray*"
+    case t : ListType                ⇒ "GList*"
+    case t : SetType                 ⇒ "GHashTable*"
+    case t : MapType                 ⇒ "GHashTable*"
 
-    case t : Declaration             ⇒ s"${t.getName.ada}_Type_Access"
+    case t : Declaration             ⇒ s"${prefix}${t.getName.cStyle}"
   }
 
   /**
@@ -140,11 +142,11 @@ class Main extends FakeMain
       })
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
 
-    s"""--  ___ _  ___ _ _                                                            --
--- / __| |/ (_) | |       ${headerLine1.get} --
--- \\__ \\ ' <| | | |__     ${headerLine2.get} --
--- |___/_|\\_\\_|_|____|    ${headerLine3.get} --
---                                                                            --
+    s"""//  ___ _  ___ _ _                                                            \\\\
+// / __| |/ (_) | |       ${headerLine1.get} \\\\
+// \\__ \\ ' <| | | |__     ${headerLine2.get} \\\\
+// |___/_|\\_\\_|_|____|    ${headerLine3.get} \\\\
+//                                                                            \\\\
 """
   }
 
@@ -166,6 +168,18 @@ class Main extends FakeMain
     rval
   }
 
+  /**
+   * Open file, but do not write a header (required by make files)
+   */
+  override protected def openRaw(path : String) = {
+    val f = new File(outPath + outPostfix + path)
+    f.getParentFile.mkdirs
+    f.createNewFile
+    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
+      new FileOutputStream(f), "UTF-8")))
+    rval
+  }
+
   override def setOption(option : String, value : String) = option.toLowerCase match {
     case "gendir" ⇒
       outPostfix = value
@@ -173,12 +187,14 @@ class Main extends FakeMain
         outPostfix = "/"+outPostfix
       if (!outPostfix.endsWith("/"))
         outPostfix = outPostfix+"/"
+    case "unsafe" ⇒ unsafe = value == "true"
     case unknown ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
   override def printHelp : Unit = println("""
 Opitions (C):
   genDir                 replace default sub-directory for generated sources
+  unsafe                 remove all generated runtime type checks, if set to "true"
 """)
 
   /**
@@ -203,7 +219,7 @@ Opitions (C):
     }
 
     // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
-    // @note some collections use 0 as empty (e.g. list)))
+    // @note some collections use 0 as empty (e.g. list)
 
     case _ ⇒ "0"
   }
