@@ -1,0 +1,12 @@
+#! escaping
+# This test should help detect lack of proper escaping in most languages
+
+/** Stupid typename */
+Int {
+
+  /** A keyword in most languages */
+  Int if;
+
+  /** A keyword in most languages */
+  Int for;
+}
