@@ -199,7 +199,7 @@ final class KnownField_${t.getName.capital}_${f.getName.camel}(
       case bci : BulkChunkInfo ⇒ owner.all
     }
     for (i ← is)
-      i.asInstanceOf[${mapType(t)}].${f.getName.camel} = t.readSingleField(in)
+      i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = t.readSingleField(in)
   }
 """}
   ${
