@@ -18,6 +18,8 @@ import java.io.BufferedWriter
 import java.io.FileOutputStream
 import de.ust.skill.generator.c.api.ApiHeaderMaker
 import de.ust.skill.generator.c.api.ApiSourceMaker
+import de.ust.skill.generator.c.model.FieldInformationHeaderMaker
+import de.ust.skill.generator.c.model.FieldInformationSourceMaker
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -33,6 +35,8 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
 final class Main extends FakeMain
     with ApiHeaderMaker
     with ApiSourceMaker
+    with FieldInformationHeaderMaker
+    with FieldInformationSourceMaker
     with MakefileMaker {
 
   override def comment(d : Declaration) = d.getComment.format("", "//! ", 80, "")
@@ -224,7 +228,7 @@ Opitions (C):
     }
 
     // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
-    // @note some collections use 0 as empty (e.g. list)))
+    // @note some collections use 0 as empty (e.g. list)
 
     case _ ⇒ "0"
   }
