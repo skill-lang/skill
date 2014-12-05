@@ -2,11 +2,14 @@
 # This test should help detect lack of proper escaping in most languages
 
 /** Stupid typename */
-Int {
+If {
 
   /** A keyword in most languages */
   Int if;
 
-  /** A keyword in most languages */
-  Int for;
+  /** Another potential name clash */
+  if for;
 }
+
+/** Another stupid typename */
+if{}
