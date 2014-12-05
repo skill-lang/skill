@@ -35,21 +35,21 @@ trait ApiHeaderMaker extends GeneralOutputMaker {
 struct ${prefix}skill_state_struct;
 typedef struct ${prefix}skill_state_struct *${prefix}skill_state;
 
-// Creates an empty skill_state
+//! Creates an empty skill_state
 ${prefix}skill_state ${prefix}empty_skill_state ();
 
-// Frees all memory allocated to the skill_state.
-// User-type lists returned by the api are not owned by the state and have to be freed manually.
+//! Frees all memory allocated to the skill_state.
+//! User-type lists returned by the api are not owned by the state and have to be freed manually.
 void ${prefix}delete_skill_state ( ${prefix}skill_state state );
 
-// Creates a skill_state from the given binary file loading all instances from the file.
+//! Creates a skill_state from the given binary file loading all instances from the file.
 ${prefix}skill_state ${prefix}skill_state_from_file ( char *file_path );
 
-// Serializes all information contained in the given state to the given binary file.
+//! Serializes all information contained in the given state to the given binary file.
 void ${prefix}write_to_file ( ${prefix}skill_state state, char *file_path );
 
-// Updates the file, the given state was created from, i.e. removing deleted
-// instances, adding created instances or fields, and updating indices.
+//! Updates the file, the given state was created from, i.e. removing deleted
+//! instances, adding created instances or fields, and updating indices.
 void ${prefix}append_to_file ( ${prefix}skill_state state );
 
 //-------------------------------------------------------------------------------------------------
@@ -81,7 +81,7 @@ ${comment(t)}typedef struct ${prefix}${t.getName.cStyle}_struct *${prefix}${t.ge
 GList *${prefix}get_all_instances ( ${prefix}skill_state state );${
       // access method
       (for (t ← IR) yield s"""
-GList *${prefix}get_${t.getName.cStyle}_instances ( ${prefix}skill_state state );""").mkString
+GList *${prefix}get_${t.getName.cStyle}_instances(${prefix}skill_state state);""").mkString
     }
 ${
       // instance constructor
@@ -94,8 +94,8 @@ ${
       // get and set methods
       // @todo should instance be of type void*? (declared as "typedef void* sf_any")
       (for (t ← IR; f ← t.getAllFields) yield s"""
-${mapType(f.getType)} $prefix${t.getName.cStyle}_get_${f.getName.cStyle}(${prefix}${t.getName.cStyle} instance);
-void $prefix${t.getName.cStyle}_set_${f.getName.cStyle}(${prefix}${t.getName.cStyle} instance, ${mapType(f.getType)} ${f.getName.cStyle});
+${comment(f)}${mapType(f.getType)} $prefix${t.getName.cStyle}_get_${f.getName.cStyle}(${prefix}${t.getName.cStyle} instance);
+${comment(f)}void $prefix${t.getName.cStyle}_set_${f.getName.cStyle}(${prefix}${t.getName.cStyle} instance, ${mapType(f.getType)} ${escaped(f.getName.cStyle())});
 """).mkString
     }
 ${
@@ -109,7 +109,4 @@ bool ${prefix}instanceof_${t.getName.cStyle}(${prefix}skill_type instance);""").
 
     out.close()
   }
-
-  def makeConstructorArguments(t : UserType) = (for (f ← t.getAllFields)
-    yield s""", ${mapType(f.getType)} ${f.getName.cStyle}""").mkString
 }

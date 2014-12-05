@@ -59,7 +59,21 @@ trait GeneralOutputMaker extends Generator {
   }
 
   /**
+   * Creates instance constructor arguments excluding the state
+   */
+  protected def makeConstructorArguments(t : UserType) : String
+
+  /**
    * flag that controls omission of runtime safety checks
    */
   protected var unsafe = false
+
+  /**
+   * provides a default name for the argument type
+   */
+  protected def name(t : Type) : String = escaped(t.getName.cStyle)
+  /**
+   * provides a default name for the argument field
+   */
+  protected def name(f : Field) : String = escaped(f.getName.cStyle)
 }

@@ -30,7 +30,7 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  *
  * @author Timm Felden, Fabian Harth
  */
-class Main extends FakeMain
+final class Main extends FakeMain
     with ApiHeaderMaker
     with ApiSourceMaker
     with MakefileMaker {
@@ -211,6 +211,9 @@ Opitions (C):
     // the string is fine anyway
     case _ ⇒ return target
   }
+
+  override protected def makeConstructorArguments(t : UserType):String = (for (f ← t.getAllFields)
+    yield s""", ${mapType(f.getType)} ${f.getName.cStyle}""").mkString
 
   override protected def defaultValue(f : Field) = f.getType match {
     case t : GroundType ⇒ t.getSkillName() match {
