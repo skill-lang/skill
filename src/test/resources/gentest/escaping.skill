@@ -2,7 +2,7 @@
 # This test should help detect lack of proper escaping in most languages
 
 /** Stupid typename */
-If {
+Int {
 
   /** A keyword in most languages */
   Int if;
