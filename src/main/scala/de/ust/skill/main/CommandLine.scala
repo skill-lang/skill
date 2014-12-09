@@ -18,6 +18,12 @@ import de.ust.skill.ir.TypeContext
  * for generic testing
  */
 object CommandLine {
+  /**
+   * configurable exit method called on error
+   * @note the purpose of changing this is to replace it with a failure method in unit tests
+   */
+  var exit : String ⇒ Unit = { s ⇒ System.err.println(s); System.exit(0) }
+
   private def printHelp(gens : Iterable[Generator]) : Unit = {
     println("""
 usage:
@@ -39,8 +45,7 @@ Opitions:
    * print an error message and quit
    */
   def error(msg : String) : Nothing = {
-    System.err.println(msg);
-    System.exit(0);
+    exit(msg)
     ???
   }
 
@@ -66,6 +71,7 @@ Opitions:
     println(s"Parsed $skillPath -- found ${tc.allTypeNames.size - (new TypeContext().allTypeNames.size)} types.")
     println(s"Generating sources into ${new File(outPath).getAbsolutePath()}")
 
+    val failures = HashMap[String, Exception]()
     for ((n, m) ← languages) {
       m.setTC(tc)
       m.setPackage(packageName)
@@ -76,8 +82,15 @@ Opitions:
       try {
         m.make
         println("-done-")
-      } catch { case e : Exception ⇒ println("FAILED:"); e.printStackTrace() }
+      } catch { case e : Exception ⇒ println("-FAILED-"); failures(n) = e }
     }
+
+    // report failures
+    if (!failures.isEmpty)
+      error((
+        for ((lang, err) ← failures)
+          yield s"$lang failed with message: ${err.getMessage}"
+      ).mkString("\n"))
   }
 
   def parseOptions(args : Iterator[String], known : Map[String, Generator]) = {

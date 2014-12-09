@@ -96,6 +96,7 @@ class Generic${name}ReadTest extends CommonTest {
   }
 
   def check(path : File, out : String) {
+    CommandLine.exit = {s ⇒ fail(s)}
     CommandLine.main(Array[String]("-L", "scala", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, path.getPath, "testsuites"))
 
     makeGenBinaryTests(out)

@@ -28,6 +28,7 @@ class GenericTests extends FunSuite {
     import scala.reflect.io.Directory
     Directory(new File("testsuites/ada/src/", out)).deleteRecursively
 
+    CommandLine.exit = {s ⇒ fail(s)}
     CommandLine.main(Array[String]("-L", "ada", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, path.getPath, "testsuites"))
   }
 

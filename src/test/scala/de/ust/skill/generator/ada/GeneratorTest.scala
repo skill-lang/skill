@@ -14,6 +14,7 @@ import de.ust.skill.main.CommandLine
 class GeneratorTest extends FunSuite {
 
   def check(src : String, out : String) {
+    CommandLine.exit = {s ⇒ fail(s)}
     CommandLine.main(Array[String]("-L", "ada", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/ada/"+src, "testsuites/"))
   }
 
