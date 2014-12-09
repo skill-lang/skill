@@ -44,10 +44,10 @@ class GeneratorTest extends FunSuite {
   test("float")(check("", "float.skill", "float"))
   test("node")(check("", "node.skill", "node"))
   test("subtypes")(check("", "subtypesExample.skill", "subtypes"))
-  test("container 1")(check("", "container1.skill", "container1"))
-  test("container user types")(check("", "container_user_type.skill", "container_user_type"))
-  test("container annotation")(check("", "container_annotation.skill", "container_annotation"))
-  test("container string")(check("", "container_string.skill", "container_string"))
+  ignore("container 1")(check("", "container1.skill", "container1"))
+  ignore("container user types")(check("", "container_user_type.skill", "container_user_type"))
+  ignore("container annotation")(check("", "container_annotation.skill", "container_annotation"))
+  ignore("container string")(check("", "container_string.skill", "container_string"))
 
   // Generate two bindings with prefix into the same directory, so that the test can compile two bindings together
   test("prefix sub")(check("sub", "subtypesExample.skill", "subtypes_prefix"))
