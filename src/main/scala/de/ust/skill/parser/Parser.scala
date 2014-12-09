@@ -175,7 +175,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * impact on the way, data is and can be stored.
      */
     private def fieldType = ((("map" | "set" | "list") ~! ("<" ~> repsep(baseType, ",") <~ ">")) ^^ {
-      case "map" ~ l  ⇒ new de.ust.skill.parser.MapType(l)
+      case "map" ~ l  ⇒ { assert(2 <= l.size, s"Did you mean set<${l.mkString}> instead of map?"); new de.ust.skill.parser.MapType(l) }
       case "set" ~ l  ⇒ { assert(1 == l.size); new de.ust.skill.parser.SetType(l.head) }
       case "list" ~ l ⇒ { assert(1 == l.size); new de.ust.skill.parser.ListType(l.head) }
     }

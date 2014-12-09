@@ -76,4 +76,16 @@ trait GeneralOutputMaker extends Generator {
    * provides a default name for the argument field
    */
   protected def name(f : Field) : String = escaped(f.getName.cStyle)
+
+  /**
+   * provides field access implementation
+   */
+  protected def access(f : Field, instance : String = "instance") : String = s"((${prefix}${name(f.getDeclaredIn)})instance)->${name(f)}"
+
+  /**
+   * creates a type cast on user types
+   * @note if t is null, then skill_type will be used
+   */
+  protected def cast(t : Type = null) : String = if (null == t) s"(${prefix}skill_type)"
+  else s"(${prefix}${name(t)})"
 }

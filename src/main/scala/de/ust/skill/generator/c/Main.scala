@@ -31,6 +31,7 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * containing instances of the respective UserTypes.
  *
  * @author Timm Felden, Fabian Harth
+ * @note the style guide for emitted C-code is K&R with 4 spaces
  */
 final class Main extends FakeMain
     with ApiHeaderMaker
@@ -148,11 +149,11 @@ final class Main extends FakeMain
       })
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
 
-    s"""//  ___ _  ___ _ _                                                            \\\\
-// / __| |/ (_) | |       ${headerLine1.get} \\\\
-// \\__ \\ ' <| | | |__     ${headerLine2.get} \\\\
-// |___/_|\\_\\_|_|____|    ${headerLine3.get} \\\\
-//                                                                            \\\\
+    s"""/*  ___ _  ___ _ _                                                            *\
+ * / __| |/ (_) | |       ${headerLine1.get} *
+ * \\__ \\ ' <| | | |__     ${headerLine2.get} *
+ * |___/_|\\_\\_|_|____|    ${headerLine3.get} *
+\*                                                                            */
 """
   }
 
@@ -194,7 +195,7 @@ final class Main extends FakeMain
       if (!outPostfix.endsWith("/"))
         outPostfix = outPostfix+"/"
     case "unsafe" ⇒ unsafe = value == "true"
-    case unknown ⇒ sys.error(s"unkown Argument: $unknown")
+    case unknown  ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
   override def printHelp : Unit = println("""
@@ -216,7 +217,7 @@ Opitions (C):
     case _ ⇒ return target
   }
 
-  override protected def makeConstructorArguments(t : UserType):String = (for (f ← t.getAllFields)
+  override protected def makeConstructorArguments(t : UserType) : String = (for (f ← t.getAllFields)
     yield s""", ${mapType(f.getType)} ${f.getName.cStyle}""").mkString
 
   override protected def defaultValue(f : Field) = f.getType match {
