@@ -32,6 +32,8 @@ import de.ust.skill.generator.c.model.StoragePoolHeaderMaker
 import de.ust.skill.generator.c.model.StoragePoolSourceMaker
 import de.ust.skill.generator.c.model.TypeInformationHeaderMaker
 import de.ust.skill.generator.c.model.TypeInformationSourceMaker
+import de.ust.skill.generator.c.model.TypesHeaderMaker
+import de.ust.skill.generator.c.model.TypesSourceMaker
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -62,7 +64,9 @@ final class Main extends FakeMain
     with TypeEnumHeaderMaker
     with TypeEnumSourceMaker
     with TypeInformationHeaderMaker
-    with TypeInformationSourceMaker {
+    with TypeInformationSourceMaker
+    with TypesHeaderMaker
+    with TypesSourceMaker {
 
   override def comment(d : Declaration) = d.getComment.format("", "//! ", 80, "")
   override def comment(f : Field) = f.getComment.format("", "//! ", 80, "")
@@ -253,7 +257,7 @@ Opitions (C):
     }
 
     // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
-    // @note some collections use 0 as empty (e.g. list)))))))))
+    // @note some collections use 0 as empty (e.g. list)
 
     case _ ⇒ "0"
   }
