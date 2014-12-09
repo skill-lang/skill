@@ -1,8 +1,34 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
+package de.ust.skill.generator.c.model
+
+import scala.collection.JavaConversions._
+import java.io.PrintWriter
+import de.ust.skill.generator.c.GeneralOutputMaker
+import de.ust.skill.ir.UserType
+
+/**
+ * @author Fabian Harth, Timm Felden
+ * @todo rename skill state to skill file
+ * @todo ensure 80 characters margin
+ */
+trait StoragePoolSourceMaker extends GeneralOutputMaker {
+  abstract override def make {
+    super.make
+    val out = open("model/storage_pool.c")
+
+    val prefixCapital = packagePrefix.toUpperCase
+
+    out.write(s"""
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <inttypes.h>
+
 #include "../model/${prefix}storage_pool.h"
 
 ${prefix}storage_pool ${prefix}storage_pool_new ( ${prefix}type_declaration declaration ) {
@@ -10,11 +36,11 @@ ${prefix}storage_pool ${prefix}storage_pool_new ( ${prefix}type_declaration decl
     result->declaration = declaration;
     result->declared_in_file = false;
     result->fields = 0;
-    
+
     result->base_pool = 0;
     result->super_pool = 0;
     result->sub_pools = 0;
-    
+
     result->instances = g_array_new ( true, true, sizeof (${prefix}skill_type) );
     result->new_instances = g_array_new ( true, true, sizeof (${prefix}skill_type) );
     // TODO do we need to store the pool id here?
@@ -28,7 +54,7 @@ ${prefix}skill_type ${prefix}storage_pool_get_instance_by_id ( ${prefix}storage_
     }
     ${prefix}storage_pool base_pool = this->base_pool;
     if ( id > base_pool->instances->len ) {
-        printf ( "Error: wrong index into storage pool. Type %s, index %" PRId64 ".\n", base_pool->declaration->name, id );
+        printf ( "Error: wrong index into storage pool. Type %s, index %" PRId64 ".\\n", base_pool->declaration->name, id );
         exit ( EXIT_FAILURE );
         return 0;
     }
@@ -41,7 +67,7 @@ void ${prefix}storage_pool_destroy ( ${prefix}storage_pool this ) {
     g_list_free ( this->fields );
     // The base pool and the sub pool will be deleted from the skill_state.
     g_list_free ( this->sub_pools );
-    
+
     // Free the actual instances
     int64_t i;
     ${prefix}skill_type current_instance;
@@ -61,10 +87,10 @@ void ${prefix}storage_pool_destroy ( ${prefix}storage_pool this ) {
             free ( current_instance );
         }
     }
-    
+
     g_array_free ( this->instances, true );
     g_array_free ( this->new_instances, true );
-    
+
     free ( this );
 }
 
@@ -385,4 +411,9 @@ GList *${prefix}storage_pool_get_sub_pools ( ${prefix}storage_pool this ) {
 
 void ${prefix}storage_pool_mark_instances_as_appended ( ${prefix}storage_pool this ) {
     squash_instances ( this );
+}
+""")
+
+    out.close()
+  }
 }

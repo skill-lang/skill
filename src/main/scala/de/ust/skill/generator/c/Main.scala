@@ -26,6 +26,12 @@ import de.ust.skill.generator.c.model.StringAccessHeaderMaker
 import de.ust.skill.generator.c.model.StringAccessSourceMaker
 import de.ust.skill.generator.c.model.TypeDeclarationHeaderMaker
 import de.ust.skill.generator.c.model.TypeDeclarationSourceMaker
+import de.ust.skill.generator.c.model.TypeEnumHeaderMaker
+import de.ust.skill.generator.c.model.TypeEnumSourceMaker
+import de.ust.skill.generator.c.model.StoragePoolHeaderMaker
+import de.ust.skill.generator.c.model.StoragePoolSourceMaker
+import de.ust.skill.generator.c.model.TypeInformationHeaderMaker
+import de.ust.skill.generator.c.model.TypeInformationSourceMaker
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -47,10 +53,16 @@ final class Main extends FakeMain
     with MakefileMaker
     with SkillStateHeaderMaker
     with SkillStateSourceMaker
+    with StoragePoolHeaderMaker
+    with StoragePoolSourceMaker
     with StringAccessHeaderMaker
-    with StringAccessSourceMaker 
+    with StringAccessSourceMaker
     with TypeDeclarationHeaderMaker
-    with TypeDeclarationSourceMaker {
+    with TypeDeclarationSourceMaker
+    with TypeEnumHeaderMaker
+    with TypeEnumSourceMaker
+    with TypeInformationHeaderMaker
+    with TypeInformationSourceMaker {
 
   override def comment(d : Declaration) = d.getComment.format("", "//! ", 80, "")
   override def comment(f : Field) = f.getComment.format("", "//! ", 80, "")
@@ -241,7 +253,7 @@ Opitions (C):
     }
 
     // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
-    // @note some collections use 0 as empty (e.g. list)
+    // @note some collections use 0 as empty (e.g. list)))))))))
 
     case _ ⇒ "0"
   }
