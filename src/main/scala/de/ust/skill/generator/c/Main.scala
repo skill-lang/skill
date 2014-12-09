@@ -34,6 +34,10 @@ import de.ust.skill.generator.c.model.TypeInformationHeaderMaker
 import de.ust.skill.generator.c.model.TypeInformationSourceMaker
 import de.ust.skill.generator.c.model.TypesHeaderMaker
 import de.ust.skill.generator.c.model.TypesSourceMaker
+import de.ust.skill.generator.c.io.BinaryReaderHeaderMaker
+import de.ust.skill.generator.c.io.BinaryReaderSourceMaker
+import de.ust.skill.generator.c.io.BinaryWriterHeaderMaker
+import de.ust.skill.generator.c.io.BinaryWriterSourceMaker
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -50,6 +54,10 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
 final class Main extends FakeMain
     with ApiHeaderMaker
     with ApiSourceMaker
+    with BinaryReaderHeaderMaker
+    with BinaryReaderSourceMaker
+    with BinaryWriterHeaderMaker
+    with BinaryWriterSourceMaker
     with FieldInformationHeaderMaker
     with FieldInformationSourceMaker
     with MakefileMaker
@@ -257,7 +265,7 @@ Opitions (C):
     }
 
     // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
-    // @note some collections use 0 as empty (e.g. list)
+    // @note some collections use 0 as empty (e.g. list)))
 
     case _ ⇒ "0"
   }

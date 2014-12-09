@@ -1,6 +1,32 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
+package de.ust.skill.generator.c.io
+
+import scala.collection.JavaConversions._
+import java.io.PrintWriter
+import de.ust.skill.generator.c.GeneralOutputMaker
+import de.ust.skill.ir.UserType
+
+/**
+ * @author Fabian Harth, Timm Felden
+ * @todo rename skill state to skill file
+ * @todo ensure 80 characters margin
+ */
+trait BinaryWriterSourceMaker extends GeneralOutputMaker {
+  abstract override def make {
+    super.make
+    val out = open("io/binary_writer.c")
+
+    val prefixCapital = packagePrefix.toUpperCase
+
+    out.write(s"""
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
 #include "../io/${prefix}binary_writer.h"
 
 typedef struct ${prefix}binary_writer_struct {
@@ -286,4 +312,9 @@ void ${prefix}binary_writer_append_to_file ( ${prefix}binary_writer this, char *
         fwrite ( iterator->data, 1, iterator->used, output_file );
     }
     fclose ( output_file );
+}
+""")
+
+    out.close()
+  }
 }
