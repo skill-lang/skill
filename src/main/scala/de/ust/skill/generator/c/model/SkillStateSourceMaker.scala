@@ -30,7 +30,7 @@ import de.ust.skill.ir.Type
 trait SkillStateSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("model/field_information.c")
+    val out = open("model/skill_state.c")
 
     val prefixCapital = packagePrefix.toUpperCase
 
@@ -45,9 +45,7 @@ trait SkillStateSourceMaker extends GeneralOutputMaker {
 #include "../io/${prefix}binary_reader.h"
 #include "../io/${prefix}binary_writer.h"
 
-// Store read- and write-functions for each field.
-
-${
+// Store read- and write-functions for each field.${
       // Use additional methods for maps, that have more than 2 base types need forward declaration here
       // (forward declaration)
       //@todo delete if possible (use higher order functions aka function pointers)
@@ -60,7 +58,7 @@ ${
             case _           ⇒ -1
           })
         ) yield s"""
-GHashTable *${name(t)}_read_${name(f)}_nested_$index ( ${prefix}skill_state state, ${prefix}string_access strings, char **buffer );""").mkString
+GHashTable *${name(t)}_read_${name(f)}_nested_$index(${prefix}skill_state state, ${prefix}string_access strings, char **buffer );""").mkString
     }
 ${
 
@@ -72,31 +70,26 @@ ${
           if !f.isAuto
         ) yield s"""
 static void ${name(t)}_read_${name(f)}(${prefix}skill_state state, ${prefix}string_access strings, ${prefix}skill_type instance, char **buffer) {
-    ${readSingleField(f, s"((${prefix}${name(t)})instance)->${name(f)}")}
+    ${readSingleField(f, access(f))}
 }
 
 int64_t ${name(t)}_write_${name(f)}(${prefix}skill_state state, ${prefix}string_access strings, ${prefix}skill_type instance, ${prefix}binary_writer out) {
-    ${writeSingleField(f, s"((${prefix}${name(t)})instance)->${name(f)}")}
-}""").mkString
+    ${writeSingleField(f, access(f))}
+}
+""").mkString
     }
-
-
-// Store cleanup functions for each declaration.
-// They set references to deleted user types to 0 for instances of this type.
 ${
 
       /**
        *  create function that removes references to deleted objects
-       *  this funciton is called prior to actual deletion of these objects and is needed in order to prevent dangling
+       *  this function is called prior to actual deletion of these objects and is needed in order to prevent dangling
        *  references
        */
       (
         for (
           t ← IR
         ) yield s"""
-// removes references to all instances that have been marked as deleted
-void remove_${name(t)}_null_references(${prefix}skill_type instance) {
-    ${
+void remove_${name(t)}_null_references(${prefix}skill_type instance) {${
           (for (f ← t.getFields if holdsReference(f))
             yield f.getType match {
             case t : ReferenceType ⇒ s"""
@@ -151,7 +144,7 @@ void remove_${name(t)}_null_references(${prefix}skill_type instance) {
     for ( iterator = values; iterator; iterator = iterator->next ) {
         target = (${prefix}skill_type) iterator->data;
         if ( target != 0 && target->skill_id == 0 ) {
-            g_hash_table_remove ( ( (${prefix}${name(t)}) instance )->_${name(f)}, target );
+            g_hash_table_remove(((${prefix}${name(t)}) instance )->_${name(f)}, target );
         }
     }
     }"""
@@ -163,16 +156,14 @@ void remove_${name(t)}_null_references(${prefix}skill_type instance) {
       ).mkString
     }
 
-${prefix}skill_state ${prefix}skill_state_new () {
+${prefix}skill_state ${prefix}skill_state_new() {
     ${prefix}skill_state result = malloc(sizeof(${prefix}skill_state_struct));
     result->filename = 0;
     result->pools = g_hash_table_new(g_str_hash, g_str_equal);
-
-    // create pools
 ${
       // create types
       (for (t ← IR) yield s"""
-    // create ${t.getName.cStyle}
+    // create ${t.getName.cStyle} pool
     {
         ${prefix}type_declaration declaration = ${prefix}type_declaration_new();
         declaration->name = "${t.getSkillName}";
@@ -264,13 +255,13 @@ ${
     return result;
 }
 
-void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {
-    ${
+void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {${
       (for (t ← IR) yield s"""
     ${prefix}type_declaration_destroy(this->${name(t)}->declaration);
     ${prefix}storage_pool_destroy(this->${name(t)});"""
       ).mkString
     }
+
     g_hash_table_destroy(this->pools);
     ${prefix}string_access_destroy(this->strings);
     free(this);
@@ -281,11 +272,14 @@ void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {
   }
 
   def readSingleField(f : Field, target : String) : String = f.getType match {
+    case t : UserType ⇒ s"""
+    int64_t reference_id = ${prefix}read_v64(buffer);
+    $target = referente_id ? ${cast(t)} ${prefix}storage_pool_get_instance_by_id(state->${name(t)}, reference_id) : 0;"""
     case t : GroundType ⇒ t.getSkillName() match {
       case "string" ⇒
         s"""$target = ${prefix}string_access_get_string_by_id ( strings, ${prefix}read_v64 ( buffer ) );"""
       case "annotation" ⇒
-        // TODO change this implemenation to TR15
+        // TODO change this implementation to TR15
         s"""int64_t type_name_id = ${prefix}read_v64 ( buffer );
     if ( type_name_id == 0 ) {
         ${prefix}read_v64 ( buffer );
@@ -295,6 +289,7 @@ void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {
         int64_t reference_id = ${prefix}read_v64 ( buffer );
         $target = ${prefix}storage_pool_get_instance_by_id ( target_pool, reference_id );
     }"""
+      case tn ⇒ s"$target = read_$tn(buffer);"
     }
   }
 
@@ -306,16 +301,21 @@ void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {
       case "string" ⇒
         s""" ${prefix}string_access_get_string_by_id ( strings, ${prefix}read_v64 ( buffer ) );"""
       case "annotation" ⇒
-        // TODO change this implemenation to TR15
-        s"""int64_t type_name_id = ${prefix}read_v64 ( buffer );
-    if ( type_name_id == 0 ) {
-        ${prefix}read_v64 ( buffer );
+      // TODO change this implementation to TR15
+        s"""${prefix}skill_type annotation = $target;
+    if(0 == annotation) {
+        write_i8(out, 0);
+        write_i8(out, 0);
+        return 2;
     } else {
-        // TODO error handling
-        ${prefix}storage_pool target_pool = (${prefix}storage_pool) g_hash_table_lookup ( state->pools, ${prefix}string_access_get_string_by_id ( strings, type_name_id ) );
-        int64_t reference_id = ${prefix}read_v64 ( buffer );
-        $target = ${prefix}storage_pool_get_instance_by_id ( target_pool, reference_id );
+        register int64_t bytes_written = 0;
+        storage_pool target_pool = (storage_pool) g_hash_table_lookup ( state->pools, annotation->declaration->name );
+        char *base_type_name = target_pool->base_pool->declaration->name;
+        bytes_written += write_v64 ( out, string_access_get_id_by_string ( strings, base_type_name ) );
+        bytes_written += write_v64 ( out, annotation->skill_id );
+        return bytes_written;
     }"""
+      case tn ⇒ s"""return write_$tn(out, ${access(f)});"""
     }
   }
 

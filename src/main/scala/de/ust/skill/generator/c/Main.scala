@@ -20,6 +20,8 @@ import de.ust.skill.generator.c.api.ApiHeaderMaker
 import de.ust.skill.generator.c.api.ApiSourceMaker
 import de.ust.skill.generator.c.model.FieldInformationHeaderMaker
 import de.ust.skill.generator.c.model.FieldInformationSourceMaker
+import de.ust.skill.generator.c.model.SkillStateSourceMaker
+import de.ust.skill.generator.c.model.SkillStateHeaderMaker
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -38,7 +40,9 @@ final class Main extends FakeMain
     with ApiSourceMaker
     with FieldInformationHeaderMaker
     with FieldInformationSourceMaker
-    with MakefileMaker {
+    with MakefileMaker
+    with SkillStateHeaderMaker
+    with SkillStateSourceMaker {
 
   override def comment(d : Declaration) = d.getComment.format("", "//! ", 80, "")
   override def comment(f : Field) = f.getComment.format("", "//! ", 80, "")
@@ -132,7 +136,7 @@ final class Main extends FakeMain
     val headerLineLength = 51
     val headerLine1 = Some((headerInfo.line1 match {
       case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: "+_).getOrElse("Your SKilL Scala Binding")
+      case None    ⇒ headerInfo.license.map("LICENSE: "+_).getOrElse("Your SKilL C Binding")
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
     val headerLine2 = Some((headerInfo.line2 match {
       case Some(s) ⇒ s
@@ -149,11 +153,11 @@ final class Main extends FakeMain
       })
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
 
-    s"""/*  ___ _  ___ _ _                                                            *\
+    s"""/*  ___ _  ___ _ _                                                            *\\
  * / __| |/ (_) | |       ${headerLine1.get} *
  * \\__ \\ ' <| | | |__     ${headerLine2.get} *
  * |___/_|\\_\\_|_|____|    ${headerLine3.get} *
-\*                                                                            */
+\\*                                                                            */
 """
   }
 
@@ -229,7 +233,7 @@ Opitions (C):
     }
 
     // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
-    // @note some collections use 0 as empty (e.g. list)
+    // @note some collections use 0 as empty (e.g. list)))
 
     case _ ⇒ "0"
   }
