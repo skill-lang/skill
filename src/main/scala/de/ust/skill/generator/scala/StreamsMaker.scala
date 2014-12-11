@@ -17,15 +17,17 @@ trait StreamsMaker extends GeneralOutputMaker {
     out.getParentFile.mkdirs();
 
     // safe unnecessary overwrites that cause race conditions on parallel builds anyway
-    try {
-      if (out.exists() && sha256(out.getAbsolutePath) == commonJarSum)
-        return
-    } catch {
-      case e : IOException ⇒ // just continue
-    }
+    this.getClass.synchronized({
+      try {
+        if (out.exists() && sha256(out.getAbsolutePath) == commonJarSum)
+          return
+      } catch {
+        case e : IOException ⇒ // just continue
+      }
 
-    Files.deleteIfExists(out.toPath)
-    Files.copy(new File(commonJar).toPath, out.toPath)
+      Files.deleteIfExists(out.toPath)
+      Files.copy(new File(commonJar).toPath, out.toPath)
+    })
   }
 
   val commonJar = "skill.jvm.common.jar"
