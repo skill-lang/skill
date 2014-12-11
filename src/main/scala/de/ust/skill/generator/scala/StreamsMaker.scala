@@ -1,9 +1,10 @@
 package de.ust.skill.generator.scala
 
-import java.nio.file.Files
 import java.io.File
-import java.security.MessageDigest
+import java.io.IOException
+import java.nio.file.Files
 import java.nio.file.Path
+import java.security.MessageDigest
 
 /**
  * creates a copy of skill.jvm.common.jar in $outPath
@@ -16,8 +17,12 @@ trait StreamsMaker extends GeneralOutputMaker {
     out.getParentFile.mkdirs();
 
     // safe unnecessary overwrites that cause race conditions on parallel builds anyway
-    if (out.exists() && sha256(out.getAbsolutePath) == commonJarSum)
-      return
+    try {
+      if (out.exists() && sha256(out.getAbsolutePath) == commonJarSum)
+        return
+    } catch {
+      case e : IOException ⇒ // just continue
+    }
 
     Files.deleteIfExists(out.toPath)
     Files.copy(new File(commonJar).toPath, out.toPath)
