@@ -1,3 +1,28 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
+package de.ust.skill.generator.c.io
+
+import scala.collection.JavaConversions._
+import java.io.PrintWriter
+import de.ust.skill.generator.c.GeneralOutputMaker
+import de.ust.skill.ir.UserType
+
+/**
+ * @author Fabian Harth, Timm Felden
+ * @todo rename skill state to skill file
+ * @todo ensure 80 characters margin
+ */
+trait ReaderSourceMaker extends GeneralOutputMaker {
+  abstract override def make {
+    super.make
+    val out = open("io/reader.c")
+
+    val prefixCapital = packagePrefix.toUpperCase
+
+    out.write(s"""
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -63,7 +88,7 @@ static void validate_field_type ( ${prefix}type_information target_type_info, ${
     if ( ${prefix}type_enum_is_constant ( target_type_info->type ) ) {
         // Check the constant value...
         if ( target_type_info->constant_value != read_type_info->constant_value ) {
-            printf ( "Error: expected constant value %" PRId64 " of the type named %s, but found %" PRId64 ".\n",
+            printf ( "Error: expected constant value %" PRId64 " of the type named %s, but found %" PRId64 ".\\n",
                 target_type_info->constant_value, target_type_info->name, read_type_info->constant_value );
             exit ( EXIT_FAILURE );
         }
@@ -74,7 +99,7 @@ static void validate_field_type ( ${prefix}type_information target_type_info, ${
             if ( g_list_length ( target_type_info->base_types ) != g_list_length ( read_type_info->base_types ) ) {
                 int64_t target_base_types_length = g_list_length ( target_type_info->base_types );
                 int64_t read_base_types_length = g_list_length ( read_type_info->base_types );
-                printf ( "Error: the map named %s of type %s should have %" PRId64 " base types, but found %" PRId64 " base types.\n",
+                printf ( "Error: the map named %s of type %s should have %" PRId64 " base types, but found %" PRId64 " base types.\\n",
                         field_name, target_type_info->name, target_base_types_length, read_base_types_length );
                 exit ( EXIT_FAILURE );
             }
@@ -86,21 +111,21 @@ static void validate_field_type ( ${prefix}type_information target_type_info, ${
                 first = *( (${prefix}type_enum*) g_list_nth_data ( target_type_info->base_types, i ) );
                 second = *( (${prefix}type_enum*) g_list_nth_data ( read_type_info->base_types, i ) );
                 if ( first != second ) {
-                    printf ( "Error: The base types of the map do not match. Field name %s, type name %s.\n",
+                    printf ( "Error: The base types of the map do not match. Field name %s, type name %s.\\n",
                             field_name, target_type_info->name );
                     exit ( EXIT_FAILURE );
                 }
             }
         } else {
             if ( target_type_info->element_type->type != read_type_info->element_type->type ) {
-                printf ( "Expected %s as base type, but found %s: field name %s, type name %s.\n",
+                printf ( "Expected %s as base type, but found %s: field name %s, type name %s.\\n",
                         ${prefix}type_enum_to_string ( target_type_info->element_type->type ), ${prefix}type_enum_to_string ( read_type_info->element_type->type ),
                         field_name, target_type_info->name );
                 exit ( EXIT_FAILURE );
             }
             if ( target_type_info->type == ${prefix}CONSTANT_LENGTH_ARRAY ) {
                 if ( target_type_info->array_length != read_type_info->array_length ) {
-                    printf ( "Error: Expected array length %" PRId64 ", but found length %" PRId64 ". Field name %s of type %s.\n",
+                    printf ( "Error: Expected array length %" PRId64 ", but found length %" PRId64 ". Field name %s of type %s.\\n",
                             target_type_info->array_length, read_type_info->array_length, field_name, target_type_info->name );
                     exit ( EXIT_FAILURE );
                 }
@@ -124,7 +149,7 @@ static field_read_information *read_field_info ( ${prefix}skill_state state, ${p
     int64_t field_restrictions = ${prefix}read_v64 ( buffer );
     if ( field_restrictions != 0 ) {
         // TODO
-        printf ( "Error. Field restrictions not yet implemented.\n" );
+        printf ( "Error. Field restrictions not yet implemented.\\n" );
         exit ( EXIT_FAILURE );
     }
     int8_t type_index = ${prefix}read_i8 ( buffer );
@@ -184,7 +209,7 @@ static field_read_information *read_field_info ( ${prefix}skill_state state, ${p
     char *field_name = ${prefix}string_access_get_string_by_id ( strings, field_name_index );
     if ( !field_name ) {
         // TODO
-        printf ( "Error: didn't find string with index %" PRId64 ".\n", field_name_index );
+        printf ( "Error: didn't find string with index %" PRId64 ".\\n", field_name_index );
         exit ( EXIT_FAILURE );
     }
     result->field_name = field_name;
@@ -260,18 +285,18 @@ static read_information *read_single_type_info ( ${prefix}skill_state state, ${p
         // Check that the right super type is referenced
         if ( super_type_name == 0 ) {
             if ( result->super_type_name != 0 ) {
-                printf ( "Error: type %s defines no super type, but should be: %s.\n", type_name, declaration->super_type->name );
+                printf ( "Error: type %s defines no super type, but should be: %s.\\n", type_name, declaration->super_type->name );
                 exit ( EXIT_FAILURE );
             }
         } else {
             if ( !declaration->super_type ) {
                 // TODO
-                printf ( "Binary file defines super type %s of type %s, but should be none.\n", super_type_name, type_name );
+                printf ( "Binary file defines super type %s of type %s, but should be none.\\n", super_type_name, type_name );
                 exit ( EXIT_FAILURE );
             }
             if ( !( strcmp ( super_type_name, declaration->super_type->name ) == 0 ) ) {
                 // TODO
-                printf ( "Expected super-type '%s', but was '%s'.\n", declaration->super_type->name, super_type_name );
+                printf ( "Expected super-type '%s', but was '%s'.\\n", declaration->super_type->name, super_type_name );
                 exit ( EXIT_FAILURE );
             }
         }
@@ -281,7 +306,7 @@ static read_information *read_single_type_info ( ${prefix}skill_state state, ${p
         ${prefix}storage_pool super_pool = pool->super_pool;
         read_information *super_read_info = (read_information*) g_hash_table_lookup ( seen_types, super_pool->declaration->name );
         if ( super_read_info == 0 ) {
-            printf ( "Error. super type '%s' has to be declared before the supbtype '%s'.\n", super_pool->declaration->name, pool->declaration->name );
+            printf ( "Error. super type '%s' has to be declared before the supbtype '%s'.\\n", super_pool->declaration->name, pool->declaration->name );
             exit ( EXIT_FAILURE );
         }
         super_read_info->subtype_order = g_list_append ( super_read_info->subtype_order, result );
@@ -302,7 +327,7 @@ static read_information *read_single_type_info ( ${prefix}skill_state state, ${p
         int64_t restrictions = ${prefix}read_v64 ( buffer );
         if ( restrictions != 0 ) {
             // TODO
-            printf ( "Restrictions not yet implemented.\n" );
+            printf ( "Restrictions not yet implemented.\\n" );
             exit ( EXIT_FAILURE );
         }
     }
@@ -374,12 +399,12 @@ static void validate_field_order ( ${prefix}skill_state state, read_information 
         if ( !new_field_iter ) {
             // There are more previously defined fields than the current type block defines.
             // TODO
-            printf ( "Field '%s' not found. It was declared in a previous block.\n", previous_field->name );
+            printf ( "Field '%s' not found. It was declared in a previous block.\\n", previous_field->name );
             exit ( EXIT_FAILURE );
         }
         current_field_name = ( (field_read_information*) new_field_iter->data )->field_name;
         if ( !( strcmp ( previous_field->name, current_field_name ) == 0 ) ) {
-            printf ( "Error: expected field named '%s', which was defined in a previous block but found field named '%s'.\n",
+            printf ( "Error: expected field named '%s', which was defined in a previous block but found field named '%s'.\\n",
                     previous_field->name, current_field_name );
             exit ( EXIT_FAILURE );
         }
@@ -402,7 +427,7 @@ static void create_sub_pool_instances ( ${prefix}skill_state state, GArray *inst
         number_of_sub_instances += subtype_read_info->number_of_instances;
     }
     if ( *index + number_of_new_instances > instances->len ) {
-        printf ( "Error: nuber of instances of subtype is not correct: type %s.\n", pool->declaration->name );
+        printf ( "Error: nuber of instances of subtype is not correct: type %s.\\n", pool->declaration->name );
         exit ( EXIT_FAILURE );
     }
     int64_t i;
@@ -583,7 +608,7 @@ void ${prefix}read_file ( ${prefix}skill_state state, char *filename ) {
     file = fopen ( filename, "rb");
     if ( !file )
     {
-        fprintf ( stderr, "Unable to open file %s\n", filename );
+        fprintf ( stderr, "Unable to open file %s\\n", filename );
         exit ( EXIT_FAILURE );
         // TODO
         return;
@@ -597,7 +622,7 @@ void ${prefix}read_file ( ${prefix}skill_state state, char *filename ) {
     file_contents = (char *) malloc ( file_length + 1 );
     if ( !file_contents )
     {
-        fprintf ( stderr, "Memory error!\n" );
+        fprintf ( stderr, "Memory error!\\n" );
         fclose ( file );
         exit ( EXIT_FAILURE );
         // TODO
@@ -628,4 +653,9 @@ void ${prefix}read_file ( ${prefix}skill_state state, char *filename ) {
     state->filename = filename;
     state->strings = strings;
     free ( file_contents );
+}
+""")
+
+    out.close()
+  }
 }

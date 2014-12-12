@@ -1,3 +1,28 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
+package de.ust.skill.generator.c.io
+
+import scala.collection.JavaConversions._
+import java.io.PrintWriter
+import de.ust.skill.generator.c.GeneralOutputMaker
+import de.ust.skill.ir.UserType
+
+/**
+ * @author Fabian Harth, Timm Felden
+ * @todo rename skill state to skill file
+ * @todo ensure 80 characters margin
+ */
+trait WriterSourceMaker extends GeneralOutputMaker {
+  abstract override def make {
+    super.make
+    val out = open("io/writer.c")
+
+    val prefixCapital = packagePrefix.toUpperCase
+
+    out.write(s"""
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,159 +37,14 @@
 #include "../model/${prefix}storage_pool.h"
 #include "../model/${prefix}field_information.h"
 
-<#if contains_string_fields>
-<#list declarations as declaration>
-<#if declaration.contains_strings>
-<#list declaration.fields as field>
-<#if field.contains_strings>
-<#if field.is_map>
-// Those methods are used to collect the strings from the map '${field.name}' from instances of type '${declaration.name}'
-<#-- Just forward declarations here -->
-<#list field.base_types as base_type>
-static GList *${declaration.name}_collect_${field.name}_strings_base_type_${base_type.base_type_index} ( GHashTable *map );
-</#list>
-</#if>
-</#if>
-</#list>
-</#if>
-</#list>
 
-<#list declarations as declaration>
-<#if declaration.contains_strings>
-<#list declaration.fields as field>
-<#if field.contains_strings>
-<#if field.is_map>
-// Those methods are used to collect the strings from the map '${field.name}' from instances of type '${declaration.name}'
-<#list field.base_types as base_type>
-<#if !base_type.has_nested_map >
-<#-- This is just a simple key-value map, without further nested maps -->
-static GList *${declaration.name}_collect_${field.name}_strings_base_type_${base_type.base_type_index} ( GHashTable *map ) {
-    GList *result = 0;
-    <#if base_type.enum_type = "STRING">
-    result = g_list_concat ( result, g_hash_table_get_keys ( map ) );
-    </#if>
-    <#if base_type.map_value_type.enum_type = "STRING">
-    result = g_list_concat ( result, g_hash_table_get_values ( map ) );
-    </#if>
-    return result;
-}
-<#else>
-<#-- This is a map with maps as values, so to collect all string, call the according read_strings method -->
-static GList *${declaration.name}_collect_${field.name}_strings_base_type_${base_type.base_type_index} ( GHashTable *map ) {
-    GList *result = 0;
-    GList *values = 0;
-    GList *iterator;
-    <#if base_type.enum_type = "STRING">
-    result = g_list_concat ( result, g_hash_table_get_keys ( map ) );
-    </#if>
-    values = g_hash_table_get_values ( map );
-    for ( iterator = values; iterator; iterator = iterator->next ) {
-        result = g_list_concat ( result, ${declaration.name}_collect_${field.name}_strings_base_type_${base_type.base_type_index + 1} ( (GHashTable*) iterator->data ) );
-    }
-    g_list_free ( values );
-    return result;
-}
-</#if>
-</#list>
-</#if>
-</#if>
-</#list>
-</#if>
-</#list>
-</#if>
+// collect string functions
+// TODO see schema
 
 // This adds all strings required for writing/appending to the given state's string_access.
 // If 'for_appending' is set to true, this collects only strings from new instances, otherwise, this collects strings from all instances.
 static void collect_strings ( ${prefix}skill_state state, ${prefix}string_access strings, bool for_appending ) {
-    GList *pool_iterator;
-    GList *field_iterator;
-    ${prefix}storage_pool pool;
-    ${prefix}type_declaration declaration;
-    ${prefix}field_information field_info;
-    
-    // Collect the names of user-types and fields of all storage pools.
-    // For appending, this may add strings, which are already contained in the binary file.
-    // Those will be ignored by the string_access.
-    GList *fields;
-    <#list declarations as declaration>
-    ${prefix}string_access_add_string ( strings, state->${declaration.name}->declaration->name );
-    fields = g_hash_table_get_values ( state->${declaration.name}->declaration->fields );
-    for ( field_iterator = fields; field_iterator; field_iterator = field_iterator->next ) {
-        field_info = (${prefix}field_information) field_iterator->data;
-        ${prefix}string_access_add_string ( strings, field_info->name );
-    }
-    g_list_free ( fields );
-    </#list>
-    
-    <#if contains_string_fields>
-    // Collect the strings, which are actual field data
-    GList *instances;
-    GList *instance_iterator;
-    GList *string_iterator;
-    GList *values;
-    int64_t i;
-
-    <#list declarations as declaration>
-    <#if declaration.contains_strings>
-    // If this is for appending, only look at new instances
-    if ( for_appending ) {
-        instances = ${prefix}storage_pool_get_new_instances ( state->${declaration.name} );
-    } else {
-        instances = ${prefix}storage_pool_get_instances ( state->${declaration.name} );
-    }
-    {
-    ${prefix}${declaration.name} current_instance;
-    for ( instance_iterator = instances; instance_iterator; instance_iterator = instance_iterator->next ) {
-        current_instance = (${prefix}${declaration.name}) instance_iterator->data;
-        <#list declaration.fields_including_constants as field>
-        <#if field.contains_strings>
-        <#if !field.is_transient>
-        <#if field.is_string>
-        ${prefix}string_access_add_string ( strings, ( current_instance->_${field.name} ) );
-        <#elseif field.is_container_type>
-        <#if field.is_constant_length_array>
-        <#if field.base_type.enum_type = "STRING">
-        for ( i = 0; i < ${field.array_length}; i++ ) {
-            ${prefix}string_access_add_string ( strings, ( g_array_index ( current_instance->_${field.name}, char*, i ) ) );
-        }
-        </#if>
-        <#elseif field.is_variable_length_array>
-        <#if field.base_type.enum_type = "STRING">
-        for ( i = 0; i < current_instance->_${field.name}->len; i++ ) {
-            ${prefix}string_access_add_string ( strings, ( g_array_index ( current_instance->_${field.name}, char*, i ) ) );
-        }
-        </#if>
-        <#elseif field.is_list_type>
-        <#if field.base_type.enum_type = "STRING">
-        for ( string_iterator = current_instance->_${field.name}; string_iterator; string_iterator = string_iterator->next ) {
-            ${prefix}string_access_add_string ( strings, (char*) ( string_iterator->data ) );
-        }
-        </#if>
-        <#elseif field.is_set_type>
-        <#if field.base_type.enum_type = "STRING">
-        values = g_hash_table_get_keys ( current_instance->_${field.name} );
-        for ( string_iterator = values; string_iterator; string_iterator = string_iterator->next ) {
-            ${prefix}string_access_add_string ( strings, (char*) ( string_iterator->data ) );
-        }
-        g_list_free ( values );
-        </#if>
-        <#elseif field.is_map>
-        values = ${declaration.name}_collect_${field.name}_strings_base_type_0 ( current_instance->_${field.name} );
-        for ( string_iterator = values; string_iterator; string_iterator = string_iterator->next ) {
-            ${prefix}string_access_add_string ( strings, (char*) ( string_iterator->data ) );
-        }
-        g_list_free ( values );
-        </#if>
-        </#if>
-        </#if>
-        </#if>
-        </#list>
-    }
-    }
-    g_list_free ( instances );
-    </#if>
-    </#list>
-    </#if>
+  // TODO see schema
 }
 
 static void write_strings ( ${prefix}string_access strings, ${prefix}binary_writer out ) {
@@ -211,7 +91,7 @@ static GList *write_field_information ( ${prefix}field_information field, ${pref
         ${prefix}storage_pool target_pool = (${prefix}storage_pool) g_hash_table_lookup ( state->pools, type_info->name );
         if ( target_pool == 0 ) {
             // TODO
-            printf ( "Error: storage_pool not found for type name %s.\n", type_info->name );
+            printf ( "Error: storage_pool not found for type name %s.\\n", type_info->name );
             exit ( EXIT_FAILURE );
         }
         int64_t pool_index = target_pool->id;
@@ -503,7 +383,7 @@ void ${prefix}append ( ${prefix}skill_state state ) {
     // reading a binary file.
     // If the filename of the state is not set, neither is the case, and appending is not legal.
     if ( state->filename == 0 ) {
-        printf ( "Error: appending not allowed. The state must either have been written to a file earlier, or have been created by reading a binary file.\n" );
+        printf ( "Error: appending not allowed. The state must either have been written to a file earlier, or have been created by reading a binary file.\\n" );
         exit ( EXIT_FAILURE );
     }
     
@@ -586,4 +466,8 @@ void ${prefix}append ( ${prefix}skill_state state ) {
     g_list_free ( all_pools );
     g_list_free ( base_pools );
 }
+""")
 
+    out.close()
+  }
+}

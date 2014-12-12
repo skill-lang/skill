@@ -68,7 +68,7 @@ GList *${prefix}get_all_instances ( ${prefix}skill_state state ) {
     // only add instances of base-pools, so that instances are not added multiple times${
       (for (t ← IR; if t == t.getBaseType)
         yield s"""
-    result = g_list_concat ( result, ${prefix}storage_pool_get_instances ( state->${t.getName.cStyle} ) );"""
+    result = g_list_concat(result, ${prefix}storage_pool_get_instances(state->${t.getName.cStyle}));"""
       ).mkString
     }
 
@@ -83,7 +83,7 @@ GList *${prefix}get_${t.getName.cStyle}_instances(${prefix}skill_state state) {
 }
 
 ${prefix}${t.getName.cStyle} ${prefix}create_${t.getName.cStyle}(${prefix}skill_state state${makeConstructorArguments(t)}) {
-    ${prefix}${t.getName.cStyle} result = ${prefix}types_create_${t.getName.cStyle}(state, 0${t.getAllFields.map(f ⇒ s", ${name(f)}").fold("")(_ + _)});
+    ${prefix}${t.getName.cStyle} result = ${prefix}types_create_${t.getName.cStyle}(state, 0${t.getAllFields.map(f ⇒ s", _${name(f)}").fold("")(_ + _)});
     ((${prefix}skill_type)result)->declaration = state->${name(t)}->declaration;
     ((${prefix}skill_type)result)->skill_id = 1;
     ${prefix}storage_pool_add_instance ( state->${name(t)}, (${prefix}skill_type) result );
@@ -113,10 +113,10 @@ ${
         exit(EXIT_FAILURE);
     }
 """
-        }    return ((${name(f.getDeclaredIn)})instance)->${escaped(f.getName.cStyle())};
+        }    return ${access(f)};
 }
 
-void $prefix${t.getName.cStyle}_set_${f.getName.cStyle}(${prefix}${t.getName.cStyle} instance, ${mapType(f.getType)} ${escaped(f.getName.cStyle())}) {
+void $prefix${t.getName.cStyle}_set_${f.getName.cStyle}(${prefix}${t.getName.cStyle} instance, ${mapType(f.getType)} _${escaped(f.getName.cStyle())}) {
 ${
           if (unsafe) ""
           else s"""    if(!${prefix}instanceof_${t.getName.cStyle}((${prefix}skill_type)instance)) {
@@ -124,7 +124,7 @@ ${
         exit(EXIT_FAILURE);
     }
 """
-        }    ((${name(f.getDeclaredIn)})instance)->${escaped(f.getName.cStyle())} = ${escaped(f.getName.cStyle())};
+        }    ${access(f)} = _${escaped(f.getName.cStyle())};
 }
 """
         ).mkString

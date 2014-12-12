@@ -76,7 +76,7 @@ trait GeneralOutputMaker extends Generator {
   /**
    * provides a default name for the argument field
    */
-  protected def name(f : Field) : String = escaped(f.getName.cStyle)
+  protected def name(f : Field) : String = "_" + escaped(f.getName.cStyle)
 
   /**
    * provides field access implementation

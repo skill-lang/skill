@@ -38,6 +38,10 @@ import de.ust.skill.generator.c.io.BinaryReaderHeaderMaker
 import de.ust.skill.generator.c.io.BinaryReaderSourceMaker
 import de.ust.skill.generator.c.io.BinaryWriterHeaderMaker
 import de.ust.skill.generator.c.io.BinaryWriterSourceMaker
+import de.ust.skill.generator.c.io.ReaderHeaderMaker
+import de.ust.skill.generator.c.io.ReaderSourceMaker
+import de.ust.skill.generator.c.io.WriterSourceMaker
+import de.ust.skill.generator.c.io.WriterHeaderMaker
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -61,6 +65,8 @@ final class Main extends FakeMain
     with FieldInformationHeaderMaker
     with FieldInformationSourceMaker
     with MakefileMaker
+    with ReaderHeaderMaker
+    with ReaderSourceMaker
     with SkillStateHeaderMaker
     with SkillStateSourceMaker
     with StoragePoolHeaderMaker
@@ -74,7 +80,9 @@ final class Main extends FakeMain
     with TypeInformationHeaderMaker
     with TypeInformationSourceMaker
     with TypesHeaderMaker
-    with TypesSourceMaker {
+    with TypesSourceMaker
+    with WriterHeaderMaker
+    with WriterSourceMaker {
 
   override def comment(d : Declaration) = d.getComment.format("", "//! ", 80, "")
   override def comment(f : Field) = f.getComment.format("", "//! ", 80, "")
@@ -254,7 +262,7 @@ Opitions (C):
   }
 
   override protected def makeConstructorArguments(t : UserType) : String = (for (f ← t.getAllFields)
-    yield s""", ${mapType(f.getType)} ${f.getName.cStyle}""").mkString
+    yield s""", ${mapType(f.getType)} _${name(f)}""").mkString
 
   override protected def defaultValue(f : Field) = f.getType match {
     case t : GroundType ⇒ t.getSkillName() match {
@@ -265,7 +273,7 @@ Opitions (C):
     }
 
     // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
-    // @note some collections use 0 as empty (e.g. list)))
+    // @note some collections use 0 as empty (e.g. list)
 
     case _ ⇒ "0"
   }
