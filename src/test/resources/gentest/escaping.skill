@@ -13,3 +13,15 @@ Int {
 
 /** Another stupid typename */
 if{}
+
+/**
+ * Representation of another type.
+ * @note Caused by a Bug in the C generator.
+ */
+Boolean {
+  /** reference to a boolean */
+  Boolean bool;
+
+  /** a flag */
+  bool boolean;
+}
