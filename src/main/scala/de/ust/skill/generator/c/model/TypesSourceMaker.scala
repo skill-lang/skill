@@ -39,40 +39,38 @@ static void set_${name(t)}_fields(
     ${prefix}${name(t)} instance,
     ${prefix}skill_state state,
     int64_t skill_id${
-        (for (f ← t.getAllFields) yield s""",
-    ${mapType(f.getType)} ${name(f)}""").mkString
+        makeConstructorArguments(t)
       }) {
     ${
-      // invoke super "constructor"
+        // invoke super "constructor"
         if (null != t.getSuperType) s"""set_${name(t.getSuperType)}_fields(
         ${cast(t.getSuperType)}instance,
         state,
         skill_id${
-          (for (f ← t.getSuperType.getAllFields) yield s""",
-        ${name(f)}""").mkString
+          (for (f ← t.getSuperType.getAllFields; if !f.isConstant()) yield s""",
+        _${name(f)}""").mkString
         });"""
         else s"set_skill_type_fields(${cast()}instance, state, skill_id);"
       }
 ${
         // assign fields
-        (for (f ← t.getFields) yield s"""
-    instance->${name(f)} = ${name(f)};""").mkString
+        (for (f ← t.getFields; if !f.isConstant()) yield s"""
+    instance->${name(f)} = _${name(f)};""").mkString
       }
 }
 
 ${prefix}${name(t)} ${prefix}types_create_${name(t)} (
     ${prefix}skill_state state,
     int64_t skill_id${
-        (for (f ← t.getAllFields) yield s""",
-    ${mapType(f.getType)} ${name(f)}""").mkString
+        makeConstructorArguments(t)
       }) {
     ${prefix}${name(t)} result = malloc(sizeof(${prefix}${name(t)}_struct));
     set_${name(t)}_fields(
         result,
         state,
         skill_id${
-        (for (f ← t.getAllFields) yield s""",
-        ${name(f)}""").mkString
+        (for (f ← t.getAllFields; if !f.isConstant()) yield s""",
+        _${name(f)}""").mkString
       });
     return result;
 }

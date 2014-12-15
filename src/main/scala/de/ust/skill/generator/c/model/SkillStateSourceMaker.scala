@@ -299,7 +299,7 @@ void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {${
 """
     case t : GroundType ⇒ t.getSkillName() match {
       case "string" ⇒
-        s""" ${prefix}string_access_get_string_by_id ( strings, ${prefix}read_v64 ( buffer ) );"""
+        s"""${prefix}write_v64(out, ${prefix}string_access_get_id_by_string(strings, ${access(f)}));"""
       case "annotation" ⇒
       // TODO change this implementation to TR15
         s"""${prefix}skill_type annotation = $target;

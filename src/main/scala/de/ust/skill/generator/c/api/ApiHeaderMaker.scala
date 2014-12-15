@@ -95,7 +95,7 @@ ${
       // @todo should instance be of type void*? (declared as "typedef void* sf_any")
       (for (t ← IR; f ← t.getAllFields) yield s"""
 ${comment(f)}${mapType(f.getType)} $prefix${t.getName.cStyle}_get_${f.getName.cStyle}(${prefix}${t.getName.cStyle} instance);
-${comment(f)}void $prefix${t.getName.cStyle}_set_${f.getName.cStyle}(${prefix}${t.getName.cStyle} instance, ${mapType(f.getType)} ${escaped(f.getName.cStyle())});
+${comment(f)}void $prefix${t.getName.cStyle}_set_${f.getName.cStyle}(${prefix}${t.getName.cStyle}, ${mapType(f.getType)});
 """).mkString
     }
 ${

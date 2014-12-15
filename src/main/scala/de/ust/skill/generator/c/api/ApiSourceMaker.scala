@@ -83,7 +83,7 @@ GList *${prefix}get_${t.getName.cStyle}_instances(${prefix}skill_state state) {
 }
 
 ${prefix}${t.getName.cStyle} ${prefix}create_${t.getName.cStyle}(${prefix}skill_state state${makeConstructorArguments(t)}) {
-    ${prefix}${t.getName.cStyle} result = ${prefix}types_create_${t.getName.cStyle}(state, 0${t.getAllFields.map(f ⇒ s", _${name(f)}").fold("")(_ + _)});
+    ${prefix}${t.getName.cStyle} result = ${prefix}types_create_${t.getName.cStyle}(state, 0${t.getAllFields.filterNot(_.isConstant).map(f ⇒ s", _${name(f)}").fold("")(_ + _)});
     ((${prefix}skill_type)result)->declaration = state->${name(t)}->declaration;
     ((${prefix}skill_type)result)->skill_id = 1;
     ${prefix}storage_pool_add_instance ( state->${name(t)}, (${prefix}skill_type) result );

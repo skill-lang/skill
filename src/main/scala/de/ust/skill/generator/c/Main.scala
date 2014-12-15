@@ -255,13 +255,13 @@ Opitions (C):
     case "auto" | "_Bool" | "break" | "case" | "char" | "_Complex" | "const" | "continue" | "default" | "do" | "double"
       | "else" | "enum" | "extern" | "float" | "for" | "goto" | "if" | "_Imaginary" | "inline" | "int" | "long" |
       "register" | "restrict" | "return" | "short" | "signed" | "sizeof" | "static" | "struct" | "switch" | "typedef"
-      | "union" | "unsigned" | "void" | "volatile" | "while" ⇒ return target.toUpperCase
+      | "union" | "unsigned" | "void" | "volatile" | "while" ⇒ return "$"+target
 
     // the string is fine anyway
     case _ ⇒ return target
   }
 
-  override protected def makeConstructorArguments(t : UserType) : String = (for (f ← t.getAllFields)
+  override protected def makeConstructorArguments(t : UserType) : String = (for (f ← t.getAllFields; if !f.isConstant())
     yield s""", ${mapType(f.getType)} _${name(f)}""").mkString
 
   override protected def defaultValue(f : Field) = f.getType match {

@@ -39,7 +39,7 @@ int8_t ${prefix}type_enum_to_int ( ${prefix}type_enum type ) {
         return 4;
     case ${prefix}ANNOTATION:
         return 5;
-    case ${prefix}BOOLEAN:
+    case ${prefix}BOOL:
         return 6;
     case ${prefix}I8:
         return 7;
@@ -88,7 +88,7 @@ ${prefix}type_enum ${prefix}type_enum_from_int ( int8_t type_id ) {
     case 5:
         return ${prefix}ANNOTATION;
     case 6:
-        return ${prefix}BOOLEAN;
+        return ${prefix}BOOL;
     case 7:
         return ${prefix}I8;
     case 8:

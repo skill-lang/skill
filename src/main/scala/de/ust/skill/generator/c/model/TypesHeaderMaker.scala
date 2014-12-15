@@ -51,12 +51,11 @@ typedef struct ${prefix}${name(t)}_struct {
 ${prefix}${name(t)} ${prefix}types_create_${name(t)} (
     ${prefix}skill_state state,
     int64_t skill_id${
-        (for (f ← t.getAllFields) yield s""",
-    ${mapType(f.getType)} ${name(f)}""").mkString
+        makeConstructorArguments(t)
       });
 """)
 
-out.write("\n#endif\n")
+    out.write("\n#endif\n")
     out.close()
   }
 }
