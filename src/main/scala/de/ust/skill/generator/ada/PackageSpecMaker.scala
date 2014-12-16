@@ -87,6 +87,7 @@ package ${packagePrefix.capitalize} is
    -------------
    --  Utils  --
    -------------
+
    function Hash (Element : Short_Short_Integer) return Ada.Containers.Hash_Type;
    function Hash (Element : Short) return Ada.Containers.Hash_Type;
    function Hash (Element : Integer) return Ada.Containers.Hash_Type;
