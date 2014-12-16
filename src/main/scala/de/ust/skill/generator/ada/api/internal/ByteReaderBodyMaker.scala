@@ -63,43 +63,56 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
    end Read_i8;
 
    function Read_i16 (Stream : ASS_IO.Stream_Access) return i16 is
-      A : i16 := i16 (Read_Byte (Stream));
-      B : i16 := i16 (Read_Byte (Stream));
+      subtype Eight_Bytes is Byte_Vector (1 .. 2);
+
+      function Convert is new Ada.Unchecked_Conversion (Eight_Bytes, i16);
+      function Convert (A, B : Byte) return i16 is
+      begin
+         return Convert (Eight_Bytes'(B, A));
+      end Convert;
+
+      A : Byte := Read_Byte (Stream);
+      B : Byte := Read_Byte (Stream);
    begin
-      return A * (2 ** 8) +
-             B;
+      return Convert (A, B);
    end Read_i16;
 
    function Read_i32 (Stream : ASS_IO.Stream_Access) return i32 is
-      A : i32 := i32 (Read_Byte (Stream));
-      B : i32 := i32 (Read_Byte (Stream));
-      C : i32 := i32 (Read_Byte (Stream));
-      D : i32 := i32 (Read_Byte (Stream));
+      subtype Eight_Bytes is Byte_Vector (1 .. 4);
+
+      function Convert is new Ada.Unchecked_Conversion (Eight_Bytes, i32);
+      function Convert (A, B, C, D : Byte) return i32 is
+      begin
+         return Convert (Eight_Bytes'(D, C, B, A));
+      end Convert;
+
+      A : Byte := Read_Byte (Stream);
+      B : Byte := Read_Byte (Stream);
+      C : Byte := Read_Byte (Stream);
+      D : Byte := Read_Byte (Stream);
    begin
-      return A * (2 ** 24) +
-             B * (2 ** 16) +
-             C * (2 ** 8) +
-             D;
+      return Convert (A, B, C, D);
    end Read_i32;
 
    function Read_i64 (Stream : ASS_IO.Stream_Access) return i64 is
-      A : i64 := i64 (Read_Byte (Stream));
-      B : i64 := i64 (Read_Byte (Stream));
-      C : i64 := i64 (Read_Byte (Stream));
-      D : i64 := i64 (Read_Byte (Stream));
-      E : i64 := i64 (Read_Byte (Stream));
-      F : i64 := i64 (Read_Byte (Stream));
-      G : i64 := i64 (Read_Byte (Stream));
-      H : i64 := i64 (Read_Byte (Stream));
+      subtype Eight_Bytes is Byte_Vector (1 .. 8);
+
+      function Convert is new Ada.Unchecked_Conversion (Eight_Bytes, i64);
+      function Convert (A, B, C, D, E, F, G, H : Byte) return i64 is
+      begin
+         return Convert (Eight_Bytes'(H, G, F, E, D, C, B, A));
+      end Convert;
+
+      A : Byte := Read_Byte (Stream);
+      B : Byte := Read_Byte (Stream);
+      C : Byte := Read_Byte (Stream);
+      D : Byte := Read_Byte (Stream);
+      E : Byte := Read_Byte (Stream);
+      F : Byte := Read_Byte (Stream);
+      G : Byte := Read_Byte (Stream);
+      H : Byte := Read_Byte (Stream);
    begin
-      return A * (2 ** 56) +
-             B * (2 ** 48) +
-             C * (2 ** 40) +
-             D * (2 ** 32) +
-             E * (2 ** 24) +
-             F * (2 ** 16) +
-             G * (2 ** 8) +
-             H;
+      return Convert (A, B, C, D, E, F, G, H);
    end Read_i64;
 
    function Read_v64 (Stream : ASS_IO.Stream_Access) return v64 is
