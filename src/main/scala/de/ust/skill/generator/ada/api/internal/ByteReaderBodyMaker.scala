@@ -49,11 +49,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
 
       Buffer_Index := Buffer_Index + 1;
 
-      declare
-         Next : Byte := Buffer_Array (Buffer_Index);
-      begin
-         return Next;
-      end;
+      return Buffer_Array (Buffer_Index);
    end Read_Byte;
 
    function Read_i8 (Stream : ASS_IO.Stream_Access) return i8 is
