@@ -67,8 +67,10 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
 
       function Convert is new Ada.Unchecked_Conversion (i16, Unsigned_16);
 
-      A : Unsigned_16 := (Convert (Value) / (2 ** 8)) and 16#ff#;
-      B : Unsigned_16 := Convert (Value) and 16#ff#;
+      Converted_Value : Unsigned_16 := Convert (Value);
+
+      A : Unsigned_16 := (Converted_Value / (2 ** 8)) and 16#ff#;
+      B : Unsigned_16 := Converted_Value and 16#ff#;
    begin
       Write_Byte (Stream, Byte (A));
       Write_Byte (Stream, Byte (B));
@@ -82,10 +84,12 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
 
       function Convert is new Ada.Unchecked_Conversion (i32, Unsigned_32);
 
-      A : Unsigned_32 := (Convert (Value) / (2 ** 24)) and 16#ff#;
-      B : Unsigned_32 := (Convert (Value) / (2 ** 16)) and 16#ff#;
-      C : Unsigned_32 := (Convert (Value) / (2 ** 8)) and 16#ff#;
-      D : Unsigned_32 := Convert (Value) and 16#ff#;
+      Converted_Value : Unsigned_32 := Convert (Value);
+
+      A : Unsigned_32 := (Converted_Value / (2 ** 24)) and 16#ff#;
+      B : Unsigned_32 := (Converted_Value / (2 ** 16)) and 16#ff#;
+      C : Unsigned_32 := (Converted_Value / (2 ** 8)) and 16#ff#;
+      D : Unsigned_32 := Converted_Value and 16#ff#;
    begin
       Write_Byte (Stream, Byte (A));
       Write_Byte (Stream, Byte (B));
@@ -101,14 +105,16 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
 
       function Convert is new Ada.Unchecked_Conversion (i64, Unsigned_64);
 
-      A : Unsigned_64 := (Convert (Value) / (2 ** 56)) and 16#ff#;
-      B : Unsigned_64 := (Convert (Value) / (2 ** 48)) and 16#ff#;
-      C : Unsigned_64 := (Convert (Value) / (2 ** 40)) and 16#ff#;
-      D : Unsigned_64 := (Convert (Value) / (2 ** 32)) and 16#ff#;
-      E : Unsigned_64 := (Convert (Value) / (2 ** 24)) and 16#ff#;
-      F : Unsigned_64 := (Convert (Value) / (2 ** 16)) and 16#ff#;
-      G : Unsigned_64 := (Convert (Value) / (2 ** 8)) and 16#ff#;
-      H : Unsigned_64 := Convert (Value) and 16#ff#;
+      Converted_Value : Unsigned_64 := Convert (Value);
+
+      A : Unsigned_64 := (Converted_Value / (2 ** 56)) and 16#ff#;
+      B : Unsigned_64 := (Converted_Value / (2 ** 48)) and 16#ff#;
+      C : Unsigned_64 := (Converted_Value / (2 ** 40)) and 16#ff#;
+      D : Unsigned_64 := (Converted_Value / (2 ** 32)) and 16#ff#;
+      E : Unsigned_64 := (Converted_Value / (2 ** 24)) and 16#ff#;
+      F : Unsigned_64 := (Converted_Value / (2 ** 16)) and 16#ff#;
+      G : Unsigned_64 := (Converted_Value / (2 ** 8)) and 16#ff#;
+      H : Unsigned_64 := Converted_Value and 16#ff#;
    begin
       Write_Byte (Stream, Byte (A));
       Write_Byte (Stream, Byte (B));
@@ -128,50 +134,52 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
       use Interfaces;
 
       function Convert is new Ada.Unchecked_Conversion (Source => v64, Target => Unsigned_64);
+
+      Converted_Value : Unsigned_64 := Convert (Value);
    begin
-      if Convert (Value) < 128 then
+      if Converted_Value < 128 then
          declare
-            A : Unsigned_64 := Convert (Value) and 16#ff#;
+            A : Unsigned_64 := Converted_Value and 16#ff#;
          begin
             Write_Byte (Stream, Byte (A));
          end;
-      elsif Convert (Value) < (128 ** 2) then
+      elsif Converted_Value < (128 ** 2) then
          declare
-            A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
-            B : Unsigned_64 := (Convert (Value) / (2 ** 7)) and 16#ff#;
+            A : Unsigned_64 := (16#80# or Converted_Value) and 16#ff#;
+            B : Unsigned_64 := (Converted_Value / (2 ** 7)) and 16#ff#;
          begin
             Write_Byte (Stream, Byte (A));
             Write_Byte (Stream, Byte (B));
          end;
-      elsif Convert (Value) < (128 ** 3) then
+      elsif Converted_Value < (128 ** 3) then
          declare
-            A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
-            B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
-            C : Unsigned_64 := (Convert (Value) / (2 ** 14)) and 16#ff#;
+            A : Unsigned_64 := (16#80# or Converted_Value) and 16#ff#;
+            B : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 7))) and 16#ff#;
+            C : Unsigned_64 := (Converted_Value / (2 ** 14)) and 16#ff#;
          begin
             Write_Byte (Stream, Byte (A));
             Write_Byte (Stream, Byte (B));
             Write_Byte (Stream, Byte (C));
          end;
-      elsif Convert (Value) < (128 ** 4) then
+      elsif Converted_Value < (128 ** 4) then
          declare
-            A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
-            B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
-            C : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
-            D : Unsigned_64 := (Convert (Value) / (2 ** 21)) and 16#ff#;
+            A : Unsigned_64 := (16#80# or Converted_Value) and 16#ff#;
+            B : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 7))) and 16#ff#;
+            C : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 14))) and 16#ff#;
+            D : Unsigned_64 := (Converted_Value / (2 ** 21)) and 16#ff#;
          begin
             Write_Byte (Stream, Byte (A));
             Write_Byte (Stream, Byte (B));
             Write_Byte (Stream, Byte (C));
             Write_Byte (Stream, Byte (D));
          end;
-      elsif Convert (Value) < (128 ** 5) then
+      elsif Converted_Value < (128 ** 5) then
          declare
-            A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
-            B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
-            C : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
-            D : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
-            E : Unsigned_64 := (Convert (Value) / (2 ** 28)) and 16#ff#;
+            A : Unsigned_64 := (16#80# or Converted_Value) and 16#ff#;
+            B : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 7))) and 16#ff#;
+            C : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 14))) and 16#ff#;
+            D : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 21))) and 16#ff#;
+            E : Unsigned_64 := (Converted_Value / (2 ** 28)) and 16#ff#;
          begin
             Write_Byte (Stream, Byte (A));
             Write_Byte (Stream, Byte (B));
@@ -179,14 +187,14 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
             Write_Byte (Stream, Byte (D));
             Write_Byte (Stream, Byte (E));
          end;
-      elsif Convert (Value) < (128 ** 6) then
+      elsif Converted_Value < (128 ** 6) then
          declare
-            A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
-            B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
-            C : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
-            D : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
-            E : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 28))) and 16#ff#;
-            F : Unsigned_64 := (Convert (Value) / (2 ** 35)) and 16#ff#;
+            A : Unsigned_64 := (16#80# or Converted_Value) and 16#ff#;
+            B : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 7))) and 16#ff#;
+            C : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 14))) and 16#ff#;
+            D : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 21))) and 16#ff#;
+            E : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 28))) and 16#ff#;
+            F : Unsigned_64 := (Converted_Value / (2 ** 35)) and 16#ff#;
          begin
             Write_Byte (Stream, Byte (A));
             Write_Byte (Stream, Byte (B));
@@ -195,15 +203,15 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
             Write_Byte (Stream, Byte (E));
             Write_Byte (Stream, Byte (F));
          end;
-      elsif Convert (Value) < (128 ** 7) then
+      elsif Converted_Value < (128 ** 7) then
          declare
-            A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
-            B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
-            C : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
-            D : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
-            E : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 28))) and 16#ff#;
-            F : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 35))) and 16#ff#;
-            G : Unsigned_64 := (Convert (Value) / (2 ** 42)) and 16#ff#;
+            A : Unsigned_64 := (16#80# or Converted_Value) and 16#ff#;
+            B : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 7))) and 16#ff#;
+            C : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 14))) and 16#ff#;
+            D : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 21))) and 16#ff#;
+            E : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 28))) and 16#ff#;
+            F : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 35))) and 16#ff#;
+            G : Unsigned_64 := (Converted_Value / (2 ** 42)) and 16#ff#;
          begin
             Write_Byte (Stream, Byte (A));
             Write_Byte (Stream, Byte (B));
@@ -213,16 +221,16 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
             Write_Byte (Stream, Byte (F));
             Write_Byte (Stream, Byte (G));
          end;
-      elsif Convert (Value) < (128 ** 8) then
+      elsif Converted_Value < (128 ** 8) then
          declare
-            A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
-            B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
-            C : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
-            D : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
-            E : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 28))) and 16#ff#;
-            F : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 35))) and 16#ff#;
-            G : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 42))) and 16#ff#;
-            H : Unsigned_64 := (Convert (Value) / (2 ** 49)) and 16#ff#;
+            A : Unsigned_64 := (16#80# or Converted_Value) and 16#ff#;
+            B : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 7))) and 16#ff#;
+            C : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 14))) and 16#ff#;
+            D : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 21))) and 16#ff#;
+            E : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 28))) and 16#ff#;
+            F : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 35))) and 16#ff#;
+            G : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 42))) and 16#ff#;
+            H : Unsigned_64 := (Converted_Value / (2 ** 49)) and 16#ff#;
          begin
             Write_Byte (Stream, Byte (A));
             Write_Byte (Stream, Byte (B));
@@ -235,15 +243,15 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
          end;
       else
          declare
-            A : Unsigned_64 := (16#80# or Convert (Value)) and 16#ff#;
-            B : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 7))) and 16#ff#;
-            C : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 14))) and 16#ff#;
-            D : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 21))) and 16#ff#;
-            E : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 28))) and 16#ff#;
-            F : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 35))) and 16#ff#;
-            G : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 42))) and 16#ff#;
-            H : Unsigned_64 := (16#80# or (Convert (Value) / (2 ** 49))) and 16#ff#;
-            I : Unsigned_64 := (Convert (Value) / (2 ** 56)) and 16#ff#;
+            A : Unsigned_64 := (16#80# or Converted_Value) and 16#ff#;
+            B : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 7))) and 16#ff#;
+            C : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 14))) and 16#ff#;
+            D : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 21))) and 16#ff#;
+            E : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 28))) and 16#ff#;
+            F : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 35))) and 16#ff#;
+            G : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 42))) and 16#ff#;
+            H : Unsigned_64 := (16#80# or (Converted_Value / (2 ** 49))) and 16#ff#;
+            I : Unsigned_64 := (Converted_Value / (2 ** 56)) and 16#ff#;
          begin
             Write_Byte (Stream, Byte (A));
             Write_Byte (Stream, Byte (B));
