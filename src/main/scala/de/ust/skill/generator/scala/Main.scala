@@ -75,18 +75,18 @@ class Main extends FakeMain
     case t : GroundType ⇒ t.getName.lower match {
       case "annotation" ⇒ "SkillType"
 
-      case "bool"       ⇒ "Boolean"
+      case "bool"       ⇒ "scala.Boolean"
 
-      case "i8"         ⇒ "Byte"
-      case "i16"        ⇒ "Short"
-      case "i32"        ⇒ "Int"
-      case "i64"        ⇒ "Long"
-      case "v64"        ⇒ "Long"
+      case "i8"         ⇒ "scala.Byte"
+      case "i16"        ⇒ "scala.Short"
+      case "i32"        ⇒ "scala.Int"
+      case "i64"        ⇒ "scala.Long"
+      case "v64"        ⇒ "scala.Long"
 
-      case "f32"        ⇒ "Float"
-      case "f64"        ⇒ "Double"
+      case "f32"        ⇒ "scala.Float"
+      case "f64"        ⇒ "scala.Double"
 
-      case "string"     ⇒ "String"
+      case "string"     ⇒ "java.lang.String"
     }
 
     case t : ConstantLengthArrayType ⇒ s"$ArrayTypeName[${mapType(t.getBaseType())}]"
