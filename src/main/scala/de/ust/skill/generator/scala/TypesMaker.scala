@@ -101,8 +101,8 @@ ${
       }
 
       out.write(s"""$makeField
-  final def $name_ = $makeGetterImplementation
-  final def ${name_}_=($Name : ${mapType(f.getType())}) : scala.Unit = $makeSetterImplementation
+  ${comment(f)}final def $name_ = $makeGetterImplementation
+  ${comment(f)}final def ${name_}_=($Name : ${mapType(f.getType())}) : scala.Unit = $makeSetterImplementation
 """)
     }
 
