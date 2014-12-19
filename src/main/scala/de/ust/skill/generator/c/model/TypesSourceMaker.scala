@@ -18,7 +18,7 @@ import de.ust.skill.ir.UserType
 trait TypesSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("model/types.c")
+    val out = open(s"model/${prefix}types.c")
 
     val prefixCapital = packagePrefix.toUpperCase
 

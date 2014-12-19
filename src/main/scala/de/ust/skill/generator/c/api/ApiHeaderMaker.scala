@@ -18,7 +18,7 @@ import de.ust.skill.ir.UserType
 trait ApiHeaderMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("api/api.h")
+    val out = open(s"api/${prefix}api.h")
 
     val prefixCapital = packagePrefix.toUpperCase
 

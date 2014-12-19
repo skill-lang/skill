@@ -18,7 +18,7 @@ import de.ust.skill.ir.UserType
 trait StringAccessHeaderMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("model/string_access.h")
+    val out = open(s"model/${prefix}string_access.h")
 
     val prefixCapital = packagePrefix.toUpperCase
 

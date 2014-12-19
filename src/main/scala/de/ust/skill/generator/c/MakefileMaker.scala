@@ -19,41 +19,43 @@ trait MakefileMaker extends GeneralOutputMaker {
     super.make
     val out = openRaw("makefile")
 
+    val prefix_capital = prefix.toUpperCase
+
     val tab = "\t"
 
     out.write(s"""CC=gcc
 CFLAGS= -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -Wall -g3 -O3 -lglib-2.0 -lm -lpthread -lrt -fPIC -std=c99 -pedantic-errors
 
-DEPENDENCIES += ./api/api.o
-
-DEPENDENCIES += ./io/binary_reader.o
-DEPENDENCIES += ./io/binary_writer.o
-DEPENDENCIES += ./io/reader.o
-DEPENDENCIES += ./io/writer.o
-
-DEPENDENCIES += ./model/field_information.o
-DEPENDENCIES += ./model/skill_state.o
-DEPENDENCIES += ./model/string_access.o
-DEPENDENCIES += ./model/type_enum.o
-DEPENDENCIES += ./model/type_information.o
-DEPENDENCIES += ./model/type_declaration.o
-DEPENDENCIES += ./model/storage_pool.o
-DEPENDENCIES += ./model/types.o
+${prefix_capital}DEPENDENCIES += ./api/${prefix}api.o
+  
+${prefix_capital}DEPENDENCIES += ./io/${prefix}binary_reader.o
+${prefix_capital}DEPENDENCIES += ./io/${prefix}binary_writer.o
+${prefix_capital}DEPENDENCIES += ./io/${prefix}reader.o
+${prefix_capital}DEPENDENCIES += ./io/${prefix}writer.o
+  
+${prefix_capital}DEPENDENCIES += ./model/${prefix}field_information.o
+${prefix_capital}DEPENDENCIES += ./model/${prefix}skill_state.o
+${prefix_capital}DEPENDENCIES += ./model/${prefix}string_access.o
+${prefix_capital}DEPENDENCIES += ./model/${prefix}type_enum.o
+${prefix_capital}DEPENDENCIES += ./model/${prefix}type_information.o
+${prefix_capital}DEPENDENCIES += ./model/${prefix}type_declaration.o
+${prefix_capital}DEPENDENCIES += ./model/${prefix}storage_pool.o
+${prefix_capital}DEPENDENCIES += ./model/${prefix}types.o 
 
 SOURCE_LOCATIONS += -I.
 
-so: $$(DEPENDENCIES)
-${tab}$$(CC) -o libapi.so $$(DEPENDENCIES) $$(CFLAGS) -shared
-${tab}ar rcs libapi.a $$(DEPENDENCIES)
-${tab}cp api/api.h api.h
+so: $$(${prefix_capital}DEPENDENCIES)
+${tab}$$(CC) -o lib${prefix}api.so $$(${prefix_capital}DEPENDENCIES) $$(CFLAGS) -shared
+${tab}ar rcs lib${prefix}api.a $$(${prefix_capital}DEPENDENCIES)
+${tab}cp api/${prefix}api.h ${prefix}api.h
 
 clean:
 ${tab}rm -rf ./api/*.o
 ${tab}rm -rf ./io/*.o
 ${tab}rm -rf ./model/*.o
-${tab}rm -rf api.h
-${tab}rm -rf libapi.so
-${tab}rm -rf libapi.a
+${tab}rm -rf ${prefix}api.h
+${tab}rm -rf lib${prefix}api.so
+${tab}rm -rf lib${prefix}api.a
 
 .PHONY: so clean
 """)

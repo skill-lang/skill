@@ -18,7 +18,7 @@ import de.ust.skill.ir.UserType
 trait StoragePoolSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("model/storage_pool.c")
+    val out = open(s"model/${prefix}storage_pool.c")
 
     val prefixCapital = packagePrefix.toUpperCase
 

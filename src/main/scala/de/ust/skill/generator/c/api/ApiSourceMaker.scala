@@ -19,7 +19,7 @@ import de.ust.skill.ir.Field
 trait ApiSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("api/api.c")
+    val out = open(s"api/${prefix}api.c")
 
     val prefixCapital = packagePrefix.toUpperCase
 
@@ -28,15 +28,15 @@ trait ApiSourceMaker extends GeneralOutputMaker {
 #include <string.h>
 #include <stdlib.h>
 
-#include "../api/api.h"
+#include "../api/${prefix}api.h"
 
-#include "../io/reader.h"
-#include "../io/writer.h"
+#include "../io/${prefix}reader.h"
+#include "../io/${prefix}writer.h"
 
-#include "../model/types.h"
-#include "../model/skill_state.h"
-#include "../model/storage_pool.h"
-#include "../model/type_declaration.h"
+#include "../model/${prefix}types.h"
+#include "../model/${prefix}skill_state.h"
+#include "../model/${prefix}storage_pool.h"
+#include "../model/${prefix}type_declaration.h"
 
 
 ${prefix}skill_state ${prefix}empty_skill_state() {

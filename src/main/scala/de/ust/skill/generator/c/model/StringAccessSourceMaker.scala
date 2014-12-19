@@ -18,7 +18,7 @@ import de.ust.skill.ir.UserType
 trait StringAccessSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("model/string_access.c")
+    val out = open(s"model/${prefix}string_access.c")
 
     out.write(s"""
 #include <stdio.h>
@@ -26,7 +26,7 @@ trait StringAccessSourceMaker extends GeneralOutputMaker {
 #include <string.h>
 #include <glib.h>
 
-#include "../model/${prefix}string_access.h"
+#include "${prefix}string_access.h"
 
 ${prefix}string_access ${prefix}string_access_new() {
     ${prefix}string_access result = malloc(sizeof(${prefix}string_access_struct));

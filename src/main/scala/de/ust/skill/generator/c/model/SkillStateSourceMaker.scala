@@ -30,7 +30,7 @@ import de.ust.skill.ir.Type
 trait SkillStateSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("model/skill_state.c")
+    val out = open(s"model/${prefix}skill_state.c")
 
     val prefixCapital = packagePrefix.toUpperCase
 
@@ -289,7 +289,7 @@ void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {${
         int64_t reference_id = ${prefix}read_v64 ( buffer );
         $target = ${prefix}storage_pool_get_instance_by_id ( target_pool, reference_id );
     }"""
-      case tn ⇒ s"$target = read_$tn(buffer);"
+      case tn ⇒ s"$target = ${prefix}read_$tn(buffer);"
     }
   }
 
@@ -301,7 +301,7 @@ void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {${
       case "string" ⇒
         s"""${prefix}write_v64(out, ${prefix}string_access_get_id_by_string(strings, ${access(f)}));"""
       case "annotation" ⇒
-      // TODO change this implementation to TR15
+        // TODO change this implementation to TR15
         s"""${prefix}skill_type annotation = $target;
     if(0 == annotation) {
         write_i8(out, 0);
@@ -315,7 +315,7 @@ void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {${
         bytes_written += write_v64 ( out, annotation->skill_id );
         return bytes_written;
     }"""
-      case tn ⇒ s"""return write_$tn(out, ${access(f)});"""
+      case tn ⇒ s"""return ${prefix}write_$tn(out, $target);"""
     }
   }
 
@@ -333,6 +333,6 @@ void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {${
    * conversion from a field's type to type_enum name
    * @note may be broken in case of compound types
    */
-  def enumType(t : Type) : String = t.getName.cStyle().toUpperCase()
+  def enumType(t : Type) : String = prefix + t.getName.cStyle().toUpperCase()
   def enumType(f : Field) : String = enumType(f.getType)
 }

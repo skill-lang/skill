@@ -44,7 +44,7 @@ trait GeneralOutputMaker extends Generator {
   /**
    * Rename package prefix; we may change the implementation in the future.
    */
-  protected def prefix = packagePrefix
+  protected def prefix = if (packagePrefix.isEmpty()) "" else packagePrefix+"_"
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
@@ -76,7 +76,7 @@ trait GeneralOutputMaker extends Generator {
   /**
    * provides a default name for the argument field
    */
-  protected def name(f : Field) : String = "$" + escaped(f.getName.cStyle)
+  protected def name(f : Field) : String = "if_"+escaped(f.getName.cStyle)
 
   /**
    * provides field access implementation

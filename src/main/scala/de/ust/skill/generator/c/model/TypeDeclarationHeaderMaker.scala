@@ -18,7 +18,7 @@ import de.ust.skill.ir.UserType
 trait TypeDeclarationHeaderMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("model/type_declaration.h")
+    val out = open(s"model/${prefix}type_declaration.h")
 
     val prefixCapital = packagePrefix.toUpperCase
 

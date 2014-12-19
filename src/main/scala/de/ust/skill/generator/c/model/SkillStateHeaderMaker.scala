@@ -30,7 +30,7 @@ import de.ust.skill.ir.Type
 trait SkillStateHeaderMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("model/skill_state.h")
+    val out = open(s"model/${prefix}skill_state.h")
 
     val prefixCapital = packagePrefix.toUpperCase
 

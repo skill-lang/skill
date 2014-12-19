@@ -18,7 +18,7 @@ import de.ust.skill.ir.UserType
 trait TypeDeclarationSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("model/type_declaration.c")
+    val out = open(s"model/${prefix}type_declaration.c")
 
     out.write(s"""
 #include <stdlib.h>
