@@ -274,7 +274,7 @@ void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {${
   def readSingleField(f : Field, target : String) : String = f.getType match {
     case t : UserType ⇒ s"""
     int64_t reference_id = ${prefix}read_v64(buffer);
-    $target = referente_id ? ${cast(t)} ${prefix}storage_pool_get_instance_by_id(state->${name(t)}, reference_id) : 0;"""
+    $target = reference_id ? ${cast(t)} ${prefix}storage_pool_get_instance_by_id(state->${name(t)}, reference_id) : 0;"""
     case t : GroundType ⇒ t.getSkillName() match {
       case "string" ⇒
         s"""$target = ${prefix}string_access_get_string_by_id ( strings, ${prefix}read_v64 ( buffer ) );"""

@@ -1,6 +1,6 @@
 /** check some float values. */
 @singleton
-FloatTest {
+Floattest {
   f32 zero;
   f32 minusZero;
   f32 two;
@@ -10,7 +10,7 @@ FloatTest {
 
 /** check some double values. */
 @singleton
-DoubleTest {
+Doubletest {
   f64 zero;
   f64 minusZero;
   f64 two;

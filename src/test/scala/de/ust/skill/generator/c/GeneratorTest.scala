@@ -29,8 +29,9 @@ class GeneratorTest extends FunSuite {
   }
 
   def check(prefix : String, src : String, target : String) {
-    deleteFiles(new File(s"testsuites/c/src/generated/$target"))
-    CommandLine.exit = {s ⇒ fail(s)}
+    // delete seems to cause sporadic test failure
+    //    deleteFiles(new File(s"testsuites/c/src/generated/$target"))
+    CommandLine.exit = { s ⇒ fail(s) }
     CommandLine.main(Array[String]("-L", "C", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", prefix, s"-O@C:GenDir=/src/generated/$target/", "src/test/resources/c/"+src, "testsuites"))
   }
 

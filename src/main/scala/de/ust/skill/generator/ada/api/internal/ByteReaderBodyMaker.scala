@@ -12,6 +12,7 @@ trait ByteReaderBodyMaker extends GeneralOutputMaker {
     super.make
     val out = open(s"""${packagePrefix}-api-internal-byte_reader.adb""")
 
+    // TODO current implementation assumes intel architecture
     out.write(s"""
 package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
 
