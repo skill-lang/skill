@@ -60,12 +60,12 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
    end Read_i8;
 
    function Read_i16 (Stream : ASS_IO.Stream_Access) return i16 is
-      subtype Eight_Bytes is Byte_Vector (1 .. 2);
+      subtype Two_Bytes is Byte_Array (1 .. 2);
 
-      function Convert is new Ada.Unchecked_Conversion (Eight_Bytes, i16);
+      function Convert is new Ada.Unchecked_Conversion (Two_Bytes, i16);
       function Convert (A, B : Byte) return i16 is
       begin
-         return Convert (Eight_Bytes'(B, A));
+         return Convert (Two_Bytes'(B, A));
       end Convert;
 
       A : Byte := Read_Byte (Stream);
@@ -75,12 +75,12 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
    end Read_i16;
 
    function Read_i32 (Stream : ASS_IO.Stream_Access) return i32 is
-      subtype Eight_Bytes is Byte_Vector (1 .. 4);
+      subtype Four_Bytes is Byte_Array (1 .. 4);
 
-      function Convert is new Ada.Unchecked_Conversion (Eight_Bytes, i32);
+      function Convert is new Ada.Unchecked_Conversion (Four_Bytes, i32);
       function Convert (A, B, C, D : Byte) return i32 is
       begin
-         return Convert (Eight_Bytes'(D, C, B, A));
+         return Convert (Four_Bytes'(D, C, B, A));
       end Convert;
 
       A : Byte := Read_Byte (Stream);
@@ -92,7 +92,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
    end Read_i32;
 
    function Read_i64 (Stream : ASS_IO.Stream_Access) return i64 is
-      subtype Eight_Bytes is Byte_Vector (1 .. 8);
+      subtype Eight_Bytes is Byte_Array (1 .. 8);
 
       function Convert is new Ada.Unchecked_Conversion (Eight_Bytes, i64);
       function Convert (A, B, C, D, E, F, G, H : Byte) return i64 is

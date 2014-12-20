@@ -65,15 +65,14 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
    ) is
       use Interfaces;
 
-      function Convert is new Ada.Unchecked_Conversion (i16, Unsigned_16);
+      subtype Two_Bytes is Byte_Array (1 .. 2);
 
-      Converted_Value : Unsigned_16 := Convert (Value);
+      function Convert is new Ada.Unchecked_Conversion (i16, Two_Bytes);
 
-      A : Unsigned_16 := (Converted_Value / (2 ** 8)) and 16#ff#;
-      B : Unsigned_16 := Converted_Value and 16#ff#;
+      Byte_Array : Two_Bytes := Convert (Value);
    begin
-      Write_Byte (Stream, Byte (A));
-      Write_Byte (Stream, Byte (B));
+      Write_Byte (Stream, Byte_Array (2));
+      Write_Byte (Stream, Byte_Array (1));
    end Write_i16;
 
    procedure Write_i32 (
@@ -82,19 +81,16 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
    ) is
       use Interfaces;
 
-      function Convert is new Ada.Unchecked_Conversion (i32, Unsigned_32);
+      subtype Four_Bytes is Byte_Array (1 .. 4);
 
-      Converted_Value : Unsigned_32 := Convert (Value);
+      function Convert is new Ada.Unchecked_Conversion (i32, Four_Bytes);
 
-      A : Unsigned_32 := (Converted_Value / (2 ** 24)) and 16#ff#;
-      B : Unsigned_32 := (Converted_Value / (2 ** 16)) and 16#ff#;
-      C : Unsigned_32 := (Converted_Value / (2 ** 8)) and 16#ff#;
-      D : Unsigned_32 := Converted_Value and 16#ff#;
+      Byte_Array : Four_Bytes := Convert (Value);
    begin
-      Write_Byte (Stream, Byte (A));
-      Write_Byte (Stream, Byte (B));
-      Write_Byte (Stream, Byte (C));
-      Write_Byte (Stream, Byte (D));
+      Write_Byte (Stream, Byte_Array (4));
+      Write_Byte (Stream, Byte_Array (3));
+      Write_Byte (Stream, Byte_Array (2));
+      Write_Byte (Stream, Byte_Array (1));
    end Write_i32;
 
    procedure Write_i64 (
@@ -103,27 +99,20 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
    ) is
       use Interfaces;
 
-      function Convert is new Ada.Unchecked_Conversion (i64, Unsigned_64);
+      subtype Eight_Bytes is Byte_Array (1 .. 8);
 
-      Converted_Value : Unsigned_64 := Convert (Value);
+      function Convert is new Ada.Unchecked_Conversion (i64, Eight_Bytes);
 
-      A : Unsigned_64 := (Converted_Value / (2 ** 56)) and 16#ff#;
-      B : Unsigned_64 := (Converted_Value / (2 ** 48)) and 16#ff#;
-      C : Unsigned_64 := (Converted_Value / (2 ** 40)) and 16#ff#;
-      D : Unsigned_64 := (Converted_Value / (2 ** 32)) and 16#ff#;
-      E : Unsigned_64 := (Converted_Value / (2 ** 24)) and 16#ff#;
-      F : Unsigned_64 := (Converted_Value / (2 ** 16)) and 16#ff#;
-      G : Unsigned_64 := (Converted_Value / (2 ** 8)) and 16#ff#;
-      H : Unsigned_64 := Converted_Value and 16#ff#;
+      Byte_Array : Eight_Bytes := Convert (Value);
    begin
-      Write_Byte (Stream, Byte (A));
-      Write_Byte (Stream, Byte (B));
-      Write_Byte (Stream, Byte (C));
-      Write_Byte (Stream, Byte (D));
-      Write_Byte (Stream, Byte (E));
-      Write_Byte (Stream, Byte (F));
-      Write_Byte (Stream, Byte (G));
-      Write_Byte (Stream, Byte (H));
+      Write_Byte (Stream, Byte_Array (8));
+      Write_Byte (Stream, Byte_Array (7));
+      Write_Byte (Stream, Byte_Array (6));
+      Write_Byte (Stream, Byte_Array (5));
+      Write_Byte (Stream, Byte_Array (4));
+      Write_Byte (Stream, Byte_Array (3));
+      Write_Byte (Stream, Byte_Array (2));
+      Write_Byte (Stream, Byte_Array (1));
    end Write_i64;
 
    --  optimized write v64: taken from the scala binding
