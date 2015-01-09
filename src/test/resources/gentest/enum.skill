@@ -1,0 +1,15 @@
+#! enums
+
+/**
+ * Test of mapping of enums.
+ *
+ * @author Timm Felden
+ */
+enum TestEnum {
+  default, second, third, last;
+
+  /**
+   * an application may store a name for each enum value
+   */
+  auto string name;
+}
