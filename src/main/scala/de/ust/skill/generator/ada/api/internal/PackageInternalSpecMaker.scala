@@ -27,7 +27,7 @@ package ${packagePrefix.capitalize}.Api.Internal is
 
    type Byte is new Interfaces.Unsigned_8;
    for Byte'Size use 8;
-   type Byte_Vector is array (Positive range <>) of Byte;
+   type Byte_Array is array (Positive range <>) of Byte;
 
    type Storage_Pool_Array is array (Natural range <>) of Skill_Type_Access;
    type Storage_Pool_Array_Access is access Storage_Pool_Array;
