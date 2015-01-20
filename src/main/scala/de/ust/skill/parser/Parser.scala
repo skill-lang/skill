@@ -131,7 +131,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * creates an enum definition
      */
     private def enumType = opt(comment) ~ ("enum" ~> id) ~ ("{" ~> repsep(id, ",") <~ ";") ~ (rep(field) <~ "}") ^^ {
-      case c ~ n ~ i ~ f ⇒ new EnumDefinition(currentFile, c.getOrElse(Comment.NoComment.get), n, i, f)
+      case c ~ n ~ i ~ f ⇒ new EnumDefinition(currentFile, c.getOrElse(Comment.NoComment.get), n, i.ensuring(!_.isEmpty, s"Enum $n requires a non-empty list of instances!"), f)
     }
 
     /**
