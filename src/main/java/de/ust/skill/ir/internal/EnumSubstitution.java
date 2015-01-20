@@ -1,20 +1,26 @@
 package de.ust.skill.ir.internal;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import de.ust.skill.ir.Comment;
 import de.ust.skill.ir.ContainerType;
 import de.ust.skill.ir.Declaration;
 import de.ust.skill.ir.EnumType;
 import de.ust.skill.ir.Field;
 import de.ust.skill.ir.Hint;
 import de.ust.skill.ir.InterfaceType;
+import de.ust.skill.ir.Name;
 import de.ust.skill.ir.ParseException;
 import de.ust.skill.ir.Restriction;
 import de.ust.skill.ir.Type;
 import de.ust.skill.ir.TypeContext;
 import de.ust.skill.ir.UserType;
 import de.ust.skill.ir.WithFields;
+import de.ust.skill.ir.restriction.SingletonRestriction;
 
 /**
  * Substitutes enums.
@@ -24,6 +30,7 @@ import de.ust.skill.ir.WithFields;
 public class EnumSubstitution extends Substitution {
 
     final private List<EnumType> enums;
+    final private Map<UserType, UserType> tops = new HashMap<>();
 
     public EnumSubstitution(List<EnumType> enums) {
         this.enums = enums;
@@ -34,13 +41,24 @@ public class EnumSubstitution extends Substitution {
         // add abstract classes for enum names and singletons for enum instances
         for (EnumType t : enums) {
             // TODO @abstract
-            defs.add(UserType.newDeclaration(tc, t.getName(), t.getComment(), Collections.<Restriction> emptySet(),
-                    Collections.<Hint> emptySet()));
+            UserType top = UserType.newDeclaration(tc, t.getName(), t.getComment(),
+                    Collections.<Restriction> emptySet(), Collections.<Hint> emptySet());
+            defs.add(top);
+
+            // enum values become singletons!
+            for (Name inst : t.getInstances()) {
+                // subtypes have the skill name "<enum>:<inst>"
+                String skillname = t.getSkillName() + ":" + inst.getSkillName();
+                Name name = new Name(Arrays.asList(skillname), skillname);
+
+                UserType sub = UserType.newDeclaration(tc, name, Comment.NoComment.get(),
+                        Arrays.asList(new SingletonRestriction()), Collections.<Hint> emptySet());
+                defs.add(sub);
+                tops.put(sub, top);
+            }
+
+            // TODO @default
         }
-
-        // TODO sub singletons!
-
-        // TODO @default
     }
 
     @Override
@@ -76,9 +94,10 @@ public class EnumSubstitution extends Substitution {
     @Override
     public void initialize(TypeContext fromTC, TypeContext tc, UserType d) throws ParseException {
         Type source = fromTC.types.get(d.getSkillName());
-        // case 1: source is null, i.e. the type has been created by us
+        // case 1: source is null, i.e. the type has been created by us (this
+        // happens in case of enum instances)
         if (null == source) {
-            throw new Error("not yet implemented");
+            d.initialize(tops.get(d), Collections.emptyList(), Collections.emptyList());
         }
         // case 2: d always was a user type ⇒ behave as always
         else if (source instanceof UserType) {
@@ -90,8 +109,8 @@ public class EnumSubstitution extends Substitution {
         // case 3: we replaced an enum
         else {
             WithFields t = (WithFields) source;
-            d.initialize(null, Collections.<InterfaceType> emptyList(),
-                    TypeContext.substituteFields(this, tc, t.getFields()));
+            List<Field> fs = TypeContext.substituteFields(this, tc, t.getFields());
+            d.initialize(null, Collections.<InterfaceType> emptyList(), fs);
         }
     }
 
