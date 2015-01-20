@@ -65,7 +65,6 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
   }
 
   // create type definitions
-  // @note performance hack: requires at least 1 instance in order to work correctly
   @inline def genericPutField[T](p : StoragePool[_ <: SkillType, _ <: SkillType], f : FieldDeclaration[T], dataChunk : MappedOutStream) {
     f.t match {
       case I8         ⇒ for (i ← p) dataChunk.i8(i.get(f).asInstanceOf[Byte])

@@ -27,6 +27,8 @@ trait SerializationFunctionsMaker extends GeneralOutputMaker {
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
+import scala.collection.mutable.ListBuffer
 import scala.language.implicitConversions
 
 import de.ust.skill.common.jvm.streams.OutStream
@@ -86,6 +88,7 @@ abstract class SerializationFunctions(state : State) {
     case F64 | I64 ⇒ 8 * p.blockInfos.last.count
 
     case V64 ⇒ encodeV64(p, f)
+    case s : Annotation ⇒ p.all.map(_.get(f).asInstanceOf[SkillType]).foldLeft(0L)((r : Long, v : SkillType) ⇒ r + encodeSingleV64(1 + state.poolByName(v.getClass.getName.toLowerCase).poolIndex) + encodeSingleV64(v.getSkillID))
     case s : StringType ⇒ p.all.map(_.get(f).asInstanceOf[String]).foldLeft(0L)((r : Long, v : String) ⇒ r + encodeSingleV64(stringIDs(v)))
 
     case s : StoragePool[_, _] ⇒
@@ -121,6 +124,14 @@ abstract class SerializationFunctions(state : State) {
         case (sum, i) ⇒
           val xs = i.get(f).asInstanceOf[Iterable[_]];
           sum + encodeSingleV64(xs.size) + encode(xs, t)
+      }
+
+    case MapType(k, v) ⇒
+      val b = p.blockInfos.last
+      p.basePool.data.view(b.bpo.toInt, (b.bpo + b.count).toInt).foldLeft(0L) {
+        case (sum, i) ⇒
+          val m = i.get(f).asInstanceOf[HashMap[_, _]];
+          sum + encodeSingleV64(m.size) + encode(m.keys, k) + encode(m.values, v)
       }
 
     case TypeDefinitionIndex(_) | TypeDefinitionName(_) ⇒ ??? // should have been eliminated already
@@ -265,12 +276,29 @@ abstract class SerializationFunctions(state : State) {
     case F64 | I64 ⇒ 8 * xs.size
 
     case V64 ⇒ encodeV64(xs.asInstanceOf[Iterable[Long]])
+    case s : Annotation ⇒ xs.asInstanceOf[Iterable[SkillType]].foldLeft(0L)((r : Long, v : SkillType) ⇒ r + encodeSingleV64(1 + state.poolByName(v.getClass.getName.toLowerCase).poolIndex) + encodeSingleV64(v.getSkillID))
+    case s : StringType ⇒ xs.asInstanceOf[Iterable[String]].foldLeft(0L)((r : Long, v : String) ⇒ r + encodeSingleV64(stringIDs(v)))
 
     case t : StoragePool[_, _] ⇒
       if (t.blockInfos.last.count < 128) xs.size // quick solution for small pools
       else encodeRefs(xs.asInstanceOf[Iterable[SkillType]])
 
-    case SetType(t)                                     ⇒ 0
+    case ConstantLengthArray(l, t) ⇒ xs.asInstanceOf[Iterable[ArrayBuffer[_]]].foldLeft(0L) {
+      case (sum, i) ⇒ sum + encode(i, t)
+    }
+    case VariableLengthArray(t) ⇒ xs.asInstanceOf[Iterable[ArrayBuffer[_]]].foldLeft(0L) {
+      case (sum, i) ⇒ sum + encodeSingleV64(i.size) + encode(i, t)
+    }
+    case ListType(t) ⇒ xs.asInstanceOf[Iterable[ListBuffer[_]]].foldLeft(0L) {
+      case (sum, i) ⇒ sum + encodeSingleV64(i.size) + encode(i, t)
+    }
+    case SetType(t) ⇒ xs.asInstanceOf[Iterable[HashSet[_]]].foldLeft(0L) {
+      case (sum, i) ⇒ sum + encodeSingleV64(i.size) + encode(i, t)
+    }
+
+    case MapType(k, v) ⇒ xs.asInstanceOf[Iterable[HashMap[_, _]]].foldLeft(0L) {
+      case (sum, i) ⇒ sum + encodeSingleV64(i.size) + encode(i.keys, k) + encode(i.values, v)
+    }
 
     case TypeDefinitionIndex(_) | TypeDefinitionName(_) ⇒ ??? // should have been eliminated already
   }
@@ -325,12 +353,23 @@ object SerializationFunctions {
   def typeToSerializationFunction(t : FieldType[_]) : (Any, OutStream) ⇒ Unit = {
     implicit def lift[T](f : (T, OutStream) ⇒ Unit) : (Any, OutStream) ⇒ Unit = { case (x, out) ⇒ f(x.asInstanceOf[T], out) }
     t match {
-      case I8                    ⇒ i8
-      case I16                   ⇒ i16
-      case I32                   ⇒ i32
-      case I64                   ⇒ i64
+      case ConstantI8(_) | ConstantI16(_) | ConstantI32(_) | ConstantI64(_) | ConstantV64(_) ⇒ { case (x, out) ⇒ }
 
-      case SetType(sub)          ⇒ lift(writeSet(typeToSerializationFunction(sub)))
+      case BoolType ⇒ bool
+      case I8 ⇒ i8
+      case I16 ⇒ i16
+      case I32 ⇒ i32
+      case I64 ⇒ i64
+      case V64 ⇒ v64
+      case F32 ⇒ f32
+      case F64 ⇒ f64
+
+      case ConstantLengthArray(len, sub) ⇒ lift(writeConstArray(typeToSerializationFunction(sub)))
+      case VariableLengthArray(sub) ⇒ lift(writeVarArray(typeToSerializationFunction(sub)))
+      case ListType(sub) ⇒ lift(writeList(typeToSerializationFunction(sub)))
+      case SetType(sub) ⇒ lift(writeSet(typeToSerializationFunction(sub)))
+
+      case MapType(k, v) ⇒ lift(writeMap(typeToSerializationFunction(k), typeToSerializationFunction(v)))
 
       case s : StoragePool[_, _] ⇒ userRef
     }
