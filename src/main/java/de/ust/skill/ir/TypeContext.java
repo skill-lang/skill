@@ -126,7 +126,7 @@ public final class TypeContext {
      * @todo move fields
      */
     public TypeContext removeInterfaces() throws ParseException {
-        if (typedefs.isEmpty())
+        if (interfaces.isEmpty())
             return this;
 
         return substitute(new InterfaceSubstitution());
@@ -144,7 +144,7 @@ public final class TypeContext {
      *       because name spaces did not find their way into the standard
      */
     public TypeContext removeEnums() throws ParseException {
-        if (typedefs.isEmpty())
+        if (enums.isEmpty())
             return this;
 
         return substitute(new EnumSubstitution(enums));
@@ -215,8 +215,9 @@ public final class TypeContext {
 
     public static List<Field> substituteFields(Substitution σ, TypeContext tc, List<Field> fs) throws ParseException {
         List<Field> rval = new ArrayList<>();
-        for (Field f : fs)
+        for (Field f : fs){
             rval.add(σ.substitute(tc, f));
+        }
         return rval;
     }
 
