@@ -126,8 +126,8 @@ ${
 
       out.write(s"""
 object ${name(t)} {
-${ // create unapply method if the type has fields, that can be matched
-  if(t.getAllFields().isEmpty())""
+${ // create unapply method if the type has fields, that can be matched (more then 12 is pointless)
+  if(t.getAllFields().isEmpty() || t.getAllFields.size > 12)""
   else s"""  def unapply(self : ${name(t)}) = ${(for (f ← t.getAllFields) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
 """
 }  final class SubType private[$packageName] (val τName : String, skillID : Long) extends ${name(t)}(skillID) with NamedType {

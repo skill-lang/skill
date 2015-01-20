@@ -44,7 +44,8 @@ import _root_.${packagePrefix}api._
  */
 final class State private[internal] (
 ${
-      (for (t ← IR) yield s"  val ${name(t)} : ${name(t)}Access,").mkString("\n")
+      if (largeSpecificationMode) ""
+      else (for (t ← IR) yield s"  val ${name(t)} : ${name(t)}Access,").mkString("\n")
     }
   val String : StringAccess,
   val pools : Array[StoragePool[_ <: SkillType, _ <: SkillType]],
@@ -53,7 +54,10 @@ ${
     extends SkillFile {
 
   val poolByName = pools.map(_.name).zip(pools).toSeq.toMap
-
+${
+      if (largeSpecificationMode) (for (t ← IR) yield s"""  val ${name(t)} = poolByName("${t.getSkillName}").asInstanceOf[${name(t)}Access]""").mkString("\n", "\n", "\n")
+      else ""
+    }
   finalizePools;
 
   def all = pools.iterator.asInstanceOf[Iterator[Access[_ <: SkillType]]]
@@ -154,17 +158,18 @@ ${
       (for (t ← IR)
         yield s"""        val ${name(t)} = new ${name(t)}StoragePool(stringType, annotation, ${i += 1; i}${
         if (null == t.getSuperType) ""
-        else { ", "+name(t.getSuperType)}
+        else { ", "+name(t.getSuperType) }
       })
         types += ${name(t)}"""
       ).mkString("\n")
     }
-        new State(
-${
-      (for (t ← IR) yield s"""          ${name(t)},""").mkString("\n")
+        new State(${
+      if (largeSpecificationMode) ""
+      else (for (t ← IR) yield s"""
+          ${name(t)},""").mkString
     }
           strings,
-          Array[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.map(name).mkString(", ")}),
+          types.toArray,
           path,
           writeMode
         )

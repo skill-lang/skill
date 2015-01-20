@@ -381,15 +381,26 @@ ${
       seenTypes = HashSet()
     }
 
-    // finish state
-    val r = new State(
-${
-      (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(
-        newPool[${mapType(t)}, ${mapType(t.getBaseType)}]("${t.getSkillName}", ${
+    // finish state${
+      // ensure existence of types in large spec mode
+      if (largeSpecificationMode) (for (t ← IR) yield s"""
+    if(!poolByName.contains("${t.getSkillName}"))
+      newPool[${mapType(t)}, ${mapType(t.getBaseType)}]("${t.getSkillName}", ${
         if (null == t.getSuperType) "null"
         else s"""poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${name(t.getSuperType)}StoragePool]"""
-      }, null)
-      ).asInstanceOf[${name(t)}StoragePool],""").mkString("\n")
+      }, null)""").mkString
+      else ""
+    }
+    val r = new State(${
+      if (largeSpecificationMode) ""
+      else
+        (for (t ← IR) yield s"""
+      poolByName.get("${t.getSkillName}").getOrElse(
+        newPool[${mapType(t)}, ${mapType(t.getBaseType)}]("${t.getSkillName}", ${
+          if (null == t.getSuperType) "null"
+          else s"""poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${name(t.getSuperType)}StoragePool]"""
+        }, null)
+      ).asInstanceOf[${name(t)}StoragePool],""").mkString
     }
       String,
       types.to,

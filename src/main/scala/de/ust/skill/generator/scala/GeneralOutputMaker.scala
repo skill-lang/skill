@@ -30,9 +30,16 @@ trait GeneralOutputMaker extends Generator {
   final def setTC(tc : TypeContext) = {
     this.types = tc
     this.IR = tc.removeSpecialDeclarations.getUsertypes.to
+    // set large specification mode; leave some spare parameters
+    largeSpecificationMode = IR.size > 200
   }
   var types : TypeContext = _
   var IR : List[UserType] = _
+
+  /**
+   * This flag is set iff the specification is too large to be passed as parameter list
+   */
+  var largeSpecificationMode = false
 
   override def getLanguageName = "scala";
 
