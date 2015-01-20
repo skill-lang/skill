@@ -564,12 +564,12 @@ sealed class SubPool[T <: B : Manifest, B <: SkillType](
 """)
     
     for (t ← IR) {
-      val typeName = "_root_."+packagePrefix + t.getName.capital
+      val typeName = "_root_."+packagePrefix + name(t)
       val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
       val fields = t.getFields.filterNot(_.isInstanceOf[View])
 
       out.write(s"""
-final class ${t.getName.capital}StoragePool(stringType : StringType, annotation : Annotation, poolIndex : Long${
+final class ${name(t)}StoragePool(stringType : StringType, annotation : Annotation, poolIndex : Long${
         if (t.getSuperType == null) ""
         else s",\nsuperPool: ${t.getSuperType.getName.capital}StoragePool"
       })
@@ -587,14 +587,14 @@ final class ${t.getName.capital}StoragePool(stringType : StringType, annotation 
         else ",\nsuperPool"
       }
     )
-    with ${t.getName.capital}Access {
+    with ${name(t)}Access {
 
   override def addField[T](ID : Int, t : FieldType[T], name : String,
                            restrictions : HashSet[FieldRestriction[_]]) : FieldDeclaration[T] = {
     val f = (name match {${
         (for (f ← fields)
           yield s"""
-      case "${f.getSkillName}" ⇒ new KnownField_${t.getName.capital}_${f.getName.camel}(ID, this)"""
+      case "${f.getSkillName}" ⇒ new KnownField_${name(t)}_${f.getName.camel}(ID, this)"""
         ).mkString("")
       }
       case _      ⇒ return super.addField(ID, t, name, restrictions)
@@ -615,7 +615,7 @@ final class ${t.getName.capital}StoragePool(stringType : StringType, annotation 
     val f = (name match {
 ${
           (for (f ← fields)
-            yield s"""      case "${f.getSkillName}" ⇒ new KnownField_${t.getName.capital}_${f.getName.camel}(fields.size, this)"""
+            yield s"""      case "${f.getSkillName}" ⇒ new KnownField_${name(t)}_${f.getName.camel}(fields.size, this)"""
           ).mkString("\n")
         }
     }).asInstanceOf[FieldDeclaration[T]]
@@ -626,7 +626,7 @@ ${
 
   override def makeSubPool(poolIndex : Long, name : String) = ${
         if (isSingleton) s"""throw new SkillException("${t.getName.capital} is a Singleton and can therefore not have any subtypes.")"""
-        else s"new ${t.getName.capital}SubPool(poolIndex, name, this)"
+        else s"new ${name(t)}SubPool(poolIndex, name, this)"
       }
 
   override def insertInstance(skillID : Long) = {
@@ -664,8 +664,8 @@ ${
       if (!isSingleton) {
         // create a sub pool
         out.write(s"""
-final class ${t.getName.capital}SubPool(poolIndex : Long, name : String, superPool : StoragePool[_ <: $typeName, _root_.${packagePrefix}${t.getBaseType.getName.capital}])
-    extends SubPool[$typeName.SubType, _root_.${packagePrefix}${t.getBaseType.getName.capital}](
+final class ${name(t)}SubPool(poolIndex : Long, name : String, superPool : StoragePool[_ <: $typeName, _root_.${packagePrefix}${t.getBaseType.getName.capital}])
+    extends SubPool[$typeName.SubType, _root_.${packagePrefix}${name(t.getBaseType)}](
       poolIndex,
       name,
       Set(),

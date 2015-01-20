@@ -27,7 +27,11 @@ import de.ust.skill.ir.UserType
 trait GeneralOutputMaker extends Generator {
 
   // remove special stuff
-  final def setTC(tc : TypeContext) = this.IR = tc.removeSpecialDeclarations.getUsertypes.to
+  final def setTC(tc : TypeContext) = {
+    this.types = tc
+    this.IR = tc.removeSpecialDeclarations.getUsertypes.to
+  }
+  var types : TypeContext = _
   var IR : List[UserType] = _
 
   override def getLanguageName = "scala";
@@ -81,6 +85,11 @@ trait GeneralOutputMaker extends Generator {
    * @note the used target OutStream is "dataChunk"
    */
   protected def writeField(d : UserType, f : Field) : String
+
+  /**
+   * Translation of a type to its representation in the source code
+   */
+  protected def name(t : Type) : String = escaped(t.getName.capital)
 
   /**
    * Assume a package prefix provider.

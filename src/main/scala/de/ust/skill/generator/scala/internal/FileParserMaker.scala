@@ -59,9 +59,9 @@ object FileParser {
       val p = (name match {
 ${
       (for (t ← IR)
-        yield s"""        case "${t.getSkillName}" ⇒ new ${t.getName.capital}StoragePool(StringType, Annotation, types.size${
+        yield s"""        case "${t.getSkillName}" ⇒ new ${name(t)}StoragePool(StringType, Annotation, types.size${
         if (null == t.getSuperType) ""
-        else s""", poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${t.getSuperType.getName.capital}StoragePool]"""
+        else s""", poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${name(t.getSuperType)}StoragePool]"""
       })""").mkString("\n")
     }
         case _ ⇒
@@ -387,9 +387,9 @@ ${
       (for (t ← IR) yield s"""      poolByName.get("${t.getSkillName}").getOrElse(
         newPool[${mapType(t)}, ${mapType(t.getBaseType)}]("${t.getSkillName}", ${
         if (null == t.getSuperType) "null"
-        else s"""poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${t.getSuperType.getName.capital}StoragePool]"""
+        else s"""poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${name(t.getSuperType)}StoragePool]"""
       }, null)
-      ).asInstanceOf[${t.getName.capital}StoragePool],""").mkString("\n")
+      ).asInstanceOf[${name(t)}StoragePool],""").mkString("\n")
     }
       String,
       types.to,

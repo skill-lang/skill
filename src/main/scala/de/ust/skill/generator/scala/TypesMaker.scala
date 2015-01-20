@@ -36,8 +36,8 @@ import _root_.${packagePrefix}internal.NamedType
       out.write(s"""
 ${
         comment(t)
-}sealed class ${t.getName.capital} private[$packageName] (skillID : Long) ${
-        if (null != t.getSuperType()) { s"extends ${t.getSuperType().getName.capital}" }
+}sealed class ${name(t)} private[$packageName] (skillID : Long) ${
+        if (null != t.getSuperType()) { s"extends ${name(t.getSuperType)}" }
         else { "extends SkillType" }
       }(skillID) {""")
 
@@ -115,7 +115,7 @@ ${
       else if (!f.isConstant) s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+_${f.getName()}"""
       else s"""+", const ${f.getName()}: ${f.constantValue()}""""
       ).mkString(""""(this: "+this""", "", """+")"""")
-
+      
       out.write(prettyStringArgs)
 
     // toString
@@ -125,12 +125,12 @@ ${
 """)
 
       out.write(s"""
-object ${t.getName.capital} {
+object ${name(t)} {
 ${ // create unapply method if the type has fields, that can be matched
   if(t.getAllFields().isEmpty())""
-  else s"""  def unapply(self : ${t.getName.capital}) = ${(for (f ← t.getAllFields) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
+  else s"""  def unapply(self : ${name(t)}) = ${(for (f ← t.getAllFields) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
 """
-}  final class SubType private[$packageName] (val τName : String, skillID : Long) extends ${t.getName.capital}(skillID) with NamedType {
+}  final class SubType private[$packageName] (val τName : String, skillID : Long) extends ${name(t)}(skillID) with NamedType {
     override def prettyString : String = τName+$prettyStringArgs
     override def toString = τName+"#"+skillID
   }

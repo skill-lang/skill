@@ -44,7 +44,7 @@ import _root_.${packagePrefix}api._
  */
 final class State private[internal] (
 ${
-      (for (t ← IR) yield s"  val ${t.getName.capital} : ${t.getName.capital}Access,").mkString("\n")
+      (for (t ← IR) yield s"  val ${name(t)} : ${name(t)}Access,").mkString("\n")
     }
   val String : StringAccess,
   val pools : Array[StoragePool[_ <: SkillType, _ <: SkillType]],
@@ -152,19 +152,19 @@ object State {
 ${
       var i = -1
       (for (t ← IR)
-        yield s"""        val ${t.getName.capital} = new ${t.getName.capital}StoragePool(stringType, annotation, ${i += 1; i}${
+        yield s"""        val ${name(t)} = new ${name(t)}StoragePool(stringType, annotation, ${i += 1; i}${
         if (null == t.getSuperType) ""
-        else { ", "+t.getSuperType.getName.capital }
+        else { ", "+name(t.getSuperType)}
       })
-        types += ${t.getName.capital}"""
+        types += ${name(t)}"""
       ).mkString("\n")
     }
         new State(
 ${
-      (for (t ← IR) yield s"""          ${t.getName.capital},""").mkString("\n")
+      (for (t ← IR) yield s"""          ${name(t)},""").mkString("\n")
     }
           strings,
-          Array[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.map(_.getName.capital).mkString(", ")}),
+          Array[StoragePool[_ <: SkillType, _ <: SkillType]](${IR.map(name).mkString(", ")}),
           path,
           writeMode
         )

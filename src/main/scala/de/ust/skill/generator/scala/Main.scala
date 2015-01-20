@@ -95,7 +95,9 @@ class Main extends FakeMain
     case t : SetType                 ⇒ s"$SetTypeName[${mapType(t.getBaseType())}]"
     case t : MapType                 ⇒ t.getBaseTypes().map(mapType).reduceRight((k, v) ⇒ s"$MapTypeName[$k, $v]")
 
-    case t : Declaration             ⇒ "_root_."+packagePrefix + t.getName.capital
+    case t : Declaration             ⇒ "_root_."+packagePrefix + name(t)
+
+    case _                           ⇒ throw new IllegalStateException(s"Unknown type $t")
   }
 
   /**
@@ -189,7 +191,7 @@ Opitions (scala):
       "try" | "type" | "var" | "while" | "with" | "yield" | "val" ⇒ target+"_"
 
     //the string is fine anyway
-    case _ ⇒ target
+    case _ ⇒ target.replace(':', '$')
   }
 
   protected def writeField(d : UserType, f : Field) : String = {

@@ -38,7 +38,7 @@ import _root_.${packagePrefix}internal.SkillType
  */
 trait SkillFile {
 ${
-      (for (t ← IR) yield s"  val ${t.getName.capital} : ${t.getName.capital}Access").mkString("\n")
+      (for (t ← IR) yield s"  val ${name(t)} : ${name(t)}Access").mkString("\n")
     }
 
   val String : StringAccess
