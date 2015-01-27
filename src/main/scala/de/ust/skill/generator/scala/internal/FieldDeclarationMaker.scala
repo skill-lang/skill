@@ -207,7 +207,7 @@ final class KnownField_${t.getName.capital}_${f.getName.camel}(${
   def read(in : MappedInStream) {${
             if (f.isConstant()) """
     // reading constants is O(0)"""
-            else """
+            else s"""
     val is = dataChunks.last match {
       case c : SimpleChunkInfo ⇒ owner.basePool.data.view(c.bpo.toInt, (c.bpo + c.count).toInt)
       case bci : BulkChunkInfo ⇒ owner.all
