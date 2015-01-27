@@ -14,6 +14,8 @@ trait ExceptionsMaker extends GeneralOutputMaker {
     //package & imports
     out.write(s"""package ${packagePrefix}internal
 
+import scala.language.existentials
+
 import de.ust.skill.common.jvm.streams.InStream""")
 
     out.write("""

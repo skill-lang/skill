@@ -36,6 +36,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.WrappedArray
 import scala.concurrent.ExecutionContext
+import scala.language.existentials
 
 import de.ust.skill.common.jvm.streams.MappedOutStream
 import de.ust.skill.common.jvm.streams.FileOutputStream
