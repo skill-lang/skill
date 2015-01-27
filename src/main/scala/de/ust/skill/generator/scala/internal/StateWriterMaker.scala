@@ -142,6 +142,7 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
   val baseOffset = out.position
   for ((Task(p, f, begin, end)) ← data) {
     val dataChunk = out.map(baseOffset, begin, end)
+    // @note use semaphore instead of data.par, because map is not thread-safe
     ExecutionContext.Implicits.global.execute(new Runnable {
       override def run = {
         p match {${
@@ -163,6 +164,9 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
 
           case _ ⇒ genericPutField(p, f, dataChunk)
         }
+      } finally {
+        // ensure that writer can terminate, errors will be printed to command line anyway, and we wont be able to
+        // recover, because errors can only happen if the skill implementation itself is broken
         barrier.release(1)
       }
     }
