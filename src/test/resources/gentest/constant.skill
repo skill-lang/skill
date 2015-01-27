@@ -1,7 +1,7 @@
 #! constants
 
 /**
- * check for constant integerers
+ * Check for constant integerers.
  *
  * @author Dennis Przytarski
  */

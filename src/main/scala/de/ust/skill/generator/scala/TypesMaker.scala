@@ -60,7 +60,7 @@ ${
       val Name = name.capital
 
       def makeField:String = {
-		if(f.isIgnored)
+		if(f.isIgnored || f.isConstant)
 		  ""
 		else
 	      s"""
@@ -70,6 +70,8 @@ ${
       def makeGetterImplementation:String = {
         if(f.isIgnored)
           s"""throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
+        else if(f.isConstant)
+          f.constantValue().toString
         else
           s"_$name"
       }
@@ -77,6 +79,8 @@ ${
       def makeSetterImplementation:String = {
         if(f.isIgnored)
           s"""throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
+        else if(f.isConstant)
+          s"""throw new IllegalAccessError("$name is a constant!")"""
         else
           s"{ ${ //@range check
             if(f.getType().isInstanceOf[GroundType]){
@@ -126,9 +130,10 @@ ${
 
       out.write(s"""
 object ${name(t)} {
-${ // create unapply method if the type has fields, that can be matched (more then 12 is pointless)
-  if(t.getAllFields().isEmpty() || t.getAllFields.size > 12)""
-  else s"""  def unapply(self : ${name(t)}) = ${(for (f ← t.getAllFields) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
+${ // create unapply method if the type has fields, that can be matched (none or more then 12 is pointless)
+  val fs = t.getAllFields().filter(_.isConstant())
+  if(fs.isEmpty() || fs.size > 12)""
+  else s"""  def unapply(self : ${name(t)}) = ${(for (f ← fs) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
 """
 }  final class SubType private[$packageName] (val τName : String, skillID : Long) extends ${name(t)}(skillID) with NamedType {
     override def prettyString : String = τName+$prettyStringArgs
