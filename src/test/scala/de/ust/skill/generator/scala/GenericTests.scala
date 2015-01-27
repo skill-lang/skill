@@ -17,6 +17,7 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import de.ust.skill.main.CommandLine
 import org.scalatest.junit.JUnitRunner
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * Generic tests built for scala.
@@ -95,14 +96,20 @@ class Generic${name}ReadTest extends CommonTest {
 
   }
 
-  def check(path : File, out : String) {
-    CommandLine.exit = {s ⇒ fail(s)}
-    CommandLine.main(Array[String]("-L", "scala", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, path.getPath, "testsuites"))
+  def check(path : File, out : String, options : String) {
+    CommandLine.exit = { s ⇒ fail(s) }
+
+    val args = ArrayBuffer[String]("-L", "scala", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out)
+    if (options.size > 0)
+      args ++= options.split("\\s+").to
+    args += path.getPath
+    args += "testsuites"
+    CommandLine.main(args.toArray)
 
     makeGenBinaryTests(out)
   }
 
-  def makeTest(path : File, name : String) = test("generic: "+name)(check(path, name))
+  def makeTest(path : File, name : String, options : String) = test("generic: "+name)(check(path, name, options))
 
   implicit class Regex(sc : StringContext) {
     def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ ⇒ "x") : _*)
@@ -110,10 +117,12 @@ class Generic${name}ReadTest extends CommonTest {
 
   for (path ← new File("src/test/resources/gentest").listFiles if path.getName.endsWith(".skill")) {
     try {
-      val r"""#!\s(\w+)${ name }""" = Files.lines(path.toPath).findFirst().orElse("")
-      makeTest(path, name)
+      val r"""#!\s(\w+)${ name }(.*)${ options }""" = Files.lines(path.toPath).findFirst().orElse("")
+      makeTest(path, name, options.trim)
     } catch {
-      case e : MatchError ⇒ // just continue, the first line did not match the command
+      case e : MatchError ⇒
+        println(s"failed processing of $path:")
+        e.printStackTrace(System.out)
     }
   }
 }

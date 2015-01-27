@@ -1,4 +1,4 @@
-#! subtypes
+#! subtypes -O@Scala:revealSkillID=true
 
 A { A a; }
 B : A { B b; }
