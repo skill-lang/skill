@@ -88,13 +88,15 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
   // create type definitions
   @inline def genericPutField[T](p : StoragePool[_ <: SkillType, _ <: SkillType], f : FieldDeclaration[T], dataChunk : MappedOutStream) {
     f.t match {
-      case I8         ⇒ for (i ← p) dataChunk.i8(i.get(f).asInstanceOf[Byte])
-      case I16        ⇒ for (i ← p) dataChunk.i16(i.get(f).asInstanceOf[Short])
-      case I32        ⇒ for (i ← p) dataChunk.i32(i.get(f).asInstanceOf[Int])
-      case I64        ⇒ for (i ← p) dataChunk.i64(i.get(f).asInstanceOf[Long])
-      case V64        ⇒ for (i ← p) dataChunk.v64(i.get(f).asInstanceOf[Long])
+      case I8                    ⇒ for (i ← p) dataChunk.i8(i.get(f).asInstanceOf[Byte])
+      case I16                   ⇒ for (i ← p) dataChunk.i16(i.get(f).asInstanceOf[Short])
+      case I32                   ⇒ for (i ← p) dataChunk.i32(i.get(f).asInstanceOf[Int])
+      case I64                   ⇒ for (i ← p) dataChunk.i64(i.get(f).asInstanceOf[Long])
+      case V64                   ⇒ for (i ← p) dataChunk.v64(i.get(f).asInstanceOf[Long])
 
-      case StringType(_) ⇒ for (i ← p) string(i.get(f).asInstanceOf[String], dataChunk)
+      case StringType(_)         ⇒ for (i ← p) string(i.get(f).asInstanceOf[String], dataChunk)
+
+      case s : StoragePool[_, _] ⇒ for (i ← p) userRef(i, out)
 
       case other ⇒
         val den = typeToSerializationFunction(other); for (i ← p) den(i.get(f), dataChunk)

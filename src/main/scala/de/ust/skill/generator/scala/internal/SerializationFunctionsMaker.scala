@@ -302,6 +302,38 @@ abstract class SerializationFunctions(state : State) {
 
     case TypeDefinitionIndex(_) | TypeDefinitionName(_) ⇒ ??? // should have been eliminated already
   }
+
+  // TODO this is not a good solution! (slow and fucked up, but funny)
+  def typeToSerializationFunction(t : FieldType[_]) : (Any, OutStream) ⇒ Unit = {
+    implicit def lift[T](f : (T, OutStream) ⇒ Unit) : (Any, OutStream) ⇒ Unit = { case (x, out) ⇒ f(x.asInstanceOf[T], out) }
+    t match {
+      case ConstantI8(_) | ConstantI16(_) | ConstantI32(_) | ConstantI64(_) | ConstantV64(_) ⇒ { case (x, out) ⇒ }
+
+      case BoolType ⇒ bool
+      case I8 ⇒ i8
+      case I16 ⇒ i16
+      case I32 ⇒ i32
+      case I64 ⇒ i64
+      case V64 ⇒ v64
+      case F32 ⇒ f32
+      case F64 ⇒ f64
+
+      case Annotation(_) ⇒ annotation
+      case StringType(_) ⇒ string
+
+      case ConstantLengthArray(len, sub) ⇒ lift(writeConstArray(typeToSerializationFunction(sub)))
+      case VariableLengthArray(sub) ⇒ lift(writeVarArray(typeToSerializationFunction(sub)))
+      case ListType(sub) ⇒ lift(writeList(typeToSerializationFunction(sub)))
+      case SetType(sub) ⇒ lift(writeSet(typeToSerializationFunction(sub)))
+
+      case MapType(k, v) ⇒ lift(writeMap(typeToSerializationFunction(k), typeToSerializationFunction(v)))
+
+      case s : StoragePool[_, _] ⇒ userRef
+
+      case TypeDefinitionIndex(_) | TypeDefinitionName(_) ⇒
+        throw new IllegalStateException("trying to serialize an intermediary type representation can never be successful")
+    }
+  }
 }
 
 object SerializationFunctions {
@@ -346,32 +378,6 @@ object SerializationFunctions {
     for ((k, v) ← elements) {
       keys(k, out)
       vals(v, out)
-    }
-  }
-
-  // TODO this is not a good solution! (slow and fucked up, but funny)
-  def typeToSerializationFunction(t : FieldType[_]) : (Any, OutStream) ⇒ Unit = {
-    implicit def lift[T](f : (T, OutStream) ⇒ Unit) : (Any, OutStream) ⇒ Unit = { case (x, out) ⇒ f(x.asInstanceOf[T], out) }
-    t match {
-      case ConstantI8(_) | ConstantI16(_) | ConstantI32(_) | ConstantI64(_) | ConstantV64(_) ⇒ { case (x, out) ⇒ }
-
-      case BoolType ⇒ bool
-      case I8 ⇒ i8
-      case I16 ⇒ i16
-      case I32 ⇒ i32
-      case I64 ⇒ i64
-      case V64 ⇒ v64
-      case F32 ⇒ f32
-      case F64 ⇒ f64
-
-      case ConstantLengthArray(len, sub) ⇒ lift(writeConstArray(typeToSerializationFunction(sub)))
-      case VariableLengthArray(sub) ⇒ lift(writeVarArray(typeToSerializationFunction(sub)))
-      case ListType(sub) ⇒ lift(writeList(typeToSerializationFunction(sub)))
-      case SetType(sub) ⇒ lift(writeSet(typeToSerializationFunction(sub)))
-
-      case MapType(k, v) ⇒ lift(writeMap(typeToSerializationFunction(k), typeToSerializationFunction(v)))
-
-      case s : StoragePool[_, _] ⇒ userRef
     }
   }
 
