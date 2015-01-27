@@ -18,6 +18,7 @@ import org.scalatest.FunSuite
 import de.ust.skill.main.CommandLine
 import org.scalatest.junit.JUnitRunner
 import scala.collection.mutable.ArrayBuffer
+import de.ust.skill.generator.common
 
 /**
  * Generic tests built for scala.
@@ -27,7 +28,14 @@ import scala.collection.mutable.ArrayBuffer
  * @author Timm Felden
  */
 @RunWith(classOf[JUnitRunner])
-class GenericTests extends FunSuite {
+class GenericTests extends common.GenericTests {
+
+  override def language = "scala"
+
+  override def deleteOutDir(out : String) {
+    import scala.reflect.io.Directory
+    Directory(new File("testsuites/scala/src/main/scala/", out)).deleteRecursively
+  }
 
   def newTestFile(packagePath : String, name : String) = {
     val f = new File(s"testsuites/scala/src/test/scala/$packagePath/$name.generated.scala")
@@ -62,7 +70,7 @@ class Generic${name}ReadTest extends CommonTest {
     out.close
   }
 
-  def makeGenBinaryTests(name : String) {
+  override def makeGenBinaryTests(name : String) {
     // find all relevant sf-files
     val base = new File("src/test/resources/genbinary")
     def collect(f : File) : Seq[File] =
@@ -94,35 +102,5 @@ class Generic${name}ReadTest extends CommonTest {
 
     //    test generieren, der sicherstellt, dass sich die daten da raus lesen lassen
 
-  }
-
-  def check(path : File, out : String, options : String) {
-    CommandLine.exit = { s ⇒ fail(s) }
-
-    val args = ArrayBuffer[String]("-L", "scala", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out)
-    if (options.size > 0)
-      args ++= options.split("\\s+").to
-    args += path.getPath
-    args += "testsuites"
-    CommandLine.main(args.toArray)
-
-    makeGenBinaryTests(out)
-  }
-
-  def makeTest(path : File, name : String, options : String) = test("generic: "+name)(check(path, name, options))
-
-  implicit class Regex(sc : StringContext) {
-    def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ ⇒ "x") : _*)
-  }
-
-  for (path ← new File("src/test/resources/gentest").listFiles if path.getName.endsWith(".skill")) {
-    try {
-      val r"""#!\s(\w+)${ name }(.*)${ options }""" = Files.lines(path.toPath).findFirst().orElse("")
-      makeTest(path, name, options.trim)
-    } catch {
-      case e : MatchError ⇒
-        println(s"failed processing of $path:")
-        e.printStackTrace(System.out)
-    }
   }
 }

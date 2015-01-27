@@ -13,6 +13,7 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import de.ust.skill.main.CommandLine
 import org.scalatest.junit.JUnitRunner
+import de.ust.skill.generator.common
 
 /**
  * Generic tests built for scala.
@@ -22,28 +23,15 @@ import org.scalatest.junit.JUnitRunner
  * @author Timm Felden
  */
 @RunWith(classOf[JUnitRunner])
-class GenericTests extends FunSuite {
+class GenericTests extends common.GenericTests {
+  override def language = "ada"
 
-  def check(path : File, out : String) {
+  def makeGenBinaryTests(name : String) {
+    // TODO not yet implemented
+  }
+
+  override def deleteOutDir(out : String) {
     import scala.reflect.io.Directory
     Directory(new File("testsuites/ada/src/", out)).deleteRecursively
-
-    CommandLine.exit = {s ⇒ fail(s)}
-    CommandLine.main(Array[String]("-L", "ada", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, path.getPath, "testsuites"))
-  }
-
-  def makeTest(path : File, name : String) = test("generic: "+name)(check(path, name))
-
-  implicit class Regex(sc : StringContext) {
-    def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ ⇒ "x") : _*)
-  }
-
-  for (path ← new File("src/test/resources/gentest").listFiles if path.getName.endsWith(".skill")) {
-    try {
-      val r"""#!\s(\w+)${ name }""" = Files.lines(path.toPath).findFirst().orElse("")
-      makeTest(path, name)
-    } catch {
-      case e : MatchError ⇒ // just continue, the first line did not match the command
-    }
   }
 }
