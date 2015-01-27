@@ -196,6 +196,9 @@ Opitions (scala):
 
   protected def writeField(d : UserType, f : Field) : String = {
     val fName = escaped(f.getName.camel)
+    if (f.isConstant())
+      return "// constants do not write individual field data"
+
     f.getType match {
       case t : GroundType ⇒ t.getSkillName match {
         case "annotation" | "string" ⇒ s"for(i ← outData) ${f.getType.getSkillName}(i.$fName, dataChunk)"

@@ -54,7 +54,7 @@ ${
 	///////////////////////
 	// getters & setters //
 	///////////////////////
-	for(f <- t.getFields if !f.isConstant && !f.isInstanceOf[View]){
+	for(f <- t.getFields if !f.isInstanceOf[View]){
       val name = f.getName()
       val name_ = escaped(name.camel)
       val Name = name.capital
@@ -71,7 +71,7 @@ ${
         if(f.isIgnored)
           s"""throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
         else if(f.isConstant)
-          f.constantValue().toString
+          s"${f.constantValue().toString}.to${mapType(f.getType)}"
         else
           s"_$name"
       }
@@ -79,8 +79,6 @@ ${
       def makeSetterImplementation:String = {
         if(f.isIgnored)
           s"""throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
-        else if(f.isConstant)
-          s"""throw new IllegalAccessError("$name is a constant!")"""
         else
           s"{ ${ //@range check
             if(f.getType().isInstanceOf[GroundType]){
@@ -104,7 +102,12 @@ ${
         }_$name = $Name }"
       }
 
-      out.write(s"""$makeField
+      if(f.isConstant)
+        out.write(s"""$makeField
+  ${comment(f)}final def $name_ = $makeGetterImplementation
+""")
+      else
+        out.write(s"""$makeField
   ${comment(f)}final def $name_ = $makeGetterImplementation
   ${comment(f)}final def ${name_}_=($Name : ${mapType(f.getType())}) : scala.Unit = $makeSetterImplementation
 """)
@@ -119,7 +122,7 @@ ${
       else if (!f.isConstant) s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+_${f.getName()}"""
       else s"""+", const ${f.getName()}: ${f.constantValue()}""""
       ).mkString(""""(this: "+this""", "", """+")"""")
-      
+
       out.write(prettyStringArgs)
 
     // toString
@@ -131,7 +134,7 @@ ${
       out.write(s"""
 object ${name(t)} {
 ${ // create unapply method if the type has fields, that can be matched (none or more then 12 is pointless)
-  val fs = t.getAllFields().filter(_.isConstant())
+  val fs = t.getAllFields().filterNot(_.isConstant())
   if(fs.isEmpty() || fs.size > 12)""
   else s"""  def unapply(self : ${name(t)}) = ${(for (f ← fs) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
 """

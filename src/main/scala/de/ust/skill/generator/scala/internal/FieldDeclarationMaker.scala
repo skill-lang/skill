@@ -225,10 +225,16 @@ final class KnownField_${t.getName.capital}_${f.getName.camel}(${
       }
 
   override def get(i : ${mapType(t)}) = i.${escaped(f.getName.camel)}
-  override def set(i : ${mapType(t)}, v : ${mapType(f.getType)}) = i.${escaped(f.getName.camel)} = v
+  override def set(i : ${mapType(t)}, v : ${mapType(f.getType)}) = ${
+        if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
+        else s"i.${escaped(f.getName.camel)} = v"
+      }
 
   override def getR(i : SkillType) = i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)}
-  override def setR(i : SkillType, v : ${mapType(f.getType)}) : Unit = i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = v
+  override def setR(i : SkillType, v : ${mapType(f.getType)}) : Unit = ${
+        if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
+        else s"i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = v"
+      }
 }
 """)
 
