@@ -76,7 +76,7 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
   val offsets = new HashMap[StoragePool[_ <: SkillType, _ <: SkillType], HashMap[FieldDeclaration[_], Future[Long]]]
   for (p ← state.pools) {
     val vs = new HashMap[FieldDeclaration[_], Future[Long]]
-    for (f ← p.fields if f.index!=0) {
+    for (f ← p.fields if f.index != 0) {
       val v = new FutureTask(new Callable[Long]() {
         def call : Long = offset(p, f)
       })
@@ -109,7 +109,7 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
   var offset = 0L
   for (p ← state.pools) {
     val vs = offsets(p)
-    val fields = p.fields.view(1, p.fields.size) // ignore field 0 (skillID)
+    val fields = p.fields.filter(_.index!=0)
     string(p.name, out)
     val LCount = p.blockInfos.last.count
     out.v64(LCount)

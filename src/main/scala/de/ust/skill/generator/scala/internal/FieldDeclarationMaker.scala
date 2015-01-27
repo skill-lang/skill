@@ -79,7 +79,7 @@ case class BlockInfo(val bpo : Long, val count : Long);
  * @param index the index of this field, starting from 0; required for append operations
  * @param T the scala type of t
  *
- * @note index 0 is used for the skillID
+ * @note index 0 is used for the skillID and other auto fields
  * @note specialized in everything but unit
  */
 sealed abstract class FieldDeclaration[T](
@@ -181,16 +181,26 @@ final class KnownField_SkillID(owner : StoragePool[_ <: SkillType, _ <: SkillTyp
 /**
  * ${f.getType.toString} ${t.getName.capital}.${f.getName.camel}
  */
-final class KnownField_${t.getName.capital}_${f.getName.camel}(
-  index : Long,
+final class KnownField_${t.getName.capital}_${f.getName.camel}(${
+        if (f.isAuto()) ""
+        else """
+      index,"""
+      }
   owner : StoragePool[_ <: SkillType, _ <: SkillType])
     extends FieldDeclaration[${mapType(f.getType)}](${mapToFieldType(f.getType)},
-      "${f.getSkillName}",
-      index,
-      owner) with KnownField[${mapType(t)}, ${mapType(f.getType)}]${
+      "${f.getSkillName}",${
+        if (f.isAuto()) """
+      0,"""
+        else """
+      index,"""
+      }
+      owner)
+    with KnownField[${mapType(t)}, ${mapType(f.getType)}]${
         // mark ignored fields as ignored; read function is inherited
         if (f.isIgnored()) """
     with IgnoredField {"""
+        else if (f.isAuto()) """
+    with AutoField {"""
         else // generate a read function 
           s""" {
 
@@ -202,12 +212,13 @@ final class KnownField_${t.getName.capital}_${f.getName.camel}(
     for (i ← is)
       i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = t.readSingleField(in)
   }
-"""}
-  ${
-    if(f.getRestrictions.isEmpty())""
-    else s"""  restrictions ++= HashSet(${mkFieldRestrictions(f)})
+
 """
-  }
+      }${
+        if (f.getRestrictions.isEmpty()) ""
+        else s"""  restrictions ++= HashSet(${mkFieldRestrictions(f)})
+"""
+      }
 
   override def get(i : ${mapType(t)}) = i.${escaped(f.getName.camel)}
   override def set(i : ${mapType(t)}, v : ${mapType(f.getType)}) = i.${escaped(f.getName.camel)} = v

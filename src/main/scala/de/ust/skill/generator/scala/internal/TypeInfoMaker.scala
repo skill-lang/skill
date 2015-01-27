@@ -562,7 +562,7 @@ sealed class SubPool[T <: B : Manifest, B <: SkillType](
   }
 }
 """)
-    
+
     for (t ← IR) {
       val typeName = "_root_."+packagePrefix + name(t)
       val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
@@ -594,7 +594,10 @@ final class ${name(t)}StoragePool(stringType : StringType, annotation : Annotati
     val f = (name match {${
         (for (f ← fields)
           yield s"""
-      case "${f.getSkillName}" ⇒ new KnownField_${name(t)}_${f.getName.camel}(ID, this)"""
+      case "${f.getSkillName}" ⇒ new KnownField_${name(t)}_${f.getName.camel}(${
+            if (f.isAuto()) ""
+            else "ID, "
+          }this)"""
         ).mkString("")
       }
       case _      ⇒ return super.addField(ID, t, name, restrictions)
@@ -615,7 +618,10 @@ final class ${name(t)}StoragePool(stringType : StringType, annotation : Annotati
     val f = (name match {
 ${
           (for (f ← fields)
-            yield s"""      case "${f.getSkillName}" ⇒ new KnownField_${name(t)}_${f.getName.camel}(fields.size, this)"""
+            yield s"""      case "${f.getSkillName}" ⇒ new KnownField_${name(t)}_${f.getName.camel}(${
+            if (f.isAuto()) ""
+            else "fields.size, "
+          }this)"""
           ).mkString("\n")
         }
     }).asInstanceOf[FieldDeclaration[T]]
