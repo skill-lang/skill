@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 19.11.2014                               *
+ * \__ \ ' <| | | |__     generated: 27.01.2015                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.internal
@@ -12,9 +12,10 @@ import java.nio.file.Path
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
 
+import de.ust.skill.common.jvm.streams.FileInputStream
+import de.ust.skill.common.jvm.streams.FileOutputStream
+
 import _root_.de.ust.skill.generator.genericBinding.api._
-import _root_.de.ust.skill.generator.genericBinding.internal.streams.FileInputStream
-import _root_.de.ust.skill.generator.genericBinding.internal.streams.FileOutputStream
 
 /**
  * This class is used to handle objects in a serializable state.
@@ -26,7 +27,7 @@ final class State private[internal] (
   val String : StringAccess,
   val pools : Array[StoragePool[_ <: SkillType, _ <: SkillType]],
   var path : Path,
-  val mode : WriteMode)
+  var mode : WriteMode)
     extends SkillFile {
 
   val poolByName = pools.map(_.name).zip(pools).toSeq.toMap
@@ -36,7 +37,7 @@ final class State private[internal] (
   def all = pools.iterator.asInstanceOf[Iterator[Access[_ <: SkillType]]]
 
   @inline private def finalizePools {
-    @inline def eliminatePreliminaryTypesIn[T](t : FieldType[T]) : FieldType[T] = t match {
+    def eliminatePreliminaryTypesIn[T](t : FieldType[T]) : FieldType[T] = t match {
       case TypeDefinitionIndex(i) ⇒ try {
         pools(i.toInt).asInstanceOf[FieldType[T]]
       } catch {
@@ -57,8 +58,8 @@ final class State private[internal] (
     for (p ← pools) {
       val fieldMap = p.fields.map { _.name }.zip(p.fields).toMap
 
-      for ((n, (t, _)) ← p.knownFields if !fieldMap.contains(n)) {
-        p.addField(p.fields.size, eliminatePreliminaryTypesIn(t), n, HashSet())
+      for (n ← p.knownFields if !fieldMap.contains(n)) {
+        p.addKnownField(n, eliminatePreliminaryTypesIn)
       }
     }
   }
@@ -79,6 +80,24 @@ final class State private[internal] (
   def close : Unit = {
     flush;
     // TODO invalidate state?
+  }
+
+  def changePath(newPath : Path) : Unit = mode match {
+    case Write                       ⇒ path = newPath
+    case Append if (path == newPath) ⇒ //nothing to do
+    case Append ⇒
+      Files.deleteIfExists(newPath);
+      Files.copy(path, newPath);
+      path = newPath
+  }
+
+  def changeMode(writeMode : Mode) : Unit = (mode, writeMode) match {
+    case (Append, Write) ⇒ mode = Write
+    case (Write, Append) ⇒
+      throw new IllegalArgumentException(
+        "Cannot change write mode from Write to Append, try to use open(<path>, Create, Append) instead."
+      )
+    case _ ⇒
   }
 }
 
@@ -110,14 +129,13 @@ object State {
         // create type information
 
         new State(
-
           strings,
-          Array[StoragePool[_ <: SkillType, _ <: SkillType]](),
+          types.toArray,
           path,
           writeMode
         )
       case Read ⇒
-        FileParser.read(new FileInputStream(path), writeMode)
+        FileParser.read(FileInputStream.open(path), writeMode)
     }
   }
 }

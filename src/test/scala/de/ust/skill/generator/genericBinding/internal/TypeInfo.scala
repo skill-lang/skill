@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 19.11.2014                               *
+ * \__ \ ' <| | | |__     generated: 27.01.2015                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.internal
@@ -12,10 +12,10 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.WrappedArray
 import scala.reflect.ClassTag
 
+import de.ust.skill.common.jvm.streams.InStream
+
 import _root_.de.ust.skill.generator.genericBinding.api._
 import _root_.de.ust.skill.generator.genericBinding.internal.restrictions._
-import _root_.de.ust.skill.generator.genericBinding.internal.streams.FileInputStream
-import _root_.de.ust.skill.generator.genericBinding.internal.streams.InStream
 
 /**
  * @param typeID the skill type ID as obtained from the read file or as it would appear in the to be written file
@@ -227,7 +227,7 @@ case class TypeDefinitionName[T : Manifest](name : String) extends FieldType[T](
 sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
   private[internal] val poolIndex : Long,
   val name : String,
-  private[internal] val knownFields : HashMap[String, (FieldType[_], HashSet[FieldRestriction[_]])],
+  private[internal] val knownFields : collection.immutable.Set[String],
   private[internal] val superPool : Option[StoragePool[_ <: B, B]])
     extends FieldType[T](32 + poolIndex)
     with Access[T] {
@@ -263,36 +263,25 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
   /**
    * the actual field data; contains fields by index
    */
-  private[internal] val fields = new ArrayBuffer[FieldDeclaration[_]](knownFields.size);
+  private[internal] val fields = new ArrayBuffer[FieldDeclaration[_]](1 + knownFields.size);
   //! each pool has a magic field 0: v64 skillID
-  locally {
-    fields += new KnownField[Long](V64, "skillid", 0L, this)
-  }
+  fields += new KnownField_SkillID(this)
 
   /**
    * Adds a new field, checks consistency and updates field data if required.
    */
-  final private[internal] def addField[T](ID : Int, t : FieldType[T], name : String,
-                                          restrictions : HashSet[FieldRestriction[_]]) : FieldDeclaration[T] = {
-    if (knownFields.contains(name)) {
-      // type-check
-      val (knownType, knownRs) = knownFields(name)
-      if (!t.equals(knownType))
-        throw TypeMissmatchError(t, knownFields(name).toString, name, this.name);
+  private[internal] def addField[T](ID : Int, t : FieldType[T], name : String,
+                                    restrictions : HashSet[FieldRestriction[_]]) : FieldDeclaration[T] = {
 
-      val f = new KnownField[T](t.asInstanceOf[FieldType[T]], name, ID, this)
-      restrictions.foreach(f.addRestriction(_))
-      knownRs.foreach(f.addRestriction(_))
-      fields += f
-      return f
-
-    } else {
-      val f = new DistributedField[T](t.asInstanceOf[FieldType[T]], name, ID, this)(t.m)
-      restrictions.foreach(f.addRestriction(_))
-      fields += f
-      return f
-    }
+    val f = new LazyField[T](t.asInstanceOf[FieldType[T]], name, ID, this)(t.m)
+    restrictions.foreach(f.addRestriction(_))
+    fields += f
+    return f
   }
+  /**
+   * Adds a known field using a mkType function that creates actual types matching the state
+   */
+  private[internal] def addKnownField[T](name:String, mkType : FieldType[T]⇒FieldType[T]){}
 
   final def allFields = fields.iterator
 
@@ -320,14 +309,14 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
       val lcount = newDynamicInstances.size
       //@ note this is the index into the data array and NOT the written lbpo
       val lbpo = if (0 == lcount) 0L
-      else newDynamicInstances.next.getSkillID - 1
+      else newDynamicInstances.next.getSkillID - 1L
 
       blockInfos += new BlockInfo(lbpo, lcount)
 
       //@note: if this does not hold for p; then it will not hold for p.subPools either!
       if (newInstances || !newPool) {
         //build field chunks
-        for (f ← fields) {
+        for (f ← fields if f.index != 0) {
           if (f.noDataChunk) {
             val c = new BulkChunkInfo(-1, -1, dynamicSize)
             f.addChunk(c)
@@ -392,7 +381,7 @@ sealed abstract class StoragePool[T <: B : Manifest, B <: SkillType](
 sealed class BasePool[T <: SkillType : Manifest](
   poolIndex : Long,
   name : String,
-  knownFields : HashMap[String, (FieldType[_], HashSet[FieldRestriction[_]])])
+  knownFields : collection.immutable.Set[String])
     extends StoragePool[T, T](poolIndex, name, knownFields, None) {
 
   /**
@@ -505,7 +494,7 @@ sealed class BasePool[T <: SkillType : Manifest](
 sealed class SubPool[T <: B : Manifest, B <: SkillType](
   poolIndex : Long,
   name : String,
-  knownFields : HashMap[String, (FieldType[_], HashSet[FieldRestriction[_]])],
+  knownFields : collection.immutable.Set[String],
   superPool : StoragePool[_ <: B, B])
     extends StoragePool[T, B](poolIndex, name, knownFields, Some(superPool)) {
 

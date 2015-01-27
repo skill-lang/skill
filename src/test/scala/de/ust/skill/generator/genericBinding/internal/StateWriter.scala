@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 19.11.2014                               *
+ * \__ \ ' <| | | |__     generated: 27.01.2015                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.internal
@@ -14,9 +14,10 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.WrappedArray
 import scala.concurrent.ExecutionContext
+import scala.language.existentials
 
-import _root_.de.ust.skill.generator.genericBinding.internal.streams.FileOutputStream
-import _root_.de.ust.skill.generator.genericBinding.internal.streams.MappedOutStream
+import de.ust.skill.common.jvm.streams.MappedOutStream
+import de.ust.skill.common.jvm.streams.FileOutputStream
 
 /**
  * Holds state of a write operation.
@@ -33,7 +34,7 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
   val lbpsiMap = new Array[Long](state.pools.length)
   state.pools.par.foreach {
     case p : BasePool[_] ⇒
-      makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ state.poolByName(s).staticSize })
+      makeLBPOMap(p, lbpsiMap, 0, _.staticSize)
       p.compress(lbpsiMap)
     case _ ⇒
   }
@@ -50,13 +51,12 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
   v64(state.pools.size, out)
 
   // calculate offsets
-  // TODO this code can be simplified a lot using ".par 
   val offsets = new HashMap[StoragePool[_ <: SkillType, _ <: SkillType], HashMap[FieldDeclaration[_], Future[Long]]]
   for (p ← state.pools) {
     val vs = new HashMap[FieldDeclaration[_], Future[Long]]
-    for (f ← p.fields) {
+    for (f ← p.fields if f.index!=0) {
       val v = new FutureTask(new Callable[Long]() {
-        def call : Long = FieldOffsetCalculator.offset(p, f)
+        def call : Long = offset(p, f)
       })
       vs.put(f, v)
       ExecutionContext.Implicits.global.execute(v)
@@ -67,13 +67,15 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
   // create type definitions
   @inline def genericPutField[T](p : StoragePool[_ <: SkillType, _ <: SkillType], f : FieldDeclaration[T], dataChunk : MappedOutStream) {
     f.t match {
-      case I8         ⇒ for (i ← p) dataChunk.i8(i.get(f).asInstanceOf[Byte])
-      case I16        ⇒ for (i ← p) dataChunk.i16(i.get(f).asInstanceOf[Short])
-      case I32        ⇒ for (i ← p) dataChunk.i32(i.get(f).asInstanceOf[Int])
-      case I64        ⇒ for (i ← p) dataChunk.i64(i.get(f).asInstanceOf[Long])
-      case V64        ⇒ for (i ← p) dataChunk.v64(i.get(f).asInstanceOf[Long])
+      case I8                    ⇒ for (i ← p) dataChunk.i8(i.get(f).asInstanceOf[Byte])
+      case I16                   ⇒ for (i ← p) dataChunk.i16(i.get(f).asInstanceOf[Short])
+      case I32                   ⇒ for (i ← p) dataChunk.i32(i.get(f).asInstanceOf[Int])
+      case I64                   ⇒ for (i ← p) dataChunk.i64(i.get(f).asInstanceOf[Long])
+      case V64                   ⇒ for (i ← p) dataChunk.v64(i.get(f).asInstanceOf[Long])
 
-      case StringType(_) ⇒ for (i ← p) string(i.get(f).asInstanceOf[String], dataChunk)
+      case StringType(_)         ⇒ for (i ← p) string(i.get(f).asInstanceOf[String], dataChunk)
+
+      case s : StoragePool[_, _] ⇒ for (i ← p) userRef(i, out)
 
       case other ⇒
         val den = typeToSerializationFunction(other); for (i ← p) den(i.get(f), dataChunk)

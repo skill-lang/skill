@@ -1,10 +1,11 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 19.11.2014                               *
+ * \__ \ ' <| | | |__     generated: 27.01.2015                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.internal
 
+import java.nio.BufferUnderflowException
 import java.nio.file.Path
 
 import scala.Array.canBuildFrom
@@ -13,11 +14,17 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.Queue
 import scala.collection.mutable.Stack
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Try
+import scala.util.Failure
+
+import de.ust.skill.common.jvm.streams.FileInputStream
 
 import _root_.de.ust.skill.generator.genericBinding.api.WriteMode
 import _root_.de.ust.skill.generator.genericBinding.internal
-import _root_.de.ust.skill.generator.genericBinding.internal.streams.FileInputStream
-import _root_.de.ust.skill.generator.genericBinding.internal.streams.InStream
 
 /**
  * The parser implementation is based on the denotational semantics given in TR14§6.
@@ -44,7 +51,7 @@ object FileParser {
       val p = (name match {
 
         case _ ⇒
-          if (null == superPool) new BasePool[SkillType.SubType](types.size, name, HashMap())
+          if (null == superPool) new BasePool[SkillType.SubType](types.size, name, Set())
           else superPool.makeSubPool(types.size, name)
       }).asInstanceOf[StoragePool[T, B]]
 
@@ -85,8 +92,7 @@ object FileParser {
       case 17           ⇒ VariableLengthArray(fieldType)
       case 18           ⇒ ListType(fieldType)
       case 19           ⇒ SetType(fieldType)
-      case 20           ⇒ MapType(fieldType, fieldType) // <- TR14
-      // TR13: MapType((0 until in.v64.toInt).map { n ⇒ groundType }.toSeq)
+      case 20           ⇒ MapType(fieldType, fieldType)
       case i if i >= 32 ⇒ TypeDefinitionIndex(i - 32)
       case id           ⇒ throw ParseException(in, blockCounter, s"Invalid type ID: $id", null)
     }
@@ -228,7 +234,7 @@ object FileParser {
               offset = end
               totalFieldCount += 1
             } else {
-              // known field
+              // seen field
               val end = in.v64
               fields(ID).addChunk(new SimpleChunkInfo(offset, end, bpo, count))
 
@@ -293,22 +299,48 @@ object FileParser {
       @inline def processFieldData {
         // we have to add the file offset to all begins and ends we encounter
         val fileOffset = in.position
+        var dataEnd = fileOffset
+
+        // awaiting async read operations
+        val asyncReads = ArrayBuffer[Future[Try[Unit]]]();
 
         //process field data declarations in order of appearance and update offsets to absolute positions
         @inline def processField[T](p : StoragePool[_ <: SkillType, _ <: SkillType], index : Int) {
           val f = p.fields(index).asInstanceOf[FieldDeclaration[T]]
           f.t = eliminatePreliminaryTypesIn[T](f.t.asInstanceOf[FieldType[T]])
 
+          // make begin/end absolute
           f.addOffsetToLastChunk(fileOffset)
+          val last = f.lastChunk
 
-          // TODO move to Field implementations
-          if (f.isInstanceOf[KnownField[T]])
-            FieldParser.parseThisField(in, p, f.asInstanceOf[KnownField[T]])
-          else
-            in.jump(f.lastChunk.end)
+          val map = in.map(0L, last.begin, last.end)
+          asyncReads.append(Future(Try(try {
+            f.read(map)
+            // map was not consumed
+            if (!map.eof && !(f.isInstanceOf[LazyField[_]] || f.isInstanceOf[IgnoredField]))
+              throw PoolSizeMissmatchError(blockCounter, last.begin, last.end, f)
+          } catch {
+            case e : BufferUnderflowException ⇒
+              throw PoolSizeMissmatchError(blockCounter, last.begin, last.end, f)
+          }
+          )))
+          dataEnd = Math.max(dataEnd, last.end)
         }
         for ((p, fID) ← fieldDataQueue) {
           processField(p, fID)
+        }
+        in.jump(dataEnd)
+
+        // await async reads
+        for (f ← asyncReads) {
+          Await.result(f, Duration.Inf) match {
+            case Failure(e) ⇒
+              e.printStackTrace()
+              println("throw")
+              if (e.isInstanceOf[SkillException]) throw e
+              else throw ParseException(in, blockCounter, "unexpected exception while reading field data (see below)", e)
+            case _ ⇒
+          }
         }
       }
 
@@ -337,7 +369,6 @@ object FileParser {
 
     // finish state
     val r = new State(
-
       String,
       types.to,
       in.path,

@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 19.11.2014                               *
+ * \__ \ ' <| | | |__     generated: 27.01.2015                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.internal
@@ -13,11 +13,12 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
-import _root_.de.ust.skill.generator.genericBinding.api._
-import _root_.de.ust.skill.generator.genericBinding.internal.streams.FileOutputStream
-import _root_.de.ust.skill.generator.genericBinding.internal.streams.InStream
+import de.ust.skill.common.jvm.streams.FileInputStream
+import de.ust.skill.common.jvm.streams.FileOutputStream
 
-final class StringPool(in : InStream) extends StringAccess {
+import _root_.de.ust.skill.generator.genericBinding.api._
+
+final class StringPool(in : FileInputStream) extends StringAccess {
   import SerializationFunctions.v64
 
   /**
@@ -49,14 +50,16 @@ final class StringPool(in : InStream) extends StringAccess {
           if (index > stringPositions.size)
             throw InvalidPoolIndex(index, stringPositions.size, "string")
 
-          val off = stringPositions(index.toInt)
-          in.push(off._1)
-          var chars = in.bytes(off._2)
-          in.pop
+          this.synchronized {
+            val off = stringPositions(index.toInt)
+            in.push(off._1)
+            var chars = in.bytes(off._2)
+            in.pop
 
-          val result = new String(chars, "UTF-8")
-          idMap(index.toInt) = result
-          result
+            val result = new String(chars, "UTF-8")
+            idMap(index.toInt) = result
+            result
+          }
         }
         case s ⇒ s;
       }

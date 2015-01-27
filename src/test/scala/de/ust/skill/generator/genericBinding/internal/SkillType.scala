@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 19.11.2014                               *
+ * \__ \ ' <| | | |__     generated: 27.01.2015                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.internal
@@ -38,9 +38,8 @@ class SkillType private[genericBinding] (protected var skillID : Long) {
    *
    * @note if field is not a distributed field of this type, then anything may happen
    */
-  def set[@specialized T](field : FieldDeclaration[T], value : T) {
-    // TODO make skillID a global constant and add this case!
-    field.asInstanceOf[DistributedField[T]].set(this, value)
+  final def set[@specialized T](field : FieldDeclaration[T], value : T) {
+    field.setR(this, value)
   }
 
   /**
@@ -50,10 +49,7 @@ class SkillType private[genericBinding] (protected var skillID : Long) {
    *
    * @note if field is not a distributed field of this type, then anything may happen
    */
-  def get[@specialized T](field : FieldDeclaration[T]) : T = {
-    // TODO make skillID a global constant and add this case!
-    field.asInstanceOf[DistributedField[T]].get(this)
-  }
+  final def get[@specialized T](field : FieldDeclaration[T]) : T = field.getR(this)
 }
 
 object SkillType {

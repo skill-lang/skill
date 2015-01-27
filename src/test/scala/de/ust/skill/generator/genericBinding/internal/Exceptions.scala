@@ -1,11 +1,13 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 19.11.2014                               *
+ * \__ \ ' <| | | |__     generated: 27.01.2015                               *
  * |___/_|\_\_|_|____|    by: Timm Felden                                     *
 \*                                                                            */
 package de.ust.skill.generator.genericBinding.internal
 
-import _root_.de.ust.skill.generator.genericBinding.internal.streams.InStream
+import scala.language.existentials
+
+import de.ust.skill.common.jvm.streams.InStream
 
 /**
  * The top class for exceptions thrown by the SKilL API.
@@ -62,8 +64,8 @@ case class InvalidPoolIndex(index : Long, size : Long, pool : String)
  *
  * @author Timm Felden
  */
-case class PoolSizeMissmatchError(expected : Long, actual : Long, t : String)
-  extends SkillException(s"expected: $expected, was: $actual, field type: $t")
+case class PoolSizeMissmatchError(block : Int, begin : Long, end : Long, field : FieldDeclaration[_])
+  extends SkillException(s"Corrupted data chunk in block ${block + 1} between 0x${begin.toHexString} and 0x${end.toHexString} in Field ${field.owner.name}.${field.name} of type ${field.t.toString}")
   with ExpectableSkillException {}
 
 /**
