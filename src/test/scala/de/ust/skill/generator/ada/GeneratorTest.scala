@@ -20,7 +20,6 @@ class GeneratorTest extends FunSuite {
 
   test("aircraft")(check("aircraft.skill", "aircraft"))
   test("autofield")(check("autofield.skill", "autofield"))
-  test("constants")(check("constant.skill", "constants"))
   test("date")(check("date.skill", "date"))
   test("filter")(check("filter.skill", "filter"))
   test("graph_1")(check("graph1.skill", "graph_1"))
