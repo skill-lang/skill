@@ -35,6 +35,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.WrappedArray
 
+import java.nio.BufferUnderflowException
 import java.nio.MappedByteBuffer
 import java.util.Arrays
 
@@ -237,21 +238,32 @@ sealed class DistributedField[@specialized(Boolean, Byte, Char, Double, Float, I
       case p : BasePool[_]   ⇒ p.data
       case p : SubPool[_, _] ⇒ p.data
     }
-    lastChunk match {
-      case c : SimpleChunkInfo ⇒
-        val low = c.bpo.toInt
-        val high = (c.bpo + c.count).toInt
-        for (i ← low until high) {
-          data(d(i)) = t.readSingleField(in)
-        }
-      case bci : BulkChunkInfo ⇒
-        for (
-          bi ← owner.blockInfos;
-          i ← bi.bpo.toInt until (bi.bpo + bi.count).toInt
-        ) {
-          data(d(i)) = t.readSingleField(in)
-        }
+
+    val firstPosition = in.position
+    try {
+      lastChunk match {
+        case c : SimpleChunkInfo ⇒
+          val low = c.bpo.toInt
+          val high = (c.bpo + c.count).toInt
+          for (i ← low until high) {
+            data(d(i)) = t.readSingleField(in)
+          }
+        case bci : BulkChunkInfo ⇒
+          for (
+            bi ← owner.blockInfos;
+            i ← bi.bpo.toInt until (bi.bpo + bi.count).toInt
+          ) {
+            data(d(i)) = t.readSingleField(in)
+          }
+      }
+    } catch {
+      case e : BufferUnderflowException ⇒
+        val lastPosition = in.position
+        throw new PoolSizeMissmatchError(dataChunks.size - 1, lastChunk.begin, lastChunk.end, this)
     }
+    val lastPosition = in.position
+    if (lastPosition - firstPosition != lastChunk.end - lastChunk.begin)
+      throw new PoolSizeMissmatchError(dataChunks.size - 1, lastChunk.begin, lastChunk.end, this)
   }
 
   override def getR(ref : SkillType) : T = {
@@ -296,23 +308,33 @@ final class LazyField[T : Manifest](
 
     for (chunk ← dataChunks) {
       val in = parts.head
-      parts.remove(0)
-      chunk match {
-        case c : SimpleChunkInfo ⇒
-          val low = c.bpo.toInt
-          val high = (c.bpo + c.count).toInt
-          for (i ← low until high) {
-            data(d(i)) = t.readSingleField(in)
-          }
-        case bci : BulkChunkInfo ⇒
-          var count = bci.count;
-          for (
-            bi ← owner.blockInfos; if ({ count -= bi.count; count >= 0 });
-            i ← bi.bpo.toInt until (bi.bpo + bi.count).toInt
-          ) {
-            data(d(i)) = t.readSingleField(in)
-          }
+      val firstPosition = in.position
+      try {
+        parts.remove(0)
+        chunk match {
+          case c : SimpleChunkInfo ⇒
+            val low = c.bpo.toInt
+            val high = (c.bpo + c.count).toInt
+            for (i ← low until high) {
+              data(d(i)) = t.readSingleField(in)
+            }
+          case bci : BulkChunkInfo ⇒
+            var count = bci.count;
+            for (
+              bi ← owner.blockInfos; if ({ count -= bi.count; count >= 0 });
+              i ← bi.bpo.toInt until (bi.bpo + bi.count).toInt
+            ) {
+              data(d(i)) = t.readSingleField(in)
+            }
+        }
+      } catch {
+        case e : BufferUnderflowException ⇒
+          val lastPosition = in.position
+          throw new PoolSizeMissmatchError(dataChunks.size - parts.size - 1, chunk.begin, chunk.end, this)
       }
+      val lastPosition = in.position
+      if (lastPosition - firstPosition != chunk.end - chunk.begin)
+        throw new PoolSizeMissmatchError(dataChunks.size - parts.size - 1, chunk.begin, chunk.end, this)
     }
   }
 
@@ -348,7 +370,6 @@ final class LazyField[T : Manifest](
 
     super.iterator
   }
-
 }
 """)
 

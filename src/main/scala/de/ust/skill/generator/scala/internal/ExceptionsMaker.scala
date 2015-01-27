@@ -76,7 +76,7 @@ case class InvalidPoolIndex(index : Long, size : Long, pool : String)
  * @author Timm Felden
  */
 case class PoolSizeMissmatchError(block : Int, begin : Long, end : Long, field : FieldDeclaration[_])
-  extends SkillException(s"Corrupted data chunk in block ${block + 1} between 0x${begin.toHexString} and 0x${end.toHexString} in Field ${field.owner.name}.${field.name} of type ${field.t.toString}")
+  extends SkillException(s"Corrupted data chunk in block ${block + 1} between 0x${begin.toHexString} and 0x${end.toHexString} in Field ${field.owner.name}.${field.name} of type: ${field.t.toString}")
   with ExpectableSkillException {}
 
 /**
