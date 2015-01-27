@@ -184,7 +184,7 @@ final class KnownField_SkillID(owner : StoragePool[_ <: SkillType, _ <: SkillTyp
 final class KnownField_${t.getName.capital}_${f.getName.camel}(${
         if (f.isAuto()) ""
         else """
-      index,"""
+  index : Long,"""
       }
   owner : StoragePool[_ <: SkillType, _ <: SkillType])
     extends FieldDeclaration[${mapType(f.getType)}](${mapToFieldType(f.getType)},
