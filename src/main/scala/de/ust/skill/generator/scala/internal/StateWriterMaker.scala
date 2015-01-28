@@ -144,7 +144,7 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
     val dataChunk = out.map(baseOffset, begin, end)
     // @note use semaphore instead of data.par, because map is not thread-safe
     ExecutionContext.Implicits.global.execute(new Runnable {
-      override def run = {
+      override def run = try {
         p match {${
       (for (d ← IR) yield {
         val fields = d.getFields.filterNot(_.isIgnored)
