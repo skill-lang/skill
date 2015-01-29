@@ -57,6 +57,7 @@ Opitions:
     // process options
     if (2 > args.length) {
       printHelp(known.values)
+      return
     }
     val skillPath : String = args(args.length - 2)
     var outPath : String = args(args.length - 1)
