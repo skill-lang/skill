@@ -190,7 +190,7 @@ ${
                 output += s"""\r\n                  declare
                      use ${mapType(t, d, f).stripSuffix(".Vector")};
 
-                     Vector : ${mapType(t, d, f)} := Object.${f.getSkillName};
+                     Vector : ${mapType(t, d, f)} renames Object.${f.getSkillName};
 
                      procedure Iterate (Position : Cursor) is
                      begin
@@ -207,7 +207,7 @@ ${
                 output += s"""\r\n                  declare
                      use ${mapType(t, d, f).stripSuffix(".List")};
 
-                     List : ${mapType(t, d, f)} := Object.${f.getSkillName};
+                     List : ${mapType(t, d, f)} renames Object.${f.getSkillName};
 
                      procedure Iterate (Position : Cursor) is
                      begin
@@ -224,7 +224,7 @@ ${
                 output += s"""\r\n                  declare
                      use ${mapType(t, d, f).stripSuffix(".Set")};
 
-                     Set : ${mapType(t, d, f)} := Object.${f.getSkillName};
+                     Set : ${mapType(t, d, f)} renames Object.${f.getSkillName};
 
                      procedure Iterate (Position : Cursor) is
                      begin
