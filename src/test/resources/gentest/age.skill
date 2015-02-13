@@ -8,8 +8,8 @@
 Age {
 
  /**
-  * People have a small positive age , but maybe they
-  * will start to live longer in the future , who knows
+  * People have a small positive age, but maybe they
+  * will start to live longer in the future, who knows
   */
   @min (0)
   v64 age;
