@@ -86,12 +86,12 @@ class Main extends FakeMain
    */
   override protected def makeConstructorArguments(t : UserType) = (
     for (f ← t.getAllFields if !(f.isConstant || f.isIgnored || f.isInstanceOf[View]))
-      yield s"${escaped(f.getName.camel)} : ${mapType(f.getType())}"
+      yield s"${mapType(f.getType())} ${name(f)}"
   ).mkString(", ")
   override protected def appendConstructorArguments(t : UserType) = {
     val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored || f.isInstanceOf[View] }
     if (r.isEmpty) ""
-    else r.map({ f ⇒ s"${escaped(f.getName.camel)} : ${mapType(f.getType())}" }).mkString(", ", ", ", "")
+    else r.map({ f ⇒ s"${mapType(f.getType())} ${name(f)}" }).mkString(", ", ", ", "")
   }
 
   /**
@@ -163,6 +163,8 @@ Opitions (Java):
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
+   *
+   * TODO escape Java instead of Scala keywords!
    */
   protected def escaped(target : String) : String = target match {
     //keywords get a suffix "_", because that way at least auto-completion will work as expected

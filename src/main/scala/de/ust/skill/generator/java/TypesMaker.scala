@@ -20,7 +20,7 @@ trait TypesMaker extends GeneralOutputMaker {
       val out = open(name(t)+".java")
 
     //package
-    out.write(s"""package ${this.packageName}
+    out.write(s"""package ${this.packageName};
 
 import de.ust.skill.common.java.internal.FieldDeclaration;
 import de.ust.skill.common.java.internal.NamedType;
@@ -67,7 +67,7 @@ ${
     	out.write(s"""
     public ${name(t)}(long skillID${appendConstructorArguments(t)}) {
         super(skillID);
-        ${relevantFields.map{f ⇒ s"_${f.getName()} = ${escaped(f.getName.camel)}"}.mkString("\n    ")}
+        ${relevantFields.map{f ⇒ s"this.${name(f)} = ${name(f)};"}.mkString("\n    ")}
     }
 """)
 	}
@@ -121,16 +121,16 @@ ${
 
       if(f.isConstant)
         out.write(s"""$makeField
-  ${comment(f)}final public get${f.getName.capital}() {
+  ${comment(f)}final public ${mapType(f.getType())} get${f.getName.capital}() {
         $makeGetterImplementation
     }
 """)
       else
         out.write(s"""$makeField
-  ${comment(f)}final public get${f.getName.capital}() {
+  ${comment(f)}final public ${mapType(f.getType())} get${f.getName.capital}() {
         $makeGetterImplementation
     }
-  ${comment(f)}final public get${f.getName.capital}(${mapType(f.getType())} ${name(f)}) {
+  ${comment(f)}final public void set${f.getName.capital}(${mapType(f.getType())} ${name(f)}) {
         $makeSetterImplementation
     }
 """)
