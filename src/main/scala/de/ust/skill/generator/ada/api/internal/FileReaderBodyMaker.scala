@@ -366,13 +366,12 @@ ${
       Type_Declaration.Storage_Pool.Iterate (Iterate'Access);
 
 ${
-      var output = "";
       /**
        * Reads the field data of all fields.
        */
-      for (d ← IR) {
-        output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
-          s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
+      (for (d ← IR; f ← d.getFields if !f.isAuto() && !f.isIgnored())
+        yield s"""
+      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
          for I in Item.Start_Index .. Item.End_Index loop
             declare
                Object : ${d.getName.ada}_Type_Access := ${d.getName.ada}_Type_Access (Storage_Pool (I));
@@ -380,10 +379,8 @@ ${
             end;
          end loop;
          Skip_Bytes := False;
-      end if;\r\n"""
-        }).mkString("")
-      }
-      output.stripSuffix("\r\n")
+      end if;
+""").mkString("")
     }
 
       if True = Skip_Bytes then

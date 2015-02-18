@@ -160,14 +160,12 @@ class Main extends FakeMain
       }
 
       case t : ConstantLengthArrayType ⇒
-        s"""begin
-               declare
-                  Skill_Parse_Constant_Array_Length_Error : exception;
-               begin
-                  if ${t.getLength} /= Field_Declaration.Constant_Array_Length then
-                     raise Skill_Parse_Constant_Array_Length_Error;
-                  end if;
-               end;
+        s"""
+               Skill_Parse_Constant_Array_Length_Error : exception;
+            begin
+               if ${t.getLength} /= Field_Declaration.Constant_Array_Length then
+                  raise Skill_Parse_Constant_Array_Length_Error;
+               end if;
                for I in 1 .. ${t.getLength} loop
                   Object.${f.getSkillName} (I) := ${inner(t.getBaseType, d, f)};
                end loop;"""
@@ -185,9 +183,13 @@ class Main extends FakeMain
                end loop;"""
 
       case t : SetType ⇒
-        s"""begin
+        s"""
+               Inserted : Boolean;
+               Position : ${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Set.Cursor;
+               pragma Unreferenced (Position);
+            begin
                for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
-                  Object.${f.getSkillName}.Insert (${inner(t.getBaseType, d, f)});
+                  ${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Set.Insert (Object.${f.getSkillName}, ${inner(t.getBaseType, d, f)}, Position, Inserted);
                end loop;"""
 
       case t : MapType ⇒
@@ -278,7 +280,7 @@ class Main extends FakeMain
       case t : VariableLengthArrayType ⇒
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".Vector")};
 
-               Vector : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
+               Vector : ${mapType(f.getType, d, f)} renames Object.${f.getSkillName};
 
                procedure Iterate (Position : Cursor) is
                begin
@@ -292,7 +294,7 @@ class Main extends FakeMain
       case t : ListType ⇒
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".List")};
 
-               List : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
+               List : ${mapType(f.getType, d, f)} renames Object.${f.getSkillName};
 
                procedure Iterate (Position : Cursor) is
                begin
@@ -306,7 +308,7 @@ class Main extends FakeMain
       case t : SetType ⇒
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".Set")};
 
-               Set : ${mapType(f.getType, d, f)} := Object.${f.getSkillName};
+               Set : ${mapType(f.getType, d, f)} renames Object.${f.getSkillName};
 
                procedure Iterate (Position : Cursor) is
                begin
