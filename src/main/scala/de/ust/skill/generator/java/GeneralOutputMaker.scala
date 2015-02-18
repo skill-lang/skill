@@ -84,7 +84,7 @@ trait GeneralOutputMaker extends Generator {
   /**
    * creates argument list of a constructor call, including a trailing comma for insertion into an argument list
    */
-  protected def appendConstructorArguments(t : UserType) : String
+  protected def appendConstructorArguments(t : UserType, prependTypes : Boolean = true) : String
 
   /**
    * turns a declaration and a field into a string writing that field into an outStream

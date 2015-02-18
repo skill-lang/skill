@@ -88,10 +88,11 @@ class Main extends FakeMain
     for (f ← t.getAllFields if !(f.isConstant || f.isIgnored || f.isInstanceOf[View]))
       yield s"${mapType(f.getType())} ${name(f)}"
   ).mkString(", ")
-  override protected def appendConstructorArguments(t : UserType) = {
+  override protected def appendConstructorArguments(t : UserType, prependTypes : Boolean) = {
     val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored || f.isInstanceOf[View] }
     if (r.isEmpty) ""
-    else r.map({ f ⇒ s"${mapType(f.getType())} ${name(f)}" }).mkString(", ", ", ", "")
+    else if(prependTypes) r.map({ f ⇒ s", ${mapType(f.getType())} ${name(f)}" }).mkString("")
+    else  r.map({ f ⇒ s", ${name(f)}" }).mkString("")
   }
 
   /**
