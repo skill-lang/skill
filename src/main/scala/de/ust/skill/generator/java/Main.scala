@@ -52,20 +52,20 @@ class Main extends FakeMain
   /**
    * Translates types into scala type names.
    */
-  override protected def mapType(t : Type) : String = t match {
+  override protected def mapType(t : Type, boxed : Boolean) : String = t match {
     case t : GroundType ⇒ t.getName.lower match {
-      case "annotation" ⇒ "SkillType"
+      case "annotation" ⇒ "SkillObject"
 
-      case "bool"       ⇒ "boolean"
+      case "bool"       ⇒ if(boxed) "Boolean" else "boolean"
 
-      case "i8"         ⇒ "byte"
-      case "i16"        ⇒ "short"
-      case "i32"        ⇒ "int"
-      case "i64"        ⇒ "long"
-      case "v64"        ⇒ "long"
+      case "i8"         ⇒ if(boxed) "Byte" else "byte"
+      case "i16"        ⇒ if(boxed) "Short" else "short"
+      case "i32"        ⇒ if(boxed) "Integer" else "int"
+      case "i64"        ⇒ if(boxed) "Long" else "long"
+      case "v64"        ⇒ if(boxed) "Long" else "long"
 
-      case "f32"        ⇒ "float"
-      case "f64"        ⇒ "double"
+      case "f32"        ⇒ if(boxed) "Float" else "float"
+      case "f64"        ⇒ if(boxed) "Double" else "double"
 
       case "string"     ⇒ "java.lang.String"
     }
@@ -74,9 +74,9 @@ class Main extends FakeMain
     case t : VariableLengthArrayType ⇒ s"$VarArrayTypeName[${mapType(t.getBaseType())}]"
     case t : ListType                ⇒ s"$ListTypeName[${mapType(t.getBaseType())}]"
     case t : SetType                 ⇒ s"$SetTypeName[${mapType(t.getBaseType())}]"
-    case t : MapType                 ⇒ t.getBaseTypes().map(mapType).reduceRight((k, v) ⇒ s"$MapTypeName[$k, $v]")
+    case t : MapType                 ⇒ t.getBaseTypes().map(mapType(_, boxed)).reduceRight((k, v) ⇒ s"$MapTypeName[$k, $v]")
 
-    case t : Declaration             ⇒ "_root_."+packagePrefix + name(t)
+    case t : Declaration             ⇒ packagePrefix + name(t)
 
     case _                           ⇒ throw new IllegalStateException(s"Unknown type $t")
   }
