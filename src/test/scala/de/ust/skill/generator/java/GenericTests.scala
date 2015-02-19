@@ -56,7 +56,7 @@ import de.ust.skill.common.java.internal.ParseException;
  * Tests the file reading capabilities.
  */
 @SuppressWarnings("static-method")
-class GenericReadReadTest {
+public class Generic${name}ReadTest {
     public SkillFile read(String s) throws Exception {
         return SkillFile.open("../../" + s);
     }
@@ -85,7 +85,7 @@ class GenericReadReadTest {
 
     // generate read tests
     locally {
-      val out = newTestFile(name, "Read")
+      val out = newTestFile(name, name.capitalize)
       for (f ← targets) {
         if (f.getPath.contains("accept")) out.write(s"""
     @Test
