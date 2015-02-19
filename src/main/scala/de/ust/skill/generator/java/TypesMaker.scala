@@ -33,17 +33,14 @@ import de.ust.skill.common.java.internal.StoragePool;
       val fields = t.getAllFields.filter(!_.isConstant)
       val relevantFields = fields.filter(!_.isIgnored)
 
-      //class declaration
       out.write(s"""
 ${
         comment(t)
 }public class ${name(t)} extends ${
         if (null != t.getSuperType()) { name(t.getSuperType) }
         else { "SkillObject" }
-      } {""")
+      } {
 
-      // constructors
-      out.write(s"""
     /**
      * Create a new unmanaged ${t.getName.capital()}. Allocation of objects without using the
      * access factory method is discouraged.
@@ -60,11 +57,14 @@ ${
     public ${name(t)}(long skillID) {
         super(skillID);
     }
-        """)
+""")
 
 	if(!relevantFields.isEmpty){
     // TODO subtyping!
     	out.write(s"""
+    /**
+     * Used for internal construction, full allocation.
+     */
     public ${name(t)}(long skillID${appendConstructorArguments(t)}) {
         super(skillID);
         ${relevantFields.map{f ⇒ s"this.${name(f)} = ${name(f)};"}.mkString("\n    ")}
@@ -81,7 +81,8 @@ ${
 		  ""
 		else
 	      s"""
-    protected ${mapType(f.getType())} ${name(f)} = ${defaultValue(f)};"""
+    protected ${mapType(f.getType())} ${name(f)} = ${defaultValue(f)};
+"""
 	  }
 
       def makeGetterImplementation:String = {
@@ -130,13 +131,39 @@ ${
   ${comment(f)}final public ${mapType(f.getType())} get${f.getName.capital}() {
         $makeGetterImplementation
     }
+
   ${comment(f)}final public void set${f.getName.capital}(${mapType(f.getType())} ${name(f)}) {
         $makeSetterImplementation
     }
 """)
     }
-  
-  // TODO generic get/set
+
+    // generic get
+    locally{
+      val fields = t.getFields.filter(!_.isIgnored)
+      if(!fields.isEmpty)
+        out.write(s"""
+    /**
+     * unchecked conversions are required, because the Java type system known
+     * nothing of our invariants
+     * 
+     * @note to self: Boxing bei primitiven beachten!
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T get(FieldDeclaration<T, ?> field) {
+        switch (field.name()) {${
+          (for(f <- fields)
+            yield s"""
+        case "${f.getSkillName}":
+            return (T) (${mapType(f.getType, true)}) ${name(f)};""").mkString
+        }
+        default:
+            return super.get(field);
+        }
+    }
+""")
+    }
 
       // pretty string
     out.write(s"""

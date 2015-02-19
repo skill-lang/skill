@@ -67,7 +67,7 @@ final public class FileParser extends de.ust.skill.common.java.internal.FilePars
       (for (t ← IR)
         yield s"""
         case "${t.getSkillName}":
-            p =  (StoragePool<T, B>) new ${name(t)}Access(types.size()${
+            p = (StoragePool<T, B>) new ${name(t)}Access(types.size()${
         if (null == t.getSuperType) ""
         else s""", (${name(t.getSuperType)}Access)(poolByName.get("${t.getSuperType.getSkillName}"))"""
       });

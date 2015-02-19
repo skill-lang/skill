@@ -16,6 +16,7 @@ trait AccessMaker extends GeneralOutputMaker {
     for (t ← IR) {
       val isBasePool = (null == t.getSuperType)
       val nameT = name(t)
+      val typeT = mapType(t)
 
       val out = open(s"internal/${nameT}Access.java")
       //package & imports
@@ -31,8 +32,6 @@ import de.ust.skill.common.java.internal.FieldType;
 import de.ust.skill.common.java.internal.StoragePool;
 import de.ust.skill.common.java.internal.TypeMissmatchError;
 import de.ust.skill.common.java.restrictions.FieldRestriction;
-
-import ${packagePrefix}*;
 """)
 
       //class declaration
@@ -40,16 +39,17 @@ import ${packagePrefix}*;
 ${
         comment(t)
       }public class ${nameT}Access extends ${
-        if (isBasePool) s"BasePool<${nameT}>"
-        else s"SubPool<${nameT}, ${name(t.getBaseType)}>"
+        if (isBasePool) s"BasePool<${typeT}>"
+        else s"SubPool<${typeT}, ${mapType(t.getBaseType)}>"
       } {
 ${
         if (isBasePool) s"""
     // TODO optimize this method away by replacing empty arrays by null pointers
     @Override
-    protected $nameT[] emptyArray() {
-        return new $nameT[0];
-    }"""
+    protected $typeT[] emptyArray() {
+        return new $typeT[0];
+    }
+"""
         else ""
       }
     /**
@@ -65,7 +65,7 @@ ${
         if (null != data[i])
             return false;
 
-        $nameT r = new $packagePrefix$nameT(skillID);
+        $typeT r = new $typeT(skillID);
         data[i] = r;
         staticData.add(r);
         return true;
@@ -74,7 +74,7 @@ ${
     @SuppressWarnings("unchecked")
     @Override
     public void addKnownField(String name) {
-        final FieldDeclaration<?, $nameT> f;
+        final FieldDeclaration<?, $typeT> f;
         switch (name) {${
           (for(f <- t.getFields)
             yield s"""
@@ -92,11 +92,40 @@ ${
         fields.add(f);
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <R> FieldDeclaration<R, $typeT> addField(int ID, FieldType<R> type, String name,
+            HashSet<FieldRestriction<?>> restrictions) {
+        final FieldDeclaration<R, $typeT> f;
+        switch (name) {${
+          (for(f <- t.getFields)
+            yield s"""
+        case "${f.getSkillName}":
+            f = (FieldDeclaration<R, $typeT>) new KnownField_${nameT}_${name(f)}(ID, this);
+            break;
+"""
+            ).mkString
+        }
+        default:
+            return super.addField(ID, type, name, restrictions);
+        }
+
+        // override preliminary type
+        if (!type.equals(f.type()))
+            throw new TypeMissmatchError(type, f.type().toString(), f.name(), name);
+        // TODO add if we reintroduce named preliminary stypes f.t = t
+
+        for (FieldRestriction<?> r : restrictions)
+            f.addRestriction(r);
+        fields.add(f);
+        return f;
+    }
+
     /**
      * @return a new $nameT instance with default field values
      */
-    public $nameT make() {
-        $nameT rval = new $nameT();
+    public $typeT make() {
+        $typeT rval = new $typeT();
         add(rval);
         return rval;
     }
@@ -104,14 +133,14 @@ ${
     /**
      * @return a new age instance with the argument field values
      */
-    public $nameT make(${makeConstructorArguments(t)}) {
-        $nameT rval = new $nameT(-1${appendConstructorArguments(t, false)});
+    public $typeT make(${makeConstructorArguments(t)}) {
+        $typeT rval = new $typeT(-1${appendConstructorArguments(t, false)});
         add(rval);
         return rval;
     }
 
     public ${nameT}Builder build() {
-        return new ${nameT}Builder(this, new $nameT());
+        return new ${nameT}Builder(this, new $typeT());
     }
 
     /**
@@ -119,9 +148,9 @@ ${
      * 
      * @author Timm Felden
      */
-    public static final class ${nameT}Builder extends Builder<$nameT> {
+    public static final class ${nameT}Builder extends Builder<$typeT> {
 
-        protected ${nameT}Builder(StoragePool<$nameT, ? super $nameT> pool, $nameT instance) {
+        protected ${nameT}Builder(StoragePool<$typeT, ? super $typeT> pool, $typeT instance) {
             super(pool, instance);
         }${
         (for (f ← t.getAllFields if !f.isIgnored() && !f.isConstant())

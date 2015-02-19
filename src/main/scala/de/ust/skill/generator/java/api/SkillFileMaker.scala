@@ -71,7 +71,7 @@ public interface SkillFile extends de.ust.skill.common.java.api.SkillFile {
       (for (t ← IR) yield s"""
 
     /**
-     * @return an access for all ${name(t)} in this state
+     * @return an access for all ${name(t)}s in this state
      */
     public ${packagePrefix}internal.${name(t)}Access ${name(t)}s();""").mkString("")
     }

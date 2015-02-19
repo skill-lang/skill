@@ -38,8 +38,9 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
 import java.util.Iterator;
 
 import de.ust.skill.common.java.internal.FieldDeclaration;
-import de.ust.skill.common.java.internal.fieldDeclarations.KnownLongField;
-import de.ust.skill.common.java.internal.fieldTypes.V64;
+import de.ust.skill.common.java.internal.StringPool;
+import de.ust.skill.common.java.internal.fieldDeclarations.*;
+import de.ust.skill.common.java.internal.fieldTypes.*;
 import de.ust.skill.common.java.internal.parts.Chunk;
 import de.ust.skill.common.java.internal.parts.SimpleChunk;
 import de.ust.skill.common.jvm.streams.MappedInStream;
@@ -54,10 +55,10 @@ final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapTy
         f.getType match {
           case ft : GroundType ⇒ ft.getSkillName match {
             case "i64" | "v64" ⇒ s"""KnownLongField<${mapType(t)}>"""
-            case ft             ⇒ "???missing specialization for type "+ft
+            case "string"      ⇒ s"""KnownField<java.lang.String, ${mapType(t)}>"""
+            case ft            ⇒ "???missing specialization for type "+ft
           }
-          case _ ⇒
-            s"""KnownField<${mapType(f.getType)}, ${mapType(t)}>"""
+          case _ ⇒ s"""KnownField<${mapType(f.getType)}, ${mapType(t)}>"""
         }
       }${
         // mark ignored fields as ignored; read function is inherited
@@ -70,7 +71,7 @@ final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapTy
 
     public $nameF(${
         if (f.isAuto()) ""
-        else "long index,"
+        else "long index, "
       }${name(t)}Access owner) {
         super(${mapToFieldType(f.getType)}, "${f.getSkillName}", ${
         if (f.isAuto()) "0"
@@ -91,7 +92,10 @@ final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapTy
 ${
         // preparation code
         f.getType match {
-          case t : UserType ⇒ s"final ${name(t)}Access target = (${name(t)}Access)type;"
+          case t : GroundType if "string".equals(t.getSkillName) ⇒ s"""
+        final StringPool sp = (StringPool)owner.owner().Strings();"""
+          case t : UserType ⇒ s"""
+        final ${name(t)}Access target = (${name(t)}Access)type;"""
           case _            ⇒ ""
         }
       }
@@ -99,7 +103,10 @@ ${
             ${
         // read next element
         f.getType match {
-        case t : GroundType ⇒ s"""is.next().set${f.getName.capital}(in.${t.getSkillName}());"""
+          case t : GroundType ⇒ t.getSkillName match{
+            case "string" ⇒ s"""is.next().set${f.getName.capital}(sp.get(in.v64()));"""
+            case _ ⇒ s"""is.next().set${f.getName.capital}(in.${t.getSkillName}());"""
+          }
 
           case t : UserType   ⇒ s"""is.next().set${f.getName.capital}(target.getByID(in.v64()));"""
           case _              ⇒ "???"
@@ -114,7 +121,8 @@ ${
     }
 
     @Override
-    public void setR(${mapType(t)} ref, ${mapType(f.getType, true)} value) {${
+    public void setR(${mapType(t)} ref, ${mapType(f.getType, true)} value) {
+        ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
         else s"ref.set${f.getName.capital}(value);"
       }
@@ -126,7 +134,8 @@ ${
     }
 
     @Override
-    public void set(${mapType(t)} ref, ${mapType(f.getType)} value) {${
+    public void set(${mapType(t)} ref, ${mapType(f.getType)} value) {
+        ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
         else s"ref.set${f.getName.capital}(value);"
       }
@@ -149,7 +158,7 @@ ${
       case "v64"        ⇒ "V64.get()"
       case "f32"        ⇒ "F32.get()"
       case "f64"        ⇒ "F64.get()"
-      case "string"     ⇒ "StringType(null)"
+      case "string"     ⇒ "new StringType((StringPool)owner.owner().Strings())"
 
       case s            ⇒ s"""TypeDefinitionName[${mapType(t)}]("$s")"""
     }

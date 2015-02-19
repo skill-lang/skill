@@ -177,8 +177,7 @@ ${
       var i = -1
       (for (t ← IR)
         yield s"""
-        ${name(t)}s = (${name(t)}Access) poolByName.get("${t.getSkillName}");
-"""
+        ${name(t)}s = (${name(t)}Access) poolByName.get("${t.getSkillName}");"""
       ).mkString("")
     }
 
