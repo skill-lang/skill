@@ -38,27 +38,28 @@ class GenericTests extends common.GenericTests {
   }
 
   def newTestFile(packagePath : String, name : String) = {
-    val f = new File(s"testsuites/java/src/test/java/$packagePath/$name.generated.java")
+    val f = new File(s"testsuites/java/src/test/java/$packagePath/Generic${name}ReadTest.java")
     f.getParentFile.mkdirs
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
 
     rval.write(s"""
-package de.ust.skill.generator.java
+package $packagePath;
 
-import org.junit.Assert
+import org.junit.Assert;
+import org.junit.Test;
 
-import $packagePath.api.SkillFile
-import $packagePath.internal.ParseException
-import $packagePath.internal.PoolSizeMissmatchError
-import $packagePath.internal.TypeMissmatchError
-import common.CommonTest
+import $packagePath.api.SkillFile;
+import de.ust.skill.common.java.internal.ParseException;
 
 /**
  * Tests the file reading capabilities.
  */
-class Generic${name}ReadTest extends CommonTest {
-  @inline def read(s: String) = SkillFile.open("../../"+s)
+@SuppressWarnings("static-method")
+class GenericReadReadTest {
+    public SkillFile read(String s) throws Exception {
+        return SkillFile.open("../../" + s);
+    }
 """)
     rval
   }
@@ -87,10 +88,16 @@ class Generic${name}ReadTest extends CommonTest {
       val out = newTestFile(name, "Read")
       for (f ← targets) {
         if (f.getPath.contains("accept")) out.write(s"""
-  test("$name - read (accept): ${f.getName}") { Assert.assertNotNull(read("${f.getPath}")) }
+    @Test
+    public void test_${name}_read_accept_${f.getName.replaceAll("\\W", "_")}() throws Exception {
+        Assert.assertNotNull(read("${f.getPath}"));
+    }
 """)
         else out.write(s"""
-  test("$name - read (reject): ${f.getName}") { intercept[ParseException] { Assert.assertNotNull(read("${f.getPath}")) } }
+    @Test(expected = ParseException.class)
+    public void test_${name}_read_reject_${f.getName.replaceAll("\\W", "_")}() throws Exception {
+        Assert.assertNotNull(read("${f.getPath}"));
+    }
 """)
       }
       closeTestFile(out)
