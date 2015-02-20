@@ -47,7 +47,7 @@ class Main extends FakeMain
     with DependenciesMaker {
 
   override def comment(d : Declaration) = d.getComment.format("/**\n", " * ", 120, " */\n")
-  override def comment(f : Field) = f.getComment.format("  /**\n", "     * ", 120, "     */\n    ")
+  override def comment(f : Field) = f.getComment.format("/**\n", "     * ", 120, "     */\n    ")
 
   /**
    * Translates types into scala type names.

@@ -77,7 +77,7 @@ ${
 	///////////////////////
 	for(f <- t.getFields if !f.isInstanceOf[View]){
       def makeField:String = {
-		if(f.isIgnored || f.isConstant)
+		if(f.isIgnored)
 		  ""
 		else
 	      s"""
@@ -88,8 +88,6 @@ ${
       def makeGetterImplementation:String = {
         if(f.isIgnored)
           s"""throw new IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
-        else if(f.isConstant)
-          s"return ${f.constantValue().toString}.to${mapType(f.getType)};"
         else
           s"return ${name(f)};"
       }
@@ -121,18 +119,24 @@ ${
       }
 
       if(f.isConstant)
-        out.write(s"""$makeField
-  ${comment(f)}final public ${mapType(f.getType())} get${f.getName.capital}() {
-        $makeGetterImplementation
+        out.write(s"""
+    ${comment(f)}static public ${mapType(f.getType())} get${f.getName.capital}() {
+          ${
+            f.getType.getSkillName match {
+              case "i64" | "v64" ⇒ s"return ${f.constantValue().toString}L;"
+              case "f32"         ⇒ s"return ${f.constantValue().toString}f;"
+              case _             ⇒ s"return ${f.constantValue().toString};"
+            }
+          }
     }
 """)
       else
         out.write(s"""$makeField
-  ${comment(f)}final public ${mapType(f.getType())} get${f.getName.capital}() {
+    ${comment(f)}final public ${mapType(f.getType())} get${f.getName.capital}() {
         $makeGetterImplementation
     }
 
-  ${comment(f)}final public void set${f.getName.capital}(${mapType(f.getType())} ${name(f)}) {
+    ${comment(f)}final public void set${f.getName.capital}(${mapType(f.getType())} ${name(f)}) {
         $makeSetterImplementation
     }
 """)
@@ -156,7 +160,10 @@ ${
           (for(f <- fields)
             yield s"""
         case "${f.getSkillName}":
-            return (T) (${mapType(f.getType, true)}) ${name(f)};""").mkString
+            return (T) (${mapType(f.getType, true)}) ${
+              if(f.isConstant()) "get" + f.getName.capital + "()"
+              else name(f)
+              };""").mkString
         }
         default:
             return super.get(field);

@@ -76,14 +76,14 @@ ${
     public void addKnownField(String name, de.ust.skill.common.java.internal.fieldTypes.StringType string, de.ust.skill.common.java.internal.fieldTypes.Annotation annotation) {
         final FieldDeclaration<?, $typeT> f;
         switch (name) {${
-          (for(f <- t.getFields)
-            yield s"""
+        (for (f ← t.getFields)
+          yield s"""
         case "${f.getSkillName}":
             f = new KnownField_${nameT}_${name(f)}(fields.size(), this);
             break;
 """
-            ).mkString
-        }
+        ).mkString
+      }
         default:
             super.addKnownField(name, string, annotation);
             return;
@@ -98,14 +98,14 @@ ${
             HashSet<FieldRestriction<?>> restrictions) {
         final FieldDeclaration<R, $typeT> f;
         switch (name) {${
-          (for(f <- t.getFields)
-            yield s"""
+        (for (f ← t.getFields)
+          yield s"""
         case "${f.getSkillName}":
             f = (FieldDeclaration<R, $typeT>) new KnownField_${nameT}_${name(f)}(ID, this);
             break;
 """
-            ).mkString
-        }
+        ).mkString
+      }
         default:
             return super.addField(ID, type, name, restrictions);
         }
@@ -129,7 +129,9 @@ ${
         add(rval);
         return rval;
     }
-
+${
+        if (t.getAllFields.filterNot { f ⇒ f.isConstant() || f.isIgnored() }.isEmpty) ""
+        else s"""
     /**
      * @return a new age instance with the argument field values
      */
@@ -138,7 +140,8 @@ ${
         add(rval);
         return rval;
     }
-
+"""
+      }
     public ${nameT}Builder build() {
         return new ${nameT}Builder(this, new $typeT());
     }

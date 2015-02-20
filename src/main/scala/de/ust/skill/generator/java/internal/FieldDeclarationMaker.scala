@@ -53,7 +53,12 @@ import de.ust.skill.common.jvm.streams.MappedInStream;
 final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapType(t)}> implements ${
         f.getType match {
           case ft : GroundType ⇒ ft.getSkillName match {
+            case "i8"                    ⇒ s"""KnownByteField<${mapType(t)}>"""
+            case "i16"                   ⇒ s"""KnownShortField<${mapType(t)}>"""
+            case "i32"                   ⇒ s"""KnownIntField<${mapType(t)}>"""
             case "i64" | "v64"           ⇒ s"""KnownLongField<${mapType(t)}>"""
+            case "f32"                   ⇒ s"""KnownFloatField<${mapType(t)}>"""
+            case "f64"                   ⇒ s"""KnownDoubleField<${mapType(t)}>"""
             case "annotation" | "string" ⇒ s"""KnownField<${mapType(f.getType)}, ${mapType(t)}>"""
             case ft                      ⇒ "???missing specialization for type "+ft
           }
@@ -80,7 +85,12 @@ final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapTy
     }
 
     @Override
-    public void read(MappedInStream in) {
+    public void read(MappedInStream in) {${
+        if (f.isConstant())
+          """
+        // this field is constant"""
+        else
+          s"""
         final Iterator<$nameT> is;
         Chunk last = dataChunks.getLast();
         if (last instanceof SimpleChunk) {
@@ -89,35 +99,39 @@ final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapTy
         } else
             is = owner.iterator();
 ${
-        // preparation code
-        f.getType match {
-          case t : GroundType if "string".equals(t.getSkillName) ⇒ s"""
+            // preparation code
+            f.getType match {
+              case t : GroundType if "string".equals(t.getSkillName) ⇒ s"""
         final StringPool sp = (StringPool)owner.owner().Strings();"""
-          case t : UserType ⇒ s"""
+              case t : UserType ⇒ s"""
         final ${name(t)}Access target = (${name(t)}Access)type;"""
-          case _ ⇒ ""
-        }
-      }
+              case _ ⇒ ""
+            }
+          }
         while (is.hasNext()) {
             ${
-        // read next element
-        f.getType match {
-          case t : GroundType ⇒ t.getSkillName match {
-            case "annotation" ⇒ s"""is.next().set${f.getName.capital}(type.readSingleField(in));"""
-            case "string" ⇒ s"""is.next().set${f.getName.capital}(sp.get(in.v64()));"""
-            case _        ⇒ s"""is.next().set${f.getName.capital}(in.${t.getSkillName}());"""
-          }
+            // read next element
+            f.getType match {
+              case t : GroundType ⇒ t.getSkillName match {
+                case "annotation" ⇒ s"""is.next().set${f.getName.capital}(type.readSingleField(in));"""
+                case "string"     ⇒ s"""is.next().set${f.getName.capital}(sp.get(in.v64()));"""
+                case _            ⇒ s"""is.next().set${f.getName.capital}(in.${t.getSkillName}());"""
+              }
 
-          case t : UserType ⇒ s"""is.next().set${f.getName.capital}(target.getByID(in.v64()));"""
-          case _            ⇒ "???"
-        }
+              case t : UserType ⇒ s"""is.next().set${f.getName.capital}(target.getByID(in.v64()));"""
+              case _            ⇒ "???"
+            }
+          }
+        }"""
       }
-        }
     }
 
     @Override
     public ${mapType(f.getType, true)} getR(${mapType(t)} ref) {
-        return ref.get${f.getName.capital}();
+        ${
+        if (f.isConstant()) s"return ${mapType(t)}.get${f.getName.capital}();"
+        else s"return ref.get${f.getName.capital}();"
+      }
     }
 
     @Override
@@ -130,7 +144,10 @@ ${
 
     @Override
     public ${mapType(f.getType)} get(${mapType(t)} ref) {
-        return ref.get${f.getName.capital}();
+        ${
+        if (f.isConstant()) s"return ${mapType(t)}.get${f.getName.capital}();"
+        else s"return ref.get${f.getName.capital}();"
+      }
     }
 
     @Override
