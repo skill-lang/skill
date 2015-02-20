@@ -56,16 +56,16 @@ class Main extends FakeMain
     case t : GroundType ⇒ t.getName.lower match {
       case "annotation" ⇒ "de.ust.skill.common.java.internal.SkillObject"
 
-      case "bool"       ⇒ if(boxed) "Boolean" else "boolean"
+      case "bool"       ⇒ if (boxed) "java.lang.Boolean" else "boolean"
 
-      case "i8"         ⇒ if(boxed) "Byte" else "byte"
-      case "i16"        ⇒ if(boxed) "Short" else "short"
-      case "i32"        ⇒ if(boxed) "Integer" else "int"
-      case "i64"        ⇒ if(boxed) "Long" else "long"
-      case "v64"        ⇒ if(boxed) "Long" else "long"
+      case "i8"         ⇒ if (boxed) "java.lang.Byte" else "byte"
+      case "i16"        ⇒ if (boxed) "java.lang.Short" else "short"
+      case "i32"        ⇒ if (boxed) "java.lang.Integer" else "int"
+      case "i64"        ⇒ if (boxed) "java.lang.Long" else "long"
+      case "v64"        ⇒ if (boxed) "java.lang.Long" else "long"
 
-      case "f32"        ⇒ if(boxed) "Float" else "float"
-      case "f64"        ⇒ if(boxed) "Double" else "double"
+      case "f32"        ⇒ if (boxed) "java.lang.Float" else "float"
+      case "f64"        ⇒ if (boxed) "java.lang.Double" else "double"
 
       case "string"     ⇒ "java.lang.String"
     }
@@ -91,8 +91,8 @@ class Main extends FakeMain
   override protected def appendConstructorArguments(t : UserType, prependTypes : Boolean) = {
     val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored || f.isInstanceOf[View] }
     if (r.isEmpty) ""
-    else if(prependTypes) r.map({ f ⇒ s", ${mapType(f.getType())} ${name(f)}" }).mkString("")
-    else  r.map({ f ⇒ s", ${name(f)}" }).mkString("")
+    else if (prependTypes) r.map({ f ⇒ s", ${mapType(f.getType())} ${name(f)}" }).mkString("")
+    else r.map({ f ⇒ s", ${name(f)}" }).mkString("")
   }
 
   /**
@@ -169,10 +169,11 @@ Opitions (Java):
    */
   protected def escaped(target : String) : String = target match {
     //keywords get a suffix "_", because that way at least auto-completion will work as expected
-    case "abstract" | "case" | "catch" | "class" | "def" | "do" | "else" | "extends" | "false" | "final" | "finally" |
-      "for" | "forSome" | "if" | "implicit" | "import" | "lazy" | "match" | "new" | "null" | "object" | "override" |
-      "package" | "private" | "protected" | "return" | "sealed" | "super" | "this" | "throw" | "trait" | "true" |
-      "try" | "type" | "var" | "while" | "with" | "yield" | "val" ⇒ target+"_"
+    case "abstract" | "continue" | "for" | "new" | "switch" | "assert" | "default" | "if" | "package" | "synchronized"
+      | "boolean" | "do" | "goto" | "private" | "this" | "break" | "double" | "implements" | "protected" | "throw"
+      | "byte" | "else" | "import" | "public" | "throws" | "case" | "enum" | "instanceof" | "return" | "transient"
+      | "catch" | "extends" | "int" | "short" | "try" | "char" | "final" | "interface" | "static" | "void" | "class"
+      | "finally" | "long" | "strictfp" | "volatile" | "const" | "float" | "native" | "super" | "while" ⇒ target+"_"
 
     //the string is fine anyway
     case _ ⇒ target.replace(':', '$')
