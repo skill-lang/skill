@@ -64,12 +64,30 @@ ${
     /**
      * Can only be constructed by the SkillFile in this package.
      */
-    ${nameT}Access(long poolIndex) {
-        super(poolIndex, "${t.getSkillName}", new HashSet<String>(Arrays.asList(new String[] { ${t.getFields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString(", ")} })));
-    }
+    ${nameT}Access(long poolIndex${
+        if (isBasePool) ""
+        else s", ${name(t.getSuperType)}Access superPool"
+      }) {
+        super(poolIndex, "${t.getSkillName}"${
+        if (isBasePool) ""
+        else ", superPool"
+      }, new HashSet<String>(Arrays.asList(new String[] { ${t.getFields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString(", ")} })));
+    }${
+        // export data for sub pools
+        if (isBasePool) s"""
+
+    final ${mapType(t.getBaseType)}[] data() {
+        return data;
+    }"""
+        else ""
+      }
 
     @Override
-    public boolean insertInstance(int skillID) {
+    public boolean insertInstance(int skillID) {${
+        if (isBasePool) ""
+        else s"""
+        ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access)basePool).data();"""
+      }
         int i = skillID - 1;
         if (null != data[i])
             return false;
@@ -192,7 +210,7 @@ ${
       case "f64"        ⇒ "F64.get()"
       case "string"     ⇒ "StringType.tmp()"
 
-      case s            ⇒ s"""(FieldType<${mapType(t)}>)(owner.poolByName().get("${t.getSkillName}"))"""
+      case s            ⇒ s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
     }
 
     t match {
@@ -202,7 +220,7 @@ ${
       case t : ListType                ⇒ s"new ListType<>(${mapGroundType(t.getBaseType)})"
       case t : SetType                 ⇒ s"new SetType<>(${mapGroundType(t.getBaseType)})"
       case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"new MapType<>($k, $v)")
-      case t : Declaration             ⇒ s"""(FieldType<${mapType(t)}>)(owner.poolByName().get("${t.getSkillName}"))"""
+      case t : Declaration             ⇒ s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
     }
   }
 
