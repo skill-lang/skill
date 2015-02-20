@@ -148,24 +148,8 @@ ${
 """
       ).mkString("")
     }
-        // finalize pools
-        for (StoragePool<?, ?> p : types) {
-            // @note this loop must happen in type order!
 
-            // set owners
-            if (p instanceof BasePool<?>)
-                ((BasePool<?>) p).setOwner(this);
-
-            // add missing field declarations
-            HashSet<String> fieldNames = new HashSet<>();
-            for (FieldDeclaration<?, ?> f : p.fields())
-                fieldNames.add(f.name());
-
-            for (String n : p.knownFields) {
-                if (!fieldNames.contains(n))
-                    p.addKnownField(n);
-            }
-        }
+        finalizePools();
     }
 
     public SkillState(HashMap<String, StoragePool<?, ?>> poolByName, StringPool strings,
@@ -181,7 +165,12 @@ ${
       ).mkString("")
     }
 
-        // finalize pools
+        finalizePools();
+    }
+
+    private void finalizePools() {
+        StringType ts = new StringType((StringPool) Strings());
+        Annotation as = new Annotation(types);
         for (StoragePool<?, ?> p : types) {
             // @note this loop must happen in type order!
 
@@ -196,7 +185,7 @@ ${
 
             for (String n : p.knownFields) {
                 if (!fieldNames.contains(n))
-                    p.addKnownField(n);
+                    p.addKnownField(n, ts, as);
             }
         }
     }

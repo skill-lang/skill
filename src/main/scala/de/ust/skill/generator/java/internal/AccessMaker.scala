@@ -73,7 +73,7 @@ ${
 
     @SuppressWarnings("unchecked")
     @Override
-    public void addKnownField(String name) {
+    public void addKnownField(String name, de.ust.skill.common.java.internal.fieldTypes.StringType string, de.ust.skill.common.java.internal.fieldTypes.Annotation annotation) {
         final FieldDeclaration<?, $typeT> f;
         switch (name) {${
           (for(f <- t.getFields)
@@ -85,10 +85,10 @@ ${
             ).mkString
         }
         default:
-            super.addKnownField(name);
+            super.addKnownField(name, string, annotation);
             return;
         }
-        f.eliminatePreliminaryTypes((ArrayList<StoragePool<?, ?>>) owner.allTypes());
+        f.eliminatePreliminaryTypes((ArrayList<StoragePool<?, ?>>) owner.allTypes(), string, annotation);
         fields.add(f);
     }
 

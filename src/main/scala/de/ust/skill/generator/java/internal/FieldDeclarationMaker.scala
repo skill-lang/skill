@@ -37,8 +37,7 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
 
 import java.util.Iterator;
 
-import de.ust.skill.common.java.internal.FieldDeclaration;
-import de.ust.skill.common.java.internal.StringPool;
+import de.ust.skill.common.java.internal.*;
 import de.ust.skill.common.java.internal.fieldDeclarations.*;
 import de.ust.skill.common.java.internal.fieldTypes.*;
 import de.ust.skill.common.java.internal.parts.Chunk;
@@ -54,9 +53,9 @@ import de.ust.skill.common.jvm.streams.MappedInStream;
 final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapType(t)}> implements ${
         f.getType match {
           case ft : GroundType ⇒ ft.getSkillName match {
-            case "i64" | "v64" ⇒ s"""KnownLongField<${mapType(t)}>"""
-            case "string"      ⇒ s"""KnownField<java.lang.String, ${mapType(t)}>"""
-            case ft            ⇒ "???missing specialization for type "+ft
+            case "i64" | "v64"           ⇒ s"""KnownLongField<${mapType(t)}>"""
+            case "annotation" | "string" ⇒ s"""KnownField<${mapType(f.getType)}, ${mapType(t)}>"""
+            case ft                      ⇒ "???missing specialization for type "+ft
           }
           case _ ⇒ s"""KnownField<${mapType(f.getType)}, ${mapType(t)}>"""
         }
@@ -96,20 +95,21 @@ ${
         final StringPool sp = (StringPool)owner.owner().Strings();"""
           case t : UserType ⇒ s"""
         final ${name(t)}Access target = (${name(t)}Access)type;"""
-          case _            ⇒ ""
+          case _ ⇒ ""
         }
       }
         while (is.hasNext()) {
             ${
         // read next element
         f.getType match {
-          case t : GroundType ⇒ t.getSkillName match{
+          case t : GroundType ⇒ t.getSkillName match {
+            case "annotation" ⇒ s"""is.next().set${f.getName.capital}(type.readSingleField(in));"""
             case "string" ⇒ s"""is.next().set${f.getName.capital}(sp.get(in.v64()));"""
-            case _ ⇒ s"""is.next().set${f.getName.capital}(in.${t.getSkillName}());"""
+            case _        ⇒ s"""is.next().set${f.getName.capital}(in.${t.getSkillName}());"""
           }
 
-          case t : UserType   ⇒ s"""is.next().set${f.getName.capital}(target.getByID(in.v64()));"""
-          case _              ⇒ "???"
+          case t : UserType ⇒ s"""is.next().set${f.getName.capital}(target.getByID(in.v64()));"""
+          case _            ⇒ "???"
         }
       }
         }
@@ -147,9 +147,9 @@ ${
   }
 
   private def mapToFieldType(t : Type) : String = {
-    //@note it is possible to pass <null> to the case classes, because they will be replaced anyway
+    //@note temporary string & annotation will be replaced later on
     def mapGroundType(t : Type) = t.getSkillName match {
-      case "annotation" ⇒ "Annotation(null)"
+      case "annotation" ⇒ "Annotation.tmp()"
       case "bool"       ⇒ "BoolType.get()"
       case "i8"         ⇒ "I8.get()"
       case "i16"        ⇒ "I16.get()"
@@ -158,7 +158,7 @@ ${
       case "v64"        ⇒ "V64.get()"
       case "f32"        ⇒ "F32.get()"
       case "f64"        ⇒ "F64.get()"
-      case "string"     ⇒ "new StringType((StringPool)owner.owner().Strings())"
+      case "string"     ⇒ "StringType.tmp()"
 
       case s            ⇒ s"""TypeDefinitionName[${mapType(t)}]("$s")"""
     }
