@@ -108,7 +108,10 @@ ${
           (for (f ← t.getFields)
             yield s"""
         case "${f.getSkillName}":
-            f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f.getType)}, fields.size(), this);
+            f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f.getType)}${
+            if (f.isAuto()) ""
+            else ", fields.size()"
+          }, this);
             break;
 """
           ).mkString
@@ -118,7 +121,10 @@ ${
             return;
         }
         fields.add(f);
-    }
+    }"""
+      }${
+        if (t.getFields.forall(_.isAuto)) ""
+        else s"""
 
     @SuppressWarnings("unchecked")
     @Override
@@ -126,7 +132,7 @@ ${
             HashSet<FieldRestriction<?>> restrictions) {
         final FieldDeclaration<R, $typeT> f;
         switch (name) {${
-          (for (f ← t.getFields)
+          (for (f ← t.getFields if !f.isAuto)
             yield s"""
         case "${f.getSkillName}":
             f = (FieldDeclaration<R, $typeT>) new KnownField_${nameT}_${name(f)}((FieldType<${mapType(f.getType, true)}>) type, ID, this);
