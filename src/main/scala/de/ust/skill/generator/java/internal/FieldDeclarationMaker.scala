@@ -52,6 +52,7 @@ import de.ust.skill.common.jvm.streams.MappedInStream;
 final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapType(t)}> implements ${
         f.getType match {
           case ft : GroundType ⇒ ft.getSkillName match {
+            case "bool"                  ⇒ s"""KnownBooleanField<${mapType(t)}>"""
             case "i8"                    ⇒ s"""KnownByteField<${mapType(t)}>"""
             case "i16"                   ⇒ s"""KnownShortField<${mapType(t)}>"""
             case "i32"                   ⇒ s"""KnownIntField<${mapType(t)}>"""
