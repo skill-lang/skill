@@ -8,6 +8,18 @@ package de.ust.skill.generator.java.internal
 import scala.collection.JavaConversions.asScalaBuffer
 import de.ust.skill.generator.java.GeneralOutputMaker
 import de.ust.skill.ir.restriction.SingletonRestriction
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.restriction.IntRangeRestriction
+import de.ust.skill.ir.restriction.FloatRangeRestriction
+import de.ust.skill.ir.restriction.NullableRestriction
 
 trait AccessMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -26,11 +38,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import de.ust.skill.common.java.internal.BasePool;
-import de.ust.skill.common.java.internal.FieldDeclaration;
-import de.ust.skill.common.java.internal.FieldType;
-import de.ust.skill.common.java.internal.StoragePool;
-import de.ust.skill.common.java.internal.TypeMissmatchError;
+import de.ust.skill.common.java.internal.*;
+import de.ust.skill.common.java.internal.fieldTypes.*;
 import de.ust.skill.common.java.restrictions.FieldRestriction;
 """)
 
@@ -70,25 +79,26 @@ ${
         staticData.add(r);
         return true;
     }
-
+${
+        if (t.getFields.isEmpty()) ""
+        else s"""
     @SuppressWarnings("unchecked")
     @Override
     public void addKnownField(String name, de.ust.skill.common.java.internal.fieldTypes.StringType string, de.ust.skill.common.java.internal.fieldTypes.Annotation annotation) {
         final FieldDeclaration<?, $typeT> f;
         switch (name) {${
-        (for (f ← t.getFields)
-          yield s"""
+          (for (f ← t.getFields)
+            yield s"""
         case "${f.getSkillName}":
-            f = new KnownField_${nameT}_${name(f)}(fields.size(), this);
+            f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f.getType)}, fields.size(), this);
             break;
 """
-        ).mkString
-      }
+          ).mkString
+        }
         default:
             super.addKnownField(name, string, annotation);
             return;
         }
-        f.eliminatePreliminaryTypes((ArrayList<StoragePool<?, ?>>) owner.allTypes(), string, annotation);
         fields.add(f);
     }
 
@@ -98,28 +108,24 @@ ${
             HashSet<FieldRestriction<?>> restrictions) {
         final FieldDeclaration<R, $typeT> f;
         switch (name) {${
-        (for (f ← t.getFields)
-          yield s"""
+          (for (f ← t.getFields)
+            yield s"""
         case "${f.getSkillName}":
-            f = (FieldDeclaration<R, $typeT>) new KnownField_${nameT}_${name(f)}(ID, this);
+            f = (FieldDeclaration<R, $typeT>) new KnownField_${nameT}_${name(f)}((FieldType<${mapType(f.getType, true)}>) type, ID, this);
             break;
 """
-        ).mkString
-      }
+          ).mkString
+        }
         default:
             return super.addField(ID, type, name, restrictions);
         }
-
-        // override preliminary type
-        if (!type.equals(f.type()))
-            throw new TypeMissmatchError(type, f.type().toString(), f.name(), name);
-        // TODO add if we reintroduce named preliminary stypes f.t = t
 
         for (FieldRestriction<?> r : restrictions)
             f.addRestriction(r);
         fields.add(f);
         return f;
-    }
+    }"""
+      }
 
     /**
      * @return a new $nameT instance with default field values
@@ -170,5 +176,44 @@ ${
 
       out.close()
     }
+  }
+
+  private def mapToFieldType(t : Type) : String = {
+    //@note temporary string & annotation will be replaced later on
+    def mapGroundType(t : Type) = t.getSkillName match {
+      case "annotation" ⇒ "Annotation.tmp()"
+      case "bool"       ⇒ "BoolType.get()"
+      case "i8"         ⇒ "I8.get()"
+      case "i16"        ⇒ "I16.get()"
+      case "i32"        ⇒ "I32.get()"
+      case "i64"        ⇒ "I64.get()"
+      case "v64"        ⇒ "V64.get()"
+      case "f32"        ⇒ "F32.get()"
+      case "f64"        ⇒ "F64.get()"
+      case "string"     ⇒ "StringType.tmp()"
+
+      case s            ⇒ s"""(FieldType<${mapType(t)}>)(owner.poolByName().get("${t.getSkillName}"))"""
+    }
+
+    t match {
+      case t : GroundType              ⇒ mapGroundType(t)
+      case t : ConstantLengthArrayType ⇒ s"new ConstantLengthArray<>(${t.getLength}, ${mapGroundType(t.getBaseType)})"
+      case t : VariableLengthArrayType ⇒ s"new VariableLengthArray<>(${mapGroundType(t.getBaseType)})"
+      case t : ListType                ⇒ s"new ListType<>(${mapGroundType(t.getBaseType)})"
+      case t : SetType                 ⇒ s"new SetType<>(${mapGroundType(t.getBaseType)})"
+      case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"new MapType<>($k, $v)")
+      case t : Declaration             ⇒ s"""(FieldType<${mapType(t)}>)(owner.poolByName().get("${t.getSkillName}"))"""
+    }
+  }
+
+  private def mkFieldRestrictions(f : Field) : String = {
+    f.getRestrictions.map(_ match {
+      case r : NullableRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.NonNull"
+      case r : IntRangeRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLow}L.to${mapType(f.getType)}, ${r.getHigh}L.to${mapType(f.getType)})"
+      case r : FloatRangeRestriction ⇒ f.getType.getSkillName match {
+        case "f32" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
+        case "f64" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowDouble}, ${r.getHighDouble})"
+      }
+    }).mkString(", ")
   }
 }

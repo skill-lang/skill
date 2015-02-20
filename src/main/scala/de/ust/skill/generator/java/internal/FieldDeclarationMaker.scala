@@ -39,7 +39,6 @@ import java.util.Iterator;
 
 import de.ust.skill.common.java.internal.*;
 import de.ust.skill.common.java.internal.fieldDeclarations.*;
-import de.ust.skill.common.java.internal.fieldTypes.*;
 import de.ust.skill.common.java.internal.parts.Chunk;
 import de.ust.skill.common.java.internal.parts.SimpleChunk;
 import de.ust.skill.common.jvm.streams.MappedInStream;
@@ -73,11 +72,11 @@ final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapTy
         else"" // generate a read function 
       } {
 
-    public $nameF(${
+    public $nameF(FieldType<${mapType(f.getType, true)}> type, ${
         if (f.isAuto()) ""
         else "long index, "
       }${name(t)}Access owner) {
-        super(${mapToFieldType(f.getType)}, "${f.getSkillName}", ${
+        super(type, "${f.getSkillName}", ${
         if (f.isAuto()) "0"
         else "index"
       }, owner);
@@ -119,7 +118,7 @@ ${
               }
 
               case t : UserType ⇒ s"""is.next().set${f.getName.capital}(target.getByID(in.v64()));"""
-              case _            ⇒ "???"
+              case _            ⇒ s"""is.next().set${f.getName.capital}(type.readSingleField(in));"""
             }
           }
         }"""
@@ -161,44 +160,5 @@ ${
 """)
       out.close()
     }
-  }
-
-  private def mapToFieldType(t : Type) : String = {
-    //@note temporary string & annotation will be replaced later on
-    def mapGroundType(t : Type) = t.getSkillName match {
-      case "annotation" ⇒ "Annotation.tmp()"
-      case "bool"       ⇒ "BoolType.get()"
-      case "i8"         ⇒ "I8.get()"
-      case "i16"        ⇒ "I16.get()"
-      case "i32"        ⇒ "I32.get()"
-      case "i64"        ⇒ "I64.get()"
-      case "v64"        ⇒ "V64.get()"
-      case "f32"        ⇒ "F32.get()"
-      case "f64"        ⇒ "F64.get()"
-      case "string"     ⇒ "StringType.tmp()"
-
-      case s            ⇒ s"""TypeDefinitionName[${mapType(t)}]("$s")"""
-    }
-
-    t match {
-      case t : GroundType              ⇒ mapGroundType(t)
-      case t : ConstantLengthArrayType ⇒ s"ConstantLengthArray(${t.getLength}, ${mapGroundType(t.getBaseType)})"
-      case t : VariableLengthArrayType ⇒ s"VariableLengthArray(${mapGroundType(t.getBaseType)})"
-      case t : ListType                ⇒ s"ListType(${mapGroundType(t.getBaseType)})"
-      case t : SetType                 ⇒ s"SetType(${mapGroundType(t.getBaseType)})"
-      case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"MapType($k, $v)")
-      case t : Declaration             ⇒ s"""TypeDefinitionName[${mapType(t)}]("${t.getSkillName}")"""
-    }
-  }
-
-  private def mkFieldRestrictions(f : Field) : String = {
-    f.getRestrictions.map(_ match {
-      case r : NullableRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.NonNull"
-      case r : IntRangeRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLow}L.to${mapType(f.getType)}, ${r.getHigh}L.to${mapType(f.getType)})"
-      case r : FloatRangeRestriction ⇒ f.getType.getSkillName match {
-        case "f32" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
-        case "f64" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowDouble}, ${r.getHighDouble})"
-      }
-    }).mkString(", ")
   }
 }

@@ -70,11 +70,11 @@ class Main extends FakeMain
       case "string"     ⇒ "java.lang.String"
     }
 
-    case t : ConstantLengthArrayType ⇒ s"$ArrayTypeName[${mapType(t.getBaseType())}]"
-    case t : VariableLengthArrayType ⇒ s"$VarArrayTypeName[${mapType(t.getBaseType())}]"
-    case t : ListType                ⇒ s"$ListTypeName[${mapType(t.getBaseType())}]"
-    case t : SetType                 ⇒ s"$SetTypeName[${mapType(t.getBaseType())}]"
-    case t : MapType                 ⇒ t.getBaseTypes().map(mapType(_, boxed)).reduceRight((k, v) ⇒ s"$MapTypeName[$k, $v]")
+    case t : ConstantLengthArrayType ⇒ s"$ArrayTypeName<${mapType(t.getBaseType(), true)}>"
+    case t : VariableLengthArrayType ⇒ s"$VarArrayTypeName<${mapType(t.getBaseType(), true)}>"
+    case t : ListType                ⇒ s"$ListTypeName<${mapType(t.getBaseType(), true)}>"
+    case t : SetType                 ⇒ s"$SetTypeName<${mapType(t.getBaseType(), true)}>"
+    case t : MapType                 ⇒ t.getBaseTypes().map(mapType(_, true)).reduceRight((k, v) ⇒ s"$MapTypeName<$k, $v>")
 
     case t : Declaration             ⇒ packagePrefix + name(t)
 
