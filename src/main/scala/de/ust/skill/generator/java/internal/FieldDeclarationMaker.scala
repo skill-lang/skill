@@ -107,7 +107,8 @@ ${
               case _ ⇒ ""
             }
           }
-        while (is.hasNext()) {
+        int count = (int) last.count;
+        while (0 != count--) {
             ${
             // read next element
             f.getType match {
