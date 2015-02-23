@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import de.ust.skill.common.java.internal.*;
+import de.ust.skill.common.java.internal.fieldDeclarations.AutoField;
 import de.ust.skill.common.java.internal.fieldTypes.*;
 import de.ust.skill.common.java.restrictions.FieldRestriction;
 """)
@@ -112,13 +113,20 @@ ${
     public void addKnownField(String name, de.ust.skill.common.java.internal.fieldTypes.StringType string, de.ust.skill.common.java.internal.fieldTypes.Annotation annotation) {
         final FieldDeclaration<?, $typeT> f;
         switch (name) {${
-          (for (f ← t.getFields)
+          (for (f ← t.getFields if !f.isAuto)
             yield s"""
         case "${f.getSkillName}":
-            f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f.getType)}${
-            if (f.isAuto()) ""
-            else ", fields.size()"
-          }, this);
+            f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f.getType)}, fields.size(), this);
+            break;
+"""
+          ).mkString
+        }${
+          var index = 0;
+          (for (f ← t.getFields if f.isAuto)
+            yield s"""
+        case "${f.getSkillName}":
+            f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f.getType)}, this);
+            autoFields[${index+=1;index-1}] = f;
             break;
 """
           ).mkString
@@ -127,7 +135,8 @@ ${
             super.addKnownField(name, string, annotation);
             return;
         }
-        fields.add(f);
+        if (!(f instanceof AutoField))
+            fields.add(f);
     }"""
       }${
         if (t.getFields.forall(_.isAuto)) ""
