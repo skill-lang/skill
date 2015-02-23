@@ -71,7 +71,14 @@ ${
         super(poolIndex, "${t.getSkillName}"${
         if (isBasePool) ""
         else ", superPool"
-      }, new HashSet<String>(Arrays.asList(new String[] { ${t.getFields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString(", ")} })));
+      }, new HashSet<String>(Arrays.asList(new String[] { ${
+        t.getFields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString(", ")
+      } })), ${
+        t.getFields.count(_.isAuto) match {
+          case 0 ⇒ "noAutoFields()"
+          case c ⇒ s"(FieldDeclaration<?, ${mapType(t)}>[]) java.lang.reflect.Array.newInstance(${mapType(t)}.class, $c)"
+        }
+      });
     }${
         // export data for sub pools
         if (isBasePool) s"""
@@ -205,7 +212,7 @@ ${
   private def mapToFieldType(t : Type) : String = {
     //@note temporary string & annotation will be replaced later on
     def mapGroundType(t : Type) = t.getSkillName match {
-      case "annotation" ⇒ "Annotation.tmp()"
+      case "annotation" ⇒ "annotation"
       case "bool"       ⇒ "BoolType.get()"
       case "i8"         ⇒ "I8.get()"
       case "i16"        ⇒ "I16.get()"
@@ -214,7 +221,7 @@ ${
       case "v64"        ⇒ "V64.get()"
       case "f32"        ⇒ "F32.get()"
       case "f64"        ⇒ "F64.get()"
-      case "string"     ⇒ "StringType.tmp()"
+      case "string"     ⇒ "string"
 
       case s            ⇒ s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
     }

@@ -76,7 +76,7 @@ final public class FileParser extends de.ust.skill.common.java.internal.FilePars
     }
         default:
             if (null == superPool)
-                p = (StoragePool<T, B>) new BasePool<T>(types.size(), name, Collections.EMPTY_SET);
+                p = (StoragePool<T, B>) new BasePool<T>(types.size(), name, Collections.EMPTY_SET, noAutoFields());
             else
                 p = superPool.makeSubPool(types.size(), name);
             break;

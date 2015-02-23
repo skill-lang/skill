@@ -75,7 +75,7 @@ final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapTy
 
     public $nameF(FieldType<${mapType(f.getType, true)}> type, ${
         if (f.isAuto()) ""
-        else "long index, "
+        else "int index, "
       }${name(t)}Access owner) {
         super(type, "${f.getSkillName}", ${
         if (f.isAuto()) "0"
