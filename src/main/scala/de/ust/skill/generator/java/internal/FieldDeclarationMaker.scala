@@ -85,14 +85,13 @@ final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapTy
     }
 
     @Override
-    public void read(MappedInStream in) {${
+    public void read(MappedInStream in, Chunk last) {${
         if (f.isConstant())
           """
         // this field is constant"""
         else
           s"""
         final Iterator<$nameT> is;
-        Chunk last = dataChunks.getLast();
         if (last instanceof SimpleChunk) {
             SimpleChunk c = (SimpleChunk) last;
             is = ((${name(t)}Access) owner).dataViewIterator((int) c.bpo, (int) (c.bpo + c.count));

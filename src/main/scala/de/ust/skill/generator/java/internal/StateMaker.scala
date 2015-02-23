@@ -135,7 +135,7 @@ public final class SkillState extends de.ust.skill.common.java.internal.SkillSta
     }
 
     public SkillState(StringPool strings, ArrayList<StoragePool<?, ?>> types, Path path, Mode mode) {
-        super(path, mode);
+        super(strings, path, mode);
         this.types = types;
         poolByName = new HashMap<>();
         for (StoragePool<?, ?> p : types)
@@ -154,7 +154,7 @@ ${
 
     public SkillState(HashMap<String, StoragePool<?, ?>> poolByName, StringPool strings,
             ArrayList<StoragePool<?, ?>> types, Path path, Mode mode) {
-        super(path, mode);
+        super(strings, path, mode);
         this.types = types;
         this.poolByName = poolByName;
 ${
@@ -166,28 +166,6 @@ ${
     }
 
         finalizePools();
-    }
-
-    private void finalizePools() {
-        StringType ts = new StringType((StringPool) Strings());
-        Annotation as = new Annotation(types);
-        for (StoragePool<?, ?> p : types) {
-            // @note this loop must happen in type order!
-
-            // set owners
-            if (p instanceof BasePool<?>)
-                ((BasePool<?>) p).setOwner(this);
-
-            // add missing field declarations
-            HashSet<String> fieldNames = new HashSet<>();
-            for (FieldDeclaration<?, ?> f : p.fields())
-                fieldNames.add(f.name());
-
-            for (String n : p.knownFields) {
-                if (!fieldNames.contains(n))
-                    p.addKnownField(n, ts, as);
-            }
-        }
     }
 ${
       var i = -1
