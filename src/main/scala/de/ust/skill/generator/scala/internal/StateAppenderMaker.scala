@@ -117,6 +117,7 @@ private[internal] final class StateAppender(state : State, out : FileOutputStrea
   case class Task(val is : TraversableOnce[SkillType], val f : FieldDeclaration[_], val begin : Long, val end : Long);
   val data = new ArrayBuffer[Task];
   var offset = 0L
+  var fieldQueue = new ArrayBuffer[ArrayBuffer[FieldDeclaration[_]]]
   for (p ← rPools) {
     // generic append
     val newPool = p.poolIndex >= newPoolIndex
@@ -143,28 +144,33 @@ private[internal] final class StateAppender(state : State, out : FileOutputStrea
       if (newPool && 0 == count) {
         out.i8(0);
       } else {
-        val vs = offsets(p)
         out.v64(fields.size)
-        for (f ← fields) {
-          out.v64(f.index)
-          val outData = f.lastChunk match {
-            case bci : BulkChunkInfo ⇒
-              string(f.name, out)
-              writeType(f.t, out)
-              restrictions(f, out)
-
-              p.all
-
-            case sci : SimpleChunkInfo ⇒
-              p.basePool.data.view(sci.bpo.toInt, (sci.bpo + sci.count).toInt)
-          }
-          // put end offset and enqueue data
-          val end = offset + vs(f).get
-          out.v64(end)
-          data += Task(outData, f, offset, end)
-          offset = end
-        }
+        fieldQueue += fields
       }
+    }
+  }
+
+  for (fields ← fieldQueue) {
+    for (f ← fields) {
+      val p = f.owner
+      val vs = offsets(p)
+      out.v64(f.index)
+      val outData = f.lastChunk match {
+        case bci : BulkChunkInfo ⇒
+          string(f.name, out)
+          writeType(f.t, out)
+          restrictions(f, out)
+
+          p.all
+
+        case sci : SimpleChunkInfo ⇒
+          p.basePool.data.view(sci.bpo.toInt, (sci.bpo + sci.count).toInt)
+      }
+      // put end offset and enqueue data
+      val end = offset + vs(f).get
+      out.v64(end)
+      data += Task(outData, f, offset, end)
+      offset = end
     }
   }
 

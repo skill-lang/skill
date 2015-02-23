@@ -107,9 +107,9 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
   case class Task[B <: SkillType](val p : StoragePool[_ <: B, B], val f : FieldDeclaration[_], val begin : Long, val end : Long);
   val data = new ArrayBuffer[Task[_ <: SkillType]];
   var offset = 0L
+  var fieldQueue = new ArrayBuffer[ArrayBuffer[FieldDeclaration[_]]]
   for (p ← state.pools) {
-    val vs = offsets(p)
-    val fields = p.fields.filter(_.index!=0)
+    val fields = p.fields.filter(_.index != 0)
     string(p.name, out)
     val LCount = p.blockInfos.last.count
     out.v64(LCount)
@@ -125,7 +125,14 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
     }
 
     out.v64(fields.size)
+    fieldQueue += fields;
+  }
+
+  // write fields
+  for (fields ← fieldQueue) {
     for (f ← fields) {
+      val p = f.owner;
+      val vs = offsets(p)
       out.v64(f.index)
       string(f.name, out)
       writeType(f.t, out)
