@@ -53,9 +53,6 @@ import ${packagePrefix}api.SkillFile;
  */
 public final class SkillState extends de.ust.skill.common.java.internal.SkillState implements SkillFile {
 
-    // types in type order
-    private ArrayList<StoragePool<?, ?>> types;
-
     // types by skill name
     private final HashMap<String, StoragePool<?, ?>> poolByName;
 
@@ -179,10 +176,6 @@ ${
     }
 """
       ).mkString("")
-    }
-    @Override
-    public Iterable<? extends Access<? extends SkillObject>> allTypes() {
-        return types;
     }
 }
 """)
