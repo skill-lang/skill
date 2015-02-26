@@ -55,7 +55,7 @@ ${
 ${
         if (isBasePool) s"""
     @Override
-    protected $typeT[] newArray(int size) {
+    final protected $typeT[] newArray(int size) {
         return new $typeT[size];
     }
 """
@@ -125,7 +125,7 @@ ${
             yield s"""
         case "${f.getSkillName}":
             f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f.getType)}, this);
-            autoFields[${index+=1;index-1}] = f;
+            autoFields[${index += 1; index - 1}] = f;
             break;
 """
           ).mkString

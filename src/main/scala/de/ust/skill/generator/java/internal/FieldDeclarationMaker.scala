@@ -40,6 +40,7 @@ import java.util.Iterator;
 
 import de.ust.skill.common.java.internal.*;
 import de.ust.skill.common.java.internal.fieldDeclarations.*;
+import de.ust.skill.common.java.internal.parts.Block;
 import de.ust.skill.common.java.internal.parts.Chunk;
 import de.ust.skill.common.java.internal.parts.SimpleChunk;
 import de.ust.skill.common.jvm.streams.MappedInStream;
@@ -129,6 +130,82 @@ ${
     }
 
     @Override
+    public long offset(Block range) {${
+        if (f.isConstant())
+          """
+        return 0; // this field is constant"""
+        else
+          f.getType match {
+
+            // read next element
+            case fieldType : GroundType ⇒ fieldType.getSkillName match {
+              case "v64" ⇒ s"""
+        ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
+        long result = 0L;
+        int i = null == range ? 0 : (int) range.bpo;
+        final int high = null == range ? data.length : (int) range.count;
+        for (; i < high; i++) {
+            long v = (${if (null == t.getSuperType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
+
+            if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
+                result += 1;
+            } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
+                result += 2;
+            } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
+                result += 3;
+            } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
+                result += 4;
+            } else if (0L == (v & 0xFFFFFFF800000000L)) {
+                result += 5;
+            } else if (0L == (v & 0xFFFFFC0000000000L)) {
+                result += 6;
+            } else if (0L == (v & 0xFFFE000000000000L)) {
+                result += 7;
+            } else if (0L == (v & 0xFF00000000000000L)) {
+                result += 8;
+            } else {
+                result += 9;
+            }
+        }
+        return result;"""
+              case _ ⇒ s"""return -1;"""
+            }
+
+            case fieldType : UserType ⇒ s"""
+        ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
+        long result = 0L;
+        int i = null == range ? 0 : (int) range.bpo;
+        final int high = null == range ? data.length : (int) range.count;
+        for (; i < high; i++) {
+            long v = (${if (null == t.getSuperType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}().getSkillID();
+
+            if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
+                result += 1;
+            } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
+                result += 2;
+            } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
+                result += 3;
+            } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
+                result += 4;
+            } else if (0L == (v & 0xFFFFFFF800000000L)) {
+                result += 5;
+            } else if (0L == (v & 0xFFFFFC0000000000L)) {
+                result += 6;
+            } else if (0L == (v & 0xFFFE000000000000L)) {
+                result += 7;
+            } else if (0L == (v & 0xFF00000000000000L)) {
+                result += 8;
+            } else {
+                result += 9;
+            }
+        }
+        return result;"""
+            case _ ⇒ s"""return -1;"""
+          }
+      }
+    }
+
+    @Override
     public void write(MappedOutStream out) throws IOException {${
         if (f.isConstant())
           """
@@ -154,8 +231,8 @@ ${
             // read next element
             f.getType match {
               case t : GroundType ⇒ t.getSkillName match {
-                case "annotation"|"string" ⇒ s"""type.writeSingleField(is.next().get${f.getName.capital}(), out);"""
-                case _            ⇒ s"""out.${t.getSkillName}(is.next().get${f.getName.capital}());"""
+                case "annotation" | "string" ⇒ s"""type.writeSingleField(is.next().get${f.getName.capital}(), out);"""
+                case _                       ⇒ s"""out.${t.getSkillName}(is.next().get${f.getName.capital}());"""
               }
 
               case t : UserType ⇒ s"""out.v64(is.next().get${f.getName.capital}().getSkillID());"""
