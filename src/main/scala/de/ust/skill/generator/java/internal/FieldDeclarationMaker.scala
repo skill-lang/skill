@@ -35,6 +35,7 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
       //package
       out.write(s"""package ${packagePrefix}internal;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 import de.ust.skill.common.java.internal.*;
@@ -128,8 +129,41 @@ ${
     }
 
     @Override
-    public void write(MappedOutStream out) {
-        throw new Error("TODO");
+    public void write(MappedOutStream out) throws IOException {${
+        if (f.isConstant())
+          """
+        // this field is constant"""
+        else
+          s"""
+        final Chunk last = dataChunks.getLast().c;
+        final Iterator<$nameT> is;
+        if (last instanceof SimpleChunk) {
+            SimpleChunk c = (SimpleChunk) last;
+            is = ((${name(t)}Access) owner).dataViewIterator((int) c.bpo, (int) (c.bpo + c.count));
+        } else
+            is = owner.iterator();
+${
+            // preparation code
+            f.getType match {
+              case _ ⇒ ""
+            }
+          }
+        int count = (int) last.count;
+        while (0 != count--) {
+            ${
+            // read next element
+            f.getType match {
+              case t : GroundType ⇒ t.getSkillName match {
+                case "annotation"|"string" ⇒ s"""type.writeSingleField(is.next().get${f.getName.capital}(), out);"""
+                case _            ⇒ s"""out.${t.getSkillName}(is.next().get${f.getName.capital}());"""
+              }
+
+              case t : UserType ⇒ s"""out.v64(is.next().get${f.getName.capital}().getSkillID());"""
+              case _            ⇒ s"""type.writeSingleField(is.next().get${f.getName.capital}(), out);"""
+            }
+          }
+        }"""
+      }
     }
 
     @Override
