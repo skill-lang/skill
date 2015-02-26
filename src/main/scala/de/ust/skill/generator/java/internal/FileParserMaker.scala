@@ -99,7 +99,7 @@ final public class FileParser extends de.ust.skill.common.java.internal.FilePars
     }
 
     private SkillState makeState(Mode mode) {
-        SkillState r = new SkillState(poolByName, Strings, types, in.path(), mode);
+        SkillState r = new SkillState(poolByName, Strings, StringType, Annotation, types, in.path(), mode);
         try {
             r.check();
         } catch (SkillException e) {

@@ -107,8 +107,8 @@ public final class SkillState extends de.ust.skill.common.java.internal.SkillSta
             // and can not be done in place
             StringPool strings = new StringPool(null);
             ArrayList<StoragePool<?, ?>> types = new ArrayList<>(1);
-            Annotation annotation = new Annotation(types);
             StringType stringType = new StringType(strings);
+            Annotation annotation = new Annotation(types, stringType);
 
             // create type information${
       var i = -1
@@ -121,7 +121,7 @@ public final class SkillState extends de.ust.skill.common.java.internal.SkillSta
             types.add(${name(t)});"""
       ).mkString("")
     }
-            return new SkillState(strings, types, path, actualMode.close);
+            return new SkillState(strings, types, stringType, annotation, path, actualMode.close);
 
         case Read:
             return FileParser.read(FileInputStream.open(path), actualMode.close);
@@ -131,9 +131,9 @@ public final class SkillState extends de.ust.skill.common.java.internal.SkillSta
         }
     }
 
-    public SkillState(StringPool strings, ArrayList<StoragePool<?, ?>> types, Path path, Mode mode) {
-        super(strings, path, mode);
-        this.types = types;
+    public SkillState(StringPool strings, ArrayList<StoragePool<?, ?>> types, StringType stringType,
+            Annotation annotationType, Path path, Mode mode) {
+        super(strings, path, mode, types, stringType, annotationType);
         poolByName = new HashMap<>();
         for (StoragePool<?, ?> p : types)
             poolByName.put(p.name(), p);
@@ -149,10 +149,10 @@ ${
         finalizePools();
     }
 
-    public SkillState(HashMap<String, StoragePool<?, ?>> poolByName, StringPool strings,
+    public SkillState(HashMap<String, StoragePool<?, ?>> poolByName, StringPool strings, StringType stringType,
+            Annotation annotationType,
             ArrayList<StoragePool<?, ?>> types, Path path, Mode mode) {
-        super(strings, path, mode);
-        this.types = types;
+        super(strings, path, mode, types, stringType, annotationType);
         this.poolByName = poolByName;
 ${
       var i = -1

@@ -54,10 +54,9 @@ ${
       } {
 ${
         if (isBasePool) s"""
-    // TODO optimize this method away by replacing empty arrays by null pointers
     @Override
-    protected $typeT[] emptyArray() {
-        return new $typeT[0];
+    protected $typeT[] newArray(int size) {
+        return new $typeT[size];
     }
 """
         else ""
@@ -65,7 +64,7 @@ ${
     /**
      * Can only be constructed by the SkillFile in this package.
      */
-    ${nameT}Access(long poolIndex${
+    ${nameT}Access(int poolIndex${
         if (isBasePool) ""
         else s", ${name(t.getSuperType)}Access superPool"
       }) {

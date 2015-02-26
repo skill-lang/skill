@@ -42,6 +42,7 @@ import de.ust.skill.common.java.internal.fieldDeclarations.*;
 import de.ust.skill.common.java.internal.parts.Chunk;
 import de.ust.skill.common.java.internal.parts.SimpleChunk;
 import de.ust.skill.common.jvm.streams.MappedInStream;
+import de.ust.skill.common.jvm.streams.MappedOutStream;
 
 """)
 
@@ -124,6 +125,11 @@ ${
           }
         }"""
       }
+    }
+
+    @Override
+    public void write(MappedOutStream out) {
+        throw new Error("TODO");
     }
 
     @Override
