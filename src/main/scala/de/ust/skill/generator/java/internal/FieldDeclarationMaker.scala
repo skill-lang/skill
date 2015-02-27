@@ -31,6 +31,9 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
       val nameT = mapType(t)
       val nameF = s"KnownField_${name(t)}_${name(f)}"
 
+      // casting access to data array using index i
+      val dataAccessI = if (null == t.getSuperType) "data[i]" else s"((${mapType(t)})data[i])"
+
       val out = open(s"internal/$nameF.java")
       //package
       out.write(s"""package ${packagePrefix}internal;
@@ -177,7 +180,7 @@ ${
         int i = null == range ? 0 : (int) range.bpo;
         final int high = null == range ? data.length : (int) range.count;
         for (; i < high; i++) {
-            long v = (${if (null == t.getSuperType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}().getSkillID();
+            long v = $dataAccessI.get${f.getName.capital}().getSkillID();
 
             if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
                 result += 1;
@@ -212,31 +215,31 @@ ${
         // this field is constant"""
         else
           s"""
+        ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
+        int i;
+        final int high;
+
         final Chunk last = dataChunks.getLast().c;
-        final Iterator<$nameT> is;
         if (last instanceof SimpleChunk) {
             SimpleChunk c = (SimpleChunk) last;
-            is = ((${name(t)}Access) owner).dataViewIterator((int) c.bpo, (int) (c.bpo + c.count));
-        } else
-            is = owner.iterator();
-${
-            // preparation code
-            f.getType match {
-              case _ ⇒ ""
-            }
-          }
-        int count = (int) last.count;
-        while (0 != count--) {
+            i = (int) c.bpo;
+            high = (int) (c.bpo + c.count);
+        } else {
+            i = 0;
+            high = owner.size();
+        }
+
+        for (; i < high; i++) {
             ${
             // read next element
             f.getType match {
               case t : GroundType ⇒ t.getSkillName match {
-                case "annotation" | "string" ⇒ s"""type.writeSingleField(is.next().get${f.getName.capital}(), out);"""
-                case _                       ⇒ s"""out.${t.getSkillName}(is.next().get${f.getName.capital}());"""
+                case "annotation" | "string" ⇒ s"""type.writeSingleField($dataAccessI.get${f.getName.capital}(), out);"""
+                case _                       ⇒ s"""out.${t.getSkillName}($dataAccessI.get${f.getName.capital}());"""
               }
 
-              case t : UserType ⇒ s"""out.v64(is.next().get${f.getName.capital}().getSkillID());"""
-              case _            ⇒ s"""type.writeSingleField(is.next().get${f.getName.capital}(), out);"""
+              case t : UserType ⇒ s"""out.v64($dataAccessI.get${f.getName.capital}().getSkillID());"""
+              case _            ⇒ s"""type.writeSingleField($dataAccessI.get${f.getName.capital}(), out);"""
             }
           }
         }"""
