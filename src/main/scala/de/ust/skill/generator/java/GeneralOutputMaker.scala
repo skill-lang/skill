@@ -18,6 +18,7 @@ import de.ust.skill.generator.common.Generator
 import scala.collection.JavaConversions._
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
+import java.nio.file.Paths
 
 /**
  * The parent class for all output makers.
@@ -63,9 +64,8 @@ trait GeneralOutputMaker extends Generator {
    * @note the used path uses maven/sbt source placement convention
    */
   override protected def open(path : String) = {
-    val f = new File(s"$outPath/src/main/java/$packagePath$path")
-    f.getParentFile.mkdirs
-    f.createNewFile
+    val f = simpleOpenDirtyPathString(s"$outPath/$sourcePath/$packagePath$path")
+    
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
       new FileOutputStream(f), "UTF-8")))
     rval.write(header)
@@ -113,4 +113,9 @@ trait GeneralOutputMaker extends Generator {
   } else {
     ""
   }
+  
+  /**
+   * Sourcepath can be configured to change output directory of source files.
+   */
+  protected var sourcePath = "src/main/java"
 }
