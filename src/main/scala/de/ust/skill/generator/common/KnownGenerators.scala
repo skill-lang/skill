@@ -8,6 +8,7 @@ object KnownGenerators {
     classOf[c.Main],
     classOf[doxygen.Main],
     classOf[java.Main],
-    classOf[scala.Main]
+    classOf[scala.Main],
+    classOf[statistics.Main]
   )
 }

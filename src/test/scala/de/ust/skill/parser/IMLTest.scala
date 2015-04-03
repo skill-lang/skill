@@ -19,6 +19,11 @@ class IMLTest extends FunSuite {
     assert(100 < Parser.process(filename).allTypeNames.size)
   }
 
+  ignore("create statistics") {
+    CommandLine.main(Array("-p", "iml", "-L", "statistics", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
+      "/home/feldentm/Desktop/iml.sf/generated"))
+  }
+
   ignore("create doxygen") {
     CommandLine.main(Array("-p", "iml", "-L", "doxygen", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
       "/home/feldentm/Desktop/iml.sf/generated"))

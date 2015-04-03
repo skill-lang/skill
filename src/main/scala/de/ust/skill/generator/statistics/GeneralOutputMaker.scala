@@ -19,13 +19,11 @@ import scala.collection.JavaConversions._
 /**
  * The parent class for all output makers.
  *
- * @author Timm Felden, Dennis Przytarski
+ * @author Timm Felden
  */
 trait GeneralOutputMaker extends Generator {
 
-  override def getLanguageName = "doxygen";
-
-  private[doxygen] def header : String
+  override def getLanguageName = "statistics";
 
   // remove special stuff for now
   final def setTC(tc : TypeContext) = this.tc = tc;
@@ -40,7 +38,7 @@ trait GeneralOutputMaker extends Generator {
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
       new FileOutputStream(f), "UTF-8")))
-    rval.write(header)
+    // no header required here -> rval.write(header)
     rval
   }
 
@@ -57,7 +55,7 @@ trait GeneralOutputMaker extends Generator {
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
-  protected def escaped(target : Name) : String = escaped(target.ada)
+  protected def escaped(target : Name) : String = ???
 
   private lazy val packagePath = if (packagePrefix.length > 0) {
     "/"+packagePrefix.replace(".", "/")
