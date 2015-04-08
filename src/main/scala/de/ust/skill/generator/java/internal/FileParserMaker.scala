@@ -99,6 +99,24 @@ final public class FileParser extends de.ust.skill.common.java.internal.FilePars
     }
 
     private SkillState makeState(Mode mode) {
+
+        // create missing type information${
+      (for (t ← IR)
+        yield s"""
+        ${name(t)}Access ${name(t)};
+        if (poolByName.containsKey("${t.getSkillName}"))
+            ${name(t)} = (${name(t)}Access) poolByName.get("${t.getSkillName}");
+        else {
+            ${name(t)} = new ${name(t)}Access(types.size()${
+        if (null == t.getSuperType) ""
+        else s", ${name(t.getSuperType)}"
+      });
+            types.add(${name(t)});
+            poolByName.put("${t.getSkillName}", ${name(t)});
+        }
+""").mkString
+    }
+        // make state
         SkillState r = new SkillState(poolByName, Strings, StringType, Annotation, types, in.path(), mode);
         try {
             r.check();

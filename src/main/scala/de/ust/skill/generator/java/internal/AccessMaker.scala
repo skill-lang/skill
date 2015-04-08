@@ -76,7 +76,7 @@ ${
       } })), ${
         t.getFields.count(_.isAuto) match {
           case 0 ⇒ "noAutoFields()"
-          case c ⇒ s"(FieldDeclaration<?, ${mapType(t)}>[]) java.lang.reflect.Array.newInstance(${mapType(t)}.class, $c)"
+          case c ⇒ s"(FieldDeclaration<?, ${mapType(t)}>[]) java.lang.reflect.Array.newInstance(FieldDeclaration.class, $c)"
         }
       });
     }${
