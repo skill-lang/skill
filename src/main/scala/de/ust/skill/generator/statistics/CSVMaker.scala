@@ -11,6 +11,7 @@ import de.ust.skill.ir.Typedef
 import de.ust.skill.ir.ContainerType
 import de.ust.skill.ir.InterfaceType
 import de.ust.skill.ir.EnumType
+import scala.annotation.tailrec
 /**
  * Creates user type equivalents.
  *
@@ -58,6 +59,23 @@ trait CSVMaker extends GeneralOutputMaker {
       out.write(s"enum;${tc.getEnums.size()}\n")
       out.write(s"user;${tc.getUsertypes.size()}\n")
       out.write(s"typedefs;${tc.getTypedefs.size()}\n")
+      out.close()
+    }
+
+    // type hierarchy height
+    locally {
+      @tailrec @inline def depth(t : UserType, d : Int = 0) : Int = t.getSuperType match {
+        case null ⇒ d
+        case s    ⇒ depth(s, d + 1)
+      }
+
+      val out = open(s"""types hierarchy.csv""")
+      out.write("super type count;count\n")
+      tc.removeSpecialDeclarations().getUsertypes.map(depth(_)).groupBy { x ⇒ x }.map {
+        case (s, ts) ⇒ (s, ts.size)
+      }.foreach {
+        case (t, count) ⇒ out.write(s"$t;$count\n")
+      }
       out.close()
     }
   }
