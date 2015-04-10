@@ -30,7 +30,7 @@ trait GeneralOutputMaker extends Generator {
   // remove special stuff
   final def setTC(tc : TypeContext) = {
     this.types = tc
-    this.IR = tc.removeSpecialDeclarations.getUsertypes.to
+    this.IR = tc.removeSpecialDeclarations.removeViews.getUsertypes.to
     // set large specification mode; leave some spare parameters
     largeSpecificationMode = IR.size > 200
   }
