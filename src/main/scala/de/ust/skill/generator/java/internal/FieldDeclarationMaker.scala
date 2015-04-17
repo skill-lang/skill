@@ -146,7 +146,7 @@ ${
         ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
         long result = 0L;
         int i = null == range ? 0 : (int) range.bpo;
-        final int high = null == range ? data.length : (int) range.count;
+        final int high = null == range ? data.length : (int) (range.bpo + range.count);
         for (; i < high; i++) {
             long v = (${if (null == t.getSuperType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
 
@@ -178,7 +178,7 @@ ${
         ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
         long result = 0L;
         int i = null == range ? 0 : (int) range.bpo;
-        final int high = null == range ? data.length : (int) range.count;
+        final int high = null == range ? data.length : (int) (range.bpo + range.count);
         for (; i < high; i++) {
             long v = $dataAccessI.get${f.getName.capital}().getSkillID();
 
