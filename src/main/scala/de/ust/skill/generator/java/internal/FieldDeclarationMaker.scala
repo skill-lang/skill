@@ -249,18 +249,18 @@ ${
     }
 
     @Override
-    public ${mapType(f.getType, true)} getR(${mapType(t)} ref) {
+    public ${mapType(f.getType, true)} getR(SkillObject ref) {
         ${
         if (f.isConstant()) s"return ${mapType(t)}.get${f.getName.capital}();"
-        else s"return ref.get${f.getName.capital}();"
+        else s"return ((${mapType(t)}) ref).get${f.getName.capital}();"
       }
     }
 
     @Override
-    public void setR(${mapType(t)} ref, ${mapType(f.getType, true)} value) {
+    public void setR(SkillObject ref, ${mapType(f.getType, true)} value) {
         ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
-        else s"ref.set${f.getName.capital}(value);"
+        else s"((${mapType(t)}) ref).set${f.getName.capital}(value);"
       }
     }
 

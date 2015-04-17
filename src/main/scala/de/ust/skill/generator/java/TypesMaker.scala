@@ -22,7 +22,7 @@ trait TypesMaker extends GeneralOutputMaker {
     //package
     out.write(s"""package ${this.packageName};
 
-import de.ust.skill.common.java.internal.FieldDeclaration;
+import de.ust.skill.common.java.api.FieldDeclaration;
 import de.ust.skill.common.java.internal.NamedType;
 import de.ust.skill.common.java.internal.SkillObject;
 import de.ust.skill.common.java.internal.StoragePool;
@@ -146,7 +146,7 @@ ${
 
     // generic get
     locally{
-      val fields = t.getFields.filter(!_.isIgnored)
+      val fields = t.getFields.filterNot(_.isIgnored)
       if(!fields.isEmpty)
         out.write(s"""
     /**
@@ -157,7 +157,7 @@ ${
      */
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T get(FieldDeclaration<T, ?> field) {
+    public <T> T get(FieldDeclaration<T> field) {
         switch (field.name()) {${
           (for(f <- fields)
             yield s"""
