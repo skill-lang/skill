@@ -20,7 +20,7 @@ class GeneratorTest extends FunSuite {
 
   def check(src : String, out : String) {
     CommandLine.exit = {s ⇒ fail(s)}
-    CommandLine.main(Array[String]("-L", "java", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/java/"+src, "testsuites"))
+    CommandLine.main(Array[String]("-L", "java", "-O@java:SuppressWarnings=true", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/java/"+src, "testsuites"))
   }
 
   test("date")(check("date.skill", "date"))

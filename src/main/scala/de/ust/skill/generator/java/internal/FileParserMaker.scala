@@ -26,7 +26,9 @@ import de.ust.skill.common.java.internal.StoragePool;
 import de.ust.skill.common.java.restrictions.TypeRestriction;
 import de.ust.skill.common.jvm.streams.FileInputStream;
 
-final public class FileParser extends de.ust.skill.common.java.internal.FileParser<SkillState> {
+${
+  suppressWarnings
+}final public class FileParser extends de.ust.skill.common.java.internal.FileParser<SkillState> {
 
     public final SkillState state;
 

@@ -36,6 +36,8 @@ import de.ust.skill.common.java.internal.StoragePool;
       out.write(s"""
 ${
         comment(t)
+}${
+  suppressWarnings
 }public class ${name(t)} extends ${
         if (null != t.getSuperType()) { name(t.getSuperType) }
         else { "SkillObject" }

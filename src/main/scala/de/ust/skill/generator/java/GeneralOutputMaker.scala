@@ -118,4 +118,10 @@ trait GeneralOutputMaker extends Generator {
    * Sourcepath can be configured to change output directory of source files.
    */
   protected var sourcePath = "src/main/java"
+  
+  /**
+   * this string may contain a "@SuppressWarnings("all")\n", in order to suppress warnings in generated code;
+   * the option can be enabled by "-O@java:SuppressWarnings=true"
+   */
+  protected var suppressWarnings = "";
 }

@@ -34,7 +34,7 @@ abstract class GenericTests extends FunSuite {
 
     CommandLine.exit = { s ⇒ fail(s) }
 
-    val args = ArrayBuffer[String]("-L", language, "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", name)
+    val args = ArrayBuffer[String]("-L", language, "-O@java:SuppressWarnings=true", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", name)
     if (options.size > 0)
       args ++= options.split("\\s+").to
     args += path.getPath

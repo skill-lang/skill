@@ -48,7 +48,9 @@ import de.ust.skill.common.java.restrictions.FieldRestriction;
       out.write(s"""
 ${
         comment(t)
-      }public class ${nameT}Access extends ${
+      }${
+  suppressWarnings
+}public class ${nameT}Access extends ${
         if (isBasePool) s"BasePool<${typeT}>"
         else s"SubPool<${typeT}, ${mapType(t.getBaseType)}>"
       } {

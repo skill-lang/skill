@@ -55,7 +55,9 @@ import de.ust.skill.common.jvm.streams.MappedOutStream;
 /**
  * ${f.getType.toString} ${t.getName.capital}.${f.getName.camel}
  */
-final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapType(t)}> implements ${
+${
+  suppressWarnings
+}final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapType(t)}> implements ${
         f.getType match {
           case ft : GroundType ⇒ ft.getSkillName match {
             case "bool"                  ⇒ s"""KnownBooleanField<${mapType(t)}>"""

@@ -51,7 +51,9 @@ import ${packagePrefix}api.SkillFile;
  * @author Timm Felden
  * @note type access fields start with a capital letter to avoid collisions
  */
-public final class SkillState extends de.ust.skill.common.java.internal.SkillState implements SkillFile {
+${
+  suppressWarnings
+}public final class SkillState extends de.ust.skill.common.java.internal.SkillState implements SkillFile {
 
     // types by skill name
     private final HashMap<String, StoragePool<?, ?>> poolByName;

@@ -31,7 +31,9 @@ import de.ust.skill.common.java.api.SkillException;
  * 
  * @author Timm Felden
  */
-public interface SkillFile extends de.ust.skill.common.java.api.SkillFile {
+${
+  suppressWarnings
+}public interface SkillFile extends de.ust.skill.common.java.api.SkillFile {
 
     /**
      * Create a new skill file based on argument path and mode.
