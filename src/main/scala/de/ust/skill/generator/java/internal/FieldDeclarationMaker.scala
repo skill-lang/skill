@@ -56,8 +56,8 @@ import de.ust.skill.common.jvm.streams.MappedOutStream;
  * ${f.getType.toString} ${t.getName.capital}.${f.getName.camel}
  */
 ${
-  suppressWarnings
-}final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapType(t)}> implements ${
+        suppressWarnings
+      }final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapType(t)}> implements ${
         f.getType match {
           case ft : GroundType ⇒ ft.getSkillName match {
             case "bool"                  ⇒ s"""KnownBooleanField<${mapType(t)}>"""
@@ -182,7 +182,12 @@ ${
         int i = null == range ? 0 : (int) range.bpo;
         final int high = null == range ? data.length : (int) (range.bpo + range.count);
         for (; i < high; i++) {
-            long v = $dataAccessI.get${f.getName.capital}().getSkillID();
+            final ${mapType(f.getType)} instance = $dataAccessI.get${f.getName.capital}();
+            if (null == instance) {
+                result += 1;
+                continue;
+            }
+            long v = instance.getSkillID();
 
             if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
                 result += 1;
