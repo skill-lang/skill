@@ -28,6 +28,8 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
     super.make
 
     for (t ← IR; f ← t.getFields; if !f.isInstanceOf[View]) {
+      val tIsBaseType = t.getSuperType == null
+
       val nameT = mapType(t)
       val nameF = s"KnownField_${name(t)}_${name(f)}"
 
@@ -150,7 +152,7 @@ ${
         int i = null == range ? 0 : (int) range.bpo;
         final int high = null == range ? data.length : (int) (range.bpo + range.count);
         for (; i < high; i++) {
-            long v = (${if (null == t.getSuperType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
+            long v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
 
             if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
                 result += 1;
@@ -231,10 +233,17 @@ ${
             SimpleChunk c = (SimpleChunk) last;
             i = (int) c.bpo;
             high = (int) (c.bpo + c.count);
-        } else {
+        } else {${
+            // we have to use the offset of the pool
+            if (tIsBaseType) """
             i = 0;
             high = owner.size();
-        }
+        """
+            else """
+            i = owner.size() > 0 ? (int) owner.iterator().next().getSkillID() - 1 : 0;
+            high = i + owner.size();
+        """
+          }}
 
         for (; i < high; i++) {
             ${
@@ -245,8 +254,12 @@ ${
                 case _                       ⇒ s"""out.${t.getSkillName}($dataAccessI.get${f.getName.capital}());"""
               }
 
-              case t : UserType ⇒ s"""out.v64($dataAccessI.get${f.getName.capital}().getSkillID());"""
-              case _            ⇒ s"""type.writeSingleField($dataAccessI.get${f.getName.capital}(), out);"""
+              case t : UserType ⇒ s"""${mapType(t)} v = $dataAccessI.get${f.getName.capital}();
+            if (null == v)
+                out.i8((byte) 0);
+            else
+                out.v64(v.getSkillID());"""
+              case _ ⇒ s"""type.writeSingleField($dataAccessI.get${f.getName.capital}(), out);"""
             }
           }
         }"""
