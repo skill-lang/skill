@@ -22,6 +22,7 @@ import de.ust.skill.ir.restriction.FloatRangeRestriction
 import de.ust.skill.ir.restriction.NullableRestriction
 import de.ust.skill.ir.View
 import de.ust.skill.ir.UserType
+import de.ust.skill.ir.SingleBaseTypeContainer
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -45,6 +46,11 @@ import java.util.Iterator;
 
 import de.ust.skill.common.java.internal.*;
 import de.ust.skill.common.java.internal.fieldDeclarations.*;
+import de.ust.skill.common.java.internal.fieldTypes.Annotation;
+import de.ust.skill.common.java.internal.fieldTypes.MapType;
+import de.ust.skill.common.java.internal.fieldTypes.SingleArgumentType;
+import de.ust.skill.common.java.internal.fieldTypes.StringType;
+import de.ust.skill.common.java.internal.fieldTypes.V64;
 import de.ust.skill.common.java.internal.parts.Block;
 import de.ust.skill.common.java.internal.parts.Chunk;
 import de.ust.skill.common.java.internal.parts.SimpleChunk;
@@ -142,21 +148,55 @@ ${
         if (f.isConstant())
           """
         return 0; // this field is constant"""
-        else
+        else {
+          // this prelude is common to most cases
+          def preludeData = s"""final ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
+        long result = 0L;
+        int i = null == range ? 0 : (int) range.bpo;
+        final int high = null == range ? data.length : (int) (range.bpo + range.count);
+        for (; i < high; i++) {"""
+
           f.getType match {
 
             // read next element
             case fieldType : GroundType ⇒ fieldType.getSkillName match {
 
+              case "annotation" ⇒ s"""
+        final Annotation t = (Annotation) type;
+        $preludeData
+            SkillObject v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
+            if(null==v)
+                result++;
+            else
+                result += t.singleOffset(v);
+        }
+        return result;"""
+
+              case "string" ⇒ s"""
+        final StringType t = (StringType) type;
+        $preludeData
+            String v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
+            if(null==v)
+                result++;
+            else
+                result += t.singleOffset(v);
+        }
+        return result;"""
+
               case "i8" | "bool" ⇒ s"""
         return range.count;"""
 
+              case "i16" ⇒ s"""
+        return 2 * range.count;"""
+
+              case "i32" | "f32" ⇒ s"""
+        return 4 * range.count;"""
+
+              case "i64" | "f64" ⇒ s"""
+        return 8 * range.count;"""
+
               case "v64" ⇒ s"""
-        ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
-        long result = 0L;
-        int i = null == range ? 0 : (int) range.bpo;
-        final int high = null == range ? data.length : (int) (range.bpo + range.count);
-        for (; i < high; i++) {
+        $preludeData
             long v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
 
             if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
@@ -181,16 +221,41 @@ ${
         }
         return result;"""
               case _ ⇒ s"""
-        return type.calculateOffset(new IterableArrayView(((${name(t.getBaseType)}Access) owner.basePool()).data(), (int) range.bpo,
-                (int) (range.bpo + range.count)));"""
+        throw new NoSuchMethodError();"""
             }
 
+            case fieldType : SingleBaseTypeContainer ⇒ s"""
+        final SingleArgumentType t = (SingleArgumentType) type;
+        final FieldType baseType = t.groundType;
+        $preludeData
+            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
+            if(null==v)
+                result++;
+            else {
+                result += V64.singleV64Offset(v.size());
+                result += baseType.calculateOffset(v);
+            }
+        }
+        return result;"""
+
+            case fieldType : MapType ⇒ s"""
+        final MapType t = (MapType) type;
+        final FieldType keyType = t.keyType;
+        final FieldType valueType = t.valueType;
+        $preludeData
+            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
+            if(null==v)
+                result++;
+            else {
+                result += V64.singleV64Offset(v.size());
+                result += keyType.calculateOffset(v.keySet());
+                result += valueType.calculateOffset(v.values());
+            }
+        }
+        return result;"""
+
             case fieldType : UserType ⇒ s"""
-        ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
-        long result = 0L;
-        int i = null == range ? 0 : (int) range.bpo;
-        final int high = null == range ? data.length : (int) (range.bpo + range.count);
-        for (; i < high; i++) {
+        $preludeData
             final ${mapType(f.getType)} instance = $dataAccessI.get${f.getName.capital}();
             if (null == instance) {
                 result += 1;
@@ -220,9 +285,9 @@ ${
         }
         return result;"""
             case _ ⇒ s"""
-        return type.calculateOffset(new IterableArrayView(((${name(t.getBaseType)}Access) owner.basePool()).data(), (int) range.bpo,
-                (int) (range.bpo + range.count)));"""
+        throw new NoSuchMethodError();"""
           }
+        }
       }
     }
 
