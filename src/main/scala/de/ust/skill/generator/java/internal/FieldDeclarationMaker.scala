@@ -48,6 +48,7 @@ import de.ust.skill.common.java.internal.fieldDeclarations.*;
 import de.ust.skill.common.java.internal.parts.Block;
 import de.ust.skill.common.java.internal.parts.Chunk;
 import de.ust.skill.common.java.internal.parts.SimpleChunk;
+import de.ust.skill.common.java.iterators.IterableArrayView;
 import de.ust.skill.common.jvm.streams.MappedInStream;
 import de.ust.skill.common.jvm.streams.MappedOutStream;
 
@@ -146,6 +147,10 @@ ${
 
             // read next element
             case fieldType : GroundType ⇒ fieldType.getSkillName match {
+
+              case "i8" | "bool" ⇒ s"""
+        return range.count;"""
+
               case "v64" ⇒ s"""
         ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
         long result = 0L;
@@ -175,7 +180,9 @@ ${
             }
         }
         return result;"""
-              case _ ⇒ s"""return -1;"""
+              case _ ⇒ s"""
+        return type.calculateOffset(new IterableArrayView(((${name(t.getBaseType)}Access) owner.basePool()).data(), (int) range.bpo,
+                (int) (range.bpo + range.count)));"""
             }
 
             case fieldType : UserType ⇒ s"""
@@ -212,7 +219,9 @@ ${
             }
         }
         return result;"""
-            case _ ⇒ s"""return -1;"""
+            case _ ⇒ s"""
+        return type.calculateOffset(new IterableArrayView(((${name(t.getBaseType)}Access) owner.basePool()).data(), (int) range.bpo,
+                (int) (range.bpo + range.count)));"""
           }
       }
     }
