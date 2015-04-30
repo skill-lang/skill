@@ -29,7 +29,7 @@ class IMLTest extends FunSuite {
       "/home/feldentm/Desktop/iml.sf/generated"))
   }
 
-  test("create java") {
+  ignore("create java") {
     CommandLine.main(Array("-p", "iml", "-L", "java", "-O@java:suppressWarnings=true", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
       "/home/feldentm/Desktop/iml.sf/generated"))
   }
