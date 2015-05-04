@@ -15,35 +15,38 @@ import java.nio.file.Files
 class IMLTest extends FunSuite {
   val filename = new File("/home/feldentm/Desktop/iml.sf/specification/iml-all.skill")
 
-  if (Files.exists(filename.toPath)) {
-
-    test("parse iml.sf") {
+  test("parse iml.sf") {
+    if (Files.exists(filename.toPath))
       assert(100 < Parser.process(filename).allTypeNames.size)
-    }
+  }
 
-    test("create statistics") {
+  test("create statistics") {
+    if (Files.exists(filename.toPath))
       CommandLine.main(Array("-p", "iml", "-L", "statistics", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
         "/home/feldentm/Desktop/iml.sf/generated"))
-    }
+  }
 
-    test("create doxygen") {
+  test("create doxygen") {
+    if (Files.exists(filename.toPath))
       CommandLine.main(Array("-p", "iml", "-L", "doxygen", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
         "/home/feldentm/Desktop/iml.sf/generated"))
-    }
+  }
 
-    ignore("create ada") {
+  test("create ada") {
+    if (Files.exists(filename.toPath))
       CommandLine.main(Array("-p", "iml", "-L", "ada", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
         "/home/feldentm/Desktop/iml.sf/generated"))
-    }
+  }
 
-    test("create java") {
+  test("create java") {
+    if (Files.exists(filename.toPath))
       CommandLine.main(Array("-p", "iml", "-L", "java", "-O@java:suppressWarnings=true", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
         "/home/feldentm/Desktop/iml.sf/generated"))
-    }
+  }
 
-    test("create scala") {
+  test("create scala") {
+    if (Files.exists(filename.toPath))
       CommandLine.main(Array("-p", "iml", "-L", "scala", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
         "/home/feldentm/Desktop/iml.sf/generated"))
-    }
   }
 }
