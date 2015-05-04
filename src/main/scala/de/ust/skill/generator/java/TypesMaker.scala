@@ -214,6 +214,11 @@ ${
             super(skillID);
             this.τPool = τPool;
         }
+        
+        @Override
+        public StoragePool<?, ?> τPool() {
+          return τPool;
+        }
 
         @Override
         public String τName() {

@@ -110,7 +110,7 @@ ${
             StringPool strings = new StringPool(null);
             ArrayList<StoragePool<?, ?>> types = new ArrayList<>(1);
             StringType stringType = new StringType(strings);
-            Annotation annotation = new Annotation(types, stringType);
+            Annotation annotation = new Annotation(types);
 
             // create type information${
       var i = -1
