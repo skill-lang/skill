@@ -10,8 +10,10 @@ import org.scalatest.junit.JUnitRunner
 import de.ust.skill.generator
 import de.ust.skill.main.CommandLine
 import java.nio.file.Files
+import org.scalatest.Ignore
 
 @RunWith(classOf[JUnitRunner])
+@Ignore
 class IMLTest extends FunSuite {
   val specPath = "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill"
   val filename = new File(specPath)

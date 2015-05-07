@@ -150,31 +150,33 @@ ${
         })
       }
 
-      output += """
+      output + s"""
    ------------------------------
    --  Field Access Functions  --
    ------------------------------
-"""
+${
 
-      /**
-       * Provides the accessor functions to the fields of every type.
-       */
-      for (d ← IR) {
-        d.getAllFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
-          output += comment(f)
-          output += s"""   function Get_${name(f)} (Object : ${name(d)}_Type) return ${mapType(f.getType, d, f)};\r\n"""
-          if (!f.isConstant) {
-            output += comment(f)
-            output += s"""   procedure Set_${name(f)} (
+        /**
+         * Provides the accessor functions to the fields of every type.
+         */
+        (for (
+          d ← IR;
+          f ← d.getAllFields if !f.isIgnored()
+        ) yield s"""
+${comment(f)}   function Get_${name(f)} (Object : ${name(d)}_Type) return ${mapType(f.getType, d, f)};
+${
+          if (f.isConstant) ""
+          else {
+            s"""${comment(f)}   procedure Set_${name(f)} (
       Object : in out ${name(d)}_Type;
       Value  :        ${mapType(f.getType, d, f)}
-   );\r\n\r\n"""
+   );
+"""
           }
-        })
-      }
-      output.stripLineEnd
+        }
+""").mkString
+      }"""
     }
-
 private
 
    type Skill_States is (Unused, Append, Create, Read, Write);
