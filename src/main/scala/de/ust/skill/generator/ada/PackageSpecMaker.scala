@@ -186,25 +186,29 @@ private
       record
          skill_id : Natural;
       end record;
-
 ${
       /**
        * Provides the record types of the type declarations.
        */
-      var output = "";
-      for (d ← IR) {
+      (for (d ← IR) yield {
         val superType = if (d.getSuperType == null) "Skill" else name(d.getSuperType)
-        output += s"""   type ${name(d)}_Type is new ${superType}_Type with\r\n      record\r\n"""
-        val fields = d.getFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
-        output += fields.map({ f ⇒
-          var comment = "";
-          if (f.isAuto()) comment = "  --  auto aka not serialized"
-          s"""         ${f.getSkillName} : ${mapType(f.getType, d, f)};${comment}"""
-        }).mkString("\r\n")
-        if (fields.length <= 0) output += s"""         null;"""
-        output += s"""\r\n      end record;\r\n\r\n"""
-      }
-      output.stripLineEnd
+
+        s"""
+   type ${name(d)}_Type is new ${superType}_Type with
+      record
+${
+          val fields = d.getFields.filterNot { f ⇒ f.isConstant() || f.isIgnored() }
+          if (fields.size <= 0) s"""         null;"""
+          else
+            (for (f ← fields) yield {
+              val comment = if (f.isAuto()) "  --  auto aka not serialized" else ""
+              s"""         ${f.getSkillName} : ${mapType(f.getType, d, f)};${comment}
+"""
+            }).mkString
+        }
+      end record;
+"""
+      }).mkString
     }
    ------------------
    --  STRING POOL --
