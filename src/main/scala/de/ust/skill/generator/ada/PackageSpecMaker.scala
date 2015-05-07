@@ -163,13 +163,13 @@ ${
           d ← IR;
           f ← d.getAllFields if !f.isIgnored()
         ) yield s"""
-${comment(f)}   function Get_${name(f)} (Object : ${name(d)}_Type) return ${mapType(f.getType, d, f)};
+${comment(f)}   function Get_${name(f)} (Object : ${name(d)}_Type) return ${mapType(f.getType, f.getDeclaredIn, f)};
 ${
           if (f.isConstant) ""
           else {
             s"""${comment(f)}   procedure Set_${name(f)} (
       Object : in out ${name(d)}_Type;
-      Value  :        ${mapType(f.getType, d, f)}
+      Value  :        ${mapType(f.getType, f.getDeclaredIn, f)}
    );
 """
           }
