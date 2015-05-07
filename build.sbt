@@ -27,3 +27,5 @@ libraryDependencies += "commons-lang" % "commons-lang" % "2.6"
 libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.1"
 
 jacoco.settings
+
+jacoco.excludes in jacoco.Config := Seq("*$$*")
