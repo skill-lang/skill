@@ -38,7 +38,7 @@ class GenericTests extends common.GenericTests {
   }
 
   def newTestFile(packagePath : String, name : String) = {
-    val f = new File(s"testsuites/java/src/test/java/$packagePath/Generic${name}ReadTest.java")
+    val f = new File(s"testsuites/java/src/test/java/$packagePath/Generic${name}Test.java")
     f.getParentFile.mkdirs
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
@@ -46,19 +46,61 @@ class GenericTests extends common.GenericTests {
     rval.write(s"""
 package $packagePath;
 
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 import $packagePath.api.SkillFile;
+
+import de.ust.skill.common.java.api.Access;
+import de.ust.skill.common.java.api.SkillFile.Mode;
+import de.ust.skill.common.java.internal.SkillObject;
 import de.ust.skill.common.java.internal.ParseException;
 
 /**
  * Tests the file reading capabilities.
  */
 @SuppressWarnings("static-method")
-public class Generic${name}ReadTest {
+public class Generic${name}Test extends common.CommonTest {
     public SkillFile read(String s) throws Exception {
         return SkillFile.open("../../" + s);
+    }
+
+    @Test
+    public void writeGeneric() throws Exception {
+        Path path = tmpFile("write.generic");
+        SkillFile sf = SkillFile.open(path);
+        reflectiveInit(sf);
+        sf.close();
+    }
+
+    @Test
+    public void writeGenericChecked() throws Exception {
+        Path path = tmpFile("write.generic.checked");
+        SkillFile sf = SkillFile.open(path);
+        reflectiveInit(sf);
+        // write file
+        sf.flush();
+
+        // create a name -> type map
+        Map<String, Access<? extends SkillObject>> types = new HashMap<>();
+        for (Access<?> t : sf.allTypes())
+            types.put(t.name(), t);
+
+        // read file and check skill IDs
+        SkillFile sf2 = SkillFile.open(path, Mode.Read);
+        for (Access<?> t : sf2.allTypes()) {
+            Iterator<? extends SkillObject> os = types.get(t.name()).iterator();
+            for (SkillObject o : t) {
+                Assert.assertTrue("to few instances in read stat", os.hasNext());
+                Assert.assertEquals(o.getSkillID(), os.next().getSkillID());
+            }
+            Assert.assertFalse("to many instances in read stat", os.hasNext());
+        }
     }
 """)
     rval

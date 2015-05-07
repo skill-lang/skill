@@ -13,7 +13,7 @@ import java.nio.file.Files
 
 @RunWith(classOf[JUnitRunner])
 class IMLTest extends FunSuite {
-  val specPath = "/tmp/iml.sf/specification/iml-all.skill"
+  val specPath = "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill"
   val filename = new File(specPath)
 
   test("parse iml.sf") {
