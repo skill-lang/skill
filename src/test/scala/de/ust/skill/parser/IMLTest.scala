@@ -13,7 +13,8 @@ import java.nio.file.Files
 
 @RunWith(classOf[JUnitRunner])
 class IMLTest extends FunSuite {
-  val filename = new File("/home/feldentm/Desktop/iml.sf/specification/iml-all.skill")
+  val specPath = "/tmp/iml.sf/specification/iml-all.skill"
+  val filename = new File(specPath)
 
   test("parse iml.sf") {
     if (Files.exists(filename.toPath))
@@ -22,31 +23,31 @@ class IMLTest extends FunSuite {
 
   test("create statistics") {
     if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "iml", "-L", "statistics", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
-        "/home/feldentm/Desktop/iml.sf/generated"))
+      CommandLine.main(Array("-p", "iml", "-L", "statistics", specPath,
+        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
   }
 
   test("create doxygen") {
     if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "iml", "-L", "doxygen", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
-        "/home/feldentm/Desktop/iml.sf/generated"))
+      CommandLine.main(Array("-p", "iml", "-L", "doxygen", specPath,
+        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
   }
 
-  test("create ada") {
+  ignore("create ada") {
     if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "iml", "-L", "ada", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
-        "/home/feldentm/Desktop/iml.sf/generated"))
+      CommandLine.main(Array("-p", "iml", "-L", "ada", specPath,
+        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
   }
 
   test("create java") {
     if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "iml", "-L", "java", "-O@java:suppressWarnings=true", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
-        "/home/feldentm/Desktop/iml.sf/generated"))
+      CommandLine.main(Array("-p", "iml", "-L", "java", "-O@java:suppressWarnings=true", specPath,
+        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
   }
 
   test("create scala") {
     if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "iml", "-L", "scala", "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill",
-        "/home/feldentm/Desktop/iml.sf/generated"))
+      CommandLine.main(Array("-p", "iml", "-L", "scala", specPath,
+        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
   }
 }
