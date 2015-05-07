@@ -87,13 +87,6 @@ trait GeneralOutputMaker extends Generator {
   protected def appendConstructorArguments(t : UserType, prependTypes : Boolean = true) : String
 
   /**
-   * turns a declaration and a field into a string writing that field into an outStream
-   * @note the used iterator is "outData"
-   * @note the used target OutStream is "dataChunk"
-   */
-  protected def writeField(d : UserType, f : Field) : String
-
-  /**
    * Translation of a type to its representation in the source code
    */
   protected def name(t : Type) : String = escaped(t.getName.capital)
