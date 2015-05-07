@@ -124,7 +124,7 @@ ${
        */
       def printFields(d : UserType) : String = {
         var output = s"""'(\r\n         skill_id => Natural (${
-          if (null == d.getBaseType) d.getName.ada
+          if (null == d.getBaseType) name(d)
           else d.getBaseType.getName.ada
         }_Type_Declaration.Storage_Pool.Length) + 1"""
         output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f ⇒
@@ -154,7 +154,7 @@ ${
         var output = "";
         val superTypes = getSuperTypes(d).toList.reverse
         superTypes.foreach({ t ⇒
-          output += s"""\r\n      ${t.getName.ada}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));"""
+          output += s"""\r\n      ${name(t)}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));"""
         })
         output
       }
@@ -164,9 +164,10 @@ ${
        * Provides the API functions and procedures for all types.
        */
       for (d ← IR) {
+        val nameD = name(d)
         output += s"""
-   function New_${d.getName.ada} (State : access Skill_State${printParameters(d)}) return ${d.getName.ada}_Type_Access is
-      ${d.getName.ada}_Type_Declaration : Type_Information := State.Types.Element ("${d.getSkillName}");${
+   function New_${nameD} (State : access Skill_State${printParameters(d)}) return ${nameD}_Type_Access is
+      ${nameD}_Type_Declaration : Type_Information := State.Types.Element ("${d.getSkillName}");${
           var output = ""
           val superTypes = getSuperTypes(d).toList.reverse
           superTypes.foreach({ t ⇒
@@ -174,40 +175,40 @@ ${
           })
           output
         }
-      New_Object : ${d.getName.ada}_Type_Access := new ${d.getName.ada}_Type${printFields(d)};
+      New_Object : ${nameD}_Type_Access := new ${nameD}_Type${printFields(d)};
    begin
-      ${d.getName.ada}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));${printSuperTypes(d)}
+      ${nameD}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));${printSuperTypes(d)}
       return New_Object;
-   end New_${d.getName.ada};
+   end New_${nameD};
 
-   procedure New_${d.getName.ada} (State : access Skill_State${printParameters(d)}) is
-      New_Object : ${d.getName.ada}_Type_Access := New_${d.getName.ada} (State${printSimpleParameters(d)});
+   procedure New_${nameD} (State : access Skill_State${printParameters(d)}) is
+      New_Object : ${nameD}_Type_Access := New_${nameD} (State${printSimpleParameters(d)});
    begin
       null;
-   end New_${d.getName.ada};
+   end New_${nameD};
 
-   function ${d.getName.ada}s_Size (State : access Skill_State) return Natural is
+   function ${nameD}s_Size (State : access Skill_State) return Natural is
       (Natural (State.Types.Element ("${d.getSkillName}").Storage_Pool.Length));
 
-   function Get_${d.getName.ada} (State : access Skill_State; Index : Natural) return ${d.getName.ada}_Type_Access is
-      (${d.getName.ada}_Type_Access (State.Types.Element ("${d.getSkillName}").Storage_Pool.Element (Index)));
+   function Get_${nameD} (State : access Skill_State; Index : Natural) return ${nameD}_Type_Access is
+      (${nameD}_Type_Access (State.Types.Element ("${d.getSkillName}").Storage_Pool.Element (Index)));
 
-   function Get_${d.getName.ada}s (State : access Skill_State) return ${d.getName.ada}_Type_Accesses is
+   function Get_${nameD}s (State : access Skill_State) return ${nameD}_Type_Accesses is
       use Storage_Pool_Vector;
 
       Type_Declaration : Type_Information := State.Types.Element ("${d.getSkillName}");
       Length : Natural := Natural (Type_Declaration.Storage_Pool.Length);
-      rval : ${d.getName.ada}_Type_Accesses := new ${d.getName.ada}_Type_Array (1 .. Length);
+      rval : ${nameD}_Type_Accesses := new ${nameD}_Type_Array (1 .. Length);
 
       procedure Iterate (Position : Cursor) is
       begin
-         rval (To_Index (Position)) := ${d.getName.ada}_Type_Access (Element (Position));
+         rval (To_Index (Position)) := ${nameD}_Type_Access (Element (Position));
       end Iterate;
       pragma Inline (Iterate);
    begin
       Type_Declaration.Storage_Pool.Iterate (Iterate'Access);
       return rval;
-   end Get_${d.getName.ada}s;\r\n"""
+   end Get_${nameD}s;\r\n"""
       }
       output
     }

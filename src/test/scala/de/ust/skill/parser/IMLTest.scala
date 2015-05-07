@@ -33,7 +33,7 @@ class IMLTest extends FunSuite {
         System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
   }
 
-  ignore("create ada") {
+  test("create ada") {
     if (Files.exists(filename.toPath))
       CommandLine.main(Array("-p", "iml", "-L", "ada", specPath,
         System.getProperty("user.home") + "/Desktop/iml.sf/generated"))

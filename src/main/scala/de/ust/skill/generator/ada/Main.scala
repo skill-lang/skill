@@ -105,13 +105,13 @@ class Main extends FakeMain
       case "string"     ⇒ "String_Access"
     }
 
-    case t : ConstantLengthArrayType ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Array"
-    case t : VariableLengthArrayType ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Vector.Vector"
-    case t : ListType                ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_List.List"
-    case t : SetType                 ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Set.Set"
-    case t : MapType                 ⇒ s"${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Map.Map"
+    case t : ConstantLengthArrayType ⇒ s"${name(d)}_${f.getSkillName.capitalize}_Array"
+    case t : VariableLengthArrayType ⇒ s"${name(d)}_${f.getSkillName.capitalize}_Vector.Vector"
+    case t : ListType                ⇒ s"${name(d)}_${f.getSkillName.capitalize}_List.List"
+    case t : SetType                 ⇒ s"${name(d)}_${f.getSkillName.capitalize}_Set.Set"
+    case t : MapType                 ⇒ s"${name(d)}_${f.getSkillName.capitalize}_Map.Map"
 
-    case t : Declaration             ⇒ s"${t.getName.ada}_Type_Access"
+    case t : Declaration             ⇒ s"${name(t)}_Type_Access"
   }
 
   /**
@@ -185,11 +185,11 @@ class Main extends FakeMain
       case t : SetType ⇒
         s"""
                Inserted : Boolean;
-               Position : ${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Set.Cursor;
+               Position : ${name(d)}_${f.getSkillName.capitalize}_Set.Cursor;
                pragma Unreferenced (Position);
             begin
                for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
-                  ${d.getSkillName.capitalize}_${f.getSkillName.capitalize}_Set.Insert (Object.${f.getSkillName}, ${inner(t.getBaseType, d, f)}, Position, Inserted);
+                  ${name(d)}_${f.getSkillName.capitalize}_Set.Insert (Object.${f.getSkillName}, ${inner(t.getBaseType, d, f)}, Position, Inserted);
                end loop;"""
 
       case t : MapType ⇒
@@ -372,7 +372,7 @@ class Main extends FakeMain
   protected def getSubTypes(d : UserType) : MutableList[Type] = {
     var rval = MutableList[Type]()
 
-    IR.reverse.foreach { _d =>
+    IR.reverse.foreach { _d ⇒
       if (d == _d.getSuperType && -1 == rval.indexOf(_d)) {
         rval += _d
         rval ++= getSubTypes(_d)
@@ -474,17 +474,18 @@ Opitions (ada):
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
   protected def escaped(target : String) : String = target.toLowerCase match {
+    // disabled escaping of keywords, because names do not appear alone anyway
     // keywords get a suffix "_2"
-    case "abort" | "else" | "new" | "return" | "abs" | "elsif" | "not" | "reverse" | "abstract" | "end" | "null" |
-      "accept" | "entry" | "select" | "access" | "exception" | "of" | "separate" | "aliased" | "exit" | "or" |
-      "some" | "all" | "others" | "subtype" | "and" | "for" | "out" | "synchronized" | "array" | "function" |
-      "overriding" | "at" | "tagged" | "generic" | "package" | "task" | "begin" | "goto" | "pragma" | "terminate" |
-      "body" | "private" | "then" | "if" | "procedure" | "type" | "case" | "in" | "protected" | "constant" |
-      "interface" | "until" | "is" | "raise" | "use" | "declare" | "range" | "delay" | "limited" | "record" |
-      "when" | "delta" | "loop" | "rem" | "while" | "digits" | "renames" | "with" | "do" | "mod" | "requeue" |
-      "xor" ⇒ return target+"_2"
+    //    case "abort" | "else" | "new" | "return" | "abs" | "elsif" | "not" | "reverse" | "abstract" | "end" | "null" |
+    //      "accept" | "entry" | "select" | "access" | "exception" | "of" | "separate" | "aliased" | "exit" | "or" |
+    //      "some" | "all" | "others" | "subtype" | "and" | "for" | "out" | "synchronized" | "array" | "function" |
+    //      "overriding" | "at" | "tagged" | "generic" | "package" | "task" | "begin" | "goto" | "pragma" | "terminate" |
+    //      "body" | "private" | "then" | "if" | "procedure" | "type" | "case" | "in" | "protected" | "constant" |
+    //      "interface" | "until" | "is" | "raise" | "use" | "declare" | "range" | "delay" | "limited" | "record" |
+    //      "when" | "delta" | "loop" | "rem" | "while" | "digits" | "renames" | "with" | "do" | "mod" | "requeue" |
+    //      "xor" ⇒ return target+"_2"
 
-    // the string is fine anyway
-    case _ ⇒ return target
+    // replace ":"-characters by something that is legal in an identifier, but wont alias an Ada-style type-name
+    case _ ⇒ return target.replace(":", "_0")
   }
 }

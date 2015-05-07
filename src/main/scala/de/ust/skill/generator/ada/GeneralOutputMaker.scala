@@ -13,8 +13,8 @@ import java.io.OutputStreamWriter
 import java.io.FileOutputStream
 import scala.collection.mutable.MutableList
 import de.ust.skill.generator.common.Generator
-
 import scala.collection.JavaConversions._
+import scala.collection.mutable.HashMap
 
 /**
  * The parent class for all output makers.
@@ -28,7 +28,7 @@ trait GeneralOutputMaker extends Generator {
   private[ada] def header : String
 
   // remove special stuff for now
-  final def setTC(tc : TypeContext) = this.IR = tc.removeSpecialDeclarations.getUsertypes.to
+  final def setTC(tc : TypeContext) = this.IR = tc.removeSpecialDeclarations.removeViews.getUsertypes.to
   var IR : List[UserType] = _
 
   /**
@@ -77,6 +77,10 @@ trait GeneralOutputMaker extends Generator {
    * @note currently unused, because emitted names can not alias predefined types or keywords anyway
    */
   protected def escaped(target : Name) : String = escaped(target.ada)
+
+  private final val nameCache = HashMap[Type, String]()
+  protected final def name(d : Type) = nameCache.get(d).getOrElse { val r = escaped(d.getName.ada); nameCache(d) = r; r }
+  protected final def name(f : Field) = escaped(f.getName.ada)
 
   private lazy val packagePath = if (packagePrefix.length > 0) {
     packagePrefix.replace(".", "/")
