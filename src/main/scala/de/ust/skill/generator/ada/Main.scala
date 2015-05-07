@@ -115,126 +115,6 @@ class Main extends FakeMain
   }
 
   /**
-   * Generates the read functions into the procedure Read_Queue_Vector_Iterator in package File_Reader.
-   */
-  protected def mapFileReader(d : UserType, f : Field) : String = {
-    /**
-     * The basis type of the field that will be read.
-     */
-    def inner(t : Type, _d : UserType, _f : Field) : String = {
-      t match {
-        case t : GroundType ⇒ t.getName.lower match {
-          case "annotation" ⇒
-            s"Read_Annotation (Input_Stream)"
-          case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" | "f32" | "f64" ⇒
-            s"Byte_Reader.Read_${mapType(t, _d, _f)} (Input_Stream)"
-          case "string" ⇒
-            s"Read_String (Input_Stream)"
-        }
-        case t : Declaration ⇒
-          s"""Read_${t.getName.ada}_Type (Input_Stream)"""
-      }
-    }
-
-    f.getType() match {
-      case t : GroundType ⇒ t.getName.lower match {
-        case "annotation" ⇒
-          s"""begin
-               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
-
-        case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" | "f32" | "f64" ⇒
-          if (f.isConstant) {
-            s"""   Skill_Parse_Constant_Error : exception;
-            begin
-               if Object.Get_${f.getSkillName.capitalize} /= ${mapType(f.getType, d, f)} (Field_Declaration.Constant_Value) then
-                  raise Skill_Parse_Constant_Error;
-               end if;"""
-          } else {
-            s"""begin
-               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
-          }
-
-        case "string" ⇒
-          s"""begin
-               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
-      }
-
-      case t : ConstantLengthArrayType ⇒
-        s"""
-               Skill_Parse_Constant_Array_Length_Error : exception;
-            begin
-               if ${t.getLength} /= Field_Declaration.Constant_Array_Length then
-                  raise Skill_Parse_Constant_Array_Length_Error;
-               end if;
-               for I in 1 .. ${t.getLength} loop
-                  Object.${f.getSkillName} (I) := ${inner(t.getBaseType, d, f)};
-               end loop;"""
-
-      case t : VariableLengthArrayType ⇒
-        s"""begin
-               for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
-                  Object.${f.getSkillName}.Append (${inner(t.getBaseType, d, f)});
-               end loop;"""
-
-      case t : ListType ⇒
-        s"""begin
-               for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
-                  Object.${f.getSkillName}.Append (${inner(t.getBaseType, d, f)});
-               end loop;"""
-
-      case t : SetType ⇒
-        s"""
-               Inserted : Boolean;
-               Position : ${name(d)}_${f.getSkillName.capitalize}_Set.Cursor;
-               pragma Unreferenced (Position);
-            begin
-               for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
-                  ${name(d)}_${f.getSkillName.capitalize}_Set.Insert (Object.${f.getSkillName}, ${inner(t.getBaseType, d, f)}, Position, Inserted);
-               end loop;"""
-
-      case t : MapType ⇒
-        s"""${
-          var output = ""
-          val types = t.getBaseTypes().reverse
-          types.slice(0, types.length - 1).zipWithIndex.foreach({
-            case (t, i) ⇒
-              val x = {
-                if (0 == i)
-                  s"""declare
-                        Key   : ${mapType(types.get(i + 1), d, f)} := ${inner(types.get(i + 1), d, f)};
-                        Value : ${mapType(types.get(i), d, f)} := ${inner(types.get(i), d, f)};
-                     begin
-                        Map.Insert (Key, Value);
-                     end;"""
-                else
-                  s"""declare
-                        Key : ${mapType(types.get(i + 1), d, f)} := ${inner(types.get(i + 1), d, f)};
-                     begin
-                        Map.Insert (Key, Read_Map_${types.length - i});
-                     end;"""
-              }
-              output += s"""               function Read_Map_${types.length - (i + 1)} return ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length - (i + 1)}.Map is
-                  Map : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length - (i + 1)}.Map;
-               begin
-                  for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
-                     ${x}
-                  end loop;
-                  return Map;
-               end Read_Map_${types.length - (i + 1)};
-               pragma Inline (Read_Map_${types.length - (i + 1)});\r\n\r\n"""
-          })
-          output.stripLineEnd.stripLineEnd
-        }
-            begin
-               Object.f := Read_Map_1;"""
-
-      case t : Declaration ⇒
-        s"""begin
-               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
-    }
-  }
-
-  /**
    * Generates the write functions into the procedure Write_Field_Data in package File_Writer.
    */
   protected def mapFileWriter(d : UserType, f : Field) : String = {
@@ -386,13 +266,13 @@ class Main extends FakeMain
    * Gets the fields as parameters of a given type.
    */
   def printParameters(d : UserType) : String = {
-    var output = "";
-    var hasFields = false;
-    output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f ⇒
-      hasFields = true;
-      s"${f.getSkillName()} : ${mapType(f.getType, d, f)}"
-    }).mkString("; ", "; ", "")
-    if (hasFields) output else ""
+    val fields = d.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
+    if (fields.isEmpty)
+      ""
+    else
+      (for (f ← fields)
+        yield s"${f.getSkillName()} : ${mapType(f.getType, f.getDeclaredIn, f)}"
+      ).mkString("; ", "; ", "")
   }
 
   /**
@@ -461,10 +341,10 @@ Opitions (ada):
     f.getType match {
       case t : GroundType              ⇒ defaultValue(t)
       case t : ConstantLengthArrayType ⇒ s"(others => ${defaultValue(t.getBaseType())})"
-      case t : VariableLengthArrayType ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".Vector")}"
-      case t : ListType                ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".List")}"
-      case t : SetType                 ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".Set")}"
-      case t : MapType                 ⇒ s"New_${mapType(t, f.getDeclaredIn, f).stripSuffix(".Map")}"
+      case t : VariableLengthArrayType ⇒ s"${mapType(t, f.getDeclaredIn, f).stripSuffix(".Vector")}.Empty_Vector"
+      case t : ListType                ⇒ s"${mapType(t, f.getDeclaredIn, f).stripSuffix(".List")}.Empty_List"
+      case t : SetType                 ⇒ s"${mapType(t, f.getDeclaredIn, f).stripSuffix(".Set")}.Empty_Set"
+      case t : MapType                 ⇒ s"${mapType(t, f.getDeclaredIn, f).stripSuffix(".Map")}.Empty_Map"
 
       case _                           ⇒ "null"
     }

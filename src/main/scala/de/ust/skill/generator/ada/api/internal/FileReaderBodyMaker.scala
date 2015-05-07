@@ -266,15 +266,15 @@ ${
         val superTypes = getSuperTypes(d).toList.reverse
         superTypes.foreach({ t ⇒
           output += s"""\r\n\r\n                  declare
-                     Sub_Type   : Type_Information := ${d.getName.ada}_Type_Declaration;
-                     Super_Type : Type_Information := ${t.getName.ada}_Type_Declaration;
+                     Sub_Type   : Type_Information := ${name(d)}_Type_Declaration;
+                     Super_Type : Type_Information := ${name(t)}_Type_Declaration;
                      Index      : Natural          := (Sub_Type.lbpsi - Super_Type.lbpsi) + Super_Type.spsi + I;
                   begin\r\n"""
           if (t == superTypes.last)
             output += s"""                     declare
-                        procedure Free is new Ada.Unchecked_Deallocation (${t.getName.ada}_Type, ${t.getName.ada}_Type_Access);
-                        Old_Object : ${t.getName.ada}_Type_Access :=
-                           ${t.getName.ada}_Type_Access (Super_Type.Storage_Pool.Element (Index));
+                        procedure Free is new Ada.Unchecked_Deallocation (${name(t)}_Type, ${name(t)}_Type_Access);
+                        Old_Object : ${name(t)}_Type_Access :=
+                           ${name(t)}_Type_Access (Super_Type.Storage_Pool.Element (Index));
                      begin
                         Object.skill_id := Old_Object.skill_id;
                         Free (Old_Object);
@@ -306,10 +306,10 @@ ${
         output += s"""      if "${d.getSkillName}" = Type_Name then
          declare
 ${
-          var output = s"""            ${d.getName.ada}_Type_Declaration : Type_Information := Types.Element ("${d.getSkillName}");\r\n"""
+          var output = s"""            ${name(d)}_Type_Declaration : Type_Information := Types.Element ("${d.getSkillName}");\r\n"""
           val superTypes = getSuperTypes(d).toList.reverse
           superTypes.foreach({ t ⇒
-            output += s"""            ${t.getName.ada}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");\r\n"""
+            output += s"""            ${name(t)}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");\r\n"""
           })
           output.stripLineEnd
         }
@@ -330,9 +330,9 @@ ${
             case _ ⇒ ""
           }
         }).mkString("")
-        output += s"""                  Object : Skill_Type_Access := new ${d.getName.ada}_Type${printDefaultValues(d)};
+        output += s"""                  Object : Skill_Type_Access := new ${name(d)}_Type${printDefaultValues(d)};
                begin
-                  ${d.getName.ada}_Type_Declaration.Storage_Pool.Append (Object);${printSuperTypes(d)}
+                  ${name(d)}_Type_Declaration.Storage_Pool.Append (Object);${printSuperTypes(d)}
                end;
             end loop;
          end;
@@ -374,7 +374,7 @@ ${
       if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
          for I in Item.Start_Index .. Item.End_Index loop
             declare
-               Object : ${d.getName.ada}_Type_Access := ${d.getName.ada}_Type_Access (Storage_Pool (I));
+               Object : ${name(d)}_Type_Access := ${name(d)}_Type_Access (Storage_Pool (I));
             ${mapFileReader(d, f)}
             end;
          end loop;
@@ -410,15 +410,15 @@ ${
        * Reads the skill id of a given object.
        */
       for (d ← IR) {
-        output += s"""   function Read_${d.getName.ada}_Type (Input_Stream : ASS_IO.Stream_Access) return ${d.getName.ada}_Type_Access is
+        output += s"""   function Read_${name(d)}_Type (Input_Stream : ASS_IO.Stream_Access) return ${name(d)}_Type_Access is
       Index : Long := Byte_Reader.Read_v64 (Input_Stream);
    begin
       if 0 = Index then
          return null;
       else
-         return ${d.getName.ada}_Type_Access (Types.Element ("${if (null == d.getSuperType) d.getSkillName else d.getBaseType.getSkillName}").Storage_Pool.Element (Positive (Index)));
+         return ${name(d)}_Type_Access (Types.Element ("${if (null == d.getSuperType) d.getSkillName else d.getBaseType.getSkillName}").Storage_Pool.Element (Positive (Index)));
       end if;
-   end Read_${d.getName.ada}_Type;\r\n\r\n"""
+   end Read_${name(d)}_Type;\r\n\r\n"""
       }
       output.stripSuffix("\r\n")
     }
@@ -448,5 +448,125 @@ end ${packagePrefix.capitalize}.Api.Internal.File_Reader;
 """)
 
     out.close()
+  }
+
+  /**
+   * Generates the read functions into the procedure Read_Queue_Vector_Iterator in package File_Reader.
+   */
+  protected def mapFileReader(d : UserType, f : Field) : String = {
+    /**
+     * The basis type of the field that will be read.
+     */
+    def inner(t : Type, _d : UserType, _f : Field) : String = {
+      t match {
+        case t : GroundType ⇒ t.getName.lower match {
+          case "annotation" ⇒
+            s"Read_Annotation (Input_Stream)"
+          case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" | "f32" | "f64" ⇒
+            s"Byte_Reader.Read_${mapType(t, _d, _f)} (Input_Stream)"
+          case "string" ⇒
+            s"Read_String (Input_Stream)"
+        }
+        case t : Declaration ⇒
+          s"""Read_${name(t)}_Type (Input_Stream)"""
+      }
+    }
+
+    f.getType() match {
+      case t : GroundType ⇒ t.getName.lower match {
+        case "annotation" ⇒
+          s"""begin
+               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
+
+        case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" | "f32" | "f64" ⇒
+          if (f.isConstant) {
+            s"""   Skill_Parse_Constant_Error : exception;
+            begin
+               if Object.Get_${f.getSkillName.capitalize} /= ${mapType(f.getType, d, f)} (Field_Declaration.Constant_Value) then
+                  raise Skill_Parse_Constant_Error;
+               end if;"""
+          } else {
+            s"""begin
+               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
+          }
+
+        case "string" ⇒
+          s"""begin
+               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
+      }
+
+      case t : ConstantLengthArrayType ⇒
+        s"""
+               Skill_Parse_Constant_Array_Length_Error : exception;
+            begin
+               if ${t.getLength} /= Field_Declaration.Constant_Array_Length then
+                  raise Skill_Parse_Constant_Array_Length_Error;
+               end if;
+               for I in 1 .. ${t.getLength} loop
+                  Object.${f.getSkillName} (I) := ${inner(t.getBaseType, d, f)};
+               end loop;"""
+
+      case t : VariableLengthArrayType ⇒
+        s"""begin
+               for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
+                  Object.${f.getSkillName}.Append (${inner(t.getBaseType, d, f)});
+               end loop;"""
+
+      case t : ListType ⇒
+        s"""begin
+               for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
+                  Object.${f.getSkillName}.Append (${inner(t.getBaseType, d, f)});
+               end loop;"""
+
+      case t : SetType ⇒
+        s"""
+               Inserted : Boolean;
+               Position : ${name(d)}_${f.getSkillName.capitalize}_Set.Cursor;
+               pragma Unreferenced (Position);
+            begin
+               for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
+                  ${name(d)}_${f.getSkillName.capitalize}_Set.Insert (Object.${f.getSkillName}, ${inner(t.getBaseType, d, f)}, Position, Inserted);
+               end loop;"""
+
+      case t : MapType ⇒
+        s"""${
+          var output = ""
+          val types = t.getBaseTypes().reverse
+          types.slice(0, types.length - 1).zipWithIndex.foreach({
+            case (t, i) ⇒
+              val x = {
+                if (0 == i)
+                  s"""declare
+                        Key   : ${mapType(types.get(i + 1), d, f)} := ${inner(types.get(i + 1), d, f)};
+                        Value : ${mapType(types.get(i), d, f)} := ${inner(types.get(i), d, f)};
+                     begin
+                        Map.Insert (Key, Value);
+                     end;"""
+                else
+                  s"""declare
+                        Key : ${mapType(types.get(i + 1), d, f)} := ${inner(types.get(i + 1), d, f)};
+                     begin
+                        Map.Insert (Key, Read_Map_${types.length - i});
+                     end;"""
+              }
+              output += s"""               function Read_Map_${types.length - (i + 1)} return ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length - (i + 1)}.Map is
+                  Map : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length - (i + 1)}.Map;
+               begin
+                  for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
+                     ${x}
+                  end loop;
+                  return Map;
+               end Read_Map_${types.length - (i + 1)};
+               pragma Inline (Read_Map_${types.length - (i + 1)});\r\n\r\n"""
+          })
+          output.stripLineEnd.stripLineEnd
+        }
+            begin
+               Object.f := Read_Map_1;"""
+
+      case t : Declaration ⇒
+        s"""begin
+               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
+    }
   }
 }

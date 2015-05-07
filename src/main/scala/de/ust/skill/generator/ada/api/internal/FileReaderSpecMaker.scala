@@ -92,17 +92,16 @@ private
    ----------------------
    function Read_Annotation (Input_Stream : ASS_IO.Stream_Access) return Skill_Type_Access;
    function Read_String (Input_Stream : ASS_IO.Stream_Access) return String_Access;
-
 ${
-      var output = ""
       /**
        * Reads the skill id of a given object.
        */
-      for (d ← IR) {
-        output += s"   function Read_${d.getName.ada}_Type (Input_Stream : ASS_IO.Stream_Access) return ${d.getName.ada}_Type_Access;\r\n"
-      }
-      output
+      (for (t ← IR)
+        yield s"""
+   function Read_${name(t)}_Type (Input_Stream : ASS_IO.Stream_Access) return ${name(t)}_Type_Access;"""
+      ).mkString
     }
+
    ------------
    --  SPSI  --
    ------------

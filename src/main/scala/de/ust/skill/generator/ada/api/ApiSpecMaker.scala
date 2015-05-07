@@ -47,8 +47,8 @@ ${
        * Provides the API functions and procedures for all types.
        */
       (for (d ← IR) yield {
-        val parameters = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map(f ⇒ s"${f.getSkillName()} : ${mapType(f.getType, d, f)}").mkString("; ", "; ", "")
-        s"""   function New_${name(d)} (State : access Skill_State${printParameters(d)}) return ${name(d)}_Type_Access;
+        s"""
+   function New_${name(d)} (State : access Skill_State${printParameters(d)}) return ${name(d)}_Type_Access;
    procedure New_${name(d)} (State : access Skill_State${printParameters(d)});
    function ${name(d)}s_Size (State : access Skill_State) return Natural;
    function Get_${name(d)} (State : access Skill_State; Index : Natural) return ${name(d)}_Type_Access;

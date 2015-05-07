@@ -117,21 +117,18 @@ private
    procedure Write_String (
       Stream : ASS_IO.Stream_Access;
       Value  : String_Access
-   );
-
-${
-      var output = ""
+   );${
       /**
        * Writes the skill id of a given object.
        */
-      for (d ← IR) {
-        output += s"""   procedure Write_${d.getName.ada}_Type (
+      (for (t ← IR) yield s"""
+   procedure Write_${name(t)}_Type (
       Stream : ASS_IO.Stream_Access;
-      Object : ${d.getName.ada}_Type_Access
-   );\r\n"""
-      }
-      output
+      Object : ${name(t)}_Type_Access
+   );"""
+      ).mkString
     }
+
    function Get_Object_Type (Object : Skill_Type_Access) return String;
 
    ------------

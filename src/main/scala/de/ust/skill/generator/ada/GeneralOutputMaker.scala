@@ -53,7 +53,6 @@ trait GeneralOutputMaker extends Generator {
   /**
    * Assume the existence of a translation function for the fields.
    */
-  protected def mapFileReader(d : UserType, f : Field) : String
   protected def mapFileWriter(d : UserType, f : Field) : String
 
   /**
