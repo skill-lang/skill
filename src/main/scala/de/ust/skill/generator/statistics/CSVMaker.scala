@@ -51,6 +51,16 @@ trait CSVMaker extends GeneralOutputMaker {
       out.close()
     }
 
+    // field counts
+    locally {
+      val out = open(s"""field counts.csv""")
+      out.write("type;fields;total\n")
+      tc.removeSpecialDeclarations().getUsertypes.foreach {
+        case t ⇒ out.write(s"$t;${t.getFields.size};${t.getAllFields.size}\n")
+      }
+      out.close()
+    }
+
     // type fancyness
     locally {
       val out = open(s"""fancy types.csv""")

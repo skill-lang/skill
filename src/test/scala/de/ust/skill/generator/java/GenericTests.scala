@@ -21,9 +21,9 @@ import scala.collection.mutable.ArrayBuffer
 import de.ust.skill.generator.common
 
 /**
- * Generic tests built for scala.
+ * Generic tests built for Java.
  * Generic tests have an implementation for each programming language, because otherwise deleting the generated code
- * upfront would be upgly.
+ * upfront would be ugly.
  *
  * @author Timm Felden
  */
