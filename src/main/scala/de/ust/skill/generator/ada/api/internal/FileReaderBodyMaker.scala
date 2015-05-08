@@ -562,7 +562,7 @@ end ${packagePrefix.capitalize}.Api.Internal.File_Reader;
           output.stripLineEnd.stripLineEnd
         }
             begin
-               Object.f := Read_Map_1;"""
+               Object.${f.getSkillName} := Read_Map_1;"""
 
       case t : Declaration ⇒
         s"""begin
