@@ -224,6 +224,16 @@ ${
         throw new NoSuchMethodError();"""
             }
 
+            case fieldType : ConstantLengthArrayType ⇒ s"""
+        final SingleArgumentType t = (SingleArgumentType) type;
+        final FieldType baseType = t.groundType;
+        $preludeData
+            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
+            assert null==v
+            result += baseType.calculateOffset(v);
+        }
+        return result;"""
+
             case fieldType : SingleBaseTypeContainer ⇒ s"""
         final SingleArgumentType t = (SingleArgumentType) type;
         final FieldType baseType = t.groundType;
