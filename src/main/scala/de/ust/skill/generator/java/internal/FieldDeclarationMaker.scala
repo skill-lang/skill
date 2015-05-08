@@ -229,7 +229,7 @@ ${
         final FieldType baseType = t.groundType;
         $preludeData
             final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
-            assert null==v
+            assert null==v;
             result += baseType.calculateOffset(v);
         }
         return result;"""
