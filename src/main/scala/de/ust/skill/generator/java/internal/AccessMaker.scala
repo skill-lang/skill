@@ -49,8 +49,8 @@ import de.ust.skill.common.java.restrictions.FieldRestriction;
 ${
         comment(t)
       }${
-  suppressWarnings
-}public class ${nameT}Access extends ${
+        suppressWarnings
+      }public class ${nameT}Access extends ${
         if (isBasePool) s"BasePool<${typeT}>"
         else s"SubPool<${typeT}, ${mapType(t.getBaseType)}>"
       } {
@@ -117,7 +117,7 @@ ${
           (for (f ← t.getFields if !f.isAuto)
             yield s"""
         case "${f.getSkillName}":
-            f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f.getType)}, fields.size(), this);
+            f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f)}, fields.size(), this);
             break;
 """
           ).mkString
@@ -126,7 +126,7 @@ ${
           (for (f ← t.getFields if f.isAuto)
             yield s"""
         case "${f.getSkillName}":
-            f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f.getType)}, this);
+            f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f)}, this);
             autoFields[${index += 1; index - 1}] = f;
             break;
 """
@@ -219,16 +219,16 @@ ${
     }
   }
 
-  private def mapToFieldType(t : Type) : String = {
+  private def mapToFieldType(f : Field) : String = {
     //@note temporary string & annotation will be replaced later on
     def mapGroundType(t : Type) = t.getSkillName match {
       case "annotation" ⇒ "annotation"
       case "bool"       ⇒ "BoolType.get()"
-      case "i8"         ⇒ "I8.get()"
-      case "i16"        ⇒ "I16.get()"
-      case "i32"        ⇒ "I32.get()"
-      case "i64"        ⇒ "I64.get()"
-      case "v64"        ⇒ "V64.get()"
+      case "i8"         ⇒ if (f.isConstant) s"new ConstantI8((byte)${f.constantValue})" else "I8.get()"
+      case "i16"        ⇒ if (f.isConstant) s"new ConstantI16((short)${f.constantValue})" else "I16.get()"
+      case "i32"        ⇒ if (f.isConstant) s"new ConstantI32(${f.constantValue})" else "I32.get()"
+      case "i64"        ⇒ if (f.isConstant) s"new ConstantI64(${f.constantValue}L)" else "I64.get()"
+      case "v64"        ⇒ if (f.isConstant) s"new ConstantV64(${f.constantValue}L)" else "V64.get()"
       case "f32"        ⇒ "F32.get()"
       case "f64"        ⇒ "F64.get()"
       case "string"     ⇒ "string"
@@ -236,7 +236,7 @@ ${
       case s            ⇒ s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
     }
 
-    t match {
+    f.getType match {
       case t : GroundType              ⇒ mapGroundType(t)
       case t : ConstantLengthArrayType ⇒ s"new ConstantLengthArray<>(${t.getLength}, ${mapGroundType(t.getBaseType)})"
       case t : VariableLengthArrayType ⇒ s"new VariableLengthArray<>(${mapGroundType(t.getBaseType)})"
