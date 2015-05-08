@@ -168,12 +168,12 @@ ${
         var hasOutput = false;
         output += s"""            if "${d.getSkillName}" = Type_Name then
                declare
-                  Object : ${d.getName.ada}_Type_Access := ${d.getName.ada}_Type_Access (Skill_Object);
+                  Object : ${name(d)}_Type_Access := ${name(d)}_Type_Access (Skill_Object);
                begin
 """
         d.getFields.filter({ f ⇒ "string" == f.getType.getSkillName }).foreach({ f ⇒
           hasOutput = true;
-          output += s"                  Put_String (Object.${f.getName.ada}.all, Safe => True);\r\n"
+          output += s"                  Put_String (Object.${f.getSkillName}.all, Safe => True);\r\n"
         })
         d.getFields.foreach({ f ⇒
           f.getType match {
@@ -344,7 +344,7 @@ ${
          First_Object : Boolean := False;
 """
           types.foreach({ t ⇒
-            output += s"""\r\n         ${t.getName.ada}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");"""
+            output += s"""\r\n         ${name(t)}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");"""
           })
           output += "\r\n      begin\r\n"
           types.foreach({ t ⇒
@@ -354,7 +354,7 @@ ${
                Object : Skill_Type_Access := Type_Declaration.Storage_Pool.Element (I);
             begin
                if First_Object then
-                  ${t.getName.ada}_Type_Declaration.lbpsi := Index - 1;
+                  ${name(t)}_Type_Declaration.lbpsi := Index - 1;
                   First_Object := False;
                end if;
                if "${t.getSkillName}" = Get_Object_Type (Object) then
@@ -367,7 +367,7 @@ ${
           output += "\r\n"
           types.foreach({ t ⇒
             output += s"""         declare
-            Next_Type_Declaration : Type_Information := ${t.getName.ada}_Type_Declaration;
+            Next_Type_Declaration : Type_Information := ${name(t)}_Type_Declaration;
             Start_Index : Natural := Next_Type_Declaration.lbpsi + 1;
             End_Index : Integer :=
                Start_Index + Natural (Next_Type_Declaration.Storage_Pool.Length) - Next_Type_Declaration.spsi - 1;
@@ -689,7 +689,7 @@ ${
           s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
          for I in Start_Index .. Natural (Type_Declaration.Storage_Pool.Length) loop
             declare
-               Object : ${d.getName.ada}_Type_Access := ${d.getName.ada}_Type_Access (Storage_Pool (I));
+               Object : ${name(d)}_Type_Access := ${name(d)}_Type_Access (Storage_Pool (I));
             ${mapFileWriter(d, f)}
             end;
          end loop;
@@ -749,9 +749,9 @@ ${
        * Writes the skill id of a given object.
        */
       for (d ← IR) {
-        output += s"""   procedure Write_${d.getName.ada}_Type (
+        output += s"""   procedure Write_${name(d)}_Type (
       Stream : ASS_IO.Stream_Access;
-      Object : ${d.getName.ada}_Type_Access
+      Object : ${name(d)}_Type_Access
    ) is
    begin
       if null = Object then
@@ -759,7 +759,7 @@ ${
       else
          Byte_Writer.Write_v64 (Stream, Long (Object.skill_id));
       end if;
-   end Write_${d.getName.ada}_Type;\r\n\r\n"""
+   end Write_${name(d)}_Type;\r\n\r\n"""
       }
       output.stripSuffix("\r\n")
     }
@@ -769,35 +769,29 @@ ${
       if null = Object then
          return "";
       end if;
-
 ${
-      var output = "";
       /**
        * Gets the type of a given object.
        */
-      for (d ← IR) {
-        output += s"""      if ${d.getName.ada}_Type'Tag = Object'Tag then
+      (for (d ← IR) yield s"""
+      if ${name(d)}_Type'Tag = Object'Tag then
          return "${d.getSkillName}";
-      end if;\r\n"""
-      }
-      output
+      end if;
+""").mkString
     }
       return "";
    end Get_Object_Type;
 
    procedure Update_Storage_Pool_Start_Index is
-   begin
-${
-      var output = "";
+   begin${
       /**
        * Corrects the SPSI (storage pool start index) of all types.
        */
-      for (d ← IR) {
-        output += s"""      if Types.Contains ("${d.getSkillName}") then
+      (for (d ← IR) yield s"""
+      if Types.Contains ("${d.getSkillName}") then
          Types.Element ("${d.getSkillName}").spsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length);
-      end if;\r\n"""
-      }
-      output.stripSuffix("\r\n")
+      end if;
+""").mkString
     }
    end Update_Storage_Pool_Start_Index;
 
@@ -805,5 +799,129 @@ end ${packagePrefix.capitalize}.Api.Internal.File_Writer;
 """)
 
     out.close()
+  }
+
+  /**
+   * Generates the write functions into the procedure Write_Field_Data in package File_Writer.
+   */
+  protected def mapFileWriter(d : UserType, f : Field) : String = {
+    /**
+     * The basis type of the field that will be written.
+     */
+    def inner(t : Type, _d : UserType, _f : Field, value : String) : String = {
+      t match {
+        case t : GroundType ⇒ t.getName.lower match {
+          case "annotation" ⇒
+            s"Write_Annotation (Stream, ${value})"
+          case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" | "f32" | "f64" ⇒
+            s"Byte_Writer.Write_${mapType(t, _d, _f)} (Stream, ${value})"
+          case "string" ⇒
+            s"Write_String (Stream, ${value})"
+        }
+        case t : Declaration ⇒
+          s"""Write_${name(t)}_Type (Stream, ${value})"""
+      }
+    }
+
+    f.getType match {
+      case t : GroundType ⇒ t.getName.lower match {
+        case "annotation" ⇒
+          s"""begin
+               ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
+
+        case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" | "f32" | "f64" ⇒
+          s"""begin
+               ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
+
+        case "string" ⇒
+          s"""begin
+               ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
+      }
+
+      case t : ConstantLengthArrayType ⇒
+        s"""begin
+               for I in Object.${f.getSkillName}'Range loop
+                  ${inner(t.getBaseType, d, f, s"Object.${f.getSkillName} (I)")};
+               end loop;"""
+
+      case t : VariableLengthArrayType ⇒
+        s"""   use ${mapType(f.getType, d, f).stripSuffix(".Vector")};
+
+               Vector : ${mapType(f.getType, d, f)} renames Object.${f.getSkillName};
+
+               procedure Iterate (Position : Cursor) is
+               begin
+                  ${inner(t.getBaseType, d, f, s"Element (Position)")};
+               end Iterate;
+               pragma Inline (Iterate);
+            begin
+               Byte_Writer.Write_v64 (Stream, Long (Vector.Length));
+               Vector.Iterate (Iterate'Access);"""
+
+      case t : ListType ⇒
+        s"""   use ${mapType(f.getType, d, f).stripSuffix(".List")};
+
+               List : ${mapType(f.getType, d, f)} renames Object.${f.getSkillName};
+
+               procedure Iterate (Position : Cursor) is
+               begin
+                  ${inner(t.getBaseType, d, f, s"Element (Position)")};
+               end Iterate;
+               pragma Inline (Iterate);
+            begin
+               Byte_Writer.Write_v64 (Stream, Long (List.Length));
+               List.Iterate (Iterate'Access);"""
+
+      case t : SetType ⇒
+        s"""   use ${mapType(f.getType, d, f).stripSuffix(".Set")};
+
+               Set : ${mapType(f.getType, d, f)} renames Object.${f.getSkillName};
+
+               procedure Iterate (Position : Cursor) is
+               begin
+                  ${inner(t.getBaseType, d, f, s"Element (Position)")};
+               end Iterate;
+               pragma Inline (Iterate);
+            begin
+               Byte_Writer.Write_v64 (Stream, Long (Set.Length));
+               Set.Iterate (Iterate'Access);"""
+
+      case t : MapType ⇒
+        s"""${
+          var output = ""
+          val types = t.getBaseTypes().reverse
+          types.slice(0, types.length - 1).zipWithIndex.foreach({
+            case (t, i) ⇒
+              val x = {
+                if (0 == i)
+                  s"""${inner(types.get(i + 1), d, f, "Key (Position)")};
+                     ${inner(types.get(i), d, f, "Element (Position)")};"""
+                else
+                  s"""${inner(types.get(i + 1), d, f, "Key (Position)")};
+                     Write_Map_${types.length - i} (Element (Position));"""
+              }
+              output += s"""   ${if (types.length - (i + 1) == types.length - 1) "" else "               "}procedure Write_Map_${types.length - (i + 1)} (Map : ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length - (i + 1)}.Map) is
+                  use ${mapType(f.getType, d, f).stripSuffix(".Map")}_${types.length - (i + 1)};
+
+                  procedure Iterate (Position : Cursor) is
+                  begin
+                     ${x}
+                  end Iterate;
+                  pragma Inline (Iterate);
+               begin
+                  Byte_Writer.Write_v64 (Stream, Long (Map.Length));
+                  Map.Iterate (Iterate'Access);
+               end Write_Map_${types.length - (i + 1)};
+               pragma Inline (Write_Map_${types.length - (i + 1)});\r\n\r\n"""
+          })
+          output.stripLineEnd.stripLineEnd
+        }
+            begin
+               Write_Map_1 (Object.${f.getSkillName});"""
+
+      case t : Declaration ⇒
+        s"""begin
+               ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
+    }
   }
 }

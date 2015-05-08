@@ -51,11 +51,6 @@ trait GeneralOutputMaker extends Generator {
   protected def mapType(t : Type, d : Declaration, f : Field) : String
 
   /**
-   * Assume the existence of a translation function for the fields.
-   */
-  protected def mapFileWriter(d : UserType, f : Field) : String
-
-  /**
    * Assume the existence of inheritance information functions for the types.
    */
   protected def getSuperTypes(d : UserType) : MutableList[Type]
