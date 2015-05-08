@@ -24,6 +24,7 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.Stack
 import de.ust.skill.ir.Comment
 import de.ust.skill.ir.TypeContext
+import scala.collection.JavaConversions._
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -332,10 +333,20 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * hints as defined in the paper. Because hints can be ignored by the generator, it is safe to allow arbitrary
      * identifiers and to warn if the identifier is not a known hint.
      */
-    private def hint = "!" ~> id ^^ { n ⇒
-      try {
-        Hint.valueOf(n.lowercase)
-      } catch { case e : IllegalArgumentException ⇒ throw ParseException(s"$n is not the name of a hint.") }
+    private def hint = "!" ~> id >> { name ⇒
+      name.lowercase match {
+        case "constantmutator" ⇒ success(name) ~ (("(" ~> int ~ ("," ~> int <~ ")")) ^^ {
+          case min ~ max ⇒ List(stringToName(min.toString), stringToName(max.toString))
+        })
+        case "provider" | "owner" ⇒ success(name) ~ ("(" ~> repsep(id, ",") <~ ")")
+        case "pragma"             ⇒ success(name) ~ rep1(id)
+        case _                    ⇒ success(name) ~ success(List[Name]())
+      }
+    } ^^ {
+      case n ~ args ⇒
+        try {
+          Hint.get(Hint.Type.valueOf(n.lowercase), args.map(_.ir))
+        } catch { case e : IllegalArgumentException ⇒ throw ParseException(s"$n is not the name of a hint.") }
     }
 
     /**
