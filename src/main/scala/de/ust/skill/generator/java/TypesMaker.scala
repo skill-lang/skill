@@ -125,9 +125,11 @@ ${
     ${comment(f)}static public ${mapType(f.getType())} get${f.getName.capital}() {
           ${
             f.getType.getSkillName match {
+              case "i8"          ⇒ s"return (byte)${f.constantValue().toString};"
+              case "i16"         ⇒ s"return (short)${f.constantValue().toString};"
+              case "i32"         ⇒ s"return ${f.constantValue().toString};"
               case "i64" | "v64" ⇒ s"return ${f.constantValue().toString}L;"
               case "f32"         ⇒ s"return ${f.constantValue().toString}f;"
-              case _             ⇒ s"return ${f.constantValue().toString};"
             }
           }
     }
