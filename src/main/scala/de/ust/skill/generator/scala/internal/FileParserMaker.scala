@@ -107,7 +107,7 @@ ${
       case 18           ⇒ ListType(fieldType)
       case 19           ⇒ SetType(fieldType)
       case 20           ⇒ MapType(fieldType, fieldType)
-      case i if i >= 32 ⇒ TypeDefinitionIndex(i - 32)
+      case i if i >= 32 ⇒ types(i.toInt - 32)
       case id           ⇒ throw ParseException(in, blockCounter, s"Invalid type ID: $$id", null)
     }
 
