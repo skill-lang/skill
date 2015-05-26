@@ -72,6 +72,7 @@ trait GeneralOutputMaker extends Generator {
    * provides a default name for the argument type
    */
   protected def name(t : Type) : String = if (null == t) "skill_type"
+  else if (t.isInstanceOf[ContainerType]) "???"
   else escaped(t.getName.cStyle)
   /**
    * provides a default name for the argument field

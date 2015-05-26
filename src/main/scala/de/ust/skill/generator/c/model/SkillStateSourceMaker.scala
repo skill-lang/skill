@@ -291,6 +291,7 @@ void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {${
     }"""
       case tn ⇒ s"$target = ${prefix}read_$tn(buffer);"
     }
+    case _ ⇒ "???"
   }
 
   def writeSingleField(f : Field, target : String) : String = f.getType match {
@@ -317,6 +318,7 @@ void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {${
     }"""
       case tn ⇒ s"""return ${prefix}write_$tn(out, $target);"""
     }
+    case _ ⇒ "???"
   }
 
   /**
@@ -333,6 +335,6 @@ void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {${
    * conversion from a field's type to type_enum name
    * @note may be broken in case of compound types
    */
-  def enumType(t : Type) : String = prefix + t.getName.cStyle().toUpperCase()
+  def enumType(t : Type) : String = if (t.isInstanceOf[ContainerType]) "???" else prefix + t.getName.cStyle().toUpperCase()
   def enumType(f : Field) : String = enumType(f.getType)
 }
