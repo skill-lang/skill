@@ -81,8 +81,14 @@ ${
       case MapType(k, v)             ⇒ MapType(eliminatePreliminaryTypesIn(k), eliminatePreliminaryTypesIn(v))
       case t                         ⇒ t
     }
+    @inline def updateField[T](f : FieldDeclaration[T]) {
+      f.t = eliminatePreliminaryTypesIn(f.t)
+    }
     for (p ← pools) {
-      val fieldMap = p.fields.map { _.name }.zip(p.fields).toMap
+      val fieldMap = p.fields.map { _.name }.toSet
+
+      for (f ← p.fields)
+        updateField(f)
 
       for (n ← p.knownFields if !fieldMap.contains(n)) {
         p.addKnownField(n, eliminatePreliminaryTypesIn)
@@ -91,7 +97,7 @@ ${
   }
 
   // TODO type restrictions
-  def check : Unit = for (p ← pools.par; f ← p.allFields) try { f.check } catch {
+  def check : Unit = for (p ← pools.par; f ← p.fields) try { f.check } catch {
     case e : SkillException ⇒ throw new SkillException(s"check failed in $${p.name}.$${f.name}:\\n  $${e.getMessage}", e)
   }
 

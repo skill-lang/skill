@@ -184,17 +184,17 @@ final class KnownField_SkillID(owner : StoragePool[_ <: SkillType, _ <: SkillTyp
 final class KnownField_${t.getName.capital}_${f.getName.camel}(${
         if (f.isAuto()) ""
         else """
-  index : Long,"""
+  _index : Long,"""
       }
-  owner : StoragePool[_ <: SkillType, _ <: SkillType])
+  _owner : StoragePool[_ <: SkillType, _ <: SkillType])
     extends FieldDeclaration[${mapType(f.getType)}](${mapToFieldType(f.getType)},
       "${f.getSkillName}",${
         if (f.isAuto()) """
       0,"""
         else """
-      index,"""
+      _index,"""
       }
-      owner)
+      _owner)
     with KnownField[${mapType(t)}, ${mapType(f.getType)}]${
         // mark ignored fields as ignored; read function is inherited
         if (f.isIgnored()) """
@@ -243,11 +243,11 @@ final class KnownField_${t.getName.capital}_${f.getName.camel}(${
  * The fields data is distributed into an array (for now its a hash map) holding its instances.
  */
 sealed class DistributedField[@specialized(Boolean, Byte, Char, Double, Float, Int, Long, Short) T : Manifest](
-  t : FieldType[T],
-  name : String,
-  index : Long,
-  owner : StoragePool[_ <: SkillType, _ <: SkillType])
-    extends FieldDeclaration[T](t, name, index, owner) {
+  _t : FieldType[T],
+  _name : String,
+  _index : Long,
+  _owner : StoragePool[_ <: SkillType, _ <: SkillType])
+    extends FieldDeclaration[T](_t, _name, _index, _owner) {
 
   // data held as in storage pools
   // @note see paper notes for O(1) implementation
@@ -310,11 +310,11 @@ sealed class DistributedField[@specialized(Boolean, Byte, Char, Double, Float, I
  * @note implementation abuses a distributed field that can be accessed iff there are no data chunks to be processed
  */
 final class LazyField[T : Manifest](
-  t : FieldType[T],
-  name : String,
-  index : Long,
-  owner : StoragePool[_ <: SkillType, _ <: SkillType])
-    extends DistributedField[T](t, name, index, owner) {
+  _t : FieldType[T],
+  _name : String,
+  _index : Long,
+  _owner : StoragePool[_ <: SkillType, _ <: SkillType])
+    extends DistributedField[T](_t, _name, _index, _owner) {
 
   // pending parts that have to be loaded
   private var parts = ListBuffer[MappedInStream]()
