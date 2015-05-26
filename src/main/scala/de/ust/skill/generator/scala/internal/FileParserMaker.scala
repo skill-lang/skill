@@ -107,7 +107,8 @@ ${
       case 18           ⇒ ListType(fieldType)
       case 19           ⇒ SetType(fieldType)
       case 20           ⇒ MapType(fieldType, fieldType)
-      case i if i >= 32 ⇒ types(i.toInt - 32)
+      case i if i >= 32 ⇒ if (i - 32 < types.size) types(i.toInt - 32)
+      else throw ParseException(in, blockCounter, s"inexistent user type $${i.toInt - 32} (user types: $${types.map { t ⇒ s"$${t.poolIndex} -> $${t.name}" }.mkString(", ")})", null)
       case id           ⇒ throw ParseException(in, blockCounter, s"Invalid type ID: $$id", null)
     }
 

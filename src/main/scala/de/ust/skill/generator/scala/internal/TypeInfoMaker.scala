@@ -493,7 +493,7 @@ sealed class BasePool[T <: SkillType : Manifest](
   override def all : Iterator[T] = data.iterator.asInstanceOf[Iterator[T]] ++ newDynamicInstances
   override def iterator : Iterator[T] = data.iterator.asInstanceOf[Iterator[T]] ++ newDynamicInstances
 
-  override def allInTypeOrder : Iterator[T] = subPools.foldLeft(staticInstances)(_ ++ _.staticInstances)
+  override def allInTypeOrder : Iterator[T] = subPools.foldLeft(staticInstances)(_ ++ _.allInTypeOrder)
 
   /**
    * returns instances directly from the data store
@@ -549,7 +549,7 @@ sealed class SubPool[T <: B : Manifest, B <: SkillType](
   override def all : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpo.toInt, (block.bpo + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
   override def iterator : Iterator[T] = blockInfos.foldRight(newDynamicInstances) { (block, iter) ⇒ basePool.data.view(block.bpo.toInt, (block.bpo + block.count).toInt).asInstanceOf[Iterable[T]].iterator ++ iter }
 
-  override def allInTypeOrder : Iterator[T] = subPools.foldLeft(staticInstances)(_ ++ _.staticInstances)
+  override def allInTypeOrder : Iterator[T] = subPools.foldLeft(staticInstances)(_ ++ _.allInTypeOrder)
 
   override def getByID(index : Long) : T = (if (0 == index) null else basePool.data(index.toInt - 1)).asInstanceOf[T]
 
