@@ -315,9 +315,9 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
 
         case "coding"                ⇒ ("(" ~> string <~ ")") ^^ { _ ⇒ null }
 
-        case "constantLengthPointer" ⇒ opt("(" ~ ")") ^^ { _ ⇒ new ConstantLengthPointerRestriction }
+        case "constantlengthpointer" ⇒ opt("(" ~ ")") ^^ { _ ⇒ new ConstantLengthPointerRestriction }
 
-        case "oneof"                 ⇒ opt("(" ~ ")") ^^ { _ ⇒ null }
+        case "oneof"                 ⇒ ("(" ~> repsep(id, ",") <~ ")") ^^ { case types ⇒ null }
 
         case unknown ⇒ opt("(" ~> repsep((int | string | floatingPointNumber), ",") <~ ")") ^^ { arg ⇒
           ParseException(s"$unknown${
