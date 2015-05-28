@@ -40,12 +40,6 @@ System : Properties {
 @Singleton
 None : Properties {}
 
-ToolDescription : Properties {
-
-  !lazy
-  @coding("zip")
-  string log;
-}
 
 DefaultBoarderCases{
   @default(System)
@@ -67,9 +61,10 @@ DefaultBoarderCases{
 
 Comment {
   @nonnull
-  string target;
+  @coding("zip")
+  string text;
 
-  @oneOf(Operator, Term)
+  @oneOf(Operator, Term, Comment)
   annotation target;
 
   @oneOf(None, System)
