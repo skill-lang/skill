@@ -130,13 +130,13 @@ ${
             // read next element
             f.getType match {
               case t : GroundType ⇒ t.getSkillName match {
-                case "annotation" ⇒ s"""is.next().set${f.getName.capital}(type.readSingleField(in));"""
-                case "string"     ⇒ s"""is.next().set${f.getName.capital}(sp.get(in.v64()));"""
-                case _            ⇒ s"""is.next().set${f.getName.capital}(in.${t.getSkillName}());"""
+                case "annotation" ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
+                case "string"     ⇒ s"""is.next().set${escaped(f.getName.capital)}(sp.get(in.v64()));"""
+                case _            ⇒ s"""is.next().set${escaped(f.getName.capital)}(in.${t.getSkillName}());"""
               }
 
-              case t : UserType ⇒ s"""is.next().set${f.getName.capital}(target.getByID(in.v64()));"""
-              case _            ⇒ s"""is.next().set${f.getName.capital}(type.readSingleField(in));"""
+              case t : UserType ⇒ s"""is.next().set${escaped(f.getName.capital)}(target.getByID(in.v64()));"""
+              case _            ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
             }
           }
         }"""
@@ -164,7 +164,7 @@ ${
               case "annotation" ⇒ s"""
         final Annotation t = (Annotation) type;
         $preludeData
-            SkillObject v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
+            SkillObject v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
             if(null==v)
                 result++;
             else
@@ -175,7 +175,7 @@ ${
               case "string" ⇒ s"""
         final StringType t = (StringType) type;
         $preludeData
-            String v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
+            String v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
             if(null==v)
                 result++;
             else
@@ -197,7 +197,7 @@ ${
 
               case "v64" ⇒ s"""
         $preludeData
-            long v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
+            long v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
 
             if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
                 result += 1;
@@ -228,7 +228,7 @@ ${
         final SingleArgumentType t = (SingleArgumentType) type;
         final FieldType baseType = t.groundType;
         $preludeData
-            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
+            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
             assert null==v;
             result += baseType.calculateOffset(v);
         }
@@ -238,7 +238,7 @@ ${
         final SingleArgumentType t = (SingleArgumentType) type;
         final FieldType baseType = t.groundType;
         $preludeData
-            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
+            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
             if(null==v)
                 result++;
             else {
@@ -253,7 +253,7 @@ ${
         final FieldType keyType = t.keyType;
         final FieldType valueType = t.valueType;
         $preludeData
-            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${f.getName.capital}();
+            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
             if(null==v)
                 result++;
             else {
@@ -266,7 +266,7 @@ ${
 
             case fieldType : UserType ⇒ s"""
         $preludeData
-            final ${mapType(f.getType)} instance = $dataAccessI.get${f.getName.capital}();
+            final ${mapType(f.getType)} instance = $dataAccessI.get${escaped(f.getName.capital)}();
             if (null == instance) {
                 result += 1;
                 continue;
@@ -334,16 +334,16 @@ ${
             // read next element
             f.getType match {
               case t : GroundType ⇒ t.getSkillName match {
-                case "annotation" | "string" ⇒ s"""type.writeSingleField($dataAccessI.get${f.getName.capital}(), out);"""
-                case _                       ⇒ s"""out.${t.getSkillName}($dataAccessI.get${f.getName.capital}());"""
+                case "annotation" | "string" ⇒ s"""type.writeSingleField($dataAccessI.get${escaped(f.getName.capital)}(), out);"""
+                case _                       ⇒ s"""out.${t.getSkillName}($dataAccessI.get${escaped(f.getName.capital)}());"""
               }
 
-              case t : UserType ⇒ s"""${mapType(t)} v = $dataAccessI.get${f.getName.capital}();
+              case t : UserType ⇒ s"""${mapType(t)} v = $dataAccessI.get${escaped(f.getName.capital)}();
             if (null == v)
                 out.i8((byte) 0);
             else
                 out.v64(v.getSkillID());"""
-              case _ ⇒ s"""type.writeSingleField($dataAccessI.get${f.getName.capital}(), out);"""
+              case _ ⇒ s"""type.writeSingleField($dataAccessI.get${escaped(f.getName.capital)}(), out);"""
             }
           }
         }"""
@@ -353,8 +353,8 @@ ${
     @Override
     public ${mapType(f.getType, true)} getR(SkillObject ref) {
         ${
-        if (f.isConstant()) s"return ${mapType(t)}.get${f.getName.capital}();"
-        else s"return ((${mapType(t)}) ref).get${f.getName.capital}();"
+        if (f.isConstant()) s"return ${mapType(t)}.get${escaped(f.getName.capital)}();"
+        else s"return ((${mapType(t)}) ref).get${escaped(f.getName.capital)}();"
       }
     }
 
@@ -362,15 +362,15 @@ ${
     public void setR(SkillObject ref, ${mapType(f.getType, true)} value) {
         ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
-        else s"((${mapType(t)}) ref).set${f.getName.capital}(value);"
+        else s"((${mapType(t)}) ref).set${escaped(f.getName.capital)}(value);"
       }
     }
 
     @Override
     public ${mapType(f.getType)} get(${mapType(t)} ref) {
         ${
-        if (f.isConstant()) s"return ${mapType(t)}.get${f.getName.capital}();"
-        else s"return ref.get${f.getName.capital}();"
+        if (f.isConstant()) s"return ${mapType(t)}.get${escaped(f.getName.capital)}();"
+        else s"return ref.get${escaped(f.getName.capital)}();"
       }
     }
 
@@ -378,7 +378,7 @@ ${
     public void set(${mapType(t)} ref, ${mapType(f.getType)} value) {
         ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
-        else s"ref.set${f.getName.capital}(value);"
+        else s"ref.set${escaped(f.getName.capital)}(value);"
       }
     }
 }

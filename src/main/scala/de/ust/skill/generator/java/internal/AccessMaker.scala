@@ -207,7 +207,7 @@ ${
           yield s"""
 
         public ${nameT}Builder ${name(f)}(${mapType(f.getType)} ${name(f)}) {
-            instance.set${f.getName.capital()}(${name(f)});
+            instance.set${escaped(f.getName.capital)}(${name(f)});
             return this;
         }""").mkString
       }

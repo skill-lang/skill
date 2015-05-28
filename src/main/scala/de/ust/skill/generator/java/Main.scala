@@ -6,9 +6,7 @@
 package de.ust.skill.generator.java
 
 import java.util.Date
-
 import scala.collection.JavaConversions.asScalaBuffer
-
 import de.ust.skill.generator.java.api.SkillFileMaker
 import de.ust.skill.generator.java.internal.AccessMaker
 import de.ust.skill.generator.java.internal.FieldDeclarationMaker
@@ -25,6 +23,7 @@ import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.View
+import scala.collection.mutable.HashMap
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -167,18 +166,26 @@ Opitions (Java):
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
-   *
-   * TODO escape Java instead of Scala keywords!
    */
-  protected def escaped(target : String) : String = target match {
-    //keywords get a suffix "_", because that way at least auto-completion will work as expected
-    case "abstract" | "continue" | "for" | "new" | "switch" | "assert" | "default" | "if" | "package" | "synchronized"
-      | "boolean" | "do" | "goto" | "private" | "this" | "break" | "double" | "implements" | "protected" | "throw"
-      | "byte" | "else" | "import" | "public" | "throws" | "case" | "enum" | "instanceof" | "return" | "transient"
-      | "catch" | "extends" | "int" | "short" | "try" | "char" | "final" | "interface" | "static" | "void" | "class"
-      | "finally" | "long" | "strictfp" | "volatile" | "const" | "float" | "native" | "super" | "while" ⇒ target+"_"
+  private val escapeCache = new HashMap[String, String]();
+  protected def escaped(target : String) : String = escapeCache.getOrElse(target, {
+    val result = target match {
+      //keywords get a suffix "_", because that way at least auto-completion will work as expected
+      case "abstract" | "continue" | "for" | "new" | "switch" | "assert" | "default" | "if" | "package" | "synchronized"
+        | "boolean" | "do" | "goto" | "private" | "this" | "break" | "double" | "implements" | "protected" | "throw"
+        | "byte" | "else" | "import" | "public" | "throws" | "case" | "enum" | "instanceof" | "return" | "transient"
+        | "catch" | "extends" | "int" | "short" | "try" | "char" | "final" | "interface" | "static" | "void" | "class"
+        | "finally" | "long" | "strictfp" | "volatile" | "const" | "float" | "native" | "super" | "while" ⇒ target+"_"
 
-    //the string is fine anyway
-    case _ ⇒ target.replace(':', '$')
-  }
+      //the string is fine anyway
+      case _ ⇒ target.map {
+        case ':'                                    ⇒ "$"
+        case c if Character.isJavaIdentifierPart(c) ⇒ c.toString
+        case c                                      ⇒ "ZZ"+c.toHexString
+      }.reduce(_ + _)
+    }
+    escapeCache(target) = result
+    result
+  })
+
 }

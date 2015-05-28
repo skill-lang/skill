@@ -113,7 +113,8 @@ ${
               ""
           }${//@monotone modification check
             if(!t.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty){
-              s"""require(skillID == -1L, "${t.getName} is specified to be monotone and this instance has already been subject to serialization!"); """
+              s"""assert skillID == -1L : "${t.getName} is specified to be monotone and this instance has already been subject to serialization!";
+        """
             }
             else
               ""
@@ -122,7 +123,7 @@ ${
 
       if(f.isConstant)
         out.write(s"""
-    ${comment(f)}static public ${mapType(f.getType())} get${f.getName.capital}() {
+    ${comment(f)}static public ${mapType(f.getType())} get${escaped(f.getName.capital)}() {
           ${
             f.getType.getSkillName match {
               case "i8"          ⇒ s"return (byte)${f.constantValue().toString};"
@@ -136,11 +137,11 @@ ${
 """)
       else
         out.write(s"""$makeField
-    ${comment(f)}final public ${mapType(f.getType())} get${f.getName.capital}() {
+    ${comment(f)}final public ${mapType(f.getType())} get${escaped(f.getName.capital)}() {
         $makeGetterImplementation
     }
 
-    ${comment(f)}final public void set${f.getName.capital}(${mapType(f.getType())} ${name(f)}) {
+    ${comment(f)}final public void set${escaped(f.getName.capital)}(${mapType(f.getType())} ${name(f)}) {
         $makeSetterImplementation
     }
 """)
