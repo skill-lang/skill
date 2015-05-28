@@ -21,6 +21,7 @@ import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
 import de.ust.skill.ir.restriction.NullableRestriction
 import de.ust.skill.ir.View
+import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -434,6 +435,7 @@ final class LazyField[T : Manifest](
         case "f32" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
         case "f64" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowDouble}, ${r.getHighDouble})"
       }
+      case r : ConstantLengthPointerRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.ConstantLengthPointer"
     }).mkString(", ")
   }
 }
