@@ -25,3 +25,9 @@ Boolean {
   /** a flag */
   bool boolean;
 }
+
+/* non-printable unicode characters */
+∀ {
+  ∀ €;
+ string ☢;
+}

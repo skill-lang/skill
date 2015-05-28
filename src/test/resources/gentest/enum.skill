@@ -12,4 +12,9 @@ enum TestEnum {
    * an application may store a name for each enum value
    */
   auto string name;
+
+  /**
+   * a real data field to test (compilable) mapping of fields in the generated code
+   */
+  TestEnum next;
 }

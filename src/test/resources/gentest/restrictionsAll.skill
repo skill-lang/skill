@@ -1,0 +1,78 @@
+#! restrictionsAll
+#
+#Test to check support for all restrictions at generator level; note that this
+# does not imply their correct or complete implementation.
+
+@unique
+Operator {
+  string name;
+}
+
+@monotone
+Term {
+
+  @nonnull
+  Operator operator;
+
+  Term[] arguments;
+}
+
+@default(System)
+@abstract
+Properties {
+}
+
+/* some regular property */
+RegularProperty : Properties {
+}
+
+/* some properties of the target system */
+@singleton
+System : Properties {
+  @nonnull
+  @constantLengthPointer
+  string name;
+
+  @default(1.1)
+  f32 version;
+}
+
+@Singleton
+None : Properties {}
+
+ToolDescription : Properties {
+
+  !lazy
+  @coding("zip")
+  string log;
+}
+
+DefaultBoarderCases{
+  @default(System)
+  auto annotation system;
+
+  @default(0)
+  v64 nopDefault;
+
+  @default(-1.0)
+  @range(-1.0, 1.0)
+  f32 float;
+
+  @default("Hello World!")
+  string message;
+
+  @default(None)
+  Properties none;
+}
+
+Comment {
+  @nonnull
+  string target;
+
+  @oneOf(Operator, Term)
+  annotation target;
+
+  @oneOf(None, System)
+  Properties property;
+}
+
