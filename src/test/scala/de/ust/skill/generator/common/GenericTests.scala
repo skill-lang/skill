@@ -5,6 +5,7 @@ import java.io.File
 import de.ust.skill.main.CommandLine
 import scala.collection.mutable.ArrayBuffer
 import java.nio.file.Files
+import org.scalatest.Assertions
 
 /**
  * Common implementation of generic tests
@@ -32,7 +33,7 @@ abstract class GenericTests extends FunSuite {
   final def makeTest(path : File, name : String, options : String) = test("generic: "+name) {
     deleteOutDir(name)
 
-    CommandLine.exit = { s ⇒ fail(s) }
+    CommandLine.exit = { s ⇒ throw(new Error(s)) }
 
     val args = ArrayBuffer[String]("-L", language, "-O@java:SuppressWarnings=true", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", name)
     if (options.size > 0)

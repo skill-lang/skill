@@ -97,7 +97,7 @@ Opitions:
 
     var packageName = List[String]()
     val header = new HeaderInfo()
-    val actual = new HashMap[String, Generator]()
+    val selectedLanguages = new HashMap[String, Generator]()
 
     while (args.hasNext) args.next match {
 
@@ -114,8 +114,8 @@ Opitions:
       case "-license" ⇒ header.license = Some(args.next)
 
       case "-L" ⇒ args.next match {
-        case "all" ⇒ actual ++= known
-        case lang ⇒ actual(lang.toLowerCase) = known.get(lang.toLowerCase).getOrElse(
+        case "all" ⇒ selectedLanguages ++= known
+        case lang ⇒ selectedLanguages(lang.toLowerCase) = known.get(lang.toLowerCase).getOrElse(
           error(s"Language $lang is not known and can therefore not be used!")
         )
       }
@@ -134,10 +134,10 @@ Opitions:
       case unknown ⇒ error(s"unknown option: $unknown")
     }
 
-    if (actual.isEmpty)
-      actual ++= known
+    if (selectedLanguages.isEmpty)
+      selectedLanguages ++= known
 
-    (header, packageName, actual)
+    (header, packageName, selectedLanguages)
   }
 
 }

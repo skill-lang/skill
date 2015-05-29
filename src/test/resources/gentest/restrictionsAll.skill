@@ -41,7 +41,7 @@ System : Properties {
 None : Properties {}
 
 
-DefaultBoarderCases{
+DefaultBoarderCases {
   @default(System)
   auto annotation system;
 
@@ -57,6 +57,27 @@ DefaultBoarderCases{
 
   @default(None)
   Properties none;
+}
+
+RangeBoarderCases {
+  @min(0, "inclusive")
+  i8 positive;
+
+  @min(-1, "exclusive")
+  i16 positive2;
+
+  @max(0, "inclusive")
+  i32 negative;
+
+  @max(1, "exclusive")
+  v64 negative2;
+
+  @range(0.0, 360.0, "inclusive", "exclusive")
+  f32 degrees;
+
+  /* @note very hard to use */
+  @range(0.0, 360.0, "exclusive", "inclusive")
+  f64 degrees2;
 }
 
 Comment {

@@ -56,7 +56,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      */
     private def int : Parser[Long] = HexInt | GeneralInt
     private def HexInt : Parser[Long] = "0x" ~> ("""[0-9a-fA-F]*""".r ^^ { i ⇒ Long.parseLong(i, 16) })
-    private def GeneralInt : Parser[Long] = """[0-9]*\.*""".r >> { i ⇒
+    private def GeneralInt : Parser[Long] = """-?[0-9]*\.*""".r >> { i ⇒
       try {
         success(Long.parseLong(i, 10))
       } catch {

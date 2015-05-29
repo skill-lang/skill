@@ -432,8 +432,9 @@ final class LazyField[T : Manifest](
       case r : NullableRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.NonNull"
       case r : IntRangeRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLow}L.to${mapType(f.getType)}, ${r.getHigh}L.to${mapType(f.getType)})"
       case r : FloatRangeRestriction ⇒ f.getType.getSkillName match {
-        case "f32" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
-        case "f64" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowDouble}, ${r.getHighDouble})"
+        case "f32"         ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
+        case "f64"         ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowDouble}, ${r.getHighDouble})"
+        case t ⇒ throw new IllegalStateException(s"parser should have rejected a float restriction on field $f" )
       }
       case r : ConstantLengthPointerRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.ConstantLengthPointer"
     }).mkString(", ")
