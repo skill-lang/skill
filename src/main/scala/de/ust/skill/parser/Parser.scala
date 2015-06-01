@@ -16,7 +16,7 @@ import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
 import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.MonotoneRestriction
-import de.ust.skill.ir.restriction.NullableRestriction
+import de.ust.skill.ir.restriction.NonNullRestriction
 import de.ust.skill.ir.restriction.SingletonRestriction
 import de.ust.skill.ir.restriction.UniqueRestriction
 import scala.annotation.tailrec
@@ -269,7 +269,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     private def fieldRestriction : Parser[Restriction] = "@" ~> id >> {
       _.lowercase match {
 
-        case "nonnull" ⇒ opt("(" ~ ")") ^^ { _ ⇒ new NullableRestriction }
+        case "nonnull" ⇒ opt("(" ~ ")") ^^ { _ ⇒ new NonNullRestriction }
 
         case "default" ⇒ "(" ~> defaultRestrictionParameter <~ ")" ^^ { _ ⇒ null }
 

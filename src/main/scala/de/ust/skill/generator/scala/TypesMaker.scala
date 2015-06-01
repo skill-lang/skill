@@ -17,6 +17,10 @@ trait TypesMaker extends GeneralOutputMaker {
     super.make
     val out = open("Types.scala")
 
+    @inline def fieldName(implicit f : Field) : String = escaped(f.getName.camel())
+    @inline def localFieldName(implicit f : Field) : String = escaped("_" + f.getName.camel())
+    @inline def fieldAssignName(implicit f : Field) : String = escaped(f.getName.camel() + "_=")
+
     //package
     out.write(s"""package ${this.packageName}
 
@@ -46,7 +50,7 @@ ${
     	out.write(s"""
   private[$packageName] def this(skillID : Long${appendConstructorArguments(t)}) {
     this(skillID)
-    ${relevantFields.map{f ⇒ s"_${f.getName()} = ${escaped(f.getName.camel)}"}.mkString("\n    ")}
+    ${relevantFields.map{f ⇒ s"${localFieldName(f)} = ${fieldName(f)}"}.mkString("\n    ")}
   }
 """)
 	}
@@ -55,39 +59,37 @@ ${
 	// getters & setters //
 	///////////////////////
 	for(f <- t.getFields if !f.isInstanceOf[View]){
-      val name = f.getName()
-      val name_ = escaped(name.camel)
-      val Name = name.capital
+    implicit val thisF = f;
 
       def makeField:String = {
 		if(f.isIgnored || f.isConstant)
 		  ""
 		else
 	      s"""
-  protected var _${f.getName} : ${mapType(f.getType())} = ${defaultValue(f)}"""
+  protected var $localFieldName : ${mapType(f.getType())} = ${defaultValue(f)}"""
 	  }
 
       def makeGetterImplementation:String = {
         if(f.isIgnored)
-          s"""throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
+          s"""throw new IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
         else if(f.isConstant)
           s"${f.constantValue().toString}.to${mapType(f.getType)}"
         else
-          s"_$name"
+          localFieldName
       }
 
       def makeSetterImplementation:String = {
         if(f.isIgnored)
-          s"""throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
+          s"""throw new IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
         else
           s"{ ${ //@range check
             if(f.getType().isInstanceOf[GroundType]){
               if(f.getType().asInstanceOf[GroundType].isInteger)
-                f.getRestrictions.collect{case r:IntRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLow}L <= $Name && $Name <= ${r.getHigh}L, "$name has to be in range [${r.getLow};${r.getHigh}]"); """}.mkString("")
+                f.getRestrictions.collect{case r:IntRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLow}L <= ${name(f)} && ${name(f)} <= ${r.getHigh}L, "${name(f)} has to be in range [${r.getLow};${r.getHigh}]"); """}.mkString("")
               else if("f32".equals(f.getType.getName))
-                f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowFloat}f <= $Name && $Name <= ${r.getHighFloat}f, "$name has to be in range [${r.getLowFloat};${r.getHighFloat}]"); """}.mkString("")
+                f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowFloat}f <= ${name(f)} && ${name(f)} <= ${r.getHighFloat}f, "${name(f)} has to be in range [${r.getLowFloat};${r.getHighFloat}]"); """}.mkString("")
               else if("f64".equals(f.getType.getName))
-               f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowDouble} <= $Name && $Name <= ${r.getHighDouble}, "$name has to be in range [${r.getLowDouble};${r.getHighDouble}]"); """}.mkString("")
+               f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowDouble} <= ${name(f)} && ${name(f)} <= ${r.getHighDouble}, "${name(f)} has to be in range [${r.getLowDouble};${r.getHighDouble}]"); """}.mkString("")
               else
                 ""
             }
@@ -99,17 +101,17 @@ ${
             }
             else
               ""
-        }_$name = $Name }"
+        }$localFieldName = ${name(f)} }"
       }
 
       if(f.isConstant)
         out.write(s"""$makeField
-  ${comment(f)}final def $name_ = $makeGetterImplementation
+  ${comment(f)}final def $fieldName = $makeGetterImplementation
 """)
       else
         out.write(s"""$makeField
-  ${comment(f)}final def $name_ = $makeGetterImplementation
-  ${comment(f)}final def ${name_}_=($Name : ${mapType(f.getType())}) : scala.Unit = $makeSetterImplementation
+  ${comment(f)}final def $fieldName = $makeGetterImplementation
+  ${comment(f)}final def $fieldAssignName(${name(f)} : ${mapType(f.getType())}) : scala.Unit = $makeSetterImplementation
 """)
     }
 
@@ -119,7 +121,7 @@ ${
 
     val prettyStringArgs = (for(f <- t.getAllFields)
       yield if(f.isIgnored) s"""+", ${f.getName()}: <<ignored>>" """
-      else if (!f.isConstant) s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+_${f.getName()}"""
+      else if (!f.isConstant) s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+${localFieldName(f)}"""
       else s"""+", const ${f.getName()}: ${f.constantValue()}""""
       ).mkString(""""(this: "+this""", "", """+")"""")
 

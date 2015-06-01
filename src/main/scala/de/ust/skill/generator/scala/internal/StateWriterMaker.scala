@@ -157,7 +157,7 @@ private[internal] final class StateWriter(state : State, out : FileOutputStream)
         val fields = d.getFields.filterNot(_.isIgnored)
         if (fields.isEmpty) ""
         else s"""
-          case pool : ${d.getName.capital}StoragePool ⇒
+          case pool : ${storagePool(d)} ⇒
             val outData = pool.${if(d.getSuperType()!=null)"all"else"data"}
             f.name match {${
           (for (f ← fields if !f.isInstanceOf[View]) yield s"""

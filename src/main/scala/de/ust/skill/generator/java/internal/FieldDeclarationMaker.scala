@@ -19,7 +19,7 @@ import de.ust.skill.ir.Type
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
-import de.ust.skill.ir.restriction.NullableRestriction
+import de.ust.skill.ir.restriction.NonNullRestriction
 import de.ust.skill.ir.View
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.SingleBaseTypeContainer

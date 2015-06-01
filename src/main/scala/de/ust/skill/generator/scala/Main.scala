@@ -6,9 +6,7 @@
 package de.ust.skill.generator.scala
 
 import java.util.Date
-
 import scala.collection.JavaConversions._
-
 import de.ust.skill.generator.common.Generator
 import de.ust.skill.generator.scala.api.AccessMaker
 import de.ust.skill.generator.scala.api.SkillFileMaker
@@ -35,6 +33,7 @@ import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.View
+import scala.collection.mutable.HashMap
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -183,16 +182,22 @@ Opitions (scala):
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
-  protected def escaped(target : String) : String = target match {
-    //keywords get a suffix "_", because that way at least auto-completion will work as expected
-    case "abstract" | "case" | "catch" | "class" | "def" | "do" | "else" | "extends" | "false" | "final" | "finally" |
-      "for" | "forSome" | "if" | "implicit" | "import" | "lazy" | "match" | "new" | "null" | "object" | "override" |
-      "package" | "private" | "protected" | "return" | "sealed" | "super" | "this" | "throw" | "trait" | "true" |
-      "try" | "type" | "var" | "while" | "with" | "yield" | "val" ⇒ target+"_"
+  private val escapeCache = new HashMap[String, String]();
+  protected def escaped(target : String) : String = escapeCache.getOrElse(target, {
+    val result = target match {
+      //keywords get a suffix "_", because that way at least auto-completion will work as expected
+      case "abstract" | "case" | "catch" | "class" | "def" | "do" | "else" | "extends" | "false" | "final" | "finally" |
+        "for" | "forSome" | "if" | "implicit" | "import" | "lazy" | "match" | "new" | "null" | "object" | "override" |
+        "package" | "private" | "protected" | "return" | "sealed" | "super" | "this" | "throw" | "trait" | "true" |
+        "try" | "type" | "var" | "while" | "with" | "yield" | "val" ⇒ s"`$target`"
 
-    //the string is fine anyway
-    case _ ⇒ target.replace(':', '$')
-  }
+      case t if t.forall(Character.isLetterOrDigit(_)) ⇒ t
+
+      case _ ⇒ s"`$target`"
+    }
+    escapeCache(target) = result
+    result
+  })
 
   protected def writeField(d : UserType, f : Field) : String = {
     val fName = escaped(f.getName.camel)

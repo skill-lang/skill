@@ -59,9 +59,9 @@ object FileParser {
       val p = (name match {
 ${
       (for (t ← IR)
-        yield s"""        case "${t.getSkillName}" ⇒ new ${name(t)}StoragePool(StringType, Annotation, types.size${
+        yield s"""        case "${t.getSkillName}" ⇒ new ${storagePool(t)}(StringType, Annotation, types.size${
         if (null == t.getSuperType) ""
-        else s""", poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${name(t.getSuperType)}StoragePool]"""
+        else s""", poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${storagePool(t.getSuperType)}]"""
       })""").mkString("\n")
     }
         case _ ⇒
@@ -314,7 +314,7 @@ ${
         val count = in.v64.toInt
         (for (i ← 0 until count; if i < 7 || 1 == (i % 2))
           yield in.v64 match {
-          case 0 ⇒ restrictions.NonNull
+          case 0 ⇒ new restrictions.NonNull
           case 3 ⇒ t match {
             case I8  ⇒ restrictions.Range(in.i8, in.i8)
             case I16 ⇒ restrictions.Range(in.i16, in.i16)
@@ -326,7 +326,7 @@ ${
             case t   ⇒ throw new ParseException(in, blockCounter, s"Type $$t can not be range restricted!", null)
           }
           //            case 5 ⇒ Coding(String.get(in.v64))
-          //            case 7 ⇒ ConstantLengthPointer
+          case 7 ⇒ new restrictions.ConstantLengthPointer
           case i ⇒ throw new ParseException(in, blockCounter,
             s"Found unknown field restriction $$i. Please regenerate your binding, if possible.", null)
         }
@@ -389,7 +389,7 @@ ${
     if(!poolByName.contains("${t.getSkillName}"))
       newPool("${t.getSkillName}", ${
         if (null == t.getSuperType) "null"
-        else s"""poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${name(t.getSuperType)}StoragePool]"""
+        else s"""poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${storagePool(t.getSuperType)}]"""
       }, null)""").mkString
       else ""
     }
@@ -399,8 +399,8 @@ ${
         (for (t ← IR) yield s"""
       poolByName.get("${t.getSkillName}").getOrElse(newPool("${t.getSkillName}", ${
           if (null == t.getSuperType) "null"
-          else s"""poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${name(t.getSuperType)}StoragePool]"""
-        }, null)).asInstanceOf[${name(t)}StoragePool],""").mkString
+          else s"""poolByName("${t.getSuperType.getSkillName}").asInstanceOf[${storagePool(t.getSuperType)}]"""
+        }, null)).asInstanceOf[${storagePool(t)}],""").mkString
     }
       String,
       types.to,

@@ -19,7 +19,7 @@ import de.ust.skill.ir.Type
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
-import de.ust.skill.ir.restriction.NullableRestriction
+import de.ust.skill.ir.restriction.NonNullRestriction
 
 trait AccessMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -249,7 +249,7 @@ ${
 
   private def mkFieldRestrictions(f : Field) : String = {
     f.getRestrictions.map(_ match {
-      case r : NullableRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.NonNull"
+      case r : NonNullRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.NonNull"
       case r : IntRangeRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLow}L.to${mapType(f.getType)}, ${r.getHigh}L.to${mapType(f.getType)})"
       case r : FloatRangeRestriction ⇒ f.getType.getSkillName match {
         case "f32" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowFloat}f, ${r.getHighFloat}f)"

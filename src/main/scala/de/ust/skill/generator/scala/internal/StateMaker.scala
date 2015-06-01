@@ -45,7 +45,7 @@ import _root_.${packagePrefix}api._
 final class State private[internal] (
 ${
       if (largeSpecificationMode) ""
-      else (for (t ← IR) yield s"  val ${name(t)} : ${name(t)}Access,").mkString("\n")
+      else (for (t ← IR) yield s"  val ${name(t)} : ${access(t)},").mkString("\n")
     }
   val String : StringAccess,
   val pools : Array[StoragePool[_ <: SkillType, _ <: SkillType]],
@@ -162,7 +162,7 @@ object State {
 ${
       var i = -1
       (for (t ← IR)
-        yield s"""        val ${name(t)} = new ${name(t)}StoragePool(stringType, annotation, ${i += 1; i}${
+        yield s"""        val ${name(t)} = new ${storagePool(t)}(stringType, annotation, ${i += 1; i}${
         if (null == t.getSuperType) ""
         else { ", "+name(t.getSuperType) }
       })

@@ -68,7 +68,7 @@ trait StringAccess {
     for (t ← IR) {
       if (t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty)
         out.write(s"""
-trait ${name(t)}Access extends Access[${mapType(t)}] {
+trait ${access(t)} extends Access[${mapType(t)}] {
   /**
    * create a new ${t.getName} instance
    */
@@ -77,7 +77,7 @@ trait ${name(t)}Access extends Access[${mapType(t)}] {
 """)
       else
         out.write(s"""
-trait ${name(t)}Access extends Access[${mapType(t)}] {
+trait ${access(t)} extends Access[${mapType(t)}] {
   /**
    * @return the instance
    */

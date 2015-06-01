@@ -36,9 +36,15 @@ package restrictions {
   /**
    * A nonnull restricition. It will ensure that field data is non null.
    */
-  object NonNull extends FieldRestriction[SkillType] {
+  object NonNull {
+    def apply[T <: AnyRef] : NonNull[T] = new NonNull[T]
+  }
+  /**
+   * A nonnull restricition. It will ensure that field data is non null.
+   */
+  class NonNull[T <: AnyRef] extends FieldRestriction[T] {
 
-    override def check(value : SkillType) {
+    override def check(value : T) {
       if (value == null)
         throw new SkillException("Null value violates @NonNull.")
     }
@@ -89,6 +95,23 @@ package restrictions {
       }
     }
     def apply(min : Double, max : Double) = new RangeF64(min, max)
+  }
+
+  /**
+   * This restriction disables variable length coding of references.
+   */
+  object ConstantLengthPointer {
+    def apply[T <: AnyRef] : ConstantLengthPointer[T] = new ConstantLengthPointer[T]
+  }
+
+  /**
+   * This restriction disables variable length coding of references.
+   */
+  class ConstantLengthPointer[T <: AnyRef] extends FieldRestriction[T] {
+
+    override def check(value : T) {
+      ???
+    }
   }
 }
 """)
