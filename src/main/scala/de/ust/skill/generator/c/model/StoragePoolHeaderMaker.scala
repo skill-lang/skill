@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c.model
@@ -139,7 +139,7 @@ void ${prefix}storage_pool_prepare_for_appending(${prefix}storage_pool this);
 //! This returns all sub-pools of this pool ordered that way, including all subtypes, not only direct subtypes.
 GList *${prefix}storage_pool_get_sub_pools(${prefix}storage_pool this);
 
-//! This merges new instances into the old instances after appending 
+//! This merges new instances into the old instances after appending
 void ${prefix}storage_pool_mark_instances_as_appended(${prefix}storage_pool this);
 
 #endif /* STORAGE_POOL_H_ */

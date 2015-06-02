@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.ada
@@ -33,17 +33,17 @@ ${
         d.getFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
           f.getType match {
             case t : ListType ⇒
-              if (false == doublyLinkedListNeeded) {
+              if (!doublyLinkedListNeeded) {
                 output += "with Ada.Containers.Doubly_Linked_Lists;\r\n"
                 doublyLinkedListNeeded = true
               }
             case t : SetType ⇒
-              if (false == hashedSetsNeeded) {
+              if (!hashedSetsNeeded) {
                 output += "with Ada.Containers.Hashed_Sets;\r\n"
                 hashedSetsNeeded = true
               }
             case t : MapType ⇒
-              if (false == hashedMapsNeeded) {
+              if (!hashedMapsNeeded) {
                 output += "with Ada.Containers.Hashed_Maps;\r\n"
                 hashedMapsNeeded = true
               }

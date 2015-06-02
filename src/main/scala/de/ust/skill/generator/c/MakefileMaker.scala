@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c
@@ -27,12 +27,12 @@ trait MakefileMaker extends GeneralOutputMaker {
 CFLAGS= -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -Wall -g3 -O3 -lglib-2.0 -lm -lpthread -lrt -fPIC -std=c99 -pedantic-errors
 
 ${prefix_capital}DEPENDENCIES += ./api/${prefix}api.o
-  
+
 ${prefix_capital}DEPENDENCIES += ./io/${prefix}binary_reader.o
 ${prefix_capital}DEPENDENCIES += ./io/${prefix}binary_writer.o
 ${prefix_capital}DEPENDENCIES += ./io/${prefix}reader.o
 ${prefix_capital}DEPENDENCIES += ./io/${prefix}writer.o
-  
+
 ${prefix_capital}DEPENDENCIES += ./model/${prefix}field_information.o
 ${prefix_capital}DEPENDENCIES += ./model/${prefix}skill_state.o
 ${prefix_capital}DEPENDENCIES += ./model/${prefix}string_access.o
@@ -40,7 +40,7 @@ ${prefix_capital}DEPENDENCIES += ./model/${prefix}type_enum.o
 ${prefix_capital}DEPENDENCIES += ./model/${prefix}type_information.o
 ${prefix_capital}DEPENDENCIES += ./model/${prefix}type_declaration.o
 ${prefix_capital}DEPENDENCIES += ./model/${prefix}storage_pool.o
-${prefix_capital}DEPENDENCIES += ./model/${prefix}types.o 
+${prefix_capital}DEPENDENCIES += ./model/${prefix}types.o
 
 SOURCE_LOCATIONS += -I.
 

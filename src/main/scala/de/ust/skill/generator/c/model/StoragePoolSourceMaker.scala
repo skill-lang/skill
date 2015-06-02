@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c.model
@@ -100,7 +100,7 @@ GList *${prefix}storage_pool_get_instances ( ${prefix}storage_pool this ) {
     ${prefix}skill_type current_instance;
     // Use a reverse loop, as g_list_prepend is a lot faster than g_list_append
     // first, collect instances, which were loaded from a file
-    
+
     // For this->instances->len == 0, the subtraction '-1' does not work, as its type is 'guint'.
     // Therefore the if-check is required.
     if ( this->instances->len > 0 ) {
@@ -111,7 +111,7 @@ GList *${prefix}storage_pool_get_instances ( ${prefix}storage_pool this ) {
             }
         }
     }
-    
+
     // collect instances, that are created by the user and not yet appended
     if ( this->new_instances->len > 0 ) {
         for ( i = this->new_instances->len - 1; i > -1; i-- ) {
@@ -129,7 +129,7 @@ GList *${prefix}storage_pool_get_new_instances ( ${prefix}storage_pool this ) {
     int64_t i;
     ${prefix}skill_type current_instance;
     // Use a reverse loop, as g_list_prepend is a lot faster than g_list_append
-    
+
     // collect instances, that are created by the user and not yet appended
     if ( this->new_instances->len > 0 ) {
         for ( i = this->new_instances->len - 1; i > -1; i-- ) {
@@ -166,7 +166,7 @@ void ${prefix}storage_pool_remove_null_references ( ${prefix}storage_pool this )
 static void remove_deleted_instances ( ${prefix}storage_pool this ) {
     int64_t i;
     ${prefix}skill_type current_instance;
-    
+
     // Remove instances of the 'instances'-array
     int64_t number_of_undeleted_instances = 0;
     for ( i = 0; i < this->instances->len; i++ ) {
@@ -193,7 +193,7 @@ static void remove_deleted_instances ( ${prefix}storage_pool this ) {
     }
     g_array_free ( this->instances, true );
     this->instances = new_array;
-    
+
     // Remove instances of the 'new_instances'-array
     number_of_undeleted_instances = 0;
     for ( i = 0; i < this->new_instances->len; i++ ) {
@@ -220,7 +220,7 @@ static void remove_deleted_instances ( ${prefix}storage_pool this ) {
     }
     g_array_free ( this->new_instances, true );
     this->new_instances = new_array;
-    
+
     // Call this on sub-pools
     GList *iterator;
     for ( iterator = this->sub_pools; iterator; iterator = iterator->next ) {
@@ -234,13 +234,13 @@ static void squash_instances ( ${prefix}storage_pool this ) {
     int64_t i;
     int64_t old_length = this->instances->len;
     g_array_set_size ( this->instances, old_length + this->new_instances->len );
-    
+
     for ( i = 0; i < this->new_instances->len; i++ ) {
         g_array_index ( this->instances, ${prefix}skill_type, old_length + i ) = g_array_index ( this->new_instances, ${prefix}skill_type, i );
     }
     g_array_free ( this->new_instances, true );
     this->new_instances = g_array_new ( true, true, sizeof (${prefix}skill_type) );
-    
+
     // Call this on sub-pools
     GList *iterator;
     for ( iterator = this->sub_pools; iterator; iterator = iterator->next ) {
@@ -371,7 +371,7 @@ void ${prefix}storage_pool_prepare_for_writing ( ${prefix}storage_pool this ) {
 
     // add the 'new_instance'-array to the 'instance'-array
     squash_instances ( this );
-    
+
     remove_deleted_instances ( this );
     reorder_instances ( this );
     int64_t lbpsi = 0;
@@ -387,7 +387,7 @@ void ${prefix}storage_pool_prepare_for_writing ( ${prefix}storage_pool this ) {
 // Call this method only on pools of base-types. It will take care of subtypes itself.
 void ${prefix}storage_pool_prepare_for_appending ( ${prefix}storage_pool this ) {
     // TODO check, that old instances have not been modified
-    
+
     remove_deleted_instances ( this );
     reorder_new_instances ( this );
     int64_t lbpsi = 0;

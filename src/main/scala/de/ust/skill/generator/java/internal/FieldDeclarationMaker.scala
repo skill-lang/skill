@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java.internal
@@ -66,7 +66,8 @@ import de.ust.skill.common.jvm.streams.MappedOutStream;
  */
 ${
         suppressWarnings
-      }final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapType(t)}> implements ${
+      }final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapType(t)}> implements
+               ${
         f.getType match {
           case ft : GroundType ⇒ ft.getSkillName match {
             case "bool"                  ⇒ s"""KnownBooleanField<${mapType(t)}>"""
@@ -87,7 +88,7 @@ ${
         else ""
       }${
         if (f.isAuto()) ", AutoField"
-        else"" // generate a read function 
+        else"" // generate a read function
       } {
 
     public $nameF(FieldType<${mapType(f.getType, true)}> type, ${
@@ -150,7 +151,8 @@ ${
         return 0; // this field is constant"""
         else {
           // this prelude is common to most cases
-          def preludeData = s"""final ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
+          def preludeData : String =
+            s"""final ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
         long result = 0L;
         int i = null == range ? 0 : (int) range.bpo;
         final int high = null == range ? data.length : (int) (range.bpo + range.count);

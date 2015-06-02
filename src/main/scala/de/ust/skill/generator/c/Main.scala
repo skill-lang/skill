@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c
@@ -162,7 +162,7 @@ final class Main extends FakeMain
 
   override def setPackage(names : List[String]) {
     if (names.isEmpty)
-      return ;
+      return
 
     if (names.size > 1)
       System.err.println("The Ada package system does not support nested packages with the expected meaning, dropping prefixes...");
@@ -255,10 +255,10 @@ Opitions (C):
     case "auto" | "_Bool" | "break" | "case" | "char" | "_Complex" | "const" | "continue" | "default" | "do" | "double"
       | "else" | "enum" | "extern" | "float" | "for" | "goto" | "if" | "_Imaginary" | "inline" | "int" | "long" |
       "register" | "restrict" | "return" | "short" | "signed" | "sizeof" | "static" | "struct" | "switch" | "typedef"
-      | "union" | "unsigned" | "void" | "volatile" | "while" ⇒ return "ZZ_"+target
+      | "union" | "unsigned" | "void" | "volatile" | "while" ⇒ "ZZ_"+target
 
     // the string is fine anyway
-    case _ ⇒ return target
+    case _ ⇒ target
   }
 
   override protected def makeConstructorArguments(t : UserType) : String = (for (f ← t.getAllFields; if !f.isConstant())

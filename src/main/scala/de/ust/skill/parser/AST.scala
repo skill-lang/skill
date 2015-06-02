@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.parser
@@ -90,18 +90,18 @@ final class Name(val source : String, delimitWithUnderscores : Boolean, delimitW
 
   lazy val c_style : String = parts.tail.foldLeft(parts.head.toUpperCase)(_+"_"+_.toLowerCase)
 
-  def ir = new de.ust.skill.ir.Name(parts, lowercase);
+  def ir : de.ust.skill.ir.Name = new de.ust.skill.ir.Name(parts, lowercase);
 
-  override def equals(o : Any) = o match {
+  override def equals(o : Any) : Boolean = o match {
     case o : Name ⇒ o.lowercase == lowercase
     case _        ⇒ false
   }
 
-  override def hashCode = lowercase.hashCode
+  override def hashCode : Int = lowercase.hashCode
 
-  override def toString = CapitalCase
+  override def toString : String = CapitalCase
 
-  def <(arg : Name) = lowercase < arg.lowercase
+  def <(arg : Name) : Boolean = lowercase < arg.lowercase
 }
 
 object ChangeModifier extends Enumeration {
@@ -115,7 +115,7 @@ final case class UserType(
     description : Description,
     _name : Name, superTypes : List[Name], body : List[Field]) extends Declaration(_name, _declaredIn) {
 
-  override def equals(other : Any) = other match {
+  override def equals(other : Any) : Boolean = other match {
     case UserType(_, Some(ChangeModifier.set), _, n, _, _) if change.isDefined ⇒
       change.get == ChangeModifier.set && n == name
 
@@ -124,6 +124,8 @@ final case class UserType(
 
     case _ ⇒ false
   }
+
+  override def hashCode() : Int = name.hashCode
 };
 
 final case class EnumDefinition(

@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c.io
@@ -140,12 +140,12 @@ static field_read_information *read_field_info ( ${prefix}skill_state state, ${p
     result->offset = 0;
     result->pool_index = -1;
     result->is_constant = false;
-    
+
     // The type information comes before the field name in the binary file.
     // Therefore it is stored in a local variable so that it can be compared to the known information later
     // if the type is known.
     ${prefix}type_information local_type_info = ${prefix}type_information_new ();
-    
+
     int64_t field_restrictions = ${prefix}read_v64 ( buffer );
     if ( field_restrictions != 0 ) {
         // TODO
@@ -169,12 +169,12 @@ static field_read_information *read_field_info ( ${prefix}skill_state state, ${p
             local_type_info->constant_value = ${prefix}read_v64 ( buffer );
         }
     }
-    
+
     if ( type == ${prefix}USER_TYPE ) {
         int64_t storage_pool_index = type_index - 32;
         result->pool_index = storage_pool_index;
     }
-    
+
     if ( ${prefix}type_enum_is_container_type ( type ) ) {
         local_type_info->element_type = ${prefix}type_information_new ();
         if ( type == ${prefix}CONSTANT_LENGTH_ARRAY ) {
@@ -204,7 +204,7 @@ static field_read_information *read_field_info ( ${prefix}skill_state state, ${p
             }
         }
     }
-    
+
     int64_t field_name_index = ${prefix}read_v64 ( buffer );
     char *field_name = ${prefix}string_access_get_string_by_id ( strings, field_name_index );
     if ( !field_name ) {
@@ -213,7 +213,7 @@ static field_read_information *read_field_info ( ${prefix}skill_state state, ${p
         exit ( EXIT_FAILURE );
     }
     result->field_name = field_name;
-    
+
     ${prefix}storage_pool pool = (${prefix}storage_pool) g_hash_table_lookup ( state->pools, type_name );
     if ( pool ) {
         // This is a known type
@@ -223,13 +223,13 @@ static field_read_information *read_field_info ( ${prefix}skill_state state, ${p
             validate_field_type ( field_info->type_info, local_type_info, field_info->name );
         }
     }
-    
+
     if ( !${prefix}type_enum_is_constant ( type ) ) {
         int64_t offset = ${prefix}read_v64 ( buffer );
         result->offset = offset;
     }
     ${prefix}type_information_destroy ( local_type_info );
-    
+
     return result;
 }
 
@@ -246,7 +246,7 @@ static read_information *read_single_type_info ( ${prefix}skill_state state, ${p
     result->number_of_instances = 0;
     result->subtype_order = 0;
     result->lbpsi = 0;
-    
+
     // Read the name
     int64_t type_name_index = ${prefix}read_v64 ( buffer );
     char *type_name = ${prefix}string_access_get_string_by_id ( strings, type_name_index );
@@ -271,7 +271,7 @@ static read_information *read_single_type_info ( ${prefix}skill_state state, ${p
     if ( !seen_type ) {
         (*pool_id)++;
     }
-    
+
     // If this type already appeared in a previous type block, the super type field is not present.
     char *super_type_name = 0;
     if ( seen_type ) {
@@ -313,7 +313,7 @@ static read_information *read_single_type_info ( ${prefix}skill_state state, ${p
     }
     if ( super_type_name ) {
         result->super_type_name = super_type_name;
-        
+
         // The lbpsi field is only present, if there is a super type.
         int64_t lbpsi = ${prefix}read_v64 ( buffer );
         result->lbpsi = lbpsi;
@@ -321,7 +321,7 @@ static read_information *read_single_type_info ( ${prefix}skill_state state, ${p
     }
     int64_t number_of_instances = ${prefix}read_v64 ( buffer );
     result->number_of_instances = number_of_instances;
-    
+
     // If this type already appeared in a previous type block, the restrictions are not read again.
     if ( !seen_type ) {
         int64_t restrictions = ${prefix}read_v64 ( buffer );
@@ -346,7 +346,7 @@ static read_information *read_single_type_info ( ${prefix}skill_state state, ${p
         field_read_information *new_field_info = malloc ( sizeof ( field_read_information ) );
         new_field_info->field_name = pool_field_info->field_name;
         new_field_info->pool_index = pool_field_info->pool_index;
-        
+
         if ( number_of_instances > 0 ) {
         // The offset for previously declared fields is only present, if new instances are added
             new_field_info->offset = ${prefix}read_v64 ( buffer );
@@ -372,7 +372,7 @@ static read_information *read_single_type_info ( ${prefix}skill_state state, ${p
 // It returns a list of read_information in the order in which they have to be read
 static GList *read_type_information ( ${prefix}skill_state state, ${prefix}string_access strings, int64_t *pool_id, GHashTable *seen_types, char **buffer ) { // returns a GList of read_information
     GList *result = 0;
-    
+
     int64_t number_of_instantiated_types = ${prefix}read_v64 ( buffer );
     int64_t i;
     for ( i = 0; i < number_of_instantiated_types; i++ ) {
@@ -389,7 +389,7 @@ static void validate_field_order ( ${prefix}skill_state state, read_information 
         // This is an unknown type. Its fields are ignored anyway.
         return;
     }
-    
+
     GList *previous_fields = pool->fields;
     GList *new_field_iter = read_information->field_info;
     ${prefix}field_information previous_field;
@@ -443,7 +443,7 @@ static void create_sub_pool_instances ( ${prefix}skill_state state, GArray *inst
     for ( iterator = read_info->subtype_order; iterator; iterator = iterator->next ) {
         create_sub_pool_instances ( state, instances, (read_information*) iterator->data, seen_types, index );
     }
-    
+
     // At this point, all instances of this type (including subtypes) already have memory allocated
     // and are referenced in the base-pool's instance array. Thus now, we can set the references of this pool's instance array.
     g_array_set_size ( pool->instances, number_of_new_instances + number_of_old_instances );
@@ -461,7 +461,7 @@ static void create_new_instances ( ${prefix}skill_state state, read_information 
         // This is an unknown type. No instances of that type will be created.
         return;
     }
-    
+
     // Some of the new instances may be instances of subtypes. Therefore collect the number of new instances of sub-pools
     int64_t number_of_sub_instances = 0;
     GList *iterator;
@@ -470,10 +470,10 @@ static void create_new_instances ( ${prefix}skill_state state, read_information 
         subtype_read_info = (read_information*) iterator->data;
         number_of_sub_instances += subtype_read_info->number_of_instances;
     }
-    
+
     int64_t number_of_old_instances = pool->instances->len;
     int64_t number_of_new_instances = read_info->number_of_instances;
-    
+
     // create new instances
     int64_t index;
     g_array_set_size ( pool->instances, number_of_old_instances + number_of_new_instances );
@@ -509,7 +509,7 @@ static void read_field_data ( ${prefix}skill_state state, ${prefix}string_access
         }
         return;
     }
-    
+
     // the fields have already been validated, so at this point, it is guaranteed, that the fields already declared
     // in previous blocks, appear in this block in the same order and before new fields.
     // Set the new_fields pointer to the first field, that hasn't been declared previously.
@@ -522,7 +522,7 @@ static void read_field_data ( ${prefix}skill_state state, ${prefix}string_access
     //    2. read new fields for all instances of that type. At this point, no new instances have to be created.
 
     // Store the last read offset, so that field data can be skipped
-    
+
     // 1. read previously declared fields
     field_read_information *pool_field_info;
     for ( i = 0; i < g_list_length ( pool->fields ); i++ ) {
@@ -545,7 +545,7 @@ static void read_field_data ( ${prefix}skill_state state, ${prefix}string_access
             }
         }
     }
-    
+
     // 2. read new fields
     GList *field_info_iter;
     field_read_information *field_read_info;
@@ -565,7 +565,7 @@ static void read_field_data ( ${prefix}skill_state state, ${prefix}string_access
             }
         }
     }
-    
+
     // Now update the field-list of the storage_pool so that it contains the new fields as well.
     for ( field_info_iter = new_fields; field_info_iter; field_info_iter = field_info_iter->next ) {
         field_info = (${prefix}field_information) g_hash_table_lookup ( pool->declaration->fields, ( (field_read_information*) field_info_iter->data )->field_name );
@@ -575,7 +575,7 @@ static void read_field_data ( ${prefix}skill_state state, ${prefix}string_access
         }
     }
 }
-    
+
 // This reads type information and all instances contained in one type block.
 static void read_type_block ( ${prefix}skill_state state, ${prefix}string_access strings, char **buffer, int64_t *pool_id, GHashTable *seen_types ) {
 
@@ -583,7 +583,7 @@ static void read_type_block ( ${prefix}skill_state state, ${prefix}string_access
     GList *iterator;
     for ( iterator = read_information_list; iterator; iterator = iterator->next ) {
         validate_field_order ( state, (read_information*) iterator->data );
-    }    
+    }
     // Creating new instances needs to respect instances of sub-pools, thus it is only called on storage pools of base types.
     for ( iterator = read_information_list; iterator; iterator = iterator->next ) {
         if ( ( (read_information*) iterator->data )->super_type_name == 0 ) {
@@ -636,7 +636,7 @@ void ${prefix}read_file ( ${prefix}skill_state state, char *filename ) {
 
     int64_t number_of_read_bytes = 0;
     int64_t pool_id = 0;
-    
+
     // We need to store some information for the types that have already been read.
     // This maps type-name -> read_information and will contain entries for all seen types during the deserialization.
     GHashTable *seen_types = g_hash_table_new ( g_str_hash, g_str_equal );

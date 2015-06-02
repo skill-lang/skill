@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.scala.internal
@@ -55,8 +55,12 @@ ${
 
   val poolByName = pools.map(_.name).zip(pools).toSeq.toMap
 ${
-      if (largeSpecificationMode) (for (t ← IR) yield s"""  val ${name(t)} = poolByName("${t.getSkillName}").asInstanceOf[${name(t)}Access]""").mkString("\n", "\n", "\n")
-      else ""
+      if (largeSpecificationMode) {
+        (
+          for (t ← IR) yield s"""  val ${name(t)} = poolByName("${t.getSkillName}").asInstanceOf[${name(t)}Access]"""
+        ).mkString("\n", "\n", "\n")
+      } else
+        ""
     }
   finalizePools;
 
@@ -148,7 +152,7 @@ object State {
       case m : WriteMode ⇒ m
     }.ensuring(_.size <= 1, throw new IOException("You can either write or append to a file.")).headOption.getOrElse(Write)
 
-    // create the state 
+    // create the state
     openMode match {
       case Create ⇒
 

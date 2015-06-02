@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.ada
@@ -159,7 +159,7 @@ class Main extends FakeMain
 
   override def setPackage(names : List[String]) {
     if (names.isEmpty)
-      return ;
+      return
 
     if (names.size > 1)
       System.err.println("The Ada package system does not support nested packages with the expected meaning, dropping prefixes...");
@@ -242,6 +242,6 @@ Opitions (ada):
     //      "xor" ⇒ return target+"_2"
 
     // replace ":"-characters by something that is legal in an identifier, but wont alias an Ada-style type-name
-    case _ ⇒ return target.replace(":", "_0")
+    case _ ⇒ target.replace(":", "_0")
   }
 }

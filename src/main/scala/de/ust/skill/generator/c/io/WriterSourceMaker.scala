@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c.io
@@ -50,7 +50,7 @@ static void collect_strings ( ${prefix}skill_state state, ${prefix}string_access
 static void write_strings ( ${prefix}string_access strings, ${prefix}binary_writer out ) {
     int64_t number_of_strings = ${prefix}string_access_get_size ( strings );
     ${prefix}write_v64 ( out, number_of_strings );
-    
+
     int64_t i;
     // Write the offsets
     int64_t offset = 0;
@@ -67,7 +67,7 @@ static void append_strings ( ${prefix}string_access strings, ${prefix}binary_wri
     int64_t i;
     int64_t size = ${prefix}string_access_get_size ( strings );
     ${prefix}write_v64 ( out, ( size - start_id ) + 1 );
-    
+
     int64_t offset = 0;
     for ( i = start_id; i <= size; i++ ) {
         offset += strlen ( ${prefix}string_access_get_string_by_id ( strings, i ) );
@@ -102,7 +102,7 @@ static GList *write_field_information ( ${prefix}field_information field, ${pref
         field_type_number += pool_index;
     }
     ${prefix}write_i8 ( out, field_type_number );
-    
+
     if ( ${prefix}type_enum_is_constant ( type_info->type ) ) {
         if ( type_info->type == ${prefix}CONSTANT_I8 ) {
             ${prefix}write_i8 ( out, type_info->constant_value );
@@ -137,7 +137,7 @@ static GList *write_field_information ( ${prefix}field_information field, ${pref
     }
     int64_t field_name_index = ${prefix}string_access_get_id_by_string ( strings, field->name );
     ${prefix}write_v64 ( out, field_name_index );
-    
+
     if ( !${prefix}type_enum_is_constant ( type_info->type ) ) {
         // Reserve data for the field offset. This will be written later.
         return g_list_append ( field_offsets, ${prefix}binary_writer_reserve_data ( out ) );
@@ -155,7 +155,7 @@ static GList *write_type_information ( ${prefix}skill_state state, ${prefix}stri
         instances = ${prefix}storage_pool_get_instances ( storage_pool );
     }
     ${prefix}type_declaration declaration = storage_pool->declaration;
-    
+
     int64_t type_name_index = ${prefix}string_access_get_id_by_string ( strings, declaration->name );
     ${prefix}write_v64 ( out, type_name_index );
     if ( !storage_pool->declared_in_file ) {
@@ -196,7 +196,7 @@ static GList *write_type_information ( ${prefix}skill_state state, ${prefix}stri
     GList *declaration_fields = g_hash_table_get_values ( storage_pool->declaration->fields );
     GList *iterator;
     ${prefix}field_information field_info;
-    
+
     if ( g_list_length ( instances ) > 0 ) {
         for ( iterator = pool_fields; iterator; iterator = iterator->next ) {
             // Those are the fields, already declared in the binary file.
@@ -227,14 +227,14 @@ static void write_instances ( ${prefix}skill_state state, ${prefix}string_access
 
     GList *instances = ${prefix}storage_pool_get_instances ( storage_pool );
     ${prefix}type_declaration declaration = storage_pool->declaration;
-        
+
     // write the actual data
     int64_t bytes_written = 0;
-    
+
     GList *field_iterator;
     GList *field_offset_iterator = field_offsets;
     GList *instance_iterator;
-    
+
     GList *fields = g_hash_table_get_values ( declaration->fields );
     for ( field_iterator = fields; field_iterator; field_iterator = field_iterator->next ) {
         ${prefix}field_information current_field = (${prefix}field_information) field_iterator->data;
@@ -261,14 +261,14 @@ static void append_instances ( ${prefix}skill_state state, ${prefix}string_acces
     GList *all_instances = ${prefix}storage_pool_get_instances ( storage_pool );
     GList *new_instances = ${prefix}storage_pool_get_new_instances ( storage_pool );
     ${prefix}type_declaration declaration = storage_pool->declaration;
-        
+
     // write the actual data
     int64_t bytes_written = 0;
-    
+
     GList *field_iterator;
     GList *field_offset_iterator = field_offsets;
     GList *instance_iterator;
-    
+
     // First, write previously declared fields for new instances
     GList *old_fields = storage_pool->fields;
     if ( g_list_length ( new_instances ) > 0 ) {
@@ -283,7 +283,7 @@ static void append_instances ( ${prefix}skill_state state, ${prefix}string_acces
             field_offset_iterator = field_offset_iterator->next;
         }
     }
-    
+
     GList *fields = g_hash_table_get_values ( declaration->fields );
     for ( field_iterator = fields; field_iterator; field_iterator = field_iterator->next ) {
         ${prefix}field_information current_field = (${prefix}field_information) field_iterator->data;
@@ -316,9 +316,9 @@ void ${prefix}write ( ${prefix}skill_state state, char *filename ) {
     for ( iterator = all_pools; iterator; iterator = iterator->next ) {
         ${prefix}storage_pool_remove_null_references ( (${prefix}storage_pool) iterator->data );
     }
-    
+
     GList *base_pools = 0;
-    
+
     // Collect base_pools, i.e. pools, whose types are roots of their inheritance tree.
     // This is required, as ids for instances are unique in the context of the same base type.
     for ( iterator = all_pools; iterator; iterator = iterator->next ) {
@@ -330,7 +330,7 @@ void ${prefix}write ( ${prefix}skill_state state, char *filename ) {
     for ( iterator = base_pools; iterator; iterator = iterator->next ) {
         ${prefix}storage_pool_prepare_for_writing ( (${prefix}storage_pool) iterator->data );
     }
-    
+
     GList *pools = 0;
     for ( iterator = base_pools; iterator; iterator = iterator->next ) {
         pool = (${prefix}storage_pool) iterator->data;
@@ -341,7 +341,7 @@ void ${prefix}write ( ${prefix}skill_state state, char *filename ) {
     collect_strings ( state, strings, false );
     ${prefix}binary_writer out = ${prefix}binary_writer_new ();
     write_strings ( strings, out );
-    
+
     // reset pool_ids as for writing, we can assign them in any order.
     for ( iterator = all_pools; iterator; iterator = iterator->next ) {
         ( (${prefix}storage_pool) iterator->data )->id = -1;
@@ -349,12 +349,12 @@ void ${prefix}write ( ${prefix}skill_state state, char *filename ) {
 
     // In the binary file, storage pools are identified via the order, in which they appear.
     int64_t pool_id = 0; // pool-ids start at 0.
-    
+
     for ( iterator = pools; iterator; iterator = iterator->next ) {
         ( (${prefix}storage_pool) iterator->data )->id = pool_id;
         pool_id++;
     }
-    
+
     int64_t number_of_instantiated_types = g_list_length ( pools );
     GList *offsets = 0; // store the field offsets for each field and for each type
     ${prefix}write_v64 ( out, number_of_instantiated_types );
@@ -386,17 +386,17 @@ void ${prefix}append ( ${prefix}skill_state state ) {
         printf ( "Error: appending not allowed. The state must either have been written to a file earlier, or have been created by reading a binary file.\\n" );
         exit ( EXIT_FAILURE );
     }
-    
+
     GList *all_pools = g_hash_table_get_values ( state->pools );
     GList *iterator;
     ${prefix}storage_pool pool;
-    
+
     // free memory for deleted instances
     // references to deleted instances have to be set to 0 so that freeing memory of deleted instances does not create dangling pointers.
     for ( iterator = all_pools; iterator; iterator = iterator->next ) {
         ${prefix}storage_pool_remove_null_references ( (${prefix}storage_pool) iterator->data );
     }
-    
+
     // Collect base_pools, i.e. pools, whose types are roots of their inheritance tree.
     GList *base_pools = 0;
     for ( iterator = all_pools; iterator; iterator = iterator->next ) {
@@ -408,7 +408,7 @@ void ${prefix}append ( ${prefix}skill_state state ) {
     for ( iterator = base_pools; iterator; iterator = iterator->next ) {
         ${prefix}storage_pool_prepare_for_appending ( (${prefix}storage_pool) iterator->data );
     }
-    
+
     GList *pools = 0;
     for ( iterator = base_pools; iterator; iterator = iterator->next ) {
         pool = (${prefix}storage_pool) iterator->data;
@@ -418,13 +418,13 @@ void ${prefix}append ( ${prefix}skill_state state ) {
 
     int64_t first_new_id = ${prefix}string_access_get_size ( state->strings ) + 1;
     collect_strings ( state, state->strings, true );
-    
+
     ${prefix}binary_writer out = ${prefix}binary_writer_new ();
     append_strings ( state->strings, out, first_new_id );
-    
+
     // pool-ids, that are already set, remain the same for appending.
     // for pools, that do not have an id yet (i.e. their id is -1), assign new ids.
-    
+
     // find the current max-id
     int64_t max_id = 0;
     for ( iterator = all_pools; iterator; iterator = iterator->next ) {
@@ -441,7 +441,7 @@ void ${prefix}append ( ${prefix}skill_state state ) {
             pool->id = pool_id;
         }
     }
-    
+
     int64_t number_of_instantiated_types = g_list_length ( pools );
     GList *offsets = 0; // store the field offsets for each field and for each type
     ${prefix}write_v64 ( out, number_of_instantiated_types );
@@ -456,7 +456,7 @@ void ${prefix}append ( ${prefix}skill_state state ) {
     }
     ${prefix}binary_writer_append_to_file ( out, state->filename );
     ${prefix}binary_writer_destroy ( out );
-    
+
     // New instances have now to be merged in to the old instances array
     for ( iterator = all_pools; iterator; iterator = iterator->next ) {
         ${prefix}storage_pool_mark_instances_as_appended ( (${prefix}storage_pool) iterator->data );

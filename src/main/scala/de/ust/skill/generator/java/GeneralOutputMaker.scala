@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java
@@ -65,7 +65,7 @@ trait GeneralOutputMaker extends Generator {
    */
   override protected def open(path : String) = {
     val f = simpleOpenDirtyPathString(s"$outPath/$sourcePath/$packagePath$path")
-    
+
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
       new FileOutputStream(f), "UTF-8")))
     rval.write(header)
@@ -106,12 +106,12 @@ trait GeneralOutputMaker extends Generator {
   } else {
     ""
   }
-  
+
   /**
    * Sourcepath can be configured to change output directory of source files.
    */
   protected var sourcePath = "src/main/java"
-  
+
   /**
    * this string may contain a "@SuppressWarnings("all")\n", in order to suppress warnings in generated code;
    * the option can be enabled by "-O@java:SuppressWarnings=true"

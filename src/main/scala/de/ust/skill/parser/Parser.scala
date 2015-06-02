@@ -1,3 +1,8 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.parser
 
 import java.io.File
@@ -35,7 +40,7 @@ import scala.collection.JavaConversions._
  * equivalence
  */
 final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase : Boolean = true, verboseOutput : Boolean = false) {
-  def stringToName(name : String) = new Name(name, delimitWithUnderscore, delimitWithCamelCase)
+  def stringToName(name : String) : Name = new Name(name, delimitWithUnderscore, delimitWithCamelCase)
 
   val tc = new ir.TypeContext
 
@@ -54,11 +59,11 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     /**
      * Skill integer literals
      */
-    private def int : Parser[Long] = HexInt | GeneralInt
-    private def HexInt : Parser[Long] = "0x" ~> ("""[0-9a-fA-F]*""".r ^^ { i ⇒ Long.parseLong(i, 16) })
-    private def GeneralInt : Parser[Long] = """-?[0-9]*\.*""".r >> { i ⇒
+    private def int : Parser[Long] = hexInt | generalInt
+    private def hexInt : Parser[Long] = "0x" ~> ("""[0-9a-fA-F]*""".r ^^ { i ⇒ Long.parseLong(i, 16) })
+    private def generalInt : Parser[Long] = """-?[0-9]*\.*""".r >> { i ⇒
       try {
-        success(Long.parseLong(i, 10))
+        success(Long.parseLong(i))
       } catch {
         case e : Exception ⇒ failure("not an int")
       }
@@ -106,7 +111,11 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
       case c ~ name ~ specs ~ target ⇒ Typedef(
         currentFile,
         name,
-        new Description(c.getOrElse(Comment.NoComment.get), specs.collect { case r : Restriction ⇒ r }, specs.collect { case h : Hint ⇒ h }),
+        new Description(
+          c.getOrElse(Comment.NoComment.get),
+          specs.collect { case r : Restriction ⇒ r },
+          specs.collect { case h : Hint ⇒ h }
+        ),
         target)
     };
 
@@ -132,7 +141,11 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * creates an enum definition
      */
     private def enumType = opt(comment) ~ ("enum" ~> id) ~ ("{" ~> repsep(id, ",") <~ ";") ~ (rep(field) <~ "}") ^^ {
-      case c ~ n ~ i ~ f ⇒ new EnumDefinition(currentFile, c.getOrElse(Comment.NoComment.get), n, i.ensuring(!_.isEmpty, s"Enum $n requires a non-empty list of instances!"), f)
+      case c ~ n ~ i ~ f ⇒
+        if (i.isEmpty)
+          throw ParseException(s"Enum $n requires a non-empty list of instances!")
+        else
+          new EnumDefinition(currentFile, c.getOrElse(Comment.NoComment.get), n, i, f)
     }
 
     /**
@@ -176,9 +189,24 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * impact on the way, data is and can be stored.
      */
     private def fieldType = ((("map" | "set" | "list") ~! ("<" ~> repsep(baseType, ",") <~ ">")) ^^ {
-      case "map" ~ l  ⇒ { if (1 >= l.size) throw ParseException(s"Did you mean set<${l.mkString}> instead of map?") else new de.ust.skill.parser.MapType(l) }
-      case "set" ~ l  ⇒ { if (1 != l.size) throw ParseException(s"Did you mean map<${l.mkString}> instead of set?") else new de.ust.skill.parser.SetType(l.head) }
-      case "list" ~ l ⇒ { if (1 != l.size) throw ParseException(s"Did you mean map<${l.mkString}> instead of list?") else new de.ust.skill.parser.ListType(l.head) }
+      case "map" ~ l ⇒ {
+        if (1 >= l.size)
+          throw ParseException(s"Did you mean set<${l.mkString}> instead of map?")
+        else
+          new de.ust.skill.parser.MapType(l)
+      }
+      case "set" ~ l ⇒ {
+        if (1 != l.size)
+          throw ParseException(s"Did you mean map<${l.mkString}> instead of set?")
+        else
+          new de.ust.skill.parser.SetType(l.head)
+      }
+      case "list" ~ l ⇒ {
+        if (1 != l.size)
+          throw ParseException(s"Did you mean map<${l.mkString}> instead of list?")
+        else
+          new de.ust.skill.parser.ListType(l.head)
+      }
     }
       // we use a backtracking approach here, because it simplifies the AST generation
       | arrayType
@@ -465,7 +493,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
           f.description.hints
         ))
     });
-    def toIR(d : Declaration) = toIRByName(d.name)
+    @inline def toIR(d : Declaration) : ir.Declaration = toIRByName(d.name)
 
     // topological sort results into a list, in order to be able to intialize it correctly
     /**
@@ -498,8 +526,9 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
           throw ParseException(s"The type hierarchy contains a cicle involving type ${n.name}.\n See ${n.declaredIn}")
 
         //    if n is not marked (i.e. has not been visited yet) then
-        if (marked(n))
-          return ;
+        if (marked(n)) {
+          return
+        }
 
         //        mark n temporarily
         temporary += n
@@ -539,7 +568,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     }
 
     // turns all AST fields of a Declaration into ir.Fields
-    def mkFields(d : Declaration, fields : List[Field]) = try {
+    def mkFields(d : Declaration, fields : List[Field]) : List[ir.Field] = try {
       // turn an AST field into an ir.Field
       def mkField(node : Field) : ir.Field = try {
         node match {
@@ -637,7 +666,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
 
     if (verboseOutput) {
       println(s"types: ${ordered.size}")
-      @inline def fieldCount(c : Int, d : Declaration) = d match {
+      @inline def fieldCount(c : Int, d : Declaration) : Int = d match {
         case d : UserType            ⇒ c + d.body.size
         case d : InterfaceDefinition ⇒ c + d.body.size
         case _                       ⇒ c

@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java.internal
@@ -111,7 +111,11 @@ ${
         else s"""
     @SuppressWarnings("unchecked")
     @Override
-    public void addKnownField(String name, de.ust.skill.common.java.internal.fieldTypes.StringType string, de.ust.skill.common.java.internal.fieldTypes.Annotation annotation) {
+    public void addKnownField(
+        String name,
+        de.ust.skill.common.java.internal.fieldTypes.StringType string,
+        de.ust.skill.common.java.internal.fieldTypes.Annotation annotation) {
+
         final FieldDeclaration<?, $typeT> f;
         switch (name) {${
           (for (f ← t.getFields if !f.isAuto)
@@ -195,7 +199,7 @@ ${
 
     /**
      * Builder for new $nameT instances.
-     * 
+     *
      * @author Timm Felden
      */
     public static final class ${nameT}Builder extends Builder<$typeT> {
@@ -221,7 +225,7 @@ ${
 
   private def mapToFieldType(f : Field) : String = {
     //@note temporary string & annotation will be replaced later on
-    def mapGroundType(t : Type) = t.getSkillName match {
+    @inline def mapGroundType(t : Type) : String = t.getSkillName match {
       case "annotation" ⇒ "annotation"
       case "bool"       ⇒ "BoolType.get()"
       case "i8"         ⇒ if (f.isConstant) s"new ConstantI8((byte)${f.constantValue})" else "I8.get()"
@@ -250,7 +254,11 @@ ${
   private def mkFieldRestrictions(f : Field) : String = {
     f.getRestrictions.map(_ match {
       case r : NonNullRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.NonNull"
-      case r : IntRangeRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLow}L.to${mapType(f.getType)}, ${r.getHigh}L.to${mapType(f.getType)})"
+      case r : IntRangeRestriction ⇒
+        s"_root_.${packagePrefix}internal.restrictions.Range(${
+          r.getLow
+        }L.to${mapType(f.getType)}, ${r.getHigh}L.to${mapType(f.getType)})"
+
       case r : FloatRangeRestriction ⇒ f.getType.getSkillName match {
         case "f32" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
         case "f64" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowDouble}, ${r.getHighDouble})"

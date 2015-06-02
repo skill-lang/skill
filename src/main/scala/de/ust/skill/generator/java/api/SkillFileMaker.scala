@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java.api
@@ -28,16 +28,16 @@ import de.ust.skill.common.java.api.SkillException;
 /**
  * An abstract skill file that is hiding all the dirty implementation details
  * from you.
- * 
+ *
  * @author Timm Felden
  */
 ${
-  suppressWarnings
-}public interface SkillFile extends de.ust.skill.common.java.api.SkillFile {
+      suppressWarnings
+    }public interface SkillFile extends de.ust.skill.common.java.api.SkillFile {
 
     /**
      * Create a new skill file based on argument path and mode.
-     * 
+     *
      * @throws IOException
      *             on IO and mode related errors
      * @throws SkillException
@@ -49,7 +49,7 @@ ${
 
     /**
      * Create a new skill file based on argument path and mode.
-     * 
+     *
      * @throws IOException
      *             on IO and mode related errors
      * @throws SkillException
@@ -61,7 +61,7 @@ ${
 
     /**
      * Create a new skill file based on argument path and mode.
-     * 
+     *
      * @throws IOException
      *             on IO and mode related errors
      * @throws SkillException

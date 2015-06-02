@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.scala.internal
@@ -202,7 +202,7 @@ final class ${knownField(f)}(${
     with IgnoredField {"""
         else if (f.isAuto()) """
     with AutoField {"""
-        else // generate a read function 
+        else // generate a read function
           s""" {
 
   def read(in : MappedInStream) {${
@@ -401,7 +401,7 @@ final class LazyField[T : Manifest](
 
   private def mapToFieldType(t : Type) : String = {
     //@note it is possible to pass <null> to the case classes, because they will be replaced anyway
-    def mapGroundType(t : Type) = t.getSkillName match {
+    @inline def mapGroundType(t : Type) : String = t.getSkillName match {
       case "annotation" ⇒ "Annotation(null)"
       case "bool"       ⇒ "BoolType"
       case "i8"         ⇒ "I8"
@@ -430,13 +430,18 @@ final class LazyField[T : Manifest](
   private def mkFieldRestrictions(f : Field) : String = {
     f.getRestrictions.map(_ match {
       case r : NonNullRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.NonNull[${mapType(f.getType)}]"
-      case r : IntRangeRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLow}L.to${mapType(f.getType)}, ${r.getHigh}L.to${mapType(f.getType)})"
+      case r : IntRangeRestriction ⇒
+        s"_root_.${packagePrefix}internal.restrictions.Range(${
+          r.getLow
+        }L.to${mapType(f.getType)}, ${r.getHigh}L.to${mapType(f.getType)})"
+
       case r : FloatRangeRestriction ⇒ f.getType.getSkillName match {
         case "f32" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
         case "f64" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowDouble}, ${r.getHighDouble})"
         case t     ⇒ throw new IllegalStateException(s"parser should have rejected a float restriction on field $f")
       }
-      case r : ConstantLengthPointerRestriction ⇒ s"_root_.${packagePrefix}internal.restrictions.ConstantLengthPointer[${mapType(f.getType)}]"
+      case r : ConstantLengthPointerRestriction ⇒
+        s"_root_.${packagePrefix}internal.restrictions.ConstantLengthPointer[${mapType(f.getType)}]"
     }).mkString(", ")
   }
 }
