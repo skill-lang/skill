@@ -188,16 +188,4 @@ ${
 
     out.close()
   }
-
-  private def fieldType(t : Type) : String = t match {
-    case t : Declaration             ⇒ s"""userTypes("${t.getSkillName}")"""
-
-    case t : GroundType              ⇒ t.getSkillName.capitalize+"Info"
-
-    case t : ConstantLengthArrayType ⇒ s"new ConstantLengthArrayInfo(${t.getLength}, ${fieldType(t.getBaseType)})"
-    case t : VariableLengthArrayType ⇒ s"new VariableLengthArrayInfo(${fieldType(t.getBaseType)})"
-    case t : ListType                ⇒ s"new ListInfo(${fieldType(t.getBaseType)})"
-    case t : SetType                 ⇒ s"new SetInfo(${fieldType(t.getBaseType)})"
-    case t : MapType                 ⇒ s"new MapInfo(${t.getBaseTypes.map(fieldType(_)).mkString("List(", ",", ")")})"
-  }
 }
