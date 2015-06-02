@@ -3,4 +3,8 @@ D : B { D d; }
 A { A a; }
 C : A { C c; }
 B : A { B b; }
+typedef E D;
 
+/** empty rootless interface */
+interface foo {
+}
