@@ -121,7 +121,7 @@ ${
           (for (f ← t.getFields if !f.isAuto)
             yield s"""
         case "${f.getSkillName}":
-            f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f)}, fields.size(), this);
+            f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f)}, 1 + dataFields.size(), this);
             break;
 """
           ).mkString
@@ -141,7 +141,7 @@ ${
             return;
         }
         if (!(f instanceof AutoField))
-            fields.add(f);
+            dataFields.add(f);
     }"""
       }${
         if (t.getFields.forall(_.isAuto)) ""
@@ -167,7 +167,7 @@ ${
 
         for (FieldRestriction<?> r : restrictions)
             f.addRestriction(r);
-        fields.add(f);
+        dataFields.add(f);
         return f;
     }"""
       }

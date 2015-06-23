@@ -87,7 +87,7 @@ ${
         if (f.isIgnored()) ", IgnoredField"
         else ""
       }${
-        if (f.isAuto()) ", AutoField"
+        if (f.isAuto()) s", AutoField<${mapType(f.getType, true)}>"
         else"" // generate a read function
       } {
 
