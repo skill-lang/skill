@@ -79,7 +79,7 @@ ${
       } })), ${
         t.getFields.count(_.isAuto) match {
           case 0 ⇒ "noAutoFields()"
-          case c ⇒ s"(FieldDeclaration<?, ${mapType(t)}>[]) java.lang.reflect.Array.newInstance(FieldDeclaration.class, $c)"
+          case c ⇒ s"(AutoField<?, ${mapType(t)}>[]) java.lang.reflect.Array.newInstance(AutoField.class, $c)"
         }
       });
     }${
@@ -132,7 +132,7 @@ ${
             yield s"""
         case "${f.getSkillName}":
             f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f)}, this);
-            autoFields[${index += 1; index - 1}] = f;
+            autoFields[${index += 1; index - 1}] = (AutoField<?, $typeT>) f;
             break;
 """
           ).mkString

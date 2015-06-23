@@ -66,7 +66,10 @@ import de.ust.skill.common.jvm.streams.MappedOutStream;
  */
 ${
         suppressWarnings
-      }final class $nameF extends FieldDeclaration<${mapType(f.getType, true)}, ${mapType(t)}> implements
+      }final class $nameF extends ${
+        if (f.isAuto) "AutoField"
+        else "FieldDeclaration"
+      }<${mapType(f.getType, true)}, ${mapType(t)}> implements
                ${
         f.getType match {
           case ft : GroundType ⇒ ft.getSkillName match {
@@ -86,9 +89,6 @@ ${
         // mark ignored fields as ignored; read function is inherited
         if (f.isIgnored()) ", IgnoredField"
         else ""
-      }${
-        if (f.isAuto()) s", AutoField<${mapType(f.getType, true)}>"
-        else"" // generate a read function
       } {
 
     public $nameF(FieldType<${mapType(f.getType, true)}> type, ${
@@ -101,14 +101,15 @@ ${
       }, owner);
             // TODO insert known restrictions?
     }
-
+${
+        if (f.isAuto) "" else s"""
     @Override
     public void read(MappedInStream in, Chunk last) {${
-        if (f.isConstant())
-          """
+          if (f.isConstant())
+            """
         // this field is constant"""
-        else
-          s"""
+          else
+            s"""
         final Iterator<$nameT> is;
         if (last instanceof SimpleChunk) {
             SimpleChunk c = (SimpleChunk) last;
@@ -116,54 +117,54 @@ ${
         } else
             is = owner.iterator();
 ${
-            // preparation code
-            f.getType match {
-              case t : GroundType if "string".equals(t.getSkillName) ⇒ s"""
+              // preparation code
+              f.getType match {
+                case t : GroundType if "string".equals(t.getSkillName) ⇒ s"""
         final StringPool sp = (StringPool)owner.owner().Strings();"""
-              case t : UserType ⇒ s"""
+                case t : UserType ⇒ s"""
         final ${name(t)}Access target = (${name(t)}Access)type;"""
-              case _ ⇒ ""
+                case _ ⇒ ""
+              }
             }
-          }
         int count = (int) last.count;
         while (0 != count--) {
             ${
-            // read next element
-            f.getType match {
-              case t : GroundType ⇒ t.getSkillName match {
-                case "annotation" ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
-                case "string"     ⇒ s"""is.next().set${escaped(f.getName.capital)}(sp.get(in.v64()));"""
-                case _            ⇒ s"""is.next().set${escaped(f.getName.capital)}(in.${t.getSkillName}());"""
-              }
+              // read next element
+              f.getType match {
+                case t : GroundType ⇒ t.getSkillName match {
+                  case "annotation" ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
+                  case "string"     ⇒ s"""is.next().set${escaped(f.getName.capital)}(sp.get(in.v64()));"""
+                  case _            ⇒ s"""is.next().set${escaped(f.getName.capital)}(in.${t.getSkillName}());"""
+                }
 
-              case t : UserType ⇒ s"""is.next().set${escaped(f.getName.capital)}(target.getByID(in.v64()));"""
-              case _            ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
+                case t : UserType ⇒ s"""is.next().set${escaped(f.getName.capital)}(target.getByID(in.v64()));"""
+                case _            ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
+              }
             }
-          }
         }"""
-      }
+        }
     }
 
     @Override
     public long offset(Block range) {${
-        if (f.isConstant())
-          """
+          if (f.isConstant())
+            """
         return 0; // this field is constant"""
-        else {
-          // this prelude is common to most cases
-          def preludeData : String =
-            s"""final ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
+          else {
+            // this prelude is common to most cases
+            def preludeData : String =
+              s"""final ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
         long result = 0L;
         int i = null == range ? 0 : (int) range.bpo;
         final int high = null == range ? data.length : (int) (range.bpo + range.count);
         for (; i < high; i++) {"""
 
-          f.getType match {
+            f.getType match {
 
-            // read next element
-            case fieldType : GroundType ⇒ fieldType.getSkillName match {
+              // read next element
+              case fieldType : GroundType ⇒ fieldType.getSkillName match {
 
-              case "annotation" ⇒ s"""
+                case "annotation" ⇒ s"""
         final Annotation t = (Annotation) type;
         $preludeData
             SkillObject v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
@@ -174,7 +175,7 @@ ${
         }
         return result;"""
 
-              case "string" ⇒ s"""
+                case "string" ⇒ s"""
         final StringType t = (StringType) type;
         $preludeData
             String v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
@@ -185,19 +186,19 @@ ${
         }
         return result;"""
 
-              case "i8" | "bool" ⇒ s"""
+                case "i8" | "bool" ⇒ s"""
         return range.count;"""
 
-              case "i16" ⇒ s"""
+                case "i16" ⇒ s"""
         return 2 * range.count;"""
 
-              case "i32" | "f32" ⇒ s"""
+                case "i32" | "f32" ⇒ s"""
         return 4 * range.count;"""
 
-              case "i64" | "f64" ⇒ s"""
+                case "i64" | "f64" ⇒ s"""
         return 8 * range.count;"""
 
-              case "v64" ⇒ s"""
+                case "v64" ⇒ s"""
         $preludeData
             long v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
 
@@ -222,11 +223,11 @@ ${
             }
         }
         return result;"""
-              case _ ⇒ s"""
+                case _ ⇒ s"""
         throw new NoSuchMethodError();"""
-            }
+              }
 
-            case fieldType : ConstantLengthArrayType ⇒ s"""
+              case fieldType : ConstantLengthArrayType ⇒ s"""
         final SingleArgumentType t = (SingleArgumentType) type;
         final FieldType baseType = t.groundType;
         $preludeData
@@ -236,7 +237,7 @@ ${
         }
         return result;"""
 
-            case fieldType : SingleBaseTypeContainer ⇒ s"""
+              case fieldType : SingleBaseTypeContainer ⇒ s"""
         final SingleArgumentType t = (SingleArgumentType) type;
         final FieldType baseType = t.groundType;
         $preludeData
@@ -250,7 +251,7 @@ ${
         }
         return result;"""
 
-            case fieldType : MapType ⇒ s"""
+              case fieldType : MapType ⇒ s"""
         final MapType t = (MapType) type;
         final FieldType keyType = t.keyType;
         final FieldType valueType = t.valueType;
@@ -266,7 +267,7 @@ ${
         }
         return result;"""
 
-            case fieldType : UserType ⇒ s"""
+              case fieldType : UserType ⇒ s"""
         $preludeData
             final ${mapType(f.getType)} instance = $dataAccessI.get${escaped(f.getName.capital)}();
             if (null == instance) {
@@ -296,20 +297,20 @@ ${
             }
         }
         return result;"""
-            case _ ⇒ s"""
+              case _ ⇒ s"""
         throw new NoSuchMethodError();"""
+            }
           }
         }
-      }
     }
 
     @Override
     public void write(MappedOutStream out) throws IOException {${
-        if (f.isConstant())
-          """
+          if (f.isConstant())
+            """
         // this field is constant"""
-        else
-          s"""
+          else
+            s"""
         ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
         int i;
         final int high;
@@ -320,38 +321,39 @@ ${
             i = (int) c.bpo;
             high = (int) (c.bpo + c.count);
         } else {${
-            // we have to use the offset of the pool
-            if (tIsBaseType) """
+              // we have to use the offset of the pool
+              if (tIsBaseType) """
             i = 0;
             high = owner.size();
         """
-            else """
+              else """
             i = owner.size() > 0 ? (int) owner.iterator().next().getSkillID() - 1 : 0;
             high = i + owner.size();
         """
-          }}
+            }}
 
         for (; i < high; i++) {
             ${
-            // read next element
-            f.getType match {
-              case t : GroundType ⇒ t.getSkillName match {
-                case "annotation" | "string" ⇒ s"""type.writeSingleField($dataAccessI.get${escaped(f.getName.capital)}(), out);"""
-                case _                       ⇒ s"""out.${t.getSkillName}($dataAccessI.get${escaped(f.getName.capital)}());"""
-              }
+              // read next element
+              f.getType match {
+                case t : GroundType ⇒ t.getSkillName match {
+                  case "annotation" | "string" ⇒ s"""type.writeSingleField($dataAccessI.get${escaped(f.getName.capital)}(), out);"""
+                  case _                       ⇒ s"""out.${t.getSkillName}($dataAccessI.get${escaped(f.getName.capital)}());"""
+                }
 
-              case t : UserType ⇒ s"""${mapType(t)} v = $dataAccessI.get${escaped(f.getName.capital)}();
+                case t : UserType ⇒ s"""${mapType(t)} v = $dataAccessI.get${escaped(f.getName.capital)}();
             if (null == v)
                 out.i8((byte) 0);
             else
                 out.v64(v.getSkillID());"""
-              case _ ⇒ s"""type.writeSingleField($dataAccessI.get${escaped(f.getName.capital)}(), out);"""
+                case _ ⇒ s"""type.writeSingleField($dataAccessI.get${escaped(f.getName.capital)}(), out);"""
+              }
             }
-          }
         }"""
-      }
+        }
     }
-
+"""
+      }
     @Override
     public ${mapType(f.getType, true)} getR(SkillObject ref) {
         ${
