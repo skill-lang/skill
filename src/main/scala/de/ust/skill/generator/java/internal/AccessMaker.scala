@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import de.ust.skill.common.java.api.SkillException;
 import de.ust.skill.common.java.internal.*;
 import de.ust.skill.common.java.internal.fieldDeclarations.AutoField;
 import de.ust.skill.common.java.internal.fieldTypes.*;
@@ -142,10 +143,7 @@ ${
         }
         if (!(f instanceof AutoField))
             dataFields.add(f);
-    }"""
-      }${
-        if (t.getFields.forall(_.isAuto)) ""
-        else s"""
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -160,15 +158,27 @@ ${
             break;
 """
           ).mkString
+        }${
+          (for (f ← t.getFields if f.isAuto)
+            yield s"""
+        case "${f.getSkillName}":
+            throw new SkillException(String.format(
+                    "The file contains a field declaration %s.%s, but there is an auto field of similar name!",
+                    this.name(), name));
+"""
+          ).mkString
         }
         default:
             return super.addField(ID, type, name, restrictions);
-        }
+        }${
+          if (t.getFields.forall(_.isAuto())) ""
+          else """
 
         for (FieldRestriction<?> r : restrictions)
             f.addRestriction(r);
         dataFields.add(f);
-        return f;
+        return f;"""
+        }
     }"""
       }
 

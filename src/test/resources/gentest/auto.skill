@@ -1,5 +1,5 @@
 #! auto
-# Auto compilation test
+# Auto compilation and structural correctness test
 
 /**
  * All fields of this type are auto.
@@ -15,3 +15,22 @@ NoSerializedData {
   auto bool seen;
 }
 
+/**
+ * Check subtyping; use single fields only,
+ * because otherwise field IDs are underspecified
+ */
+A {
+  auto A a;
+}
+
+B : A {
+  auto B b;
+}
+
+C : B {
+  auto C c;
+}
+
+D : B {
+  auto D d;
+}
