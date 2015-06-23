@@ -98,8 +98,8 @@ trait Generator {
     while (ps.hasNext) ps.next match {
       case ".." ⇒
         ps.next; rps.prepend(ps.next)
-      case "."  ⇒ rps.prepend(ps.next)
-      case p    ⇒ rps.prepend(p)
+      case "." ⇒ rps.prepend(ps.next)
+      case p   ⇒ rps.prepend(p)
     }
 
     val f = new File(rps.mkString("/"));
@@ -110,6 +110,11 @@ trait Generator {
 
     f
   }
+
+  /**
+   * maximum line length in emitted output
+   */
+  var lineLength = 80
 
   /**
    * Transform a comment of a declaration into the language's comment system

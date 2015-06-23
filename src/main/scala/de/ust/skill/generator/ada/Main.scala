@@ -44,8 +44,10 @@ class Main extends FakeMain
     with StateMakerBodyMaker
     with StateMakerSpecMaker {
 
-  override def comment(d : Declaration) = d.getComment.format("", "   -- ", 80, "")
-  override def comment(f : Field) = f.getComment.format("", "   -- ", 80, "")
+  // fix gnat bug
+  lineLength = 79
+  override def comment(d : Declaration) : String = d.getComment.format("", "   -- ", lineLength, "")
+  override def comment(f : Field) : String = f.getComment.format("", "   -- ", lineLength, "")
 
   /**
    * Translates the types into the skill type id's.
@@ -158,13 +160,14 @@ class Main extends FakeMain
   private var _packagePrefix = ""
 
   override def setPackage(names : List[String]) {
-    if (names.isEmpty)
-      return
+    if (!names.isEmpty) {
 
-    if (names.size > 1)
-      System.err.println("The Ada package system does not support nested packages with the expected meaning, dropping prefixes...");
+      if (names.size > 1)
+        System.err.println(
+          "The Ada package system does not support nested packages with the expected meaning, dropping prefixes...");
 
-    _packagePrefix = names.last
+      _packagePrefix = names.last
+    }
   }
 
   override private[ada] def header : String = _header
@@ -198,7 +201,7 @@ class Main extends FakeMain
 """
   }
 
-  override def setOption(option : String, value : String) = option match {
+  override def setOption(option : String, value : String) : Unit = option match {
     case unknown ⇒ sys.error(s"unkown Argument: $unknown")
   }
 

@@ -64,8 +64,9 @@ class Main extends FakeMain
     with TypeInfoMaker
     with TypesMaker {
 
-  override def comment(d : Declaration) = d.getComment.format("/**\n", " * ", 120, " */\n")
-  override def comment(f : Field) = f.getComment.format("  /**\n", "   * ", 120, "   */\n")
+  lineLength = 120
+  override def comment(d : Declaration) : String = d.getComment.format("/**\n", " * ", lineLength, " */\n")
+  override def comment(f : Field) : String = f.getComment.format("  /**\n", "   * ", lineLength, "   */\n")
 
   /**
    * Translates types into scala type names.

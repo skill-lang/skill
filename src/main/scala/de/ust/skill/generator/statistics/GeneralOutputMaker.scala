@@ -55,7 +55,7 @@ trait GeneralOutputMaker extends Generator {
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
-  protected def escaped(target : Name) : String = ???
+  protected def escaped(target : Name) : String = target.camel
 
   private lazy val packagePath = if (packagePrefix.length > 0) {
     "/"+packagePrefix.replace(".", "/")

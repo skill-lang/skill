@@ -45,8 +45,9 @@ class Main extends FakeMain
     with TypesMaker
     with DependenciesMaker {
 
-  override def comment(d : Declaration) = d.getComment.format("/**\n", " * ", 120, " */\n")
-  override def comment(f : Field) = f.getComment.format("/**\n", "     * ", 120, "     */\n    ")
+  lineLength = 120
+  override def comment(d : Declaration) : String = d.getComment.format("/**\n", " * ", lineLength, " */\n")
+  override def comment(f : Field) : String = f.getComment.format("/**\n", "     * ", lineLength, "     */\n    ")
 
   /**
    * Translates types into scala type names.
@@ -137,7 +138,7 @@ class Main extends FakeMain
     _packagePrefix = names.foldRight("")(_+"."+_)
   }
 
-  override def setOption(option : String, value : String) = option.toLowerCase match {
+  override def setOption(option : String, value : String) : Unit = option.toLowerCase match {
     case "revealskillid"          ⇒ revealSkillID = ("true" == value);
     case "srcpath" | "sourcepath" ⇒ sourcePath = if ('"' == value.charAt(0)) value.substring(1, value.length - 1) else value;
     case "suppresswarnings"       ⇒ suppressWarnings = if ("true" == value) "@SuppressWarnings(\"all\")\n" else ""

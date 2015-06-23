@@ -30,8 +30,8 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
 class Main extends FakeMain
     with CSVMaker {
 
-  override def comment(d : Declaration) = ???
-  override def comment(f : Field) = ???
+  override def comment(d : Declaration) = throw new NoSuchMethodError
+  override def comment(f : Field) = throw new NoSuchMethodError
 
   /**
    * Translates the types into Ada types.
@@ -63,5 +63,5 @@ Opitions (statistics):
 """)
 
   // unused
-  override protected def defaultValue(f : Field) = ???
+  override protected def defaultValue(f : Field) = throw new NoSuchMethodError
 }

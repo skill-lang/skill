@@ -33,8 +33,11 @@ class Main extends FakeMain
     with TypedefMaker
     with UserTypeMaker {
 
-  override def comment(d : Declaration) = d.getComment.format("/*!\n", " * ", 80, " */\n").replace('<', '⟨').replace('>', '⟩')
-  override def comment(f : Field) = f.getComment.format("    /*!\n", "     * ", 80, "     */\n").replace('<', '⟨').replace('>', '⟩')
+  lineLength = 80
+  override def comment(d : Declaration) : String =
+    d.getComment.format("/*!\n", " * ", lineLength, " */\n").replace('<', '⟨').replace('>', '⟩')
+  override def comment(f : Field) : String =
+    f.getComment.format("    /*!\n", "     * ", lineLength, "     */\n").replace('<', '⟨').replace('>', '⟩')
 
   /**
    * Translates the types into Ada types.
@@ -107,7 +110,7 @@ class Main extends FakeMain
 """
   }
 
-  override def setOption(option : String, value : String) = option match {
+  override def setOption(option : String, value : String) : Unit = option match {
     case unknown ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
@@ -117,7 +120,7 @@ Opitions (doxygen):
 """)
 
   // unused
-  override protected def defaultValue(f : Field) = ???
+  override protected def defaultValue(f : Field) = throw new NoSuchMethodError
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.

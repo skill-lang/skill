@@ -84,8 +84,9 @@ final class Main extends FakeMain
     with WriterHeaderMaker
     with WriterSourceMaker {
 
-  override def comment(d : Declaration) = d.getComment.format("", "//! ", 80, "")
-  override def comment(f : Field) = f.getComment.format("", "//! ", 80, "")
+  lineLength = 80
+  override def comment(d : Declaration) : String = d.getComment.format("", "//! ", lineLength, "")
+  override def comment(f : Field) : String = f.getComment.format("", "//! ", lineLength, "")
 
   /**
    * Translates the types into C99 types.
@@ -161,13 +162,8 @@ final class Main extends FakeMain
   private var _packagePrefix = ""
 
   override def setPackage(names : List[String]) {
-    if (names.isEmpty)
-      return
-
-    if (names.size > 1)
-      System.err.println("The Ada package system does not support nested packages with the expected meaning, dropping prefixes...");
-
-    _packagePrefix = names.last
+    if (!names.isEmpty)
+      _packagePrefix = names.map(_.toLowerCase).mkString("_");
   }
 
   override private[c] def header : String = _header
@@ -231,7 +227,7 @@ final class Main extends FakeMain
     rval
   }
 
-  override def setOption(option : String, value : String) = option.toLowerCase match {
+  override def setOption(option : String, value : String) : Unit = option.toLowerCase match {
     case "gendir" ⇒
       outPostfix = value
       if (!outPostfix.startsWith("/"))

@@ -36,10 +36,12 @@ usage:
 
 Opitions:
   -p packageName         set a package name used by all emitted code.
+
   -h1|h2|h3 content      overrides the content of the respective header line
   -u userName            set a user name
   -date date             set a custom date
   -license text          set a license text
+
   -L name|all            request a language to be built; default: all
   -O@<lang>:<opt>=<val>  set for a language an option to a value
 """)
