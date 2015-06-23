@@ -1,0 +1,7 @@
+Container {
+  v64[3] arr;
+}
+
+/** no instance of this is required */
+SomethingElse{
+}

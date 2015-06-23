@@ -30,9 +30,9 @@ import scala.collection.mutable.ListBuffer
  *
  * @author Timm Felden
  */
-sealed abstract class ChunkInfo(var begin : Long, var end : Long, val count : Long);
-final class SimpleChunkInfo(begin : Long, end : Long, val bpsi : Long, count : Long) extends ChunkInfo(begin, end, count);
-final class BulkChunkInfo(begin : Long, end : Long, count : Long) extends ChunkInfo(begin, end, count);
+sealed abstract class ChunkInfo(var begin : Long, var end : Long, val count : Int);
+final class SimpleChunkInfo(begin : Long, end : Long, val bpsi : Int, count : Int) extends ChunkInfo(begin, end, count);
+final class BulkChunkInfo(begin : Long, end : Long, count : Int) extends ChunkInfo(begin, end, count);
 
 /**
  * Blocks contain information about the type of an index range.
@@ -41,7 +41,7 @@ final class BulkChunkInfo(begin : Long, end : Long, count : Long) extends ChunkI
  * @param count the number of instances in this chunk
  * @author Timm Felden
  */
-case class BlockInfo(val bpsi : Long, val count : Long);
+case class BlockInfo(val bpsi : Int, val count : Int);
 
 /**
  * A field decalariation, as it occurs during parsing of a type blocks header.
@@ -51,7 +51,7 @@ case class BlockInfo(val bpsi : Long, val count : Long);
  * @param name the name of the field
  * @param index the index of this field, starting from 0; required for append operations
  */
-class FieldDeclaration(var t : FieldType, val name : String, val index : Long) {
+class FieldDeclaration(var t : FieldType, val name : String, val index : Int) {
 
   /**
    *  Data chunk information, as it is required for later parsing.

@@ -93,7 +93,11 @@ final public class OutBuffer extends OutStream {
 
 	@Override
 	public void put(byte[] data) {
-		tail = new Data(data, tail);
+    if (tail.data.length - tail.used < data.length)
+  		tail = new Data(tail);
+
+    for (byte b : data)
+      tail.data[tail.used++] = b;
 		size += data.length;
 	}
 

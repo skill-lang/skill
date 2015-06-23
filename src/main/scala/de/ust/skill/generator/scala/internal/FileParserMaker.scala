@@ -81,12 +81,12 @@ ${
       case 12           ⇒ F32
       case 13           ⇒ F64
       case 14           ⇒ StringType
-      case 15           ⇒ ConstantLengthArray(in.v64, groundType)
+      case 15           ⇒ ConstantLengthArray(in.v64.toInt, groundType)
       case 17           ⇒ VariableLengthArray(groundType)
       case 18           ⇒ ListType(groundType)
       case 19           ⇒ SetType(groundType)
       case 20           ⇒ MapType((0 until in.v64.toInt).map { n ⇒ groundType }.toSeq)
-      case i if i >= 32 ⇒ TypeDefinitionIndex(i - 32)
+      case i if i >= 32 ⇒ TypeDefinitionIndex(i.toInt - 32)
       case id           ⇒ throw ParseException(in, blockCounter, s"Invalid type ID: $$id", null)
     }
 
@@ -104,7 +104,7 @@ ${
       case 12           ⇒ F32
       case 13           ⇒ F64
       case 14           ⇒ StringType
-      case i if i >= 32 ⇒ TypeDefinitionIndex(i - 32)
+      case i if i >= 32 ⇒ TypeDefinitionIndex(i.toInt - 32)
       case id           ⇒ throw ParseException(in, blockCounter, s"Invalid base type ID: $$id", null)
     }
 
@@ -141,12 +141,12 @@ ${
       var offset = 0L
 
       @inline def typeDefinition[T <: B, B <: SkillType] {
-        @inline def superDefinition : (String, Long) = {
+        @inline def superDefinition : (String, Int) = {
           val superName = in.v64;
           if (0 == superName)
-            (null, 1L) // bpsi is 1 if the first legal index is one
+            (null, 1) // bpsi is 1 if the first legal index is one
           else
-            (String.get(superName), in.v64)
+            (String.get(superName), in.v64.toInt)
         }
         @inline def typeRestrictions : HashSet[Restriction] = {
           val count = in.v64.toInt
@@ -159,7 +159,7 @@ ${
             case 4 ⇒ Singleton
             case 5 ⇒ throw new ParseException(in, blockCounter, "Types can not be coding restricted!", null)
             case 6 ⇒ Monotone
-            case i ⇒ throw new ParseException(in, blockCounter, "Found unknown type restriction $$i. Please regenerate your binding, if possible.", null)
+            case i ⇒ throw new ParseException(in, blockCounter, s"Found unknown type restriction $$i. Please regenerate your binding, if possible.", null)
           }
           ).toSet[Restriction].to
         }
@@ -177,14 +177,14 @@ ${
               case V64  ⇒ Range(in.v64, in.v64)
               case F32  ⇒ Range(in.f32, in.f32)
               case F64  ⇒ Range(in.f64, in.f64)
-              case t    ⇒ throw new ParseException(in, blockCounter, "Type $$t can not be range restricted!", null)
+              case t    ⇒ throw new ParseException(in, blockCounter, s"Type $$t can not be range restricted!", null)
             }
             case 2 ⇒ throw new ParseException(in, blockCounter, "Fields can not be unique restricted!", null)
             case 3 ⇒ ConstantLengthPointer
             case 4 ⇒ throw new ParseException(in, blockCounter, "Fields can not be singleton restricted!", null)
             case 5 ⇒ Coding(String.get(in.v64))
             case 6 ⇒ throw new ParseException(in, blockCounter, "Fields can not be monotone restricted!", null)
-            case i ⇒ throw new ParseException(in, blockCounter, "Found unknown field restriction $$i. Please regenerate your binding, if possible.", null)
+            case i ⇒ throw new ParseException(in, blockCounter, s"Found unknown field restriction $$i. Please regenerate your binding, if possible.", null)
           }
           ).toSet[Restriction].to
         }
@@ -200,20 +200,20 @@ ${
         // try to parse the type definition
         try {
           var definition : StoragePool[T, B] = null
-          var count = 0L
-          var lbpsi = 1L
+          var count = 0
+          var lbpsi = 1
           if (poolByName.contains(name)) {
             definition = poolByName(name).asInstanceOf[StoragePool[T, B]]
             if (definition.superPool.isDefined)
-              lbpsi = in.v64
-            count = in.v64
+              lbpsi = in.v64.toInt
+            count = in.v64.toInt
           } else {
             val superDef = superDefinition
             if (null!=superDef._1 && !poolByName.contains(superDef._1))
               throw new ParseException(in, blockCounter, s"Type $$name refers to unknown super type $${superDef._1}. Known types are: $${types.mkString(", ")}", null)
 
             lbpsi = superDef._2
-            count = in.v64
+            count = in.v64.toInt
             val rest = typeRestrictions
 
             definition = newPool(name, superDef._1, rest)
@@ -221,11 +221,7 @@ ${
 
           // adjust lbpsi
           // @note -1 is due to conversion between index<->array offset
-          lbpsi += definition.basePool.data.length - 1
-
-          // store block info and prepare resize
-          definition.blockInfos += BlockInfo(lbpsi, count)
-          resizeQueue += definition
+          lbpsi += definition.basePool.oldDynamicSize - 1
 
           // read field part
           val fieldCount = in.v64.toInt
@@ -268,29 +264,19 @@ ${
               fieldDataQueue += ((definition, f))
             }
           }
+
+          // store block info and prepare resize
+          definition.addBlockInfo(lbpsi, count)
+          resizeQueue += definition
         } catch {
           case e : java.nio.BufferUnderflowException            ⇒ throw ParseException(in, blockCounter, "unexpected end of file", e)
           case e : Exception if !e.isInstanceOf[ParseException] ⇒ throw ParseException(in, blockCounter, e.getMessage, e)
         }
       }
       @inline def resizePools {
-        val resizeStack = new Stack[StoragePool[_ <: SkillType, _ <: SkillType]]
-        // resize base pools and push entries to stack
         for (p ← resizeQueue) {
-          p match {
-            case p : BasePool[_] ⇒ p.resizeData(p.blockInfos.last.count.toInt)
-            case _               ⇒
-          }
-          resizeStack.push(p)
-        }
-
-        // create instances from stack
-        for (p ← resizeStack) {
-          val bi = p.blockInfos.last
-          var i = bi.bpsi
-          val high = bi.bpsi + bi.count
-          while (i < high && p.insertInstance(i + 1))
-            i += 1;
+          p.resizeData(p.blockInfos.last.count)
+          p.updateBlockInfo // change count of block info to static instance count
         }
       }
       @inline def insertFields {

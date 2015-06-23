@@ -47,8 +47,8 @@ object FieldParser {
       case I64 ⇒ in.i64
       case V64 ⇒ in.v64
       case Annotation ⇒ (in.v64, in.v64) match {
-        case (0L, _) ⇒ null
-        case (t, i)  ⇒ pools(String.get(t)).getByID(i)
+        case (0L, _) ⇒ 0L
+        case (t, i)  ⇒ AnnotationRef.build(pools(String.get(t)).poolIndex, i.toInt)
       }
       case BoolType   ⇒ in.i8 != 0
       case F32        ⇒ in.f32
@@ -56,8 +56,8 @@ object FieldParser {
       case StringType ⇒ String.get(in.v64)
 
       case d : ConstantLengthArray ⇒
-        (for (i ← 0 until d.length.toInt)
-          yield readSingleField(d.groundType)).to[ArrayBuffer]
+        asArray(for (i ← 0 until d.length.toInt)
+          yield readSingleField(d.groundType), d.groundType)
 
       case d : VariableLengthArray ⇒
         (for (i ← 0 until in.v64.toInt)
@@ -75,12 +75,26 @@ object FieldParser {
       case d : MapType ⇒ parseMap(d.groundType)
 
       // user types are just references, easy pray
-      case d : StoragePool[_, _] ⇒ in.v64 match {
-        case 0     ⇒ null
-        case index ⇒ d.getByID(index)
-      }
+      case d : StoragePool[_, _] ⇒ in.v64.toInt
 
       case d ⇒ throw new IllegalStateException("unsupported or unexpected type: "+d)
+    }
+    /**
+     * if d is a constant length array, the result is a correct typed array
+     */
+    @inline def asArray(data : Seq[Any], t : FieldType) = t match {
+        case I8  ⇒ data.asInstanceOf[Seq[Byte]].toArray
+        case I16 ⇒ data.asInstanceOf[Seq[Short]].toArray
+        case I32 ⇒ data.asInstanceOf[Seq[Int]].toArray
+        case I64 ⇒ data.asInstanceOf[Seq[Long]].toArray
+        case V64 ⇒ data.asInstanceOf[Seq[Long]].toArray
+        case Annotation ⇒ data.asInstanceOf[Seq[Long]].toArray
+        case BoolType   ⇒ data.asInstanceOf[Seq[Boolean]].toArray
+        case F32        ⇒ data.asInstanceOf[Seq[Float]].toArray
+        case F64        ⇒ data.asInstanceOf[Seq[Double]].toArray
+        case StringType ⇒ data.asInstanceOf[Seq[String]].toArray
+        case _ : StoragePool[_, _] ⇒ data.asInstanceOf[Seq[Int]].toArray
+        case d ⇒ throw new IllegalStateException("unsupported or unexpected type: "+d)
     }
     /**
      * if d is a map<T,U,V>, the result is a Parser[Map[T,Map[U,V]]]
@@ -96,7 +110,7 @@ object FieldParser {
 
     val c = f.dataChunks.last
     if (in.position != c.begin)
-      throw new SkillException("@begin of data chunk: expected position(0x$${in.position.toHexString}) to be 0x$${c.begin.toHexString}")
+      throw new SkillException(s"@begin of data chunk: expected position(0x$${in.position.toHexString}) to be 0x$${c.begin.toHexString}")
 
     // partial fields, refer to TR14§???
     if (0 != c.count && c.begin == c.end && f.t.typeID > 4) {
@@ -108,30 +122,29 @@ object FieldParser {
 ${
       (for (t ← IR)
         yield s"""      case p : ${t.getCapitalName}StoragePool ⇒
-        val d = ${if(t.getSuperType()!= null) s"WrappedArray.make[${packagePrefix}${t.getCapitalName}](p.data)" else "p.data"}
         f.name match {
 ${
-        (for (f ← t.getAllFields)
+        (for (f ← t.getFields)
           yield s"""        case "${f.getSkillName}" ⇒"""+(
           if (f.isIgnored) " in.jump(c.end)"
           else if (f.isConstant) ""
-          else readField(f)
+          else readField(f, t.getSuperType != null)
         )
         ).mkString("\n")
       }
         case _ ⇒
           c match {
             case c : SimpleChunkInfo ⇒
-              val low = c.bpsi.toInt
-              val high = (c.bpsi + c.count).toInt
+              val low = c.bpsi
+              val high = c.bpsi + c.count
               for (i ← low until high)
-                d(i).set(t.asInstanceOf[Access[SkillType]], f, readSingleField(f.t))
+                p.unknownFieldData(f).put(i + 1, readSingleField(f.t))
 
             case bci : BulkChunkInfo ⇒
               for (
-                bi ← t.blockInfos;
-                i ← bi.bpsi.toInt until (bi.bpsi + bi.count).toInt
-              ) d(i).set(t.asInstanceOf[Access[SkillType]], f, readSingleField(f.t))
+                bi ← t.dynamicBlockInfos;
+                i ← bi.bpsi until bi.bpsi + bi.count
+              ) p.unknownFieldData(f).put(i + 1, readSingleField(f.t))
           }
       }""").mkString("\n")
     }
@@ -145,79 +158,14 @@ ${
 
           case bci : BulkChunkInfo ⇒
             for (
-              bi ← t.blockInfos;
-              i ← bi.bpsi.toInt until (bi.bpsi + bi.count).toInt
+              bi ← t.dynamicBlockInfos;
+              i ← bi.bpsi until bi.bpsi + bi.count
             ) t.getByID(i + 1).set(t.asInstanceOf[Access[SkillType]], f, readSingleField(f.t))
         }
     }
 
     if (in.position != c.end)
       throw PoolSizeMissmatchError(c.end - c.begin, in.position - c.begin, f.t.toString)
-  }
-
-  /**
-   * Reads an array of single fields of type t.
-   */
-  private[this] def readArray[T](size : Long, t : FieldType, in : InStream, pools : HashMap[String, StoragePool[_, _ <: SkillType]], strings : ArrayBuffer[String]) : ArrayBuffer[T] = {
-    @inline def readSingleField(t : FieldType) : Any = t match {
-      case I8  ⇒ in.i8
-      case I16 ⇒ in.i16
-      case I32 ⇒ in.i32
-      case I64 ⇒ in.i64
-      case V64 ⇒ in.v64
-      case Annotation ⇒ (in.v64, in.v64) match {
-        case (0L, _) ⇒ null
-        case (t, i)  ⇒ pools(strings(t.toInt)).getByID(i)
-      }
-      case BoolType   ⇒ in.i8 != 0
-      case F32        ⇒ in.f32
-      case F64        ⇒ in.f64
-      case StringType ⇒ strings(in.v64.toInt)
-
-      case d : ConstantLengthArray ⇒
-        (for (i ← 0 until d.length.toInt)
-          yield readSingleField(d.groundType)).to[ArrayBuffer]
-
-      case d : VariableLengthArray ⇒
-        (for (i ← 0 until in.v64.toInt)
-          yield readSingleField(d.groundType)).to[ArrayBuffer]
-
-      case d : SetType ⇒
-        (for (i ← 0 until in.v64.toInt)
-          yield readSingleField(d.groundType)).to[HashSet]
-
-      case d : ListType ⇒
-        (for (i ← 0 until in.v64.toInt)
-          yield readSingleField(d.groundType)).to[ListBuffer]
-
-      // map parsing is recursive on the ground types
-      case d : MapType ⇒ parseMap(d.groundType)
-
-      // user types are just references, easy pray
-      case d : StoragePool[_, _] ⇒ in.v64 match {
-        case 0     ⇒ null
-        case index ⇒ pools(d.name).getByID(index)
-      }
-
-      case d ⇒ throw new IllegalStateException("unsupported or unexpected type: "+d)
-    }
-    /**
-     * if d is a map<T,U,V>, the result is a Parser[Map[T,Map[U,V]]]
-     */
-    @inline def parseMap(types : Seq[FieldType]) : Any =
-      if (1 == types.size) readSingleField(types.head)
-      else {
-        val result = new HashMap[Any, Any]
-        for (i ← 0 until in.v64.toInt)
-          result.put(readSingleField(types.head), parseMap(types.tail))
-        result
-      }
-
-    val result = new ArrayBuffer[T](size.toInt)
-    for (i ← 0 until size.toInt) {
-      result += readSingleField(t).asInstanceOf[T]
-    }
-    result
   }
 }
 """)
@@ -226,49 +174,46 @@ ${
     out.close()
   }
 
-  private def readField(f: Field): String = {
+  private def readField(f: Field, isSubType : Boolean): String = {
     val t = f.getType
     val (prelude, action, result) = readSingleField(t)
     s"""$prelude
           c match {
             case c : SimpleChunkInfo ⇒
-              val low = c.bpsi.toInt
-              val high = (c.bpsi + c.count).toInt
+              ${if (isSubType) "val low = p.indexOfOldID(c.bpsi + 1)"
+                else           "val low = c.bpsi"}
+              val high = low + c.count
               for (i ← low until high) {$action
-                d(i).${f.getName} = $result
+                p._${f.getName}(i) = $result
               }
 
             case bci : BulkChunkInfo ⇒
-              for (
-                bi ← t.blockInfos;
-                i ← bi.bpsi.toInt until (bi.bpsi + bi.count).toInt
-              ) {$action
-                d(i).${f.getName} = $result
+              for (i ← 0 until bci.count) {$action
+                p._${f.getName}(i) = $result
               }
           }"""
   }
 
   private def readSingleField(t: Type): (String, String, String) = t match {
-    case t: Declaration ⇒ (s"""
-          val ref = pools("${t.getSkillName}").asInstanceOf[${t.getCapitalName}StoragePool]""", "", "ref.getByID(in.v64)")
+    case t: Declaration ⇒ (s"", "", "in.v64.toInt")
     case t: GroundType ⇒ ("", "", t.getSkillName match {
       case "annotation" ⇒ """(in.v64, in.v64) match {
-                case (0L, _) ⇒ null
-                case (t, i)  ⇒ pools(String.get(t)).getByID(i)
+                case (0L, _) ⇒ 0L
+                case (t, i)  ⇒ AnnotationRef.build(pools(String.get(t.toInt)).poolIndex, i.toInt)
               }"""
-      case "string" ⇒ "String.get(in.v64)"
+      case "string" ⇒ "String.get(in.v64.toInt)"
       case n        ⇒ "in."+n
     })
 
     case t: SetType ⇒
       val (p, r, s) = readSingleField(t.getBaseType)
       (p, s"""
-                val r = new HashSet[${mapType(t.getBaseType)}]
+                val r = new HashSet[${mapTypeRepresentation(t.getBaseType)}]
                 val count = in.v64.toInt
                 r.sizeHint(count)
                 for (i ← 0 until count) r.add($s)""", "r")
 
-    case _ ⇒ ("", "", "readSingleField(f.t).asInstanceOf["+mapType(t)+"]")
+    case _ ⇒ ("", "", "readSingleField(f.t).asInstanceOf["+mapTypeRepresentation(t)+"]")
   }
 
 }

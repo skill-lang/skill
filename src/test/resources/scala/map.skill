@@ -1,0 +1,3 @@
+AMap {
+    map<i64, i64> aMap;
+}

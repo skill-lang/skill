@@ -21,19 +21,20 @@ import ${packagePrefix}api.Access
  * The top of the skill type hierarchy.
  * @author Timm Felden
  */
-class SkillType private[$packageName] (protected var skillID : Long) {
-  private[internal] final def getSkillID = skillID
-  private[internal] final def setSkillID(newID : Long) = skillID = newID
+abstract sealed class SkillType private[$packageName] (protected var skillID : Int) {
+  @inline private[internal] final def getSkillID = skillID
+  @inline private[internal] final def setSkillID(newID : Int) = skillID = newID
+  protected[internal] def myPool : StoragePool[_ <: SkillType, _ <: SkillType]
 
   /**
-   * mark an instance as deleted
+   * mark an instance as deleted. After a call to delete, this instance should no longer be used.
    */
-  final def delete = setSkillID(0)
+  def delete : Unit
 
   /**
    * checks for a deleted mark
    */
-  final def markedForDeletion = 0 == getSkillID
+  def markedForDeletion : Boolean
 
   /**
    * provides a pretty representation of this
@@ -44,7 +45,7 @@ class SkillType private[$packageName] (protected var skillID : Long) {
    * reflective setter
    */
   def set[@specialized T](acc : Access[_ <: SkillType], field : FieldDeclaration, value : T) {
-    acc.asInstanceOf[StoragePool[_ <: SkillType, _ <: SkillType]].unknownFieldData(field).put(this, value)
+    acc.asInstanceOf[StoragePool[_ <: SkillType, _ <: SkillType]].unknownFieldData(field).put(skillID, value)
   }
 
   /**
@@ -52,22 +53,63 @@ class SkillType private[$packageName] (protected var skillID : Long) {
    */
   def get(acc : Access[_ <: SkillType], field : FieldDeclaration) : Any = {
     try {
-      acc.asInstanceOf[StoragePool[_ <: SkillType, _ <: SkillType]].unknownFieldData(field)(this)
+      acc.asInstanceOf[StoragePool[_ <: SkillType, _ <: SkillType]].unknownFieldData(field)(skillID)
     } catch {
       case e : Exception ⇒ this+" is not in:\\n"+acc.asInstanceOf[StoragePool[_ <: SkillType, _ <: SkillType]].unknownFieldData(field).mkString("\\n")
     }
   }
-}
 
+  /**
+   * equality of SkillType instances
+   */
+  override def equals(obj : Any) = obj match {
+    case st : SkillType ⇒ skillID == st.skillID && myPool.basePool == st.myPool.basePool
+    case _ ⇒ false
+  }
+  /**
+   * hash code function
+   */
+  override def hashCode = skillID.hashCode ^ myPool.basePool.typeID.hashCode
+}
 object SkillType {
-  final class SubType private[$packageName] (val τName : String, skillID : Long) extends SkillType(skillID)  with NamedType{
-    override def prettyString : String = τName+"(this: "+this+")"
-    override def toString = τName+"#"+skillID
+  implicit class ReferenceHelper(val x : SkillType) extends AnyVal {
+    @inline private[internal] final def annotation : Long = if (x == null) 0L else (x.myPool.poolIndex.toLong << 32) | x.getSkillID
+    @inline private[internal] final def reference : Int = if (x == null) 0 else x.getSkillID
   }
 }
 
-trait NamedType {
-  val τName : String;
+/**
+ * Base class for all known skill types (accessible through state fields)
+ * @author Jonathan Roth
+ */
+abstract class KnownSkillType private[$packageName] (_skillID : Int) extends SkillType(_skillID) {
+  protected def basePool : BasePool[_ <: SkillType]
+  
+  final override def delete = basePool.removeByID(skillID)
+  final override def markedForDeletion = basePool.isIDRemoved(skillID)
+
+  /**
+   * equality of SkillType instances
+   */
+  final override def equals(obj : Any) = obj match {
+    case kst : KnownSkillType ⇒ skillID == kst.skillID && basePool == kst.basePool
+    case st : SkillType ⇒ skillID == st.getSkillID && basePool == st.myPool.basePool
+    case _ ⇒ false
+  }
+  /**
+   * hash code function
+   */
+  final override def hashCode = skillID.hashCode ^ basePool.typeID.hashCode
+}
+/**
+ * Represents unknown skill types read from a file. Only reflective field access is possible.
+ * @author Jonathan Roth
+ */
+final class UnknownSkillType private[$packageName] (_skillID : Int, val pool : StoragePool[_ <: SkillType, _ <: SkillType]) extends SkillType(_skillID) {
+  protected[internal] override def myPool = pool
+  
+  override def delete = pool.basePool.removeByID(skillID)
+  override def markedForDeletion = pool.basePool.isIDRemoved(skillID)
 }
 """)
 

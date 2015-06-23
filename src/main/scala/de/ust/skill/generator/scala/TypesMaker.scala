@@ -21,9 +21,10 @@ trait TypesMaker extends GeneralOutputMaker {
     out.write(s"""package ${this.packageName}
 
 import ${packagePrefix}api.Access
+import ${packagePrefix}api.SkillState
 import ${packagePrefix}internal.FieldDeclaration
+import ${packagePrefix}internal.KnownSkillType
 import ${packagePrefix}internal.SkillType
-import ${packagePrefix}internal.NamedType
 """)
 
     val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
@@ -38,21 +39,16 @@ import ${packagePrefix}internal.NamedType
 
       //class prefix
       val Name = t.getCapitalName;
+      val poolName = t.getName + "Pool"
       out.write(s"""
-sealed class $Name private[$packageName] (skillID : Long) ${
-        if (null != t.getSuperType()) { s"extends ${t.getSuperType().getCapitalName()}" }
-        else { "extends SkillType" }
-      }(skillID) {""")
-
-      // constructor
-	if(!relevantFields.isEmpty){
-    	out.write(s"""
-  private[$packageName] def this(skillID : Long${appendConstructorArguments(t)}) {
-    this(skillID)
-    ${relevantFields.map{f ⇒ s"_${f.getName()} = ${escaped(f.getName)}"}.mkString("\n    ")}
-  }
+sealed class $Name private[$packageName] (_skillID : Int, state : SkillState) ${
+        if (null != t.getSuperType()) { s"extends ${t.getSuperType().getCapitalName()}(_skillID, state)" }
+        else { "extends KnownSkillType(_skillID)" }
+      } {
+  protected[$packageName] override def myPool : internal.StoragePool[_ <: $Name, _ <: ${t.getBaseType.getCapitalName}] = $poolName
+  ${if (null == t.getSuperType) s"protected final override def basePool = $poolName" else ""}
+  @inline protected final val $poolName = state.$Name.asInstanceOf[internal.${Name}StoragePool]
 """)
-	}
 
 	///////////////////////
 	// getters & setters //
@@ -62,19 +58,11 @@ sealed class $Name private[$packageName] (skillID : Long) ${
       val name_ = escaped(name)
       val Name = name.capitalize
 
-      def makeField:String = {
-		if(f.isIgnored)
-		  ""
-		else
-	      s"""
-  protected var _${f.getName} : ${mapType(f.getType())} = ${defaultValue(f)}"""
-	  }
-
       def makeGetterImplementation:String = {
         if(f.isIgnored)
           s"""throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
         else
-          s"_$name"
+          s"$poolName.get$Name(skillID)"
       }
 
       def makeSetterImplementation:String = {
@@ -101,22 +89,20 @@ sealed class $Name private[$packageName] (skillID : Long) ${
               ""
           }${//@monotone modification check
             if(!t.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty){
-              s"""require(skillID == -1L, "${t.getName} is specified to be monotone and this instance has already been subject to serialization!"); """
+              s"""require(skillID < 0, "${t.getName} is specified to be monotone and this instance has already been subject to serialization!"); """
             }
             else
               ""
-        }_$name = $Name }"
+        }$poolName.set$Name(skillID, $Name) }"
       }
 
       if ("annotation".equals(f.getType().getName())) { 
-        out.write(s"""$makeField
-  final def $name_ : SkillType = $makeGetterImplementation
-  final def ${name_}_=($Name : SkillType): Unit = $makeSetterImplementation
+        out.write(s"""  @inline final def $name_ : SkillType = $makeGetterImplementation
+  @inline final def ${name_}_=($Name : SkillType): Unit = $makeSetterImplementation
 """)
       } else {
-        out.write(s"""$makeField
-  final def $name_ = $makeGetterImplementation
-  final def ${name_}_=($Name : ${mapType(f.getType())}) = $makeSetterImplementation
+        out.write(s"""  @inline final def $name_ = $makeGetterImplementation
+  @inline final def ${name_}_=($Name : ${mapType(f.getType())}) = $makeSetterImplementation
 """)
       }
     }
@@ -125,7 +111,7 @@ sealed class $Name private[$packageName] (skillID : Long) ${
     out.write(s"""
   override def get(acc : Access[_ <: SkillType], field : FieldDeclaration) : Any = field.name match {
 ${
-      (for(f <- t.getAllFields.filterNot(_.isIgnored)) yield s"""    case "${f.getSkillName}" ⇒ _${f.getName}""").mkString("\n")
+      (for(f <- t.getAllFields.filterNot(_.isIgnored)) yield s"""    case "${f.getSkillName}" ⇒ ${f.getName}""").mkString("\n")
 }${
       (for(f <- t.getAllFields.filter(_.isIgnored)) yield s"""    case "${f.getSkillName}" ⇒ throw new IllegalAccessError("${f.getName} is ignored")""").mkString("\n")
 }
@@ -139,7 +125,7 @@ ${
 ${
   (
     for(f <- t.getAllFields.filterNot{t ⇒ t.isIgnored || t.isConstant()}) 
-      yield s"""    case "${f.getSkillName}" ⇒ _${f.getName} = value.asInstanceOf[${mapType(f.getType)}]"""
+      yield s"""    case "${f.getSkillName}" ⇒ ${f.getName} = value.asInstanceOf[${mapType(f.getType)}]"""
   ).mkString("\n")
 }${
   (
@@ -161,7 +147,7 @@ ${
     
     val prettyStringArgs = (for(f <- t.getAllFields)
       yield if(f.isIgnored) s"""+", ${f.getName()}: <<ignored>>" """
-      else if (!f.isConstant) s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+_${f.getName()}"""
+      else if (!f.isConstant) s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+${f.getName()}"""
       else s"""+", const ${f.getName()}: ${f.constantValue()}""""
       ).mkString(""""(this: "+this""", "", """+")"""")
       
@@ -176,11 +162,14 @@ ${
       out.write(s"""
 object $Name {
   def unapply(self : $Name) = ${(for (f ← t.getAllFields) yield "self."+f.getName).mkString("Some(", ", ", ")")}
-
-  final class SubType private[$packageName] (val τName : String, skillID : Long) extends $Name(skillID) with NamedType{
-    override def prettyString : String = τName+$prettyStringArgs
-    override def toString = τName+"#"+skillID
-  }
+${
+        if (t.getRestrictions.collect{ case r : SingletonRestriction ⇒ r }.isEmpty) s"""
+  final class SubType private[$packageName] (_skillID : Int, _pool : internal.${Name}SubPool) extends $Name(_skillID, _pool.basePool.skillState) {
+    protected[$packageName] override val myPool = _pool
+    override def prettyString : String = myPool.name+$prettyStringArgs
+    override def toString = myPool.name+"#"+skillID
+  }"""
+        }
 }
 """);
     }

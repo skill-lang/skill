@@ -1,0 +1,10 @@
+Base {
+    i32 base;
+}
+
+Derived : Base {
+    i32 derived;
+}
+
+Empty : Derived {
+}
