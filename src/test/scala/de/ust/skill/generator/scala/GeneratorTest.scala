@@ -19,11 +19,20 @@ class GeneratorTest extends FunSuite {
     Main.main(Array[String]("-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/scala/"+src, "testsuites/scala/src/main/scala/"))
   }
 
-  test("benchmark: colored graph")(check("benchmarks.coloredGraph.skill", "benchmarks.coloredGraph"))
-  test("benchmark: graph")(check("benchmarks.graph.skill", "benchmarks.graph"))
+  test("number")(check("number.skill", "number"))
+  test("fields")(check("fields.skill", "fields"))
+  test("cycle")(check("cycle.skill", "cycle"))
+  test("derivation")(check("derivation.skill", "derivation"))
+  test("fixed size array")(check("fixedArray.skill", "containers.array.fixed"))
+  test("variable size array")(check("variableArray.skill", "containers.array.variable"))
+  test("list")(check("list.skill", "containers.list"))
+  test("set")(check("set.skill", "containers.set"))
+  test("map")(check("map.skill", "containers.map"))
+  //test("benchmark: colored graph")(check("benchmarks.coloredGraph.skill", "benchmarks.coloredGraph"))
+  //test("benchmark: graph")(check("benchmarks.graph.skill", "benchmarks.graph"))
 
   test("annotation")(check("annotation.skill", "annotation"))
-  test("blocks")(check("blocks.skill", "block"))
+  //test("blocks")(check("blocks.skill", "block"))
   test("container")(check("container.skill", "container"))
   test("date")(check("date.skill", "date"))
   test("graph")(check("graph.skill", "graph"))
@@ -36,10 +45,9 @@ class GeneratorTest extends FunSuite {
   test("hints: ignore")(check("hintIgnore.skill", "hints.ignore"))
 
   test("node")(check("node.skill", "node"))
-  test("number")(check("number.skill", "number"))
   test("subtypes")(check("subtypesExample.skill", "subtypes"))
-  test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
-  test("datedMessage")(check("datedMessage.skill", "datedMessage"))
+  //test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
+  //test("datedMessage")(check("datedMessage.skill", "datedMessage"))
 
   /**
    * generate code for a more complex example that makes use of a set of tools to modify very simple nodes.
@@ -53,9 +61,9 @@ class GeneratorTest extends FunSuite {
     check("nodeExample.viewer.skill", "toolchains.node.viewer")
   }
 
-  test("check _root_ bug")(
-    assert(intercept[AssertionError] {
-      Main.main(Array[String]("-u", "<<some developer>>", "-h2", "<<debug>>", "src/test/resources/scala/date.skill", "testsuites/scala/src/main/scala/"))
-    }.getMessage === "assertion failed: You have to specify a non-empty package name!")
-  )
+  //test("check _root_ bug")(
+  //  assert(intercept[AssertionError] {
+  //    Main.main(Array[String]("-u", "<<some developer>>", "-h2", "<<debug>>", "src/test/resources/scala/date.skill", "testsuites/scala/src/main/scala/"))
+  //  }.getMessage === "assertion failed: You have to specify a non-empty package name!")
+  //)
 }

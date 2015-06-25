@@ -35,8 +35,8 @@ trait InternalInstanceProperties {
   /**
    * @return the ID of the instance; if -1, no ID has been assigned yet, if 0, the object will not be written to disk
    */
-  private[internal] def getSkillID: Long
-  private[internal] def setSkillID(newID: Long): Unit
+  private[internal] def getSkillID: Int
+  private[internal] def setSkillID(newID: Int): Unit
 }
 """)
 

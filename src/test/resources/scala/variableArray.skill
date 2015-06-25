@@ -1,0 +1,3 @@
+Variable {
+    annotation[] variable;
+}

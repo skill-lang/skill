@@ -12,11 +12,13 @@ import scala.collection.JavaConversions.asScalaBuffer
 
 import de.ust.skill.generator.scala.api.AccessMaker
 import de.ust.skill.generator.scala.api.SkillStateMaker
+import de.ust.skill.generator.scala.internal.ContainersMaker
 import de.ust.skill.generator.scala.internal.ExceptionsMaker
 import de.ust.skill.generator.scala.internal.FieldDeclarationMaker
 import de.ust.skill.generator.scala.internal.FieldParserMaker
 import de.ust.skill.generator.scala.internal.FileParserMaker
 import de.ust.skill.generator.scala.internal.InternalInstancePropertiesMaker
+import de.ust.skill.generator.scala.internal.RemappingFunctionsMaker
 import de.ust.skill.generator.scala.internal.RestrictionsMaker
 import de.ust.skill.generator.scala.internal.SerializableStateMaker
 import de.ust.skill.generator.scala.internal.SerializationFunctionsMaker
@@ -93,6 +95,7 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  */
 class Main extends FakeMain
     with AccessMaker
+    with ContainersMaker
     with ExceptionsMaker
     with FieldDeclarationMaker
     with FieldParserMaker
@@ -101,6 +104,7 @@ class Main extends FakeMain
     with FileParserMaker
     with InStreamMaker
     with InternalInstancePropertiesMaker
+    with RemappingFunctionsMaker
     with OutBufferMaker
     with OutStreamMaker
     with RestrictionsMaker
@@ -138,16 +142,46 @@ class Main extends FakeMain
       case "string"     ⇒ "String"
     }
 
-    case t : ConstantLengthArrayType ⇒ s"$ArrayTypeName[${mapType(t.getBaseType())}]"
-    case t : VariableLengthArrayType ⇒ s"$VarArrayTypeName[${mapType(t.getBaseType())}]"
-    case t : ListType                ⇒ s"$ListTypeName[${mapType(t.getBaseType())}]"
-    case t : SetType                 ⇒ s"$SetTypeName[${mapType(t.getBaseType())}]"
+    case t : ConstantLengthArrayType ⇒ arrayTypeName(t.getBaseType)
+    case t : VariableLengthArrayType ⇒ varArrayTypeName(t.getBaseType)
+    case t : ListType                ⇒ listTypeName(t.getBaseType)
+    case t : SetType                 ⇒ setTypeName(t.getBaseType)
+    case t : MapType                 ⇒ mapTypeName(t.getBaseTypes)
+
+    case t : Declaration ⇒ "_root_."+packagePrefix + t.getName()
+  }
+
+  /**
+   * Translates types into the internally representing types.
+   */
+  override protected def mapTypeRepresentation(t : Type) : String = t match {
+    case t : GroundType ⇒ t.getName() match {
+      case "annotation" ⇒ "Long"
+
+      case "bool"       ⇒ "Boolean"
+
+      case "i8"         ⇒ "Byte"
+      case "i16"        ⇒ "Short"
+      case "i32"        ⇒ "Int"
+      case "i64"        ⇒ "Long"
+      case "v64"        ⇒ "Long"
+
+      case "f32"        ⇒ "Float"
+      case "f64"        ⇒ "Double"
+
+      case "string"     ⇒ "String"
+    }
+
+    case t : ConstantLengthArrayType ⇒ s"$ArrayTypeName[${mapTypeRepresentation(t.getBaseType())}]"
+    case t : VariableLengthArrayType ⇒ s"$VarArrayTypeName[${mapTypeRepresentation(t.getBaseType())}]"
+    case t : ListType                ⇒ s"$ListTypeName[${mapTypeRepresentation(t.getBaseType())}]"
+    case t : SetType                 ⇒ s"$SetTypeName[${mapTypeRepresentation(t.getBaseType())}]"
     case t : MapType ⇒ {
-      val types = t.getBaseTypes().reverse.map(mapType(_))
+      val types = t.getBaseTypes().reverse.map(mapTypeRepresentation(_))
       types.tail.fold(types.head)({ (U, t) ⇒ s"$MapTypeName[$t, $U]" });
     }
 
-    case t : Declaration ⇒ "_root_."+packagePrefix + t.getName()
+    case t : Declaration ⇒ "Int"
   }
 
   /**
@@ -247,52 +281,44 @@ class Main extends FakeMain
   protected def writeField(d : Declaration, f : Field) : String = {
     val fName = escaped(f.getName)
     f.getType match {
-      case t : GroundType ⇒ t.getSkillName match {
+      case t : GroundType ⇒ s"for(i ← p._${f.getName}.view(outStart, outEnd)) ${f.getType.getSkillName}(i, dataChunk)"
 
-        case "i64" ⇒
-          s"""val target = ByteBuffer.allocate(8 * fieldSize)
-                for(i ← outData) target.putLong(i.$fName)
-                dataChunk.put(target.array)"""
+      case t : Declaration ⇒ s"""for(i ← p._${f.getName}.view(outStart, outEnd)) userRef(i, dataChunk)"""
 
-        case _ ⇒ s"for(i ← outData) ${f.getType.getSkillName}(i.$fName, dataChunk)"
-      }
-
-      case t : Declaration ⇒ s"""for(i ← outData) userRef(i.$fName, dataChunk)"""
-
-      case t : ConstantLengthArrayType ⇒ s"for(i ← outData) writeConstArray(${
+      case t : ConstantLengthArrayType ⇒ s"for(i ← p._${f.getName}.view(outStart, outEnd)) writeConstArray(${
         t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+          case t : Declaration ⇒ s"userRef"
           case b               ⇒ b.getSkillName()
         }
-      })(i.$fName, dataChunk)"
-      case t : VariableLengthArrayType ⇒ s"for(i ← outData) writeVarArray(${
+      })(i, dataChunk)"
+      case t : VariableLengthArrayType ⇒ s"for(i ← p._${f.getName}.view(outStart, outEnd)) writeVarArray(${
         t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+          case t : Declaration ⇒ s"userRef"
           case b               ⇒ b.getSkillName()
         }
-      })(i.$fName, dataChunk)"
-      case t : SetType ⇒ s"for(i ← outData) writeSet(${
+      })(i, dataChunk)"
+      case t : SetType ⇒ s"for(i ← p._${f.getName}.view(outStart, outEnd)) writeSet(${
         t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+          case t : Declaration ⇒ s"userRef"
           case b               ⇒ b.getSkillName()
         }
-      })(i.$fName, dataChunk)"
-      case t : ListType ⇒ s"for(i ← outData) writeList(${
+      })(i, dataChunk)"
+      case t : ListType ⇒ s"for(i ← p._${f.getName}.view(outStart, outEnd)) writeList(${
         t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+          case t : Declaration ⇒ s"userRef"
           case b               ⇒ b.getSkillName()
         }
-      })(i.$fName, dataChunk)"
+      })(i, dataChunk)"
 
       case t : MapType ⇒ locally {
-        s"for(i ← outData) ${
+        s"for(i ← p._${f.getName}.view(outStart, outEnd)) ${
           t.getBaseTypes().map {
-            case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+            case t : Declaration ⇒ s"userRef"
             case b               ⇒ b.getSkillName()
           }.reduceRight { (t, v) ⇒
             s"writeMap($t, $v)"
           }
-        }(i.$fName, dataChunk)"
+        }(i, dataChunk)"
       }
     }
   }

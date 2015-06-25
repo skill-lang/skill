@@ -27,6 +27,7 @@ trait SerializationFunctionsMaker extends GeneralOutputMaker {
 
 import java.nio.ByteBuffer
 
+import scala.language.implicitConversions
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
@@ -64,23 +65,22 @@ abstract class SerializationFunctions(state : SerializableState) {
 
   def string(v : String, out : OutStream) : Unit = out.v64(stringIDs(v))
 
-  @inline final def annotation(ref : SkillType, out : OutStream) {
-    if (null == ref) {
+  @inline final def annotation(ref : Long, out : OutStream) {
+    if (0 == ref) {
       out.put(0.toByte)
       out.put(0.toByte)
     } else {
-      if(ref.isInstanceOf[NamedType]) string(ref.asInstanceOf[NamedType].τName, out)
-      else string(ref.getClass.getSimpleName.toLowerCase, out)
-      out.v64(ref.getSkillID)
+      val r = new AnnotationRef(ref)
+      string(state.pools(r.typeIndex).name, out)
+      out.v64(r.skillID)
     }
   }
 }
 
 object SerializationFunctions {
 
-  @inline final def userRef[T <: SkillType](ref : T, out : OutStream) {
-    if (null == ref) out.put(0.toByte)
-    else out.v64(ref.getSkillID)
+  @inline final def userRef(ref : Int, out : OutStream) {
+    out.v64(ref)
   }
 
   @inline def bool(v : Boolean, out : OutStream) = out.put(if (v) -1.toByte else 0.toByte)
@@ -97,7 +97,7 @@ object SerializationFunctions {
   // wraps translation functions to stream users
   implicit def wrap[T](f : T ⇒ Array[Byte]) : (T, OutStream) ⇒ Unit = { (v : T, out : OutStream) ⇒ out.put(f(v)) }
 
-  def writeConstArray[T, S >: T](trans : (S, OutStream) ⇒ Unit)(elements : scala.collection.mutable.ArrayBuffer[T], out : OutStream) {
+  def writeConstArray[T, S >: T](trans : (S, OutStream) ⇒ Unit)(elements : scala.Array[T], out : OutStream) {
     for (e ← elements)
       trans(e, out)
   }

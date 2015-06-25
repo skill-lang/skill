@@ -47,19 +47,25 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
 
   // save the index of the first new pool
   val newPoolIndex = state.pools.indexWhere(_.blockInfos.isEmpty) match {
-    case -1L ⇒ state.pools.size + 1 // ensure that no pool is marked as *new*
-    case i   ⇒ i.toLong
+    case -1 ⇒ state.pools.size + 1 // ensure that no pool is marked as *new*
+    case i   ⇒ i
   }
 
   // make lbpsi map, update data map to contain dynamic instances and create serialization skill IDs for serialization
   // index → bpsi
   val lbpsiMap = new Array[Long](state.pools.length)
   val chunkMap = HashMap[FieldDeclaration, ChunkInfo]()
+  val maps = new Array[Array[Int]](state.pools.length)
+  state.pools.foreach {
+    case p : BasePool[_] ⇒ maps(p.poolIndex) = p.prepareNewRemap(p.oldDynamicSize + 1)
+    case p : SubPool[_, _] ⇒ maps(p.poolIndex) = maps(p.basePool.poolIndex)
+    case _ ⇒
+  }
   state.pools.foreach {
     case p : BasePool[_] ⇒
-      makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ state.poolByName(s).newObjects.size })
+      makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ state.poolByName(s).newStaticSize })
       //@note it is very important to prepare after the creation of the lbpsi map
-      p.prepareAppend(chunkMap)
+      p.appendNew(maps, chunkMap)
     case _ ⇒
   }
 
@@ -81,15 +87,16 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
   val dataChunk = new OutBuffer();
 
   // @note performance hack: requires at least 1 instance in order to work correctly
-  @inline def genericPutField(p : StoragePool[_ <: SkillType, _ <: SkillType], f : FieldDeclaration, instances : TraversableOnce[SkillType]) {
+  @inline def genericPutField(p : StoragePool[_ <: SkillType, _ <: SkillType], f : FieldDeclaration, outStart : Int, outEnd : Int) {
     f.t match {
-      case I8         ⇒ for (i ← instances) i8(i.get(p, f).asInstanceOf[Byte], dataChunk)
-      case I16        ⇒ for (i ← instances) i16(i.get(p, f).asInstanceOf[Short], dataChunk)
-      case I32        ⇒ for (i ← instances) i32(i.get(p, f).asInstanceOf[Int], dataChunk)
-      case I64        ⇒ for (i ← instances) i64(i.get(p, f).asInstanceOf[Long], dataChunk)
-      case V64        ⇒ for (i ← instances) v64(i.get(p, f).asInstanceOf[Long], dataChunk)
+      case I8         ⇒ for (i ← outStart until outEnd) i8(p.unknownFieldData(f)(i).asInstanceOf[Byte], dataChunk)
+      case I16        ⇒ for (i ← outStart until outEnd) i16(p.unknownFieldData(f)(i).asInstanceOf[Short], dataChunk)
+      case I32        ⇒ for (i ← outStart until outEnd) i32(p.unknownFieldData(f)(i).asInstanceOf[Int], dataChunk)
+      case I64        ⇒ for (i ← outStart until outEnd) i64(p.unknownFieldData(f)(i).asInstanceOf[Long], dataChunk)
+      case V64        ⇒ for (i ← outStart until outEnd) v64(p.unknownFieldData(f)(i).asInstanceOf[Long], dataChunk)
 
-      case StringType ⇒ for (i ← instances) string(i.get(p, f).asInstanceOf[String], dataChunk)
+      case StringType ⇒ for (i ← outStart until outEnd) string(p.unknownFieldData(f)(i).asInstanceOf[String], dataChunk)
+      case _ ⇒ ???
     }
   }
   for (p ← state.pools) {
@@ -122,18 +129,18 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
             out.v64(fields.size)
             for (f ← fields) {
             var fieldSize = 0
-              val outData = f.dataChunks.last match {
+              val (outStart, outEnd) = f.dataChunks.last match {
                 case bci : BulkChunkInfo ⇒
                   fieldSize = p.size
                   restrictions(f, out)
                   writeType(f.t, out)
                   string(f.name, out)
 
-                  p.all
+                  (0, p.dynamicSize)
 
                 case sci : SimpleChunkInfo ⇒
-                  fieldSize = count.toInt
-                  p.data.view(sci.bpsi.toInt, (sci.bpsi + sci.count).toInt).iterator.asInstanceOf[Iterator[_root_.${packagePrefix}${t.getCapitalName}]]
+                  fieldSize = count
+                  (sci.bpsi, sci.bpsi + sci.count)
 
               }
               f.name match {${
@@ -142,7 +149,7 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
                   ${writeField(t, f)}
                 }""").mkString("")
         }
-                case _ ⇒ if (outData.size > 0) genericPutField(p, f, outData)
+                case _ ⇒ if (outEnd > outStart) genericPutField(p, f, outStart + 1, outEnd + 1)
               }
               // end
               out.v64(dataChunk.size)
@@ -170,7 +177,7 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
           } else for (sn ← p.superName) {
             out.v64(lbpsiMap(p.poolIndex.toInt))
           }
-          val count = p.blockInfos.tail.size
+          val count = p.dynamicSize - p.blockInfos.last.bpsi
           v64(count, out)
 
           if (newPool)
@@ -181,20 +188,20 @@ private[internal] final class StateAppender(state : SerializableState, out : Out
           } else {
             out.v64(fields.size)
             for (f ← fields) {
-              val outData = f.dataChunks.last match {
+              val (outStart, outEnd) = f.dataChunks.last match {
                 case bci : BulkChunkInfo ⇒
                   restrictions(f, out)
                   writeType(f.t, out)
                   string(f.name, out)
 
-                  p.all
+                  (0, p.dynamicSize)
 
                 case sci : SimpleChunkInfo ⇒
-                  p.basePool.data.view(sci.bpsi.toInt, (sci.bpsi + sci.count).toInt)
+                  (sci.bpsi, sci.bpsi + sci.count)
 
               }
 
-              if (outData.size > 0) genericPutField(p, f, outData)
+              if (outEnd > outStart) genericPutField(p, f, outStart + 1, outEnd + 1)
               // end
               v64(dataChunk.size, out)
             }

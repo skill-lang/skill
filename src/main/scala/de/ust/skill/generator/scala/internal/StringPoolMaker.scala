@@ -94,7 +94,7 @@ final class StringPool(in: InStream) extends StringAccess {
       serializationIDs.put(idMap(i), i)
     }
 
-    // instert new strings to the map;
+    // insert new strings to the map;
     //  this is the place where duplications with lazy strings will be detected and eliminated
     for (s ← newStrings) {
       if (!serializationIDs.contains(s)) {
@@ -150,7 +150,7 @@ final class StringPool(in: InStream) extends StringAccess {
     val data = new OutBuffer()
     var offsets = ArrayBuffer[Int]()
 
-    // instert new strings to the map;
+    // insert new strings to the map;
     //  this is the place where duplications with lazy strings will be detected and eliminated
     //  this is also the place, where new instances are appended to the output file
     for (s ← newStrings)

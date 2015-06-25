@@ -28,6 +28,8 @@ trait SerializableStateMaker extends GeneralOutputMaker {
 import java.nio.file.Files
 import java.nio.file.Path
 
+import scala.collection.mutable.HashMap
+
 import ${packagePrefix}api._
 import ${packagePrefix}internal.streams.FileOutputStream
 
@@ -82,7 +84,7 @@ ${
   @inline private def finalizePools {
     @inline def eliminatePreliminaryTypesIn(t : FieldType) : FieldType = t match {
       case TypeDefinitionIndex(i) ⇒ try {
-        pools(i.toInt)
+        pools(i)
       } catch {
         case e : Exception ⇒ throw new IllegalStateException(s"inexistent user type $$i (user types: $${poolByName.mkString})", e)
       }
@@ -99,6 +101,10 @@ ${
       case t                         ⇒ t
     }
     for (p ← pools) {
+      p match {
+        case bp : BasePool[_] ⇒ { bp.state = this; bp.updateLocalIndices }
+        case _ ⇒
+      }
       val fieldMap = p.fields.map { _.name }.zip(p.fields).toMap
 
       for ((n, t) ← p.knownFields if !fieldMap.contains(n)) {
@@ -106,6 +112,54 @@ ${
       }
     }
   }
+
+  // reference resolving helpers
+  @inline private[internal] final def resolveAnnotation(ref : AnnotationRef) = pools(ref.typeIndex).getByID(ref.skillID)
+${
+  (for (t ← IR) yield s"""  @inline private[internal] final def resolve${t.getCapitalName}(ref : Int) = ${t.getCapitalName}.asInstanceOf[${t.getCapitalName}StoragePool].getByID(ref)""").mkString("\n")
+}
+  
+  // building containers
+  @inline private[internal] def resolveAnnotationInternal(ref : Long) = resolveAnnotation(new AnnotationRef(ref))
+  @inline private def resolveReferenceInternal[T <: SkillType](access : Access[T]) =
+    access.asInstanceOf[StoragePool[T, _ >: T <: SkillType]].getByID _
+  
+  final def makeRefArray[T <: SkillType](length : Int, access : Access[T]) = RefArray[T](length, resolveReferenceInternal(access))
+  final def makeAnnotationArray(length : Int) = AnnotationArray(length, resolveAnnotationInternal _)
+  
+  final def makeRefVarArray[T <: SkillType](access : Access[T]) = RefArrayBuffer[T](resolveReferenceInternal(access))
+  final def makeAnnotationVarArray() = AnnotationArrayBuffer(resolveAnnotationInternal _)
+  
+  final def makeRefList[T <: SkillType](access : Access[T]) = RefListBuffer[T](resolveReferenceInternal(access))
+  final def makeAnnotationList() = AnnotationListBuffer(resolveAnnotationInternal _)
+  
+  final def makeRefSet[T <: SkillType](access : Access[T]) = RefHashSet[T](resolveReferenceInternal(access))
+  final def makeAnnotationSet() = AnnotationHashSet(resolveAnnotationInternal _)
+
+  final def makeBasicMap[A, B]() =
+    new BasicMapView[A, B](new HashMap[A, B])
+  final def makeBasicRefMap[A, B <: SkillType](access : Access[B]) =
+    new BasicRefMapView[A, B](new HashMap[A, Int], resolveReferenceInternal(access))
+  final def makeBasicAnnotationMap[A]() =
+    new BasicAnnotationMapView[A](new HashMap[A, Long], resolveAnnotationInternal _)
+  final def makeRefBasicMap[A <: SkillType, B](access : Access[A]) =
+    new RefBasicMapView[A, B](new HashMap[Int, B], resolveReferenceInternal(access))
+  final def makeRefMap[A <: SkillType, B <: SkillType](accessA : Access[A], accessB : Access[B]) =
+    new RefMapView[A, B](new HashMap[Int, Int], resolveReferenceInternal(accessA), resolveReferenceInternal(accessB))
+  final def makeRefAnnotationMap[A <: SkillType](access : Access[A]) =
+    new RefAnnotationMapView[A](new HashMap[Int, Long], resolveReferenceInternal(access), resolveAnnotationInternal _)
+  final def makeAnnotationBasicMap[B]() =
+    new AnnotationBasicMapView[B](new HashMap[Long, B], resolveAnnotationInternal _)
+  final def makeAnnotationRefMap[B <: SkillType](access : Access[B]) =
+    new AnnotationRefMapView[B](new HashMap[Long, Int], resolveAnnotationInternal _, resolveReferenceInternal(access))
+  final def makeAnnotationMap() =
+    new AnnotationMapView(new HashMap[Long, Long], resolveAnnotationInternal _)
+  final def makeBasicMapMap[A, B <: MapView[_, _]](map : B) =
+    new BasicMapMapView[A, B](new HashMap[A, B#M], (map.wrap _).asInstanceOf[(B#M) ⇒ B])
+  final def makeRefMapMap[A <: SkillType, B <: MapView[_, _]](access : Access[A], map : B) =
+    new RefMapMapView[A, B](new HashMap[Int, B#M], resolveReferenceInternal(access), (map.wrap _).asInstanceOf[(B#M) ⇒ B])
+  final def makeAnnotationMapMap[B <: MapView[_, _]](map : B) =
+    new AnnotationMapMapView[B](new HashMap[Long, B#M], resolveAnnotationInternal _, (map.wrap _).asInstanceOf[(B#M) ⇒ B])
 }
 
 object SerializableState {
@@ -130,17 +184,5 @@ ${
 """)
 
     out.close()
-  }
-
-  private def fieldType(t: Type): String = t match {
-    case t: Declaration             ⇒ s"""userTypes("${t.getSkillName}")"""
-
-    case t: GroundType              ⇒ t.getSkillName.capitalize+"Info"
-
-    case t: ConstantLengthArrayType ⇒ s"new ConstantLengthArrayInfo(${t.getLength}, ${fieldType(t.getBaseType)})"
-    case t: VariableLengthArrayType ⇒ s"new VariableLengthArrayInfo(${fieldType(t.getBaseType)})"
-    case t: ListType                ⇒ s"new ListInfo(${fieldType(t.getBaseType)})"
-    case t: SetType                 ⇒ s"new SetInfo(${fieldType(t.getBaseType)})"
-    case t: MapType                 ⇒ s"new MapInfo(${t.getBaseTypes.map(fieldType(_)).mkString("List(", ",", ")")})"
   }
 }

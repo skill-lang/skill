@@ -1,1 +1,3 @@
-Number { i64 number; }
+Number {
+    i64 number;
+}

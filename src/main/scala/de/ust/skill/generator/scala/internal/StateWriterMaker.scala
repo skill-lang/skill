@@ -45,14 +45,19 @@ import ${packagePrefix}internal.streams.OutStream
 private[internal] final class StateWriter(state : SerializableState, out : OutStream) extends SerializationFunctions(state) {
   import SerializationFunctions._
 
-  // make lbpsi map, update data map to contain dynamic instances and create serialization skill IDs for serialization
+  // update data map to contain dynamic instances and create serialization skill IDs for serialization
   // index → bpsi
   //@note pools.par would not be possible if it were an actual map:)
-  val lbpsiMap = new Array[Long](state.pools.length)
+  // prepare remapping
+  val maps = new Array[(LongArrayBuffer[RemappingInfo], Array[Int])](state.pools.length)
+  state.pools.foreach {
+    case p : BasePool[_] ⇒ maps(p.poolIndex) = p.prepareFullRemap
+    case p : SubPool[_, _] ⇒ maps(p.poolIndex) = maps(p.basePool.poolIndex)
+    case _ ⇒
+  }
+  // compress pools
   state.pools.par.foreach {
-    case p : BasePool[_] ⇒
-      makeLBPSIMap(p, lbpsiMap, 1, { s ⇒ state.poolByName(s).staticSize })
-      p.compress(lbpsiMap)
+    case p : BasePool[_] ⇒ p.compress(maps)
     case _ ⇒
   }
 
@@ -80,6 +85,7 @@ private[internal] final class StateWriter(state : SerializableState, out : OutSt
       case V64        ⇒ for (i ← instances) v64(i.get(p, f).asInstanceOf[Long], dataChunk)
 
       case StringType ⇒ for (i ← instances) string(i.get(p, f).asInstanceOf[String], dataChunk)
+      case _ ⇒ ???
     }
   }
   for (p ← state.pools) {
@@ -89,19 +95,15 @@ private[internal] final class StateWriter(state : SerializableState, out : OutSt
         val fields = d.getFields.filterNot(_.isIgnored)
         s"""
       case p : ${d.getCapitalName}StoragePool ⇒
-        val outData = ${
-          if (null == d.getSuperType) "p.data"
-          else s"WrappedArray.make[_root_.${packagePrefix}${d.getCapitalName}](p.data).view(p.blockInfos.last.bpsi.toInt - 1, p.blockInfos.last.bpsi.toInt - 1 + p.blockInfos.last.count.toInt)"
-        }
         val fields = p.fields
 
         string("$sName", out)
         ${
           if (null == d.getSuperType) "out.put(0.toByte)"
           else s"""string("${d.getSuperType.getSkillName}", out)
-        out.v64(lbpsiMap(p.poolIndex.toInt))"""
+        out.v64(p.blockInfos.last.bpsi + 1)"""
         }
-        out.v64(outData.length)
+        out.v64(p.dynamicSize)
         restrictions(p, out)
 
         out.${
@@ -110,7 +112,8 @@ private[internal] final class StateWriter(state : SerializableState, out : OutSt
         }
 ${
           if (fields.size != 0) s"""
-        val fieldSize = outData.length
+        val outStart = 0
+        val outEnd = p.dynamicSize
         for (f ← fields if p.knownFields.contains(f.name)) {
           restrictions(f, out)
           writeType(f.t, out)
@@ -138,7 +141,7 @@ ${
         p.superName match {
           case Some(sn) ⇒
             string(sn, out)
-            v64(lbpsiMap(p.poolIndex.toInt), out)
+            v64(p.blockInfos.last.bpsi + 1, out)
           case None ⇒
             out.put(0.toByte)
         }
