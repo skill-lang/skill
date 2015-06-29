@@ -35,10 +35,13 @@ class GenericTests extends common.GenericTests {
   val tests = new ArrayBuffer[Name]()
 
   def makeGenBinaryTests(__name : String) {
+    val (accept, reject) = collectBinaries(__name)
     implicit val name = new Name(__name, true, true)
     tests.append(name)
     def cStyle(implicit name : Name) = name.lowercase
     def adaStyle(implicit name : Name) = name.lowercase.capitalize
+    def file2ID(f : File) = f.getName.replaceAll("\\W", "_");
+
     // test setup
     locally {
       val out = newFile(cStyle, s"test_$cStyle.ads")
@@ -64,7 +67,11 @@ package Test_$adaStyle.Gen_Test is
 
    procedure Initialize (T : in out Test);
 
-   procedure Read;
+${
+        (for (f ← accept ++ reject)
+          yield s"""
+   procedure Read_${file2ID(f)};""").mkString
+      }
 
 end Test_$adaStyle.Gen_Test;""")
       out.close
@@ -80,16 +87,30 @@ package body Test_$adaStyle.Gen_Test is
 
    procedure Initialize (T : in out Test) is
    begin
-      Set_Name (T, "Test_$adaStyle.Gen_Test");
-      Ahven.Framework.Add_Test_Routine (T, Read'Access, "read");
+      Set_Name (T, "Test_$adaStyle.Gen_Test");${
+        (
+          (for (f ← accept)
+            yield s"""
+      Ahven.Framework.Add_Test_Routine (T, Read_${file2ID(f)}'Access, "$name - read (accept): ${f.getName}");
+""")
+          ++
+          (for (f ← reject) yield s"""
+      Ahven.Framework.Add_Test_Routine (T, Read_${file2ID(f)}'Access, "$name - read (reject): ${f.getName}");
+""")
+        ).mkString
+      }
    end Initialize;
 
-   procedure Read is
+${
+        (for (f ← accept ++ reject)
+          yield s"""
+   procedure Read_${file2ID(f)} is
       State : access Skill_State := new Skill_State;
    begin
       null;
-   end Read;
-
+   end Read_${file2ID(f)};
+""").mkString
+      }
 end Test_$adaStyle.Gen_Test;""")
       out.close
     }

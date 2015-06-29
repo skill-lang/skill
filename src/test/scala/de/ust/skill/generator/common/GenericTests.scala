@@ -38,6 +38,25 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
   def makeGenBinaryTests(name : String) : Unit
 
   /**
+   * helper function that collects binaries for a given test name.
+   *
+   * @return (accept, reject)
+   */
+  final def collectBinaries(name : String) : (Seq[File], Seq[File]) = {
+    val base = new File("src/test/resources/genbinary")
+    def collect(f : File) : Seq[File] =
+      (for (path ← f.listFiles if path.isDirectory) yield collect(path)).flatten ++
+        f.listFiles.filterNot(_.isDirectory)
+
+    val targets = (
+      collect(new File(base, "<all>"))
+      ++ collect(if (new File(base, name).exists) new File(base, name) else new File(base, "<empty>"))
+    ).filter(_.getName.endsWith(".sf"))
+
+    targets.partition(_.getPath.contains("accept"))
+  }
+
+  /**
    * hook called once after all tests have been generated
    */
   def finalizeTests() : Unit

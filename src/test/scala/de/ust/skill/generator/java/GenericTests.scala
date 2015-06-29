@@ -114,34 +114,24 @@ public class Generic${name}Test extends common.CommonTest {
   }
 
   override def makeGenBinaryTests(name : String) {
-    // find all relevant sf-files
-    val base = new File("src/test/resources/genbinary")
-    def collect(f : File) : Seq[File] =
-      (for (path ← f.listFiles if path.isDirectory) yield collect(path)).flatten ++
-        f.listFiles.filterNot(_.isDirectory)
-
-    val targets = (
-      collect(new File(base, "<all>"))
-      ++ collect(if (new File(base, name).exists) new File(base, name) else new File(base, "<empty>"))
-    ).filter(_.getName.endsWith(".sf"))
+    val (accept, reject) = collectBinaries(name)
 
     // generate read tests
     locally {
-      val out = newTestFile(name, name.capitalize)
-      for (f ← targets) {
-        if (f.getPath.contains("accept")) out.write(s"""
+      val out = newTestFile(name, "Read")
+
+      for (f ← accept) out.write(s"""
     @Test
     public void test_${name}_read_accept_${f.getName.replaceAll("\\W", "_")}() throws Exception {
         Assert.assertNotNull(read("${f.getPath}"));
     }
 """)
-        else out.write(s"""
+      for (f ← reject) out.write(s"""
     @Test(expected = ParseException.class)
     public void test_${name}_read_reject_${f.getName.replaceAll("\\W", "_")}() throws Exception {
         Assert.assertNotNull(read("${f.getPath}"));
     }
 """)
-      }
       closeTestFile(out)
     }
 
