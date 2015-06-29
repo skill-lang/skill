@@ -101,13 +101,26 @@ ${
    end Initialize;
 
 ${
-        (for (f ← accept ++ reject)
+        (for (f ← accept)
           yield s"""
    procedure Read_${file2ID(f)} is
       State : access Skill_State := new Skill_State;
    begin
       Skill.Read (State, "../../${f.getPath}");
       Skill.Close (State);
+   end Read_${file2ID(f)};
+""").mkString
+      }${
+        (for (f ← reject)
+          yield s"""
+   procedure Read_${file2ID(f)} is
+      State : access Skill_State := new Skill_State;
+   begin
+      Skill.Read (State, "../../${f.getPath}");
+      Skill.Close (State);
+      Ahven.Fail("expected an exception to be thrown");
+   exception when
+         others => null;
    end Read_${file2ID(f)};
 """).mkString
       }
