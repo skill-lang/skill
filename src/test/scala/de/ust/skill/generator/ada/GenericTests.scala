@@ -87,16 +87,15 @@ package body Test_$adaStyle.Gen_Test is
 
    procedure Initialize (T : in out Test) is
    begin
-      Set_Name (T, "Test_$adaStyle.Gen_Test");${
+      Set_Name (T, "Test_$adaStyle.Gen_Test");
+${
         (
           (for (f ← accept)
             yield s"""
-      Ahven.Framework.Add_Test_Routine (T, Read_${file2ID(f)}'Access, "$name - read (accept): ${f.getName}");
-""")
+      Ahven.Framework.Add_Test_Routine (T, Read_${file2ID(f)}'Access, "read (accept): ${f.getName}");""")
           ++
           (for (f ← reject) yield s"""
-      Ahven.Framework.Add_Test_Routine (T, Read_${file2ID(f)}'Access, "$name - read (reject): ${f.getName}");
-""")
+      Ahven.Framework.Add_Test_Routine (T, Read_${file2ID(f)}'Access, "read (reject): ${f.getName}");""")
         ).mkString
       }
    end Initialize;
@@ -107,7 +106,8 @@ ${
    procedure Read_${file2ID(f)} is
       State : access Skill_State := new Skill_State;
    begin
-      null;
+      Skill.Read (State, "../../${f.getPath}");
+      Skill.Close (State);
    end Read_${file2ID(f)};
 """).mkString
       }
