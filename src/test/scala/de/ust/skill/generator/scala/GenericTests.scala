@@ -103,4 +103,8 @@ class Generic${name}ReadTest extends CommonTest {
     //    test generieren, der sicherstellt, dass sich die daten da raus lesen lassen
 
   }
+
+  override def finalizeTests {
+    // nothing yet
+  }
 }

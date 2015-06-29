@@ -11,13 +11,15 @@ import de.ust.skill.main.CommandLine
 import scala.collection.mutable.ArrayBuffer
 import java.nio.file.Files
 import org.scalatest.Assertions
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.ConfigMap
 
 /**
  * Common implementation of generic tests
  *
  * @author Timm Felden
  */
-abstract class GenericTests extends FunSuite {
+abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
 
   /**
    * parameter name of the language. This is required for code generator invocation.
@@ -35,10 +37,15 @@ abstract class GenericTests extends FunSuite {
    */
   def makeGenBinaryTests(name : String) : Unit
 
+  /**
+   * hook called once after all tests have been generated
+   */
+  def finalizeTests() : Unit
+
   final def makeTest(path : File, name : String, options : String) = test("generic: "+name) {
     deleteOutDir(name)
 
-    CommandLine.exit = { s ⇒ throw(new Error(s)) }
+    CommandLine.exit = { s ⇒ throw (new Error(s)) }
 
     val args = ArrayBuffer[String]("-L", language, "-O@java:SuppressWarnings=true", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", name)
     if (options.size > 0)
@@ -63,5 +70,9 @@ abstract class GenericTests extends FunSuite {
         println(s"failed processing of $path:")
         e.printStackTrace(System.out)
     }
+  }
+
+  override def afterAll(configMap : ConfigMap) {
+    finalizeTests
   }
 }

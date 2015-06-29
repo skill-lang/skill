@@ -59,19 +59,26 @@ ${
       ) yield if (f.isConstant) {
         s"""
    function Get_${name(f)} (Object : ${name(d)}_Type) return ${mapType(f.getType, f.getDeclaredIn, f)} is
-      (${f.constantValue});
+      (${
+          f.getType.getName.getSkillName match {
+            case "i8"  ⇒ f.constantValue.toByte
+            case "i16" ⇒ f.constantValue.toShort
+            case "i32" ⇒ f.constantValue.toInt
+            case _     ⇒ f.constantValue
+          }
+        });
 """
       } else {
         s"""
    function Get_${name(f)} (Object : ${name(d)}_Type) return ${mapType(f.getType, f.getDeclaredIn, f)} is
-      (Object.${f.getSkillName});
+      (Object.${escapedLonely(f.getSkillName)});
 
    procedure Set_${name(f)} (
-      Object : in out ${d.getName.ada}_Type;
+      Object : in out ${name(d)}_Type;
       Value  :        ${mapType(f.getType, f.getDeclaredIn, f)}
    ) is
    begin
-      Object.${f.getSkillName} := Value;
+      Object.${escapedLonely(f.getSkillName)} := Value;
    end Set_${name(f)};
 """
       }

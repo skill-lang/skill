@@ -202,9 +202,8 @@ ${
           else
             (for (f ← fields) yield {
               val comment = if (f.isAuto()) "  --  auto aka not serialized" else ""
-              s"""         ${f.getSkillName} : ${mapType(f.getType, d, f)};${comment}
-"""
-            }).mkString
+              s"""         ${escapedLonely(f.getSkillName)} : ${mapType(f.getType, d, f)};${comment}"""
+            }).mkString("\n")
         }
       end record;
 """

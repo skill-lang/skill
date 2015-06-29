@@ -125,10 +125,10 @@ ${
       def printFields(d : UserType) : String = {
         var output = s"""'(\r\n         skill_id => Natural (${
           if (null == d.getBaseType) name(d)
-          else d.getBaseType.getName.ada
+          else name(d.getBaseType)
         }_Type_Declaration.Storage_Pool.Length) + 1"""
         output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f ⇒
-          s",\r\n         ${f.getSkillName} => ${f.getSkillName}"
+          s",\r\n         ${escapedLonely(f.getSkillName)} => ${escapedLonely(f.getSkillName)}"
         }).mkString("")
         output += "\r\n      )";
         output
@@ -142,7 +142,7 @@ ${
         var hasFields = false
         output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f ⇒
           hasFields = true
-          f.getSkillName()
+          escapedLonely(f.getSkillName())
         }).mkString(", ", ", ", "")
         if (hasFields) output else ""
       }

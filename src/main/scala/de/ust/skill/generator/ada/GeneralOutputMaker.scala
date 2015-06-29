@@ -71,6 +71,10 @@ trait GeneralOutputMaker extends Generator {
    * @note currently unused, because emitted names can not alias predefined types or keywords anyway
    */
   protected def escaped(target : Name) : String = escaped(target.ada)
+  /**
+   * Escape lonely words
+   */
+  protected def escapedLonely(target : String) : String;
 
   private final val nameCache = HashMap[Type, String]()
   protected final def name(d : Type) = nameCache.get(d).getOrElse { val r = escaped(d.getName.ada); nameCache(d) = r; r }

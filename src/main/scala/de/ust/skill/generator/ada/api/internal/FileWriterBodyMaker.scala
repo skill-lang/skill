@@ -173,15 +173,15 @@ ${
 """
         d.getFields.filter({ f ⇒ "string" == f.getType.getSkillName }).foreach({ f ⇒
           hasOutput = true;
-          output += s"                  Put_String (Object.${f.getSkillName}.all, Safe => True);\r\n"
+          output += s"                  Put_String (Object.${escapedLonely(f.getSkillName)}.all, Safe => True);\r\n"
         })
         d.getFields.foreach({ f ⇒
           f.getType match {
             case t : ConstantLengthArrayType ⇒
               if ("string" == t.getBaseType.getSkillName) {
                 hasOutput = true;
-                output += s"""\r\n                  for I in Object.${f.getSkillName}'Range loop
-                     Put_String (Object.${f.getSkillName} (I).all, Safe => True);
+                output += s"""\r\n                  for I in Object.${escapedLonely(f.getSkillName)}'Range loop
+                     Put_String (Object.${escapedLonely(f.getSkillName)} (I).all, Safe => True);
                   end loop;\r\n""";
               }
             case t : VariableLengthArrayType ⇒
@@ -190,7 +190,7 @@ ${
                 output += s"""\r\n                  declare
                      use ${mapType(t, d, f).stripSuffix(".Vector")};
 
-                     Vector : ${mapType(t, d, f)} renames Object.${f.getSkillName};
+                     Vector : ${mapType(t, d, f)} renames Object.${escapedLonely(f.getSkillName)};
 
                      procedure Iterate (Position : Cursor) is
                      begin
@@ -207,7 +207,7 @@ ${
                 output += s"""\r\n                  declare
                      use ${mapType(t, d, f).stripSuffix(".List")};
 
-                     List : ${mapType(t, d, f)} renames Object.${f.getSkillName};
+                     List : ${mapType(t, d, f)} renames Object.${escapedLonely(f.getSkillName)};
 
                      procedure Iterate (Position : Cursor) is
                      begin
@@ -224,7 +224,7 @@ ${
                 output += s"""\r\n                  declare
                      use ${mapType(t, d, f).stripSuffix(".Set")};
 
-                     Set : ${mapType(t, d, f)} renames Object.${f.getSkillName};
+                     Set : ${mapType(t, d, f)} renames Object.${escapedLonely(f.getSkillName)};
 
                      procedure Iterate (Position : Cursor) is
                      begin
@@ -271,7 +271,7 @@ ${
                 })
                 output = output.stripLineEnd
                 output += s"""                  begin
-                     Read_Map_1 (Object.${f.getSkillName});
+                     Read_Map_1 (Object.${escapedLonely(f.getSkillName)});
                   end;\r\n"""
               }
             case _ ⇒ null
@@ -281,7 +281,10 @@ ${
         output += s"""               end;
             end if;\r\n"""
       }
-      output.stripSuffix("\r\n")
+      if (output.isEmpty)
+        "                  null;"
+      else
+        output.stripSuffix("\r\n")
     }
          end Iterate;
          pragma Inline (Iterate);
@@ -787,11 +790,13 @@ ${
       /**
        * Corrects the SPSI (storage pool start index) of all types.
        */
-      (for (d ← IR) yield s"""
+      val r = (for (d ← IR) yield s"""
       if Types.Contains ("${d.getSkillName}") then
          Types.Element ("${d.getSkillName}").spsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length);
       end if;
 """).mkString
+
+      if (r.isEmpty) "\n      null;" else r
     }
    end Update_Storage_Pool_Start_Index;
 
@@ -827,27 +832,27 @@ end ${packagePrefix.capitalize}.Api.Internal.File_Writer;
       case t : GroundType ⇒ t.getName.lower match {
         case "annotation" ⇒
           s"""begin
-               ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
+               ${inner(f.getType, d, f, s"Object.${escapedLonely(f.getSkillName)}")};"""
 
         case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" | "f32" | "f64" ⇒
           s"""begin
-               ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
+               ${inner(f.getType, d, f, s"Object.${escapedLonely(f.getSkillName)}")};"""
 
         case "string" ⇒
           s"""begin
-               ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
+               ${inner(f.getType, d, f, s"Object.${escapedLonely(f.getSkillName)}")};"""
       }
 
       case t : ConstantLengthArrayType ⇒
         s"""begin
-               for I in Object.${f.getSkillName}'Range loop
-                  ${inner(t.getBaseType, d, f, s"Object.${f.getSkillName} (I)")};
+               for I in Object.${escapedLonely(f.getSkillName)}'Range loop
+                  ${inner(t.getBaseType, d, f, s"Object.${escapedLonely(f.getSkillName)} (I)")};
                end loop;"""
 
       case t : VariableLengthArrayType ⇒
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".Vector")};
 
-               Vector : ${mapType(f.getType, d, f)} renames Object.${f.getSkillName};
+               Vector : ${mapType(f.getType, d, f)} renames Object.${escapedLonely(f.getSkillName)};
 
                procedure Iterate (Position : Cursor) is
                begin
@@ -861,7 +866,7 @@ end ${packagePrefix.capitalize}.Api.Internal.File_Writer;
       case t : ListType ⇒
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".List")};
 
-               List : ${mapType(f.getType, d, f)} renames Object.${f.getSkillName};
+               List : ${mapType(f.getType, d, f)} renames Object.${escapedLonely(f.getSkillName)};
 
                procedure Iterate (Position : Cursor) is
                begin
@@ -875,7 +880,7 @@ end ${packagePrefix.capitalize}.Api.Internal.File_Writer;
       case t : SetType ⇒
         s"""   use ${mapType(f.getType, d, f).stripSuffix(".Set")};
 
-               Set : ${mapType(f.getType, d, f)} renames Object.${f.getSkillName};
+               Set : ${mapType(f.getType, d, f)} renames Object.${escapedLonely(f.getSkillName)};
 
                procedure Iterate (Position : Cursor) is
                begin
@@ -917,11 +922,11 @@ end ${packagePrefix.capitalize}.Api.Internal.File_Writer;
           output.stripLineEnd.stripLineEnd
         }
             begin
-               Write_Map_1 (Object.${f.getSkillName});"""
+               Write_Map_1 (Object.${escapedLonely(f.getSkillName)});"""
 
       case t : Declaration ⇒
         s"""begin
-               ${inner(f.getType, d, f, s"Object.${f.getSkillName}")};"""
+               ${inner(f.getType, d, f, s"Object.${escapedLonely(f.getSkillName)}")};"""
     }
   }
 }

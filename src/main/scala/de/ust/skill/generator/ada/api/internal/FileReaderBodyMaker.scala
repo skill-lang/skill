@@ -282,17 +282,21 @@ ${
           output += s"""                     Super_Type.Storage_Pool.Replace_Element (Index, Object);
                   end;"""
         })
-        output
+
+        if (output.isEmpty())
+          "null;"
+        else
+          output
       }
 
       /**
        * Provides the default values of all fields of a given type.
        */
       def printDefaultValues(d : UserType) : String = {
-        var output = s"""'(\r\n                     skill_id => ${if (null == d.getSuperType) s"Natural (${d.getBaseType.getName.ada}_Type_Declaration.Storage_Pool.Length) + 1" else "0"}"""
+        var output = s"""'(\r\n                     skill_id => ${if (null == d.getSuperType) s"Natural (${name(d.getBaseType)}_Type_Declaration.Storage_Pool.Length) + 1" else "0"}"""
         val fields = d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored })
         output += fields.map({ f ⇒
-          s""",\r\n                     ${f.getSkillName} => ${defaultValue(f)}"""
+          s""",\r\n                     ${escapedLonely(f.getSkillName)} => ${defaultValue(f)}"""
         }).mkString("")
         output += "\r\n                  )";
         output
@@ -338,7 +342,10 @@ ${
          end;
       end if;\r\n"""
       }
-      output.stripSuffix("\r\n")
+      if (output.isEmpty)
+        "null;"
+      else
+        output.stripSuffix("\r\n")
     }
    end Create_Objects;
 
@@ -434,7 +441,10 @@ ${
          Types.Element ("${d.getSkillName}").spsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length);
       end if;\r\n"""
       }
-      output.stripSuffix("\r\n")
+      if (output.isEmpty())
+        "null;"
+      else
+        output.stripSuffix("\r\n")
     }
    end Update_Storage_Pool_Start_Index;
 
@@ -476,23 +486,23 @@ end ${packagePrefix.capitalize}.Api.Internal.File_Reader;
       case t : GroundType ⇒ t.getName.lower match {
         case "annotation" ⇒
           s"""begin
-               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
+               Object.${escapedLonely(f.getSkillName)} := ${inner(f.getType, d, f)};"""
 
         case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" | "f32" | "f64" ⇒
           if (f.isConstant) {
             s"""   Skill_Parse_Constant_Error : exception;
             begin
-               if Object.Get_${f.getSkillName.capitalize} /= ${mapType(f.getType, d, f)} (Field_Declaration.Constant_Value) then
+               if Object.Get_${name(f)} /= ${mapType(f.getType, d, f)} (Field_Declaration.Constant_Value) then
                   raise Skill_Parse_Constant_Error;
                end if;"""
           } else {
             s"""begin
-               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
+               Object.${escapedLonely(f.getSkillName)} := ${inner(f.getType, d, f)};"""
           }
 
         case "string" ⇒
           s"""begin
-               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
+               Object.${escapedLonely(f.getSkillName)} := ${inner(f.getType, d, f)};"""
       }
 
       case t : ConstantLengthArrayType ⇒
@@ -503,19 +513,19 @@ end ${packagePrefix.capitalize}.Api.Internal.File_Reader;
                   raise Skill_Parse_Constant_Array_Length_Error;
                end if;
                for I in 1 .. ${t.getLength} loop
-                  Object.${f.getSkillName} (I) := ${inner(t.getBaseType, d, f)};
+                  Object.${escapedLonely(f.getSkillName)} (I) := ${inner(t.getBaseType, d, f)};
                end loop;"""
 
       case t : VariableLengthArrayType ⇒
         s"""begin
                for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
-                  Object.${f.getSkillName}.Append (${inner(t.getBaseType, d, f)});
+                  Object.${escapedLonely(f.getSkillName)}.Append (${inner(t.getBaseType, d, f)});
                end loop;"""
 
       case t : ListType ⇒
         s"""begin
                for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
-                  Object.${f.getSkillName}.Append (${inner(t.getBaseType, d, f)});
+                  Object.${escapedLonely(f.getSkillName)}.Append (${inner(t.getBaseType, d, f)});
                end loop;"""
 
       case t : SetType ⇒
@@ -525,7 +535,7 @@ end ${packagePrefix.capitalize}.Api.Internal.File_Reader;
                pragma Unreferenced (Position);
             begin
                for I in 1 .. Byte_Reader.Read_v64 (Input_Stream) loop
-                  ${name(d)}_${f.getSkillName.capitalize}_Set.Insert (Object.${f.getSkillName}, ${inner(t.getBaseType, d, f)}, Position, Inserted);
+                  ${name(d)}_${f.getSkillName.capitalize}_Set.Insert (Object.${escapedLonely(f.getSkillName)}, ${inner(t.getBaseType, d, f)}, Position, Inserted);
                end loop;"""
 
       case t : MapType ⇒
@@ -562,11 +572,11 @@ end ${packagePrefix.capitalize}.Api.Internal.File_Reader;
           output.stripLineEnd.stripLineEnd
         }
             begin
-               Object.${f.getSkillName} := Read_Map_1;"""
+               Object.${escapedLonely(f.getSkillName)} := Read_Map_1;"""
 
       case t : Declaration ⇒
         s"""begin
-               Object.${f.getSkillName} := ${inner(f.getType, d, f)};"""
+               Object.${escapedLonely(f.getSkillName)} := ${inner(f.getType, d, f)};"""
     }
   }
 }

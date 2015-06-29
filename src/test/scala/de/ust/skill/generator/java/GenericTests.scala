@@ -152,4 +152,8 @@ public class Generic${name}Test extends common.CommonTest {
     //    test generieren, der sicherstellt, dass sich die daten da raus lesen lassen
 
   }
+
+  override def finalizeTests {
+    // nothing yet
+  }
 }

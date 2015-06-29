@@ -21,12 +21,12 @@ package body ${packagePrefix.capitalize}.Api.Internal.State_Maker is
       Types : access Types_Hash_Map.Map := State.Types;
    begin
 ${
-  /**
-   * Puts all known missing types into the types hash map.
-   */
-  var output = "";
-  for (d ← IR) {
-    output += s"""      if not Types.Contains ("${d.getSkillName}") then
+      /**
+       * Puts all known missing types into the types hash map.
+       */
+      var output = "";
+      for (d ← IR) {
+        output += s"""      if not Types.Contains ("${d.getSkillName}") then
          declare
             Type_Name    : String := "${d.getSkillName}";
             Super_Name   : String := "${if (null == d.getSuperType) "" else d.getSuperType}";
@@ -51,17 +51,20 @@ ${
       else
          Types.Element ("${d.getSkillName}").Known := True;
       end if;\r\n\r\n"""
-  }
-  output.stripLineEnd
-}
+      }
+      if (output.isEmpty)
+        "      null;"
+      else
+        output.stripLineEnd
+    }
 ${
-  /**
-   * Puts all known missing fields into the field vector of a given type.
-   */
-  var output = "";
-  for (d ← IR) {
-     output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
-       s"""      if not Has_Field (Types.Element ("${d.getSkillName}"), "${f.getSkillName}") then
+      /**
+       * Puts all known missing fields into the field vector of a given type.
+       */
+      var output = "";
+      for (d ← IR) {
+        output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
+          s"""      if not Has_Field (Types.Element ("${d.getSkillName}"), "${f.getSkillName}") then
          declare
             Type_Name  : String := "${d.getSkillName}";
             Field_Name : String := "${f.getSkillName}";
@@ -73,42 +76,46 @@ ${
                F_Type                => ${mapTypeToId(f.getType, f)},
                Constant_Value        => ${f.constantValue},
                Constant_Array_Length => ${
-  f.getType match {
-    case t: ConstantLengthArrayType ⇒ t.getLength
-    case _ => 0
-  }
-},
+            f.getType match {
+              case t : ConstantLengthArrayType ⇒ t.getLength
+              case _                           ⇒ 0
+            }
+          },
                Base_Types            => Base_Types,
                Known                 => True,
                Written               => False
             );
          begin
 ${
-  var output = ""
-  f.getType match {
-    case t: ConstantLengthArrayType ⇒
-      output += s"            New_Field.Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
-    case t: VariableLengthArrayType ⇒
-      output += s"            New_Field.Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
-    case t: ListType ⇒
-      output += s"            New_Field.Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
-    case t: SetType ⇒
-      output += s"            New_Field.Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
-    case t: MapType ⇒
-      t.getBaseTypes.foreach({ t =>
-        output += s"            New_Field.Base_Types.Append (${mapTypeToId(t, f)});\r\n"
-      })
-    case _ ⇒ null
-  }
-  output
-}            Types.Element (Type_Name).Fields.Append (New_Field);
+            var output = ""
+            f.getType match {
+              case t : ConstantLengthArrayType ⇒
+                output += s"            New_Field.Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
+              case t : VariableLengthArrayType ⇒
+                output += s"            New_Field.Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
+              case t : ListType ⇒
+                output += s"            New_Field.Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
+              case t : SetType ⇒
+                output += s"            New_Field.Base_Types.Append (${mapTypeToId(t.getBaseType, f)});\r\n"
+              case t : MapType ⇒
+                t.getBaseTypes.foreach({ t ⇒
+                  output += s"            New_Field.Base_Types.Append (${mapTypeToId(t, f)});\r\n"
+                })
+              case _ ⇒ null
+            }
+            output
+          }            Types.Element (Type_Name).Fields.Append (New_Field);
          end;
       else
          Get_Field (Types.Element ("${d.getSkillName}"), "${f.getSkillName}").Known := True;
-      end if;\r\n\r\n"""}).mkString("")
-  }
-  output.stripLineEnd.stripLineEnd
-}
+      end if;\r\n\r\n"""
+        }).mkString("")
+      }
+      if (output.isEmpty)
+        "      null;"
+      else
+        output.stripLineEnd.stripLineEnd
+    }
    end Create;
 
    function Has_Field (

@@ -149,7 +149,7 @@ class Main extends FakeMain
       ""
     else
       (for (f ← fields)
-        yield s"${f.getSkillName()} : ${mapType(f.getType, f.getDeclaredIn, f)}"
+        yield s"${escapedLonely(f.getSkillName())} : ${mapType(f.getType, f.getDeclaredIn, f)}"
       ).mkString("; ", "; ", "")
   }
 
@@ -161,12 +161,7 @@ class Main extends FakeMain
 
   override def setPackage(names : List[String]) {
     if (!names.isEmpty) {
-
-      if (names.size > 1)
-        System.err.println(
-          "The Ada package system does not support nested packages with the expected meaning, dropping prefixes...");
-
-      _packagePrefix = names.last
+      _packagePrefix = names.map(_.toLowerCase).reduce(_ + _)
     }
   }
 
@@ -230,21 +225,27 @@ Opitions (ada):
   }
 
   /**
+   * escape keywords and reserved words as well
+   */
+  protected def escapedLonely(target : String) : String = target.toLowerCase match {
+    //     keywords and reserved words get a suffix "_2"
+    case "abort" | "else" | "new" | "return" | "abs" | "elsif" | "not" | "reverse" | "abstract" | "end" | "null" |
+      "accept" | "entry" | "select" | "access" | "exception" | "of" | "separate" | "aliased" | "exit" | "or" |
+      "some" | "all" | "others" | "subtype" | "and" | "for" | "out" | "synchronized" | "array" | "function" |
+      "overriding" | "at" | "tagged" | "generic" | "package" | "task" | "begin" | "goto" | "pragma" | "terminate" |
+      "body" | "private" | "then" | "if" | "procedure" | "type" | "case" | "in" | "protected" | "constant" |
+      "interface" | "until" | "is" | "raise" | "use" | "declare" | "range" | "delay" | "limited" | "record" |
+      "when" | "delta" | "loop" | "rem" | "while" | "digits" | "renames" | "with" | "do" | "mod" | "requeue" |
+      "xor" | "boolean" ⇒ return target+"_2"
+    case s ⇒ escaped(s)
+  }
+
+  /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
-  protected def escaped(target : String) : String = target.toLowerCase match {
-    // disabled escaping of keywords, because names do not appear alone anyway
-    // keywords get a suffix "_2"
-    //    case "abort" | "else" | "new" | "return" | "abs" | "elsif" | "not" | "reverse" | "abstract" | "end" | "null" |
-    //      "accept" | "entry" | "select" | "access" | "exception" | "of" | "separate" | "aliased" | "exit" | "or" |
-    //      "some" | "all" | "others" | "subtype" | "and" | "for" | "out" | "synchronized" | "array" | "function" |
-    //      "overriding" | "at" | "tagged" | "generic" | "package" | "task" | "begin" | "goto" | "pragma" | "terminate" |
-    //      "body" | "private" | "then" | "if" | "procedure" | "type" | "case" | "in" | "protected" | "constant" |
-    //      "interface" | "until" | "is" | "raise" | "use" | "declare" | "range" | "delay" | "limited" | "record" |
-    //      "when" | "delta" | "loop" | "rem" | "while" | "digits" | "renames" | "with" | "do" | "mod" | "requeue" |
-    //      "xor" ⇒ return target+"_2"
-
-    // replace ":"-characters by something that is legal in an identifier, but wont alias an Ada-style type-name
-    case _ ⇒ target.replace(":", "_0")
-  }
+  protected def escaped(target : String) : String = target.map {
+      case ':'                               ⇒ "_0"
+      case c if Character.isUnicodeIdentifierPart(c) ⇒ c.toString
+      case c                                 ⇒ "ZZ"+c.toHexString
+    }.reduce(_ + _)
 }
