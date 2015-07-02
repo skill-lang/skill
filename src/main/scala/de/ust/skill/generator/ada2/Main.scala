@@ -24,8 +24,10 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * @author Timm Felden, Dennis Przytarski
  */
 class Main extends FakeMain
-  with DynamicArrayBodyMaker
-  with DynamicArraySpecMaker {
+    with ByteReaderBodyMaker
+    with ByteReaderSpecMaker
+    with DynamicArrayBodyMaker
+    with DynamicArraySpecMaker {
 
   // fix gnat bug
   lineLength = 79
