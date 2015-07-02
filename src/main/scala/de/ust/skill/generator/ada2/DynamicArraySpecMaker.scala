@@ -95,7 +95,7 @@ private
       end record;
 
 end Dynamic_Array;
-    """)
+    """.replaceAll("""\h+$""", ""))
 
     out.close()
   }

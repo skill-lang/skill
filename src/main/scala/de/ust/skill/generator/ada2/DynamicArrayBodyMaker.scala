@@ -118,7 +118,7 @@ package body Dynamic_Array is
    end Finalize;
 
 end Dynamic_Array;
-    """)
+    """.replaceAll("""\h+$""", ""))
 
     out.close()
   }
