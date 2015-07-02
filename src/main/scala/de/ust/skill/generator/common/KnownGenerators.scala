@@ -10,6 +10,7 @@ object KnownGenerators {
 
   val all = List[Class[_ <: Generator]](
     classOf[ada.Main],
+    classOf[ada2.Main],
     classOf[c.Main],
     classOf[doxygen.Main],
     classOf[java.Main],
