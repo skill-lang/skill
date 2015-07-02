@@ -27,7 +27,8 @@ class Main extends FakeMain
     with ByteReaderBodyMaker
     with ByteReaderSpecMaker
     with DynamicArrayBodyMaker
-    with DynamicArraySpecMaker {
+    with DynamicArraySpecMaker
+    with MmapCMaker {
 
   // fix gnat bug
   lineLength = 79
