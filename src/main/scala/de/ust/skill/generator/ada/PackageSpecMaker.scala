@@ -98,23 +98,26 @@ package ${packagePrefix.capitalize} is
    -----------------------
    --  Specified Types  --
    -----------------------
-
 ${
       /**
        * Provides the user types.
        */
-      var output = "";
-      for (d ← IR) {
-        output += comment(d)
-        output += s"""   type ${name(d)}_Type is new Skill_Type with private;\r\n"""
-        output += s"""   type ${name(d)}_Type_Access is access all ${name(d)}_Type;\r\n"""
-        output += s"""   type ${name(d)}_Type_Array is array (Natural range <>) of ${name(d)}_Type_Access;\r\n"""
-        output += s"""   type ${name(d)}_Type_Accesses is access ${name(d)}_Type_Array;\r\n"""
-        output += s"""   function Hash (Element : ${name(d)}_Type_Access) return Ada.Containers.Hash_Type;\r\n\r\n"""
+      (for (t ← IR) yield {
+        val nameT = name(t)
+        s""" 
+${comment(t)}
+   type ${nameT}_Type is new Skill_Type with private;
+   ${nameT}_Type_Skillname       : aliased String := "${t.getSkillName}";
+   type ${nameT}_Type_Access is access all ${nameT}_Type;
+   type ${nameT}_Type_Array is array (Natural range <>) of ${nameT}_Type_Access;
+   type ${nameT}_Type_Accesses is access ${nameT}_Type_Array;
+   function Hash (Element : ${nameT}_Type_Access) return Ada.Containers.Hash_Type;
+"""
       }
-
-      output.stripLineEnd
-
+      ).mkString
+    }
+${
+      var output = "";
       /**
        * Provides the compound types.
        */
@@ -160,15 +163,16 @@ ${
          * Provides the accessor functions to the fields of every type.
          */
         (for (
-          d ← IR;
-          f ← d.getAllFields if !f.isIgnored()
+          t ← IR;
+          f ← t.getAllFields if !f.isIgnored()
         ) yield s"""
-${comment(f)}   function Get_${name(f)} (Object : ${name(d)}_Type) return ${mapType(f.getType, f.getDeclaredIn, f)};
+   ${name(t)}_Type_${name(f)}_Field_Skillname : aliased String := "${f.getSkillName}";
+${comment(f)}   function Get_${name(f)} (Object : ${name(t)}_Type) return ${mapType(f.getType, f.getDeclaredIn, f)};
 ${
           if (f.isConstant) ""
           else {
             s"""${comment(f)}   procedure Set_${name(f)} (
-      Object : in out ${name(d)}_Type;
+      Object : in out ${name(t)}_Type;
       Value  :        ${mapType(f.getType, f.getDeclaredIn, f)}
    );
 """

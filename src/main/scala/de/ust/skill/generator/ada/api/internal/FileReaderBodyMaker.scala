@@ -307,13 +307,13 @@ ${
        * Provides the type record information with the fields and their default values of all types.
        */
       for (d ← IR) {
-        output += s"""      if "${d.getSkillName}" = Type_Name then
+        output += s"""      if ${name(d)}_Type_Skillname = Type_Name then
          declare
 ${
-          var output = s"""            ${name(d)}_Type_Declaration : Type_Information := Types.Element ("${d.getSkillName}");\r\n"""
+          var output = s"""            ${name(d)}_Type_Declaration : Type_Information := Types.Element (${name(d)}_Type_Skillname);\r\n"""
           val superTypes = getSuperTypes(d).toList.reverse
           superTypes.foreach({ t ⇒
-            output += s"""            ${name(t)}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");\r\n"""
+            output += s"""            ${name(t)}_Type_Declaration : Type_Information := Types.Element (${name(t)}_Type_Skillname);\r\n"""
           })
           output.stripLineEnd
         }
@@ -376,13 +376,13 @@ ${
       /**
        * Reads the field data of all fields.
        */
-      (for (d ← IR; f ← d.getFields if !f.isAuto() && !f.isIgnored())
+      (for (t ← IR; f ← t.getFields if !f.isAuto() && !f.isIgnored())
         yield s"""
-      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
+      if ${name(t)}_Type_Skillname = Type_Name and then ${name(t)}_Type_${name(f)}_Field_Skillname = Field_Name then
          for I in Item.Start_Index .. Item.End_Index loop
             declare
-               Object : ${name(d)}_Type_Access := ${name(d)}_Type_Access (Storage_Pool (I));
-            ${mapFileReader(d, f)}
+               Object : ${name(t)}_Type_Access := ${name(t)}_Type_Access (Storage_Pool (I));
+            ${mapFileReader(t, f)}
             end;
          end loop;
          Skip_Bytes := False;
@@ -423,7 +423,7 @@ ${
       if 0 = Index then
          return null;
       else
-         return ${name(d)}_Type_Access (Types.Element ("${if (null == d.getSuperType) d.getSkillName else d.getBaseType.getSkillName}").Storage_Pool.Element (Positive (Index)));
+         return ${name(d)}_Type_Access (Types.Element (${name(if (null == d.getSuperType) d else d.getBaseType)}_Type_Skillname).Storage_Pool.Element (Positive (Index)));
       end if;
    end Read_${name(d)}_Type;\r\n\r\n"""
       }
@@ -437,8 +437,8 @@ ${
        * Corrects the SPSI (storage pool start index) of all types.
        */
       for (d ← IR) {
-        output += s"""      if Types.Contains ("${d.getSkillName}") then
-         Types.Element ("${d.getSkillName}").spsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length);
+        output += s"""      if Types.Contains (${name(d)}_Type_Skillname) then
+         Types.Element (${name(d)}_Type_Skillname).spsi := Natural (Types.Element (${name(d)}_Type_Skillname).Storage_Pool.Length);
       end if;\r\n"""
       }
       if (output.isEmpty())

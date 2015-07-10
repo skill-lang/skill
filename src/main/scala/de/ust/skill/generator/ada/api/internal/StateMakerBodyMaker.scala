@@ -20,16 +20,15 @@ package body ${packagePrefix.capitalize}.Api.Internal.State_Maker is
    procedure Create (State : access Skill_State) is
       Types : access Types_Hash_Map.Map := State.Types;
    begin
-${
+      null;${
       /**
        * Puts all known missing types into the types hash map.
        */
-      var output = "";
-      for (d ← IR) {
-        output += s"""      if not Types.Contains ("${d.getSkillName}") then
+      (for (t ← IR) yield s"""
+      if not Types.Contains (${name(t)}_Type_Skillname) then
          declare
-            Type_Name    : String := "${d.getSkillName}";
-            Super_Name   : String := "${if (null == d.getSuperType) "" else d.getSuperType}";
+            Type_Name    : String := ${name(t)}_Type_Skillname;
+            Super_Name   : String := ${if (null == t.getSuperType) "\"\"" else s"${name(t.getSuperType)}_Type_Skillname"};
             Fields       : Fields_Vector.Vector;
             Storage_Pool : Storage_Pool_Vector.Vector;
             New_Type     : Type_Information := new Type_Declaration'(
@@ -49,25 +48,21 @@ ${
             Types.Insert (New_Type.Name, New_Type);
          end;
       else
-         Types.Element ("${d.getSkillName}").Known := True;
-      end if;\r\n\r\n"""
-      }
-      if (output.isEmpty)
-        "      null;"
-      else
-        output.stripLineEnd
+         Types.Element (${name(t)}_Type_Skillname).Known := True;
+      end if;
+""").mkString
     }
 ${
       /**
        * Puts all known missing fields into the field vector of a given type.
        */
       var output = "";
-      for (d ← IR) {
-        output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
-          s"""      if not Has_Field (Types.Element ("${d.getSkillName}"), "${f.getSkillName}") then
+      for (t ← IR) {
+        output += t.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
+          s"""      if not Has_Field (Types.Element (${name(t)}_Type_Skillname), ${name(t)}_Type_${name(f)}_Field_Skillname) then
          declare
-            Type_Name  : String := "${d.getSkillName}";
-            Field_Name : String := "${f.getSkillName}";
+            Type_Name  : String := ${name(t)}_Type_Skillname;
+            Field_Name : String := ${name(t)}_Type_${name(f)}_Field_Skillname;
             Base_Types : Base_Types_Vector.Vector;
             New_Field  : Field_Information := new Field_Declaration'(
                id                    => Long (Natural (Types.Element (Type_Name).Fields.Length) + 1),
@@ -107,7 +102,7 @@ ${
           }            Types.Element (Type_Name).Fields.Append (New_Field);
          end;
       else
-         Get_Field (Types.Element ("${d.getSkillName}"), "${f.getSkillName}").Known := True;
+         Get_Field (Types.Element (${name(t)}_Type_Skillname), ${name(t)}_Type_${name(f)}_Field_Skillname).Known := True;
       end if;\r\n\r\n"""
         }).mkString("")
       }

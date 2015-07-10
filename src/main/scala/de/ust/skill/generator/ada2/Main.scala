@@ -84,7 +84,7 @@ class Main extends FakeMain
   }
 
   override def printHelp : Unit = println("""
-Opitions (ada):
+Opitions (ada2):
   (none)
 """)
 

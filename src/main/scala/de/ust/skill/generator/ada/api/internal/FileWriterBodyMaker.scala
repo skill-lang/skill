@@ -166,7 +166,7 @@ ${
       var output = "";
       for (d ← IR) {
         var hasOutput = false;
-        output += s"""            if "${d.getSkillName}" = Type_Name then
+        output += s"""            if ${name(d)}_Type_Skillname = Type_Name then
                declare
                   Object : ${name(d)}_Type_Access := ${name(d)}_Type_Access (Skill_Object);
                begin
@@ -336,7 +336,7 @@ ${
           output += s"""\r\n      declare
          use Storage_Pool_Vector;
 
-         Type_Declaration : Type_Information := Types.Element ("${d.getSkillName}");
+         Type_Declaration : Type_Information := Types.Element (${name(d)}_Type_Skillname);
          Size             : Natural          :=
             Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi;
 
@@ -360,7 +360,7 @@ ${
                   ${name(t)}_Type_Declaration.lbpsi := Index - 1;
                   First_Object := False;
                end if;
-               if "${t.getSkillName}" = Get_Object_Type (Object) then
+               if ${name(t)}_Type_Skillname = Get_Object_Type (Object) then
                   Temp (Index) := Object;
                   Index := Index + 1;
                end if;
@@ -445,25 +445,14 @@ ${
 
 ${
       /**
-       * Consider only instantiated types to be written.
+       * write types in type order (as guaranteed by IR)
        */
-      def inner(d : Type) : String = {
-        s"""      if Is_Type_Instantiated (Types.Element ("${d.getSkillName}")) then
-         Write_Type_Declaration (Types.Element ("${d.getSkillName}"));
-      end if;\r\n"""
-      }
-      var output = ""
-      /**
-       * First, write the base types and then its sub types.
-       */
-      for (d ← IR) {
-        if (null == d.getSuperType) {
-          output += inner(d)
-          getSubTypes(d).foreach({ t ⇒ output += inner(t) })
-        }
-      }
-      output
+      (for (t ← IR)
+        yield s"""
+      Write_Type_Declaration (Types.Element (${name(t)}_Type_Skillname));"""
+      ).mkString
     }
+
       Last_Types_End := 0;
 
       Copy_Field_Data;
@@ -511,6 +500,11 @@ ${
       Field_Count     : Natural := Natural (Type_Declaration.Fields.Length);
       Instances_Count : Natural := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi;
    begin
+      -- write instantiated types only
+      if not Is_Type_Instantiated (Type_Declaration) then
+         return;
+      end if;
+
       Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Type_Name)));
       Byte_Writer.Write_v64 (Output_Stream, Long (Instances_Count));
 
@@ -681,25 +675,23 @@ ${
       if Field_Declaration.Written then
          Start_Index := Type_Declaration.spsi + 1;
       end if;
-
 ${
-      var output = "";
       /**
        * Writes the field data of all fields.
        */
-      for (d ← IR) {
-        output += d.getFields.filter({ f ⇒ !f.isAuto && !f.isConstant && !f.isIgnored }).map({ f ⇒
-          s"""      if "${d.getSkillName}" = Type_Name and then "${f.getSkillName}" = Field_Name then
+      (for (
+        t ← IR;
+        f ← t.getFields if (!f.isAuto && !f.isConstant && !f.isIgnored)
+      ) yield s"""
+      if ${name(t)}_Type_Skillname = Type_Name and then ${name(t)}_Type_${name(f)}_Field_Skillname = Field_Name then
          for I in Start_Index .. Natural (Type_Declaration.Storage_Pool.Length) loop
             declare
-               Object : ${name(d)}_Type_Access := ${name(d)}_Type_Access (Storage_Pool (I));
-            ${mapFileWriter(d, f)}
+               Object : ${name(t)}_Type_Access := ${name(t)}_Type_Access (Storage_Pool (I));
+            ${mapFileWriter(t, f)}
             end;
          end loop;
-      end if;\r\n"""
-        }).mkString("")
-      }
-      output
+      end if;
+""").mkString
     }
       Free (Storage_Pool);
    end Write_Field_Data;
@@ -776,9 +768,9 @@ ${
       /**
        * Gets the type of a given object.
        */
-      (for (d ← IR) yield s"""
-      if ${name(d)}_Type'Tag = Object'Tag then
-         return "${d.getSkillName}";
+      (for (t ← IR) yield s"""
+      if ${name(t)}_Type'Tag = Object'Tag then
+         return ${name(t)}_Type_Skillname;
       end if;
 """).mkString
     }
@@ -790,9 +782,9 @@ ${
       /**
        * Corrects the SPSI (storage pool start index) of all types.
        */
-      val r = (for (d ← IR) yield s"""
-      if Types.Contains ("${d.getSkillName}") then
-         Types.Element ("${d.getSkillName}").spsi := Natural (Types.Element ("${d.getSkillName}").Storage_Pool.Length);
+      val r = (for (t ← IR) yield s"""
+      if Types.Contains (${name(t)}_Type_Skillname) then
+         Types.Element (${name(t)}_Type_Skillname).spsi := Natural (Types.Element (${name(t)}_Type_Skillname).Storage_Pool.Length);
       end if;
 """).mkString
 

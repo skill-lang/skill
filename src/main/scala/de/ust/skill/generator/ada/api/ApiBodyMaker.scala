@@ -167,11 +167,11 @@ ${
         val nameD = name(d)
         output += s"""
    function New_${nameD} (State : access Skill_State${printParameters(d)}) return ${nameD}_Type_Access is
-      ${nameD}_Type_Declaration : Type_Information := State.Types.Element ("${d.getSkillName}");${
+      ${nameD}_Type_Declaration : Type_Information := State.Types.Element (${nameD}_Type_Skillname);${
           var output = ""
           val superTypes = getSuperTypes(d).toList.reverse
           superTypes.foreach({ t ⇒
-            output += s"""\r\n      ${t.getName.ada}_Type_Declaration : Type_Information := State.Types.Element ("${t.getSkillName}");"""
+            output += s"""\r\n      ${t.getName.ada}_Type_Declaration : Type_Information := State.Types.Element (${name(t)}_Type_Skillname);"""
           })
           output
         }
@@ -188,15 +188,15 @@ ${
    end New_${nameD};
 
    function ${nameD}s_Size (State : access Skill_State) return Natural is
-      (Natural (State.Types.Element ("${d.getSkillName}").Storage_Pool.Length));
+      (Natural (State.Types.Element (${nameD}_Type_Skillname).Storage_Pool.Length));
 
    function Get_${nameD} (State : access Skill_State; Index : Natural) return ${nameD}_Type_Access is
-      (${nameD}_Type_Access (State.Types.Element ("${d.getSkillName}").Storage_Pool.Element (Index)));
+      (${nameD}_Type_Access (State.Types.Element (${nameD}_Type_Skillname).Storage_Pool.Element (Index)));
 
    function Get_${nameD}s (State : access Skill_State) return ${nameD}_Type_Accesses is
       use Storage_Pool_Vector;
 
-      Type_Declaration : Type_Information := State.Types.Element ("${d.getSkillName}");
+      Type_Declaration : Type_Information := State.Types.Element (${nameD}_Type_Skillname);
       Length : Natural := Natural (Type_Declaration.Storage_Pool.Length);
       rval : ${nameD}_Type_Accesses := new ${nameD}_Type_Array (1 .. Length);
 

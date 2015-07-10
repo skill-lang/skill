@@ -71,7 +71,11 @@ class Generic${name}ReadTest extends CommonTest {
   }
 
   override def makeGenBinaryTests(name : String) {
-    val (accept, reject) = collectBinaries(name)
+    
+    
+    val tmp = collectBinaries(name);
+    val accept = tmp._1
+    val reject = tmp._2
 
     // generate read tests
     locally {
