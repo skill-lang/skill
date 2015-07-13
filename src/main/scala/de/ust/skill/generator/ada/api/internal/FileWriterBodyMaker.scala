@@ -97,7 +97,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
       Byte_Writer.Finalize_Buffer (Output_Stream);
    end Run;
 
-   function Get_String_Index (Value : String) return Positive is
+   function Get_String_Index (Value : String_Access) return Positive is
       Index : Natural := String_Pool.Reverse_Find_Index (Value);
       Skill_Unknown_String_Index : exception;
    begin
@@ -108,7 +108,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
    end Get_String_Index;
 
    procedure Put_String (
-      Value : String;
+      Value : String_Access;
       Safe  : Boolean := False
    ) is
       Append : Boolean := True;
@@ -117,7 +117,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
          declare
             Index : Natural := String_Pool.Reverse_Find_Index (Value);
          begin
-            if 0 < Index or else 0 = Value'Length then
+            if 0 < Index or else null = Value then
                Append := False;
             end if;
          end;
@@ -135,8 +135,8 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
 
    procedure Prepare_String_Pool_Iterator (Iterator : Types_Hash_Map.Cursor) is
       Type_Declaration : Type_Information := Types_Hash_Map.Element (Iterator);
-      Type_Name        : String           := Type_Declaration.Name;
-      Super_Name       : String           := Type_Declaration.Super_Name;
+      Type_Name        : String_Access    := Type_Declaration.Name;
+      Super_Name       : String_Access    := Type_Declaration.Super_Name;
    begin
       Put_String (Type_Name, Safe => True);
       Put_String (Super_Name, Safe => True);
@@ -146,7 +146,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
 
          procedure Iterate (Iterator : Cursor) is
             Field_Declaration : Field_Information := Element (Iterator);
-            Field_Name        : String            := Field_Declaration.Name;
+            Field_Name        : String_Access     := Field_Declaration.Name;
          begin
             Put_String (Field_Name, Safe => True);
          end Iterate;
@@ -166,14 +166,14 @@ ${
       var output = "";
       for (d ← IR) {
         var hasOutput = false;
-        output += s"""            if ${name(d)}_Type_Skillname = Type_Name then
+        output += s"""            if Equals (${name(d)}_Type_Skillname, Type_Name) then
                declare
                   Object : ${name(d)}_Type_Access := ${name(d)}_Type_Access (Skill_Object);
                begin
 """
         d.getFields.filter({ f ⇒ "string" == f.getType.getSkillName }).foreach({ f ⇒
           hasOutput = true;
-          output += s"                  Put_String (Object.${escapedLonely(f.getSkillName)}.all, Safe => True);\r\n"
+          output += s"                  Put_String (Object.${escapedLonely(f.getSkillName)}, Safe => True);\r\n"
         })
         d.getFields.foreach({ f ⇒
           f.getType match {
@@ -181,7 +181,7 @@ ${
               if ("string" == t.getBaseType.getSkillName) {
                 hasOutput = true;
                 output += s"""\r\n                  for I in Object.${escapedLonely(f.getSkillName)}'Range loop
-                     Put_String (Object.${escapedLonely(f.getSkillName)} (I).all, Safe => True);
+                     Put_String (Object.${escapedLonely(f.getSkillName)} (I), Safe => True);
                   end loop;\r\n""";
               }
             case t : VariableLengthArrayType ⇒
@@ -194,7 +194,7 @@ ${
 
                      procedure Iterate (Position : Cursor) is
                      begin
-                        Put_String (Element (Position).all, Safe => True);
+                        Put_String (Element (Position), Safe => True);
                      end Iterate;
                      pragma Inline (Iterate);
                   begin
@@ -211,7 +211,7 @@ ${
 
                      procedure Iterate (Position : Cursor) is
                      begin
-                        Put_String (Element (Position).all, Safe => True);
+                        Put_String (Element (Position), Safe => True);
                      end Iterate;
                      pragma Inline (Iterate);
                   begin
@@ -228,7 +228,7 @@ ${
 
                      procedure Iterate (Position : Cursor) is
                      begin
-                        Put_String (Element (Position).all, Safe => True);
+                        Put_String (Element (Position), Safe => True);
                      end Iterate;
                      pragma Inline (Iterate);
                   begin
@@ -245,13 +245,13 @@ ${
                     val x = {
                       var output = ""
                       if (0 == i) {
-                        if ("string" == types.get(i + 1).getSkillName) output += s"Put_String (Key (Position).all, Safe => True);"
+                        if ("string" == types.get(i + 1).getSkillName) output += s"Put_String (Key (Position), Safe => True);"
                         if ("string" == types.get(i).getSkillName) {
                           if (!output.isEmpty) output += "\r\n                     "
-                          output += s"Put_String (Element (Position).all, Safe => True);"
+                          output += s"Put_String (Element (Position), Safe => True);"
                         }
                       } else {
-                        if ("string" == types.get(i + 1).getSkillName) output += s"Put_String (Key (Position).all, Safe => True);\r\n                           "
+                        if ("string" == types.get(i + 1).getSkillName) output += s"Put_String (Key (Position), Safe => True);\r\n                           "
                         output += s"Read_Map_${types.length - i} (Element (Position));"
                       }
                       if (output.isEmpty) "null;" else output
@@ -309,8 +309,8 @@ ${
 
          for I in Start_Index .. End_Index loop
             declare
-               Value         : String := String_Pool.Element (I);
-               String_Length : i32    := Value'Length + Last_String_End;
+               Value         : String_Access := String_Pool.Element (I);
+               String_Length : i32           := Value'Length + Last_String_End;
             begin
                Byte_Writer.Write_i32 (Output_Stream, String_Length);
                Last_String_End := String_Length;
@@ -333,7 +333,8 @@ ${
         if (null == d.getSuperType && 0 < getSubTypes(d).length) {
           val types = getSubTypes(d).+=:(d)
 
-          output += s"""\r\n      declare
+          output += s"""
+      declare
          use Storage_Pool_Vector;
 
          Type_Declaration : Type_Information := Types.Element (${name(d)}_Type_Skillname);
@@ -347,7 +348,7 @@ ${
          First_Object : Boolean := False;
 """
           types.foreach({ t ⇒
-            output += s"""\r\n         ${name(t)}_Type_Declaration : Type_Information := Types.Element ("${t.getSkillName}");"""
+            output += s"""\r\n         ${name(t)}_Type_Declaration : Type_Information := Types.Element (${name(d)}_Type_Skillname);"""
           })
           output += "\r\n      begin\r\n"
           types.foreach({ t ⇒
@@ -495,10 +496,10 @@ ${
    end Count_Known_Unwritten_Fields;
 
    procedure Write_Type_Declaration (Type_Declaration : Type_Information) is
-      Type_Name       : String  := Type_Declaration.Name;
-      Super_Name      : String  := Type_Declaration.Super_Name;
-      Field_Count     : Natural := Natural (Type_Declaration.Fields.Length);
-      Instances_Count : Natural := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi;
+      Type_Name       : String_Access := Type_Declaration.Name;
+      Super_Name      : String_Access := Type_Declaration.Super_Name;
+      Field_Count     : Natural       := Natural (Type_Declaration.Fields.Length);
+      Instances_Count : Natural       := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi;
    begin
       -- write instantiated types only
       if not Is_Type_Instantiated (Type_Declaration) then
@@ -511,14 +512,14 @@ ${
       if not Type_Declaration.Written then
          Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
 
-         if 0 < Super_Name'Length then
+         if null /= Super_Name then
             Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Super_Name)));
          else
             Byte_Writer.Write_v64 (Output_Stream, 0);
          end if;
       end if;
 
-      if 0 < Super_Name'Length then
+      if null /= Super_Name then
          Byte_Writer.Write_v64 (Output_Stream, Long (Type_Declaration.lbpsi));
       end if;
 
@@ -574,10 +575,10 @@ ${
       Type_Declaration  : Type_Information;
       Field_Declaration : Field_Information
    ) is
-      Type_Name  : String := Type_Declaration.Name;
-      Field_Name : String := Field_Declaration.Name;
-      Field_Type : Long   := Field_Declaration.F_Type;
-      Size       : Long   := Field_Data_Size (Type_Declaration, Field_Declaration);
+      Type_Name  : String_Access := Type_Declaration.Name;
+      Field_Name : String_Access := Field_Declaration.Name;
+      Field_Type : Long          := Field_Declaration.F_Type;
+      Size       : Long          := Field_Data_Size (Type_Declaration, Field_Declaration);
 
       --  see comment in file date.ads
       Base_Types : Base_Types_Vector.Vector := Field_Declaration.Base_Types;
@@ -657,9 +658,9 @@ ${
       Type_Declaration  : Type_Information;
       Field_Declaration : Field_Information
    ) is
-      Type_Name    : String := Type_Declaration.Name;
-      Field_Name   : String := Field_Declaration.Name;
-      Start_Index  : Positive := 1;
+      Type_Name    : String_Access := Type_Declaration.Name;
+      Field_Name   : String_Access := Field_Declaration.Name;
+      Start_Index  : Positive      := 1;
       Storage_Pool : Storage_Pool_Array_Access :=
          new Storage_Pool_Array (1 .. Natural (Type_Declaration.Storage_Pool.Length));
 
@@ -683,7 +684,7 @@ ${
         t ← IR;
         f ← t.getFields if (!f.isAuto && !f.isConstant && !f.isIgnored)
       ) yield s"""
-      if ${name(t)}_Type_Skillname = Type_Name and then ${name(t)}_Type_${name(f)}_Field_Skillname = Field_Name then
+      if Equals (${name(t)}_Type_Skillname, Type_Name) and then Equals (${name(t)}_Type_${name(f)}_Field_Skillname, Field_Name) then
          for I in Start_Index .. Natural (Type_Declaration.Storage_Pool.Length) loop
             declare
                Object : ${name(t)}_Type_Access := ${name(t)}_Type_Access (Storage_Pool (I));
@@ -709,19 +710,19 @@ ${
       Stream : ASS_IO.Stream_Access;
       Object : Skill_Type_Access
    ) is
-      Type_Name : String := Get_Object_Type (Object);
+      Type_Name : String_Access := Get_Object_Type (Object);
 
-      function Get_Base_Type (Type_Declaration : Type_Information) return String is
-         Super_Name : String := Type_Declaration.Super_Name;
+      function Get_Base_Type (Type_Declaration : Type_Information) return String_Access is
+         Super_Name : String_Access := Type_Declaration.Super_Name;
       begin
-         if 0 = Super_Name'Length then
+         if null = Super_Name then
             return Type_Name;
          else
             return Get_Base_Type (Types.Element (Super_Name));
          end if;
       end Get_Base_Type;
    begin
-      if 0 = Type_Name'Length then
+      if null = Type_Name then
          Byte_Writer.Write_v64 (Stream, 0);
          Byte_Writer.Write_v64 (Stream, 0);
       else
@@ -735,7 +736,7 @@ ${
       Value  : String_Access
    ) is
    begin
-      Byte_Writer.Write_v64 (Stream, Long (Get_String_Index (Value.all)));
+      Byte_Writer.Write_v64 (Stream, Long (Get_String_Index (Value)));
    end Write_String;
 
 ${
@@ -758,11 +759,11 @@ ${
       }
       output.stripSuffix("\r\n")
     }
-   function Get_Object_Type (Object : Skill_Type_Access) return String is
+   function Get_Object_Type (Object : Skill_Type_Access) return String_Access is
       use Ada.Tags;
    begin
       if null = Object then
-         return "";
+         return null;
       end if;
 ${
       /**
@@ -774,7 +775,7 @@ ${
       end if;
 """).mkString
     }
-      return "";
+      return null;
    end Get_Object_Type;
 
    procedure Update_Storage_Pool_Start_Index is

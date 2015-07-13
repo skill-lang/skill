@@ -164,8 +164,8 @@ package body ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
    function Read_String (
       Stream : ASS_IO.Stream_Access;
       Length : i32
-   ) return String is
-      New_String : String (1 .. Integer (Length));
+   ) return String_Access is
+      New_String : String_Access :=  new String (1 .. Integer (Length));
    begin
       for I in Integer range 1 .. Integer (Length) loop
          New_String (I) := Character'Val (Read_Byte (Stream));

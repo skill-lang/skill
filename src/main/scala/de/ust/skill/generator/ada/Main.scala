@@ -83,7 +83,7 @@ class Main extends FakeMain
     case t : SetType                 ⇒ 19.toString
     case t : MapType                 ⇒ 20.toString
 
-    case t : Declaration             ⇒ s"""Long (Types.Element ("${t.getSkillName}").id)"""
+    case t : Declaration             ⇒ s"""Long (Types.Element (${name(t)}_Type_Skillname).id)"""
   }
 
   /**

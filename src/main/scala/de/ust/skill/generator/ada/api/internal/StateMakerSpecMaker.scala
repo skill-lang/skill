@@ -29,12 +29,12 @@ private
 
    function Has_Field (
       Type_Declaration : Type_Information;
-      Field_Name       : String
+      Field_Name       : String_Access
    ) return Boolean;
 
    function Get_Field (
       Type_Declaration : Type_Information;
-      Field_Name       : String
+      Field_Name       : String_Access
    ) return Field_Information;
 
 end ${packagePrefix.capitalize}.Api.Internal.State_Maker;

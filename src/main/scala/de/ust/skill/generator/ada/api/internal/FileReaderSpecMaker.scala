@@ -76,11 +76,11 @@ private
    --  PHASE 1
    procedure Read_Type_Block;
    procedure Read_Type_Declaration (Last_End : in out Long);
-   procedure Read_Field_Declaration (Type_Name : String; Field_Id : Long);
+   procedure Read_Field_Declaration (Type_Name : String_Access; Field_Id : Long);
    procedure Read_Field_Data;
 
    procedure Create_Objects (
-      Type_Name      : String;
+      Type_Name      : String_Access;
       Instance_Count : Natural
    );
 

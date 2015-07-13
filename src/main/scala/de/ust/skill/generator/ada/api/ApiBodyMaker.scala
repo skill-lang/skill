@@ -25,21 +25,30 @@ package body ${packagePrefix.capitalize}.Api is
    procedure Append (State : access Skill_State) is
       package File_Writer renames Api.Internal.File_Writer;
    begin
-      if Append = State.State or else Read = State.State or else Write = State.State then
+      if Append = State.State
+        or else Read = State.State
+        or else Write = State.State
+      then
          File_Writer.Append (State, State.File_Name.all);
          State.State := Append;
       else
-         raise Skill_State_Error;
+         raise Skill_Error with "Can not append to this state.";
       end if;
    end Append;
 
    procedure Close (State : access Skill_State) is
-      procedure Free is new Ada.Unchecked_Deallocation (String_Pool_Vector.Vector, String_Pool_Access);
-      procedure Free is new Ada.Unchecked_Deallocation (Types_Hash_Map.Map, Types_Hash_Map_Access);
+      procedure Free is new Ada.Unchecked_Deallocation
+        (String_Pool_Vector.Vector,
+         String_Pool_Access);
+      procedure Free is new Ada.Unchecked_Deallocation
+        (Types_Hash_Map.Map,
+         Types_Hash_Map_Access);
       procedure Free is new Ada.Unchecked_Deallocation (String, String_Access);
 
       procedure Iterate_Storage_Pool (Position : Storage_Pool_Vector.Cursor) is
-         procedure Free is new Ada.Unchecked_Deallocation (Skill_Type'Class, Skill_Type_Access);
+         procedure Free is new Ada.Unchecked_Deallocation
+           (Skill_Type'Class,
+            Skill_Type_Access);
 
          Object : Skill_Type_Access := Storage_Pool_Vector.Element (Position);
       begin
@@ -48,18 +57,24 @@ package body ${packagePrefix.capitalize}.Api is
       pragma Inline (Iterate_Storage_Pool);
 
       procedure Iterate_Field_Declaration (Position : Fields_Vector.Cursor) is
-         procedure Free is new Ada.Unchecked_Deallocation (Field_Declaration, Field_Information);
+         procedure Free is new Ada.Unchecked_Deallocation
+           (Field_Declaration,
+            Field_Information);
 
-         Field_Declaration : Field_Information := Fields_Vector.Element (Position);
+         Field_Declaration : Field_Information :=
+           Fields_Vector.Element (Position);
       begin
          Free (Field_Declaration);
       end Iterate_Field_Declaration;
       pragma Inline (Iterate_Field_Declaration);
 
       procedure Iterate_Type_Declaration (Position : Types_Hash_Map.Cursor) is
-         procedure Free is new Ada.Unchecked_Deallocation (Type_Declaration, Type_Information);
+         procedure Free is new Ada.Unchecked_Deallocation
+           (Type_Declaration,
+            Type_Information);
 
-         Type_Declaration : Type_Information := Types_Hash_Map.Element (Position);
+         Type_Declaration : Type_Information :=
+           Types_Hash_Map.Element (Position);
       begin
          Type_Declaration.Fields.Iterate (Iterate_Field_Declaration'Access);
          Type_Declaration.Storage_Pool.Iterate (Iterate_Storage_Pool'Access);
@@ -83,14 +98,11 @@ package body ${packagePrefix.capitalize}.Api is
          State_Maker.Create (State);
          State.State := Create;
       else
-         raise Skill_State_Error;
+         raise Skill_Error with "Can only create unused states.";
       end if;
    end Create;
 
-   procedure Read (
-      State     : access Skill_State;
-      File_Name :        String
-   ) is
+   procedure Read (State : access Skill_State; File_Name : String) is
       package File_Reader renames Api.Internal.File_Reader;
       package State_Maker renames Api.Internal.State_Maker;
    begin
@@ -100,22 +112,23 @@ package body ${packagePrefix.capitalize}.Api is
          State.File_Name := new String'(File_Name);
          State.State     := Read;
       else
-         raise Skill_State_Error;
+         raise Skill_Error with "Can only read into an unusude state.";
       end if;
    end Read;
 
-   procedure Write (
-      State     : access Skill_State;
-      File_Name :        String
-   ) is
+   procedure Write (State : access Skill_State; File_Name : String) is
       package File_Writer renames Api.Internal.File_Writer;
    begin
-      if Append = State.State or else Create = State.State or else Read = State.State or else Write = State.State then
+      if Append = State.State
+        or else Create = State.State
+        or else Read = State.State
+        or else Write = State.State
+      then
          File_Writer.Write (State, File_Name);
          State.File_Name := new String'(File_Name);
          State.State     := Write;
       else
-         raise Skill_State_Error;
+         raise Skill_Error with "State is not in a mode that can be written.";
       end if;
    end Write;
 ${
@@ -150,14 +163,10 @@ ${
       /**
        * Pushes the new object also into the storage pools of the super types.
        */
-      def printSuperTypes(d : UserType) : String = {
-        var output = "";
-        val superTypes = getSuperTypes(d).toList.reverse
-        superTypes.foreach({ t ⇒
-          output += s"""\r\n      ${name(t)}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));"""
-        })
-        output
-      }
+      def printSuperTypes(d : UserType) : String = (
+        for (t ← getSuperTypes(d).toList.reverse) yield s"""
+      ${name(t)}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));"""
+      ).mkString
 
       var output = ""
       /**
@@ -166,18 +175,24 @@ ${
       for (d ← IR) {
         val nameD = name(d)
         output += s"""
-   function New_${nameD} (State : access Skill_State${printParameters(d)}) return ${nameD}_Type_Access is
-      ${nameD}_Type_Declaration : Type_Information := State.Types.Element (${nameD}_Type_Skillname);${
+   function New_${nameD}
+     (State : access Skill_State${printParameters(d)}) return ${nameD}_Type_Access
+   is
+      ${nameD}_Type_Declaration : Type_Information :=
+        State.Types.Element (${nameD}_Type_Skillname);${
           var output = ""
           val superTypes = getSuperTypes(d).toList.reverse
           superTypes.foreach({ t ⇒
-            output += s"""\r\n      ${t.getName.ada}_Type_Declaration : Type_Information := State.Types.Element (${name(t)}_Type_Skillname);"""
+            output += s"""
+      ${t.getName.ada}_Type_Declaration : Type_Information :=
+         State.Types.Element (${name(t)}_Type_Skillname);"""
           })
           output
         }
       New_Object : ${nameD}_Type_Access := new ${nameD}_Type${printFields(d)};
    begin
-      ${nameD}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));${printSuperTypes(d)}
+      ${nameD}_Type_Declaration.Storage_Pool.Append
+        (Skill_Type_Access (New_Object));${printSuperTypes(d)}
       return New_Object;
    end New_${nameD};
 
@@ -196,9 +211,10 @@ ${
    function Get_${nameD}s (State : access Skill_State) return ${nameD}_Type_Accesses is
       use Storage_Pool_Vector;
 
-      Type_Declaration : Type_Information := State.Types.Element (${nameD}_Type_Skillname);
+      Type_Declaration : Type_Information :=
+        State.Types.Element (${nameD}_Type_Skillname);
       Length : Natural := Natural (Type_Declaration.Storage_Pool.Length);
-      rval : ${nameD}_Type_Accesses := new ${nameD}_Type_Array (1 .. Length);
+      rval   : ${nameD}_Type_Accesses := new ${nameD}_Type_Array (1 .. Length);
 
       procedure Iterate (Position : Cursor) is
       begin
@@ -208,7 +224,8 @@ ${
    begin
       Type_Declaration.Storage_Pool.Iterate (Iterate'Access);
       return rval;
-   end Get_${nameD}s;\r\n"""
+   end Get_${nameD}s;
+"""
       }
       output
     }

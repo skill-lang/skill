@@ -33,7 +33,9 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
       ASS_IO.Open (Input_File, ASS_IO.In_File, File_Name);
       Input_Stream := ASS_IO.Stream (Input_File);
 
-      while not ASS_IO.End_Of_File (Input_File) or else not Byte_Reader.End_Of_Buffer loop
+      while not ASS_IO.End_Of_File (Input_File)
+        or else not Byte_Reader.End_Of_Buffer
+      loop
          Read_String_Block;
          Read_Type_Block;
          Update_Storage_Pool_Start_Index;
@@ -54,18 +56,14 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
             String_Length : i32 := String_End - Last_End;
          begin
             String_Lengths (I) := String_End - Last_End;
-            Last_End := String_End;
+            Last_End           := String_End;
          end;
       end loop;
 
       --  read strings
       for I in String_Lengths'Range loop
-         declare
-            String_Length : i32    := String_Lengths (I);
-            Next_String   : String := Byte_Reader.Read_String (Input_Stream, String_Length);
-         begin
-            String_Pool.Append (Next_String);
-         end;
+         String_Pool.Append
+            (Byte_Reader.Read_String (Input_Stream, String_Lengths (I)));
       end loop;
    end Read_String_Block;
 
@@ -81,7 +79,8 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
    end Read_Type_Block;
 
    procedure Read_Type_Declaration (Last_End : in out Long) is
-      Type_Name      : String := String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream)));
+      Type_Name : String_Access :=
+        String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream)));
       Instance_Count : Natural;
       Field_Count    : Long;
    begin
@@ -91,31 +90,31 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
          Skip_Restrictions;
 
          declare
-            procedure Free is new Ada.Unchecked_Deallocation (String, String_Access);
+            procedure Free is new Ada.Unchecked_Deallocation
+              (String,
+               String_Access);
 
-            Super_Name_Index : Long          := Byte_Reader.Read_v64 (Input_Stream);
-            Super_Name       : String_Access := new String'("");
+            Super_Name_Index : Long := Byte_Reader.Read_v64 (Input_Stream);
+            Super_Name       : String_Access := null;
          begin
             if Super_Name_Index > 0 then
-               Super_Name := new String'(String_Pool.Element (Natural (Super_Name_Index)));
+               Super_Name := String_Pool.Element (Natural (Super_Name_Index));
             end if;
 
             declare
                New_Type_Fields       : Fields_Vector.Vector;
                New_Type_Storage_Pool : Storage_Pool_Vector.Vector;
-               New_Type              : Type_Information := new Type_Declaration'(
-                  Type_Size    => Type_Name'Length,
-                  Super_Size   => Super_Name.all'Length,
-                  id           => Long (Natural (Types.Length) + 32),
-                  Name         => Type_Name,
-                  Super_Name   => Super_Name.all,
-                  spsi         => 0,
-                  lbpsi        => 0,
-                  Fields       => New_Type_Fields,
-                  Storage_Pool => New_Type_Storage_Pool,
-                  Known        => False,
-                  Written      => True
-               );
+               New_Type              : Type_Information :=
+                 new Type_Declaration'
+                   (id           => Long (Natural (Types.Length) + 32),
+                    Name         => Type_Name,
+                    Super_Name   => Super_Name,
+                    spsi         => 0,
+                    lbpsi        => 0,
+                    Fields       => New_Type_Fields,
+                    Storage_Pool => New_Type_Storage_Pool,
+                    Known        => False,
+                    Written      => True);
             begin
                Free (Super_Name);
                Types.Insert (New_Type.Name, New_Type);
@@ -123,8 +122,9 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
          end;
       end if;
 
-      if 0 /= Types.Element (Type_Name).Super_Name'Length then
-         Types.Element (Type_Name).lbpsi := Natural (Byte_Reader.Read_v64 (Input_Stream));
+      if null /= Types.Element (Type_Name).Super_Name then
+         Types.Element (Type_Name).lbpsi :=
+           Natural (Byte_Reader.Read_v64 (Input_Stream));
       end if;
 
       Field_Count := Byte_Reader.Read_v64 (Input_Stream);
@@ -136,10 +136,12 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
          End_Index    : Natural;
       begin
          if 0 = Instance_Count then
-            End_Index := Natural (Types.Element (Type_Name).Storage_Pool.Length);
+            End_Index :=
+              Natural (Types.Element (Type_Name).Storage_Pool.Length);
          else
-            Start_Index := Natural (Types.Element (Type_Name).Storage_Pool.Length) + 1;
-            End_Index   := Start_Index + Instance_Count - 1;
+            Start_Index :=
+              Natural (Types.Element (Type_Name).Storage_Pool.Length) + 1;
+            End_Index := Start_Index + Instance_Count - 1;
             Create_Objects (Type_Name, Instance_Count);
          end if;
 
@@ -147,7 +149,9 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
             declare
                Field_Id : Long := Long (Byte_Reader.Read_v64 (Input_Stream));
             begin
-               if (Known_Fields < Field_Count and then Known_Fields < I) or 0 = Instance_Count then
+               if (Known_Fields < Field_Count and then Known_Fields < I) or
+                 0 = Instance_Count
+               then
                   Read_Field_Declaration (Type_Name, Field_Id);
                   Start_Index := 1;
                end if;
@@ -158,17 +162,17 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
                end if;
 
                declare
-                  Field_End         : Long              := Byte_Reader.Read_v64 (Input_Stream);
-                  Data_Length       : Long              := Field_End - Last_End;
+                  Field_End : Long := Byte_Reader.Read_v64 (Input_Stream);
+                  Data_Length       : Long := Field_End - Last_End;
                   Field_Declaration : Field_Information :=
-                     Types.Element (Type_Name).Fields.Element (Positive (Field_Index));
-                  Item              : Queue_Item        := (
-                     Type_Declaration  => Types.Element (Type_Name),
+                    Types.Element (Type_Name).Fields.Element
+                    (Positive (Field_Index));
+                  Item : Queue_Item :=
+                    (Type_Declaration  => Types.Element (Type_Name),
                      Field_Declaration => Field_Declaration,
                      Start_Index       => Start_Index,
                      End_Index         => End_Index,
-                     Data_Length       => Data_Length
-                  );
+                     Data_Length       => Data_Length);
                begin
                   Last_End := Field_End;
                   Read_Queue.Append (Item);
@@ -178,10 +182,16 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
       end;
    end Read_Type_Declaration;
 
-   procedure Read_Field_Declaration (Type_Name : String; Field_Id : Long) is
-      Field_Name : String := String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream)));
+   procedure Read_Field_Declaration
+     (Type_Name : String_Access;
+      Field_Id  : Long)
+   is
+      Field_Name : String_Access :=
+        String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream)));
 
-      procedure Read_Map_Definition (Base_Types : in out Base_Types_Vector.Vector) is
+      procedure Read_Map_Definition
+        (Base_Types : in out Base_Types_Vector.Vector)
+      is
       begin
          Base_Types.Append (Byte_Reader.Read_v64 (Input_Stream));
 
@@ -201,16 +211,21 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
          Constant_Value        : Long := 0;
          Constant_Array_Length : Long := 0;
 
-         --  see comment in file ${packagePrefix.toLowerCase}.ads
-         Base_Types            : Base_Types_Vector.Vector;
+         --  see comment in file age.ads
+         Base_Types : Base_Types_Vector.Vector;
       begin
          case Field_Type is
             --  const i8, i16, i32, i64, v64
-            when 0 => Constant_Value := Long (Byte_Reader.Read_i8 (Input_Stream));
-            when 1 => Constant_Value := Long (Byte_Reader.Read_i16 (Input_Stream));
-            when 2 => Constant_Value := Long (Byte_Reader.Read_i32 (Input_Stream));
-            when 3 => Constant_Value := Byte_Reader.Read_i64 (Input_Stream);
-            when 4 => Constant_Value := Byte_Reader.Read_v64 (Input_Stream);
+            when 0 =>
+               Constant_Value := Long (Byte_Reader.Read_i8 (Input_Stream));
+            when 1 =>
+               Constant_Value := Long (Byte_Reader.Read_i16 (Input_Stream));
+            when 2 =>
+               Constant_Value := Long (Byte_Reader.Read_i32 (Input_Stream));
+            when 3 =>
+               Constant_Value := Byte_Reader.Read_i64 (Input_Stream);
+            when 4 =>
+               Constant_Value := Byte_Reader.Read_v64 (Input_Stream);
 
             --  array T[i]
             when 15 =>
@@ -218,26 +233,28 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
                Base_Types.Append (Byte_Reader.Read_v64 (Input_Stream));
 
             --  array T[], list, set
-            when 17 .. 19 => Base_Types.Append (Byte_Reader.Read_v64 (Input_Stream));
+            when 17 .. 19 =>
+               Base_Types.Append (Byte_Reader.Read_v64 (Input_Stream));
 
             --  map
-            when 20 => Read_Map_Definition (Base_Types);
+            when 20 =>
+               Read_Map_Definition (Base_Types);
 
-            when others => null;
+            when others =>
+               null;
          end case;
 
          declare
-            New_Field : Field_Information := new Field_Declaration'(
-               id                    => Field_Id,
-               Size                  => Field_Name'Length,
-               Name                  => Field_Name,
-               F_Type                => Field_Type,
-               Constant_Value        => Constant_Value,
-               Constant_Array_Length => Constant_Array_Length,
-               Base_Types            => Base_Types,
-               Known                 => False,
-               Written               => True
-            );
+            New_Field : Field_Information :=
+              new Field_Declaration'
+                (id                    => Field_Id,
+                 Name                  => Field_Name,
+                 F_Type                => Field_Type,
+                 Constant_Value        => Constant_Value,
+                 Constant_Array_Length => Constant_Array_Length,
+                 Base_Types            => Base_Types,
+                 Known                 => False,
+                 Written               => True);
          begin
             Types.Element (Type_Name).Fields.Append (New_Field);
          end;
@@ -252,10 +269,10 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
       Read_Queue.Clear;
    end Read_Field_Data;
 
-   procedure Create_Objects (
-      Type_Name      : String;
-      Instance_Count : Natural
-   ) is
+   procedure Create_Objects
+     (Type_Name      : String_Access;
+      Instance_Count : Natural)
+   is
    begin
 ${
       /**
@@ -307,13 +324,18 @@ ${
        * Provides the type record information with the fields and their default values of all types.
        */
       for (d ← IR) {
-        output += s"""      if ${name(d)}_Type_Skillname = Type_Name then
-         declare
-${
-          var output = s"""            ${name(d)}_Type_Declaration : Type_Information := Types.Element (${name(d)}_Type_Skillname);\r\n"""
+        output += s"""      if Equals (${name(d)}_Type_Skillname, Type_Name) then
+         declare${
+          var output = s"""
+            ${name(d)}_Type_Declaration : Type_Information :=
+              Types.Element (${name(d)}_Type_Skillname);
+"""
           val superTypes = getSuperTypes(d).toList.reverse
           superTypes.foreach({ t ⇒
-            output += s"""            ${name(t)}_Type_Declaration : Type_Information := Types.Element (${name(t)}_Type_Skillname);\r\n"""
+            output += s"""
+            ${name(t)}_Type_Declaration : Type_Information :=
+              Types.Element (${name(t)}_Type_Skillname);
+"""
           })
           output.stripLineEnd
         }
@@ -340,7 +362,8 @@ ${
                end;
             end loop;
          end;
-      end if;\r\n"""
+      end if;
+"""
       }
       if (output.isEmpty)
         "null;"
@@ -349,7 +372,9 @@ ${
     }
    end Create_Objects;
 
-   procedure Read_Queue_Vector_Iterator (Iterator : Read_Queue_Vector.Cursor) is
+   procedure Read_Queue_Vector_Iterator
+     (Iterator : Read_Queue_Vector.Cursor)
+   is
       use Storage_Pool_Vector;
 
       Item       : Queue_Item := Read_Queue_Vector.Element (Iterator);
@@ -358,10 +383,11 @@ ${
       Type_Declaration  : Type_Information          := Item.Type_Declaration;
       Field_Declaration : Field_Information         := Item.Field_Declaration;
       Storage_Pool      : Storage_Pool_Array_Access :=
-         new Storage_Pool_Array (1 .. Natural (Type_Declaration.Storage_Pool.Length));
+        new Storage_Pool_Array
+        (1 .. Natural (Type_Declaration.Storage_Pool.Length));
 
-      Type_Name  : String := Type_Declaration.Name;
-      Field_Name : String := Field_Declaration.Name;
+      Type_Name  : String_Access := Type_Declaration.Name;
+      Field_Name : String_Access := Field_Declaration.Name;
 
       procedure Iterate (Position : Cursor) is
          Index : Positive := To_Index (Position);
@@ -371,14 +397,15 @@ ${
       pragma Inline (Iterate);
    begin
       Type_Declaration.Storage_Pool.Iterate (Iterate'Access);
-
 ${
       /**
        * Reads the field data of all fields.
        */
       (for (t ← IR; f ← t.getFields if !f.isAuto() && !f.isIgnored())
         yield s"""
-      if ${name(t)}_Type_Skillname = Type_Name and then ${name(t)}_Type_${name(f)}_Field_Skillname = Field_Name then
+      if Equals (${name(t)}_Type_Skillname, Type_Name)
+        and then Equals (${name(t)}_Type_${name(f)}_Field_Skillname, Field_Name)
+      then
          for I in Item.Start_Index .. Item.End_Index loop
             declare
                Object : ${name(t)}_Type_Access := ${name(t)}_Type_Access (Storage_Pool (I));
@@ -387,9 +414,8 @@ ${
          end loop;
          Skip_Bytes := False;
       end if;
-""").mkString("")
+""").mkString
     }
-
       if True = Skip_Bytes then
          Byte_Reader.Skip_Bytes (Input_Stream, Item.Data_Length);
       end if;
@@ -397,54 +423,56 @@ ${
       Free (Storage_Pool);
    end Read_Queue_Vector_Iterator;
 
-   function Read_Annotation (Input_Stream : ASS_IO.Stream_Access) return Skill_Type_Access is
+   function Read_Annotation
+     (Input_Stream : ASS_IO.Stream_Access) return Skill_Type_Access
+   is
       Base_Type_Name : v64 := Byte_Reader.Read_v64 (Input_Stream);
       Index          : v64 := Byte_Reader.Read_v64 (Input_Stream);
    begin
       if 0 = Base_Type_Name then
          return null;
       else
-         return Types.Element (String_Pool.Element (Natural (Base_Type_Name))).Storage_Pool.Element (Positive (Index));
+         return Types.Element (String_Pool.Element (Natural (Base_Type_Name)))
+             .Storage_Pool.Element
+           (Positive (Index));
       end if;
    end Read_Annotation;
 
-   function Read_String (Input_Stream : ASS_IO.Stream_Access) return String_Access is
-      (new String'(String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream)))));
-
+   function Read_String
+     (Input_Stream : ASS_IO.Stream_Access) return String_Access is
+     (String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream))));
 ${
-      var output = "";
       /**
        * Reads the skill id of a given object.
        */
-      for (d ← IR) {
-        output += s"""   function Read_${name(d)}_Type (Input_Stream : ASS_IO.Stream_Access) return ${name(d)}_Type_Access is
+      (for (t ← IR) yield s"""
+   function Read_${name(t)}_Type
+     (Input_Stream : ASS_IO.Stream_Access) return ${name(t)}_Type_Access
+   is
       Index : Long := Byte_Reader.Read_v64 (Input_Stream);
    begin
       if 0 = Index then
          return null;
       else
-         return ${name(d)}_Type_Access (Types.Element (${name(if (null == d.getSuperType) d else d.getBaseType)}_Type_Skillname).Storage_Pool.Element (Positive (Index)));
+         return ${name(t)}_Type_Access
+             (Types.Element (${name(if (null == t.getSuperType) t else t.getBaseType)}_Type_Skillname).Storage_Pool.Element
+              (Positive (Index)));
       end if;
-   end Read_${name(d)}_Type;\r\n\r\n"""
-      }
-      output.stripSuffix("\r\n")
+   end Read_${name(t)}_Type;
+""").mkString
     }
    procedure Update_Storage_Pool_Start_Index is
-   begin
-${
-      var output = "";
-      /**
-       * Corrects the SPSI (storage pool start index) of all types.
-       */
-      for (d ← IR) {
-        output += s"""      if Types.Contains (${name(d)}_Type_Skillname) then
-         Types.Element (${name(d)}_Type_Skillname).spsi := Natural (Types.Element (${name(d)}_Type_Skillname).Storage_Pool.Length);
-      end if;\r\n"""
-      }
-      if (output.isEmpty())
-        "null;"
+   begin${
+      if (IR.isEmpty) "\n      null;"
       else
-        output.stripSuffix("\r\n")
+        /**
+         * Corrects the SPSI (storage pool start index) of all types.
+         */
+        (for (t ← IR) yield s"""
+      if Types.Contains (${name(t)}_Type_Skillname) then
+         Types.Element (${name(t)}_Type_Skillname).spsi :=
+           Natural (Types.Element (${name(t)}_Type_Skillname).Storage_Pool.Length);
+      end if;""").mkString
     }
    end Update_Storage_Pool_Start_Index;
 

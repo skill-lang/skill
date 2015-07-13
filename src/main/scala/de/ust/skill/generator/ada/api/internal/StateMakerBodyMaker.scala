@@ -27,13 +27,11 @@ package body ${packagePrefix.capitalize}.Api.Internal.State_Maker is
       (for (t ← IR) yield s"""
       if not Types.Contains (${name(t)}_Type_Skillname) then
          declare
-            Type_Name    : String := ${name(t)}_Type_Skillname;
-            Super_Name   : String := ${if (null == t.getSuperType) "\"\"" else s"${name(t.getSuperType)}_Type_Skillname"};
+            Type_Name    : String_Access := ${name(t)}_Type_Skillname;
+            Super_Name   : String_Access := ${if (null == t.getSuperType) "null" else s"${name(t.getSuperType)}_Type_Skillname"};
             Fields       : Fields_Vector.Vector;
             Storage_Pool : Storage_Pool_Vector.Vector;
             New_Type     : Type_Information := new Type_Declaration'(
-               Type_Size    => Type_Name'Length,
-               Super_Size   => Super_Name'Length,
                id           => Long (Natural (Types.Length) + 32),
                Name         => Type_Name,
                Super_Name   => Super_Name,
@@ -61,12 +59,11 @@ ${
         output += t.getFields.filter({ f ⇒ !f.isAuto && !f.isIgnored }).map({ f ⇒
           s"""      if not Has_Field (Types.Element (${name(t)}_Type_Skillname), ${name(t)}_Type_${name(f)}_Field_Skillname) then
          declare
-            Type_Name  : String := ${name(t)}_Type_Skillname;
-            Field_Name : String := ${name(t)}_Type_${name(f)}_Field_Skillname;
+            Type_Name  : String_Access := ${name(t)}_Type_Skillname;
+            Field_Name : String_Access := ${name(t)}_Type_${name(f)}_Field_Skillname;
             Base_Types : Base_Types_Vector.Vector;
             New_Field  : Field_Information := new Field_Declaration'(
                id                    => Long (Natural (Types.Element (Type_Name).Fields.Length) + 1),
-               Size                  => Field_Name'Length,
                Name                  => Field_Name,
                F_Type                => ${mapTypeToId(f.getType, f)},
                Constant_Value        => ${f.constantValue},
@@ -115,7 +112,7 @@ ${
 
    function Has_Field (
       Type_Declaration : Type_Information;
-      Field_Name       : String
+      Field_Name       : String_Access
    ) return Boolean is
       use Fields_Vector;
 
@@ -136,7 +133,7 @@ ${
 
    function Get_Field (
       Type_Declaration : Type_Information;
-      Field_Name       : String
+      Field_Name       : String_Access
    ) return Field_Information is
       use Fields_Vector;
 

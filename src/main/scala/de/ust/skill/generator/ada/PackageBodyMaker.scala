@@ -30,7 +30,7 @@ package body ${packagePrefix.capitalize} is
    function Hash (Element : String_Access) return Ada.Containers.Hash_Type is
       (Ada.Strings.Hash (Element.all));
 
-   function "=" (Left, Right : String_Access) return Boolean is
+   function Equals (Left, Right : String_Access) return Boolean is
       (Left = Right or else ((Left /= null and Right /= null) and then Left.all = Right.all));
 
    function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type is

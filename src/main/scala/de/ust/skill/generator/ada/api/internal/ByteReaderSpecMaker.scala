@@ -39,7 +39,7 @@ private package ${packagePrefix.capitalize}.Api.Internal.Byte_Reader is
    function Read_String (
       Stream : ASS_IO.Stream_Access;
       Length : i32
-   ) return String;
+   ) return String_Access;
 
    procedure Skip_Bytes (
       Stream : ASS_IO.Stream_Access;

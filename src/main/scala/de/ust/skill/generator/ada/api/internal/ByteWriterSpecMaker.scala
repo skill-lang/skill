@@ -62,7 +62,7 @@ private package ${packagePrefix.capitalize}.Api.Internal.Byte_Writer is
    );
    procedure Write_String (
       Stream : ASS_IO.Stream_Access;
-      Value  : String
+      Value  : String_Access
    );
 
 private

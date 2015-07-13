@@ -14,8 +14,7 @@ trait PackageSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}.ads""")
 
     out.write(s"""
-with Ada.Containers.Indefinite_Hashed_Maps;
-with Ada.Containers.Indefinite_Vectors;
+with Ada.Containers.Hashed_Maps;
 with Ada.Containers.Vectors;
 with Ada.Strings.Hash;
 with Ada.Unchecked_Conversion;
@@ -28,7 +27,6 @@ ${
       for (d ← IR) {
         var doublyLinkedListNeeded = false;
         var hashedSetsNeeded = false;
-        var hashedMapsNeeded = false;
 
         d.getFields.filter({ f ⇒ !f.isIgnored }).foreach({ f ⇒
           f.getType match {
@@ -41,11 +39,6 @@ ${
               if (!hashedSetsNeeded) {
                 output += "with Ada.Containers.Hashed_Sets;\r\n"
                 hashedSetsNeeded = true
-              }
-            case t : MapType ⇒
-              if (!hashedMapsNeeded) {
-                output += "with Ada.Containers.Hashed_Maps;\r\n"
-                hashedMapsNeeded = true
               }
             case _ ⇒ null
           }
@@ -88,12 +81,13 @@ package ${packagePrefix.capitalize} is
    --  Utils  --
    -------------
 
-   function Hash (Element : Short_Short_Integer) return Ada.Containers.Hash_Type;
+   function Hash
+     (Element : Short_Short_Integer) return Ada.Containers.Hash_Type;
    function Hash (Element : Short) return Ada.Containers.Hash_Type;
    function Hash (Element : Integer) return Ada.Containers.Hash_Type;
    function Hash (Element : Long) return Ada.Containers.Hash_Type;
    function Hash (Element : String_Access) return Ada.Containers.Hash_Type;
-   function "=" (Left, Right : String_Access) return Boolean;
+   function Equals (Left, Right : String_Access) return Boolean;
 
    -----------------------
    --  Specified Types  --
@@ -107,7 +101,7 @@ ${
         s""" 
 ${comment(t)}
    type ${nameT}_Type is new Skill_Type with private;
-   ${nameT}_Type_Skillname       : aliased String := "${t.getSkillName}";
+   ${nameT}_Type_Skillname : String_Access := new String'("${t.getSkillName}");
    type ${nameT}_Type_Access is access all ${nameT}_Type;
    type ${nameT}_Type_Array is array (Natural range <>) of ${nameT}_Type_Access;
    type ${nameT}_Type_Accesses is access ${nameT}_Type_Array;
@@ -166,7 +160,7 @@ ${
           t ← IR;
           f ← t.getAllFields if !f.isIgnored()
         ) yield s"""
-   ${name(t)}_Type_${name(f)}_Field_Skillname : aliased String := "${f.getSkillName}";
+   ${name(t)}_Type_${name(f)}_Field_Skillname : String_Access := new String'("${f.getSkillName}");
 ${comment(f)}   function Get_${name(f)} (Object : ${name(t)}_Type) return ${mapType(f.getType, f.getDeclaredIn, f)};
 ${
           if (f.isConstant) ""
@@ -184,12 +178,11 @@ ${
 private
 
    type Skill_States is (Unused, Append, Create, Read, Write);
-   Skill_State_Error : exception;
+   Skill_Error : exception;
 
-   type Skill_Type is abstract tagged
-      record
-         skill_id : Natural;
-      end record;
+   type Skill_Type is abstract tagged record
+      skill_id : Natural;
+   end record;
 ${
       /**
        * Provides the record types of the type declarations.
@@ -216,13 +209,18 @@ ${
    ------------------
    --  STRING POOL --
    ------------------
-   package String_Pool_Vector is new Ada.Containers.Indefinite_Vectors (Positive, String);
+   package String_Pool_Vector is new Ada.Containers.Vectors
+     (Positive,
+      String_Access,
+      "=" => Equals);
    type String_Pool_Access is access String_Pool_Vector.Vector;
 
    --------------------
    --  STORAGE POOL  --
    --------------------
-   package Storage_Pool_Vector is new Ada.Containers.Vectors (Positive, Skill_Type_Access);
+   package Storage_Pool_Vector is new Ada.Containers.Vectors
+     (Positive,
+      Skill_Type_Access);
 
    --------------------------
    --  FIELD DECLARATIONS  --
@@ -235,17 +233,16 @@ ${
    --
    package Base_Types_Vector is new Ada.Containers.Vectors (Positive, Long);
 
-   type Field_Declaration (Size : Positive) is
-      record
-         id                    : Long;
-         Name                  : String (1 .. Size);
-         F_Type                : Long;
-         Constant_Value        : Long;
-         Constant_Array_Length : Long;
-         Base_Types            : Base_Types_Vector.Vector;
-         Known                 : Boolean;
-         Written               : Boolean;
-      end record;
+   type Field_Declaration is record
+      id                    : Long;
+      Name                  : String_Access;
+      F_Type                : Long;
+      Constant_Value        : Long;
+      Constant_Array_Length : Long;
+      Base_Types            : Base_Types_Vector.Vector;
+      Known                 : Boolean;
+      Written               : Boolean;
+   end record;
    type Field_Information is access Field_Declaration;
 
    package Fields_Vector is new Ada.Containers.Vectors (Positive, Field_Information);
@@ -253,34 +250,35 @@ ${
    -------------------------
    --  TYPE DECLARATIONS  --
    -------------------------
-   type Type_Declaration (Type_Size : Positive; Super_Size : Natural) is
-      record
-         id           : Long;
-         Name         : String (1 .. Type_Size);
-         Super_Name   : String (1 .. Super_Size);
-         spsi         : Natural;
-         lbpsi        : Natural;
-         Fields       : Fields_Vector.Vector;
-         Storage_Pool : Storage_Pool_Vector.Vector;
-         Known        : Boolean;
-         Written      : Boolean;
-      end record;
+   type Type_Declaration is record
+      id           : Long;
+      Name         : String_Access;
+      Super_Name   : String_Access;
+      spsi         : Natural;
+      lbpsi        : Natural;
+      Fields       : Fields_Vector.Vector;
+      Storage_Pool : Storage_Pool_Vector.Vector;
+      Known        : Boolean;
+      Written      : Boolean;
+   end record;
    type Type_Information is access Type_Declaration;
 
-   package Types_Hash_Map is new Ada.Containers.Indefinite_Hashed_Maps
-      (String, Type_Information, Ada.Strings.Hash, "=");
+   package Types_Hash_Map is new Ada.Containers.Hashed_Maps
+     (String_Access,
+      Type_Information,
+      Hash,
+      Equals);
    type Types_Hash_Map_Access is access Types_Hash_Map.Map;
 
    -------------------
    --  SKILL STATE  --
    -------------------
-   type Skill_State is
-      record
-         File_Name   : String_Access;
-         State       : Skill_States          := Unused;
-         String_Pool : String_Pool_Access    := new String_Pool_Vector.Vector;
-         Types       : Types_Hash_Map_Access := new Types_Hash_Map.Map;
-      end record;
+   type Skill_State is record
+      File_Name   : String_Access;
+      State       : Skill_States          := Unused;
+      String_Pool : String_Pool_Access    := new String_Pool_Vector.Vector;
+      Types       : Types_Hash_Map_Access := new Types_Hash_Map.Map;
+   end record;
 
 end ${packagePrefix.capitalize};
 """)

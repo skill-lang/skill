@@ -68,9 +68,9 @@ private
    procedure Prepare_String_Pool;
    procedure Prepare_String_Pool_Iterator (Iterator : Types_Hash_Map.Cursor);
 
-   function Get_String_Index (Value : String) return Positive;
+   function Get_String_Index (Value : String_Access) return Positive;
    procedure Put_String (
-      Value : String;
+      Value : String_Access;
       Safe  : Boolean := False
    );
    procedure Write_String_Pool;
@@ -129,7 +129,7 @@ private
       ).mkString
     }
 
-   function Get_Object_Type (Object : Skill_Type_Access) return String;
+   function Get_Object_Type (Object : Skill_Type_Access) return String_Access;
 
    ------------
    --  SPSI  --
