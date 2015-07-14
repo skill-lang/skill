@@ -42,10 +42,7 @@ with Ada.Unchecked_Deallocation;
 
 package ${packagePrefix.capitalize}.Api.Internal.File_Reader is
 
-   procedure Read (
-      State     : access Skill_State;
-      File_Name :        String
-   );
+   procedure Read (State : access Skill_State; File_Name : String);
 
 private
 
@@ -53,16 +50,17 @@ private
    Input_Stream : ASS_IO.Stream_Access;
 
    --  a queue item for the field data of a field
-   type Queue_Item is
-      record
-         Type_Declaration  : Type_Information;
-         Field_Declaration : Field_Information;
-         Start_Index       : Natural;
-         End_Index         : Natural;
-         Data_Length       : Long;
-      end record;
+   type Queue_Item is record
+      Type_Declaration  : Type_Information;
+      Field_Declaration : Field_Information;
+      Start_Index       : Natural;
+      End_Index         : Natural;
+      Data_Length       : Long;
+   end record;
 
-   package Read_Queue_Vector is new Ada.Containers.Vectors (Positive, Queue_Item);
+   package Read_Queue_Vector is new Ada.Containers.Vectors
+     (Positive,
+      Queue_Item);
    Read_Queue : Read_Queue_Vector.Vector;
 
    --------------------
@@ -76,13 +74,14 @@ private
    --  PHASE 1
    procedure Read_Type_Block;
    procedure Read_Type_Declaration (Last_End : in out Long);
-   procedure Read_Field_Declaration (Type_Name : String_Access; Field_Id : Long);
+   procedure Read_Field_Declaration
+     (Type_Info : Type_Information;
+      Field_Id  : Long);
    procedure Read_Field_Data;
 
-   procedure Create_Objects (
-      Type_Name      : String_Access;
-      Instance_Count : Natural
-   );
+   procedure Create_Objects
+     (Type_Name      : String_Access;
+      Instance_Count : Natural);
 
    --  PHASE 2
    procedure Read_Queue_Vector_Iterator (Iterator : Read_Queue_Vector.Cursor);
@@ -90,15 +89,18 @@ private
    ----------------------
    --  READ FUNCTIONS  --
    ----------------------
-   function Read_Annotation (Input_Stream : ASS_IO.Stream_Access) return Skill_Type_Access;
-   function Read_String (Input_Stream : ASS_IO.Stream_Access) return String_Access;
+   function Read_Annotation
+     (Input_Stream : ASS_IO.Stream_Access) return Skill_Type_Access;
+   function Read_String
+     (Input_Stream : ASS_IO.Stream_Access) return String_Access;
 ${
       /**
        * Reads the skill id of a given object.
        */
       (for (t ← IR)
         yield s"""
-   function Read_${name(t)}_Type (Input_Stream : ASS_IO.Stream_Access) return ${name(t)}_Type_Access;"""
+   function Read_${name(t)}_Type
+     (Input_Stream : ASS_IO.Stream_Access) return ${name(t)}_Type_Access;"""
       ).mkString
     }
 

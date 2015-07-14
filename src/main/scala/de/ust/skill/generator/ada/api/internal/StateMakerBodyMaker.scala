@@ -28,13 +28,13 @@ package body ${packagePrefix.capitalize}.Api.Internal.State_Maker is
       if not Types.Contains (${name(t)}_Type_Skillname) then
          declare
             Type_Name    : String_Access := ${name(t)}_Type_Skillname;
-            Super_Name   : String_Access := ${if (null == t.getSuperType) "null" else s"${name(t.getSuperType)}_Type_Skillname"};
+            Super_Type   : Type_Information := ${if (null == t.getSuperType) "null" else s"Types.Element(${name(t.getSuperType)}_Type_Skillname)"};
             Fields       : Fields_Vector.Vector;
             Storage_Pool : Storage_Pool_Vector.Vector;
             New_Type     : Type_Information := new Type_Declaration'(
                id           => Long (Natural (Types.Length) + 32),
                Name         => Type_Name,
-               Super_Name   => Super_Name,
+               Super_Type   => Super_Type,
                spsi         => 0,
                lbpsi        => 0,
                Fields       => Fields,

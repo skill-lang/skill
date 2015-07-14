@@ -89,6 +89,13 @@ package body ${packagePrefix.capitalize}.Api is
       Free (State.Types);
 
       State.State := Unused;
+   exception
+      when E : Storage_Error =>
+         raise Skill_Error
+           with "Failed to close state with storage_error. Double close?";
+      when E : Constraint_Error =>
+         raise Skill_Error
+           with "Failed to close state with constraint_error. Double close?";
    end Close;
 
    procedure Create (State : access Skill_State) is
@@ -202,13 +209,19 @@ ${
       null;
    end New_${nameD};
 
-   function ${nameD}s_Size (State : access Skill_State) return Natural is
+   function ${nameD}s_Size
+     (State : access Skill_State) return Natural
+   is
       (Natural (State.Types.Element (${nameD}_Type_Skillname).Storage_Pool.Length));
 
-   function Get_${nameD} (State : access Skill_State; Index : Natural) return ${nameD}_Type_Access is
+   function Get_${nameD}
+     (State : access Skill_State; Index : Natural) return ${nameD}_Type_Access
+   is
       (${nameD}_Type_Access (State.Types.Element (${nameD}_Type_Skillname).Storage_Pool.Element (Index)));
 
-   function Get_${nameD}s (State : access Skill_State) return ${nameD}_Type_Accesses is
+   function Get_${nameD}s
+     (State : access Skill_State) return ${nameD}_Type_Accesses
+   is
       use Storage_Pool_Vector;
 
       Type_Declaration : Type_Information :=

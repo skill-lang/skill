@@ -64,10 +64,10 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
             Type_Declaration : Type_Information := Element (Position);
          begin
             for I in 1 .. Natural (Type_Declaration.Fields.Length) loop
-               Type_Declaration.Fields.Element(I).Written := False;
+               Type_Declaration.Fields.Element (I).Written := False;
             end loop;
 
-            Type_Declaration.spsi := 0;
+            Type_Declaration.spsi    := 0;
             Type_Declaration.Written := False;
          end Iterate;
          pragma Inline (Iterate);
@@ -136,10 +136,8 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Writer is
    procedure Prepare_String_Pool_Iterator (Iterator : Types_Hash_Map.Cursor) is
       Type_Declaration : Type_Information := Types_Hash_Map.Element (Iterator);
       Type_Name        : String_Access    := Type_Declaration.Name;
-      Super_Name       : String_Access    := Type_Declaration.Super_Name;
    begin
       Put_String (Type_Name, Safe => True);
-      Put_String (Super_Name, Safe => True);
 
       declare
          use Fields_Vector;
@@ -443,7 +441,6 @@ ${
       Ensure_Type_Order;
 
       Byte_Writer.Write_v64 (Output_Stream, Count_Instantiated_Types);
-
 ${
       /**
        * write types in type order (as guaranteed by IR)
@@ -459,7 +456,9 @@ ${
       Copy_Field_Data;
    end Write_Type_Block;
 
-   function Count_Known_Fields (Type_Declaration : Type_Information) return Long is
+   function Count_Known_Fields
+     (Type_Declaration : Type_Information) return Long
+   is
       use Fields_Vector;
 
       Return_Value : Long := 0;
@@ -477,7 +476,9 @@ ${
       return Return_Value;
    end Count_Known_Fields;
 
-   function Count_Known_Unwritten_Fields (Type_Declaration : Type_Information) return Long is
+   function Count_Known_Unwritten_Fields
+     (Type_Declaration : Type_Information) return Long
+   is
       use Fields_Vector;
 
       Return_Value : Long := 0;
@@ -496,43 +497,51 @@ ${
    end Count_Known_Unwritten_Fields;
 
    procedure Write_Type_Declaration (Type_Declaration : Type_Information) is
-      Type_Name       : String_Access := Type_Declaration.Name;
-      Super_Name      : String_Access := Type_Declaration.Super_Name;
-      Field_Count     : Natural       := Natural (Type_Declaration.Fields.Length);
-      Instances_Count : Natural       := Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi;
+      Type_Name       : String_Access    := Type_Declaration.Name;
+      Super_Type      : Type_Information := Type_Declaration.Super_Type;
+      Field_Count     : Natural := Natural (Type_Declaration.Fields.Length);
+      Instances_Count : Natural :=
+        Natural (Type_Declaration.Storage_Pool.Length) - Type_Declaration.spsi;
    begin
       -- write instantiated types only
       if not Is_Type_Instantiated (Type_Declaration) then
          return;
       end if;
 
-      Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Type_Name)));
+      Byte_Writer.Write_v64
+        (Output_Stream,
+         Long (Get_String_Index (Type_Name)));
       Byte_Writer.Write_v64 (Output_Stream, Long (Instances_Count));
 
       if not Type_Declaration.Written then
          Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
 
-         if null /= Super_Name then
-            Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Super_Name)));
+         if null /= Super_Type then
+            Byte_Writer.Write_v64 (Output_Stream, Long (Super_Type.id));
          else
-            Byte_Writer.Write_v64 (Output_Stream, 0);
+            Byte_Writer.Write_i8 (Output_Stream, 0);
          end if;
       end if;
 
-      if null /= Super_Name then
+      if null /= Super_Type then
          Byte_Writer.Write_v64 (Output_Stream, Long (Type_Declaration.lbpsi));
       end if;
 
       if Write = Modus then
-         Byte_Writer.Write_v64 (Output_Stream, Count_Known_Fields (Type_Declaration));
+         Byte_Writer.Write_v64
+           (Output_Stream,
+            Count_Known_Fields (Type_Declaration));
 
          --  write known fields
          for I in 1 .. Field_Count loop
             declare
-               Field_Declaration : Field_Information := Type_Declaration.Fields.Element (Positive (I));
+               Field_Declaration : Field_Information :=
+                 Type_Declaration.Fields.Element (Positive (I));
             begin
                if Field_Declaration.Known then
-                  Write_Field_Declaration (Type_Declaration, Field_Declaration);
+                  Write_Field_Declaration
+                    (Type_Declaration,
+                     Field_Declaration);
                end if;
             end;
          end loop;
@@ -540,17 +549,24 @@ ${
 
       if Append = Modus then
          if 0 = Instances_Count then
-            Byte_Writer.Write_v64 (Output_Stream, Count_Known_Unwritten_Fields (Type_Declaration));
+            Byte_Writer.Write_v64
+              (Output_Stream,
+               Count_Known_Unwritten_Fields (Type_Declaration));
          else
-            Byte_Writer.Write_v64 (Output_Stream, Count_Known_Fields (Type_Declaration));
+            Byte_Writer.Write_v64
+              (Output_Stream,
+               Count_Known_Fields (Type_Declaration));
 
             --  write known written fields
             for I in 1 .. Field_Count loop
                declare
-                  Field_Declaration : Field_Information := Type_Declaration.Fields.Element (Positive (I));
+                  Field_Declaration : Field_Information :=
+                    Type_Declaration.Fields.Element (Positive (I));
                begin
                   if Field_Declaration.Known and Field_Declaration.Written then
-                     Write_Field_Declaration (Type_Declaration, Field_Declaration);
+                     Write_Field_Declaration
+                       (Type_Declaration,
+                        Field_Declaration);
                   end if;
                end;
             end loop;
@@ -559,10 +575,15 @@ ${
          --  write known unwritten fields
          for I in 1 .. Field_Count loop
             declare
-               Field_Declaration : Field_Information := Type_Declaration.Fields.Element (Positive (I));
+               Field_Declaration : Field_Information :=
+                 Type_Declaration.Fields.Element (Positive (I));
             begin
-               if Field_Declaration.Known and not Field_Declaration.Written then
-                  Write_Field_Declaration (Type_Declaration, Field_Declaration);
+               if Field_Declaration.Known and
+                 not Field_Declaration.Written
+               then
+                  Write_Field_Declaration
+                    (Type_Declaration,
+                     Field_Declaration);
                end if;
             end;
          end loop;
@@ -571,14 +592,14 @@ ${
       Type_Declaration.Written := True;
    end Write_Type_Declaration;
 
-   procedure Write_Field_Declaration (
-      Type_Declaration  : Type_Information;
-      Field_Declaration : Field_Information
-   ) is
+   procedure Write_Field_Declaration
+     (Type_Declaration  : Type_Information;
+      Field_Declaration : Field_Information)
+   is
       Type_Name  : String_Access := Type_Declaration.Name;
       Field_Name : String_Access := Field_Declaration.Name;
       Field_Type : Long          := Field_Declaration.F_Type;
-      Size       : Long          := Field_Data_Size (Type_Declaration, Field_Declaration);
+      Size : Long := Field_Data_Size (Type_Declaration, Field_Declaration);
 
       --  see comment in file date.ads
       Base_Types : Base_Types_Vector.Vector := Field_Declaration.Base_Types;
@@ -586,24 +607,48 @@ ${
       Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.id);
 
       if not Field_Declaration.Written then
-         Byte_Writer.Write_v64 (Output_Stream, Long (Get_String_Index (Field_Name)));
+         Byte_Writer.Write_v64
+           (Output_Stream,
+            Long (Get_String_Index (Field_Name)));
          Byte_Writer.Write_v64 (Output_Stream, Long (Field_Type));
 
          case Field_Type is
             --  const i8, i16, i32, i64, v64
-            when 0 => Byte_Writer.Write_i8 (Output_Stream, i8 (Field_Declaration.Constant_Value));
-            when 1 => Byte_Writer.Write_i16 (Output_Stream, Short (Field_Declaration.Constant_Value));
-            when 2 => Byte_Writer.Write_i32 (Output_Stream, i32 (Field_Declaration.Constant_Value));
-            when 3 => Byte_Writer.Write_i64 (Output_Stream, Field_Declaration.Constant_Value);
-            when 4 => Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Constant_Value);
+            when 0 =>
+               Byte_Writer.Write_i8
+                 (Output_Stream,
+                  i8 (Field_Declaration.Constant_Value));
+            when 1 =>
+               Byte_Writer.Write_i16
+                 (Output_Stream,
+                  Short (Field_Declaration.Constant_Value));
+            when 2 =>
+               Byte_Writer.Write_i32
+                 (Output_Stream,
+                  i32 (Field_Declaration.Constant_Value));
+            when 3 =>
+               Byte_Writer.Write_i64
+                 (Output_Stream,
+                  Field_Declaration.Constant_Value);
+            when 4 =>
+               Byte_Writer.Write_v64
+                 (Output_Stream,
+                  Field_Declaration.Constant_Value);
 
             --  array T[i]
             when 15 =>
-               Byte_Writer.Write_v64 (Output_Stream, Long (Field_Declaration.Constant_Array_Length));
-               Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Base_Types.First_Element);
+               Byte_Writer.Write_v64
+                 (Output_Stream,
+                  Long (Field_Declaration.Constant_Array_Length));
+               Byte_Writer.Write_v64
+                 (Output_Stream,
+                  Field_Declaration.Base_Types.First_Element);
 
             --  array T[], list, set
-            when 17 .. 19 => Byte_Writer.Write_v64 (Output_Stream, Field_Declaration.Base_Types.First_Element);
+            when 17 .. 19 =>
+               Byte_Writer.Write_v64
+                 (Output_Stream,
+                  Field_Declaration.Base_Types.First_Element);
 
             --  map
             when 20 =>
@@ -613,8 +658,8 @@ ${
                   Base_Types_Length : Positive := Positive (Base_Types.Length);
 
                   procedure Iterate (Position : Cursor) is
-                     Base_Type_Id : Long := Element (Position);
-                     Index : Positive := Positive (To_Index (Position));
+                     Base_Type_Id : Long     := Element (Position);
+                     Index        : Positive := Positive (To_Index (Position));
                   begin
                      Byte_Writer.Write_v64 (Output_Stream, Base_Type_Id);
 
@@ -627,7 +672,8 @@ ${
                   Base_Types.Iterate (Iterate'Access);
                end;
 
-            when others => null;
+            when others =>
+               null;
          end case;
 
          Byte_Writer.Write_v64 (Output_Stream, 0);  --  restrictions
@@ -639,30 +685,34 @@ ${
       Field_Declaration.Written := True;
    end Write_Field_Declaration;
 
-   function Field_Data_Size (
-      Type_Declaration  : Type_Information;
-      Field_Declaration : Field_Information
-   ) return Long is
+   function Field_Data_Size
+     (Type_Declaration  : Type_Information;
+      Field_Declaration : Field_Information) return Long
+   is
       Current_Index : Long := Long (ASS_IO.Index (Field_Data_File));
       Return_Value  : Long;
    begin
       Byte_Writer.Finalize_Buffer (Output_Stream);
-      Write_Field_Data (Field_Data_Stream, Type_Declaration, Field_Declaration);
+      Write_Field_Data
+        (Field_Data_Stream,
+         Type_Declaration,
+         Field_Declaration);
       Byte_Writer.Finalize_Buffer (Field_Data_Stream);
       Return_Value := Long (ASS_IO.Index (Field_Data_File)) - Current_Index;
       return Return_Value;
    end Field_Data_Size;
 
-   procedure Write_Field_Data (
-      Stream            : ASS_IO.Stream_Access;
+   procedure Write_Field_Data
+     (Stream            : ASS_IO.Stream_Access;
       Type_Declaration  : Type_Information;
-      Field_Declaration : Field_Information
-   ) is
-      Type_Name    : String_Access := Type_Declaration.Name;
-      Field_Name   : String_Access := Field_Declaration.Name;
-      Start_Index  : Positive      := 1;
+      Field_Declaration : Field_Information)
+   is
+      Type_Name    : String_Access             := Type_Declaration.Name;
+      Field_Name   : String_Access             := Field_Declaration.Name;
+      Start_Index  : Positive                  := 1;
       Storage_Pool : Storage_Pool_Array_Access :=
-         new Storage_Pool_Array (1 .. Natural (Type_Declaration.Storage_Pool.Length));
+        new Storage_Pool_Array
+        (1 .. Natural (Type_Declaration.Storage_Pool.Length));
 
       procedure Iterate (Position : Storage_Pool_Vector.Cursor) is
          Index : Positive := Storage_Pool_Vector.To_Index (Position);
@@ -684,10 +734,14 @@ ${
         t ← IR;
         f ← t.getFields if (!f.isAuto && !f.isConstant && !f.isIgnored)
       ) yield s"""
-      if Equals (${name(t)}_Type_Skillname, Type_Name) and then Equals (${name(t)}_Type_${name(f)}_Field_Skillname, Field_Name) then
-         for I in Start_Index .. Natural (Type_Declaration.Storage_Pool.Length) loop
+      if Equals (${name(t)}_Type_Skillname, Type_Name)
+        and then Equals (${name(t)}_Type_${name(f)}_Field_Skillname, Field_Name)
+      then
+         for I in Start_Index .. Natural (Type_Declaration.Storage_Pool.Length)
+         loop
             declare
-               Object : ${name(t)}_Type_Access := ${name(t)}_Type_Access (Storage_Pool (I));
+               Object : ${name(t)}_Type_Access :=
+                 ${name(t)}_Type_Access (Storage_Pool (I));
             ${mapFileWriter(t, f)}
             end;
          end loop;
@@ -701,32 +755,42 @@ ${
    begin
       ASS_IO.Reset (Field_Data_File, ASS_IO.In_File);
       Byte_Reader.Reset_Buffer;
-      for I in Long (ASS_IO.Index (Field_Data_File)) .. Long (ASS_IO.Size (Field_Data_File)) loop
-         Byte_Writer.Write_i8 (Output_Stream, Byte_Reader.Read_i8 (Field_Data_Stream));
+      for I in
+        Long (ASS_IO.Index (Field_Data_File)) ..
+            Long (ASS_IO.Size (Field_Data_File))
+      loop
+         Byte_Writer.Write_i8
+           (Output_Stream,
+            Byte_Reader.Read_i8 (Field_Data_Stream));
       end loop;
    end Copy_Field_Data;
 
-   procedure Write_Annotation (
-      Stream : ASS_IO.Stream_Access;
-      Object : Skill_Type_Access
-   ) is
+   procedure Write_Annotation
+     (Stream : ASS_IO.Stream_Access;
+      Object : Skill_Type_Access)
+   is
       Type_Name : String_Access := Get_Object_Type (Object);
 
-      function Get_Base_Type (Type_Declaration : Type_Information) return String_Access is
-         Super_Name : String_Access := Type_Declaration.Super_Name;
+      function Get_Base_Type
+        (Type_Declaration : Type_Information) return String_Access
+      is
+         T : Type_Information := Type_Declaration;
       begin
-         if null = Super_Name then
-            return Type_Name;
-         else
-            return Get_Base_Type (Types.Element (Super_Name));
-         end if;
+         while (null /= T) loop
+            T := T.Super_Type;
+         end loop;
+
+         return Type_Declaration.Name;
       end Get_Base_Type;
    begin
       if null = Type_Name then
          Byte_Writer.Write_v64 (Stream, 0);
          Byte_Writer.Write_v64 (Stream, 0);
       else
-         Byte_Writer.Write_v64 (Stream, Long (Get_String_Index (Get_Base_Type (Types.Element (Type_Name)))));
+         Byte_Writer.Write_v64
+           (Stream,
+            Long
+              (Get_String_Index (Get_Base_Type (Types.Element (Type_Name)))));
          Byte_Writer.Write_v64 (Stream, Long (Object.skill_id));
       end if;
    end Write_Annotation;

@@ -171,10 +171,13 @@ ${
    );
 """
           }
-        }
-""").mkString
+        }""").mkString
       }"""
     }
+   -- reflective API
+   type Type_Declaration is private;
+   type Type_Information is access Type_Declaration;
+
 private
 
    type Skill_States is (Unused, Append, Create, Read, Write);
@@ -253,7 +256,7 @@ ${
    type Type_Declaration is record
       id           : Long;
       Name         : String_Access;
-      Super_Name   : String_Access;
+      Super_Type   : Type_Information;
       spsi         : Natural;
       lbpsi        : Natural;
       Fields       : Fields_Vector.Vector;
@@ -261,7 +264,6 @@ ${
       Known        : Boolean;
       Written      : Boolean;
    end record;
-   type Type_Information is access Type_Declaration;
 
    package Types_Hash_Map is new Ada.Containers.Hashed_Maps
      (String_Access,

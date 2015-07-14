@@ -17,16 +17,20 @@ trait FileReaderBodyMaker extends GeneralOutputMaker {
     out.write(s"""
 package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
 
-   String_Pool : String_Pool_Access;
-   Types       : Types_Hash_Map_Access;
+   package Type_Vector is new Ada.Containers.Vectors
+     (Positive,
+      Type_Information);
+   type Type_Vector_Access is access Type_Vector.Vector;
 
-   procedure Read (
-      State     : access Skill_State;
-      File_Name :        String
-   ) is
+   String_Pool : String_Pool_Access;
+   Type_Map    : Types_Hash_Map_Access;
+   Types       : Type_Vector_Access;
+
+   procedure Read (State : access Skill_State; File_Name : String) is
    begin
       String_Pool := State.String_Pool;
-      Types       := State.Types;
+      Type_Map    := State.Types;
+      Types       := new Type_Vector.Vector;
 
       Byte_Reader.Reset_Buffer;
 
@@ -63,8 +67,11 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
       --  read strings
       for I in String_Lengths'Range loop
          String_Pool.Append
-            (Byte_Reader.Read_String (Input_Stream, String_Lengths (I)));
+           (Byte_Reader.Read_String (Input_Stream, String_Lengths (I)));
       end loop;
+   exception
+      when E : others =>
+         raise Skill_Error with "malformed string block";
    end Read_String_Block;
 
    procedure Read_Type_Block is
@@ -79,69 +86,67 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
    end Read_Type_Block;
 
    procedure Read_Type_Declaration (Last_End : in out Long) is
-      Type_Name : String_Access :=
+      Type_Name : constant String_Access :=
         String_Pool.Element (Natural (Byte_Reader.Read_v64 (Input_Stream)));
+      Type_Info      : Type_Information;
       Instance_Count : Natural;
       Field_Count    : Long;
    begin
       Instance_Count := Natural (Byte_Reader.Read_v64 (Input_Stream));
 
-      if not Types.Contains (Type_Name) then
+      if not Type_Map.Contains (Type_Name) then
          Skip_Restrictions;
 
          declare
-            procedure Free is new Ada.Unchecked_Deallocation
-              (String,
-               String_Access);
-
-            Super_Name_Index : Long := Byte_Reader.Read_v64 (Input_Stream);
-            Super_Name       : String_Access := null;
+            Super_Type_Index : Long := Byte_Reader.Read_v64 (Input_Stream);
+            Super_Type       : Type_Information := null;
          begin
-            if Super_Name_Index > 0 then
-               Super_Name := String_Pool.Element (Natural (Super_Name_Index));
+            if 0 /= Super_Type_Index then
+               Super_Type := Types.Element (Natural (Super_Type_Index));
             end if;
 
-            declare
-               New_Type_Fields       : Fields_Vector.Vector;
-               New_Type_Storage_Pool : Storage_Pool_Vector.Vector;
-               New_Type              : Type_Information :=
-                 new Type_Declaration'
-                   (id           => Long (Natural (Types.Length) + 32),
-                    Name         => Type_Name,
-                    Super_Name   => Super_Name,
-                    spsi         => 0,
-                    lbpsi        => 0,
-                    Fields       => New_Type_Fields,
-                    Storage_Pool => New_Type_Storage_Pool,
-                    Known        => False,
-                    Written      => True);
-            begin
-               Free (Super_Name);
-               Types.Insert (New_Type.Name, New_Type);
-            end;
+            Type_Info :=
+              new Type_Declaration'
+                (id           => Long (Natural (Types.Length) + 32),
+                 Name         => Type_Name,
+                 Super_Type   => Super_Type,
+                 spsi         => 0,
+                 lbpsi        => 0,
+                 Fields       => Fields_Vector.Empty_Vector,
+                 Storage_Pool => Storage_Pool_Vector.Empty_Vector,
+                 Known        => False,
+                 Written      => True);
+
+            Type_Map.Insert (Type_Name, Type_Info);
+            Types.Append (Type_Info);
+
+         exception
+            when E : others =>
+               raise Skill_Error
+                 with "failed to parse head of declaration of type " &
+                 Type_Name.all;
          end;
+      else
+         Type_Info := Type_Map.Element (Type_Name);
       end if;
 
-      if null /= Types.Element (Type_Name).Super_Name then
-         Types.Element (Type_Name).lbpsi :=
-           Natural (Byte_Reader.Read_v64 (Input_Stream));
+      if null /= Type_Info.Super_Type then
+         Type_Info.lbpsi := Natural (Byte_Reader.Read_v64 (Input_Stream));
       end if;
 
       Field_Count := Byte_Reader.Read_v64 (Input_Stream);
 
       declare
          Field_Index  : Long;
-         Known_Fields : Long := Long (Types.Element (Type_Name).Fields.Length);
+         Known_Fields : Long := Long (Type_Info.Fields.Length);
          Start_Index  : Natural;
          End_Index    : Natural;
       begin
          if 0 = Instance_Count then
-            End_Index :=
-              Natural (Types.Element (Type_Name).Storage_Pool.Length);
+            End_Index := Natural (Type_Info.Storage_Pool.Length);
          else
-            Start_Index :=
-              Natural (Types.Element (Type_Name).Storage_Pool.Length) + 1;
-            End_Index := Start_Index + Instance_Count - 1;
+            Start_Index := Natural (Type_Info.Storage_Pool.Length) + 1;
+            End_Index   := Start_Index + Instance_Count - 1;
             Create_Objects (Type_Name, Instance_Count);
          end if;
 
@@ -152,7 +157,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
                if (Known_Fields < Field_Count and then Known_Fields < I) or
                  0 = Instance_Count
                then
-                  Read_Field_Declaration (Type_Name, Field_Id);
+                  Read_Field_Declaration (Type_Info, Field_Id);
                   Start_Index := 1;
                end if;
 
@@ -165,10 +170,9 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
                   Field_End : Long := Byte_Reader.Read_v64 (Input_Stream);
                   Data_Length       : Long := Field_End - Last_End;
                   Field_Declaration : Field_Information :=
-                    Types.Element (Type_Name).Fields.Element
-                    (Positive (Field_Index));
+                    Type_Info.Fields.Element (Positive (Field_Index));
                   Item : Queue_Item :=
-                    (Type_Declaration  => Types.Element (Type_Name),
+                    (Type_Declaration  => Type_Info,
                      Field_Declaration => Field_Declaration,
                      Start_Index       => Start_Index,
                      End_Index         => End_Index,
@@ -176,14 +180,34 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
                begin
                   Last_End := Field_End;
                   Read_Queue.Append (Item);
+               exception
+                  when E : others =>
+                     raise Skill_Error
+                       with "failed to create field " &
+                       Field_Declaration.Name.all &
+                       " of type " &
+                       Type_Name.all;
                end;
+
+            exception
+               when E : others =>
+                  raise Skill_Error
+                    with "failed to parse field #" &
+                    Long'Image (Field_Id) &
+                    " of type " &
+                    Type_Name.all;
             end;
          end loop;
+      exception
+         when E : others =>
+            raise Skill_Error
+              with "failed to parse field declarations of type " &
+              Type_Name.all;
       end;
    end Read_Type_Declaration;
 
    procedure Read_Field_Declaration
-     (Type_Name : String_Access;
+     (Type_Info : Type_Information;
       Field_Id  : Long)
    is
       Field_Name : String_Access :=
@@ -256,7 +280,7 @@ package body ${packagePrefix.capitalize}.Api.Internal.File_Reader is
                  Known                 => False,
                  Written               => True);
          begin
-            Types.Element (Type_Name).Fields.Append (New_Field);
+            Type_Info.Fields.Append (New_Field);
          end;
       end;
 
@@ -282,11 +306,13 @@ ${
         var output = "";
         val superTypes = getSuperTypes(d).toList.reverse
         superTypes.foreach({ t ⇒
-          output += s"""\r\n\r\n                  declare
+          output += s"""
+                  declare
                      Sub_Type   : Type_Information := ${name(d)}_Type_Declaration;
                      Super_Type : Type_Information := ${name(t)}_Type_Declaration;
                      Index      : Natural          := (Sub_Type.lbpsi - Super_Type.lbpsi) + Super_Type.spsi + I;
-                  begin\r\n"""
+                  begin
+"""
           if (t == superTypes.last)
             output += s"""                     declare
                         procedure Free is new Ada.Unchecked_Deallocation (${name(t)}_Type, ${name(t)}_Type_Access);
@@ -295,7 +321,8 @@ ${
                      begin
                         Object.skill_id := Old_Object.skill_id;
                         Free (Old_Object);
-                     end;\r\n"""
+                     end;
+"""
           output += s"""                     Super_Type.Storage_Pool.Replace_Element (Index, Object);
                   end;"""
         })
@@ -328,13 +355,13 @@ ${
          declare${
           var output = s"""
             ${name(d)}_Type_Declaration : Type_Information :=
-              Types.Element (${name(d)}_Type_Skillname);
+              Type_Map.Element (${name(d)}_Type_Skillname);
 """
           val superTypes = getSuperTypes(d).toList.reverse
           superTypes.foreach({ t ⇒
             output += s"""
             ${name(t)}_Type_Declaration : Type_Information :=
-              Types.Element (${name(t)}_Type_Skillname);
+              Type_Map.Element (${name(t)}_Type_Skillname);
 """
           })
           output.stripLineEnd
@@ -426,14 +453,13 @@ ${
    function Read_Annotation
      (Input_Stream : ASS_IO.Stream_Access) return Skill_Type_Access
    is
-      Base_Type_Name : v64 := Byte_Reader.Read_v64 (Input_Stream);
-      Index          : v64 := Byte_Reader.Read_v64 (Input_Stream);
+      Base_Type_Offset : v64 := Byte_Reader.Read_v64 (Input_Stream);
+      Index            : v64 := Byte_Reader.Read_v64 (Input_Stream);
    begin
-      if 0 = Base_Type_Name then
+      if 0 = Base_Type_Offset then
          return null;
       else
-         return Types.Element (String_Pool.Element (Natural (Base_Type_Name)))
-             .Storage_Pool.Element
+         return Types.Element (Natural (Base_Type_Offset)).Storage_Pool.Element
            (Positive (Index));
       end if;
    end Read_Annotation;
@@ -455,7 +481,7 @@ ${
          return null;
       else
          return ${name(t)}_Type_Access
-             (Types.Element (${name(if (null == t.getSuperType) t else t.getBaseType)}_Type_Skillname).Storage_Pool.Element
+             (Type_Map.Element (${name(if (null == t.getSuperType) t else t.getBaseType)}_Type_Skillname).Storage_Pool.Element
               (Positive (Index)));
       end if;
    end Read_${name(t)}_Type;
@@ -469,9 +495,9 @@ ${
          * Corrects the SPSI (storage pool start index) of all types.
          */
         (for (t ← IR) yield s"""
-      if Types.Contains (${name(t)}_Type_Skillname) then
-         Types.Element (${name(t)}_Type_Skillname).spsi :=
-           Natural (Types.Element (${name(t)}_Type_Skillname).Storage_Pool.Length);
+      if Type_Map.Contains (${name(t)}_Type_Skillname) then
+         Type_Map.Element (${name(t)}_Type_Skillname).spsi :=
+           Natural (Type_Map.Element (${name(t)}_Type_Skillname).Storage_Pool.Length);
       end if;""").mkString
     }
    end Update_Storage_Pool_Start_Index;
