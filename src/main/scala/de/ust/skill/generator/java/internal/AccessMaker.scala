@@ -42,6 +42,7 @@ import de.ust.skill.common.java.api.SkillException;
 import de.ust.skill.common.java.internal.*;
 import de.ust.skill.common.java.internal.fieldDeclarations.AutoField;
 import de.ust.skill.common.java.internal.fieldTypes.*;
+import de.ust.skill.common.java.internal.parts.Block;
 import de.ust.skill.common.java.restrictions.FieldRestriction;
 """)
 
@@ -93,19 +94,24 @@ ${
       }
 
     @Override
-    public boolean insertInstance(int skillID) {${
+    public void insertInstances() {${
         if (isBasePool) ""
         else s"""
         ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access)basePool).data();"""
       }
-        int i = skillID - 1;
-        if (null != data[i])
-            return false;
+        final Block last = blocks().getLast();
+        int i = (int) last.bpo;
+        int high = (int) (last.bpo + last.count);
+        while (i < high) {
+            if (null != data[i])
+                return;
 
-        $typeT r = new $typeT(skillID);
-        data[i] = r;
-        staticData.add(r);
-        return true;
+            $typeT r = new $typeT(i + 1);
+            data[i] = r;
+            staticData.add(r);
+
+            i += 1;
+        }
     }
 ${
         if (t.getFields.isEmpty()) ""
