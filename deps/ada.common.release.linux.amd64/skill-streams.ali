@@ -1,0 +1,93 @@
+V "GNAT Lib v4.9"
+A -O3
+A -gnatA
+A -gnatn
+A -gnatN
+A -gnatp
+A -gnat2012
+A -mtune=generic
+A -march=x86-64
+P SS ZX
+
+RN
+RV NO_IMPLEMENTATION_PRAGMAS
+RV SPARK_05
+
+U skill.streams%b	skill-streams.adb	461c7d8b NE OO PK
+W interfaces%s		interfac.ads		interfac.ali
+W interfaces.c%s	i-c.adb			i-c.ali
+W interfaces.c.pointers%s
+W skill%s		skill.adb		skill.ali
+W skill.streams%s	skill-streams.adb	skill-streams.ali
+W skill.streams.reader%s  skill-streams-reader.adb  skill-streams-reader.ali
+W skill.types%s		skill-types.ads		skill-types.ali
+
+U skill.streams%s	skill-streams.ads	114ac5c7 BN NE OO PR PK
+W interfaces%s		interfac.ads		interfac.ali
+W interfaces.c%s	i-c.adb			i-c.ali
+W interfaces.c.pointers%s
+W skill%s		skill.adb		skill.ali
+Y skill.streams.reader%s  skill-streams-reader.adb  skill-streams-reader.ali
+W skill.types%s		skill-types.ads		skill-types.ali
+
+D ada.ads		20070406091342 3ffc8e18
+D a-charac.ads		20070912115821 2d3ec45b
+D a-chlat1.ads		20140225151544 66457d31
+D a-except.ads		20140129161953 f86a4103
+D a-stream.ads		20140122164720 1a984740
+D a-tags.ads		20111212115430 6c0509d0
+D a-unccon.ads		20070406091342 f9eb8f06
+D a-uncdea.ads		20070406091342 f15a5ed1
+D interfac.ads		20140225151838 69adb1b9
+D i-c.ads		20110801143639 5421119b
+D i-cpoint.ads		20130104124955 ee8a93ec
+D i-cpoint.adb		20130104124955 8bc8f877
+D i-cstrin.ads		20130104124955 341d0ddf
+D i-cstrea.ads		20130412125801 8128536b
+D i-cstrea.adb		20090409150019 98747b85
+D skill.ads		20150716082453 116540ca
+D skill-streams.ads	20150723134340 e598fb11
+D skill-streams.adb	20150723134651 4633f886
+D skill-streams-reader.ads  20150727130008 df81b079
+D skill-streams-reader.adb  20150727131317 f20f7e18
+D skill-types.ads	20150727131323 809d4c12
+D system.ads		20141210093300 90249111
+D s-crtl.ads		20140225151544 840e6817
+D s-exctab.ads		20140225151139 54135002
+D s-imgint.ads		20090409150019 02dbe0c2
+D s-imglli.ads		20090409150019 114f55d1
+D s-parame.ads		20140225151139 ab8cb46a
+D s-secsta.ads		20140225151139 86a2856d
+D s-soflin.ads		20140225151139 aa763b52
+D s-stache.ads		20140225151139 a37c21ec
+D s-stalib.ads		20140225151139 a891183f
+D s-stoele.ads		20140225151139 2dc34a04
+D s-stoele.adb		20140225151139 ed88f8fb
+D s-stratt.ads		20131014135145 aedef97e
+D s-traent.ads		20140225151139 b5116092
+D s-unstyp.ads		20140225151139 510692af
+X 9 interfac.ads
+38K9*Interfaces 179e15 17|7r6 8r6 19r9 19r50 21r47 18|7r6 8r6
+X 10 i-c.ads
+18K20*C 230e17 17|7w17 8r17 19r20 19r61 21r58 18|7w17 8r17
+47M9*unsigned_char 17|19r63 21r60
+60M9*size_t 17|19r22
+X 11 i-cpoint.ads
+44k22*Pointers 102e26 17|8w19 18|8w19
+X 16 skill.ads
+7K9*Skill 12e10 17|10r6 14r9 23r27 23r61 25r5 18|10r6 11r6 13r14 15r27 15r61
+. 17r14 20r5
+X 17 skill-streams.ads
+14K15*Streams 16|7k9 17|23r67 25l11 25e18 18|11r12 13b20 15r67 17r20 20l11
+. 20t18
+17A9*Unsigned_Char_Array(10|47M9)<10|60M9> 20r26 21r8
+23V13*Input{19|21P9} 23>20 18|15b13 18l8 18t13
+23p20 Path{21|24P9} 18|15b20 17r40
+X 19 skill-streams-reader.ads
+15K23*Reader 17|23r75 18|11w20 15r75 17r28 19|109e25
+21P9*Input_Stream(20R9) 18|15r82
+25V13*Open{21P9} 18|17s35
+X 21 skill-types.ads
+9K15*Types 17|10w12 23r33 18|10w12 15r33 21|40e16
+24P9*String_Access(string) 17|23r39 18|15r39
+

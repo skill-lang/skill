@@ -1,0 +1,71 @@
+V "GNAT Lib v4.9"
+A -O3
+A -gnatA
+A -gnatn
+A -gnatN
+A -gnatp
+A -gnat2012
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_DISPATCH
+RV NO_DISPATCHING_CALLS
+RV NO_EXCEPTION_HANDLERS
+RV NO_EXCEPTIONS
+RV NO_IMPLICIT_CONDITIONALS
+RV NO_STANDARD_STORAGE_POOLS
+RV NO_IMPLEMENTATION_PRAGMAS
+RV NO_ELABORATION_CODE
+RV SPARK_05
+
+U skill.field_types%s	skill-field_types.ads	adda9d16 EE OO PF PR PK
+W ada.exceptions%s	a-except.adb		a-except.ali
+W ada.streams%s		a-stream.adb		a-stream.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W skill%s		skill.adb		skill.ali
+W system%s		system.ads		system.ali
+W system.finalization_masters%s  s-finmas.adb	s-finmas.ali
+W system.pool_global%s	s-pooglo.adb		s-pooglo.ali
+W system.soft_links%s	s-soflin.adb		s-soflin.ali
+W system.storage_elements%s  s-stoele.adb	s-stoele.ali
+
+D ada.ads		20070406091342 3ffc8e18
+D a-except.ads		20140129161953 f86a4103
+D a-finali.ads		20111121113555 52ecdc1b
+D a-stream.ads		20140122164720 1a984740
+D a-tags.ads		20111212115430 6c0509d0
+D a-unccon.ads		20070406091342 f9eb8f06
+D skill.ads		20150716082453 116540ca
+D skill-field_types.ads	20150723104959 bcbfdddc
+D system.ads		20141210093300 90249111
+D s-exctab.ads		20140225151139 54135002
+D s-finmas.ads		20140225151139 814daec4
+D s-finroo.ads		20120426095924 4ff27390
+D s-parame.ads		20140225151139 ab8cb46a
+D s-pooglo.ads		20110804083314 542f33d0
+D s-soflin.ads		20140225151139 aa763b52
+D s-stache.ads		20140225151139 a37c21ec
+D s-stalib.ads		20140225151139 a891183f
+D s-stoele.ads		20140225151139 2dc34a04
+D s-stoele.adb		20140225151139 ed88f8fb
+D s-stopoo.ads		20131010103753 b16154c2
+D s-traent.ads		20140225151139 b5116092
+X 7 skill.ads
+7K9*Skill 12e10 8|7r9 27r5
+X 8 skill-field_types.ads
+7K15*Field_Types 7|7k9 8|27l11 27e22
+11H9*Field_Type_Base 11e55 12r30 14p13 14r31 15p13 15r31 21r39
+12P9*Field_Type(11R9)
+14y13*ID{natural} 14^17
+14p17 This(11R9)
+15y13*To_String{string} 15>24
+15r24 This{11R9}
+18+12 T
+19i7 Type_Id{natural} 24r10
+20k12*Field_Types 18z12 19z7 25l8 25e19
+21H12*Field_Type<11R9> 15p13 21e71 23P27 23r45
+23V27*Id{natural}<14p13> 23^31
+23p31 This(21R12)
+

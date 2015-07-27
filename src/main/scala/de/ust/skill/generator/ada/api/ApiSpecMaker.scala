@@ -15,48 +15,54 @@ trait SkillSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}-api.ads""")
 
     out.write(s"""
-with Ada.Unchecked_Deallocation;
+with Skill.Files;
+with Skill.Internal.File_Parsers;
+with Skill.Types.Pools;
+with $poolsPackage;
 
---
---  This package provides the API for Skill_State
---
+-- parametrization of file, read/write and pool code
+package ${PackagePrefix}.Api is
 
-package ${packagePrefix.capitalize}.Api is
+   type File_T is new Skill.Files.File_T with private;
+   type File is access File_T;
 
-   --  Appends new data into a skill file.
-   procedure Append (State : access Skill_State);
-   --  Closes the skill state.
-   procedure Close (State : access Skill_State);
-   --  Fills an empty skill state with the known types.
-   procedure Create (State : access Skill_State);
-   --  Reads a skill file into an emtpy skill state.
-   procedure Read (
-      State     : access Skill_State;
-      File_Name :        String
-   );
-   --  Writes all data into a skill file.
-   procedure Write (
-      State     : access Skill_State;
-      File_Name :        String
-   );
+   -- create a new file using the argument path for I/O
+   function Open
+     (Path    : String;
+      Read_M  : Skill.Files.Read_Mode  := Skill.Files.Read;
+      Write_M : Skill.Files.Write_Mode := Skill.Files.Write) return File;
 
-  --  type access functionality for each user types
-  --  provides new, size and get operations.
+   -- write changes to disk
+   procedure Flush (This : access File_T);
+
+   -- write changes to disk, free all memory
+   procedure Close (This : access File_T);
+
+   -- user type pools
+   -- work around GNAT bug
 ${
-      /**
-       * Provides the API functions and procedures for all types.
-       */
-      (for (d ← IR) yield {
-        s"""
-   function New_${name(d)} (State : access Skill_State${printParameters(d)}) return ${name(d)}_Type_Access;
-   procedure New_${name(d)} (State : access Skill_State${printParameters(d)});
-   function ${name(d)}s_Size (State : access Skill_State) return Natural;
-   function Get_${name(d)} (State : access Skill_State; Index : Natural) return ${name(d)}_Type_Access;
-   function Get_${name(d)}s (State : access Skill_State) return ${name(d)}_Type_Accesses;
-"""
-      }).mkString("\n")
+      (for (t ← IR)
+        yield s"""
+   package ${name(t)}_Pool_P renames ${poolsPackage}.${name(t)}_P;
+   subtype ${name(t)}_Pool is ${name(t)}_Pool_P.Pool;
+   function ${name(t)}s (This : access File_T) return ${name(t)}_Pool;
+""").mkString
     }
-end ${packagePrefix.capitalize}.Api;
+private
+
+   type File_T is new Skill.Files.File_T with record${
+      if (IR.isEmpty())
+        """
+      null;"""
+      else
+        (for (t ← IR)
+          yield s"""
+      ${name(t)}s : ${name(t)}_Pool;"""
+        ).mkString
+    }
+   end record;
+
+end ${PackagePrefix}.Api;
 """)
 
     out.close()

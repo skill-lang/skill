@@ -16,233 +16,198 @@ trait SkillBodyMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}-api.adb""")
 
     out.write(s"""
-with ${packagePrefix.capitalize}.Api.Internal.File_Writer;
-with ${packagePrefix.capitalize}.Api.Internal.State_Maker;
-with ${packagePrefix.capitalize}.Api.Internal.File_Reader;
+with Ada.Unchecked_Conversion;
+with Ada.Unchecked_Deallocation;
 
-package body ${packagePrefix.capitalize}.Api is
+with Skill.Errors;
+with Skill.Equals;
+with Skill.Field_Types;
+with Skill.Files;
+with Skill.Internal.File_Parsers;
+with Skill.Internal.Parts;
+with Skill.Streams;
+with Skill.String_Pools;
+with Skill.Types;
+with Skill.Types.Pools;
 
-   procedure Append (State : access Skill_State) is
-      package File_Writer renames Api.Internal.File_Writer;
-   begin
-      if Append = State.State
-        or else Read = State.State
-        or else Write = State.State
-      then
-         File_Writer.Append (State, State.File_Name.all);
-         State.State := Append;
-      else
-         raise Skill_Error with "Can not append to this state.";
-      end if;
-   end Append;
+with ${PackagePrefix}.Internal_Skill_Names;
 
-   procedure Close (State : access Skill_State) is
-      procedure Free is new Ada.Unchecked_Deallocation
-        (String_Pool_Vector.Vector,
-         String_Pool_Access);
-      procedure Free is new Ada.Unchecked_Deallocation
-        (Types_Hash_Map.Map,
-         Types_Hash_Map_Access);
-      procedure Free is new Ada.Unchecked_Deallocation (String, String_Access);
+-- parametrization of file, read/write and pool code
+package body ${PackagePrefix}.Api is
 
-      procedure Iterate_Storage_Pool (Position : Storage_Pool_Vector.Cursor) is
-         procedure Free is new Ada.Unchecked_Deallocation
-           (Skill_Type'Class,
-            Skill_Type_Access);
+   use type Skill.Types.Pools.Pool;
 
-         Object : Skill_Type_Access := Storage_Pool_Vector.Element (Position);
-      begin
-         Free (Object);
-      end Iterate_Storage_Pool;
-      pragma Inline (Iterate_Storage_Pool);
-
-      procedure Iterate_Field_Declaration (Position : Fields_Vector.Cursor) is
-         procedure Free is new Ada.Unchecked_Deallocation
-           (Field_Declaration,
-            Field_Information);
-
-         Field_Declaration : Field_Information :=
-           Fields_Vector.Element (Position);
-      begin
-         Free (Field_Declaration);
-      end Iterate_Field_Declaration;
-      pragma Inline (Iterate_Field_Declaration);
-
-      procedure Iterate_Type_Declaration (Position : Types_Hash_Map.Cursor) is
-         procedure Free is new Ada.Unchecked_Deallocation
-           (Type_Declaration,
-            Type_Information);
-
-         Type_Declaration : Type_Information :=
-           Types_Hash_Map.Element (Position);
-      begin
-         Type_Declaration.Fields.Iterate (Iterate_Field_Declaration'Access);
-         Type_Declaration.Storage_Pool.Iterate (Iterate_Storage_Pool'Access);
-         Free (Type_Declaration);
-      end Iterate_Type_Declaration;
-      pragma Inline (Iterate_Type_Declaration);
-   begin
-      State.Types.Iterate (Iterate_Type_Declaration'Access);
-
-      Free (State.File_Name);
-      Free (State.String_Pool);
-      Free (State.Types);
-
-      State.State := Unused;
-   exception
-      when E : Storage_Error =>
-         raise Skill_Error
-           with "Failed to close state with storage_error. Double close?";
-      when E : Constraint_Error =>
-         raise Skill_Error
-           with "Failed to close state with constraint_error. Double close?";
-   end Close;
-
-   procedure Create (State : access Skill_State) is
-      package State_Maker renames Api.Internal.State_Maker;
-   begin
-      if Unused = State.State then
-         State_Maker.Create (State);
-         State.State := Create;
-      else
-         raise Skill_Error with "Can only create unused states.";
-      end if;
-   end Create;
-
-   procedure Read (State : access Skill_State; File_Name : String) is
-      package File_Reader renames Api.Internal.File_Reader;
-      package State_Maker renames Api.Internal.State_Maker;
-   begin
-      if Unused = State.State then
-         File_Reader.Read (State, File_Name);
-         State_Maker.Create (State);
-         State.File_Name := new String'(File_Name);
-         State.State     := Read;
-      else
-         raise Skill_Error with "Can only read into an unusude state.";
-      end if;
-   end Read;
-
-   procedure Write (State : access Skill_State; File_Name : String) is
-      package File_Writer renames Api.Internal.File_Writer;
-   begin
-      if Append = State.State
-        or else Create = State.State
-        or else Read = State.State
-        or else Write = State.State
-      then
-         File_Writer.Write (State, File_Name);
-         State.File_Name := new String'(File_Name);
-         State.State     := Write;
-      else
-         raise Skill_Error with "State is not in a mode that can be written.";
-      end if;
-   end Write;
-${
-      /**
-       * Provides the fields of a given type as a comma-separated list used as record attributes.
-       */
-      def printFields(d : UserType) : String = {
-        var output = s"""'(\r\n         skill_id => Natural (${
-          if (null == d.getBaseType) name(d)
-          else name(d.getBaseType)
-        }_Type_Declaration.Storage_Pool.Length) + 1"""
-        output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f ⇒
-          s",\r\n         ${escapedLonely(f.getSkillName)} => ${escapedLonely(f.getSkillName)}"
-        }).mkString("")
-        output += "\r\n      )";
-        output
-      }
-
-      /**
-       * Provides the fields of a given type as a comma-separated list used as parameters.
-       */
-      def printSimpleParameters(d : UserType) : String = {
-        var output = "";
-        var hasFields = false
-        output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f ⇒
-          hasFields = true
-          escapedLonely(f.getSkillName())
-        }).mkString(", ", ", ", "")
-        if (hasFields) output else ""
-      }
-
-      /**
-       * Pushes the new object also into the storage pools of the super types.
-       */
-      def printSuperTypes(d : UserType) : String = (
-        for (t ← getSuperTypes(d).toList.reverse) yield s"""
-      ${name(t)}_Type_Declaration.Storage_Pool.Append (Skill_Type_Access (New_Object));"""
-      ).mkString
-
-      var output = ""
-      /**
-       * Provides the API functions and procedures for all types.
-       */
-      for (d ← IR) {
-        val nameD = name(d)
-        output += s"""
-   function New_${nameD}
-     (State : access Skill_State${printParameters(d)}) return ${nameD}_Type_Access
+   -- TODO we can make this faster using a hash map (for large type systems)
+   function New_Pool
+     (Type_ID : Natural;
+      Name    : Skill.Types.String_Access;
+      Super   : Skill.Types.Pools.Pool) return Skill.Types.Pools.Pool
    is
-      ${nameD}_Type_Declaration : Type_Information :=
-        State.Types.Element (${nameD}_Type_Skillname);${
-          var output = ""
-          val superTypes = getSuperTypes(d).toList.reverse
-          superTypes.foreach({ t ⇒
-            output += s"""
-      ${t.getName.ada}_Type_Declaration : Type_Information :=
-         State.Types.Element (${name(t)}_Type_Skillname);"""
-          })
-          output
-        }
-      New_Object : ${nameD}_Type_Access := new ${nameD}_Type${printFields(d)};
-   begin
-      ${nameD}_Type_Declaration.Storage_Pool.Append
-        (Skill_Type_Access (New_Object));${printSuperTypes(d)}
-      return New_Object;
-   end New_${nameD};
+   begin${
+      (for (t ← IR)
+        yield s"""
+      if Equals.Equals (Name, Internal_Skill_Names.${escaped(t.getSkillName).capitalize}_Skill_Name) then
+         return ${name(t)}_Pool_P.Make (Type_ID);
+      end if;
+"""
+      ).mkString
+    }
+--        If null = Super then
+--              return Unknown_Base (Type_ID, Name);
+--        end if;
+--
+--              return Super.Make_Sub_Pool (Type_ID, Name);
+      return null;
+   end New_Pool;
 
-   procedure New_${nameD} (State : access Skill_State${printParameters(d)}) is
-      New_Object : ${nameD}_Type_Access := New_${nameD} (State${printSimpleParameters(d)});
+   -- build a state from intermediate information
+   function Make_State
+     (Path          : Skill.Types.String_Access;
+      Mode          : Skill.Files.Write_Mode;
+      Strings       : Skill.String_Pools.Pool;
+      Types         : Skill.Files.Type_Vector;
+      Types_By_Name : Skill.Files.Type_Map) return File
+   is${
+      (for (t ← IR)
+        yield s"""
+      function Convert is new Ada.Unchecked_Conversion
+        (Skill.Types.Pools.Pool,
+         ${name(t)}_Pool);"""
+      ).mkString
+    }
+   begin
+      -- read fields
+      -- TODO implementation
+
+      -- make state
+      return new File_T'
+          (Path          => Path,
+           Mode          => Mode,
+           Strings       => Strings,
+           Types         => Types,
+           Types_By_Name => Types_By_Name${
+      (
+        for (t ← IR) yield s""",
+           ${name(t)}s          =>
+             Convert
+               (Types_By_Name.Element (Internal_Skill_Names.${escaped(t.getSkillName).capitalize}_Skill_Name))"""
+      ).mkString
+    });
+   end Make_State;
+
+   -- type instantiation functions
+   function Constant_Length_Array
+     (Length : Types.v64;
+      Base_T : Skill.Field_Types.Field_Type)
+      return Skill.Field_Types.Field_Type
+   is
+   begin
+      return null;
+   end Constant_Length_Array;
+   function Variable_Length_Array
+     (Base_T : Skill.Field_Types.Field_Type)
+      return Skill.Field_Types.Field_Type
+   is
+   begin
+      return null;
+   end Variable_Length_Array;
+   function List_Type
+     (Base_T : Skill.Field_Types.Field_Type)
+      return Skill.Field_Types.Field_Type
+   is
+   begin
+      return null;
+   end List_Type;
+   function Set_Type
+     (Base_T : Skill.Field_Types.Field_Type)
+      return Skill.Field_Types.Field_Type
+   is
+   begin
+      return null;
+   end Set_Type;
+   function Map_Type
+     (Key_T   : Skill.Field_Types.Field_Type;
+      Value_T : Skill.Field_Types.Field_Type)
+      return Skill.Field_Types.Field_Type
+   is
+   begin
+      return null;
+   end Map_Type;
+
+   function Read is new Skill.Internal.File_Parsers.Read (File_T, File);
+
+   function Open
+     (Path    : String;
+      Read_M  : Files.Read_Mode  := Skill.Files.Read;
+      Write_M : Files.Write_Mode := Skill.Files.Write) return File
+   is
+   begin
+      case Read_M is
+
+         when Files.Read =>
+            return Read (Skill.Streams.Input (new String'(Path)), Write_M);
+
+         when Files.Create =>
+            raise Skill.Errors.Skill_Error with "TBD";
+
+            --          case Create:
+            --              // initialization order of type information has to match file parser
+            --              // and can not be done in place
+            --              StringPool strings = new StringPool(null);
+      --              ArrayList<StoragePool<?, ?>> types = new ArrayList<>(1);
+            --              StringType stringType = new StringType(strings);
+            --              Annotation annotation = new Annotation(types);
+            --
+            --              // create type information
+            --              AgeAccess Age = new AgeAccess(0);
+            --              types.add(Age);
+            --              return new SkillState(strings, types, stringType, annotation, path, actualMode.close);
+            --
+      end case;
+   end Open;
+
+   procedure Flush (This : access File_T) is
    begin
       null;
-   end New_${nameD};
+      -- TODO
+   end Flush;
 
-   function ${nameD}s_Size
-     (State : access Skill_State) return Natural
-   is
-      (Natural (State.Types.Element (${nameD}_Type_Skillname).Storage_Pool.Length));
+   procedure Close (This : access File_T) is
+      procedure Delete is new Ada.Unchecked_Deallocation
+        (String,
+         Types.String_Access);
 
-   function Get_${nameD}
-     (State : access Skill_State; Index : Natural) return ${nameD}_Type_Access
-   is
-      (${nameD}_Type_Access (State.Types.Element (${nameD}_Type_Skillname).Storage_Pool.Element (Index)));
-
-   function Get_${nameD}s
-     (State : access Skill_State) return ${nameD}_Type_Accesses
-   is
-      use Storage_Pool_Vector;
-
-      Type_Declaration : Type_Information :=
-        State.Types.Element (${nameD}_Type_Skillname);
-      Length : Natural := Natural (Type_Declaration.Storage_Pool.Length);
-      rval   : ${nameD}_Type_Accesses := new ${nameD}_Type_Array (1 .. Length);
-
-      procedure Iterate (Position : Cursor) is
+      procedure Delete (This : Types.Pools.Pool) is
       begin
-         rval (To_Index (Position)) := ${nameD}_Type_Access (Element (Position));
-      end Iterate;
-      pragma Inline (Iterate);
+         This.Dynamic.Free;
+      end Delete;
+
+      type Ft is access all File_T;
+
+      procedure Delete is new Ada.Unchecked_Deallocation(File_T, FT);
+
+      Self : FT := Ft(This);
    begin
-      Type_Declaration.Storage_Pool.Iterate (Iterate'Access);
-      return rval;
-   end Get_${nameD}s;
+      This.Flush;
+
+      Delete (This.Path);
+      -- TODO       This.Strings.Free;
+      This.Types.Foreach (Delete'Access);
+      This.Types.Free;
+
+
+      Delete(Self);
+   end Close;
+${
+      (for (t ← IR) yield s"""
+   function ${name(t)}s (This : access File_T) return ${name(t)}_Pool is
+   begin
+      return This.${name(t)}s;
+   end ${name(t)}s;
 """
-      }
-      output
+      ).mkString
     }
-end ${packagePrefix.capitalize}.Api;
+end ${PackagePrefix}.Api;
 """)
 
     out.close()

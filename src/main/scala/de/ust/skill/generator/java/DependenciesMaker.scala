@@ -34,13 +34,13 @@ trait DependenciesMaker extends GeneralOutputMaker {
         }
 
         Files.deleteIfExists(out.toPath)
-        Files.copy(new File(jar).toPath, out.toPath)
+        Files.copy(new File("deps/" + jar).toPath, out.toPath)
       })
     }
   }
 
   val jars = Seq("skill.jvm.common.jar", "skill.java.common.jar")
-  lazy val commonJarSum = jars.map { s ⇒ (s -> sha256(s)) }.toMap
+  lazy val commonJarSum = jars.map { s ⇒ (s -> sha256("deps/" + s)) }.toMap
 
   final def sha256(name : String) : String = sha256(new File("src/test/resources/"+name).toPath)
   @inline final def sha256(path : Path) : String = {

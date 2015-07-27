@@ -28,6 +28,8 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * @author Timm Felden, Dennis Przytarski
  */
 class Main extends FakeMain
+    with DependenciesMaker
+
     with PackageBodyMaker
     with PackageInternalSpecMaker
     with PackageSpecMaker
@@ -46,8 +48,8 @@ class Main extends FakeMain
 
   // fix gnat bug
   lineLength = 79
-  override def comment(d : Declaration) : String = d.getComment.format("", "   -- ", lineLength, "")
-  override def comment(f : Field) : String = f.getComment.format("", "   -- ", lineLength, "")
+  override def comment(d : Declaration) : String = d.getComment.format("", "   -- ", lineLength, "   ")
+  override def comment(f : Field) : String = f.getComment.format("", "   -- ", lineLength, "   ")
 
   /**
    * Translates the types into the skill type id's.
@@ -89,31 +91,31 @@ class Main extends FakeMain
   /**
    * Translates the types into Ada types.
    */
-  override protected def mapType(t : Type, d : Declaration, f : Field) : String = t match {
+  override protected def mapType(t : Type) : String = t match {
     case t : GroundType ⇒ t.getName.lower match {
-      case "annotation" ⇒ "Skill_Type_Access"
+      case "annotation" ⇒ "Skill.Types.Annotation"
 
       case "bool"       ⇒ "Boolean"
 
-      case "i8"         ⇒ "i8"
-      case "i16"        ⇒ "i16"
-      case "i32"        ⇒ "i32"
-      case "i64"        ⇒ "i64"
-      case "v64"        ⇒ "v64"
+      case "i8"         ⇒ "Skill.Types.I8"
+      case "i16"        ⇒ "Skill.Types.I16"
+      case "i32"        ⇒ "Skill.Types.I32"
+      case "i64"        ⇒ "Skill.Types.I64"
+      case "v64"        ⇒ "Skill.Types.V64"
 
-      case "f32"        ⇒ "f32"
-      case "f64"        ⇒ "f64"
+      case "f32"        ⇒ "Skill.Types.F32"
+      case "f64"        ⇒ "Skill.Types.F64"
 
-      case "string"     ⇒ "String_Access"
+      case "string"     ⇒ "Skill.Types.String_Access"
     }
 
-    case t : ConstantLengthArrayType ⇒ s"${name(d)}_${f.getSkillName.capitalize}_Array"
-    case t : VariableLengthArrayType ⇒ s"${name(d)}_${f.getSkillName.capitalize}_Vector.Vector"
-    case t : ListType                ⇒ s"${name(d)}_${f.getSkillName.capitalize}_List.List"
-    case t : SetType                 ⇒ s"${name(d)}_${f.getSkillName.capitalize}_Set.Set"
-    case t : MapType                 ⇒ s"${name(d)}_${f.getSkillName.capitalize}_Map.Map"
+    case t : ConstantLengthArrayType ⇒ "☢"
+    case t : VariableLengthArrayType ⇒ "☢"
+    case t : ListType                ⇒ "☢"
+    case t : SetType                 ⇒ "☢"
+    case t : MapType                 ⇒ "☢"
 
-    case t : Declaration             ⇒ s"${name(t)}_Type_Access"
+    case t : Declaration             ⇒ s"${name(t)}"
   }
 
   /**
@@ -149,7 +151,7 @@ class Main extends FakeMain
       ""
     else
       (for (f ← fields)
-        yield s"${escapedLonely(f.getSkillName())} : ${mapType(f.getType, f.getDeclaredIn, f)}"
+        yield s"${escapedLonely(f.getSkillName())} : ${mapType(f.getType)}"
       ).mkString("; ", "; ", "")
   }
 
@@ -157,13 +159,20 @@ class Main extends FakeMain
    * Provides the package prefix.
    */
   override protected def packagePrefix() : String = _packagePrefix
-  private var _packagePrefix = ""
+  private var _packagePrefix = "sf"
+  override protected def PackagePrefix() : String = _PackagePrefix
+  private var _PackagePrefix = "SF"
 
   override def setPackage(names : List[String]) {
     if (!names.isEmpty) {
-      _packagePrefix = names.map(_.toLowerCase).reduce(_ + _)
+      _packagePrefix = names.map(_.toLowerCase).reduce(_+"-"+_)
+      _PackagePrefix = names.map(_.toLowerCase.capitalize).reduce(_+"."+_)
+      _poolsPackage = s"Skill.Types.Pools.${PackagePrefix.replace(".", "_")}_Pools"
     }
   }
+
+  private var _poolsPackage = "Skill.Types.Pools.SF_Pools"
+  override protected def poolsPackage : String = _poolsPackage
 
   override private[ada] def header : String = _header
   private lazy val _header = {
@@ -215,10 +224,10 @@ Opitions (ada):
     f.getType match {
       case t : GroundType              ⇒ defaultValue(t)
       case t : ConstantLengthArrayType ⇒ s"(others => ${defaultValue(t.getBaseType())})"
-      case t : VariableLengthArrayType ⇒ s"${mapType(t, f.getDeclaredIn, f).stripSuffix(".Vector")}.Empty_Vector"
-      case t : ListType                ⇒ s"${mapType(t, f.getDeclaredIn, f).stripSuffix(".List")}.Empty_List"
-      case t : SetType                 ⇒ s"${mapType(t, f.getDeclaredIn, f).stripSuffix(".Set")}.Empty_Set"
-      case t : MapType                 ⇒ s"${mapType(t, f.getDeclaredIn, f).stripSuffix(".Map")}.Empty_Map"
+      case t : VariableLengthArrayType ⇒ s"${mapType(t).stripSuffix(".Vector")}.Empty_Vector"
+      case t : ListType                ⇒ s"${mapType(t).stripSuffix(".List")}.Empty_List"
+      case t : SetType                 ⇒ s"${mapType(t).stripSuffix(".Set")}.Empty_Set"
+      case t : MapType                 ⇒ s"${mapType(t).stripSuffix(".Map")}.Empty_Map"
 
       case _                           ⇒ "null"
     }
@@ -244,8 +253,8 @@ Opitions (ada):
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
   protected def escaped(target : String) : String = target.map {
-      case ':'                               ⇒ "_0"
-      case c if Character.isUnicodeIdentifierPart(c) ⇒ c.toString
-      case c                                 ⇒ "ZZ"+c.toHexString
-    }.reduce(_ + _)
+    case ':'                                       ⇒ "_0"
+    case c if Character.isUnicodeIdentifierPart(c) ⇒ c.toString
+    case c                                         ⇒ "ZZ"+c.toHexString
+  }.reduce(_ + _)
 }

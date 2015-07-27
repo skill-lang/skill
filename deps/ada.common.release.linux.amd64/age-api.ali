@@ -1,0 +1,346 @@
+V "GNAT Lib v4.9"
+A -O3
+A -gnatA
+A -gnatn
+A -gnatN
+A -gnatp
+A -gnat2012
+A -mtune=generic
+A -march=x86-64
+P SS ZX
+
+RN
+RV NO_ACCESS_SUBPROGRAMS
+RV NO_ALLOCATORS
+RV NO_DIRECT_BOOLEAN_OPERATORS
+RV NO_DISPATCH
+RV NO_DISPATCHING_CALLS
+RV NO_EXCEPTION_HANDLERS
+RV NO_EXCEPTION_PROPAGATION
+RV NO_EXCEPTIONS
+RV NO_IMPLICIT_CONDITIONALS
+RV NO_IMPLICIT_DYNAMIC_CODE
+RV NO_IMPLICIT_LOOPS
+RV NO_LOCAL_ALLOCATORS
+RV NO_NESTED_FINALIZATION
+RV NO_RECURSION
+RV NO_SECONDARY_STACK
+RV NO_STANDARD_STORAGE_POOLS
+RV NO_STREAMS
+RV NO_UNCHECKED_ACCESS
+RV NO_UNCHECKED_CONVERSION
+RV NO_UNCHECKED_DEALLOCATION
+RV NO_DEFAULT_INITIALIZATION
+RV NO_IMPLEMENTATION_ATTRIBUTES
+RV NO_IMPLEMENTATION_PRAGMAS
+RV NO_IMPLICIT_ALIASING
+RV NO_ELABORATION_CODE
+RV SPARK_05
+
+U age.api%b		age-api.adb		1b42f134 OO PK
+W ada%s			ada.ads			ada.ali
+Z ada.containers%s	a-contai.ads		a-contai.ali
+Z ada.containers.hash_tables%s  a-cohata.ads	a-cohata.ali
+Z ada.containers.hash_tables.generic_keys%s
+Z ada.containers.hash_tables.generic_operations%s
+Z ada.containers.prime_numbers%s  a-coprnu.adb	a-coprnu.ali
+W ada.exceptions%s	a-except.adb		a-except.ali
+Z ada.finalization%s	a-finali.adb		a-finali.ali
+Z ada.iterator_interfaces%s
+W ada.streams%s		a-stream.adb		a-stream.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W ada.unchecked_conversion%s
+W ada.unchecked_deallocation%s
+W age%s			age.adb			age.ali
+W age.internal_skill_names%s  age-internal_skill_names.ads  age-internal_skill_names.ali
+W skill%s		skill.adb		skill.ali
+W skill.equals%s	skill-equals.ads	skill-equals.ali
+W skill.errors%s	skill-errors.adb	skill-errors.ali
+W skill.field_types%s	skill-field_types.ads	skill-field_types.ali
+W skill.files%s		skill-files.adb		skill-files.ali
+W skill.internal%s	skill-internal.ads	skill-internal.ali
+W skill.internal.file_parsers%s  skill-internal-file_parsers.adb  skill-internal-file_parsers.ali  ED
+W skill.internal.parts%s  skill-internal-parts.adb  skill-internal-parts.ali
+W skill.streams%s	skill-streams.adb	skill-streams.ali
+W skill.string_pools%s	skill-string_pools.adb	skill-string_pools.ali
+W skill.types%s		skill-types.ads		skill-types.ali
+W skill.types.pools%s	skill-types-pools.adb	skill-types-pools.ali
+W system%s		system.ads		system.ali
+W system.address_image%s  s-addima.adb		s-addima.ali
+W system.finalization_masters%s  s-finmas.adb	s-finmas.ali
+W system.img_int%s	s-imgint.adb		s-imgint.ali
+W system.pool_global%s	s-pooglo.adb		s-pooglo.ali
+W system.secondary_stack%s  s-secsta.adb	s-secsta.ali
+W system.soft_links%s	s-soflin.adb		s-soflin.ali
+W system.standard_library%s  s-stalib.adb	s-stalib.ali
+W system.storage_elements%s  s-stoele.adb	s-stoele.ali
+W system.storage_pools%s  s-stopoo.adb		s-stopoo.ali
+W system.storage_pools.subpools%s  s-stposu.adb	s-stposu.ali
+W system.stream_attributes%s  s-stratt.adb	s-stratt.ali
+
+U age.api%s		age-api.ads		0d7c9883 EE OO PF PK
+W ada.exceptions%s	a-except.adb		a-except.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W age%s			age.adb			age.ali
+W skill%s		skill.adb		skill.ali
+W skill.files%s		skill-files.adb		skill-files.ali
+W skill.internal%s	skill-internal.ads	skill-internal.ali
+W skill.internal.file_parsers%s  skill-internal-file_parsers.adb  skill-internal-file_parsers.ali
+W skill.types%s		skill-types.ads		skill-types.ali
+W skill.types.pools%s	skill-types-pools.adb	skill-types-pools.ali
+W skill.types.pools.age_pools%s  skill-types-pools-age_pools.adb  skill-types-pools-age_pools.ali
+W system%s		system.ads		system.ali
+W system.finalization_masters%s  s-finmas.adb	s-finmas.ali
+W system.pool_global%s	s-pooglo.adb		s-pooglo.ali
+W system.soft_links%s	s-soflin.adb		s-soflin.ali
+W system.storage_elements%s  s-stoele.adb	s-stoele.ali
+
+D ada.ads		20070406091342 3ffc8e18
+D a-charac.ads		20070912115821 2d3ec45b
+D a-chlat1.ads		20140225151544 66457d31
+D a-contai.ads		20101025135029 61e5e089
+D a-cdlili.ads		20130411133353 c3008bbb
+D a-cgarso.ads		20070406091342 9129bfa8
+D a-cohata.ads		20110804151834 04abccc5
+D a-chtgke.ads		20140219145932 a7b0f3a2
+D a-chtgke.adb		20140220134615 ee7af212
+D a-chtgop.ads		20140219145932 b47ea0e7
+D a-chtgop.adb		20140220134615 c00683b2
+D a-cohama.ads		20130411133353 9f97b812
+D a-cohama.adb		20140220134615 55a9a6dc
+D a-cohase.ads		20130411133353 1483927e
+D a-cohase.adb		20140220134615 0e3e14a8
+D a-coprnu.ads		20090409150019 0cdf1864
+D a-convec.ads		20120217141546 0aaf3975
+D a-convec.adb		20140220134615 a022038f
+D a-except.ads		20140129161953 f86a4103
+D a-finali.ads		20111121113555 52ecdc1b
+D a-inteio.ads		20070406091342 f64b89a4
+D a-inteio.ads		20070406091342 f64b89a4
+D a-ioexce.ads		20140225151544 e4a01f64
+D a-iteint.ads		20110906092602 7c7305e9
+D a-stream.ads		20140122164720 1a984740
+D a-string.ads		20070406091342 90ac6797
+D a-strhas.ads		20140225151544 c71c2a52
+D a-tags.ads		20111212115430 6c0509d0
+D a-textio.ads		20140129155348 386df5d4
+D a-tiinau.ads		20090409150019 8114c8e4
+D a-tiinio.ads		20090409150019 aa04e5d6
+D a-tiinio.adb		20091130162119 df9cd7af
+D a-unccon.ads		20070406091342 f9eb8f06
+D a-uncdea.ads		20070406091342 f15a5ed1
+D age.ads		20150727120621 d610bba6
+D age-api.ads		20150727094127 14cce72b
+D age-api.adb		20150727123830 c0b935a7
+D age-internal_skill_names.ads  20150723104254 656d820f
+D interfac.ads		20140225151838 69adb1b9
+D i-c.ads		20110801143639 5421119b
+D i-cpoint.ads		20130104124955 ee8a93ec
+D i-cpoint.adb		20130104124955 8bc8f877
+D i-cstrin.ads		20130104124955 341d0ddf
+D i-cstrea.ads		20130412125801 8128536b
+D i-cstrea.adb		20090409150019 98747b85
+D skill.ads		20150716082453 116540ca
+D skill-equals.ads	20150727121427 04b1e8a1
+D skill-errors.ads	20150716093303 486fc786
+D skill-field_declarations.ads  20150727121434 489e6844
+D skill-field_declarations.adb  20150727092149 9c3ba334
+D skill-field_types.ads	20150723104959 bcbfdddc
+D skill-field_types-builtin.ads  20150727121423 5472a7d4
+D skill-files.ads	20150727100913 42dce1e6
+D skill-files.adb	20150727090908 29b13e48
+D skill-hashes.ads	20150727121419 ea98993e
+D skill-internal.ads	20150716085413 47a66c46
+D skill-internal-file_parsers.ads  20150727100938 ca5f1083
+D skill-internal-file_parsers.adb  20150727132851 29241542
+D skill-internal-parts.ads  20150727092949 9624b9dd
+D skill-internal-parts.adb  20150727100936 b516ca6e
+D skill-streams.ads	20150723134340 e598fb11
+D skill-streams-reader.ads  20150727130008 df81b079
+D skill-streams-reader.adb  20150727131317 f20f7e18
+D skill-string_pools.ads  20150727100920 9de3c6c8
+D skill-string_pools.adb  20150727100916 81533399
+D skill-synchronization.ads  20150727100918 b5b77a82
+D skill-types.ads	20150727131323 809d4c12
+D skill-types-pools.ads	20150727122734 b4cbbbe8
+D skill-types-pools.adb	20150727123957 151646b7
+D skill-types-pools-age_pools.ads  20150727120800 f3e88e83
+D skill-types-pools-age_pools.adb  20150727122628 7ee1ac4a
+D skill-types-vectors.ads  20150727132702 352fc2e0
+D skill-types-vectors.adb  20150727131640 43b72627
+D system.ads		20141210093300 90249111
+D s-addima.ads		20090409150019 a1ec9d3a
+D s-atacco.ads		20120515093410 4c36d12f
+D s-crtl.ads		20140225151544 840e6817
+D s-exctab.ads		20140225151139 54135002
+D s-ficobl.ads		20120709130952 55a71d43
+D s-finmas.ads		20140225151139 814daec4
+D s-finroo.ads		20120426095924 4ff27390
+D s-imgint.ads		20090409150019 02dbe0c2
+D s-imglli.ads		20090409150019 114f55d1
+D s-linux.ads		20140409145429 5b2f79a5
+D s-multip.ads		20101011073009 38ac9f73
+D s-oscons.ads		20141210093300 a445b120
+D s-osinte.ads		20140409145429 59011f13
+D s-parame.ads		20140225151139 ab8cb46a
+D s-pooglo.ads		20110804083314 542f33d0
+D s-secsta.ads		20140225151139 86a2856d
+D s-soflin.ads		20140225151139 aa763b52
+D s-stache.ads		20140225151139 a37c21ec
+D s-stausa.ads		20110804134155 017a0a05
+D s-stalib.ads		20140225151139 a891183f
+D s-stoele.ads		20140225151139 2dc34a04
+D s-stoele.adb		20140225151139 ed88f8fb
+D s-stopoo.ads		20131010103753 b16154c2
+D s-stposu.ads		20121005142121 ffeba1c5
+D s-stratt.ads		20131014135145 aedef97e
+D s-stratt.adb		20090409150019 56ef263e
+D s-tasinf.ads		20120730151500 21316953
+D s-taspri.ads		20110927094500 15f617a8
+D s-taskin.ads		20140131154341 3f821f32
+D s-taprob.ads		20110927094500 502249e3
+D s-tpoben.ads		20121029113218 b641f948
+D s-tpobop.ads		20090409150019 5f548bb3
+D s-traent.ads		20140225151139 b5116092
+D s-unstyp.ads		20140225151139 510692af
+D s-wchcon.ads		20140225151139 1b7d22d2
+D s-wchcon.adb		20140225151139 974e87c5
+X 1 ada.ads
+16K9*Ada 19e8 37|16r6 19r6 53r31 149r31 160r31
+X 12 a-cohama.ads
+52R9*Map<20|48R9>
+282V13*Element{68|48P9} 37|68s31[53|27]
+X 24 a-iteint.ads
+24h9 Forward_Iterator
+32h9 Reversible_Iterator<24R9[17|70]>
+X 33 a-unccon.ads
+20v14*Unchecked_Conversion 37|16w10 53r35
+X 34 a-uncdea.ads
+20u15*Unchecked_Deallocation 37|19w10 149r35 160r35
+X 35 age.ads
+10K9*Age 19e8 36|13r9 42r5 37|18r6 22r14 180r5
+X 36 age-api.ads
+13K13*Api 35|10k9 36|38E9 42l9 42e12 37|22b18 180l9 180t12
+15R9*File_T<53|34R9> 16r24 25p14 25r35 28p14 28r35 34p13 34r33 38c9 40e14
+. 37|60r18 110r59 142r35 148r35 158r29 160r58 175r33
+16P9*File(15R9) 22r69 37|51r52 110r67 115r63
+19V13*Open{16P9} 20>7 21>7 22>7 37|112b13 140l8 140t12
+20s7 Path{string} 37|113b7 121r59
+21e7 Read_M{53|18E9} 37|114b7 118r12
+22e7 Write_M{53|19E9} 37|115b7 121r67
+25U14*Flush 25^21 37|142b14 146l8 146t13 164s12
+25p21 This(15R9) 37|142b21
+28U14*Close 28^21 37|148b14 173l8 173t13
+28p21 This(15R9) 37|148b21 162r23 164r7 166r15 168r7 169r7
+32K12*Age_Pool_P=32:59 33r24 37|34r17
+33P12*Age_Pool{70|22P12} 34r48 39r14 37|55r10 175r48
+34V13*Ages{33P12} 34^19 37|175b13 178l8 178t12
+34p19 This(15R9) 37|175b19 177r14
+39p7 Ages{33P12} 37|66m12 177r19
+X 37 age-api.adb
+27V13 New_Pool{68|48P9} 27b13 28>7 29>7 30>7 43l8 43t16 57|22i21
+28i7 Type_ID{natural} 34r34
+29p7 Name{67|24P9} 33r25
+30p7 Super{68|48P9}
+46V13 Make_State{36|16P9} 46b13 47>7 48>7 49>7 50>7 51>7 69l8 69t18 57|27i21
+47p7 Path{67|24P9} 61r29
+48e7 Mode{53|19E9} 62r29
+49p7 Strings{64|23P9} 63r29
+50p7 Types{53|24P12} 64r29
+51r7 Types_By_Name{53|32R12} 65r29 68r17
+53V16 Convert[33|20]{70|22P12} 67s14
+72V13 Constant_Length_Array{51|12P9} 72b13 73>7 74>7 79l8 79t29 57|35i21
+73i7 Length{67|16I12}
+74p7 Base_T{51|12P9}
+80V13 Variable_Length_Array{51|12P9} 80b13 81>7 86l8 86t29 57|39i21
+81p7 Base_T{51|12P9}
+87V13 List_Type{51|12P9} 87b13 88>7 93l8 93t17 57|42i21
+88p7 Base_T{51|12P9}
+94V13 Set_Type{51|12P9} 94b13 95>7 100l8 100t16 57|45i21
+95p7 Base_T{51|12P9}
+101V13 Map_Type{51|12P9} 101b13 102>7 103>7 108l8 108t16 57|48i21
+102p7 Key_T{51|12P9}
+103p7 Value_T{51|12P9}
+110V13 Read[57|52]{36|16P9} 121s20 58|44b13
+149U17 Delete[34|20] 166s7
+153U17 Delete 153b17 153>25 156l11 156t17 168r27
+153p25 This{68|48P9} 155r10
+158P12 Ft(36|15R9) 160r66 162r14 162r20
+160U17 Delete[34|20] 172s7
+162p7 Self{158P12} 172m14 172r14
+X 38 age-internal_skill_names.ads
+11K13*Internal_Skill_Names 37|18w10 33r31 68r40 38|17e29
+14p4*Age_Skill_Name{67|24P9} 37|33r52 68r61
+X 39 interfac.ads
+54I9*Integer_64<long_integer>
+X 46 skill.ads
+7K9*Skill 36|7r6 8r6 9r6 10r6 15r23 21r17 21r43 22r17 22r43 32r31 38r23 37|7r6
+. 8r6 9r6 10r6 11r6 12r6 13r6 14r6 15r6 17r6 24r8 25r13 29r17 30r17 30r48
+. 47r23 48r23 49r23 50r23 51r23 54r10 74r16 75r14 81r16 82r14 88r16 89r14
+. 95r16 96r14 102r17 103r17 104r14 110r25 114r37 115r37 121r26 124r19 46|12e10
+X 47 skill-equals.ads
+14K15*Equals 37|13w12 33r10 47|30e17
+19V13*Equals{boolean} 37|33s17
+X 48 skill-errors.ads
+9K15*Errors 37|10w12 124r25 48|24e17
+12X4*Skill_Error 37|124r32
+X 51 skill-field_types.ads
+7K15*Field_Types 37|14w12 74r22 75r20 81r22 82r20 88r22 89r20 95r22 96r20
+. 102r23 103r23 104r20 51|27e22
+12P9*Field_Type(11R9) 37|74r34 75r32 81r34 82r32 88r34 89r32 95r34 96r32
+. 102r35 103r35 104r32
+21H12 Field_Type<11R9>
+X 53 skill-files.ads
+16K15*Files 36|7w12 15r29 21r23 21r49 22r23 22r49 38r29 37|8w12 48r29 50r29
+. 51r29 114r17 114r43 115r17 115r43 120r15 123r15 53|55e16
+18E9*Read_Mode 36|21r29 37|114r23 53|18e36
+18n23*Create{18E9} 37|123r21
+18n31*Read{18E9} 36|21r55 37|114r49 120r21
+19E9*Write_Mode 36|22r29 37|48r35 115r23 53|19e38
+19n24*Write{19E9} 36|22r55 37|115r49
+24P12*Type_Vector{72|17P9[21]} 37|50r35
+32R12*Type_Map{12|52R9[27]} 37|51r35
+34H9*File_T 36|15r35 38r35 53|49e14
+36p7*Path{67|24P9} 37|61m12 166m20
+39e7*Mode{19E9} 37|62m12
+42p7*Strings{64|23P9} 37|63m12
+45p7*Types{24P12} 37|64m12 168r12 169r12
+48r7*Types_By_Name{32R12} 37|65m12
+X 56 skill-internal.ads
+7K15*Internal 36|8r12 37|11r12 15r12 110r31 56|9e19
+X 57 skill-internal-file_parsers.ads
+16K24*File_Parsers 36|8w21 37|11w21 110r40 57|55e32
+52v13*Read 37|110r53
+X 59 skill-internal-parts.ads
+13K24*Parts 37|15w21 59|43e25
+X 61 skill-streams.ads
+14K15*Streams 37|9w12 121r32 61|25e18
+23V13*Input 37|121s40
+X 64 skill-string_pools.ads
+20K15*String_Pools 37|12w12 49r29 64|85e23
+23P9*Pool(22R9) 37|49r42
+X 67 skill-types.ads
+9K15*Types 36|9r12 10r12 32r37 37|7r12 17w12 25r19 29r23 30r23 30r54 47r29
+. 54r16 73r16 151r10 153r32 67|40e16
+16I12*v64{39|54I9} 37|73r22
+24P9*String_Access(string) 37|29r29 47r35 151r16
+X 68 skill-types-pools.ads
+42K21*Pools 36|9w18 10r18 32r43 37|7w18 25r25 30r29 30r60 54r22 153r38 68|169e22
+48P9*Pool(47R9) 37|25r31 30r35 30r66 54r28 153r44
+49P9*Pool_Dyn(47R9)
+60V13*Dynamic{49P9} 37|155s15
+108x14*Free 37|155R23
+X 70 skill-types-pools-age_pools.ads
+17K27*Age_Pools 36|10w24 32r49 70|58e32
+19K12*Age_P 36|32r59 70|56e13
+22P12*Pool(21R12) 36|33r35
+32V16*Make{68|48P9} 37|34s28
+X 72 skill-types-vectors.ads
+16R9*Vector_T
+17P9*Vector(16R9[53|21])
+21U14*Free 37|169s18[53|21]
+24U14*Foreach 37|168s18[53|21]
+X 93 s-stausa.ads
+203U14*Initialize 204i<c,__gnat_stack_usage_initialize>22
+268U14*Output_Results 272i<c,__gnat_stack_usage_output_results>22
+

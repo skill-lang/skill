@@ -1,0 +1,123 @@
+V "GNAT Lib v4.9"
+A -O3
+A -gnatA
+A -gnatn
+A -gnatN
+A -gnatp
+A -gnat2012
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV SIMPLE_BARRIERS
+RV NO_EXCEPTION_HANDLERS
+RV NO_EXCEPTION_PROPAGATION
+RV NO_EXCEPTIONS
+RV NO_PROTECTED_TYPES
+RV NO_STANDARD_STORAGE_POOLS
+RV NO_IMPLEMENTATION_PRAGMAS
+RV SPARK_05
+RV MAX_PROTECTED_ENTRIES=1
+
+U skill.synchronization%b  skill-synchronization.adb  b0225706 NE OO PK
+W ada.tags%s		a-tags.adb		a-tags.ali
+W skill%s		skill.adb		skill.ali
+W system%s		system.ads		system.ali
+W system.soft_links%s	s-soflin.adb		s-soflin.ali
+W system.tasking.protected_objects%s  s-taprob.adb  s-taprob.ali
+W system.tasking.protected_objects.entries%s  s-tpoben.adb  s-tpoben.ali
+W system.tasking.protected_objects.operations%s  s-tpobop.adb  s-tpobop.ali
+
+U skill.synchronization%s  skill-synchronization.ads  a4d23a48 NE OO PU PK
+W ada.exceptions%s	a-except.adb		a-except.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W skill%s		skill.adb		skill.ali
+W system%s		system.ads		system.ali
+W system.tasking%s	s-taskin.adb		s-taskin.ali
+W system.tasking.protected_objects%s  s-taprob.adb  s-taprob.ali
+W system.tasking.protected_objects.entries%s  s-tpoben.adb  s-tpoben.ali
+
+D ada.ads		20070406091342 3ffc8e18
+D a-except.ads		20140129161953 f86a4103
+D a-finali.ads		20111121113555 52ecdc1b
+D a-stream.ads		20140122164720 1a984740
+D a-tags.ads		20111212115430 6c0509d0
+D a-unccon.ads		20070406091342 f9eb8f06
+D a-uncdea.ads		20070406091342 f15a5ed1
+D interfac.ads		20140225151838 69adb1b9
+D i-c.ads		20110801143639 5421119b
+D skill.ads		20150716082453 116540ca
+D skill-synchronization.ads  20150727100918 b5b77a82
+D skill-synchronization.adb  20150727100921 855902e1
+D system.ads		20141210093300 90249111
+D s-atacco.ads		20120515093410 4c36d12f
+D s-bitops.ads		20140225151544 0765e3a3
+D s-exctab.ads		20140225151139 54135002
+D s-finmas.ads		20140225151139 814daec4
+D s-finroo.ads		20120426095924 4ff27390
+D s-intman.ads		20090409150019 47ba1e06
+D s-linux.ads		20140409145429 5b2f79a5
+D s-multip.ads		20101011073009 38ac9f73
+D s-oscons.ads		20141210093300 a445b120
+D s-osinte.ads		20140409145429 59011f13
+D s-osprim.ads		20090409150019 b0d18c29
+D s-osprim.adb		20091121120111 9201ba69
+D s-parame.ads		20140225151139 ab8cb46a
+D s-pooglo.ads		20110804083314 542f33d0
+D s-restri.ads		20140225151139 1b9d0672
+D s-restri.adb		20140225151139 0b93a92a
+D s-rident.ads		20140225151139 fcbf2143
+D s-secsta.ads		20140225151139 86a2856d
+D s-soflin.ads		20140225151139 aa763b52
+D s-soflin.adb		20140225151139 f0f94dbe
+D s-solita.ads		20090409150019 4e08c3ec
+D s-stache.ads		20140225151139 a37c21ec
+D s-stchop.ads		20090409150019 ea7da0c3
+D s-stausa.ads		20110804134155 017a0a05
+D s-stalib.ads		20140225151139 a891183f
+D s-stoele.ads		20140225151139 2dc34a04
+D s-stoele.adb		20140225151139 ed88f8fb
+D s-stopoo.ads		20131010103753 b16154c2
+D s-tasinf.ads		20120730151500 21316953
+D s-taspri.ads		20110927094500 15f617a8
+D s-taprop.ads		20111212143339 1dd2e1b6
+D s-taprop.adb		20140409145429 a993954f
+D s-tpoaal.adb		20110906104317 0239874f system.task_primitives.operations.atcb_allocation
+D s-tporft.adb		20110831093335 c1225b23 system.task_primitives.operations.register_foreign_thread
+D s-tpopsp.adb		20110803103826 43d7f309 system.task_primitives.operations.specific
+D s-taskin.ads		20140131154341 3f821f32
+D s-tasdeb.ads		20110804131359 1fdd4e3b
+D s-taenca.ads		20090409150019 da9410ac
+D s-taenca.adb		20110905143030 01494d6d
+D s-tasini.ads		20120612110910 cd8187f9
+D s-tasini.adb		20140129155348 7de16cee
+D s-taprob.ads		20110927094500 502249e3
+D s-tpoben.ads		20121029113218 b641f948
+D s-tpobop.ads		20090409150019 5f548bb3
+D s-tpobop.adb		20130103105847 c43af208
+D s-tasque.ads		20090409150019 b4c10749
+D s-tasque.adb		20090409150019 6ae2886d
+D s-tasren.ads		20120208100446 a67a9949
+D s-tasuti.ads		20090415084231 eab7b9b0
+D s-tasuti.adb		20110829141528 0b9d7ca6
+D s-traent.ads		20140225151139 b5116092
+D s-traces.ads		20090409150019 f21d68aa
+D s-tratas.ads		20090409150019 fe3b06bf
+D s-unstyp.ads		20140225151139 510692af
+X 10 skill.ads
+7K9*Skill 12e10 11|7r9 18r5 12|7r14 23r5
+X 11 skill-synchronization.ads
+7K15*Synchronization 10|7k9 11|18l11 18e26 12|7b20 23l11 23t26
+11W19*Mutex 15E7 16l8 16e13 12|9b19 21l8 21t13
+12Y13 Lock 12|11b13 14l11 14t15
+13U17 Unlock 12|16b17 19l11 19t17
+15b7 Locked{boolean} 12|11r27 13r10 18r10
+X 35 s-stache.ads
+60P9*Stack_Access(50R9)
+X 36 s-stchop.ads
+65V13*Stack_Check{35|60P9} 80i<c,_gnat_stack_check>22
+X 37 s-stausa.ads
+203U14*Initialize 204i<c,__gnat_stack_usage_initialize>22
+268U14*Output_Results 272i<c,__gnat_stack_usage_output_results>22
+

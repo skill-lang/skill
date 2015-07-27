@@ -25,6 +25,13 @@ trait GeneralOutputMaker extends Generator {
 
   override def getLanguageName = "ada";
 
+  /**
+   * configurable build mode; either "release" or "debug"
+   */
+  var buildMode = "release"
+  var buildOS = System.getProperty("os.name").toLowerCase
+  var buildARCH = "amd64"
+
   private[ada] def header : String
 
   // remove special stuff for now
@@ -48,7 +55,7 @@ trait GeneralOutputMaker extends Generator {
    * Assume the existence of a translation function for the types.
    */
   protected def mapTypeToId(t : Type, f : Field) : String
-  protected def mapType(t : Type, d : Declaration, f : Field) : String
+  protected def mapType(t : Type) : String
 
   /**
    * Assume the existence of inheritance information functions for the types.
@@ -62,9 +69,12 @@ trait GeneralOutputMaker extends Generator {
   protected def printParameters(d : UserType) : String
 
   /**
-   * Assume a package prefix provider.
+   * Assume a package prefix provider. Small p for files, large P for names.
    */
   protected def packagePrefix : String
+  protected def PackagePrefix : String
+  // the name of tha package that contains all pools
+  protected def poolsPackage : String
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.

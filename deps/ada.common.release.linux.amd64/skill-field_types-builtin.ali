@@ -1,0 +1,275 @@
+V "GNAT Lib v4.9"
+A -O3
+A -gnatA
+A -gnatn
+A -gnatN
+A -gnatp
+A -gnat2012
+A -mtune=generic
+A -march=x86-64
+P SS ZX
+
+RN
+RV NO_ACCESS_SUBPROGRAMS
+RV NO_ALLOCATORS
+RV NO_DISPATCH
+RV NO_DISPATCHING_CALLS
+RV NO_EXCEPTION_HANDLERS
+RV NO_EXCEPTIONS
+RV NO_IMPLICIT_CONDITIONALS
+RV NO_SECONDARY_STACK
+RV NO_STANDARD_STORAGE_POOLS
+RV NO_DEFAULT_INITIALIZATION
+RV NO_IMPLEMENTATION_PRAGMAS
+RV NO_ELABORATION_CODE
+RV SPARK_05
+
+U skill.field_types.builtin%s  skill-field_types-builtin.ads  a196d70f EE OO PF PK
+W ada%s			ada.ads			ada.ali
+W ada.containers%s	a-contai.ads		a-contai.ali
+W ada.containers.doubly_linked_lists%s
+Z ada.containers.hash_tables%s  a-cohata.ads	a-cohata.ali
+W ada.containers.hashed_maps%s
+W ada.containers.hashed_sets%s
+W ada.containers.vectors%s
+W ada.exceptions%s	a-except.adb		a-except.ali
+Z ada.finalization%s	a-finali.adb		a-finali.ali
+Z ada.iterator_interfaces%s
+W ada.streams%s		a-stream.adb		a-stream.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W skill%s		skill.adb		skill.ali
+W skill.field_types%s	skill-field_types.ads	skill-field_types.ali
+W skill.hashes%s	skill-hashes.ads	skill-hashes.ali
+W skill.types%s		skill-types.ads		skill-types.ali
+W system%s		system.ads		system.ali
+W system.secondary_stack%s  s-secsta.adb	s-secsta.ali
+W system.storage_elements%s  s-stoele.adb	s-stoele.ali
+W system.storage_pools%s  s-stopoo.adb		s-stopoo.ali
+W system.storage_pools.subpools%s  s-stposu.adb	s-stposu.ali
+W system.stream_attributes%s  s-stratt.adb	s-stratt.ali
+
+D ada.ads		20070406091342 3ffc8e18
+D a-charac.ads		20070912115821 2d3ec45b
+D a-chlat1.ads		20140225151544 66457d31
+D a-contai.ads		20101025135029 61e5e089
+D a-cdlili.ads		20130411133353 c3008bbb
+D a-cdlili.adb		20130411133353 17cec70d
+D a-cgarso.ads		20070406091342 9129bfa8
+D a-cohata.ads		20110804151834 04abccc5
+D a-chtgke.ads		20140219145932 a7b0f3a2
+D a-chtgop.ads		20140219145932 b47ea0e7
+D a-cohama.ads		20130411133353 9f97b812
+D a-cohama.adb		20140220134615 55a9a6dc
+D a-cohase.ads		20130411133353 1483927e
+D a-cohase.adb		20140220134615 0e3e14a8
+D a-coprnu.ads		20090409150019 0cdf1864
+D a-convec.ads		20120217141546 0aaf3975
+D a-convec.adb		20140220134615 a022038f
+D a-except.ads		20140129161953 f86a4103
+D a-finali.ads		20111121113555 52ecdc1b
+D a-ioexce.ads		20140225151544 e4a01f64
+D a-iteint.ads		20110906092602 7c7305e9
+D a-stream.ads		20140122164720 1a984740
+D a-string.ads		20070406091342 90ac6797
+D a-strhas.ads		20140225151544 c71c2a52
+D a-tags.ads		20111212115430 6c0509d0
+D a-unccon.ads		20070406091342 f9eb8f06
+D a-uncdea.ads		20070406091342 f15a5ed1
+D interfac.ads		20140225151838 69adb1b9
+D i-c.ads		20110801143639 5421119b
+D i-cpoint.ads		20130104124955 ee8a93ec
+D i-cpoint.adb		20130104124955 8bc8f877
+D i-cstrin.ads		20130104124955 341d0ddf
+D i-cstrea.ads		20130412125801 8128536b
+D i-cstrea.adb		20090409150019 98747b85
+D skill.ads		20150716082453 116540ca
+D skill-equals.ads	20150727121427 04b1e8a1
+D skill-field_declarations.ads  20150727121434 489e6844
+D skill-field_declarations.adb  20150727092149 9c3ba334
+D skill-field_types.ads	20150723104959 bcbfdddc
+D skill-field_types-builtin.ads  20150727121423 5472a7d4
+D skill-files.ads	20150727100913 42dce1e6
+D skill-hashes.ads	20150727121419 ea98993e
+D skill-internal.ads	20150716085413 47a66c46
+D skill-internal-parts.ads  20150727092949 9624b9dd
+D skill-internal-parts.adb  20150727100936 b516ca6e
+D skill-streams.ads	20150723134340 e598fb11
+D skill-streams-reader.ads  20150727130008 df81b079
+D skill-streams-reader.adb  20150727131317 f20f7e18
+D skill-string_pools.ads  20150727100920 9de3c6c8
+D skill-synchronization.ads  20150727100918 b5b77a82
+D skill-types.ads	20150727131323 809d4c12
+D skill-types-pools.ads	20150727122734 b4cbbbe8
+D skill-types-pools.adb	20150727123957 151646b7
+D skill-types-vectors.ads  20150727132702 352fc2e0
+D skill-types-vectors.adb  20150727131640 43b72627
+D system.ads		20141210093300 90249111
+D s-crtl.ads		20140225151544 840e6817
+D s-exctab.ads		20140225151139 54135002
+D s-finmas.ads		20140225151139 814daec4
+D s-finroo.ads		20120426095924 4ff27390
+D s-imgint.ads		20090409150019 02dbe0c2
+D s-imglli.ads		20090409150019 114f55d1
+D s-parame.ads		20140225151139 ab8cb46a
+D s-pooglo.ads		20110804083314 542f33d0
+D s-secsta.ads		20140225151139 86a2856d
+D s-soflin.ads		20140225151139 aa763b52
+D s-stache.ads		20140225151139 a37c21ec
+D s-stalib.ads		20140225151139 a891183f
+D s-stoele.ads		20140225151139 2dc34a04
+D s-stoele.adb		20140225151139 ed88f8fb
+D s-stopoo.ads		20131010103753 b16154c2
+D s-stposu.ads		20121005142121 ffeba1c5
+D s-stratt.ads		20131014135145 aedef97e
+D s-stratt.adb		20090409150019 56ef263e
+D s-traent.ads		20140225151139 b5116092
+D s-unstyp.ads		20140225151139 510692af
+X 1 ada.ads
+16K9*Ada 19e8 40|6r6 7r6 8r6 9r6 10r6 116r25 133r25 147r52 151r25 165r51
+. 170r25
+X 4 a-contai.ads
+16K13*Containers 24e19 40|6w10 7r10 8r10 9r10 10r10 116r29 133r29 147r56
+. 151r29 165r55 170r29
+19M9*Hash_Type 40|147r67 165r66
+X 5 a-cdlili.ads
+45k24*Doubly_Linked_Lists 381e39 40|7w21 133r40
+49R9 List<19|48R9> 40|135r23[133]
+X 11 a-cohama.ads
+48k24*Hashed_Maps 441e31 40|8w21 170r40
+52R9 Map<19|48R9> 40|172r23[170]
+X 13 a-cohase.ads
+50k24*Hashed_Sets 557e31 40|9w21 151r40
+54R9 Set<19|48R9> 40|153r23[151]
+X 16 a-convec.ads
+45k24*Vectors 474e27 40|10w21 116r40
+55R9 Vector<19|48R9> 40|118r23[116]
+X 21 a-iteint.ads
+24h9 Forward_Iterator
+32h9 Reversible_Iterator<24R9[16|70]>
+X 28 interfac.ads
+45I9*Integer_8<short_short_integer>
+48I9*Integer_16<short_integer>
+51I9*Integer_32<integer>
+54I9*Integer_64<long_integer>
+X 35 skill.ads
+7K9*Skill 12e10 40|12r6 13r6 13r24 15r9 48r22 182r5
+X 39 skill-field_types.ads
+7K15*Field_Types 35|7k9 39|27e22 40|15r15 182r11
+12P9*Field_Type(11R9) 40|62r26 65r20 69r18 72r19 75r19 78r19 81r19 85r19
+. 88r19 92r27 97r15 113r15 130r15 148r15 167r21
+15y13*To_String{string} 40|108R15 125R15 142R25 160R24 179R23 179R47
+20k12*Field_Types 25e19 40|24r25 38r25 103r25 120r25 137r25 155r25 174r25
+21H12*Field_Type<11R9> 40|26r33[24] 40r33[38] 105r33[103] 122r33[120] 139r33[137]
+. 157r33[155] 176r33[174]
+23V27 Id{natural}<14p13>
+X 40 skill-field_types-builtin.ads
+15K27*Builtin 39|7k15 40|182l23 182e30
+19+12 T 24r38
+20i7 Type_Id{natural} 24r41
+21s7 Image{string} 29r10
+22k12*Plain_Types 19z12 20z7 21z7 30l8 30e19 61r22 64r22 68r23 71r23 74r23
+. 77r23 80r23 84r23 87r23 91r33
+24K15*A1[39|20] 26r30
+26R12*Field_Type<39|21R12[24]> 26e60 28P27 28r45 62r47[61] 65r41[64] 69r40[68]
+. 72r41[71] 75r41[74] 78r41[77] 81r41[80] 85r41[84] 88r41[87] 92r59[91]
+28V27*To_String{string}<39|15p13> 28>38
+28r38 This{26R12}
+33+12 T 38r38 41r18
+34i7 Type_Id{natural} 38r41
+35s7 Image{string} 45r10
+36k12*Constant_Types 33z12 34z7 35z7 46l8 46e22 50r31 52r32 54r32 56r32 58r32
+38K15*A1[39|20] 40r30
+40R12*Field_Type<39|21R12[38]> 42e17 44P27 44r45
+41*10 Value{33+12}
+44V27*To_String{string}<39|15p13> 44>38
+44r38 This{40R12}
+48K12*T=48:28 50r47 52r48 54r48 56r48 58r48 61r35 68r36 71r36 74r36 77r36
+. 80r36 84r36 87r36 91r46
+50K12*Constant_I8[36]
+52K12*Constant_I16[36]
+54K12*Constant_I32[36]
+56K12*Constant_I64[36]
+58K12*Constant_V64[36]
+61K12*A8[22] 62r44
+62p4*Annotation{39|12P9}
+64K12*A9[22] 65r38
+65p4*Bool{39|12P9}
+68K12*A11[22] 69r36
+69p4*I8{39|12P9}
+71K12*A21[22] 72r37
+72p4*I16{39|12P9}
+74K12*A31[22] 75r37
+75p4*I32{39|12P9}
+77K12*A41[22] 78r37
+78p4*I64{39|12P9}
+80K12*A51[22] 81r37
+81p4*V64{39|12P9}
+84K12*A32[22] 85r37
+85p4*F32{39|12P9}
+87K12*A42[22] 88r37
+88p4*F64{39|12P9}
+91K12*String_Type_T[22] 92r45
+92p4*String_Type{39|12P9}
+96+12 Base_T 101r51
+97p7 Base{39|12P9} 108r10
+98i7 Size{natural} 101r40 108r46
+99k12*Array_Types 96z12 97z7 98z7 109l8 109e19
+101A12*T(96+12)<integer> 103r38
+103K15*A1[39|20] 105r30
+105R12*Field_Type<39|21R12[103]> 105e60 107P27 107r45
+107V27*To_String{string}<39|15p13> 107>38
+107r38 This{105R12}
+112+12 Base_T 116r58
+113p7 Base{39|12P9} 125r10
+114k12*Var_Array_Types 112z12 113z7 126l8 126e23
+116K15*A2[16|45] 118r20
+118R15*T{16|55R9[116]} 120r38
+120K15*A1[39|20] 122r30
+122R12*Field_Type<39|21R12[120]> 122e60 124P27 124r45
+124V27*To_String{string}<39|15p13> 124>38
+124r38 This{122R12}
+129+12 Base_T 133r61
+130p7 Base{39|12P9} 142r20
+131k12*List_Types 129z12 130z7 143l8 143e18
+133K15*A2[5|45] 135r20
+135R15*T{5|49R9[133]} 137r38
+137K15*A1[39|20] 139r30
+139R12*Field_Type<39|21R12[137]> 139e60 141P27 141r45
+141V27*To_String{string}<39|15p13> 141>38
+141r38 This{139R12}
+146+12 Base_T 147r37 151r53
+147V21 Hash{4|19M9} 147>27 151r61
+147*27 Element{146+12}
+148p7 Base{39|12P9} 160r19
+149k12*Set_Types 146z12 147z21 148z7 161l8 161e17
+151K15*A2[13|50] 153r20
+153R15*T{13|54R9[151]} 155r38
+155K15*A1[39|20] 157r30
+157R12*Field_Type<39|21R12[155]> 157e60 159P27 159r45
+159V27*To_String{string}<39|15p13> 159>38
+159r38 This{157R12}
+164+12 Key_T 165r37 170r53
+165V21 Hash{4|19M9} 165>27 170r69
+165*27 Element{164+12}
+166+12 Value_T 170r60
+167p7 Key{39|12P9} 179r19
+167p12 Value{39|12P9} 179r41
+168k12*Map_Types 164z12 165z21 166z12 167z7 167z12 180l8 180e17
+170K15*A2[11|48] 172r20
+172R15*T{11|52R9[170]} 174r38
+174K15*A1[39|20] 176r30
+176R12*Field_Type<39|21R12[174]> 176e60 178P27 178r45
+178V27*To_String{string}<39|15p13> 178>38
+178r38 This{176R12}
+X 42 skill-hashes.ads
+14K15*Hashes 40|13w12 13r30 42|25e17
+X 51 skill-types.ads
+9K15*Types 40|12w12 48r28 51|40e16
+12I12*i8{28|45I9} 40|50r49 68r38
+13I12*i16{28|48I9} 40|52r50 71r38
+14I12*i32{28|51I9} 40|54r50 74r38 84r38
+15I12*i64{28|54I9} 40|56r50 77r38 87r38
+16I12*v64{28|54I9} 40|58r50 80r38
+24P9*String_Access(string) 40|91r48
+36P9*Annotation(33R9) 40|61r37
+

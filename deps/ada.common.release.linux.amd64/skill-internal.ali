@@ -1,0 +1,25 @@
+V "GNAT Lib v4.9"
+A -O3
+A -gnatA
+A -gnatn
+A -gnatN
+A -gnatp
+A -gnat2012
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U skill.internal%s	skill-internal.ads	56c32c8c NE OO PU PK
+W skill%s		skill.adb		skill.ali
+
+D skill.ads		20150716082453 116540ca
+D skill-internal.ads	20150716085413 47a66c46
+D system.ads		20141210093300 90249111
+X 1 skill.ads
+7K9*Skill 12e10 2|7r9 9r5
+X 2 skill-internal.ads
+7K15*Internal 1|7k9 2|9l11 9e19
+

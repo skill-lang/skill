@@ -1,0 +1,293 @@
+V "GNAT Lib v4.9"
+A -O3
+A -gnatA
+A -gnatn
+A -gnatN
+A -gnatp
+A -gnat2012
+A -mtune=generic
+A -march=x86-64
+P SS ZX
+
+RN
+RV NO_ALLOCATORS
+RV NO_DISPATCH
+RV NO_DISPATCHING_CALLS
+RV NO_IMPLICIT_CONDITIONALS
+RV NO_LOCAL_ALLOCATORS
+RV NO_SECONDARY_STACK
+RV NO_STANDARD_STORAGE_POOLS
+RV NO_UNCHECKED_CONVERSION
+RV NO_UNCHECKED_DEALLOCATION
+RV NO_IMPLEMENTATION_PRAGMAS
+RV NO_ELABORATION_CODE
+RV SPARK_05
+
+U skill.streams.reader%b  skill-streams-reader.adb  9e5792f3 NE OO PK
+W ada%s			ada.ads			ada.ali
+W ada.characters%s	a-charac.ads		a-charac.ali
+W ada.characters.latin_1%s  a-chlat1.ads	a-chlat1.ali
+W ada.exceptions%s	a-except.adb		a-except.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W ada.unchecked_conversion%s
+W ada.unchecked_deallocation%s
+W interfaces%s		interfac.ads		interfac.ali
+W interfaces.c%s	i-c.adb			i-c.ali
+W interfaces.c.strings%s  i-cstrin.adb		i-cstrin.ali
+W skill%s		skill.adb		skill.ali
+W skill.streams%s	skill-streams.adb	skill-streams.ali
+W skill.types%s		skill-types.ads		skill-types.ali
+W system.img_int%s	s-imgint.adb		s-imgint.ali
+W system.img_lli%s	s-imglli.adb		s-imglli.ali
+W system.secondary_stack%s  s-secsta.adb	s-secsta.ali
+
+U skill.streams.reader%s  skill-streams-reader.ads  4d709aba BN EE OO PF PR PK
+W ada%s			ada.ads			ada.ali
+W ada.exceptions%s	a-except.adb		a-except.ali
+W ada.streams%s		a-stream.adb		a-stream.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+Z ada.unchecked_conversion%s
+W interfaces%s		interfac.ads		interfac.ali
+W interfaces.c%s	i-c.adb			i-c.ali
+W interfaces.c.pointers%s
+W interfaces.c.strings%s  i-cstrin.adb		i-cstrin.ali
+W interfaces.c_streams%s  i-cstrea.adb		i-cstrea.ali
+W skill%s		skill.adb		skill.ali
+W skill.streams%s	skill-streams.adb	skill-streams.ali
+W skill.types%s		skill-types.ads		skill-types.ali
+W system%s		system.ads		system.ali
+W system.exception_table%s  s-exctab.adb	s-exctab.ali
+Z system.parameters%s	s-parame.adb		s-parame.ali
+W system.secondary_stack%s  s-secsta.adb	s-secsta.ali
+W system.standard_library%s  s-stalib.adb	s-stalib.ali
+W system.storage_elements%s  s-stoele.adb	s-stoele.ali
+W system.stream_attributes%s  s-stratt.adb	s-stratt.ali
+
+D ada.ads		20070406091342 3ffc8e18
+D a-charac.ads		20070912115821 2d3ec45b
+D a-chlat1.ads		20140225151544 66457d31
+D a-except.ads		20140129161953 f86a4103
+D a-ioexce.ads		20140225151544 e4a01f64
+D a-stream.ads		20140122164720 1a984740
+D a-tags.ads		20111212115430 6c0509d0
+D a-unccon.ads		20070406091342 f9eb8f06
+D a-uncdea.ads		20070406091342 f15a5ed1
+D interfac.ads		20140225151838 69adb1b9
+D i-c.ads		20110801143639 5421119b
+D i-cpoint.ads		20130104124955 ee8a93ec
+D i-cpoint.adb		20130104124955 8bc8f877
+D i-cstrin.ads		20130104124955 341d0ddf
+D i-cstrea.ads		20130412125801 8128536b
+D i-cstrea.adb		20090409150019 98747b85
+D skill.ads		20150716082453 116540ca
+D skill-streams.ads	20150723134340 e598fb11
+D skill-streams-reader.ads  20150727130008 df81b079
+D skill-streams-reader.adb  20150727131317 f20f7e18
+D skill-types.ads	20150727131323 809d4c12
+D system.ads		20141210093300 90249111
+D s-crtl.ads		20140225151544 840e6817
+D s-exctab.ads		20140225151139 54135002
+D s-exctab.adb		20140225151139 05502b19
+D s-htable.ads		20140225151139 84c2b3ea
+D s-imgint.ads		20090409150019 02dbe0c2
+D s-imglli.ads		20090409150019 114f55d1
+D s-parame.ads		20140225151139 ab8cb46a
+D s-secsta.ads		20140225151139 86a2856d
+D s-soflin.ads		20140225151139 aa763b52
+D s-stache.ads		20140225151139 a37c21ec
+D s-stalib.ads		20140225151139 a891183f
+D s-stoele.ads		20140225151139 2dc34a04
+D s-stoele.adb		20140225151139 ed88f8fb
+D s-stratt.ads		20131014135145 aedef97e
+D s-stratt.adb		20090409150019 56ef263e
+D s-traent.ads		20140225151139 b5116092
+D s-unstyp.ads		20140225151139 510692af
+X 1 ada.ads
+16K9*Ada 19e8 19|13r6 67r26 20|7r6 8r6 9r6 52r31 90r31 107r31 121r31 137r31
+. 160r31 163r31 194r26 199r9 201r9 204r9 207r9 210r9 212r9 222r9 224r9 227r9
+. 230r9 233r9
+X 2 a-charac.ads
+16K13*Characters 18e19 20|7r10 199r13 201r13 204r13 207r13 210r13 222r13
+. 224r13 227r13 230r13 233r13
+X 3 a-chlat1.ads
+18K24*Latin_1 296e27 20|7w21 199r24 201r24 204r24 207r24 210r24 222r24 224r24
+. 227r24 230r24 233r24
+35e4*LF{character} 20|199r32 201r32 204r32 207r32 210r32 222r32 224r32 227r32
+. 230r32 233r32
+X 4 a-except.ads
+53K13*Exceptions 360e19 19|13w10 67r30 20|194r30 212r13
+62R9*Exception_Occurrence 328e14 19|67r41 20|194r41
+103V13*Exception_Information{string} 20|212s24
+X 8 a-unccon.ads
+17+9 Source 20|161r10 164r10
+18+9 Target 20|162r10 165r10
+20v14*Unchecked_Conversion 20|8w10 90r35 107r35 121r35 137r35 160r35 163r35
+X 9 a-uncdea.ads
+20u15*Unchecked_Deallocation 20|9w10 52r35
+X 10 interfac.ads
+38K9*Interfaces 179e15 19|7r6 8r6 9r6 10r6 76r22 86r16 87r16 92r31 96r18
+. 97r18 103r14 20|11w6 14r6 21r15 22r9 26r7 42r16 45r24 47r35 77r24 91r10
+. 159r16 174r12 181r45 185r15
+45I9*Integer_8<short_short_integer>
+48I9*Integer_16<short_integer>
+51I9*Integer_32<integer>
+54I9*Integer_64<long_integer> 20|42r27
+66M9*Unsigned_64 20|159r27
+129V13*Shift_Left{66M9} 20|174s23 181s56 185s26
+X 11 i-c.ads
+18K20*C 230e17 19|7w17 8r17 9r17 76r33 87r27 92r42 96r29 97r29 20|14r17 21r26
+. 22r20 26r18 45r35 47r46 77r35 91r21
+47M9*unsigned_char 19|78r63 81r31 20|91r23
+56I9*ptrdiff_t<long_integer> 20|47r48 93r41 108r42 122r42 138r42
+60M9*size_t 19|78r33 80r31 87r29 96r31 97r31 20|45r37 77r37
+X 12 i-cpoint.ads
+39E9 Index 19|80r7
+40+9 Element 19|81r7
+41A9 Element_Array(40+9)<39E9> 19|82r7
+42*4 Default_Terminator{40+9} 19|83r7
+44k22*Pointers 102e26 19|8w19 79r27
+47P9*Pointer(11|47M9) 19|88r22[79] 98r24[79] 20|41r22[19|79] 93r17[19|79]
+. 108r18[19|79] 109r18[19|79] 122r18[19|79] 123r18[19|79] 124r18[19|79] 125r18[19|79]
+. 138r18[19|79] 139r18[19|79] 140r18[19|79] 141r18[19|79] 142r18[19|79] 143r18[19|79]
+. 144r18[19|79] 145r18[19|79]
+68V14*"+"{47P9[19|79]} 20|47s33[19|79] 93s37[19|79] 108s38[19|79] 109s31[19|79]
+. 122s38[19|79] 123s31[19|79] 124s31[19|79] 125s31[19|79] 138s38[19|79] 139s31[19|79]
+. 140s31[19|79] 141s31[19|79] 142s31[19|79] 143s31[19|79] 144s31[19|79] 145s31[19|79]
+X 14 i-cstrin.ads
+36K22*Strings 104e25 19|9w19 92r44 20|14w19 21r28 22r22 26r20
+47P9*chars_ptr 19|92r52 20|21r36
+60V13*New_String{47P9} 20|22s30
+62U14*Free 20|26s28
+X 15 i-cstrea.ads
+37K20*C_Streams 285e25 19|10w17 86r27 103r25
+41M12*FILEs{23|50M12} 19|86r37 103r35
+X 17 skill.ads
+7K9*Skill 12e10 19|12r6 15r9 21r41 25r26 38r44 43r51 45r63 47r61 49r62 51r62
+. 53r62 55r62 102r14 109r5 20|13r6 16r14 18r8 59r44 66r51 74r14 86r61 92r10
+. 102r62 116r62 132r62 155r62 237r5
+X 18 skill-streams.ads
+14K15*Streams 17|7k9 18|25e18 19|15r15 21r47 109r11 20|16r20 237r11
+17A9*Unsigned_Char_Array(11|47M9)<11|60M9> 20|106r24 120r24 136r24
+X 19 skill-streams-reader.ads
+15K23*Reader 18|14k15 19|21r55 76E12 109l19 109e25 20|16b28 237l19 237t25
+18R9*Abstract_Stream 20r31 22r29 40r32 43r21 45r34 47r31 49r32 51r32 53r32
+. 55r32 95c9 99e14 101r31 107r29 20|66r21 73r21 80r32 86r31 102r32 116r32
+. 132r32 155r32
+20R9*Input_Stream_T<18R9> 21r62 28p13 29r22 37p13 38r21 64p13 65r33 70p13
+. 71r30 101c9 104e14 20|27r18 36r22 59r21 192r33 216r30
+21P9*Input_Stream(20R9) 25r60 20|20r54
+22R9*Sub_Stream_T<18R9> 23r30 35p14 35r34 107c9 107e61 20|44r18 50r34 51r28
+. 52r59
+23P9*Sub_Stream(22R9) 32r33 20|39r33
+25V13*Open{21P9} 25>19 20|20b13 33l8 33t12
+25p19 Path{21|24P9} 20|20b19 22r42 28r24
+28V13*Map{23P9} 29^7 30>7 31>7 32>7 20|35b13 48l8 48t11
+29p7 This(20R9) 20|36b7 47r24
+30i7 Base{21|16I12} 20|37b7 47r59
+31i7 First{21|16I12} 20|38b7 45r52 47r66
+32i7 Last{21|16I12} 20|39b7 45r45
+35U14*Free 35^20 20|50b14 56l8 56t12
+35p20 This(22R9) 20|50b20 53r19
+37V13*Path{21|24P9} 38^7 20|58b13 63l8 63t12
+38p7 This(20R9) 20|59b7 62r14
+40V13*Eof{boolean} 40^18 20|80b13 84l8 84t11
+40p18 This(18R9) 20|80b18 83r14 83r31
+42V13*Position{21|16I12} 43^7 20|65b13 70l8 70t16
+43p7 This(18R9) 20|66b7 69r25
+45U14*Jump 45^20 45>57 20|72b14 78l8 78t12
+45p20 This(18R9) 20|73b7 77r7
+45i57 Pos{21|16I12} 20|74b7 77r45
+47V13*I8{21|12I12} 47^17 58r19 20|86b13 100l8 100t10 169s50 176s34
+47p17 This(18R9) 20|86b17 93r28 93r52 98r7 98r24
+49V13*I16{21|13I12} 49^18 59r19 20|102b13 114l8 114t11
+49p18 This(18R9) 20|102b18 108r29 108r53 112r7 112r24
+51V13*I32{21|14I12} 51^18 60r19 20|116b13 130l8 130t11
+51p18 This(18R9) 20|116b18 122r29 122r53 128r7 128r24
+53V13*I64{21|15I12} 53^18 61r19 20|132b13 153l8 153t11
+53p18 This(18R9) 20|132b18 138r29 138r53 151r7 151r24
+55V13*V64{21|16I12} 55^18 20|155b13 189l8 189t11
+55p18 This(18R9) 20|155b18 169r45 176r29
+64V13*Parse_Exception{string} 65^7 66>7 67>7 68>7 20|191b13 214l8 214t23
+65p7 This(20R9) 20|192b7 200r9 203r43
+66i7 Block_Counter{positive} 20|193b7 206r25
+67r7 Cause{4|62R9} 20|194b7 212r47
+68s7 Message{string} 20|195b7 209r9
+70V13*Parse_Exception{string} 71^7 72>7 73>7 20|215b13 235l8 235t23
+71p7 This(20R9) 20|216b7 223r9 226r43
+72i7 Block_Counter{positive} 20|217b7 229r25
+73s7 Message{string} 20|218b7 232r9
+76K12 C=76:33 78r31 78r61 79r25 80r29 81r29 20|81r11 87r11 93r39 103r11 108r40
+. 117r11 122r40 133r11 138r40
+78A9 Uchar_Array(11|47M9)<11|60M9> 82r29
+79K12 Uchar[12|44] 88r16 98r18 20|41r16 88r11 93r11 104r11 108r12 109r12
+. 118r11 122r12 123r12 124r12 125r12 134r11 138r12 139r12 140r12 141r12 142r12
+. 143r12 144r12 145r12
+85R9 Mmap 89e14 92r70 20|24r13
+86m7*File{15|41M12} 20|29r28
+87m7*Length{11|60M9} 20|30r28
+88p7*Map{12|47P9[79]} 20|31r28
+92V13 MMap_Open{85R9} 92>24 93b<c,mmap_open>22 20|24s21
+92p24 Path{14|47P9}
+96m7*Length{11|60M9} 20|30m12 45m12 83r36
+97m7*Position{11|60M9} 20|32m12 46m12 69r30 77m12 83r19 93r57 98m12 98r29
+. 108r58 112m12 112r29 122r58 128m12 128r29 138r58 151m12 151r29 203r48 226r48
+98p7*Map{12|47P9[79]} 20|31m12 47m12 47r29 93r33 108r34 122r34 138r34
+102p7 Path{21|24P9} 20|28m12 62r19 200r14 223r14
+103m7 File{15|41M12} 20|29m12
+X 20 skill-streams-reader.adb
+21p7 Cpath{14|47P9} 24r32 26m34 26r34
+24r7 Map{19|85R9} 29r24 30r24 31r24
+51P12 S(19|22R9) 52r73 53r11 53r16
+52U17 Delete[9|20] 55s7
+53p7 D{51P12} 55m15 55r15
+90V16 Convert[8|20]{10|45I9} 94s28
+93p7 P{12|47P9[19|79]} 94r37
+94i7 R{21|12I12} 99r14
+106A15 Bytes{18|17A9}<11|60M9> 107r57 110r38
+107V16 Convert[8|20]{10|48I9} 110s29
+108p7 P{12|47P9[19|79]} 109r29 110r53
+109p7 P1{12|47P9[19|79]} 110r45
+110i7 R{21|13I12} 113r14
+120A15 Bytes{18|17A9}<11|60M9> 121r57 126r38
+121V16 Convert[8|20]{10|51I9} 126s29
+122p7 P{12|47P9[19|79]} 123r29 124r29 125r29 126r69
+123p7 P1{12|47P9[19|79]} 126r61
+124p7 P2{12|47P9[19|79]} 126r53
+125p7 P3{12|47P9[19|79]} 126r45
+126i7 R{21|14I12} 129r14
+136A15 Bytes{18|17A9}<11|60M9> 137r57 148r12
+137V16 Convert[8|20]{10|54I9} 147s9
+138p7 P{12|47P9[19|79]} 139r29 140r29 141r29 142r29 143r29 144r29 145r29
+. 149r71
+139p7 P1{12|47P9[19|79]} 149r63
+140p7 P2{12|47P9[19|79]} 149r55
+141p7 P3{12|47P9[19|79]} 149r47
+142p7 P4{12|47P9[19|79]} 149r39
+143p7 P5{12|47P9[19|79]} 149r31
+144p7 P6{12|47P9[19|79]} 149r23
+145p7 P7{12|47P9[19|79]} 149r15
+146i7 R{21|15I12} 152r14
+158I15 Count_Type{integer} 167r22
+160V16 Convert[8|20]{10|66M9} 169s36 176s20
+163V16 Convert[8|20]{10|54I9} 188s14
+167i7 Count{158I15} 171r14 174r58 175m10 175r20 179r12 185r61
+168m7 Return_Value{21|18M12} 172m10 173r12 181m13 181r29 183m13 184r15 188r23
+169m7 Bucket{21|18M12} 171r39 174r35 176m10 181r68 185r38
+X 21 skill-types.ads
+9K15*Types 19|12w12 25r32 30r15 31r15 32r15 38r50 43r57 45r69 47r67 49r68
+. 51r68 53r68 55r68 102r20 20|13w12 20r26 37r15 38r15 39r15 59r50 66r57 69r14
+. 74r20 86r67 92r16 94r11 102r68 107r64 110r12 116r68 121r64 126r12 132r68
+. 137r64 146r12 155r68 161r20 162r20 164r20 165r20 168r22 169r22 21|40e16
+12I12*i8{10|45I9} 19|47r73 20|86r73 92r22 94r17 161r26
+13I12*i16{10|48I9} 19|49r74 20|102r74 107r70 110r18
+14I12*i32{10|51I9} 19|51r74 20|116r74 121r70 126r18
+15I12*i64{10|54I9} 19|53r74 20|132r74 137r70 146r18
+16I12*v64{10|54I9} 19|30r21 31r21 32r21 43r63 45r75 55r74 20|37r21 38r21
+. 39r21 66r63 69r20 74r26 155r74 165r26
+18M12*Uv64{10|66M9} 20|162r26 164r26 168r28 169r28
+24P9*String_Access(string) 19|25r38 38r56 102r26 20|20r32 59r56
+X 22 system.ads
+64M9*Address
+X 23 s-crtl.ads
+50M12*FILEs{22|64M9}
+

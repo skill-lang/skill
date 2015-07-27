@@ -1,0 +1,290 @@
+V "GNAT Lib v4.9"
+A -O3
+A -gnatA
+A -gnatn
+A -gnatN
+A -gnatp
+A -gnat2012
+A -mtune=generic
+A -march=x86-64
+P SS ZX
+
+RN
+RV NO_ALLOCATORS
+RV NO_DISPATCH
+RV NO_DISPATCHING_CALLS
+RV NO_EXCEPTION_HANDLERS
+RV NO_EXCEPTIONS
+RV NO_IMPLICIT_CONDITIONALS
+RV NO_IMPLICIT_DYNAMIC_CODE
+RV NO_LOCAL_ALLOCATORS
+RV NO_NESTED_FINALIZATION
+RV NO_RECURSION
+RV NO_SECONDARY_STACK
+RV NO_STANDARD_STORAGE_POOLS
+RV NO_UNCHECKED_CONVERSION
+RV NO_DEFAULT_INITIALIZATION
+RV NO_IMPLEMENTATION_PRAGMAS
+RV NO_ELABORATION_CODE
+RV SPARK_05
+
+U skill.types.pools%b	skill-types-pools.adb	78022f2d NE OO PK
+W ada%s			ada.ads			ada.ali
+W ada.containers%s	a-contai.ads		a-contai.ali
+W ada.containers.vectors%s
+W ada.exceptions%s	a-except.adb		a-except.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W ada.unchecked_conversion%s
+W skill%s		skill.adb		skill.ali
+W skill.field_types%s	skill-field_types.ads	skill-field_types.ali
+W skill.internal%s	skill-internal.ads	skill-internal.ali
+W skill.internal.parts%s  skill-internal-parts.adb  skill-internal-parts.ali
+W skill.types%s		skill-types.ads		skill-types.ali
+W system.finalization_masters%s  s-finmas.adb	s-finmas.ali
+W system.pool_global%s	s-pooglo.adb		s-pooglo.ali
+W system.secondary_stack%s  s-secsta.adb	s-secsta.ali
+W system.soft_links%s	s-soflin.adb		s-soflin.ali
+
+U skill.types.pools%s	skill-types-pools.ads	2b0fe1cc BN EE OO PF PK
+W ada%s			ada.ads			ada.ali
+W ada.containers%s	a-contai.ads		a-contai.ali
+W ada.containers.vectors%s
+W ada.exceptions%s	a-except.adb		a-except.ali
+Z ada.finalization%s	a-finali.adb		a-finali.ali
+W ada.streams%s		a-stream.adb		a-stream.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+Z ada.unchecked_deallocation%s
+W skill%s		skill.adb		skill.ali
+W skill.field_declarations%s  skill-field_declarations.adb  skill-field_declarations.ali
+W skill.field_types%s	skill-field_types.ads	skill-field_types.ali
+Y skill.files%s		skill-files.adb		skill-files.ali
+W skill.internal%s	skill-internal.ads	skill-internal.ali
+W skill.internal.parts%s  skill-internal-parts.adb  skill-internal-parts.ali
+W skill.types%s		skill-types.ads		skill-types.ali
+W skill.types.vectors%s	skill-types-vectors.adb	skill-types-vectors.ali
+W system%s		system.ads		system.ali
+W system.finalization_masters%s  s-finmas.adb	s-finmas.ali
+W system.img_int%s	s-imgint.adb		s-imgint.ali
+W system.pool_global%s	s-pooglo.adb		s-pooglo.ali
+W system.soft_links%s	s-soflin.adb		s-soflin.ali
+W system.storage_elements%s  s-stoele.adb	s-stoele.ali
+W system.stream_attributes%s  s-stratt.adb	s-stratt.ali
+
+D ada.ads		20070406091342 3ffc8e18
+D a-charac.ads		20070912115821 2d3ec45b
+D a-chlat1.ads		20140225151544 66457d31
+D a-contai.ads		20101025135029 61e5e089
+D a-cdlili.ads		20130411133353 c3008bbb
+D a-cgarso.ads		20070406091342 9129bfa8
+D a-cohata.ads		20110804151834 04abccc5
+D a-cohama.ads		20130411133353 9f97b812
+D a-cohase.ads		20130411133353 1483927e
+D a-convec.ads		20120217141546 0aaf3975
+D a-convec.adb		20140220134615 a022038f
+D a-except.ads		20140129161953 f86a4103
+D a-finali.ads		20111121113555 52ecdc1b
+D a-ioexce.ads		20140225151544 e4a01f64
+D a-iteint.ads		20110906092602 7c7305e9
+D a-stream.ads		20140122164720 1a984740
+D a-string.ads		20070406091342 90ac6797
+D a-strhas.ads		20140225151544 c71c2a52
+D a-tags.ads		20111212115430 6c0509d0
+D a-unccon.ads		20070406091342 f9eb8f06
+D a-uncdea.ads		20070406091342 f15a5ed1
+D interfac.ads		20140225151838 69adb1b9
+D i-c.ads		20110801143639 5421119b
+D i-cpoint.ads		20130104124955 ee8a93ec
+D i-cpoint.adb		20130104124955 8bc8f877
+D i-cstrin.ads		20130104124955 341d0ddf
+D i-cstrea.ads		20130412125801 8128536b
+D i-cstrea.adb		20090409150019 98747b85
+D skill.ads		20150716082453 116540ca
+D skill-equals.ads	20150727121427 04b1e8a1
+D skill-field_declarations.ads  20150727121434 489e6844
+D skill-field_declarations.adb  20150727092149 9c3ba334
+D skill-field_types.ads	20150723104959 bcbfdddc
+D skill-files.ads	20150727100913 42dce1e6
+D skill-hashes.ads	20150727121419 ea98993e
+D skill-internal.ads	20150716085413 47a66c46
+D skill-internal-parts.ads  20150727092949 9624b9dd
+D skill-internal-parts.adb  20150727100936 b516ca6e
+D skill-streams.ads	20150723134340 e598fb11
+D skill-streams-reader.ads  20150727130008 df81b079
+D skill-streams-reader.adb  20150727131317 f20f7e18
+D skill-string_pools.ads  20150727100920 9de3c6c8
+D skill-synchronization.ads  20150727100918 b5b77a82
+D skill-types.ads	20150727131323 809d4c12
+D skill-types-pools.ads	20150727122734 b4cbbbe8
+D skill-types-pools.adb	20150727123957 151646b7
+D skill-types-vectors.ads  20150727132702 352fc2e0
+D skill-types-vectors.adb  20150727131640 43b72627
+D system.ads		20141210093300 90249111
+D s-crtl.ads		20140225151544 840e6817
+D s-exctab.ads		20140225151139 54135002
+D s-finmas.ads		20140225151139 814daec4
+D s-finroo.ads		20120426095924 4ff27390
+D s-imgint.ads		20090409150019 02dbe0c2
+D s-imglli.ads		20090409150019 114f55d1
+D s-parame.ads		20140225151139 ab8cb46a
+D s-pooglo.ads		20110804083314 542f33d0
+D s-secsta.ads		20140225151139 86a2856d
+D s-soflin.ads		20140225151139 aa763b52
+D s-stache.ads		20140225151139 a37c21ec
+D s-stalib.ads		20140225151139 a891183f
+D s-stoele.ads		20140225151139 2dc34a04
+D s-stoele.adb		20140225151139 ed88f8fb
+D s-stopoo.ads		20131010103753 b16154c2
+D s-stposu.ads		20121005142121 ffeba1c5
+D s-stratt.ads		20131014135145 aedef97e
+D s-stratt.adb		20090409150019 56ef263e
+D s-traent.ads		20140225151139 b5116092
+D s-unstyp.ads		20140225151139 510692af
+X 1 ada.ads
+16K9*Ada 19e8 45|7r6 46|7r6 11r6 26r31 50r31 84r31 88r31
+X 4 a-contai.ads
+16K13*Containers 24e19 45|7r10 46|7r10
+X 10 a-convec.ads
+45k24*Vectors 474e27 45|7w21 46|7w21
+X 15 a-iteint.ads
+24h9 Forward_Iterator
+32h9 Reversible_Iterator<24R9[10|70]>
+X 20 a-unccon.ads
+20v14*Unchecked_Conversion 46|11w10 26r35 50r35 84r35 88r35
+X 22 interfac.ads
+54I9*Integer_64<long_integer>
+X 29 skill.ads
+7K9*Skill 12e10 45|9r6 10r6 11r6 13r6 42r9 83r50 87r36 94r36 114r41 138r23
+. 141r16 153r27 158r17 159r10 161r15 169r5 46|9r6 10r6 22r14 69r36 73r36
+. 81r36 94r12 112r41 130r5
+X 31 skill-field_declarations.ads
+15K15*Field_Declarations 101e29 45|10w12 87r42 94r42 138r29 46|73r42 81r42
+. 85r10 86r10 90r10 92r11 94r18
+20P9*Field_Declaration(18R9) 45|94r61 46|81r61 86r29 92r30
+25P12*Field_Vector{47|17P9[22]} 45|87r61 138r48 46|73r61
+28P9*Lazy_Field(27R9) 46|85r29
+35P9*Owner_T 46|90r29
+59V13*Make_Lazy_Field{28P9} 46|94s37
+X 33 skill-field_types.ads
+7K15*Field_Types 27e22 45|9w12 47r32 93r14 120r32 46|9w12 80r14
+11H9*Field_Type_Base 11e55 45|47r44 120r44
+12P9*Field_Type(11R9) 45|93r26 46|80r26
+X 34 skill-files.ads
+16K15 Files 45|153r33
+X 36 skill-internal.ads
+7K15*Internal 9e19 45|11r12 83r56 141r22 46|10r12 69r42
+X 37 skill-internal-parts.ads
+13K24*Parts 43e25 45|11w21 83r65 141r31 46|10w21 69r51
+18i7*Count{44|16I12} 46|117r60
+22P12*Blocks{47|17P9[21]} 45|83r71 141r37 46|69r57
+X 44 skill-types.ads
+9K15*Types 29|7k9 44|40e16 45|13r12 42r15 56r37 114r47 158r23 159r16 161r21
+. 169r11 46|22r20 112r47 117r15 130r11
+16I12*v64{22|54I9} 46|117r21
+24P9*String_Access(string) 45|66r54 94r14 123r23 46|36r36 81r14
+29I12*Skill_ID_T{integer} 45|99r14 102r14 105r14
+36P9*Annotation(33R9)
+37A9*Annotation_Array_T(36P9)<integer> 45|159r22 46|119r13
+38P9*Annotation_Array(37A9) 45|114r53 158r29 161r27 46|112r53 118r15
+X 45 skill-types-pools.ads
+42K21*Pools 44|9k15 45|120E9 169l17 169e22 46|22b26 130l17 130t22
+47H9*Pool_T<33|11R9> 48r24 49r28 50r36 52r37 60p13 60r36 64P13 64r31 66p13
+. 66r39 68P13 68r31 70p13 70r33 72p13 72r34 74r33 78p13 78r40 83p13 83r35
+. 86p13 87r21 90p13 91r21 97p13 98r21 108p14 108r34 120c9 151e14 160r37 165r36
+. 46|24r36 25r28 33r31 36r21 39r31 41r33 43r34 45r33 48r28 49r24 69r21 73r21
+. 78r21 87r28
+48P9*Pool(47R9) 72r49 129r15 46|43r49
+49P9*Pool_Dyn(47R9) 60r51 46|24r51 26r60
+50H9*Sub_Pool_T<47R9> 51r28 60p13 64P13 66p13 68P13 70p13 72p13 80P13 80r40
+. 83p13 86p13 90p13 100P13 101r21 109P14 109r34 165c9 167e14
+51P9*Sub_Pool(50R9) 56r61 46|52r24
+52H9*Base_Pool_T<47R9> 53r29 60p13 64P13 66p13 68P13 70p13 72p13 79P13 79r40
+. 83p13 86p13 90p13 103P13 104r21 110P14 110r34 113p13 114r21 116p14 116r41
+. 160c9 163e14 46|112r21 115r41
+53P9*Base_Pool(52R9) 70r48 132r14 46|41r48
+56K12*Sub_Pool_Vector_P[47|13] 57r31
+57P12*Sub_Pool_Vector{47|17P9[56]} 135r19
+60V13*Dynamic{49P9} 60^22 46|24b13 29l8 29t15 62R20
+60p22 This(47R9) 46|24b22 28r26
+64V13*To_String{string}<33|15p13> 64>24 46|33b13
+64r24 This{47R9} 46|33r57
+66V13*Skill_Name{44|24P9} 66^25 46|35b13
+66p25 This(47R9) 46|37r7
+68V13*ID{natural}<33|14p13> 68^17 46|39b13
+68p17 This(47R9) 46|39r58
+70V13*Base{53P9} 70^19 46|41b13
+70p19 This(47R9) 46|41r62
+72V13*Super{48P9} 72^20 46|43b13
+72p20 This(47R9) 46|43r58
+74V13*Size{natural} 74^19 46|45b13 54s27 66l8 66t12
+74p19 This(47R9) 46|45b19 58r10 59r17 62r15 63r7
+78y13*Static_Size{natural} 78^26 46|62R28
+78p26 This(47R9)
+79y13*Static_Size{natural}<78p13> 79^26
+79p26 This(52R9)
+80y13*Static_Size{natural}<78p13> 80^26
+80p26 This(50R9)
+83V13*Blocks{37|22P12} 83^21 46|68b13
+83p21 This(47R9) 46|70r7
+86V13*Data_Fields{31|25P12} 87^7 46|72b13 103s12
+87p7 This(47R9) 46|74r7
+90V13*Add_Field{31|20P9} 91^7 92>7 93>7 94>7 46|77b13 106l8 106t17
+91p7 This(47R9) 46|78b7 95r27 103r7
+92i7 ID{natural} 46|79b7 96r15
+93p7 T{33|12P9} 46|80b7 97r15
+94p7 Name{44|24P9} 46|81b7 98r15
+97y13*Insert_Instance{boolean} 98^7 99>7
+98p7 This(47R9)
+99i7 ID{44|29I12}
+100y13*Insert_Instance{boolean}<97p13> 101^7 102>7
+101p7 This(50R9)
+102i7 ID{44|29I12}
+103y13*Insert_Instance{boolean}<97p13> 104^7 105>7
+104p7 This(52R9)
+105i7 ID{44|29I12}
+108x14*Free 108^20
+108p20 This(47R9)
+109x14*Free<108p14> 109^20
+109p20 This(50R9)
+110x14*Free<108p14> 110^20
+110p20 This(52R9)
+113V13*Data{44|38P9} 114^7 46|111b13
+114p7 This(52R9) 46|113r7
+116U14*Resize_Data 116^27 46|115b14 126l8 126t19
+116p27 This(52R9) 46|115b27 117r35 120r10 120r30 122r16 122r35 123r19 125r7
+123p7 Name{44|24P9} 46|33r62 37r12
+126i7 Type_Id{natural} 46|39r63
+129p7 Super{48P9} 46|43r63
+132p7 Base{53P9} 46|41r67
+135p7 Sub_Pools{57P12} 46|63r12
+138p7 Data_Fields_F{31|25P12} 46|74r12
+141p7 Blocks{37|22P12} 46|70r12 117r40
+149b7 Fixed{boolean} 46|58r15
+150i7 Cached_Size{natural} 46|59r22
+153P9 Owner_T 162r15
+158p4 Empty_Data{44|38P9}
+161p7 Data{44|38P9} 46|113r12 120r15 120r35 122r21 122r40 123r24 125m12
+162p7 Owner{153P9}
+X 46 skill-types-pools.adb
+25P12 P(45|47R9) 26r57 28r23
+26V16 Convert[20|20]{45|49P9} 28s14
+46i7 Size{natural} 54m10 54r18 62m7 65r14
+48P12 P(45|47R9) 50r57
+49P12 D(45|47R9) 50r60
+50V16 Convert[20|20]{49P12}
+52U17 F 52b17 52>20 55l11 55t12 63r31
+52p20 I{45|51P9} 54r25
+84V16 Convert[20|20]{31|20P9} 93s9
+87P12 P(45|47R9) 89r10 95r24
+88V16 Convert[20|20]{31|35P9} 95s15
+92p7 F{31|20P9} 103r32 105r14
+117i7 Count{44|16I12} 120r56
+118p7 D{44|38P9} 123r10 125r20
+122i11 I{integer} 123r13 123r30
+X 47 skill-types-vectors.ads
+13k21*Vectors 45|13w18 56r43 47|104e24
+16R9*Vector_T
+17P9*Vector(16R9[37|21]) 45|57r49[56]
+24U14*Foreach 46|63s22[45|56]
+29U14*Append 46|103s24[31|22]
+46V13*Last_Element{37|16R9} 46|117s47[37|21]
+
