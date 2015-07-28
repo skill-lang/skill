@@ -191,7 +191,7 @@ package body ${PackagePrefix}.Api is
       This.Flush;
 
       Delete (This.Path);
-      -- TODO       This.Strings.Free;
+      This.Strings.Free;
       This.Types.Foreach (Delete'Access);
       This.Types.Free;
 

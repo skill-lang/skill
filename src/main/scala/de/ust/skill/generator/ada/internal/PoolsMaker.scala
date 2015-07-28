@@ -6,6 +6,7 @@
 package de.ust.skill.generator.ada.api.internal
 
 import de.ust.skill.generator.ada.GeneralOutputMaker
+import scala.collection.JavaConversions._
 
 trait PoolsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -53,6 +54,13 @@ ${
       -- destructor invoked by close
       procedure Free (This : access Pool_T);
 
+      overriding
+      function Add_Field
+        (This : access Pool_T;
+         ID   : Natural;
+         T    : Field_Types.Field_Type;
+         Name : String_Access) return Skill.Field_Declarations.Field_Declaration;
+
       overriding function Insert_Instance
         (This : access Pool_T;
          ID   : Skill_ID_T) return Boolean;
@@ -89,6 +97,7 @@ end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools;
 
     out.write(s"""
 with Ada.Unchecked_Conversion;
+with Ada.Unchecked_Deallocation;
 
 with Skill.Equals;
 with Skill.Errors;
@@ -103,7 +112,10 @@ with Skill.Types;
 with Skill.Types.Vectors;
 
 with $PackagePrefix.Api;
-with $PackagePrefix.Internal_Skill_Names;
+with $PackagePrefix.Internal_Skill_Names;${
+      (for (t ← IR; f ← t.getFields) yield s"""
+with $PackagePrefix.Known_Field_${name(t)}_${name(f)};""").mkString
+    }
 
 -- instantiated pool packages
 -- GNAT Bug workaround; should be "new Base(...)" instead
@@ -121,7 +133,7 @@ ${
          if 0 = ID then
             return null;
          else
-            return ${PackagePrefix}.To_$Name(This.Data (Id));
+            return ${PackagePrefix}.To_$Name (This.Data (ID));
          end if;
       end Get;
 
@@ -167,13 +179,79 @@ ${
       end Make;
 
       procedure Free (This : access Pool_T) is
+
+         procedure Delete
+           (This : Skill.Field_Declarations.Field_Declaration)
+         is
+         begin
+            This.Free;
+         end Delete;
+
+         Data : Annotation_Array := This.Data;
+         procedure Delete is new Ada.Unchecked_Deallocation
+           (Skill.Types.Skill_Object,
+            Skill.Types.Annotation);
+         procedure Delete is new Ada.Unchecked_Deallocation
+           (Skill.Types.Annotation_Array_T,
+            Skill.Types.Annotation_Array);
+
+         type P is access all Pool_T;
+         procedure Delete is new Ada.Unchecked_Deallocation (Pool_T, P);
+         D : P := P (This);
       begin
+         for I in Data'Range loop
+            Delete (Data (I));
+         end loop;
+         Delete (Data);
+
          This.Sub_Pools.Free;
+         This.Data_Fields_F.Foreach (Delete'Access);
          This.Data_Fields_F.Free;
          This.Blocks.Free;
          This.Static_Data.Free;
          This.New_Objects.Free;
+         Delete (D);
       end Free;
+
+      function Add_Field
+        (This : access Pool_T;
+         ID   : Natural;
+         T    : Field_Types.Field_Type;
+         Name : String_Access)
+         return Skill.Field_Declarations.Field_Declaration
+      is
+         type P is access all Pool_T;
+         function Convert is new Ada.Unchecked_Conversion
+           (P, Field_Declarations.Owner_T);
+
+         F : Field_Declarations.Field_Declaration;
+
+         type Super is access all Base_Pool_T;
+      begin
+${
+          t.getFields.foldRight("""
+         return Super (This).Add_Field (ID, T, Name);""") {
+            case (f, s) ⇒ s"""
+         if Skill.Equals.Equals
+             (Name,
+              ${PackagePrefix}.Internal_Skill_Names.${f.getSkillName.capitalize}_Skill_Name)
+         then
+            F := ${PackagePrefix}.Known_Field_${name(t)}_${name(f)}.Make (ID, T, Convert (P (This)));
+         else$s
+         end if;"""
+          }
+        }${
+          if (t.getFields.isEmpty()) ""
+          else """
+
+         -- TODO restrictions
+         --          for (FieldRestriction<?> r : restrictions)
+         --              f.addRestriction(r);
+         This.Data_Fields.Append (F);
+
+         return F;"""
+        }
+      end Add_Field;
 
       overriding function Insert_Instance
         (This : access Pool_T;
