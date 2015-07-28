@@ -9,7 +9,7 @@ import de.ust.skill.generator.ada.GeneralOutputMaker
 import de.ust.skill.ir.Declaration
 import scala.collection.JavaConversions._
 
-trait SkillSpecMaker extends GeneralOutputMaker {
+trait APISpecMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
     val out = open(s"""${packagePrefix}-api.ads""")

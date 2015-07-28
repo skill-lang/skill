@@ -5,16 +5,25 @@
 \*                                                                            */
 package de.ust.skill.generator.ada
 
-import de.ust.skill.generator.ada.api._
-import de.ust.skill.generator.ada.api.internal.PackageInternalSpecMaker
-import de.ust.skill.generator.ada.internal._
-import de.ust.skill.ir._
-import de.ust.skill.parser.Parser
-import java.io.File
 import java.util.Date
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.MutableList
-import de.ust.skill.generator.common.Generator
+import de.ust.skill.generator.ada.api.APIBodyMaker
+import de.ust.skill.generator.ada.api.APISpecMaker
+import de.ust.skill.generator.ada.api.internal.InternalStringsMaker
+import de.ust.skill.generator.ada.api.internal.PoolsMaker
+import de.ust.skill.generator.ada.internal.KnownFieldsMaker
+import de.ust.skill.generator.ada.internal.InternalMaker
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.UserType
+import de.ust.skill.ir.VariableLengthArrayType
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -28,23 +37,15 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * @author Timm Felden, Dennis Przytarski
  */
 class Main extends FakeMain
+    with APIBodyMaker
+    with APISpecMaker
     with DependenciesMaker
-
+    with InternalStringsMaker
+    with InternalMaker
+    with KnownFieldsMaker
     with PackageBodyMaker
-    with PackageInternalSpecMaker
     with PackageSpecMaker
-    with SkillBodyMaker
-    with SkillSpecMaker
-    with ByteReaderBodyMaker
-    with ByteReaderSpecMaker
-    with ByteWriterBodyMaker
-    with ByteWriterSpecMaker
-    with FileReaderBodyMaker
-    with FileReaderSpecMaker
-    with FileWriterBodyMaker
-    with FileWriterSpecMaker
-    with StateMakerBodyMaker
-    with StateMakerSpecMaker {
+    with PoolsMaker {
 
   // fix gnat bug
   lineLength = 79

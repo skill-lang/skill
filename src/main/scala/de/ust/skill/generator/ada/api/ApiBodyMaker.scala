@@ -10,7 +10,7 @@ import de.ust.skill.ir.Declaration
 import scala.collection.JavaConversions._
 import de.ust.skill.ir.UserType
 
-trait SkillBodyMaker extends GeneralOutputMaker {
+trait APIBodyMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
     val out = open(s"""${packagePrefix}-api.adb""")
@@ -46,7 +46,7 @@ package body ${PackagePrefix}.Api is
    begin${
       (for (t ← IR)
         yield s"""
-      if Equals.Equals (Name, Internal_Skill_Names.${escaped(t.getSkillName).capitalize}_Skill_Name) then
+      if Skill.Equals.Equals (Name, Internal_Skill_Names.${escaped(t.getSkillName).capitalize}_Skill_Name) then
          return ${name(t)}_Pool_P.Make (Type_ID);
       end if;
 """
@@ -97,7 +97,7 @@ package body ${PackagePrefix}.Api is
 
    -- type instantiation functions
    function Constant_Length_Array
-     (Length : Types.v64;
+     (Length : Skill.Types.v64;
       Base_T : Skill.Field_Types.Field_Type)
       return Skill.Field_Types.Field_Type
    is
@@ -138,16 +138,16 @@ package body ${PackagePrefix}.Api is
 
    function Open
      (Path    : String;
-      Read_M  : Files.Read_Mode  := Skill.Files.Read;
-      Write_M : Files.Write_Mode := Skill.Files.Write) return File
+      Read_M  : Skill.Files.Read_Mode  := Skill.Files.Read;
+      Write_M : Skill.Files.Write_Mode := Skill.Files.Write) return File
    is
    begin
       case Read_M is
 
-         when Files.Read =>
+         when Skill.Files.Read =>
             return Read (Skill.Streams.Input (new String'(Path)), Write_M);
 
-         when Files.Create =>
+         when Skill.Files.Create =>
             raise Skill.Errors.Skill_Error with "TBD";
 
             --          case Create:
@@ -175,18 +175,18 @@ package body ${PackagePrefix}.Api is
    procedure Close (This : access File_T) is
       procedure Delete is new Ada.Unchecked_Deallocation
         (String,
-         Types.String_Access);
+         Skill.Types.String_Access);
 
-      procedure Delete (This : Types.Pools.Pool) is
+      procedure Delete (This : Skill.Types.Pools.Pool) is
       begin
          This.Dynamic.Free;
       end Delete;
 
       type Ft is access all File_T;
 
-      procedure Delete is new Ada.Unchecked_Deallocation(File_T, FT);
+      procedure Delete is new Ada.Unchecked_Deallocation (File_T, Ft);
 
-      Self : FT := Ft(This);
+      Self : Ft := Ft (This);
    begin
       This.Flush;
 
@@ -195,8 +195,7 @@ package body ${PackagePrefix}.Api is
       This.Types.Foreach (Delete'Access);
       This.Types.Free;
 
-
-      Delete(Self);
+      Delete (Self);
    end Close;
 ${
       (for (t ← IR) yield s"""
