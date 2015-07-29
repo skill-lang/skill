@@ -110,13 +110,13 @@ class Main extends FakeMain
       case "string"     ⇒ "Skill.Types.String_Access"
     }
 
-    case t : ConstantLengthArrayType ⇒ "☢"
-    case t : VariableLengthArrayType ⇒ "☢"
-    case t : ListType                ⇒ "☢"
-    case t : SetType                 ⇒ "☢"
-    case t : MapType                 ⇒ "☢"
+    case t : ConstantLengthArrayType ⇒ "Skill.Types.V64"
+    case t : VariableLengthArrayType ⇒ "Skill.Types.V64"
+    case t : ListType                ⇒ "Skill.Types.V64"
+    case t : SetType                 ⇒ "Skill.Types.V64"
+    case t : MapType                 ⇒ "Skill.Types.V64"
 
-    case t : Declaration             ⇒ s"${name(t)}"
+    case t : Declaration             ⇒ s"${PackagePrefix}.${name(t)}"
   }
 
   /**
@@ -160,14 +160,14 @@ class Main extends FakeMain
    * Provides the package prefix.
    */
   override protected def packagePrefix() : String = _packagePrefix
-  private var _packagePrefix = "sf"
+  private var _packagePrefix = "root"
   override protected def PackagePrefix() : String = _PackagePrefix
-  private var _PackagePrefix = "SF"
+  private var _PackagePrefix = "Root"
 
   override def setPackage(names : List[String]) {
     if (!names.isEmpty) {
-      _packagePrefix = names.map(_.toLowerCase).reduce(_+"-"+_)
-      _PackagePrefix = names.map(_.toLowerCase.capitalize).reduce(_+"."+_)
+      _packagePrefix = names.map(_.toLowerCase).fold("root")(_+"-"+_)
+      _PackagePrefix = names.map(_.toLowerCase.capitalize).fold("Root")(_+"."+_)
       _poolsPackage = s"Skill.Types.Pools.${PackagePrefix.replace(".", "_")}_Pools"
     }
   }

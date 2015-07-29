@@ -24,16 +24,25 @@ ${
         yield s"""
    type ${name(t)}_T is new Skill.Types.Skill_Object with private;
 ${comment(t)}type ${name(t)} is access ${name(t)}_T;
+""").mkString
+    }
+${
+      (for (t ← IR)
+        yield s"""
 
    -- ${name(t)} type conversions
    function To_${name(t)} (This : access Skill.Types.Skill_Object) return ${name(t)};
+   pragma Inline (To_${name(t)});
 
    -- Age fields
 ${
         (for (f ← t.getFields)
           yield s"""
 ${comment(f)}function Get_${name(f)} (This : access ${name(t)}_T'Class) return ${mapType(f.getType)};
+   pragma Inline (Get_${name(f)});
+
 ${comment(f)}procedure Set_${name(f)} (This : access ${name(t)}_T'Class; V : ${mapType(f.getType)});
+   pragma Inline (Set_${name(f)});
 """
         ).mkString
       }

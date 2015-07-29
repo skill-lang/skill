@@ -13,7 +13,8 @@ trait PoolsMaker extends GeneralOutputMaker {
     super.make
 
     makeSpec
-    makeBody
+    if (!IR.isEmpty)
+      makeBody
   }
 
   private final def makeSpec {
@@ -114,7 +115,7 @@ with Skill.Types.Vectors;
 with $PackagePrefix.Api;
 with $PackagePrefix.Internal_Skill_Names;${
       (for (t ← IR; f ← t.getFields) yield s"""
-with $PackagePrefix.Known_Field_${name(t)}_${name(f)};""").mkString
+with $PackagePrefix.Known_Field_${escaped(t.getName.ada())}_${escaped(f.getName.ada())};""").mkString
     }
 
 -- instantiated pool packages
@@ -154,7 +155,7 @@ ${
       begin
          This :=
            new Pool_T'
-             (Name          => ${PackagePrefix}.Internal_Skill_Names.${t.getSkillName.capitalize}_Skill_Name,
+             (Name          => ${internalSkillName(t)},
               Type_Id       => Type_Id,
               Super         => null,
               Base          => null,
@@ -220,6 +221,8 @@ ${
          Name : String_Access)
          return Skill.Field_Declarations.Field_Declaration
       is
+         pragma Warnings (Off);
+
          type P is access all Pool_T;
          function Convert is new Ada.Unchecked_Conversion
            (P, Field_Declarations.Owner_T);
@@ -234,9 +237,9 @@ ${
             case (f, s) ⇒ s"""
          if Skill.Equals.Equals
              (Name,
-              ${PackagePrefix}.Internal_Skill_Names.${f.getSkillName.capitalize}_Skill_Name)
+              ${internalSkillName(f)})
          then
-            F := ${PackagePrefix}.Known_Field_${name(t)}_${name(f)}.Make (ID, T, Convert (P (This)));
+            F := ${PackagePrefix}.Known_Field_${escaped(t.getName.ada)}_${escaped(f.getName.ada)}.Make (ID, T, Convert (P (This)));
          else$s
          end if;"""
           }

@@ -29,6 +29,7 @@ with Skill.Streams;
 with Skill.String_Pools;
 with Skill.Types;
 with Skill.Types.Pools;
+with Skill.Types.Pools.Unknown_Base;
 
 with ${PackagePrefix}.Internal_Skill_Names;
 
@@ -52,9 +53,9 @@ package body ${PackagePrefix}.Api is
 """
       ).mkString
     }
---        If null = Super then
---              return Unknown_Base (Type_ID, Name);
---        end if;
+      if null = Super then
+         return Skill.Types.Pools.Unknown_Base.Make (Type_ID, Name);
+      end if;
 --
 --              return Super.Make_Sub_Pool (Type_ID, Name);
       return null;
@@ -62,12 +63,14 @@ package body ${PackagePrefix}.Api is
 
    -- build a state from intermediate information
    function Make_State
-     (Path          : Skill.Types.String_Access;
-      Mode          : Skill.Files.Write_Mode;
-      Strings       : Skill.String_Pools.Pool;
-      Types         : Skill.Files.Type_Vector;
-      Types_By_Name : Skill.Files.Type_Map) return File
-   is${
+     (Path    : Skill.Types.String_Access;
+      Mode    : Skill.Files.Write_Mode;
+      Strings : Skill.String_Pools.Pool;
+      Types   : Skill.Files.Type_Vector;
+      TBN     : Skill.Files.Type_Map) return File
+   is
+      Pragma Warnings (Off);
+${
       (for (t ← IR)
         yield s"""
       function Convert is new Ada.Unchecked_Conversion
@@ -75,12 +78,25 @@ package body ${PackagePrefix}.Api is
          ${name(t)}_Pool);"""
       ).mkString
     }
-   begin
-      -- read fields
-      -- TODO implementation
 
-      -- make state
-      return new File_T'
+      Rval          : File;
+      P             : Skill.Types.Pools.Pool;
+      Types_By_Name : Skill.Files.Type_Map := TBN;
+   begin
+      -- create missing type information
+${
+      (for (t ← IR)
+        yield s"""
+      if not Types_By_Name.Contains (${internalSkillName(t)}) then
+         P := ${name(t)}_Pool_P.Make (Types.Length);
+         Types.Append (P);
+         Types_By_Name.Include (${internalSkillName(t)}, P);
+      end if;"""
+      ).mkString
+    }
+
+      Rval :=
+        new File_T'
           (Path          => Path,
            Mode          => Mode,
            Strings       => Strings,
@@ -90,9 +106,15 @@ package body ${PackagePrefix}.Api is
         for (t ← IR) yield s""",
            ${name(t)}s          =>
              Convert
-               (Types_By_Name.Element (Internal_Skill_Names.${escaped(t.getSkillName).capitalize}_Skill_Name))"""
+               (Types_By_Name.Element (${internalSkillName(t)}))"""
       ).mkString
     });
+
+      -- read fields
+      Rval.Finalize_Pools;
+
+      -- make state
+      return Rval;
    end Make_State;
 
    -- type instantiation functions

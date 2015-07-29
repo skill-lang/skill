@@ -22,6 +22,9 @@ trait DependenciesMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
+    println("ada dependency creation is postponed; clone ada_common yourself!")
+    return
+
     // architecture to be copied to the target directory
     val architecture = s"ada.common.$buildMode.$buildOS.$buildARCH"
 

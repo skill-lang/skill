@@ -87,8 +87,23 @@ trait GeneralOutputMaker extends Generator {
   protected def escapedLonely(target : String) : String;
 
   private final val nameCache = HashMap[Type, String]()
-  protected final def name(d : Type) = nameCache.get(d).getOrElse { val r = escaped(d.getName.ada); nameCache(d) = r; r }
-  protected final def name(f : Field) = escaped(f.getName.ada)
+  protected final def name(d : Type) = nameCache.get(d).getOrElse { val r = escapedLonely(d.getName.ada); nameCache(d) = r; r }
+  protected final def name(f : Field) = escapedLonely(f.getName.ada)
+
+  /**
+   * creates references to generated skill names package
+   */
+  private final val skillNameCache = HashMap[String, String]()
+  protected final def internalSkillName(f : Field) = skillNameCache.get(f.getSkillName).getOrElse {
+    val r = s"$PackagePrefix.Internal_Skill_Names.${escaped(f.getSkillName).capitalize}_Skill_Name";
+    skillNameCache(f.getSkillName) = r;
+    r
+  }
+  protected final def internalSkillName(t : Type) = skillNameCache.get(t.getSkillName).getOrElse {
+    val r = s"$PackagePrefix.Internal_Skill_Names.${escaped(t.getSkillName).capitalize}_Skill_Name";
+    skillNameCache(t.getSkillName) = r;
+    r
+  }
 
   private lazy val packagePath = if (packagePrefix.length > 0) {
     packagePrefix.replace(".", "/")
