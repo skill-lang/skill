@@ -24,8 +24,9 @@ trait PoolsMaker extends GeneralOutputMaker {
     out.write(s"""
 with Skill.Files;
 with Skill.Internal.File_Parsers;
-with Skill.Types.Pools;
 with Skill.Types;
+with Skill.Types.Pools;
+with Skill.Types.Pools.Sub;
 with Skill.Types.Vectors;
 
 with $PackagePrefix;
@@ -60,7 +61,8 @@ ${
         (This : access Pool_T;
          ID   : Natural;
          T    : Field_Types.Field_Type;
-         Name : String_Access) return Skill.Field_Declarations.Field_Declaration;
+         Name : String_Access)
+         return Skill.Field_Declarations.Field_Declaration;
 
       overriding function Insert_Instance
         (This : access Pool_T;
@@ -72,6 +74,17 @@ ${
 --        procedure Foreach
 --          (This : access Pool_T;
 --           F    : access procedure (I : $Name));
+
+      package Sub_Pools is new Sub
+        (T    => ${Type}_T,
+         P    => $Type,
+         To_P => ${PackagePrefix}.To_$Name);
+
+      function Make_Sub_Pool
+        (This : access Pool_T;
+         ID   : Natural;
+         Name : String_Access) return Skill.Types.Pools.Pool is
+        (Sub_Pools.Make (This.To_Pool, ID, Name));
 
    private
 
@@ -103,14 +116,9 @@ with Ada.Unchecked_Deallocation;
 with Skill.Equals;
 with Skill.Errors;
 with Skill.Field_Types;
-with Skill.Files;
-with Skill.Internal.File_Parsers;
 with Skill.Internal.Parts;
 with Skill.Streams;
 with Skill.String_Pools;
-with Skill.Types.Pools;
-with Skill.Types;
-with Skill.Types.Vectors;
 
 with $PackagePrefix.Api;
 with $PackagePrefix.Internal_Skill_Names;${
@@ -203,7 +211,9 @@ ${
          for I in Data'Range loop
             Delete (Data (I));
          end loop;
-         Delete (Data);
+         if 0 /= Data'Length then
+            Delete (Data);
+         end if;
 
          This.Sub_Pools.Free;
          This.Data_Fields_F.Foreach (Delete'Access);

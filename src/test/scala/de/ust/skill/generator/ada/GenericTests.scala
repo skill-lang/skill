@@ -59,8 +59,6 @@ with Root.$adaStyle.Api;
 
 package Test_$adaStyle.Gen_Test is
 
-   package Skill renames Root.$adaStyle.Api;
-
    type Test is new Ahven.Framework.Test_Case with null record;
 
    procedure Initialize (T : in out Test);
@@ -78,7 +76,7 @@ end Test_$adaStyle.Gen_Test;""")
     // generate [[test]]-generic.adb
     locally {
       val out = newFile(cStyle, s"test_$cStyle-gen_test.adb")
-      out.print(s"""
+      out.print(s"""with Skill.Errors;
 
 package body Test_$adaStyle.Gen_Test is
 
@@ -101,7 +99,7 @@ ${
         (for (f ← accept)
           yield s"""
    procedure Read_${file2ID(f)} is
-      State : Skill.File := Skill.Open("../../${f.getPath}");
+      State : Root.$adaStyle.Api.File := Root.$adaStyle.Api.Open("../../${f.getPath}");
    begin
       State.Close;
    end Read_${file2ID(f)};
@@ -110,13 +108,13 @@ ${
         (for (f ← reject)
           yield s"""
    procedure Read_${file2ID(f)} is
-      State : Skill.File;
+      State : Root.$adaStyle.Api.File;
    begin
-      State := Skill.Open("../../${f.getPath}");
+      State := Root.$adaStyle.Api.Open("../../${f.getPath}");
       State.Close;
       Ahven.Fail("expected an exception to be thrown");
-   exception when
-         others => null;
+   exception
+      when E : Skill.Errors.Skill_Error => null;
    end Read_${file2ID(f)};
 """).mkString
       }

@@ -24,12 +24,11 @@ package body ${PackagePrefix} is
 ${
         (for (t ← IR)
           yield s"""
-   function To_${name(t)} (This : access Skill.Types.Skill_Object) return ${name(t)}
+   function To_${name(t)} (This : Skill.Types.Annotation) return ${name(t)}
    is
-      type T is access all Skill.Types.Skill_Object;
-      function Convert is new Ada.Unchecked_Conversion (T, ${name(t)});
+      function Convert is new Ada.Unchecked_Conversion (Skill.Types.Annotation, ${name(t)});
    begin
-      return Convert (T (This));
+      return Convert (This);
    end To_${name(t)};
 
    -- Age fields

@@ -247,7 +247,7 @@ Opitions (ada):
       "interface" | "until" | "is" | "raise" | "use" | "declare" | "range" | "delay" | "limited" | "record" |
       "when" | "delta" | "loop" | "rem" | "while" | "digits" | "renames" | "with" | "do" | "mod" | "requeue" |
       "xor" | "boolean" ⇒ return target+"_2"
-    case s ⇒ escaped(s)
+    case _ ⇒ escaped(target)
   }
 
   /**

@@ -31,7 +31,7 @@ ${
         yield s"""
 
    -- ${name(t)} type conversions
-   function To_${name(t)} (This : access Skill.Types.Skill_Object) return ${name(t)};
+   function To_${name(t)} (This : Skill.Types.Annotation) return ${name(t)};
    pragma Inline (To_${name(t)});
 
    -- Age fields

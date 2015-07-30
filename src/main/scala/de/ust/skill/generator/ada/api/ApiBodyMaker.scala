@@ -56,9 +56,8 @@ package body ${PackagePrefix}.Api is
       if null = Super then
          return Skill.Types.Pools.Unknown_Base.Make (Type_ID, Name);
       end if;
---
---              return Super.Make_Sub_Pool (Type_ID, Name);
-      return null;
+
+      return Super.Dynamic.Make_Sub_Pool (Type_ID, Name);
    end New_Pool;
 
    -- build a state from intermediate information
