@@ -18,25 +18,28 @@ trait StreamsMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    val out = new File(s"$outPath/lib/skill.jvm.common.jar");
-    out.getParentFile.mkdirs();
-
     // safe unnecessary overwrites that cause race conditions on parallel builds anyway
-    this.getClass.synchronized({
-      try {
-        if (out.exists() && sha256(out.getAbsolutePath) == commonJarSum)
-          return
-      } catch {
-        case e : IOException ⇒ // just continue
-      }
+    for (jar ← jars) {
+      this.getClass.synchronized({
 
-      Files.deleteIfExists(out.toPath)
-      Files.copy(new File(commonJar).toPath, out.toPath)
-    })
+        val out = new File(s"$outPath/lib/$jar");
+        out.getParentFile.mkdirs();
+
+        try {
+          if (out.exists() && sha256(out.getAbsolutePath) == commonJarSum(jar))
+            return
+        } catch {
+          case e : IOException ⇒ // just continue
+        }
+
+        Files.deleteIfExists(out.toPath)
+        Files.copy(new File("deps/" + jar).toPath, out.toPath)
+      })
+    }
   }
 
-  val commonJar = "skill.jvm.common.jar"
-  lazy val commonJarSum = sha256(commonJar)
+  val jars = Seq("skill.jvm.common.jar")
+  lazy val commonJarSum = jars.map { s ⇒ (s -> sha256("deps/" + s)) }.toMap
 
   final def sha256(name : String) : String = sha256(new File("src/test/resources/"+name).toPath)
   @inline final def sha256(path : Path) : String = {
