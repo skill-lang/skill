@@ -14,8 +14,8 @@ import java.util.Set;
 final public class UserType extends Declaration implements WithFields {
 
     /**
-     * super type is the type above this type. base type is the base type of the
-     * formed type tree. This can even be <i>this</i>.
+     * super type is the type above this type. base type is the base type of the formed type tree. This can even be
+     * <i>this</i>.
      */
     private UserType superType = null, baseType = null;
     private final List<UserType> children = new ArrayList<>();
@@ -28,10 +28,8 @@ final public class UserType extends Declaration implements WithFields {
      * Creates a declaration of type name.
      * 
      * @throws ParseException
-     *             thrown, if the declaration to be constructed is in fact
-     *             illegal
-     * @note the declaration has to be completed, i.e. it has to be evaluated in
-     *       pre-order over the type hierarchy.
+     *             thrown, if the declaration to be constructed is in fact illegal
+     * @note the declaration has to be completed, i.e. it has to be evaluated in pre-order over the type hierarchy.
      */
     private UserType(Name name, Comment comment, Collection<Restriction> restrictions, Collection<Hint> hints)
             throws ParseException {
@@ -72,19 +70,17 @@ final public class UserType extends Declaration implements WithFields {
     }
 
     /**
-     * Initializes the type declaration with data obtained from parsing the
-     * declarations body.
+     * Initializes the type declaration with data obtained from parsing the declarations body.
      * 
      * @param SuperType
      * @param Fields
      * @param interfaces
      * @throws ParseException
-     *             thrown if the declaration is illegal, e.g. because it
-     *             contains illegal hints
+     *             thrown if the declaration is illegal, e.g. because it contains illegal hints
      */
     public void initialize(UserType SuperType, List<InterfaceType> interfaces, List<Field> Fields)
             throws ParseException {
-        assert !isInitialized() : "multiple initialization";
+        assert!isInitialized() : "multiple initialization";
         assert null != Fields : "no fields supplied";
         // check for duplicate fields
         {
@@ -138,6 +134,13 @@ final public class UserType extends Declaration implements WithFields {
         return rval;
     }
 
+    /**
+     * @return a list of types, that use this type as direct super type
+     */
+    public List<UserType> getSubTypes() {
+        return children;
+    }
+
     /*
      * (non-Javadoc)
      * @see de.ust.skill.ir.WithFields#getFields()
@@ -149,8 +152,7 @@ final public class UserType extends Declaration implements WithFields {
     }
 
     /**
-     * @return all fields of an instance of the type, including fields declared
-     *         in super types
+     * @return all fields of an instance of the type, including fields declared in super types
      */
     public List<Field> getAllFields() {
         assert isInitialized() : "you can not obtain fields of type " + name + " because it is not initialized";
