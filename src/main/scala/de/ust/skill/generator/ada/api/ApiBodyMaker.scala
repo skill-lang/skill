@@ -169,21 +169,20 @@ ${
             return Read (Skill.Streams.Input (new String'(Path)), Write_M);
 
          when Skill.Files.Create =>
-            raise Skill.Errors.Skill_Error with "TBD";
+         -- initialization order of type information has to match file parser
+         -- and can not be done in place
 
-            --          case Create:
-            --              // initialization order of type information has to match file parser
-            --              // and can not be done in place
-            --              StringPool strings = new StringPool(null);
-      --              ArrayList<StoragePool<?, ?>> types = new ArrayList<>(1);
-            --              StringType stringType = new StringType(strings);
-            --              Annotation annotation = new Annotation(types);
-            --
-            --              // create type information
-            --              AgeAccess Age = new AgeAccess(0);
-            --              types.add(Age);
-            --              return new SkillState(strings, types, stringType, annotation, path, actualMode.close);
-            --
+            declare
+               Strings : Skill.String_Pools.Pool :=
+                 Skill.String_Pools.Create (null);
+            begin
+               return Make_State
+                   (Path    => new String'(Path),
+                    Mode    => Write_M,
+                    Strings => Strings,
+                    Types   => Skill.Files.P_Type_Vector.Empty_Vector,
+                    TBN     => Skill.Files.P_Type_Map.Empty_Map);
+            end;
       end case;
    end Open;
 

@@ -47,6 +47,24 @@ ${
       -- API methods
       function Get (This : access Pool_T; ID : Skill_ID_T) return $Type;
 
+      -- constructor for instances
+      procedure Make
+        (This  : access Pool_T${
+          (
+            for (f ← t.getAllFields)
+              yield s""";
+         F_${name(f)} : ${mapType(f.getType)} := ${defaultValue(f)}"""
+          ).mkString
+        });
+      function Make
+        (This  : access Pool_T${
+          (
+            for (f ← t.getAllFields)
+              yield s""";
+         F_${name(f)} : ${mapType(f.getType)} := ${defaultValue(f)}"""
+          ).mkString
+        }) return ${mapType(t)};
+
       ----------------------
       -- internal methods --
       ----------------------
@@ -145,6 +163,46 @@ ${
             return ${PackagePrefix}.To_$Name (This.Data (ID));
          end if;
       end Get;
+
+      procedure Make
+        (This  : access Pool_T${
+          (
+            for (f ← t.getAllFields)
+              yield s""";
+         F_${name(f)} : ${mapType(f.getType)} := ${defaultValue(f)}"""
+          ).mkString
+        }) is
+         R : ${mapType(t)} := new ${mapType(t)}_T;
+      begin
+         R.Skill_ID := -1;${
+          (
+            for (f ← t.getAllFields)
+              yield s"""
+         R.Set_${name(f)} (F_${name(f)});"""
+          ).mkString
+        }
+         This.New_Objects.Append (R);
+      end Make;
+      function Make
+        (This  : access Pool_T${
+          (
+            for (f ← t.getAllFields)
+              yield s""";
+         F_${name(f)} : ${mapType(f.getType)} := ${defaultValue(f)}"""
+          ).mkString
+        }) return ${mapType(t)} is
+         R : ${mapType(t)} := new ${mapType(t)}_T;
+      begin
+         R.Skill_ID := -1;${
+          (
+            for (f ← t.getAllFields)
+              yield s"""
+         R.Set_${name(f)} (F_${name(f)});"""
+          ).mkString
+        }
+         This.New_Objects.Append (R);
+         return R;
+      end Make;
 
       ----------------------
       -- internal methods --

@@ -168,6 +168,6 @@ end ${PackagePrefix}.Known_Field_$fn;
       case "String"     ⇒ "null"
       case n            ⇒ "Input."+n
     }
-    case _ ⇒ "Input.V64"
+    case _ ⇒ "null"
   }
 }
