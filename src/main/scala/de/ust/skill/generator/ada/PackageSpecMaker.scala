@@ -22,8 +22,13 @@ package ${PackagePrefix} is
 ${
       (for (t ← IR)
         yield s"""
-   type ${name(t)}_T is new Skill.Types.Skill_Object with private;
-${comment(t)}type ${name(t)} is access ${name(t)}_T;
+   type ${name(t)}_T is new ${
+        if (null == t.getSuperType) "Skill.Types.Skill_Object"
+        else name(t.getSuperType)+"_T"
+      } with private;
+${comment(t)}
+   type ${name(t)} is access ${name(t)}_T;
+   type ${name(t)}_Dyn is access ${name(t)}_T'Class;
 """).mkString
     }
 ${
@@ -33,15 +38,43 @@ ${
    -- ${name(t)} type conversions
    function To_${name(t)} (This : Skill.Types.Annotation) return ${name(t)};
    pragma Inline (To_${name(t)});
+${
+        // type conversions to super types
+        var r = new StringBuilder
+        var s = t.getSuperType
+        while (null != s) {
+          r ++= s"""
+   function To_${name(s)} (This : access ${name(t)}_T) return ${name(s)};
+   pragma Inline (To_${name(s)});
+         """
+          s = s.getSuperType
+        }
+
+        // type conversions to subtypes
+        def asSub(sub : UserType) {
+          r ++= s"""
+   function As_${name(sub)} (This : access ${name(t)}_T) return ${name(sub)};
+   pragma Inline (As_${name(sub)});
+         """
+          sub.getSubTypes.foreach(asSub)
+        }
+
+        t.getSubTypes.foreach(asSub)
+
+        r.toString
+      }
+
+   function Dynamic_${name(t)} (This : access ${name(t)}_T) return ${name(t)}_Dyn;
+   pragma Inline (Dynamic_${name(t)});
 
    -- Age fields
 ${
         (for (f ← t.getFields)
-          yield s"""
-${comment(f)}function Get_${name(f)} (This : access ${name(t)}_T'Class) return ${mapType(f.getType)};
+          yield s"""${comment(f)}
+   function Get_${name(f)} (This : access ${name(t)}_T'Class) return ${mapType(f.getType)};
    pragma Inline (Get_${name(f)});
-
-${comment(f)}procedure Set_${name(f)} (This : access ${name(t)}_T'Class; V : ${mapType(f.getType)});
+${comment(f)}
+   procedure Set_${name(f)} (This : access ${name(t)}_T'Class; V : ${mapType(f.getType)});
    pragma Inline (Set_${name(f)});
 """
         ).mkString
@@ -52,7 +85,10 @@ ${comment(f)}procedure Set_${name(f)} (This : access ${name(t)}_T'Class; V : ${m
 ${
       (for (t ← IR)
         yield s"""
-   type ${name(t)}_T is new Skill.Types.Skill_Object with record${
+   type ${name(t)}_T is new ${
+        if (null == t.getSuperType) "Skill.Types.Skill_Object"
+        else name(t.getSuperType)+"_T"
+      } with record${
         if (t.getFields.isEmpty())
           """
       null;"""
