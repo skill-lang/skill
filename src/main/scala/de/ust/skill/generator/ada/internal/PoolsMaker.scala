@@ -82,9 +82,11 @@ ${
          Name : String_Access)
          return Skill.Field_Declarations.Field_Declaration;
 
-      overriding function Insert_Instance
-        (This : access Pool_T;
-         ID   : Skill_ID_T) return Boolean;
+      overriding
+      procedure Resize_Pool
+        (This       : access Pool_T;
+         Targets    : Type_Vector;
+         Self_Index : Natural);
 
       overriding function Static_Size (This : access Pool_T) return Natural;
 
@@ -106,12 +108,18 @@ ${
 
    private
 
+      type Static_Data_Array_T is array (Positive range <>) of aliased ${Type}_T;
+      type Static_Data_Array is access Static_Data_Array_T;
+
       package A1 is new Vectors (Natural, $Type);
-      subtype Instance_Vector is A1.Vector;
+      subtype New_Instance_Vector is A1.Vector;
+
+      package A2 is new Vectors (Natural, Static_Data_Array);
+      subtype Static_Instance_Vector is A2.Vector;
 
       type Pool_T is new Base_Pool_T with record
-         Static_Data : Instance_Vector;
-         New_Objects : Instance_Vector;
+         Static_Data : Static_Instance_Vector;
+         New_Objects : New_Instance_Vector;
       end record;
    end ${Name}_P;
 """
@@ -233,7 +241,7 @@ ${
               Cached_Size => 0,
               Data        => Skill.Types.Pools.Empty_Data,
               Owner       => null,
-              Static_Data => A1.Empty_Vector,
+              Static_Data => A2.Empty_Vector,
               New_Objects => A1.Empty_Vector);
 
          This.Base := Convert (This);
@@ -254,6 +262,17 @@ ${
             This.Free;
          end Delete;
 
+         procedure Delete_SA (This : Static_Data_Array) is
+            type P is access all Static_Data_Array_T;
+            D : P := P (This);
+
+            procedure Free is new Ada.Unchecked_Deallocation
+              (Static_Data_Array_T,
+               P);
+         begin
+            Free (D);
+         end Delete_SA;
+
          Data : Annotation_Array := This.Data;
          procedure Delete is new Ada.Unchecked_Deallocation
            (Skill.Types.Skill_Object,
@@ -266,9 +285,6 @@ ${
          procedure Delete is new Ada.Unchecked_Deallocation (Pool_T, P);
          D : P := P (This);
       begin
-         for I in Data'Range loop
-            Delete (Data (I));
-         end loop;
          if 0 /= Data'Length then
             Delete (Data);
          end if;
@@ -277,6 +293,7 @@ ${
          This.Data_Fields_F.Foreach (Delete'Access);
          This.Data_Fields_F.Free;
          This.Blocks.Free;
+         This.Static_Data.Foreach (Delete_SA'Access);
          This.Static_Data.Free;
          This.New_Objects.Free;
          Delete (D);
@@ -324,27 +341,43 @@ ${
         }
       end Add_Field;
 
-      overriding function Insert_Instance
-        (This : access Pool_T;
-         ID   : Skill.Types.Skill_ID_T) return Boolean
+      procedure Resize_Pool
+        (This       : access Pool_T;
+         Targets    : Type_Vector;
+         Self_Index : Natural)
       is
-         function Convert is new Ada.Unchecked_Conversion
-           (Source => $Type,
-            Target => Skill.Types.Annotation);
+         Size : Natural;
+         ID   : Skill_ID_T := 1 + Skill_ID_T (This.Blocks.Last_Element.BPO);
 
-         I : Natural := Natural (ID);
-         R : $Type;
+         SD : Static_Data_Array;
+         R  : $Type;
+
+         use Interfaces;
       begin
-         if null /= This.Data (I) then
-            return False;
+         This.Resize_Data;
+
+         if Self_Index = Targets.Length - 1
+           or else Targets.Element (Self_Index + 1).Super /= This.To_Pool
+         then
+            Size := Natural (This.Blocks.Last_Element.Count);
+         else
+            Size :=
+              Natural
+                (Targets.Element (Self_Index + 1).Blocks.Last_Element.BPO -
+                 This.Blocks.Last_Element.BPO);
          end if;
 
-         R             := new ${Type}_T;
-         R.Skill_ID    := ID;
-         This.Data (I) := Convert (R);
-         This.Static_Data.Append (R);
-         return True;
-      end Insert_Instance;
+         SD := new Static_Data_Array_T (1 .. Size);
+         This.Static_Data.Append (SD);
+
+         -- set skill IDs and insert into data
+         for I in SD'Range loop
+            R              := SD (I).Unchecked_Access;
+            R.Skill_ID     := ID;
+            This.Data (ID) := R.To_Annotation;
+            ID             := ID + 1;
+         end loop;
+      end Resize_Pool;
 
       overriding function Static_Size (This : access Pool_T) return Natural is
       begin

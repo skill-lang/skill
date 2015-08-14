@@ -25,40 +25,43 @@ package body ${PackagePrefix} is
 ${
         (for (t ← IR)
           yield s"""
-   function To_${name(t)} (This : Skill.Types.Annotation) return ${name(t)}
-   is
+   function To_${name(t)} (This : Skill.Types.Annotation) return ${name(t)} is
       function Convert is new Ada.Unchecked_Conversion (Skill.Types.Annotation, ${name(t)});
    begin
       return Convert (This);
    end To_${name(t)};
-${
+
+   function Unchecked_Access (This : access ${name(t)}_T) return ${name(t)} is
+      type T is access all ${name(t)}_T;
+      function Convert is new Ada.Unchecked_Conversion (T, ${name(t)});
+   begin
+      return Convert (T (This));
+   end Unchecked_Access;${
           // type conversions to super types
           var r = new StringBuilder
           var s = t.getSuperType
           while (null != s) {
             r ++= s"""
-   function To_${name(s)} (This : access ${name(t)}_T) return ${name(s)}
-   is
+   function To_${name(s)} (This : access ${name(t)}_T) return ${name(s)} is
       type T is access all ${name(t)}_T;
       function Convert is new Ada.Unchecked_Conversion (T, ${name(s)});
    begin
       return Convert (T (This));
    end To_${name(s)};
-         """
+"""
             s = s.getSuperType
           }
 
           // type conversions to subtypes
           def asSub(sub : UserType) {
             r ++= s"""
-   function As_${name(sub)} (This : access ${name(t)}_T) return ${name(sub)}
-   is
+   function As_${name(sub)} (This : access ${name(t)}_T) return ${name(sub)} is
       type T is access all ${name(t)}_T;
       function Convert is new Ada.Unchecked_Conversion (T, ${name(sub)});
    begin
       return Convert (T (This));
    end As_${name(sub)};
-         """
+"""
             sub.getSubTypes.foreach(asSub)
           }
 
@@ -67,8 +70,7 @@ ${
           r.toString
         }
 
-   function Dynamic_${name(t)} (This : access ${name(t)}_T) return ${name(t)}_Dyn
-   is
+   function Dynamic_${name(t)} (This : access ${name(t)}_T) return ${name(t)}_Dyn is
       function Convert is new Ada.Unchecked_Conversion (Skill.Types.Annotation, ${name(t)}_Dyn);
    begin
       return Convert (This.To_Annotation);

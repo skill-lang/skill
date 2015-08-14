@@ -38,7 +38,9 @@ ${
    -- ${name(t)} type conversions
    function To_${name(t)} (This : Skill.Types.Annotation) return ${name(t)};
    pragma Inline (To_${name(t)});
-${
+
+   function Unchecked_Access (This : access ${name(t)}_T) return ${name(t)};
+   pragma Inline (Unchecked_Access);${
         // type conversions to super types
         var r = new StringBuilder
         var s = t.getSuperType
@@ -46,7 +48,7 @@ ${
           r ++= s"""
    function To_${name(s)} (This : access ${name(t)}_T) return ${name(s)};
    pragma Inline (To_${name(s)});
-         """
+"""
           s = s.getSuperType
         }
 
@@ -55,7 +57,7 @@ ${
           r ++= s"""
    function As_${name(sub)} (This : access ${name(t)}_T) return ${name(sub)};
    pragma Inline (As_${name(sub)});
-         """
+"""
           sub.getSubTypes.foreach(asSub)
         }
 

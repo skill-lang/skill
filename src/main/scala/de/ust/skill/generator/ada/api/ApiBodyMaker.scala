@@ -65,10 +65,10 @@ package body ${PackagePrefix}.Api is
      (Path    : Skill.Types.String_Access;
       Mode    : Skill.Files.Write_Mode;
       Strings : Skill.String_Pools.Pool;
-      Types   : Skill.Files.Type_Vector;
+      Types   : Skill.Types.Pools.Type_Vector;
       TBN     : Skill.Files.Type_Map) return File
    is
-      Pragma Warnings (Off);
+      pragma Warnings (Off);
 ${
       (for (t ← IR)
         yield s"""
@@ -86,10 +86,13 @@ ${
 ${
       (for (t ← IR)
         yield s"""
-      if not Types_By_Name.Contains (${internalSkillName(t)}) then
+      if not Types_By_Name.Contains
+        (${internalSkillName(t)})
+      then
          P := ${name(t)}_Pool_P.Make (Types.Length);
          Types.Append (P);
-         Types_By_Name.Include (${internalSkillName(t)}, P);
+         Types_By_Name.Include
+         (${internalSkillName(t)}, P);
       end if;"""
       ).mkString
     }
@@ -180,7 +183,7 @@ ${
                    (Path    => new String'(Path),
                     Mode    => Write_M,
                     Strings => Strings,
-                    Types   => Skill.Files.P_Type_Vector.Empty_Vector,
+                    Types   => Skill.Types.Pools.P_Type_Vector.Empty_Vector,
                     TBN     => Skill.Files.P_Type_Map.Empty_Map);
             end;
       end case;
