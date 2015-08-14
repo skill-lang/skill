@@ -174,7 +174,7 @@ ${
 
             declare
                Strings : Skill.String_Pools.Pool :=
-                 Skill.String_Pools.Create (null);
+                 Skill.String_Pools.Create (Skill.Streams.Input (null));
             begin
                return Make_State
                    (Path    => new String'(Path),
@@ -185,12 +185,6 @@ ${
             end;
       end case;
    end Open;
-
-   procedure Flush (This : access File_T) is
-   begin
-      null;
-      -- TODO
-   end Flush;
 
    procedure Close (This : access File_T) is
       procedure Delete is new Ada.Unchecked_Deallocation
