@@ -101,7 +101,7 @@ ${
    procedure Read_${file2ID(f)} is
       State : Root.$adaStyle.Api.File := Root.$adaStyle.Api.Open("../../${f.getPath}");
    begin
-      State.Close;
+      State.Free;
    end Read_${file2ID(f)};
 """).mkString
       }${
@@ -111,7 +111,7 @@ ${
       State : Root.$adaStyle.Api.File;
    begin
       State := Root.$adaStyle.Api.Open("../../${f.getPath}");
-      State.Close;
+      State.Free;
       Ahven.Fail("expected an exception to be thrown");
    exception
       when E : Skill.Errors.Skill_Error => null;

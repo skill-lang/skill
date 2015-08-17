@@ -189,7 +189,7 @@ ${
       end case;
    end Open;
 
-   procedure Close (This : access File_T) is
+   procedure Free (This : access File_T) is
       procedure Delete is new Ada.Unchecked_Deallocation
         (String,
          Skill.Types.String_Access);
@@ -205,14 +205,18 @@ ${
 
       Self : Ft := Ft (This);
    begin
-      This.Flush;
-
       Delete (This.Path);
       This.Strings.Free;
       This.Types.Foreach (Delete'Access);
       This.Types.Free;
 
       Delete (Self);
+   end Free;
+
+   procedure Close (This : access File_T) is
+   begin
+      This.Flush;
+      This.Free;
    end Close;
 ${
       (for (t ← IR) yield s"""

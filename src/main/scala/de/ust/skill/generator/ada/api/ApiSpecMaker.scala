@@ -32,6 +32,9 @@ package ${PackagePrefix}.Api is
       Read_M  : Skill.Files.Read_Mode  := Skill.Files.Read;
       Write_M : Skill.Files.Write_Mode := Skill.Files.Write) return File;
 
+   -- free all memory
+   procedure Free (This : access File_T);
+
    -- write changes to disk, free all memory
    procedure Close (This : access File_T);
 
