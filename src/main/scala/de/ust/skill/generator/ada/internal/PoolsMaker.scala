@@ -82,6 +82,11 @@ ${
          Name : String_Access)
          return Skill.Field_Declarations.Field_Declaration;
 
+      procedure Add_Known_Field
+        (This : access Pool_T;
+         Name : String_Access;
+         String_Type : Field_Types.Builtin.String_Type_T.Field_Type);
+
       overriding
       procedure Resize_Pool
         (This       : access Pool_T;
@@ -174,7 +179,10 @@ ${
    package body ${Name}_P is
 
       -- API methods
-      function Get (This : access Pool_T; ID : Skill_ID_T) return $Type is
+      function Get
+        (This : access Pool_T;
+         ID   : Skill_ID_T) return $Type
+      is
       begin
          if 0 = ID then
             return null;
@@ -247,6 +255,15 @@ ${
               Sub_Pools     => Sub_Pool_Vector_P.Empty_Vector,
               Data_Fields_F =>
                 Skill.Field_Declarations.Field_Vector_P.Empty_Vector,
+              Known_Fields => ${
+          if (t.getFields.isEmpty())
+            "No_Known_Fields"
+          else {
+            (for ((f, i) ← t.getFields.zipWithIndex)
+              yield s"                 ${i + 1} => ${internalSkillName(f)}\n"
+            ).mkString("new String_Access_Array'((\n", ",", "                ))")
+          }
+        },
               Blocks      => Skill.Internal.Parts.Blocks_P.Empty_Vector,
               Fixed       => False,
               Cached_Size => 0,
@@ -352,6 +369,28 @@ ${
         }
       end Add_Field;
 
+      procedure Add_Known_Field
+        (This        : access Pool_T;
+         Name        : String_Access;
+         String_Type : Field_Types.Builtin.String_Type_T.Field_Type)
+      is
+         F : Field_Declarations.Field_Declaration;
+      begin
+         if Skill.Equals.Equals
+             (Root.Age.Internal_Skill_Names.Age_Skill_Name,
+              Name)
+         then
+            F :=
+              This.Add_Field
+              (ID => 1 + This.Data_Fields_F.Length,
+               T => Field_Types.Builtin.V64,
+               Name => Name);
+            return;
+         end if;
+         raise Constraint_Error
+           with "generator broken in pool::add_known_field";
+      end Add_Known_Field;
+
       procedure Resize_Pool
         (This       : access Pool_T;
          Targets    : Type_Vector;
@@ -395,30 +434,34 @@ ${
          return This.Static_Data.Length + This.New_Objects.Length;
       end Static_Size;
 
-      procedure Do_For_Static_Instances (This : access Pool_T;
-                                         F : access procedure(I : Annotation)) is
+      procedure Do_For_Static_Instances
+        (This : access Pool_T;
+         F    : access procedure (I : Annotation))
+      is
 
          procedure Defer (arr : Static_Data_Array) is
          begin
-            for I of Arr.all loop
-               F(I.To_Annotation);
+            for I in arr'Range loop
+               F (arr (I).To_Annotation);
             end loop;
-         end;
+         end Defer;
       begin
-         This.Static_Data.Foreach(Defer'access);
-      end;
+         This.Static_Data.Foreach (Defer'Access);
+      end Do_For_Static_Instances;
 
       procedure Update_After_Compress
         (This     : access Pool_T;
-         Lbpo_Map : Skill.Internal.Lbpo_Map_T) is
+         Lbpo_Map : Skill.Internal.Lbpo_Map_T)
+      is
       begin
          This.Blocks.Clear;
-         This.Blocks.Append(Skill.Internal.Parts.Block'(
-                            Types.V64(Lbpo_Map(This.Type_Id)),
-                            Types.V64(This.Size)));
+         This.Blocks.Append
+         (Skill.Internal.Parts.Block'
+            (Types.v64 (Lbpo_Map (This.Type_Id)), Types.v64 (This.Size)));
 
          for I in 1 .. This.Sub_Pools.Length loop
-            This.Sub_Pools.Element(I).Dynamic.Update_After_Compress (Lbpo_Map);
+            This.Sub_Pools.Element (I).Dynamic.Update_After_Compress
+            (Lbpo_Map);
          end loop;
       end Update_After_Compress;
 
