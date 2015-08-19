@@ -106,8 +106,19 @@ ${
          Name : String_Access) return Skill.Types.Pools.Pool is
         (Sub_Pools.Make (This.To_Pool, ID, Name));
 
+      --        function Iterator (This : access Pool_T) return Age_Iterator is abstract;
+
+      procedure Do_For_Static_Instances (This : access Pool_T;
+                                         F : access procedure(I : Annotation));
+
+      procedure Update_After_Compress
+        (This     : access Pool_T;
+         Lbpo_Map : Skill.Internal.Lbpo_Map_T);
+
    private
 
+      -- note: this trick makes treatment of new objects more complicated; there
+      -- is an almost trivial solution to the problem in C++
       type Static_Data_Array_T is array (Positive range <>) of aliased ${Type}_T;
       type Static_Data_Array is access Static_Data_Array_T;
 
@@ -383,6 +394,33 @@ ${
       begin
          return This.Static_Data.Length + This.New_Objects.Length;
       end Static_Size;
+
+      procedure Do_For_Static_Instances (This : access Pool_T;
+                                         F : access procedure(I : Annotation)) is
+
+         procedure Defer (arr : Static_Data_Array) is
+         begin
+            for I of Arr.all loop
+               F(I.To_Annotation);
+            end loop;
+         end;
+      begin
+         This.Static_Data.Foreach(Defer'access);
+      end;
+
+      procedure Update_After_Compress
+        (This     : access Pool_T;
+         Lbpo_Map : Skill.Internal.Lbpo_Map_T) is
+      begin
+         This.Blocks.Clear;
+         This.Blocks.Append(Skill.Internal.Parts.Block'(
+                            Types.V64(Lbpo_Map(This.Type_Id)),
+                            Types.V64(This.Size)));
+
+         for I in 1 .. This.Sub_Pools.Length loop
+            This.Sub_Pools.Element(I).Dynamic.Update_After_Compress (Lbpo_Map);
+         end loop;
+      end Update_After_Compress;
 
    end ${Name}_P;
 """

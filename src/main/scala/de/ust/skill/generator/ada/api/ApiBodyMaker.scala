@@ -22,6 +22,7 @@ with Ada.Unchecked_Deallocation;
 with Skill.Errors;
 with Skill.Equals;
 with Skill.Field_Types;
+with Skill.Field_Types.Builtin;
 with Skill.Files;
 with Skill.Internal.File_Parsers;
 with Skill.Internal.Parts;
@@ -62,11 +63,12 @@ package body ${PackagePrefix}.Api is
 
    -- build a state from intermediate information
    function Make_State
-     (Path    : Skill.Types.String_Access;
-      Mode    : Skill.Files.Write_Mode;
-      Strings : Skill.String_Pools.Pool;
-      Types   : Skill.Types.Pools.Type_Vector;
-      TBN     : Skill.Files.Type_Map) return File
+     (Path          : Skill.Types.String_Access;
+      Mode          : Skill.Files.Write_Mode;
+      Strings       : Skill.String_Pools.Pool;
+      String_Type   : Skill.Field_Types.Builtin.String_Type_T.Field_Type;
+      Types         : Skill.Types.Pools.Type_Vector;
+      Types_By_Name : Skill.Files.Type_Map) return File
    is
       pragma Warnings (Off);
 ${
@@ -78,20 +80,20 @@ ${
       ).mkString
     }
 
-      Rval          : File;
-      P             : Skill.Types.Pools.Pool;
-      Types_By_Name : Skill.Files.Type_Map := TBN;
+      Rval      : File;
+      P         : Skill.Types.Pools.Pool;
+      TBN_Local : Skill.Files.Type_Map := Types_By_Name;
    begin
       -- create missing type information
 ${
       (for (t ← IR)
         yield s"""
-      if not Types_By_Name.Contains
+      if not TBN_Local.Contains
         (${internalSkillName(t)})
       then
          P := ${name(t)}_Pool_P.Make (Types.Length);
          Types.Append (P);
-         Types_By_Name.Include
+         TBN_Local.Include
          (${internalSkillName(t)}, P);
       end if;"""
       ).mkString
@@ -102,13 +104,14 @@ ${
           (Path          => Path,
            Mode          => Mode,
            Strings       => Strings,
+           String_Type   => String_Type,
            Types         => Types,
-           Types_By_Name => Types_By_Name${
+           Types_By_Name => TBN_Local${
       (
         for (t ← IR) yield s""",
            ${name(t)}s          =>
              Convert
-               (Types_By_Name.Element (${internalSkillName(t)}))"""
+               (TBN_Local.Element (${internalSkillName(t)}))"""
       ).mkString
     });
 
@@ -178,13 +181,17 @@ ${
             declare
                Strings : Skill.String_Pools.Pool :=
                  Skill.String_Pools.Create (Skill.Streams.Input (null));
+               String_Type : Skill.Field_Types.Builtin.String_Type_T
+                 .Field_Type :=
+                 Skill.Field_Types.Builtin.String_Type (Strings);
             begin
                return Make_State
-                   (Path    => new String'(Path),
-                    Mode    => Write_M,
-                    Strings => Strings,
-                    Types   => Skill.Types.Pools.P_Type_Vector.Empty_Vector,
-                    TBN     => Skill.Files.P_Type_Map.Empty_Map);
+                   (Path          => new String'(Path),
+                    Mode          => Write_M,
+                    Strings       => Strings,
+                    String_Type   => String_Type,
+                    Types => Skill.Types.Pools.P_Type_Vector.Empty_Vector,
+                    Types_By_Name => Skill.Files.P_Type_Map.Empty_Map);
             end;
       end case;
    end Open;
