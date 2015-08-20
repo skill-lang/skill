@@ -24,7 +24,7 @@ ${
       val strings = IR.foldLeft(Set[String]()) { case (s, t) ⇒ s + t.getSkillName ++ t.getFields.map(_.getSkillName).toSet }
       (for (s ← strings.toArray.sorted)
         yield s"""
-   ${escaped(s).capitalize}_Skill_Name : not null Skill.Types.String_Access :=
+   ${escaped(s).capitalize}_Skill_Name : constant not null Skill.Types.String_Access :=
                            new String'("$s");
 """
       ).mkString

@@ -430,8 +430,16 @@ ${
       end Resize_Pool;
 
       overriding function Static_Size (This : access Pool_T) return Natural is
+         Rval : Natural := This.New_Objects.Length;
+
+         procedure Collect(This : Static_Data_Array) is
+         begin
+            Rval := Rval + This'Length;
+         end Collect;
+
       begin
-         return This.Static_Data.Length + This.New_Objects.Length;
+         This.Static_Data.Foreach(Collect'Access);
+         return Rval;
       end Static_Size;
 
       procedure Do_For_Static_Instances
