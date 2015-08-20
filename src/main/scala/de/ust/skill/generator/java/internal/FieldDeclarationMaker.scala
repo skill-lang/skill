@@ -146,11 +146,12 @@ ${
     }
 
     @Override
-    public long offset(Block range) {${
+    public long offset() {${
           if (f.isConstant())
             """
         return 0; // this field is constant"""
-          else {
+          else """
+        final Block range = owner.lastBlock();""" + {
             // this prelude is common to most cases
             def preludeData : String =
               s"""final ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
