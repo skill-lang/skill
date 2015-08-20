@@ -118,11 +118,11 @@ package body ${PackagePrefix}.Known_Field_$fn is
    is
    begin
       return new Known_Field_${fn}_T'
-          (Data_Chunks => Skill.Field_Declarations.Chunk_List_P.Empty_Vector,
-           T           => T,
-           Name        => ${internalSkillName(f)},
-           Index       => ID,
-           Owner       => Owner,
+          (Data_Chunks   => Skill.Field_Declarations.Chunk_List_P.Empty_Vector,
+           T             => T,
+           Name          => ${internalSkillName(f)},
+           Index         => ID,
+           Owner         => Owner,
            Future_Offset => 0);
    end Make;
 
@@ -194,34 +194,34 @@ package body ${PackagePrefix}.Known_Field_$fn is
    begin"""+{
         // this prelude is common to most cases
         val preludeData : String = """
-      for i in Low .. High - 1 loop"""
+      for I in Low + 1 .. High loop"""
 
         f.getType match {
 
           // read next element
           case fieldType : GroundType ⇒ fieldType.getSkillName match {
 
-            case "annotation" ⇒ s"""
-        final Annotation t = (Annotation) type;
-        $preludeData
-            SkillObject v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)};
-            if(null==v)
-                result++;
-            else
-                result += t.singleOffset(v);
-        }
-        return result;"""
-
-            case "string" ⇒ s"""
-        final StringType t = (StringType) type;
-        $preludeData
-            String v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)};
-            if(null==v)
-                result++;
-            else
-                result += t.singleOffset(v);
-        }
-        return result;"""
+            //            case "annotation" ⇒ s"""
+            //        final Annotation t = (Annotation) type;
+            //        $preludeData
+            //            SkillObject v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)};
+            //            if(null==v)
+            //                result++;
+            //            else
+            //                result += t.singleOffset(v);
+            //        }
+            //        return result;"""
+            //
+            //            case "string" ⇒ s"""
+            //        final StringType t = (StringType) type;
+            //        $preludeData
+            //            String v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)};
+            //            if(null==v)
+            //                result++;
+            //            else
+            //                result += t.singleOffset(v);
+            //        }
+            //        return result;"""
 
             case "i8" | "bool" ⇒ s"""
         This.Future_Offset := rang.count;"""
@@ -264,81 +264,83 @@ package body ${PackagePrefix}.Known_Field_$fn is
       This.Future_Offset := Result;"""
 
             case _ ⇒ s"""
-        throw new NoSuchMethodError();"""
+        raise Constraint_Error with "TODO";"""
           }
 
-          case fieldType : ConstantLengthArrayType ⇒ s"""
-        final SingleArgumentType t = (SingleArgumentType) type;
-        final FieldType baseType = t.groundType;
-        $preludeData
-            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
-            assert null==v;
-            result += baseType.calculateOffset(v);
-        }
-        return result;"""
+//          case fieldType : ConstantLengthArrayType ⇒ s"""
+//        final SingleArgumentType t = (SingleArgumentType) type;
+//        final FieldType baseType = t.groundType;
+//        $preludeData
+//            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
+//            assert null==v;
+//            result += baseType.calculateOffset(v);
+//        }
+//        return result;"""
+//
+//          case fieldType : SingleBaseTypeContainer ⇒ s"""
+//        final SingleArgumentType t = (SingleArgumentType) type;
+//        final FieldType baseType = t.groundType;
+//        $preludeData
+//            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
+//            if(null==v)
+//                result++;
+//            else {
+//                result += V64.singleV64Offset(v.size());
+//                result += baseType.calculateOffset(v);
+//            }
+//        }
+//        return result;"""
+//
+//          case fieldType : MapType ⇒ s"""
+//        final MapType t = (MapType) type;
+//        final FieldType keyType = t.keyType;
+//        final FieldType valueType = t.valueType;
+//        $preludeData
+//            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
+//            if(null==v)
+//                result++;
+//            else {
+//                result += V64.singleV64Offset(v.size());
+//                result += keyType.calculateOffset(v.keySet());
+//                result += valueType.calculateOffset(v.values());
+//            }
+//        }
+//        return result;"""
 
-          case fieldType : SingleBaseTypeContainer ⇒ s"""
-        final SingleArgumentType t = (SingleArgumentType) type;
-        final FieldType baseType = t.groundType;
-        $preludeData
-            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
-            if(null==v)
-                result++;
-            else {
-                result += V64.singleV64Offset(v.size());
-                result += baseType.calculateOffset(v);
-            }
-        }
-        return result;"""
-
-          case fieldType : MapType ⇒ s"""
-        final MapType t = (MapType) type;
-        final FieldType keyType = t.keyType;
-        final FieldType valueType = t.valueType;
-        $preludeData
-            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
-            if(null==v)
-                result++;
-            else {
-                result += V64.singleV64Offset(v.size());
-                result += keyType.calculateOffset(v.keySet());
-                result += valueType.calculateOffset(v.values());
-            }
-        }
-        return result;"""
-
-          case fieldType : UserType ⇒ s"""
-        $preludeData
-            final ${mapType(f.getType)} instance = $dataAccessI.get${escaped(f.getName.capital)}();
-            if (null == instance) {
-                result += 1;
-                continue;
-            }
-            long v = instance.getSkillID();
-
-            if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
-                result += 1;
-            } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
-                result += 2;
-            } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
-                result += 3;
-            } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
-                result += 4;
-            } else if (0L == (v & 0xFFFFFFF800000000L)) {
-                result += 5;
-            } else if (0L == (v & 0xFFFFFC0000000000L)) {
-                result += 6;
-            } else if (0L == (v & 0xFFFE000000000000L)) {
-                result += 7;
-            } else if (0L == (v & 0xFF00000000000000L)) {
-                result += 8;
-            } else {
-                result += 9;
-            }
-        }
-        return result;"""
+          case fieldType : UserType ⇒ s"""$preludeData
+        declare
+            Instance : ${mapType(f.getType)} := $dataAccessI.Get_${name(f)};
+            V : Skill.Types.Uv64;
+         begin
+            if null = Instance Then
+               Result := Result + 1;
+            else
+               V := Cast (Skill.Types.V64(Instance.Skill_ID));
+               if 0 = (V and 16#FFFFFFFFFFFFFF80#) then
+                  Result := Result + 1;
+               elsif 0 = (V and 16#FFFFFFFFFFFFC000#) then
+                  Result := Result + 2;
+               elsif 0 = (V and 16#FFFFFFFFFFE00000#) then
+                  Result := Result + 3;
+               elsif 0 = (V and 16#FFFFFFFFF0000000#) then
+                  Result := Result + 4;
+               elsif 0 = (V and 16#FFFFFFF800000000#) then
+                  Result := Result + 5;
+               elsif 0 = (V and 16#FFFFFC0000000000#) then
+                  Result := Result + 6;
+               elsif 0 = (V and 16#FFFE000000000000#) then
+                  Result := Result + 7;
+               elsif 0 = (V and 16#FF00000000000000#) then
+                  Result := Result + 8;
+               else
+                  Result := Result + 9;
+               end if;
+            end if;
+         end;
+      end loop;
+      This.Future_Offset := Result;"""
           case _ ⇒ s"""
-        throw new NoSuchMethodError();"""
+        raise constraint_error with "TODO";"""
         }
       }
     }
@@ -354,15 +356,14 @@ package body ${PackagePrefix}.Known_Field_$fn is
         (Skill.Types.v64,
          Skill.Types.Uv64);
 
-      Data   : Skill.Types.Annotation_Array := This.Owner.Base.Data;
-      C      : Skill.Internal.Parts.Chunk := This.Data_Chunks.Last_Element.C;
-      Low    : Natural;
-      High   : Natural;
-   begin
-   ${
+      Data : Skill.Types.Annotation_Array := This.Owner.Base.Data;
+      C    : Skill.Internal.Parts.Chunk   := This.Data_Chunks.Last_Element.C;
+      Low  : Natural;
+      High : Natural;
+   begin${
       if (f.isConstant())
         """
-        null; -- this field is constant"""
+      null; -- this field is constant"""
       else
         s"""
       if C.all in Skill.Internal.Parts.Simple_Chunk then
@@ -374,26 +375,36 @@ package body ${PackagePrefix}.Known_Field_$fn is
          Low := 1;
          High := This.Owner.Size;"""
           else """
-            i = owner.size() > 0 ? (int) owner.iterator().next().getSkillID() - 1 : 0;
-            high = i + owner.size();"""
+         if This.Owner.Size > 0 then
+            -- TODO not correct for appends !!
+            Low := Natural (This.Owner.Blocks.Last_Element.BPO) + 1;
+         else
+            Low := 1;
+         end if;
+         High := Low + This.Owner.Size - 1;"""
         }
       end if;
 
-      for i in Low .. High - 1 loop
+      for I in Low .. High loop
          ${
           // read next element
           f.getType match {
             case t : GroundType ⇒ t.getSkillName match {
-              case "annotation" | "string" ⇒ s"""type.writeSingleField($fieldAccessI, output);"""
-              case _                       ⇒ s"""output.${t.getSkillName}($fieldAccessI);"""
+              //              case "annotation" | "string" ⇒ s"""type.writeSingleField($fieldAccessI, output);"""
+              case "annotation" | "string" ⇒ s"""raise Constraint_Error with "todo";"""
+              case _                       ⇒ s"""Output.${t.getSkillName.capitalize}($fieldAccessI);"""
             }
 
-            case t : UserType ⇒ s"""${mapType(t)} v = $dataAccessI.get${escaped(f.getName.capital)}();
-            if (null == v)
-                out.i8((byte) 0);
+            case t : UserType ⇒ s"""declare
+            Instance : ${mapType(f.getType)} := $dataAccessI.Get_${name(f)};
+         begin
+            if null = Instance Then
+               Output.I8 (0);
             else
-                out.v64(v.getSkillID());"""
-            case _ ⇒ s"""type.writeSingleField($dataAccessI.get${escaped(f.getName.capital)}(), out);"""
+               Output.V64(Skill.Types.V64(Instance.Skill_ID));
+            end if;
+         end;"""
+            case _ ⇒ s"""raise Constraint_Error with "todo";"""
           }
         }
       end loop;"""

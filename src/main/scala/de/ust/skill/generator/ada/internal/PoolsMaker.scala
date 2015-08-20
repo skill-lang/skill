@@ -7,6 +7,15 @@ package de.ust.skill.generator.ada.api.internal
 
 import de.ust.skill.generator.ada.GeneralOutputMaker
 import scala.collection.JavaConversions._
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.MapType
 
 trait PoolsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -85,7 +94,8 @@ ${
       procedure Add_Known_Field
         (This : access Pool_T;
          Name : String_Access;
-         String_Type : Field_Types.Builtin.String_Type_T.Field_Type);
+         String_Type : Field_Types.Builtin.String_Type_T.Field_Type;
+         Annotation_Type : Field_Types.Builtin.Annotation_Type_P.Field_Type);
 
       overriding
       procedure Resize_Pool
@@ -372,21 +382,26 @@ ${
       procedure Add_Known_Field
         (This        : access Pool_T;
          Name        : String_Access;
-         String_Type : Field_Types.Builtin.String_Type_T.Field_Type)
+         String_Type : Field_Types.Builtin.String_Type_T.Field_Type;
+         Annotation_Type : Field_Types.Builtin.Annotation_Type_P.Field_Type)
       is
          F : Field_Declarations.Field_Declaration;
-      begin
+      begin${
+          (for (f ← t.getFields if !f.isAuto)
+            yield s"""
          if Skill.Equals.Equals
-             (Root.Age.Internal_Skill_Names.Age_Skill_Name,
+             (${internalSkillName(f)},
               Name)
          then
             F :=
               This.Add_Field
               (ID => 1 + This.Data_Fields_F.Length,
-               T => Field_Types.Builtin.V64,
+               T => ${mapToFieldType(f)},
                Name => Name);
             return;
-         end if;
+         end if;"""
+          ).mkString
+        }
          raise Constraint_Error
            with "generator broken in pool::add_known_field";
       end Add_Known_Field;
@@ -446,6 +461,10 @@ ${
         (This : access Pool_T;
          F    : access procedure (I : Annotation))
       is
+         type T is access procedure (I : ${mapType(t)});
+         type U is access procedure (I : Annotation);
+
+         function Cast is new Ada.Unchecked_Conversion(U, T);
 
          procedure Defer (arr : Static_Data_Array) is
          begin
@@ -455,6 +474,7 @@ ${
          end Defer;
       begin
          This.Static_Data.Foreach (Defer'Access);
+         This.New_Objects.Foreach(Cast(F));
       end Do_For_Static_Instances;
 
       procedure Update_After_Compress
@@ -481,5 +501,29 @@ end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools;
 """)
 
     out.close()
+  }
+
+  private def mapToFieldType(f : Field) : String = {
+    //@note temporary string & annotation will be replaced later on
+    @inline def mapGroundType(t : Type) : String = t.getSkillName match {
+      case "annotation" ⇒ "Field_Types.Field_Type(Annotation_Type)"
+      case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" | "f32" | "f64" ⇒
+        if (f.isConstant) s"Field_Types.Builtin.Const_${t.getName.capital}(${f.constantValue})"
+        else s"Field_Types.Builtin.${t.getName.capital}"
+      case "string" ⇒ "Field_Types.Field_Type(String_Type)"
+
+      case s        ⇒ s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
+    }
+
+    f.getType match {
+      case t : GroundType              ⇒ mapGroundType(t)
+//      case t : ConstantLengthArrayType ⇒ s"new ConstantLengthArray<>(${t.getLength}, ${mapGroundType(t.getBaseType)})"
+//      case t : VariableLengthArrayType ⇒ s"new VariableLengthArray<>(${mapGroundType(t.getBaseType)})"
+//      case t : ListType                ⇒ s"new ListType<>(${mapGroundType(t.getBaseType)})"
+//      case t : SetType                 ⇒ s"new SetType<>(${mapGroundType(t.getBaseType)})"
+//      case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"new MapType<>($k, $v)")
+      case t : Declaration             ⇒ s"Field_Types.Field_Type(This.Owner.Types_By_Name.Element(${internalSkillName(t)}))"
+      case _ ⇒ "Field_Types.Field_Type(Annotation_Type)"
+    }
   }
 }

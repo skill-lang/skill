@@ -67,8 +67,9 @@ package body ${PackagePrefix}.Api is
       Mode          : Skill.Files.Write_Mode;
       Strings       : Skill.String_Pools.Pool;
       String_Type   : Skill.Field_Types.Builtin.String_Type_T.Field_Type;
+      Annotation_Type : Skill.Field_Types.Builtin.Annotation_Type_P.Field_Type;
       Types         : Skill.Types.Pools.Type_Vector;
-      Types_By_Name : Skill.Files.Type_Map) return File
+      Types_By_Name : Skill.Types.Pools.Type_Map) return File
    is
       pragma Warnings (Off);
 ${
@@ -82,7 +83,7 @@ ${
 
       Rval      : File;
       P         : Skill.Types.Pools.Pool;
-      TBN_Local : Skill.Files.Type_Map := Types_By_Name;
+      TBN_Local : Skill.Types.Pools.Type_Map := Types_By_Name;
    begin
       -- create missing type information
 ${
@@ -105,6 +106,7 @@ ${
            Mode          => Mode,
            Strings       => Strings,
            String_Type   => String_Type,
+           Annotation_Type => Annotation_Type,
            Types         => Types,
            Types_By_Name => TBN_Local${
       (
@@ -181,17 +183,23 @@ ${
             declare
                Strings : Skill.String_Pools.Pool :=
                  Skill.String_Pools.Create (Skill.Streams.Input (null));
+               Types : Skill.Types.Pools.Type_Vector :=
+                 Skill.Types.Pools.P_Type_Vector.Empty_Vector;
                String_Type : Skill.Field_Types.Builtin.String_Type_T
                  .Field_Type :=
                  Skill.Field_Types.Builtin.String_Type (Strings);
+               Annotation_Type : Skill.Field_Types.Builtin.Annotation_Type_P
+                 .Field_Type :=
+                 Skill.Field_Types.Builtin.Annotation (Types);
             begin
                return Make_State
-                   (Path          => new String'(Path),
-                    Mode          => Write_M,
-                    Strings       => Strings,
-                    String_Type   => String_Type,
-                    Types => Skill.Types.Pools.P_Type_Vector.Empty_Vector,
-                    Types_By_Name => Skill.Files.P_Type_Map.Empty_Map);
+                   (Path            => new String'(Path),
+                    Mode            => Write_M,
+                    Strings         => Strings,
+                    String_Type     => String_Type,
+                    Annotation_Type => Annotation_Type,
+                    Types           => Types,
+                    Types_By_Name   => Skill.Types.Pools.P_Type_Map.Empty_Map);
             end;
       end case;
    end Open;
