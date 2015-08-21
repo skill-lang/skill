@@ -103,6 +103,7 @@ with Skill.Field_Declarations;
 with Skill.Field_Types;
 with Skill.Internal.Parts;
 with Skill.Streams.Reader;
+with Skill.String_Pools;
 with Skill.Types;
 with $poolsPackage;
 
@@ -167,10 +168,22 @@ package body ${PackagePrefix}.Known_Field_$fn is
          Last  := First + Natural (This.Owner.Blocks.Last_Element.Count);
          -- TODO This is horribly incorrect!!!
       end if;
-
+${
+  f.getType.getSkillName match {
+    case "string" ⇒ s"""
+      declare
+         Strings : Skill.String_Pools.Pool := Skill.Field_Types.Builtin.String_Type_T.Field_Type(This.T).Strings;
+      begin
+         for I in First + 1 .. Last loop
+            To_${name(t)} (Data (I)).Set_${name(f)} (Strings.Get(Input.V64));
+         end loop;
+      end;"""
+    case _ ⇒ s"""
       for I in First + 1 .. Last loop
          To_${name(t)} (Data (I)).Set_${name(f)} (${read(f)});
-      end loop;
+      end loop;"""
+  }
+}
    end Read;
 
    procedure Offset (This : access Known_Field_${fn}_T) is${
