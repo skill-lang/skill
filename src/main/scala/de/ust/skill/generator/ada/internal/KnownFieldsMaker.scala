@@ -212,16 +212,45 @@ package body ${PackagePrefix}.Known_Field_$fn is
             //        }
             //        return result;"""
             //
-            //            case "string" ⇒ s"""
-            //        final StringType t = (StringType) type;
-            //        $preludeData
-            //            String v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)};
-            //            if(null==v)
-            //                result++;
-            //            else
-            //                result += t.singleOffset(v);
-            //        }
-            //        return result;"""
+                        case "string" ⇒ s"""
+      declare
+         V : Skill.Types.Uv64;
+         Ids : Skill.Field_Types.Builtin.String_Type_T.ID_Map :=
+           Skill.Field_Types.Builtin.String_Type_T.Field_Type
+             (This.T).Get_Id_Map;
+
+         use type Ada.Containers.Count_Type;
+      begin
+         if Ids.Length < 255 then
+            This.Future_Offset := Skill.Types.V64(High - Low);
+            return;
+         end if;
+
+         for I in Low + 1 .. High loop
+            V := Cast (Skill.Types.V64 (Ids.Element ($dataAccessI.Get_${name(f)})));
+
+            if 0 = (v and 16#FFFFFFFFFFFFFF80#) then
+               Result := Result + 1;
+            elsif 0 = (v and 16#FFFFFFFFFFFFC000#) then
+               Result := Result + 2;
+            elsif 0 = (v and 16#FFFFFFFFFFE00000#) then
+               Result := Result + 3;
+            elsif 0 = (v and 16#FFFFFFFFF0000000#) then
+               Result := Result + 4;
+            elsif 0 = (v and 16#FFFFFFF800000000#) then
+               Result := Result + 5;
+            elsif 0 = (v and 16#FFFFFC0000000000#) then
+               Result := Result + 6;
+            elsif 0 = (v and 16#FFFE000000000000#) then
+               Result := Result + 7;
+            elsif 0 = (v and 16#FF00000000000000#) then
+               Result := Result + 8;
+            else
+               Result := Result + 9;
+            end if;
+         end loop;
+      end;
+      This.Future_Offset := Result;"""
 
             case "i8" | "bool" ⇒ s"""
         This.Future_Offset := rang.count;"""
@@ -390,8 +419,9 @@ package body ${PackagePrefix}.Known_Field_$fn is
           // read next element
           f.getType match {
             case t : GroundType ⇒ t.getSkillName match {
-              //              case "annotation" | "string" ⇒ s"""type.writeSingleField($fieldAccessI, output);"""
-              case "annotation" | "string" ⇒ s"""raise Constraint_Error with "todo";"""
+              case "annotation" ⇒ s"""raise Constraint_Error with "todo: write annotation";"""
+              case "string" ⇒ s"""Skill.Field_Types.Builtin.String_Type_T.Field_Type
+             (This.T).Write_Single_Field($fieldAccessI, output);"""
               case _                       ⇒ s"""Output.${t.getSkillName.capitalize}($fieldAccessI);"""
             }
 
