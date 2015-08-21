@@ -460,7 +460,7 @@ ${
          Size : Natural;
          ID   : Skill_ID_T := 1 + Skill_ID_T (This.Blocks.Last_Element.BPO);
 
-         Data : Skill.Types.Annotation_Array := This${if(isBase)""else".Base"}.Data;
+         Data : Skill.Types.Annotation_Array;
 
          SD : Static_Data_Array;
          R  : $Type;
@@ -471,6 +471,7 @@ ${
          This.Resize_Data;"""
           else ""
         }
+         Data := This${if(isBase)""else".Base"}.Data;
 
          if Self_Index = Targets.Length - 1
            or else Targets.Element (Self_Index + 1).Super /= This.To_Pool
