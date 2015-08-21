@@ -97,7 +97,7 @@ ${
       then
          P := ${name(t)}_Pool_P.Make_Pool (Types.Length${
           if (null == t.getSuperType) ""
-          else s", TBN_Local.Element (${internalSkillName(t)})"
+          else s", TBN_Local.Element (${internalSkillName(t.getSuperType)})"
         });
          Types.Append (P);
          TBN_Local.Include

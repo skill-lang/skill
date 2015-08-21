@@ -227,7 +227,10 @@ ${
             //
             case "string" ⇒ s"""
       declare
-         V : Skill.Types.Uv64;
+         use type Skill.Types.String_Access;
+
+         S   : Skill.Types.String_Access;
+         V   : Skill.Types.Uv64;
          Ids : Skill.Field_Types.Builtin.String_Type_T.ID_Map :=
            Skill.Field_Types.Builtin.String_Type_T.Field_Type
              (This.T).Get_Id_Map;
@@ -235,31 +238,36 @@ ${
          use type Ada.Containers.Count_Type;
       begin
          if Ids.Length < 255 then
-            This.Future_Offset := Skill.Types.V64(High - Low);
+            This.Future_Offset := Skill.Types.v64 (High - Low);
             return;
          end if;
 
          for I in Low + 1 .. High loop
-            V := Cast (Skill.Types.V64 (Ids.Element ($dataAccessI.Get_${name(f)})));
-
-            if 0 = (v and 16#FFFFFFFFFFFFFF80#) then
+            S := $dataAccessI.Get_${name(f)};
+            if null = S then
                Result := Result + 1;
-            elsif 0 = (v and 16#FFFFFFFFFFFFC000#) then
-               Result := Result + 2;
-            elsif 0 = (v and 16#FFFFFFFFFFE00000#) then
-               Result := Result + 3;
-            elsif 0 = (v and 16#FFFFFFFFF0000000#) then
-               Result := Result + 4;
-            elsif 0 = (v and 16#FFFFFFF800000000#) then
-               Result := Result + 5;
-            elsif 0 = (v and 16#FFFFFC0000000000#) then
-               Result := Result + 6;
-            elsif 0 = (v and 16#FFFE000000000000#) then
-               Result := Result + 7;
-            elsif 0 = (v and 16#FF00000000000000#) then
-               Result := Result + 8;
             else
-               Result := Result + 9;
+               V := Cast (Skill.Types.v64 (Ids.Element (S)));
+
+               if 0 = (V and 16#FFFFFFFFFFFFFF80#) then
+                  Result := Result + 1;
+               elsif 0 = (V and 16#FFFFFFFFFFFFC000#) then
+                  Result := Result + 2;
+               elsif 0 = (V and 16#FFFFFFFFFFE00000#) then
+                  Result := Result + 3;
+               elsif 0 = (V and 16#FFFFFFFFF0000000#) then
+                  Result := Result + 4;
+               elsif 0 = (V and 16#FFFFFFF800000000#) then
+                  Result := Result + 5;
+               elsif 0 = (V and 16#FFFFFC0000000000#) then
+                  Result := Result + 6;
+               elsif 0 = (V and 16#FFFE000000000000#) then
+                  Result := Result + 7;
+               elsif 0 = (V and 16#FF00000000000000#) then
+                  Result := Result + 8;
+               else
+                  Result := Result + 9;
+               end if;
             end if;
          end loop;
       end;
