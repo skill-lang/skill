@@ -49,7 +49,10 @@ package body ${PackagePrefix}.Api is
       (for (t ← IR)
         yield s"""
       if Skill.Equals.Equals (Name, Internal_Skill_Names.${escaped(t.getSkillName).capitalize}_Skill_Name) then
-         return ${name(t)}_Pool_P.Make (Type_ID);
+         return ${name(t)}_Pool_P.Make_Pool (Type_ID${
+          if (null == t.getSuperType) ""
+          else ", Super"
+        });
       end if;
 """
       ).mkString
@@ -92,7 +95,10 @@ ${
       if not TBN_Local.Contains
         (${internalSkillName(t)})
       then
-         P := ${name(t)}_Pool_P.Make (Types.Length);
+         P := ${name(t)}_Pool_P.Make_Pool (Types.Length${
+          if (null == t.getSuperType) ""
+          else s", TBN_Local.Element (${internalSkillName(t)})"
+        });
          Types.Append (P);
          TBN_Local.Include
          (${internalSkillName(t)}, P);

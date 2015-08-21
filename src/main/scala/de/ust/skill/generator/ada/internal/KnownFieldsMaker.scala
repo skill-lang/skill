@@ -156,7 +156,7 @@ package body ${PackagePrefix}.Known_Field_$fn is
    is
       First : Natural;
       Last  : Natural;
-      Data  : Skill.Types.Annotation_Array    := Owner_Dyn (This).Data;
+      Data  : Skill.Types.Annotation_Array    := Owner_Dyn (This)${if(tIsBaseType)""else".Base"}.Data;
       Input : Skill.Streams.Reader.Sub_Stream := CE.Input;
    begin
       if CE.C.all in Skill.Internal.Parts.Simple_Chunk then
@@ -212,7 +212,7 @@ package body ${PackagePrefix}.Known_Field_$fn is
             //        }
             //        return result;"""
             //
-                        case "string" ⇒ s"""
+            case "string" ⇒ s"""
       declare
          V : Skill.Types.Uv64;
          Ids : Skill.Field_Types.Builtin.String_Type_T.ID_Map :=
@@ -296,45 +296,45 @@ package body ${PackagePrefix}.Known_Field_$fn is
         raise Constraint_Error with "TODO";"""
           }
 
-//          case fieldType : ConstantLengthArrayType ⇒ s"""
-//        final SingleArgumentType t = (SingleArgumentType) type;
-//        final FieldType baseType = t.groundType;
-//        $preludeData
-//            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
-//            assert null==v;
-//            result += baseType.calculateOffset(v);
-//        }
-//        return result;"""
-//
-//          case fieldType : SingleBaseTypeContainer ⇒ s"""
-//        final SingleArgumentType t = (SingleArgumentType) type;
-//        final FieldType baseType = t.groundType;
-//        $preludeData
-//            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
-//            if(null==v)
-//                result++;
-//            else {
-//                result += V64.singleV64Offset(v.size());
-//                result += baseType.calculateOffset(v);
-//            }
-//        }
-//        return result;"""
-//
-//          case fieldType : MapType ⇒ s"""
-//        final MapType t = (MapType) type;
-//        final FieldType keyType = t.keyType;
-//        final FieldType valueType = t.valueType;
-//        $preludeData
-//            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
-//            if(null==v)
-//                result++;
-//            else {
-//                result += V64.singleV64Offset(v.size());
-//                result += keyType.calculateOffset(v.keySet());
-//                result += valueType.calculateOffset(v.values());
-//            }
-//        }
-//        return result;"""
+          //          case fieldType : ConstantLengthArrayType ⇒ s"""
+          //        final SingleArgumentType t = (SingleArgumentType) type;
+          //        final FieldType baseType = t.groundType;
+          //        $preludeData
+          //            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
+          //            assert null==v;
+          //            result += baseType.calculateOffset(v);
+          //        }
+          //        return result;"""
+          //
+          //          case fieldType : SingleBaseTypeContainer ⇒ s"""
+          //        final SingleArgumentType t = (SingleArgumentType) type;
+          //        final FieldType baseType = t.groundType;
+          //        $preludeData
+          //            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
+          //            if(null==v)
+          //                result++;
+          //            else {
+          //                result += V64.singleV64Offset(v.size());
+          //                result += baseType.calculateOffset(v);
+          //            }
+          //        }
+          //        return result;"""
+          //
+          //          case fieldType : MapType ⇒ s"""
+          //        final MapType t = (MapType) type;
+          //        final FieldType keyType = t.keyType;
+          //        final FieldType valueType = t.valueType;
+          //        $preludeData
+          //            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
+          //            if(null==v)
+          //                result++;
+          //            else {
+          //                result += V64.singleV64Offset(v.size());
+          //                result += keyType.calculateOffset(v.keySet());
+          //                result += valueType.calculateOffset(v.values());
+          //            }
+          //        }
+          //        return result;"""
 
           case fieldType : UserType ⇒ s"""$preludeData
         declare
@@ -377,7 +377,11 @@ package body ${PackagePrefix}.Known_Field_$fn is
 
    procedure Write
      (This   : access Known_Field_${fn}_T;
-      Output : Skill.Streams.Writer.Sub_Stream) is
+      Output : Skill.Streams.Writer.Sub_Stream) is${
+      if (f.isConstant())
+        """ null; -- this field is constant"""
+      else
+        s"""
       use type Skill.Types.v64;
       use type Skill.Types.Uv64;
 
@@ -389,12 +393,7 @@ package body ${PackagePrefix}.Known_Field_$fn is
       C    : Skill.Internal.Parts.Chunk   := This.Data_Chunks.Last_Element.C;
       Low  : Natural;
       High : Natural;
-   begin${
-      if (f.isConstant())
-        """
-      null; -- this field is constant"""
-      else
-        s"""
+   begin
       if C.all in Skill.Internal.Parts.Simple_Chunk then
          Low := Natural(Skill.Internal.Parts.Simple_Chunk(C.all).BPO);
          High := Low + Natural(C.Count);
@@ -422,7 +421,7 @@ package body ${PackagePrefix}.Known_Field_$fn is
               case "annotation" ⇒ s"""raise Constraint_Error with "todo: write annotation";"""
               case "string" ⇒ s"""Skill.Field_Types.Builtin.String_Type_T.Field_Type
              (This.T).Write_Single_Field($fieldAccessI, output);"""
-              case _                       ⇒ s"""Output.${t.getSkillName.capitalize}($fieldAccessI);"""
+              case _ ⇒ s"""Output.${t.getSkillName.capitalize}($fieldAccessI);"""
             }
 
             case t : UserType ⇒ s"""declare
@@ -437,9 +436,9 @@ package body ${PackagePrefix}.Known_Field_$fn is
             case _ ⇒ s"""raise Constraint_Error with "todo";"""
           }
         }
-      end loop;"""
+      end loop;
+   end Write;"""
     }
-   end Write;
 
 end ${PackagePrefix}.Known_Field_$fn;
 """)

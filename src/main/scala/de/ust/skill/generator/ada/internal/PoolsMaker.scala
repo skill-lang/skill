@@ -45,12 +45,13 @@ with $PackagePrefix;
 package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools is
 ${
       (for (t ← IR) yield {
+        val isBase = null == t.getSuperType
         val Name = name(t)
         val Type = PackagePrefix+"."+Name
         s"""
    package ${Name}_P is
 
-      type Pool_T is new Base_Pool_T with private;
+      type Pool_T is new ${if(isBase)"Base"else"Sub"}_Pool_T with private;
       type Pool is access Pool_T;
 
       -- API methods
@@ -79,7 +80,10 @@ ${
       ----------------------
 
       -- constructor invoked by new_pool
-      function Make (Type_Id : Natural) return Pools.Pool;
+      function Make_Pool (Type_Id : Natural${
+          if (isBase) ""
+          else "; Super : Skill.Types.Pools.Pool"
+        }) return Pools.Pool;
       -- destructor invoked by close
       procedure Free (This : access Pool_T);
 
@@ -143,7 +147,7 @@ ${
       package A2 is new Vectors (Natural, Static_Data_Array);
       subtype Static_Instance_Vector is A2.Vector;
 
-      type Pool_T is new Base_Pool_T with record
+      type Pool_T is new ${if(isBase)"Base"else"Sub"}_Pool_T with record
          Static_Data : Static_Instance_Vector;
          New_Objects : New_Instance_Vector;
       end record;
@@ -183,8 +187,34 @@ with $PackagePrefix.Known_Field_${escaped(t.getName.ada())}_${escaped(f.getName.
 package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools is
 ${
       (for (t ← IR) yield {
+        val isBase = null == t.getSuperType
         val Name = name(t)
         val Type = PackagePrefix+"."+Name
+
+  def mapToFieldType(f : Field) : String = {
+    //@note temporary string & annotation will be replaced later on
+    @inline def mapGroundType(t : Type) : String = t.getSkillName match {
+      case "annotation" ⇒ "Field_Types.Field_Type(Annotation_Type)"
+      case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" | "f32" | "f64" ⇒
+        if (f.isConstant) s"Field_Types.Builtin.Const_${t.getName.capital}(${f.constantValue})"
+        else s"Field_Types.Builtin.${t.getName.capital}"
+      case "string" ⇒ "Field_Types.Field_Type(String_Type)"
+
+      case s        ⇒ s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
+    }
+
+    f.getType match {
+      case t : GroundType  ⇒ mapGroundType(t)
+      //      case t : ConstantLengthArrayType ⇒ s"new ConstantLengthArray<>(${t.getLength}, ${mapGroundType(t.getBaseType)})"
+      //      case t : VariableLengthArrayType ⇒ s"new VariableLengthArray<>(${mapGroundType(t.getBaseType)})"
+      //      case t : ListType                ⇒ s"new ListType<>(${mapGroundType(t.getBaseType)})"
+      //      case t : SetType                 ⇒ s"new SetType<>(${mapGroundType(t.getBaseType)})"
+      //      case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"new MapType<>($k, $v)")
+      case t : Declaration ⇒ s"Field_Types.Field_Type(This${if(isBase)""else".Base"}.Owner.Types_By_Name.Element(${internalSkillName(t)}))"
+      case _               ⇒ "Field_Types.Field_Type(Annotation_Type)"
+    }
+  }
+
         s"""
    package body ${Name}_P is
 
@@ -197,7 +227,7 @@ ${
          if 0 = ID then
             return null;
          else
-            return ${PackagePrefix}.To_$Name (This.Data (ID));
+            return ${PackagePrefix}.To_$Name (This${if(isBase)""else".Base"}.Data (ID));
          end if;
       end Get;
 
@@ -246,7 +276,10 @@ ${
       ----------------------
 
       -- constructor invoked by new_pool
-      function Make (Type_Id : Natural) return Skill.Types.Pools.Pool is
+      function Make_Pool (Type_Id : Natural${
+          if (null == t.getSuperType) ""
+          else "; Super : Skill.Types.Pools.Pool"
+        }) return Skill.Types.Pools.Pool is
          function Convert is new Ada.Unchecked_Conversion
            (Source => Pool,
             Target => Skill.Types.Pools.Base_Pool);
@@ -259,9 +292,16 @@ ${
          This :=
            new Pool_T'
              (Name          => ${internalSkillName(t)},
-              Type_Id       => Type_Id,
+              Type_Id       => Type_Id,${
+          if (null == t.getSuperType) """
               Super         => null,
               Base          => null,
+              Data          => Skill.Types.Pools.Empty_Data,
+              Owner         => null,"""
+          else """
+              Super         => Super,
+              Base          => Super.Base,"""
+        }
               Sub_Pools     => Sub_Pool_Vector_P.Empty_Vector,
               Data_Fields_F =>
                 Skill.Field_Declarations.Field_Vector_P.Empty_Vector,
@@ -277,19 +317,20 @@ ${
               Blocks      => Skill.Internal.Parts.Blocks_P.Empty_Vector,
               Fixed       => False,
               Cached_Size => 0,
-              Data        => Skill.Types.Pools.Empty_Data,
-              Owner       => null,
               Static_Data => A2.Empty_Vector,
               New_Objects => A1.Empty_Vector);
-
-         This.Base := Convert (This);
+${
+          if (null == t.getSuperType) """
+         This.Base := Convert (This);"""
+          else ""
+        }
          return Convert (This);
       exception
          when E : others =>
             Skill.Errors.Print_Stacktrace (E);
             Skill.Errors.Print_Stacktrace;
             raise Skill.Errors.Skill_Error with "$Name pool allocation failed";
-      end Make;
+      end Make_Pool;
 
       procedure Free (This : access Pool_T) is
 
@@ -310,8 +351,11 @@ ${
          begin
             Free (D);
          end Delete_SA;
-
-         Data : Annotation_Array := This.Data;
+${
+              if(isBase)"""
+         Data : Annotation_Array := This.Data;"""
+              else ""
+            }
          procedure Delete is new Ada.Unchecked_Deallocation
            (Skill.Types.Skill_Object,
             Skill.Types.Annotation);
@@ -322,11 +366,13 @@ ${
          type P is access all Pool_T;
          procedure Delete is new Ada.Unchecked_Deallocation (Pool_T, P);
          D : P := P (This);
-      begin
+      begin${
+        if(isBase)"""
          if 0 /= Data'Length then
             Delete (Data);
-         end if;
-
+         end if;"""
+        else ""
+      }
          This.Sub_Pools.Free;
          This.Data_Fields_F.Foreach (Delete'Access);
          This.Data_Fields_F.Free;
@@ -352,7 +398,7 @@ ${
 
          F : Field_Declarations.Field_Declaration;
 
-         type Super is access all Base_Pool_T;
+         type Super is access all Pool_T;
       begin
 ${
           t.getFields.foldRight("""
@@ -414,12 +460,17 @@ ${
          Size : Natural;
          ID   : Skill_ID_T := 1 + Skill_ID_T (This.Blocks.Last_Element.BPO);
 
+         Data : Skill.Types.Annotation_Array := This${if(isBase)""else".Base"}.Data;
+
          SD : Static_Data_Array;
          R  : $Type;
 
          use Interfaces;
-      begin
-         This.Resize_Data;
+      begin${
+          if (null == t.getSuperType) """
+         This.Resize_Data;"""
+          else ""
+        }
 
          if Self_Index = Targets.Length - 1
            or else Targets.Element (Self_Index + 1).Super /= This.To_Pool
@@ -437,10 +488,10 @@ ${
 
          -- set skill IDs and insert into data
          for I in SD'Range loop
-            R              := SD (I).Unchecked_Access;
-            R.Skill_ID     := ID;
-            This.Data (ID) := R.To_Annotation;
-            ID             := ID + 1;
+            R          := SD (I).Unchecked_Access;
+            R.Skill_ID := ID;
+            Data (ID)  := R.To_Annotation;
+            ID         := ID + 1;
          end loop;
       end Resize_Pool;
 
@@ -501,29 +552,5 @@ end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools;
 """)
 
     out.close()
-  }
-
-  private def mapToFieldType(f : Field) : String = {
-    //@note temporary string & annotation will be replaced later on
-    @inline def mapGroundType(t : Type) : String = t.getSkillName match {
-      case "annotation" ⇒ "Field_Types.Field_Type(Annotation_Type)"
-      case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" | "f32" | "f64" ⇒
-        if (f.isConstant) s"Field_Types.Builtin.Const_${t.getName.capital}(${f.constantValue})"
-        else s"Field_Types.Builtin.${t.getName.capital}"
-      case "string" ⇒ "Field_Types.Field_Type(String_Type)"
-
-      case s        ⇒ s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
-    }
-
-    f.getType match {
-      case t : GroundType              ⇒ mapGroundType(t)
-//      case t : ConstantLengthArrayType ⇒ s"new ConstantLengthArray<>(${t.getLength}, ${mapGroundType(t.getBaseType)})"
-//      case t : VariableLengthArrayType ⇒ s"new VariableLengthArray<>(${mapGroundType(t.getBaseType)})"
-//      case t : ListType                ⇒ s"new ListType<>(${mapGroundType(t.getBaseType)})"
-//      case t : SetType                 ⇒ s"new SetType<>(${mapGroundType(t.getBaseType)})"
-//      case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"new MapType<>($k, $v)")
-      case t : Declaration             ⇒ s"Field_Types.Field_Type(This.Owner.Types_By_Name.Element(${internalSkillName(t)}))"
-      case _ ⇒ "Field_Types.Field_Type(Annotation_Type)"
-    }
   }
 }
