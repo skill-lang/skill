@@ -49,9 +49,14 @@ end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools;
     val out = open(s"""skill-types-pools-${packagePrefix.replace('-', '_')}_pools-${Name.toLowerCase}_p.ads""")
 
     out.write(s"""
+
+with Ada.Unchecked_Conversion;
+
 with Skill.Containers.Vectors;
 with Skill.Files;
 with Skill.Internal.File_Parsers;
+with Skill.Streams.Reader;
+with Skill.Streams.Writer;
 with Skill.Types;
 with Skill.Types.Pools;
 with Skill.Types.Pools.Sub;
@@ -143,6 +148,26 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
    procedure Update_After_Compress
      (This     : access Pool_T;
       Lbpo_Map : Skill.Internal.Lbpo_Map_T);
+
+   -- RTTI implementation
+   function Boxed is new Ada.Unchecked_Conversion
+     ($Type, Types.Box);
+   function Unboxed is new Ada.Unchecked_Conversion
+     (Types.Box, $Type);
+
+   function Read_Box
+     (This : access Pool_T;
+      Input : Skill.Streams.Reader.Sub_Stream) return Types.Box is
+      (Boxed (This.Get(Skill_ID_T(Input.V64))));
+
+   function Offset_Box
+     (This : access Pool_T;
+      Target : Types.Box) return Types.V64 is
+     (Field_Types.Builtin.Offset_Single_V64(Types.V64(Unboxed(Target).Skill_ID)));
+
+   procedure Write_Box
+     (This : access Pool_T;
+         Output : Streams.Writer.Sub_Stream; Target : Types.Box);
 
 private
 
