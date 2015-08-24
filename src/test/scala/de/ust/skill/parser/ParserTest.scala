@@ -35,10 +35,10 @@ class ParserTest extends FunSuite {
 
   test("empty")(assert(0 === Parser.process("/empty.skill").removeSpecialDeclarations().getUsertypes().size))
 
-  test("type ordered IR") {
+  test("strict type ordered IR") {
     val IR = Parser.process("/typeOrderIR.skill").getUsertypes()
     val order = IR.map(_.getSkillName).mkString("")
-    assert(order == "abdc" || order == "acbd", order+" is not in type order!")
+    assert(order == "abdc", order+" is not in type order!")
   }
 
   test("regression: casing of user types") {
