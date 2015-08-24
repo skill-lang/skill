@@ -47,7 +47,7 @@ ${
       (for (t ← IR) yield {
         val isBase = null == t.getSuperType
         val Name = name(t)
-        val Type = PackagePrefix+"."+Name
+        val Type = s"Standard.$PackagePrefix.$Name"
         s"""
    package ${Name}_P is
 
@@ -117,7 +117,7 @@ ${
       package Sub_Pools is new Sub
         (T    => ${Type}_T,
          P    => $Type,
-         To_P => ${PackagePrefix}.To_$Name);
+         To_P => Standard.${PackagePrefix}.To_$Name);
 
       function Make_Sub_Pool
         (This : access Pool_T;
@@ -189,7 +189,7 @@ ${
       (for (t ← IR) yield {
         val isBase = null == t.getSuperType
         val Name = name(t)
-        val Type = PackagePrefix+"."+Name
+        val Type = s"Standard.$PackagePrefix.$Name"
 
   def mapToFieldType(f : Field) : String = {
     //@note temporary string & annotation will be replaced later on
@@ -227,7 +227,7 @@ ${
          if 0 = ID then
             return null;
          else
-            return ${PackagePrefix}.To_$Name (This${if(isBase)""else".Base"}.Data (ID));
+            return Standard.${PackagePrefix}.To_$Name (This${if(isBase)""else".Base"}.Data (ID));
          end if;
       end Get;
 
@@ -409,7 +409,7 @@ ${
              (Name,
               ${internalSkillName(f)})
          then
-            F := ${PackagePrefix}.Known_Field_${escaped(t.getName.ada)}_${escaped(f.getName.ada)}.Make (ID, T, Convert (P (This)));
+            F := Standard.${PackagePrefix}.Known_Field_${escaped(t.getName.ada)}_${escaped(f.getName.ada)}.Make (ID, T, Convert (P (This)));
          else$s
          end if;"""
           }

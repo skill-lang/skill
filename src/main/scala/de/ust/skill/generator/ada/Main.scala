@@ -92,7 +92,7 @@ class Main extends FakeMain
   /**
    * Translates the types into Ada types.
    */
-  override protected def mapType(t : Type) : String = t match {
+  override protected def mapType(t : Type) : String = "Standard." + (t match {
     case t : GroundType ⇒ t.getName.lower match {
       case "annotation" ⇒ "Skill.Types.Annotation"
 
@@ -117,7 +117,7 @@ class Main extends FakeMain
     case t : MapType                 ⇒ "Skill.Types.String_Access"
 
     case t : Declaration             ⇒ s"${PackagePrefix}.${name(t)}"
-  }
+  })
 
   /**
    * Gets all super types of a given type.
@@ -166,9 +166,9 @@ class Main extends FakeMain
 
   override def setPackage(names : List[String]) {
     if (!names.isEmpty) {
-      _packagePrefix = names.map(_.toLowerCase).fold("root")(_+"-"+_)
-      _PackagePrefix = names.map(_.toLowerCase.capitalize).fold("Root")(_+"."+_)
-      _poolsPackage = s"Skill.Types.Pools.${PackagePrefix.replace(".", "_")}_Pools"
+      _packagePrefix = names.map(_.toLowerCase).reduce(_+"-"+_)
+      _PackagePrefix = names.map(_.toLowerCase.capitalize).reduce(_+"."+_)
+      _poolsPackage = s"Skill.Types.Pools.${names.map(_.toLowerCase.capitalize).reduce(_+"_"+_)}_Pools"
     }
   }
 

@@ -87,8 +87,8 @@ end ${PackagePrefix}.Known_Field_$fn;
     val tIsBaseType = t.getSuperType == null
 
     // casting access to data array using index i
-    val dataAccessI = s"$PackagePrefix.To_${name(t)} (Data (I))"
-    val fieldAccessI = s"$PackagePrefix.To_${name(t)} (Data (I)).Get_${name(f)}"
+    val dataAccessI = s"Standard.$PackagePrefix.To_${name(t)} (Data (I))"
+    val fieldAccessI = s"$dataAccessI.Get_${name(f)}"
 
     val out = open(s"""${packagePrefix}-known_field_${escaped(t.getName.ada).toLowerCase}_${escaped(f.getName.ada).toLowerCase}.adb""")
 

@@ -55,7 +55,7 @@ end Test_$adaStyle;""")
     locally {
       val out = newFile(cStyle, s"test_$cStyle-gen_test.ads")
       out.print(s"""with Ahven.Framework;
-with Root.$adaStyle.Api;
+with $adaStyle.Api;
 
 package Test_$adaStyle.Gen_Test is
 
@@ -99,7 +99,7 @@ ${
         (for (f ← accept)
           yield s"""
    procedure Read_${file2ID(f)} is
-      State : Root.$adaStyle.Api.File := Root.$adaStyle.Api.Open("../../${f.getPath}");
+      State : Standard.$adaStyle.Api.File := Standard.$adaStyle.Api.Open("../../${f.getPath}");
    begin
       State.Free;
    end Read_${file2ID(f)};
@@ -108,9 +108,9 @@ ${
         (for (f ← reject)
           yield s"""
    procedure Read_${file2ID(f)} is
-      State : Root.$adaStyle.Api.File;
+      State : Standard.$adaStyle.Api.File;
    begin
-      State := Root.$adaStyle.Api.Open("../../${f.getPath}");
+      State := Standard.$adaStyle.Api.Open("../../${f.getPath}");
       State.Free;
       Ahven.Fail("expected an exception to be thrown");
    exception
