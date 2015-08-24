@@ -282,7 +282,7 @@ ${
         }) return Skill.Types.Pools.Pool is
          function Convert is new Ada.Unchecked_Conversion
            (Source => Pool,
-            Target => Skill.Types.Pools.Base_Pool);
+            Target => Skill.Types.Pools.${if(null == t.getSuperType)"Base"else "Sub"}_Pool);
          function Convert is new Ada.Unchecked_Conversion
            (Source => Pool,
             Target => Skill.Types.Pools.Pool);
@@ -322,7 +322,8 @@ ${
 ${
           if (null == t.getSuperType) """
          This.Base := Convert (This);"""
-          else ""
+          else """
+         This.Super.Sub_Pools.Append (Convert (This));"""
         }
          return Convert (This);
       exception
@@ -539,7 +540,7 @@ ${
          (Skill.Internal.Parts.Block'
             (Types.v64 (Lbpo_Map (This.Type_Id)), Types.v64 (This.Size)));
 
-         for I in 1 .. This.Sub_Pools.Length loop
+         for I in 0 .. This.Sub_Pools.Length - 1 loop
             This.Sub_Pools.Element (I).Dynamic.Update_After_Compress
             (Lbpo_Map);
          end loop;
