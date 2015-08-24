@@ -34,7 +34,7 @@ with Skill.Field_Declarations;
 with Skill.Field_Types;
 with Skill.Streams.Writer;
 
-limited with ${poolsPackage};
+limited with ${poolsPackage}.${name(t)}_P;
 
 package ${PackagePrefix}.Known_Field_$fn is
 
@@ -105,7 +105,7 @@ with Skill.Internal.Parts;
 with Skill.Streams.Reader;
 with Skill.String_Pools;
 with Skill.Types;
-with $poolsPackage;
+with $poolsPackage.${name(t)}_P;
 
 with ${PackagePrefix}.Internal_Skill_Names;
 

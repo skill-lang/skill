@@ -17,8 +17,13 @@ trait APISpecMaker extends GeneralOutputMaker {
     out.write(s"""
 with Skill.Files;
 with Skill.Internal.File_Parsers;
-with Skill.Types.Pools;
-with $poolsPackage;
+with Skill.Types.Pools;${
+      (
+        for (t ← IR)
+          yield s"""
+with $poolsPackage.${name(t)}_P;"""
+      ).mkString
+    }
 
 -- parametrization of file, read/write and pool code
 package ${PackagePrefix}.Api is
