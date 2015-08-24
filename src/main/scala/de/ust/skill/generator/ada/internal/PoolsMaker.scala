@@ -49,12 +49,12 @@ end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools;
     val out = open(s"""skill-types-pools-${packagePrefix.replace('-', '_')}_pools-${Name.toLowerCase}_p.ads""")
 
     out.write(s"""
+with Skill.Containers.Vectors;
 with Skill.Files;
 with Skill.Internal.File_Parsers;
 with Skill.Types;
 with Skill.Types.Pools;
 with Skill.Types.Pools.Sub;
-with Skill.Types.Vectors;
 
 with $PackagePrefix;
 
@@ -151,10 +151,10 @@ private
    type Static_Data_Array_T is array (Positive range <>) of aliased ${Type}_T;
    type Static_Data_Array is access Static_Data_Array_T;
 
-   package A1 is new Vectors (Natural, $Type);
+   package A1 is new Containers.Vectors (Natural, $Type);
    subtype New_Instance_Vector is A1.Vector;
 
-   package A2 is new Vectors (Natural, Static_Data_Array);
+   package A2 is new Containers.Vectors (Natural, Static_Data_Array);
    subtype Static_Instance_Vector is A2.Vector;
 
    type Pool_T is new ${if(isBase)"Base"else"Sub"}_Pool_T with record
@@ -430,6 +430,7 @@ ${
         with "generator broken in pool::add_known_field";
    end Add_Known_Field;
 
+   -- @note: this might not be correct in general (first/last index calculation)
    procedure Resize_Pool
      (This       : access Pool_T;
       Targets    : Type_Vector;
