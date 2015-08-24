@@ -501,7 +501,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      */
     def topologicalSort(nodes : Iterable[Declaration]) : ListBuffer[Declaration] = {
       // create edges, subtypes in alphabetical order
-      val edges = defs.map(_ -> ArrayBuffer[Declaration]()).toMap
+      var edges = defs.map(_ -> ArrayBuffer[Declaration]()).toMap
       nodes.foreach {
         case t : UserType            ⇒ t.superTypes.map(definitionNames).foreach(edges(_) += t)
         case t : InterfaceDefinition ⇒ t.superTypes.map(definitionNames).foreach(edges(_) += t)
@@ -510,8 +510,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
         case _ ⇒
       }
       //@note lexical order in edges
-      for ((_, e) ← edges)
-        e.sortWith(_.name.lowercase > _.name.lowercase)
+      edges = edges.map{case (k, e) ⇒ (k, e.sortWith(_.name.lowercase > _.name.lowercase))}
 
       // L ← Empty list that will contain the sorted nodes
       val L = ListBuffer[Declaration]()
