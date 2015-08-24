@@ -48,11 +48,28 @@ package body ${PackagePrefix}.Api is
    begin${
       (for (t ← IR)
         yield s"""
-      if Skill.Equals.Equals (Name, Internal_Skill_Names.${escaped(t.getSkillName).capitalize}_Skill_Name) then
+      if Skill.Equals.Equals (Name, ${internalSkillName(t)}) then${
+        if (null == t.getSuperType) """
+         if null /= Super then
+            raise Skill.Errors.Skill_Error
+              with "Expected no super type, but found: " &
+              Super.Skill_Name.all;
+         end if;"""
+        else s"""
+         if null = Super then
+            raise Skill.Errors.Skill_Error
+              with "Expected super type ${t.getSuperType.getSkillName}, but found <<none>>";
+         elsif not Skill.Equals.Equals (Super.Skill_Name, ${internalSkillName(t.getSuperType)}) then
+            raise Skill.Errors.Skill_Error
+              with "Expected super type ${t.getSuperType.getSkillName}, but found: " &
+              Super.Skill_Name.all;
+         end if;"""
+      }
+
          return ${name(t)}_Pool_P.Make_Pool (Type_ID${
-          if (null == t.getSuperType) ""
-          else ", Super"
-        });
+        if (null == t.getSuperType) ""
+        else ", Super"
+      });
       end if;
 """
       ).mkString
@@ -96,9 +113,9 @@ ${
         (${internalSkillName(t)})
       then
          P := ${name(t)}_Pool_P.Make_Pool (Types.Length${
-          if (null == t.getSuperType) ""
-          else s", TBN_Local.Element (${internalSkillName(t.getSuperType)})"
-        });
+        if (null == t.getSuperType) ""
+        else s", TBN_Local.Element (${internalSkillName(t.getSuperType)})"
+      });
          Types.Append (P);
          TBN_Local.Include
          (${internalSkillName(t)}, P);

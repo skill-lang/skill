@@ -16,7 +16,6 @@ trait APISpecMaker extends GeneralOutputMaker {
 
     out.write(s"""
 with Skill.Files;
-with Skill.Internal.File_Parsers;
 with Skill.Types.Pools;${
       (
         for (t ← IR)
