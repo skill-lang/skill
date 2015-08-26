@@ -93,17 +93,17 @@ trait GeneralOutputMaker extends Generator {
   /**
    * creates references to generated skill names package
    */
-  private final val skillNameCache = HashMap[String, String]()
-  protected final def internalSkillName(f : Field) = skillNameCache.get(f.getSkillName).getOrElse {
+  private final val skillNameCache = new HashMap[String, String]
+  protected final def internalSkillName(f : Field) = this.synchronized(skillNameCache.get(f.getSkillName).getOrElse {
     val r = s"Standard.$PackagePrefix.Internal_Skill_Names.${escaped(f.getSkillName).capitalize}_Skill_Name";
     skillNameCache(f.getSkillName) = r;
     r
-  }
-  protected final def internalSkillName(t : Type) = skillNameCache.get(t.getSkillName).getOrElse {
+  })
+  protected final def internalSkillName(t : Type) = this.synchronized(skillNameCache.get(t.getSkillName).getOrElse {
     val r = s"Standard.$PackagePrefix.Internal_Skill_Names.${escaped(t.getSkillName).capitalize}_Skill_Name";
     skillNameCache(t.getSkillName) = r;
     r
-  }
+  })
 
   private lazy val packagePath = if (packagePrefix.length > 0) {
     packagePrefix.replace(".", "/")

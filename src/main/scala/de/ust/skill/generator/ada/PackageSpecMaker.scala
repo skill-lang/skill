@@ -83,6 +83,28 @@ ${
             case ft : SingleBaseTypeContainer ⇒ s"""
    function Box_${name(f)} (This : access ${name(t)}_T'Class; V : ${mapType(ft.getBaseType)}) return Skill.Types.Box;
    function Unbox_${name(f)} (This : access ${name(t)}_T'Class; V : Skill.Types.Box) return ${mapType(ft.getBaseType)};"""
+
+            case ft : MapType ⇒
+              def boxing(Vs : String, ts : List[Type]) : Seq[String] = {
+                val k = ts.head
+                Seq(s"""
+   function Box_${name(f)}_${Vs}K (This : access ${name(t)}_T'Class; V : ${mapType(k)}) return Skill.Types.Box;
+   function Unbox_${name(f)}_${Vs}K (This : access ${name(t)}_T'Class; V : Skill.Types.Box) return ${mapType(k)};
+""") ++
+                  (ts.tail match {
+                    case v :: Nil ⇒ Seq(s"""
+   function Box_${name(f)}_${Vs}V (This : access ${name(t)}_T'Class; V : ${mapType(v)}) return Skill.Types.Box;
+   function Unbox_${name(f)}_${Vs}V (This : access ${name(t)}_T'Class; V : Skill.Types.Box) return ${mapType(v)};
+""")
+                    case vs : List[Type] ⇒ Seq(s"""
+   function Box_${name(f)}_${Vs}V (This : access ${name(t)}_T'Class; V : Skill.Types.Boxed_Map) return Skill.Types.Box;
+   function Unbox_${name(f)}_${Vs}V (This : access ${name(t)}_T'Class; V : Skill.Types.Box) return Skill.Types.Boxed_Map;
+""") ++ boxing(Vs+"V", vs)
+                  })
+              }
+
+              boxing("", ft.getBaseTypes.toList).mkString
+
             case _ ⇒ ""
           }
         }"""

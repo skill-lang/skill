@@ -101,6 +101,7 @@ with Ada.Unchecked_Deallocation;
 with Skill.Files;
 with Skill.Field_Declarations;
 with Skill.Field_Types;
+with Skill.Field_Types.Builtin;
 with Skill.Internal.Parts;
 with Skill.Streams.Reader;
 with Skill.String_Pools;
@@ -168,22 +169,8 @@ package body ${PackagePrefix}.Known_Field_$fn is
          Last  := First + Natural (This.Owner.Blocks.Last_Element.Count);
          -- TODO This is horribly incorrect!!!
       end if;
-${
-  f.getType.getSkillName match {
-    case "string" ⇒ s"""
-      declare
-         Strings : Skill.String_Pools.Pool := Skill.Field_Types.Builtin.String_Type_P.Field_Type(This.T).Strings;
-      begin
-         for I in First + 1 .. Last loop
-            To_${name(t)} (Data (I)).Set_${name(f)} (Strings.Get(Input.V64));
-         end loop;
-      end;"""
-    case _ ⇒ s"""
-      for I in First + 1 .. Last loop
-         To_${name(t)} (Data (I)).Set_${name(f)} (${read(f)});
-      end loop;"""
-  }
-}
+
+${readBlock(t, f)}
    end Read;
 
    procedure Offset (This : access Known_Field_${fn}_T) is${
@@ -467,14 +454,85 @@ end ${PackagePrefix}.Known_Field_$fn;
     out.close()
   }
 
-  private def read(f : Field) : String = f.getType match {
-    case t : UserType ⇒ "null"
-    case t : GroundType ⇒ t.getName.ada match {
-      case "Annotation" ⇒ "null"
-      case "String"     ⇒ "null"
-      case n            ⇒ "Input."+n
+  private def readBlock(t: Type, f : Field) : String = {
+    def defaultBlock(read : String) : String = s"""
+      for I in First + 1 .. Last loop
+         To_${name(t)} (Data (I)).Set_${name(f)} ($read);
+      end loop;"""
+
+    f.getType match {
+      case ft : UserType ⇒ defaultBlock("null")
+
+      case ft : GroundType ⇒ t.getName.ada match {
+        case "Annotation" ⇒ defaultBlock("null")
+
+        case "String"     ⇒ s"""
+      declare
+         Strings : Skill.String_Pools.Pool := Skill.Field_Types.Builtin.String_Type_P.Field_Type(This.T).Strings;
+      begin
+         for I in First + 1 .. Last loop
+            To_${name(t)} (Data (I)).Set_${name(f)} (Strings.Get(Input.V64));
+         end loop;
+      end;"""
+
+        case n ⇒ defaultBlock("Input."+n)
+      }
+
+      case ft : ConstantLengthArrayType ⇒ s"""
+      declare
+         B : Skill.Types.Boxed_Array;
+      begin
+         for I in First + 1 .. Last loop
+            B := Skill.Field_Types.Builtin.Const_Arrays_P.Unboxed
+                (This.T.Read_Box (Input));
+            To_${name(t)} (Data (I)).Set_${name(f)} (B);
+         end loop;
+      end;"""
+
+      case ft : VariableLengthArrayType ⇒ s"""
+      declare
+         B : Skill.Types.Boxed_Array;
+      begin
+         for I in First + 1 .. Last loop
+            B := Skill.Field_Types.Builtin.Var_Arrays_P.Unboxed
+            (This.T.Read_Box (Input));
+            To_${name(t)} (Data (I)).Set_${name(f)} (B);
+         end loop;
+      end;"""
+
+      case ft : ListType                ⇒ s"""
+      declare
+         B : Skill.Types.Boxed_List;
+      begin
+         for I in First + 1 .. Last loop
+            B := Skill.Field_Types.Builtin.List_Type_P.Unboxed
+            (This.T.Read_Box (Input));
+            To_${name(t)} (Data (I)).Set_${name(f)} (B);
+         end loop;
+      end;"""
+
+      case ft : SetType                 ⇒ s"""
+      declare
+         B : Skill.Types.Boxed_Set;
+      begin
+         for I in First + 1 .. Last loop
+            B := Skill.Field_Types.Builtin.Set_Type_P.Unboxed
+            (This.T.Read_Box (Input));
+            To_${name(t)} (Data (I)).Set_${name(f)} (B);
+         end loop;
+      end;"""
+
+      case ft : MapType                 ⇒ s"""
+      declare
+         B : Skill.Types.Boxed_Map;
+      begin
+         for I in First + 1 .. Last loop
+            B := Skill.Field_Types.Builtin.Map_Type_P.Unboxed
+            (This.T.Read_Box (Input));
+            To_${name(t)} (Data (I)).Set_${name(f)} (B);
+         end loop;
+      end;"""
+      case _ ⇒ ???
     }
-    // TODO replace this by reflective read code
-    case t ⇒ defaultValue(f)
   }
 }

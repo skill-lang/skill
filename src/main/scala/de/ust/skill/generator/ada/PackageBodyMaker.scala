@@ -8,6 +8,9 @@ package de.ust.skill.generator.ada
 import scala.collection.JavaConversions._
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.SingleBaseTypeContainer
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.Field
 
 trait PackageBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -93,8 +96,8 @@ ${
       This.${name(f)} := V;
    end Set_${name(f)};
 ${
-          f.getType match {
-            case ft : SingleBaseTypeContainer ⇒ s"""
+            f.getType match {
+              case ft : SingleBaseTypeContainer ⇒ s"""
    function Box_${name(f)} (This : access ${name(t)}_T'Class; V : ${mapType(ft.getBaseType)}) return Skill.Types.Box is
       pragma Warnings (Off);
       function Convert is new Ada.Unchecked_Conversion (${mapType(ft.getBaseType)}, Skill.Types.Box);
@@ -109,9 +112,13 @@ ${
       return Convert (V);
    end Unbox_${name(f)};
 """
-            case _ ⇒ ""
-          }
-        }"""
+              case ft : MapType ⇒
+
+                map_boxing(t, f, "", ft.getBaseTypes.toList).mkString
+
+              case _ ⇒ ""
+            }
+          }"""
           ).mkString
         }"""
         ).mkString
@@ -197,5 +204,58 @@ end ${PackagePrefix};
 
       out.close()
     }
+  }
+
+  private final def map_boxing(t : Type, f : Field, Vs : String, ts : List[Type]) : Seq[String] = {
+    val k : Type = ts.head
+
+    Seq(s"""
+   function Box_${name(f)}_${Vs}K (This : access ${name(t)}_T'Class; V : ${mapType(k)}) return Skill.Types.Box is
+      pragma Warnings (Off);
+      function Convert is new Ada.Unchecked_Conversion (${mapType(k)}, Skill.Types.Box);
+   begin
+      return Convert (V);
+   end Box_${name(f)}_${Vs}K;
+
+   function Unbox_${name(f)}_${Vs}K (This : access ${name(t)}_T'Class; V : Skill.Types.Box) return ${mapType(k)} is
+      pragma Warnings (Off);
+      function Convert is new Ada.Unchecked_Conversion (Skill.Types.Box, ${mapType(k)});
+   begin
+      return Convert (V);
+   end Unbox_${name(f)}_${Vs}K;
+""") ++
+      (ts.tail match {
+        case (v : Type) :: Nil ⇒ Seq(s"""
+   function Box_${name(f)}_${Vs}V (This : access ${name(t)}_T'Class; V : ${mapType(v)}) return Skill.Types.Box is
+      pragma Warnings (Off);
+      function Convert is new Ada.Unchecked_Conversion (${mapType(v)}, Skill.Types.Box);
+   begin
+      return Convert (V);
+   end Box_${name(f)}_${Vs}V;
+
+   function Unbox_${name(f)}_${Vs}V (This : access ${name(t)}_T'Class; V : Skill.Types.Box) return ${mapType(v)} is
+      pragma Warnings (Off);
+      function Convert is new Ada.Unchecked_Conversion (Skill.Types.Box, ${mapType(v)});
+   begin
+      return Convert (V);
+   end Unbox_${name(f)}_${Vs}V;
+""")
+        case vs : List[Type] ⇒ Seq(s"""
+   function Box_${name(f)}_${Vs}V (This : access ${name(t)}_T'Class; V : Skill.Types.Boxed_Map) return Skill.Types.Box is
+      pragma Warnings (Off);
+      function Convert is new Ada.Unchecked_Conversion (Skill.Types.Boxed_Map, Skill.Types.Box);
+   begin
+      return Convert (V);
+   end Box_${name(f)}_${Vs}V;
+
+   function Unbox_${name(f)}_${Vs}V (This : access ${name(t)}_T'Class; V : Skill.Types.Box) return Skill.Types.Boxed_Map is
+      pragma Warnings (Off);
+      function Convert is new Ada.Unchecked_Conversion (Skill.Types.Box, Skill.Types.Boxed_Map);
+   begin
+      return Convert (V);
+   end Unbox_${name(f)}_${Vs}V;
+""") ++ map_boxing(t, f, Vs+"V", vs)
+
+      })
   }
 }

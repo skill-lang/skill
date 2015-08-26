@@ -226,10 +226,9 @@ Opitions (ada):
       case t : GroundType              ⇒ defaultValue(t)
       case t : ConstantLengthArrayType ⇒ "Standard.Skill.Types.Arrays_P.Empty_Vector"
       case t : VariableLengthArrayType ⇒ "Standard.Skill.Types.Arrays_P.Empty_Vector"
-      case t : ListType                ⇒ "Standard.Skill.Types.Lists_P.Empty_List"
-      case t : SetType                 ⇒ "Standard.Skill.Types.Sets_P.Empty_Set"
-      case t : MapType                 ⇒ "Standard.Skill.Types.Maps_P.Empty_Map"
-
+      case t : ListType                ⇒ "new Standard.Skill.Types.Lists_P.List"
+      case t : SetType                 ⇒ "new Standard.Skill.Types.Sets_P.Set"
+      case t : MapType                 ⇒ "new Standard.Skill.Types.Maps_P.Map"
       case _                           ⇒ "null"
     }
   }

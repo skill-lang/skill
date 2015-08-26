@@ -130,7 +130,7 @@ end Test_$adaStyle.Gen_Test;""")
     f.createNewFile
     val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
 
-    for (t ← tests)
+    for (t ← tests.sortWith(_.lowercase < _.lowercase))
       out.println(s"with Test_${t.lowercase.capitalize}.Gen_Test;")
 
     out.print(s"""
@@ -138,7 +138,7 @@ package body Test is
    procedure Add_Generic_Testes (Suite : in out Ahven.Framework.Test_Suite) is
    begin
 ${
-      (for (t ← tests) yield s"      Ahven.Framework.Add_Test (Suite, new Test_${t.lowercase.capitalize}.Gen_Test.Test);").mkString("\n")
+      (for (t ← tests.sortWith(_.lowercase < _.lowercase)) yield s"      Ahven.Framework.Add_Test (Suite, new Test_${t.lowercase.capitalize}.Gen_Test.Test);").mkString("\n")
     }
    end Add_Generic_Testes;
 end Test;""")

@@ -65,6 +65,7 @@ with $PackagePrefix;
 
 -- instantiated pool packages
 package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
+   pragma Warnings (Off);
 
    type Pool_T is new ${if(isBase)"Base"else"Sub"}_Pool_T with private;
    type Pool is access Pool_T;
