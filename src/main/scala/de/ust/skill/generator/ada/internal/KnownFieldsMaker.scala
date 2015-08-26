@@ -460,10 +460,13 @@ end ${PackagePrefix}.Known_Field_$fn;
          To_${name(t)} (Data (I)).Set_${name(f)} ($read);
       end loop;"""
 
+    if(f.isConstant())
+      return ""
+
     f.getType match {
       case ft : UserType ⇒ defaultBlock("null")
 
-      case ft : GroundType ⇒ t.getName.ada match {
+      case ft : GroundType ⇒ ft.getName.ada match {
         case "Annotation" ⇒ defaultBlock("null")
 
         case "String"     ⇒ s"""
