@@ -474,6 +474,7 @@ end ${PackagePrefix}.Known_Field_$fn;
       case "String"     ⇒ "null"
       case n            ⇒ "Input."+n
     }
-    case _ ⇒ "null"
+    // TODO replace this by reflective read code
+    case t ⇒ defaultValue(f)
   }
 }

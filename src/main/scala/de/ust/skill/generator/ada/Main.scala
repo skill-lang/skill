@@ -110,11 +110,11 @@ class Main extends FakeMain
       case "string"     ⇒ "Skill.Types.String_Access"
     }
 
-    case t : ConstantLengthArrayType ⇒ "Skill.Types.String_Access"
-    case t : VariableLengthArrayType ⇒ "Skill.Types.String_Access"
-    case t : ListType                ⇒ "Skill.Types.String_Access"
-    case t : SetType                 ⇒ "Skill.Types.String_Access"
-    case t : MapType                 ⇒ "Skill.Types.String_Access"
+    case t : ConstantLengthArrayType ⇒ "Skill.Types.Boxed_Array"
+    case t : VariableLengthArrayType ⇒ "Skill.Types.Boxed_Array"
+    case t : ListType                ⇒ "Skill.Types.Boxed_List"
+    case t : SetType                 ⇒ "Skill.Types.Boxed_Set"
+    case t : MapType                 ⇒ "Skill.Types.Boxed_Map"
 
     case t : Declaration             ⇒ s"${PackagePrefix}.${name(t)}"
   })
@@ -224,11 +224,11 @@ Opitions (ada):
     }
     f.getType match {
       case t : GroundType              ⇒ defaultValue(t)
-//      case t : ConstantLengthArrayType ⇒ s"(others => ${defaultValue(t.getBaseType())})"
-//      case t : VariableLengthArrayType ⇒ s"${mapType(t).stripSuffix(".Vector")}.Empty_Vector"
-//      case t : ListType                ⇒ s"${mapType(t).stripSuffix(".List")}.Empty_List"
-//      case t : SetType                 ⇒ s"${mapType(t).stripSuffix(".Set")}.Empty_Set"
-//      case t : MapType                 ⇒ s"${mapType(t).stripSuffix(".Map")}.Empty_Map"
+      case t : ConstantLengthArrayType ⇒ "Standard.Skill.Types.Arrays_P.Empty_Vector"
+      case t : VariableLengthArrayType ⇒ "Standard.Skill.Types.Arrays_P.Empty_Vector"
+      case t : ListType                ⇒ "Standard.Skill.Types.Lists_P.Empty_List"
+      case t : SetType                 ⇒ "Standard.Skill.Types.Sets_P.Empty_Set"
+      case t : MapType                 ⇒ "Standard.Skill.Types.Maps_P.Empty_Map"
 
       case _                           ⇒ "null"
     }
