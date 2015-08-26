@@ -23,6 +23,7 @@ with Skill.Errors;
 with Skill.Equals;
 with Skill.Field_Types;
 with Skill.Field_Types.Builtin;
+with Skill.Field_Types.Builtin.String_Type_P;
 with Skill.Files;
 with Skill.Internal.File_Parsers;
 with Skill.Internal.Parts;
@@ -86,7 +87,7 @@ package body ${PackagePrefix}.Api is
      (Path          : Skill.Types.String_Access;
       Mode          : Skill.Files.Write_Mode;
       Strings       : Skill.String_Pools.Pool;
-      String_Type   : Skill.Field_Types.Builtin.String_Type_T.Field_Type;
+      String_Type   : Skill.Field_Types.Builtin.String_Type_P.Field_Type;
       Annotation_Type : Skill.Field_Types.Builtin.Annotation_Type_P.Field_Type;
       Types         : Skill.Types.Pools.Type_Vector;
       Types_By_Name : Skill.Types.Pools.Type_Map) return File
@@ -112,7 +113,7 @@ ${
       if not TBN_Local.Contains
         (${internalSkillName(t)})
       then
-         P := ${name(t)}_Pool_P.Make_Pool (Types.Length${
+         P := ${name(t)}_Pool_P.Make_Pool (Natural (Types.Length)${
         if (null == t.getSuperType) ""
         else s", TBN_Local.Element (${internalSkillName(t.getSuperType)})"
       });
@@ -208,9 +209,9 @@ ${
                  Skill.String_Pools.Create (Skill.Streams.Input (null));
                Types : Skill.Types.Pools.Type_Vector :=
                  Skill.Types.Pools.P_Type_Vector.Empty_Vector;
-               String_Type : Skill.Field_Types.Builtin.String_Type_T
+               String_Type : Skill.Field_Types.Builtin.String_Type_P
                  .Field_Type :=
-                 Skill.Field_Types.Builtin.String_Type (Strings);
+                 Skill.Field_Types.Builtin.String_Type_P.Make (Strings);
                Annotation_Type : Skill.Field_Types.Builtin.Annotation_Type_P
                  .Field_Type :=
                  Skill.Field_Types.Builtin.Annotation (Types);

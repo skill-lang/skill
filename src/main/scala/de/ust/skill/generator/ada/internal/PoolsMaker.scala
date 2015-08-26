@@ -113,7 +113,7 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
    procedure Add_Known_Field
      (This : access Pool_T;
       Name : String_Access;
-      String_Type : Field_Types.Builtin.String_Type_T.Field_Type;
+      String_Type : Field_Types.Builtin.String_Type_P.Field_Type;
       Annotation_Type : Field_Types.Builtin.Annotation_Type_P.Field_Type);
 
    overriding
@@ -158,7 +158,7 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
    function Read_Box
      (This : access Pool_T;
       Input : Skill.Streams.Reader.Sub_Stream) return Types.Box is
-      (Boxed (This.Get(Skill_ID_T(Input.V64))));
+     (Boxed (This.Get(Skill_ID_T(Input.V64))));
 
    function Offset_Box
      (This : access Pool_T;
@@ -167,7 +167,10 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
 
    procedure Write_Box
      (This : access Pool_T;
-         Output : Streams.Writer.Sub_Stream; Target : Types.Box);
+      Output : Streams.Writer.Sub_Stream; Target : Types.Box);
+
+   function Content_Tag (This : access Pool_T) return Ada.Tags.Tag is
+     (${Type}_T'Tag);
 
 private
 
@@ -219,6 +222,8 @@ with $PackagePrefix.Known_Field_${escaped(t.getName.ada())}_${escaped(f.getName.
 
 -- instantiated pool packages
 package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
+
+   use type $Type;
 
    -- API methods
    function Get
@@ -431,7 +436,7 @@ ${
    procedure Add_Known_Field
      (This        : access Pool_T;
       Name        : String_Access;
-      String_Type : Field_Types.Builtin.String_Type_T.Field_Type;
+      String_Type : Field_Types.Builtin.String_Type_P.Field_Type;
       Annotation_Type : Field_Types.Builtin.Annotation_Type_P.Field_Type)
    is
       F : Field_Declarations.Field_Declaration;
@@ -548,6 +553,17 @@ ${
          (Lbpo_Map);
       end loop;
    end Update_After_Compress;
+
+   procedure Write_Box
+     (This : access Pool_T;
+      Output : Streams.Writer.Sub_Stream; Target : Types.Box) is
+   begin
+      if null = Unboxed(Target) then
+         Output.I8(0);
+      else 
+         Output.V64(Types.V64(Unboxed(Target).Skill_Id));
+      end if;
+   end Write_Box;
 
 end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P;
 """)

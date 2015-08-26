@@ -172,7 +172,7 @@ ${
   f.getType.getSkillName match {
     case "string" ⇒ s"""
       declare
-         Strings : Skill.String_Pools.Pool := Skill.Field_Types.Builtin.String_Type_T.Field_Type(This.T).Strings;
+         Strings : Skill.String_Pools.Pool := Skill.Field_Types.Builtin.String_Type_P.Field_Type(This.T).Strings;
       begin
          for I in First + 1 .. Last loop
             To_${name(t)} (Data (I)).Set_${name(f)} (Strings.Get(Input.V64));
@@ -231,8 +231,8 @@ ${
 
          S   : Skill.Types.String_Access;
          V   : Skill.Types.Uv64;
-         Ids : Skill.Field_Types.Builtin.String_Type_T.ID_Map :=
-           Skill.Field_Types.Builtin.String_Type_T.Field_Type
+         Ids : Skill.Field_Types.Builtin.String_Type_P.ID_Map :=
+           Skill.Field_Types.Builtin.String_Type_P.Field_Type
              (This.T).Get_Id_Map;
 
          use type Ada.Containers.Count_Type;
@@ -440,7 +440,7 @@ ${
           f.getType match {
             case t : GroundType ⇒ t.getSkillName match {
               case "annotation" ⇒ s"""raise Constraint_Error with "todo: write annotation";"""
-              case "string" ⇒ s"""Skill.Field_Types.Builtin.String_Type_T.Field_Type
+              case "string" ⇒ s"""Skill.Field_Types.Builtin.String_Type_P.Field_Type
              (This.T).Write_Single_Field($fieldAccessI, output);"""
               case _ ⇒ s"""Output.${t.getSkillName.capitalize}($fieldAccessI);"""
             }
