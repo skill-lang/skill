@@ -69,7 +69,7 @@ ${
    function Dynamic_${name(t)} (This : access ${name(t)}_T) return ${name(t)}_Dyn;
    pragma Inline (Dynamic_${name(t)});
 
-   -- Age fields
+   -- ${name(t)} fields
 ${
         (for (f ← t.getFields)
           yield s"""${comment(f)}
@@ -78,7 +78,14 @@ ${
 ${comment(f)}
    procedure Set_${name(f)} (This : access ${name(t)}_T'Class; V : ${mapType(f.getType)});
    pragma Inline (Set_${name(f)});
-"""
+${
+          f.getType match {
+            case ft : SingleBaseTypeContainer ⇒ s"""
+   function Box_${name(f)} (This : access ${name(t)}_T'Class; V : ${mapType(ft.getBaseType)}) return Skill.Types.Box;
+   function Unbox_${name(f)} (This : access ${name(t)}_T'Class; V : Skill.Types.Box) return ${mapType(ft.getBaseType)};"""
+            case _ ⇒ ""
+          }
+        }"""
         ).mkString
       }
 """

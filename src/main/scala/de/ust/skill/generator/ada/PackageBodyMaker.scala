@@ -7,6 +7,7 @@ package de.ust.skill.generator.ada
 
 import scala.collection.JavaConversions._
 import de.ust.skill.ir.UserType
+import de.ust.skill.ir.SingleBaseTypeContainer
 
 trait PackageBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -91,7 +92,26 @@ ${
    begin
       This.${name(f)} := V;
    end Set_${name(f)};
+${
+          f.getType match {
+            case ft : SingleBaseTypeContainer ⇒ s"""
+   function Box_${name(f)} (This : access ${name(t)}_T'Class; V : ${mapType(ft.getBaseType)}) return Skill.Types.Box is
+      pragma Warnings (Off);
+      function Convert is new Ada.Unchecked_Conversion (${mapType(ft.getBaseType)}, Skill.Types.Box);
+   begin
+      return Convert (V);
+   end Box_${name(f)};
+
+   function Unbox_${name(f)} (This : access ${name(t)}_T'Class; V : Skill.Types.Box) return ${mapType(ft.getBaseType)} is
+      pragma Warnings (Off);
+      function Convert is new Ada.Unchecked_Conversion (Skill.Types.Box, ${mapType(ft.getBaseType)});
+   begin
+      return Convert (V);
+   end Unbox_${name(f)};
 """
+            case _ ⇒ ""
+          }
+        }"""
           ).mkString
         }"""
         ).mkString
