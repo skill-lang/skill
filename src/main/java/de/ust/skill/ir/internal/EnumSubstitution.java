@@ -52,7 +52,7 @@ public class EnumSubstitution extends Substitution {
                 Name name = new Name(Arrays.asList(skillname), skillname);
 
                 UserType sub = UserType.newDeclaration(tc, name, Comment.NoComment.get(),
-                        Arrays.asList(new SingletonRestriction()), Collections.<Hint> emptySet());
+                        Arrays.<Restriction> asList(new SingletonRestriction()), Collections.<Hint> emptySet());
                 defs.add(sub);
                 tops.put(sub, top);
             }
@@ -97,7 +97,7 @@ public class EnumSubstitution extends Substitution {
         // case 1: source is null, i.e. the type has been created by us (this
         // happens in case of enum instances)
         if (null == source) {
-            d.initialize(tops.get(d), Collections.emptyList(), Collections.emptyList());
+            d.initialize(tops.get(d), Collections.<InterfaceType> emptyList(), Collections.<Field> emptyList());
         }
         // case 2: d always was a user type ⇒ behave as always
         else if (source instanceof UserType) {
