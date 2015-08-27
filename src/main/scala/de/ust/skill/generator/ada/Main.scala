@@ -120,6 +120,20 @@ class Main extends FakeMain
   })
 
   /**
+   * creates call to right "boxed"-function
+   */
+  protected def boxCall(t : Type) : String = t match {
+    case t : GroundType ⇒ t.getName.lower match {
+      case "string" ⇒ "Skill.Field_Types.Builtin.String_Type_P.Boxed"
+    }
+    case _ ⇒ ???
+  }
+  /**
+   * creates call to right "unboxed"-function
+   */
+  protected def unboxCall(t : Type) : String = ???
+
+  /**
    * Gets all super types of a given type.
    */
   protected def getSuperTypes(d : UserType) : MutableList[Type] = {

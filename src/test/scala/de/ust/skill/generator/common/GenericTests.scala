@@ -22,6 +22,11 @@ import org.scalatest.ConfigMap
 abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
 
   /**
+   * can be used to restrict tests to a single specification; should always be [[empty string]] on commit
+   */
+  val testOnly = "unicode"
+
+  /**
    * parameter name of the language. This is required for code generator invocation.
    */
   def language : String
@@ -80,7 +85,7 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
     def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ ⇒ "x") : _*)
   }
 
-  for (path ← new File("src/test/resources/gentest").listFiles if path.getName.endsWith(".skill")) {
+  for (path ← new File("src/test/resources/gentest").listFiles if path.getName.endsWith(testOnly+".skill")) {
     try {
       val r"""#!\s(\w+)${ name }(.*)${ options }""" = Files.lines(path.toPath).findFirst().orElse("")
       makeTest(path, name, options.trim)

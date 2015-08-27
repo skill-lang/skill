@@ -58,6 +58,15 @@ trait GeneralOutputMaker extends Generator {
   protected def mapType(t : Type) : String
 
   /**
+   * creates call to right "boxed"-function
+   */
+  protected def boxCall(t : Type) : String
+  /**
+   * creates call to right "unboxed"-function
+   */
+  protected def unboxCall(t : Type) : String
+
+  /**
    * Assume the existence of inheritance information functions for the types.
    */
   protected def getSuperTypes(d : UserType) : MutableList[Type]

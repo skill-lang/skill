@@ -24,6 +24,16 @@ trait PackageBodyMaker extends GeneralOutputMaker {
       out.write(s"""
 with Ada.Unchecked_Conversion;
 
+with Skill.Field_Types.Builtin.String_Type_P;
+${
+        (
+          for (t ← IR; f ← t.getFields)
+            yield s"""
+with ${PackagePrefix}.Known_Field_${name(t)}_${name(f)};"""
+        ).mkString
+      }
+
+
 -- types generated out of the specification
 package body ${PackagePrefix} is
 ${
@@ -79,6 +89,28 @@ ${
    begin
       return Convert (This.To_Annotation);
    end Dynamic_${name(t)};
+
+   -- reflective getter
+   function Reflective_Get
+     (This : access Unicode_T;
+      F : Skill.Field_Declarations.Field_Declaration) return Skill.Types.Box is
+   begin${
+          (
+            for (f ← t.getAllFields) yield s"""
+      if F.all in Standard.${PackagePrefix}.Known_Field_${name(f.getDeclaredIn)}_${name(f)}.Known_Field_${name(f.getDeclaredIn)}_${name(f)}_T then
+         return ${boxCall(f.getType)} (This.${name(f)});
+      end if;"""
+          ).mkString
+        }
+
+      return This.To_Annotation.Reflective_Get (F);
+   end Reflective_Get;
+
+   -- reflective setter
+   procedure Reflective_Set
+     (This : access Unicode_T;
+      F : Skill.Field_Declarations.Field_Declaration;
+      V : Skill.Types.Box) is null;
 
    -- Age fields
 ${

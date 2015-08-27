@@ -15,10 +15,10 @@ trait PackageSpecMaker extends GeneralOutputMaker {
 
     out.write(s"""
 with Skill.Types;
+with Skill.Field_Declarations;
 
 -- types generated out of the specification
 package ${PackagePrefix} is
-   pragma Preelaborate;
 ${
       (for (t ← IR)
         yield s"""
@@ -68,6 +68,17 @@ ${
 
    function Dynamic_${name(t)} (This : access ${name(t)}_T) return ${name(t)}_Dyn;
    pragma Inline (Dynamic_${name(t)});
+
+   -- reflective getter
+   function Reflective_Get
+     (This : access ${name(t)}_T;
+      F : Skill.Field_Declarations.Field_Declaration) return Skill.Types.Box;
+
+   -- reflective setter
+   procedure Reflective_Set
+     (This : access ${name(t)}_T;
+      F : Skill.Field_Declarations.Field_Declaration;
+      V : Skill.Types.Box);
 
    -- ${name(t)} fields
 ${

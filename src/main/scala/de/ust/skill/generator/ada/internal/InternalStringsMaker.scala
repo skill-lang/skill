@@ -19,7 +19,6 @@ with Skill.Types;
 -- skill names used to represent types
 -- ensures rather fast string comparisons
 package ${PackagePrefix}.Internal_Skill_Names is
-   pragma Preelaborate;
 ${
       val strings = IR.foldLeft(Set[String]()) { case (s, t) ⇒ s + t.getSkillName ++ t.getFields.map(_.getSkillName).toSet }
       (for (s ← strings.toArray.sorted)
