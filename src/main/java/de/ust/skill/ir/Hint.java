@@ -54,7 +54,7 @@ final public class Hint {
     }
 
     private Hint(Type type) {
-        this(type, Collections.emptyList());
+        this(type, Collections.<Name> emptyList());
     }
 
     public static Hint get(Type type, List<Name> args) throws ParseException {
