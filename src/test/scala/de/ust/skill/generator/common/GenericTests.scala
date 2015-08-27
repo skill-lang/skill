@@ -24,7 +24,7 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
   /**
    * can be used to restrict tests to a single specification; should always be [[empty string]] on commit
    */
-  val testOnly = "unicode"
+  val testOnly = ""
 
   /**
    * parameter name of the language. This is required for code generator invocation.
