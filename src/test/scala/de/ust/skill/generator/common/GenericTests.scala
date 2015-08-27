@@ -13,6 +13,7 @@ import java.nio.file.Files
 import org.scalatest.Assertions
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.ConfigMap
+import scala.io.Codec
 
 /**
  * Common implementation of generic tests
@@ -87,7 +88,7 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
 
   for (path ← new File("src/test/resources/gentest").listFiles if path.getName.endsWith(testOnly+".skill")) {
     try {
-      val r"""#!\s(\w+)${ name }(.*)${ options }""" = io.Source.fromFile(path).getLines.toSeq.headOption.getOrElse("")
+      val r"""#!\s(\w+)${ name }(.*)${ options }""" = io.Source.fromFile(path)(Codec.UTF8).getLines.toSeq.headOption.getOrElse("")
       makeTest(path, name, options.trim)
     } catch {
       case e : MatchError ⇒
