@@ -92,7 +92,7 @@ class Main extends FakeMain
   /**
    * Translates the types into Ada types.
    */
-  override protected def mapType(t : Type) : String = "Standard." + (t match {
+  override protected def mapType(t : Type) : String = "Standard."+(t match {
     case t : GroundType ⇒ t.getName.lower match {
       case "annotation" ⇒ "Skill.Types.Annotation"
 
@@ -123,10 +123,13 @@ class Main extends FakeMain
    * creates call to right "boxed"-function
    */
   protected def boxCall(t : Type) : String = t match {
-    case t : GroundType ⇒ t.getName.lower match {
-      case "string" ⇒ "Skill.Field_Types.Builtin.String_Type_P.Boxed"
-    }
-    case _ ⇒ ???
+    case t : GroundType              ⇒ s"Standard.Skill.Field_Types.Builtin.${t.getName.capital}_Type_P.Boxed"
+    case t : ConstantLengthArrayType ⇒ "Standard.Skill.Field_Types.Builtin.Const_Arrays_P.Boxed"
+    case t : VariableLengthArrayType ⇒ "Standard.Skill.Field_Types.Builtin.Var_Arrays_P.Boxed"
+    case t : ListType                ⇒ "Standard.Skill.Field_Types.Builtin.List_Type_P.Boxed"
+    case t : SetType                 ⇒ "Standard.Skill.Field_Types.Builtin.Set_Type_P.Boxed"
+    case t : MapType                 ⇒ "Standard.Skill.Field_Types.Builtin.Map_Type_P.Boxed"
+    case t                           ⇒ s"$poolsPackage.${name(t)}_P.Boxed"
   }
   /**
    * creates call to right "unboxed"-function

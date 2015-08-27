@@ -27,9 +27,13 @@ with Ada.Unchecked_Conversion;
 with Skill.Field_Types.Builtin.String_Type_P;
 ${
         (
-          for (t ← IR; f ← t.getFields)
-            yield s"""
-with ${PackagePrefix}.Known_Field_${name(t)}_${name(f)};"""
+          for (t ← IR) yield s"""
+with $poolsPackage.${name(t)}_P;"""+
+            (
+              for (f ← t.getFields if !f.isConstant)
+                yield s"""
+with ${PackagePrefix}.Known_Field_${fieldName(t, f)};"""
+            ).mkString
         ).mkString
       }
 
@@ -92,12 +96,12 @@ ${
 
    -- reflective getter
    function Reflective_Get
-     (This : access Unicode_T;
+     (This : access ${name(t)}_T;
       F : Skill.Field_Declarations.Field_Declaration) return Skill.Types.Box is
    begin${
           (
-            for (f ← t.getAllFields) yield s"""
-      if F.all in Standard.${PackagePrefix}.Known_Field_${name(f.getDeclaredIn)}_${name(f)}.Known_Field_${name(f.getDeclaredIn)}_${name(f)}_T then
+            for (f ← t.getAllFields if !f.isConstant) yield s"""
+      if F.all in Standard.${PackagePrefix}.Known_Field_${fieldName(f.getDeclaredIn, f)}.Known_Field_${fieldName(f.getDeclaredIn, f)}_T then
          return ${boxCall(f.getType)} (This.${name(f)});
       end if;"""
           ).mkString
@@ -108,7 +112,7 @@ ${
 
    -- reflective setter
    procedure Reflective_Set
-     (This : access Unicode_T;
+     (This : access ${name(t)}_T;
       F : Skill.Field_Declarations.Field_Declaration;
       V : Skill.Types.Box) is null;
 

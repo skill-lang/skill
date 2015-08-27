@@ -114,6 +114,8 @@ trait GeneralOutputMaker extends Generator {
     r
   })
 
+  protected final def fieldName(t : Type, f : Field) = s"${escaped(t.getName.ada)}_${escaped(f.getName.ada)}"
+
   private lazy val packagePath = if (packagePrefix.length > 0) {
     packagePrefix.replace(".", "/")
   } else {

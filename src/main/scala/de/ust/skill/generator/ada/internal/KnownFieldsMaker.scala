@@ -26,7 +26,7 @@ trait KnownFieldsMaker extends GeneralOutputMaker {
 
     val out = open(s"""${packagePrefix}-known_field_${escaped(t.getName.ada).toLowerCase}_${escaped(f.getName.ada).toLowerCase}.ads""")
 
-    val fn = s"${escaped(t.getName.ada)}_${escaped(f.getName.ada)}"
+    val fn = fieldName(t, f)
 
     out.write(s"""
 with Skill.Files;
@@ -92,7 +92,7 @@ end ${PackagePrefix}.Known_Field_$fn;
 
     val out = open(s"""${packagePrefix}-known_field_${escaped(t.getName.ada).toLowerCase}_${escaped(f.getName.ada).toLowerCase}.adb""")
 
-    val fn = s"${escaped(t.getName.ada)}_${escaped(f.getName.ada)}"
+    val fn = fieldName(t, f)
 
     out.write(s"""
 with Ada.Unchecked_Conversion;
