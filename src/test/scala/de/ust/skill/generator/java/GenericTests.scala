@@ -40,6 +40,8 @@ class GenericTests extends common.GenericTests {
   def newTestFile(packagePath : String, name : String) = {
     val f = new File(s"testsuites/java/src/test/java/$packagePath/Generic${name}Test.java")
     f.getParentFile.mkdirs
+    if(f.exists)
+      f.delete
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
 
