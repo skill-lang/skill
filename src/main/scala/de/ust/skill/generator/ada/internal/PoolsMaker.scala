@@ -412,7 +412,7 @@ ${
 
       F : Field_Declarations.Field_Declaration;
 
-      type Super is access all Pool_T;
+      type Super is access all Pools.${if(isBase)"Base"else"Sub"}_Pool_T;
    begin
 ${
        t.getFields.foldRight("""
