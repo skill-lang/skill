@@ -164,13 +164,14 @@ package body ${PackagePrefix}.Known_Field_$fn is
       if CE.C.all in Skill.Internal.Parts.Simple_Chunk then
          First := Natural (CE.C.To_Simple.BPO);
          Last  := First + Natural (CE.C.Count);
-      else
-         First := Natural (This.Owner.Blocks.Last_Element.BPO);
-         Last  := First + Natural (This.Owner.Blocks.Last_Element.Count);
-         -- TODO This is horribly incorrect!!!
-      end if;
-
 ${readBlock(t, f)}
+      else
+         for Block_Index in 1 .. CE.C.To_Bulk.Block_Count loop
+            First := Natural (This.Owner.Blocks.Element (Block_Index - 1).BPO);
+            Last  := First + Natural (This.Owner.Blocks.Element (Block_Index - 1).Count);
+${readBlock(t, f)}
+         end loop;
+      end if;
    end Read;
 
    procedure Offset (This : access Known_Field_${fn}_T) is${
@@ -261,16 +262,16 @@ ${readBlock(t, f)}
       This.Future_Offset := Result;"""
 
             case "i8" | "bool" ⇒ s"""
-        This.Future_Offset := rang.count;"""
+        This.Future_Offset := Rang.Count;"""
 
             case "i16" ⇒ s"""
-        This.Future_Offset := 2 * rang.count;"""
+        This.Future_Offset := 2 * Rang.Count;"""
 
             case "i32" | "f32" ⇒ s"""
-        This.Future_Offset := 4 * rang.count;"""
+        This.Future_Offset := 4 * Rang.Count;"""
 
             case "i64" | "f64" ⇒ s"""
-        This.Future_Offset := 8 * rang.count;"""
+        This.Future_Offset := 8 * Rang.Count;"""
 
             case "v64" ⇒ s"""$preludeData
          declare
@@ -385,7 +386,8 @@ ${readBlock(t, f)}
 
    procedure Write
      (This   : access Known_Field_${fn}_T;
-      Output : Skill.Streams.Writer.Sub_Stream) is${
+      Output : Skill.Streams.Writer.Sub_Stream)
+   is${
       if (f.isConstant())
         """ null; -- this field is constant"""
       else
@@ -403,12 +405,12 @@ ${readBlock(t, f)}
       High : Natural;
    begin
       if C.all in Skill.Internal.Parts.Simple_Chunk then
-         Low := Natural(Skill.Internal.Parts.Simple_Chunk(C.all).BPO);
+         Low  := Natural(Skill.Internal.Parts.Simple_Chunk(C.all).BPO);
          High := Low + Natural(C.Count);
       else${
           // we have to use the offset of the pool
           if (tIsBaseType) """
-         Low := 1;
+         Low  := 1;
          High := This.Owner.Size;"""
           else """
          if This.Owner.Size > 0 then
@@ -428,8 +430,8 @@ ${readBlock(t, f)}
             case t : GroundType ⇒ t.getSkillName match {
               case "annotation" ⇒ s"""raise Constraint_Error with "todo: write annotation";"""
               case "string" ⇒ s"""Skill.Field_Types.Builtin.String_Type_P.Field_Type
-             (This.T).Write_Single_Field($fieldAccessI, output);"""
-              case _ ⇒ s"""Output.${t.getSkillName.capitalize}($fieldAccessI);"""
+             (This.T).Write_Single_Field ($fieldAccessI, output);"""
+              case _ ⇒ s"""Output.${t.getSkillName.capitalize} ($fieldAccessI);"""
             }
 
             case t : UserType ⇒ s"""declare
@@ -438,7 +440,7 @@ ${readBlock(t, f)}
             if null = Instance Then
                Output.I8 (0);
             else
-               Output.V64(Skill.Types.V64(Instance.Skill_ID));
+               Output.V64 (Skill.Types.V64(Instance.Skill_ID));
             end if;
          end;"""
             case _ ⇒ s"""raise Constraint_Error with "todo";"""
@@ -471,10 +473,10 @@ end ${PackagePrefix}.Known_Field_$fn;
 
         case "String"     ⇒ s"""
       declare
-         Strings : Skill.String_Pools.Pool := Skill.Field_Types.Builtin.String_Type_P.Field_Type(This.T).Strings;
+         Strings : Skill.String_Pools.Pool := Skill.Field_Types.Builtin.String_Type_P.Field_Type (This.T).Strings;
       begin
          for I in First + 1 .. Last loop
-            To_${name(t)} (Data (I)).Set_${name(f)} (Strings.Get(Input.V64));
+            To_${name(t)} (Data (I)).Set_${name(f)} (Strings.Get (Input.V64));
          end loop;
       end;"""
 

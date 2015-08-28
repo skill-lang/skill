@@ -372,6 +372,9 @@ ${
       procedure Delete is new Ada.Unchecked_Deallocation
         (Skill.Types.Annotation_Array_T,
          Skill.Types.Annotation_Array);
+      procedure Delete is new Ada.Unchecked_Deallocation
+        (Skill.Types.String_Access_Array,
+         Skill.Types.String_Access_Array_Access);
 
       type P is access all Pool_T;
       procedure Delete is new Ada.Unchecked_Deallocation (Pool_T, P);
@@ -390,6 +393,7 @@ ${
       This.Static_Data.Foreach (Delete_SA'Access);
       This.Static_Data.Free;
       This.New_Objects.Free;
+      Delete(This.Known_Fields);
       Delete (D);
    end Free;
 
@@ -457,9 +461,23 @@ ${
          return;
       end if;"""
        ).mkString
+     }${
+       var index = 0;
+       (for (f ← t.getFields if f.isAuto)
+         yield s"""
+      if Skill.Equals.Equals
+          (${internalSkillName(f)},
+           Name)
+      then
+         F := KnownField_${fieldName(t, f)}.Make
+           (T => ${mapToFieldType(f, isBase)}, Owner => This);
+         This.Auto_Fields(${index += 1; index - 1}) = f;
+         return;
+      end if;"""
+       ).mkString
      }
       raise Constraint_Error
-        with "generator broken in pool::add_known_field";
+        with "generator broken in pool::add_known_field: unexpeted add for:" & Name.all;
    end Add_Known_Field;
 
    -- @note: this might not be correct in general (first/last index calculation)

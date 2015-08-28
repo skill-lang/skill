@@ -202,6 +202,12 @@ ${
       type Ft is access all File_T;
 
       procedure Delete is new Ada.Unchecked_Deallocation (File_T, Ft);
+      procedure Delete is new Ada.Unchecked_Deallocation
+        (Skill.Field_Types.Builtin.Annotation_Type_P.Field_Type_T,
+         Skill.Field_Types.Builtin.Annotation_Type_P.Field_Type);
+      procedure Delete is new Ada.Unchecked_Deallocation
+        (Skill.Field_Types.Builtin.String_Type_P.Field_Type_T,
+         Skill.Field_Types.Builtin.String_Type_P.Field_Type);
 
       Self : Ft := Ft (This);
    begin
@@ -209,6 +215,8 @@ ${
       This.Strings.Free;
       This.Types.Foreach (Delete'Access);
       This.Types.Free;
+      Delete (This.String_Type);
+      Delete (This.Annotation_Type);
 
       Delete (Self);
    end Free;
