@@ -218,7 +218,7 @@ ${readBlock(t, f)}
          V   : Skill.Types.Annotation;
       begin
          for I in Low + 1 .. High loop
-            V := Standard.Annotation.To_Test (Data (I)).Get_F;
+            V := $fieldAccessI;
             if null = V then
                Result := Result + 2;
             else
