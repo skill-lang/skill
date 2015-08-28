@@ -43,8 +43,11 @@ package ${PackagePrefix}.Known_Field_$fn is
    type Known_Field_$fn is access Known_Field_${fn}_T'Class;
 
    function Make
-     (ID    : Natural;
-      T     : Skill.Field_Types.Field_Type;
+     (${
+  if(f.isAuto())""
+  else"""
+      ID    : Natural;"""
+}T     : Skill.Field_Types.Field_Type;
       Owner : Skill.Field_Declarations.Owner_T)
       return Skill.Field_Declarations.Field_Declaration;
 
@@ -113,8 +116,11 @@ with ${PackagePrefix}.Internal_Skill_Names;
 package body ${PackagePrefix}.Known_Field_$fn is
 
    function Make
-     (ID    : Natural;
-      T     : Skill.Field_Types.Field_Type;
+     (${
+  if(f.isAuto())""
+  else"""
+      ID    : Natural;"""
+}T     : Skill.Field_Types.Field_Type;
       Owner : Skill.Field_Declarations.Owner_T)
       return Skill.Field_Declarations.Field_Declaration
    is
@@ -123,7 +129,7 @@ package body ${PackagePrefix}.Known_Field_$fn is
           (Data_Chunks   => Skill.Field_Declarations.Chunk_List_P.Empty_Vector,
            T             => T,
            Name          => ${internalSkillName(f)},
-           Index         => ID,
+           Index         => ${if(f.isAuto())"0" else "ID"},
            Owner         => Owner,
            Future_Offset => 0);
    end Make;

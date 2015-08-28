@@ -49,10 +49,10 @@ end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools;
     val out = open(s"""skill-types-pools-${packagePrefix.replace('-', '_')}_pools-${Name.toLowerCase}_p.ads""")
 
     out.write(s"""
-
 with Ada.Unchecked_Conversion;
 
 with Skill.Containers.Vectors;
+with Skill.Field_Declarations;
 with Skill.Files;
 with Skill.Internal.File_Parsers;
 with Skill.Streams.Reader;
@@ -186,9 +186,15 @@ private
    package A2 is new Containers.Vectors (Natural, Static_Data_Array);
    subtype Static_Instance_Vector is A2.Vector;
 
+   type Auto_Field_Array is
+     array (0 .. ${t.getFields.filter { _.isAuto() }.size - 1}) of Skill.Field_Declarations.Field_Declaration;
+
    type Pool_T is new ${if(isBase)"Base"else"Sub"}_Pool_T with record
       Static_Data : Static_Instance_Vector;
       New_Objects : New_Instance_Vector;
+
+      -- the list of all auto fields
+      Auto_Fields : Auto_Field_Array;
    end record;
 
 end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P;
@@ -314,6 +320,7 @@ package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_
            Sub_Pools     => Sub_Pool_Vector_P.Empty_Vector,
            Data_Fields_F =>
              Skill.Field_Declarations.Field_Vector_P.Empty_Vector,
+           Auto_Fields => (others => null),
            Known_Fields => ${
        if (t.getFields.isEmpty())
          "No_Known_Fields"
@@ -415,7 +422,7 @@ ${
       type Super is access all Pools.${if(isBase)"Base"else"Sub"}_Pool_T;
    begin
 ${
-       t.getFields.foldRight("""
+       t.getFields.filterNot { _.isAuto }.foldRight("""
       return Super (This).Add_Field (ID, T, Name);""") {
          case (f, s) ⇒ s"""
       if Skill.Equals.Equals
@@ -445,6 +452,10 @@ ${
       String_Type : Field_Types.Builtin.String_Type_P.Field_Type;
       Annotation_Type : Field_Types.Builtin.Annotation_Type_P.Field_Type)
    is
+      type P is access all Pool_T;
+      function Convert is new Ada.Unchecked_Conversion
+        (P, Field_Declarations.Owner_T);
+
       F : Field_Declarations.Field_Declaration;
    begin${
        (for (f ← t.getFields if !f.isAuto)
@@ -469,9 +480,10 @@ ${
           (${internalSkillName(f)},
            Name)
       then
-         F := KnownField_${fieldName(t, f)}.Make
-           (T => ${mapToFieldType(f, isBase)}, Owner => This);
-         This.Auto_Fields(${index += 1; index - 1}) = f;
+         F := Standard.$PackagePrefix.Known_Field_${fieldName(t, f)}.Make
+           (T     => ${mapToFieldType(f, isBase)},
+            Owner => Convert (P (This)));
+         This.Auto_Fields(${index += 1; index - 1}) := F;
          return;
       end if;"""
        ).mkString
