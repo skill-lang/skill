@@ -109,7 +109,12 @@ with Skill.Internal.Parts;
 with Skill.Streams.Reader;
 with Skill.String_Pools;
 with Skill.Types;
-with $poolsPackage.${name(t)}_P;
+with $poolsPackage.${name(t)}_P;${
+  t.getFields.map(_.getType).collect{
+    case t : UserType ⇒ t
+  }.map(t ⇒ s"""
+with $poolsPackage.${name(t)}_P;""").mkString
+}
 
 with ${PackagePrefix}.Internal_Skill_Names;
 
