@@ -118,10 +118,7 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
       Annotation_Type : Field_Types.Builtin.Annotation_Type_P.Field_Type);
 
    overriding
-   procedure Resize_Pool
-     (This       : access Pool_T;
-      Targets    : Type_Vector;
-      Self_Index : Natural);
+   procedure Resize_Pool (This : access Pool_T);
 
    overriding function Static_Size (This : access Pool_T) return Natural;
 
@@ -495,11 +492,7 @@ ${
    end Add_Known_Field;
 
    -- @note: this might not be correct in general (first/last index calculation)
-   procedure Resize_Pool
-     (This       : access Pool_T;
-      Targets    : Type_Vector;
-      Self_Index : Natural)
-   is
+   procedure Resize_Pool (This : access Pool_T) is
       Size : Natural;
       ID   : Skill_ID_T := 1 + Skill_ID_T (This.Blocks.Last_Element.BPO);
 
@@ -507,6 +500,16 @@ ${
 
       SD : Static_Data_Array;
       R  : $Type;
+
+      Last : Skill_ID_T := ID - 1 + Natural (This.Blocks.Last_Element.Count);
+
+      procedure Max_BPO (P : Pools.Sub_Pool) is
+         Tmp_Bpo : Skill_ID_T := Skill_ID_T(P.Blocks.Last_Element.BPO);
+      begin
+         if (ID - 2) < Tmp_Bpo and then Tmp_Bpo < Last then
+            Last := Tmp_Bpo;
+         end if;
+      end Max_BPO;
 
       use Interfaces;
    begin${
@@ -516,16 +519,9 @@ ${
      }
       Data := This${if(isBase)""else".Base"}.Data;
 
-      if Self_Index = Targets.Length - 1
-        or else Targets.Element (Self_Index + 1).Super /= This.To_Pool
-      then
-         Size := Natural (This.Blocks.Last_Element.Count);
-      else
-         Size :=
-           Natural
-             (Targets.Element (Self_Index + 1).Blocks.Last_Element.BPO -
-              This.Blocks.Last_Element.BPO);
-      end if;
+      This.Sub_Pools.Foreach (Max_BPO'Access);
+
+      Size := (Last - Id) + 1;
 
       SD := new Static_Data_Array_T (1 .. Size);
       This.Static_Data.Append (SD);
