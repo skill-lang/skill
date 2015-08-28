@@ -400,7 +400,9 @@ ${
       This.Static_Data.Foreach (Delete_SA'Access);
       This.Static_Data.Free;
       This.New_Objects.Free;
-      Delete(This.Known_Fields);
+      if No_Known_Fields /= This.Known_Fields then
+         Delete(This.Known_Fields);
+      end if;
       Delete (D);
    end Free;
 
