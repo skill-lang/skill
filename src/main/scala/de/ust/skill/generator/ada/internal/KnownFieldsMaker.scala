@@ -484,7 +484,24 @@ end ${PackagePrefix}.Known_Field_$fn;
       return ""
 
     f.getType match {
-      case ft : UserType ⇒ defaultBlock("null")
+      case ft : UserType ⇒  s"""
+         declare
+            function Cast is new Ada.Unchecked_Conversion
+              (Skill.Field_Types.Field_Type,
+               ${poolsPackage}.${name(f.getType)}_P.Pool);
+
+            F_T_Data : Skill.Types.Annotation_Array := Cast (This.T).Base.Data;
+            Index    : Natural;
+         begin
+            for I in First + 1 .. Last loop
+               Index := Natural (Input.V64);
+               if Index in F_T_Data'Range then
+                  To_${name(t)} (Data (I)).Set_${name(f)} (To_${name(f.getType)} (F_T_Data (Index)));
+               else
+                  To_${name(t)} (Data (I)).Set_${name(f)} (null);
+               end if;
+            end loop;
+         end;"""
 
       case ft : GroundType ⇒ ft.getName.ada match {
         case "Annotation" ⇒  s"""
