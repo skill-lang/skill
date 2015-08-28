@@ -475,7 +475,23 @@ end ${PackagePrefix}.Known_Field_$fn;
       case ft : UserType ⇒ defaultBlock("null")
 
       case ft : GroundType ⇒ ft.getName.ada match {
-        case "Annotation" ⇒ defaultBlock("null")
+        case "Annotation" ⇒  s"""
+      declare
+            Types : Skill.Types.Pools.Type_Vector := Skill.Field_Types.Builtin.Annotation_Type_P.Field_Type (This.T).Types;
+            Type_ID : Natural;
+            D : Skill.Types.Annotation_Array;
+      begin
+            for I in First + 1 .. Last loop
+               Type_ID := Natural (Input.V64);
+               if 0 = Type_ID then
+                  Type_ID := Natural(Input.V64);
+                  To_${name(t)} (Data (I)).Set_${name(f)} (null);
+               else
+                  D := Types.Element (Type_ID - 1).Base.Data;
+                  To_${name(t)} (Data (I)).Set_${name(f)} (D (Natural (Input.V64)));
+               end if;
+         end loop;
+      end;"""
 
         case "String"     ⇒ s"""
       declare
