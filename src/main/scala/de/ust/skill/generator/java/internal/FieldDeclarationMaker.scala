@@ -170,7 +170,7 @@ ${
         $preludeData
             SkillObject v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
             if(null==v)
-                result++;
+                result += 2;
             else
                 result += t.singleOffset(v);
         }

@@ -580,7 +580,7 @@ ${
       This.Blocks.Clear;
       This.Blocks.Append
       (Skill.Internal.Parts.Block'
-         (Types.v64 (Lbpo_Map (This.Type_Id)), Types.v64 (This.Size)));
+         (Types.v64 (Lbpo_Map (This.Pool_Offset)), Types.v64 (This.Size)));
 
       for I in 0 .. This.Sub_Pools.Length - 1 loop
          This.Sub_Pools.Element (I).Dynamic.Update_After_Compress

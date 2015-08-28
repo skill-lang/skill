@@ -208,17 +208,26 @@ ${readBlock(t, f)}
           // read next element
           case fieldType : GroundType ⇒ fieldType.getSkillName match {
 
-            //            case "annotation" ⇒ s"""
-            //        final Annotation t = (Annotation) type;
-            //        $preludeData
-            //            SkillObject v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)};
-            //            if(null==v)
-            //                result++;
-            //            else
-            //                result += t.singleOffset(v);
-            //        }
-            //        return result;"""
-            //
+            case "annotation" ⇒ s"""
+      declare
+         pragma Warnings (Off);
+         use type Skill.Types.Annotation;
+
+         function Boxed is new Ada.Unchecked_Conversion (Skill.Types.Annotation, Skill.Types.Box);
+
+         V   : Skill.Types.Annotation;
+      begin
+         for I in Low + 1 .. High loop
+            V := Standard.Annotation.To_Test (Data (I)).Get_F;
+            if null = V then
+               Result := Result + 2;
+            else
+               Result := Result + This.T.Offset_Box( Boxed (V));
+            end if;
+         end loop;
+      end;
+      This.Future_Offset := Result;"""
+
             case "string" ⇒ s"""
       declare
          use type Skill.Types.String_Access;
@@ -434,9 +443,12 @@ ${readBlock(t, f)}
           // read next element
           f.getType match {
             case t : GroundType ⇒ t.getSkillName match {
-              case "annotation" ⇒ s"""raise Constraint_Error with "todo: write annotation";"""
+              case "annotation" ⇒ s"""Skill.Field_Types.Builtin.Annotation_Type_P.Field_Type
+           (This.T).Write_Box
+         (Output, Skill.Field_Types.Builtin.Annotation_Type_P.Boxed
+            ($fieldAccessI));"""
               case "string" ⇒ s"""Skill.Field_Types.Builtin.String_Type_P.Field_Type
-             (This.T).Write_Single_Field ($fieldAccessI, output);"""
+             (This.T).Write_Single_Field ($fieldAccessI, Output);"""
               case _ ⇒ s"""Output.${t.getSkillName.capitalize} ($fieldAccessI);"""
             }
 
