@@ -60,7 +60,7 @@ ${
           var s = t.getSuperType
           while (null != s) {
             r ++= s"""
-   function To_${name(s)} (This : access ${name(t)}_T) return ${name(s)} is
+   function To_${name(s)} (This : access ${name(t)}_T'Class) return ${name(s)} is
       type T is access all ${name(t)}_T;
       function Convert is new Ada.Unchecked_Conversion (T, ${name(s)});
    begin
@@ -73,7 +73,7 @@ ${
           // type conversions to subtypes
           def asSub(sub : UserType) {
             r ++= s"""
-   function As_${name(sub)} (This : access ${name(t)}_T) return ${name(sub)} is
+   function As_${name(sub)} (This : access ${name(t)}_T'Class) return ${name(sub)} is
       type T is access all ${name(t)}_T;
       function Convert is new Ada.Unchecked_Conversion (T, ${name(sub)});
    begin

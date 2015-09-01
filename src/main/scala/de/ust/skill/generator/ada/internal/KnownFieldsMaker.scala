@@ -105,6 +105,7 @@ with Skill.Files;
 with Skill.Field_Declarations;
 with Skill.Field_Types;
 with Skill.Field_Types.Builtin;
+with Skill.Field_Types.Builtin.String_Type_P;
 with Skill.Internal.Parts;
 with Skill.Streams.Reader;
 with Skill.String_Pools;

@@ -46,7 +46,7 @@ ${
         var s = t.getSuperType
         while (null != s) {
           r ++= s"""
-   function To_${name(s)} (This : access ${name(t)}_T) return ${name(s)};
+   function To_${name(s)} (This : access ${name(t)}_T'Class) return ${name(s)};
    pragma Inline_Always (To_${name(s)});
 """
           s = s.getSuperType
@@ -55,7 +55,7 @@ ${
         // type conversions to subtypes
         def asSub(sub : UserType) {
           r ++= s"""
-   function As_${name(sub)} (This : access ${name(t)}_T) return ${name(sub)};
+   function As_${name(sub)} (This : access ${name(t)}_T'Class) return ${name(sub)};
    pragma Inline_Always (As_${name(sub)});
 """
           sub.getSubTypes.foreach(asSub)
