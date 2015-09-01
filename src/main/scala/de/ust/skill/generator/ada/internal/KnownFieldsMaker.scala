@@ -197,6 +197,7 @@ ${readBlock(t, f)}
       function Cast is new Ada.Unchecked_Conversion
         (Skill.Types.v64,
          Skill.Types.Uv64);
+      pragma Inline_Always (Cast);
 
       Rang   : Skill.Internal.Parts.Block   := This.Owner.Blocks.Last_Element;
       Data   : Skill.Types.Annotation_Array := This.Owner.Base.Data;

@@ -53,6 +53,8 @@ with Ada.Unchecked_Conversion;
 
 with Skill.Containers.Vectors;
 with Skill.Field_Declarations;
+with Skill.Field_Types.Builtin;
+with Skill.Field_Types.Builtin.String_Type_P;
 with Skill.Files;
 with Skill.Internal.File_Parsers;
 with Skill.Streams.Reader;
@@ -72,6 +74,7 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
 
    -- API methods
    function Get (This : access Pool_T; ID : Skill_ID_T) return $Type;
+   pragma Inline (Get);
 
    -- constructor for instances
    procedure Make
