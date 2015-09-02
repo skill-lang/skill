@@ -24,6 +24,8 @@ trait PackageBodyMaker extends GeneralOutputMaker {
       out.write(s"""
 with Ada.Unchecked_Conversion;
 
+with Interfaces;
+
 with Skill.Field_Types.Builtin.String_Type_P;
 ${
         (
@@ -122,6 +124,7 @@ ${
             yield s"""
    function Get_${name(f)} (This : access ${name(t)}_T'Class) return ${mapType(f.getType)}
    is
+      use Interfaces;
    begin
       return ${
             if (f.isConstant()) mapConstantValue(f)
