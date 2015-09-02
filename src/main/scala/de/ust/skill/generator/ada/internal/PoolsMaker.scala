@@ -615,18 +615,17 @@ end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P;
         else s"Field_Types.Builtin.${t.getName.capital}"
       case "string" ⇒ "Field_Types.Field_Type(String_Type)"
 
-      case s        ⇒ s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
+      case s        ⇒ s"Field_Types.Field_Type(This${if(isBase)""else".Base"}.Owner.Types_By_Name.Element(${internalSkillName(t)}))"
     }
 
     f.getType match {
       case t : GroundType  ⇒ mapGroundType(t)
-      //      case t : ConstantLengthArrayType ⇒ s"new ConstantLengthArray<>(${t.getLength}, ${mapGroundType(t.getBaseType)})"
-      //      case t : VariableLengthArrayType ⇒ s"new VariableLengthArray<>(${mapGroundType(t.getBaseType)})"
-      //      case t : ListType                ⇒ s"new ListType<>(${mapGroundType(t.getBaseType)})"
-      //      case t : SetType                 ⇒ s"new SetType<>(${mapGroundType(t.getBaseType)})"
-      //      case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"new MapType<>($k, $v)")
+            case t : ConstantLengthArrayType ⇒ s"Field_Types.Builtin.Const_Array(${t.getLength}, ${mapGroundType(t.getBaseType)})"
+            case t : VariableLengthArrayType ⇒ s"Field_Types.Builtin.Var_Array(${mapGroundType(t.getBaseType)})"
+            case t : ListType                ⇒ s"Field_Types.Builtin.List_Type(${mapGroundType(t.getBaseType)})"
+            case t : SetType                 ⇒ s"Field_Types.Builtin.Set_Type(${mapGroundType(t.getBaseType)})"
+            case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"Field_Types.Builtin.Map_Type($k, $v)")
       case t : Declaration ⇒ s"Field_Types.Field_Type(This${if(isBase)""else".Base"}.Owner.Types_By_Name.Element(${internalSkillName(t)}))"
-      case _               ⇒ "Field_Types.Field_Type(Annotation_Type)"
     }
   }
 }

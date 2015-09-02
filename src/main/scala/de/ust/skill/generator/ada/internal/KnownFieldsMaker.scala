@@ -229,7 +229,7 @@ ${readBlock(t, f)}
             if null = V then
                Result := Result + 2;
             else
-               Result := Result + This.T.Offset_Box( Boxed (V));
+               Result := Result + This.T.Offset_Box (Boxed (V));
             end if;
          end loop;
       end;
@@ -327,45 +327,61 @@ ${readBlock(t, f)}
         raise Constraint_Error with "TODO";"""
           }
 
-          //          case fieldType : ConstantLengthArrayType ⇒ s"""
-          //        final SingleArgumentType t = (SingleArgumentType) type;
-          //        final FieldType baseType = t.groundType;
-          //        $preludeData
-          //            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
-          //            assert null==v;
-          //            result += baseType.calculateOffset(v);
-          //        }
-          //        return result;"""
-          //
-          //          case fieldType : SingleBaseTypeContainer ⇒ s"""
-          //        final SingleArgumentType t = (SingleArgumentType) type;
-          //        final FieldType baseType = t.groundType;
-          //        $preludeData
-          //            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
-          //            if(null==v)
-          //                result++;
-          //            else {
-          //                result += V64.singleV64Offset(v.size());
-          //                result += baseType.calculateOffset(v);
-          //            }
-          //        }
-          //        return result;"""
-          //
-          //          case fieldType : MapType ⇒ s"""
-          //        final MapType t = (MapType) type;
-          //        final FieldType keyType = t.keyType;
-          //        final FieldType valueType = t.valueType;
-          //        $preludeData
-          //            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
-          //            if(null==v)
-          //                result++;
-          //            else {
-          //                result += V64.singleV64Offset(v.size());
-          //                result += keyType.calculateOffset(v.keySet());
-          //                result += valueType.calculateOffset(v.values());
-          //            }
-          //        }
-          //        return result;"""
+                    case fieldType : ConstantLengthArrayType ⇒ s"""
+      declare
+         pragma Warnings (Off);
+         use type ${mapType(f.getType)};
+
+         function Boxed is new Ada.Unchecked_Conversion (${mapType(f.getType)}, Skill.Types.Box);
+
+         V   : ${mapType(f.getType)};
+      begin
+         for I in Low + 1 .. High loop
+            V := $fieldAccessI;
+            Result := Result + This.T.Offset_Box (Boxed (V));
+         end loop;
+      end;
+      This.Future_Offset := Result;"""
+
+                    case fieldType : SingleBaseTypeContainer ⇒ s"""
+      declare
+         pragma Warnings (Off);
+         use type ${mapType(f.getType)};
+
+         function Boxed is new Ada.Unchecked_Conversion (${mapType(f.getType)}, Skill.Types.Box);
+
+         V   : ${mapType(f.getType)};
+      begin
+         for I in Low + 1 .. High loop
+            V := $fieldAccessI;
+            if null = V then
+               Result := Result + 1;
+            else
+               Result := Result + This.T.Offset_Box (Boxed (V));
+            end if;
+         end loop;
+      end;
+      This.Future_Offset := Result;"""
+
+                    case fieldType : MapType ⇒ s"""
+      declare
+         pragma Warnings (Off);
+         use type ${mapType(f.getType)};
+
+         function Boxed is new Ada.Unchecked_Conversion (${mapType(f.getType)}, Skill.Types.Box);
+
+         V   : ${mapType(f.getType)};
+      begin
+         for I in Low + 1 .. High loop
+            V := $fieldAccessI;
+            if null = V then
+               Result := Result + 1;
+            else
+               Result := Result + This.T.Offset_Box (Boxed (V));
+            end if;
+         end loop;
+      end;
+      This.Future_Offset := Result;"""
 
           case fieldType : UserType ⇒ s"""$preludeData
         declare
@@ -399,8 +415,7 @@ ${readBlock(t, f)}
          end;
       end loop;
       This.Future_Offset := Result;"""
-          case _ ⇒ s"""
-        raise constraint_error with "TODO";"""
+          case _ ⇒ ???
         }
       }
     }
@@ -468,7 +483,31 @@ ${readBlock(t, f)}
                Output.V64 (Skill.Types.V64(Instance.Skill_ID));
             end if;
          end;"""
-            case _ ⇒ s"""raise Constraint_Error with "todo";"""
+
+            case t : ConstantLengthArrayType ⇒ s"""Skill.Field_Types.Builtin.Const_Arrays_P.Field_Type
+           (This.T).Write_Box
+         (Output, Skill.Field_Types.Builtin.Const_Arrays_P.Boxed
+            ($fieldAccessI));"""
+
+            case t : VariableLengthArrayType ⇒ s"""Skill.Field_Types.Builtin.Var_Arrays_P.Field_Type
+           (This.T).Write_Box
+         (Output, Skill.Field_Types.Builtin.Var_Arrays_P.Boxed
+            ($fieldAccessI));"""
+
+            case t : ListType ⇒ s"""Skill.Field_Types.Builtin.List_Type_P.Field_Type
+           (This.T).Write_Box
+         (Output, Skill.Field_Types.Builtin.List_Type_P.Boxed
+            ($fieldAccessI));"""
+
+            case t : SetType ⇒ s"""Skill.Field_Types.Builtin.Set_Type_P.Field_Type
+           (This.T).Write_Box
+         (Output, Skill.Field_Types.Builtin.Set_Type_P.Boxed
+            ($fieldAccessI));"""
+
+            case t : MapType ⇒ s"""Skill.Field_Types.Builtin.Map_Type_P.Field_Type
+           (This.T).Write_Box
+         (Output, Skill.Field_Types.Builtin.Map_Type_P.Boxed
+            ($fieldAccessI));"""
           }
         }
       end loop;
