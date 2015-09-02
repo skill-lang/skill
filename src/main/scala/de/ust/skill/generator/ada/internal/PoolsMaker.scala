@@ -611,12 +611,7 @@ end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P;
     @inline def mapGroundType(t : Type) : String = t.getSkillName match {
       case "annotation" ⇒ "Field_Types.Field_Type(Annotation_Type)"
       case "bool" | "i8" | "i16" | "i32" | "i64" | "v64" | "f32" | "f64" ⇒
-        if (f.isConstant) s"Field_Types.Builtin.Const_${t.getName.capital}(${t.getSkillName.last match {
-          case '8' ⇒ f.constantValue.toByte.toString
-          case '6' ⇒ f.constantValue.toShort.toString
-          case '2' ⇒ f.constantValue.toInt.toString
-          case '4' ⇒ f.constantValue.toString
-        }})"
+        if (f.isConstant) s"Field_Types.Builtin.Const_${t.getName.capital}(${mapConstantValue(f)})"
         else s"Field_Types.Builtin.${t.getName.capital}"
       case "string" ⇒ "Field_Types.Field_Type(String_Type)"
 

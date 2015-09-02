@@ -121,4 +121,16 @@ trait GeneralOutputMaker extends Generator {
   } else {
     ""
   }
+
+  /**
+   * create an appropriate image for a constant string
+   *
+   * @note silently assumes f to be a constant
+   */
+  protected final def mapConstantValue(f : Field) : String = f.getType.getSkillName.last match {
+    case '8' ⇒ f.constantValue.toByte.toString
+    case '6' ⇒ f.constantValue.toShort.toString
+    case '2' ⇒ f.constantValue.toInt.toString
+    case '4' ⇒ f.constantValue.toString
+  }
 }

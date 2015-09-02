@@ -123,13 +123,20 @@ ${
    function Get_${name(f)} (This : access ${name(t)}_T'Class) return ${mapType(f.getType)}
    is
    begin
-      return This.${name(f)};
+      return ${
+            if (f.isConstant()) mapConstantValue(f)
+            else s"This.${name(f)}"
+          };
    end Get_${name(f)};
 
    procedure Set_${name(f)} (This : access ${name(t)}_T'Class; V : ${mapType(f.getType)})
    is
    begin
-      This.${name(f)} := V;
+      ${
+            // we wont raise an exception, because we rather want the code to be deleted by the compiler
+            if (f.isConstant()) "null;"
+            else s"This.${name(f)} := V;"
+          }
    end Set_${name(f)};
 ${
             f.getType match {
