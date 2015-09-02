@@ -34,6 +34,9 @@ ${comment(t)}
 ${
       (for (t ← IR)
         yield s"""
+   overriding
+   function Skill_Name (This : access ${name(t)}_T) return Standard.Skill.Types.String_Access;
+
    -- ${name(t)} type conversions
    function To_${name(t)} (This : Skill.Types.Annotation) return ${name(t)};
    pragma Inline_Always (To_${name(t)});

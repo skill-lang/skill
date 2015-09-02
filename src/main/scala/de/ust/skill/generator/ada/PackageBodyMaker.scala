@@ -27,6 +27,7 @@ with Ada.Unchecked_Conversion;
 with Interfaces;
 
 with Skill.Field_Types.Builtin.String_Type_P;
+with ${PackagePrefix}.Internal_Skill_Names;
 ${
         (
           for (t ← IR) yield s"""
@@ -45,6 +46,10 @@ package body ${PackagePrefix} is
 ${
         (for (t ← IR)
           yield s"""
+   overriding
+   function Skill_Name (This : access ${name(t)}_T) return Standard.Skill.Types.String_Access is
+     (${internalSkillName(t)});
+
    function To_${name(t)} (This : Skill.Types.Annotation) return ${name(t)} is
       function Convert is new Ada.Unchecked_Conversion (Skill.Types.Annotation, ${name(t)});
    begin
