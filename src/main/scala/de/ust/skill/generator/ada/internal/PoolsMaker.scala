@@ -125,6 +125,8 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
 
    overriding function Static_Size (This : access Pool_T) return Natural;
 
+   overriding function New_Objects_Size (This : access Pool_T) return Natural;
+
    -- applies F for each element in this
 --        procedure Foreach
 --          (This : access Pool_T;
@@ -143,8 +145,17 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
 
    --        function Iterator (This : access Pool_T) return Age_Iterator is abstract;
 
+   overriding
    procedure Do_For_Static_Instances (This : access Pool_T;
-                                      F : access procedure(I : Annotation));
+                                      F : not null access procedure(I : Annotation));
+
+   overriding
+   procedure Foreach_Dynamic_New_Instance
+     (This : access Pool_T;
+      F    : not null access procedure (I : Annotation));
+
+   overriding function First_Dynamic_New_Instance
+     (This : access Pool_T) return Annotation;
 
    procedure Update_After_Compress
      (This     : access Pool_T;
@@ -553,15 +564,18 @@ ${
       return Rval;
    end Static_Size;
 
+   overriding function New_Objects_Size (This : access Pool_T) return Natural is
+     (This.New_Objects.Length);
+
+   type T is not null access procedure (I : ${mapType(t)});
+   type U is not null access procedure (I : Annotation);
+
+   function Cast is new Ada.Unchecked_Conversion(U, T);
+
    procedure Do_For_Static_Instances
      (This : access Pool_T;
-      F    : access procedure (I : Annotation))
+      F : not null access procedure(I : Annotation)) 
    is
-      type T is access procedure (I : ${mapType(t)});
-      type U is access procedure (I : Annotation);
-
-      function Cast is new Ada.Unchecked_Conversion(U, T);
-
       procedure Defer (arr : Static_Data_Array) is
       begin
          for I in arr'Range loop
@@ -572,6 +586,35 @@ ${
       This.Static_Data.Foreach (Defer'Access);
       This.New_Objects.Foreach(Cast(F));
    end Do_For_Static_Instances;
+
+   procedure Foreach_Dynamic_New_Instance
+     (This : access Pool_T;
+      F    : not null access procedure (I : Annotation)) is
+
+      procedure Make (This : Sub_Pool) is
+      begin
+         This.Dynamic.Foreach_Dynamic_New_Instance (F);
+      end Make;
+   begin
+      This.New_Objects.Foreach (Cast (F));
+      This.Sub_Pools.Foreach (Make'Access);
+   end Foreach_Dynamic_New_Instance;
+
+   overriding function First_Dynamic_New_Instance
+     (This : access Pool_T) return Annotation is
+
+      Rval : Annotation;
+   begin
+      if This.New_Objects.Is_Empty then
+         for I in 1 .. This.Sub_Pools.Length loop
+            Rval := This.Sub_Pools.Element(I).Dynamic.First_Dynamic_New_Instance;
+            exit when null /= Rval;
+         end loop;
+         return Rval;
+      else
+         return This.New_Objects.First_Element.To_Annotation;
+      end if;
+   end First_Dynamic_New_Instance;
 
    procedure Update_After_Compress
      (This     : access Pool_T;
