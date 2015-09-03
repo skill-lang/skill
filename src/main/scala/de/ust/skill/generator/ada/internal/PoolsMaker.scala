@@ -607,7 +607,7 @@ ${
    begin
       if This.New_Objects.Is_Empty then
          for I in 1 .. This.Sub_Pools.Length loop
-            Rval := This.Sub_Pools.Element(I).Dynamic.First_Dynamic_New_Instance;
+            Rval := This.Sub_Pools.Element(I-1).Dynamic.First_Dynamic_New_Instance;
             exit when null /= Rval;
          end loop;
          return Rval;

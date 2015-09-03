@@ -65,7 +65,7 @@ ${
           // type conversions to super types
           var r = new StringBuilder
           var s = t.getSuperType
-          while (null != s) {
+          if (null != s) {
             r ++= s"""
    function To_${name(s)} (This : access ${name(t)}_T'Class) return ${name(s)} is
       type T is access all ${name(t)}_T;
@@ -127,7 +127,7 @@ ${
 ${
           (for (f ← t.getFields)
             yield s"""
-   function Get_${name(f)} (This : access ${name(t)}_T'Class) return ${mapType(f.getType)}
+   function Get_${name(f)} (This : not null access ${name(t)}_T'Class) return ${mapType(f.getType)}
    is
       use Interfaces;
    begin
@@ -137,7 +137,7 @@ ${
           };
    end Get_${name(f)};
 
-   procedure Set_${name(f)} (This : access ${name(t)}_T'Class; V : ${mapType(f.getType)})
+   procedure Set_${name(f)} (This : not null access ${name(t)}_T'Class; V : ${mapType(f.getType)})
    is
    begin
       ${

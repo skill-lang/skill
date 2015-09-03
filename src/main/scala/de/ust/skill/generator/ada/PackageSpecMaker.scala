@@ -47,7 +47,7 @@ ${
         // type conversions to super types
         var r = new StringBuilder
         var s = t.getSuperType
-        while (null != s) {
+        if (null != s) {
           r ++= s"""
    function To_${name(s)} (This : access ${name(t)}_T'Class) return ${name(s)};
    pragma Inline_Always (To_${name(s)});
@@ -87,10 +87,10 @@ ${
 ${
         (for (f ← t.getFields)
           yield s"""${comment(f)}
-   function Get_${name(f)} (This : access ${name(t)}_T'Class) return ${mapType(f.getType)};
+   function Get_${name(f)} (This : not null access ${name(t)}_T'Class) return ${mapType(f.getType)};
    pragma Inline_Always (Get_${name(f)});
 ${comment(f)}
-   procedure Set_${name(f)} (This : access ${name(t)}_T'Class; V : ${mapType(f.getType)});
+   procedure Set_${name(f)} (This : not null access ${name(t)}_T'Class; V : ${mapType(f.getType)});
    pragma Inline_Always (Set_${name(f)});
 ${
           f.getType match {

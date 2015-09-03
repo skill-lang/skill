@@ -444,20 +444,18 @@ ${readBlock(t, f)}
       if C.all in Skill.Internal.Parts.Simple_Chunk then
          Low  := Natural(Skill.Internal.Parts.Simple_Chunk(C.all).BPO);
          High := Low + Natural(C.Count);
-      else${
-          // we have to use the offset of the pool
-          if (tIsBaseType) """
-         Low  := 1;
-         High := This.Owner.Size;"""
-          else """
-         if This.Owner.Size > 0 then
-            -- TODO not correct for appends !!
-            Low := Natural (This.Owner.Blocks.Last_Element.BPO) + 1;
-         else
-            Low := 1;
-         end if;
-         High := Low + This.Owner.Size - 1;"""
-        }
+      else
+         declare
+            use type Skill.Types.Annotation;
+            Next : Skill.Types.Annotation := This.Owner.Dynamic.First_Dynamic_New_Instance;
+         begin
+            if null /= Next then
+               Low := Next.Skill_ID;
+            else 
+               Low  := 1;
+            end if;
+         end;
+         High := Low + This.Owner.Size - 1;
       end if;
 
       for I in Low .. High loop
