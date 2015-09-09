@@ -94,6 +94,11 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
        ).mkString
      }) return ${mapType(t)};
 
+   -- create a boxed instance with default values;
+   -- only useful in reflective applications
+   overriding
+   function Make_Boxed_Instance (This : access Pool_T) return Box;
+
    ----------------------
    -- internal methods --
    ----------------------
@@ -296,6 +301,12 @@ package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_
       This.New_Objects.Append (R);
       return R;
    end Make;
+
+   overriding
+   function Make_Boxed_Instance (This : access Pool_T) return Box is
+   begin
+      return Boxed (This.Make);
+   end;
 
    ----------------------
    -- internal methods --
