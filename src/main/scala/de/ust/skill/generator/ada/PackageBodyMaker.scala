@@ -126,7 +126,7 @@ ${
           (
             for (f ← t.getAllFields if !f.isConstant) yield s"""
       if F.all in Standard.${PackagePrefix}.Known_Field_${fieldName(f.getDeclaredIn, f)}.Known_Field_${fieldName(f.getDeclaredIn, f)}_T then
-         This.${name(f)} := ${unboxCall(f.getType)};
+         This.${name(f)} := ${unboxCall(f.getType)} (V);
          return;
       end if;"""
           ).mkString
