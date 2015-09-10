@@ -134,7 +134,15 @@ class Main extends FakeMain
   /**
    * creates call to right "unboxed"-function
    */
-  protected def unboxCall(t : Type) : String = ???
+  protected def unboxCall(t : Type) : String = t match {
+    case t : GroundType              ⇒ s"Standard.Skill.Field_Types.Builtin.${t.getName.capital}_Type_P.Unboxed"
+    case t : ConstantLengthArrayType ⇒ "Standard.Skill.Field_Types.Builtin.Const_Arrays_P.Unboxed"
+    case t : VariableLengthArrayType ⇒ "Standard.Skill.Field_Types.Builtin.Var_Arrays_P.Unboxed"
+    case t : ListType                ⇒ "Standard.Skill.Field_Types.Builtin.List_Type_P.Unboxed"
+    case t : SetType                 ⇒ "Standard.Skill.Field_Types.Builtin.Set_Type_P.Unboxed"
+    case t : MapType                 ⇒ "Standard.Skill.Field_Types.Builtin.Map_Type_P.Unboxed"
+    case t                           ⇒ s"$poolsPackage.${name(t)}_P.Unboxed"
+  }
 
   /**
    * Gets all super types of a given type.

@@ -121,9 +121,21 @@ ${
    procedure Reflective_Set
      (This : access ${name(t)}_T;
       F : Skill.Field_Declarations.Field_Declaration;
-      V : Skill.Types.Box) is null;
+      V : Skill.Types.Box) is
+   begin${
+          (
+            for (f ← t.getAllFields if !f.isConstant) yield s"""
+      if F.all in Standard.${PackagePrefix}.Known_Field_${fieldName(f.getDeclaredIn, f)}.Known_Field_${fieldName(f.getDeclaredIn, f)}_T then
+         This.${name(f)} := ${unboxCall(f.getType)};
+         return;
+      end if;"""
+          ).mkString
+        }
 
-   -- Age fields
+      This.To_Annotation.Reflective_Set (F, V);
+   end Reflective_Set;
+
+   -- ${name(t)} fields
 ${
           (for (f ← t.getFields)
             yield s"""
