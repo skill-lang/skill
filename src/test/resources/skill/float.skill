@@ -1,0 +1,21 @@
+#! floats
+
+/** check some float values. */
+@singleton
+FloatTest {
+  f32 zero;
+  f32 minusZero;
+  f32 two;
+  f32 pi;
+  f32 NaN;
+}
+
+/** check some double values. */
+@singleton
+DoubleTest {
+  f64 zero;
+  f64 minusZero;
+  f64 two;
+  f64 pi;
+  f64 NaN;
+}

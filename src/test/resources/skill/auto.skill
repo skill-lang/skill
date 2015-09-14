@@ -1,0 +1,36 @@
+#! auto
+# Auto compilation and structural correctness test
+
+/**
+ * All fields of this type are auto.
+ *
+ * @author Timm Felden
+ */
+NoSerializedData {
+  auto v64 age;
+  auto string name;
+  auto NoSerializedData someReference;
+  auto map<string, string> someMap;
+  auto list<i32> someIntegersInAList;
+  auto bool seen;
+}
+
+/**
+ * Check subtyping; use single fields only,
+ * because otherwise field IDs are underspecified
+ */
+A {
+  auto A a;
+}
+
+B : A {
+  auto B b;
+}
+
+C : B {
+  auto C c;
+}
+
+D : B {
+  auto D d;
+}

@@ -14,6 +14,7 @@ object KnownGenerators {
     classOf[doxygen.Main],
     classOf[java.Main],
     classOf[scala.Main],
+    classOf[skill.Main],
     classOf[statistics.Main]
   )
 }
