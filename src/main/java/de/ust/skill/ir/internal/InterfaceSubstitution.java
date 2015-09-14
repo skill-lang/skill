@@ -12,6 +12,7 @@ import de.ust.skill.ir.ParseException;
 import de.ust.skill.ir.Restriction;
 import de.ust.skill.ir.Type;
 import de.ust.skill.ir.TypeContext;
+import de.ust.skill.ir.UserType;
 
 /**
  * Substitutes interfaces.
@@ -60,6 +61,51 @@ public class InterfaceSubstitution extends Substitution {
             return ((ContainerType) target).substituteBase(tc, this);
         }
         return tc.get(target.getSkillName());
+    }
+
+    @Override
+    public void initialize(TypeContext fromTC, TypeContext tc, UserType d) throws ParseException {
+        UserType t = (UserType) fromTC.types.get(d.getSkillName());
+
+        // collect fields from super interfaces
+        List<Field> fields = TypeContext.substituteFields(this, tc, t.getFields());
+        for (InterfaceType i : t.getSuperInterfaces())
+            addFieldsRecursive(tc, fields, i);
+
+        UserType superType = findSuperType(t);
+
+        d.initialize((UserType) substitute(tc, superType), Collections.emptyList(), fields);
+    }
+
+    private static UserType findSuperType(UserType t) {
+        UserType rval = t.getSuperType();
+        // search interfaces
+        if (null == rval)
+            for (InterfaceType i : t.getSuperInterfaces())
+                if (null == rval)
+                    rval = findSuperType(i);
+
+        return rval;
+    }
+
+    private static UserType findSuperType(InterfaceType t) {
+        UserType rval = null;
+        if (t.getSuperType() instanceof UserType)
+            rval = (UserType) t.getSuperType();
+
+        // search interfaces
+        if (null == rval)
+            for (InterfaceType i : t.getSuperInterfaces())
+                if (null == rval)
+                    rval = findSuperType(i);
+
+        return rval;
+    }
+
+    private void addFieldsRecursive(TypeContext tc, List<Field> fields, InterfaceType i) throws ParseException {
+        fields.addAll(TypeContext.substituteFields(this, tc, i.getFields()));
+        for (InterfaceType sub : i.getSuperInterfaces())
+            addFieldsRecursive(tc, fields, sub);
     }
 
 }
