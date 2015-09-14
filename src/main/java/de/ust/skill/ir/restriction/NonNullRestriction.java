@@ -11,12 +11,12 @@ final public class NonNullRestriction extends Restriction {
 
 	@Override
 	public String getName() {
-		return "nullable";
+        return "nonnull";
 	}
 
 	@Override
 	public String toString() {
-		return "@nullable";
+        return "@nonnull";
 	}
 
 }

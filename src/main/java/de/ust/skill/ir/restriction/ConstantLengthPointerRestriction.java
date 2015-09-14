@@ -17,7 +17,7 @@ final public class ConstantLengthPointerRestriction extends Restriction {
 
 	@Override
 	public String toString() {
-		throw new NoSuchMethodError("not yet implemented");
+        return "@ConstantLengthPointer";
 	}
 
 }

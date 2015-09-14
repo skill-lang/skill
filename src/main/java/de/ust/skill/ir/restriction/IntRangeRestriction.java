@@ -36,4 +36,9 @@ final public class IntRangeRestriction extends RangeRestriction {
 	public long getHigh() {
 		return high;
 	}
+
+    @Override
+    public String toString() {
+        return "@range(" + low + ", " + high + ")";
+    }
 }
