@@ -88,6 +88,27 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
     }
     // step 2: closure over super-interface relation
     var typesVisited = Set[Declaration]()
+    def moreSpecific(l : UserType, r : UserType) : UserType = {
+      // find the more specific type
+
+      // is l a super type of r? 
+      var t = parent(r)
+      while (null != t) {
+        if (t == l)
+          return r
+        t = parent.get(t).getOrElse(null)
+      }
+
+      // is r a super type of l? 
+      t = parent(l)
+      while (null != t) {
+        if (t == r)
+          return l
+        t = parent.get(t).getOrElse(null)
+      }
+
+      throw new Exception();
+    }
     def recursiveSuperType(d : Declaration) : UserType = {
       typesVisited += d
       var r = parent.get(d).getOrElse(null)
@@ -100,8 +121,12 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
               )
           ) {
             var t = recursiveSuperType(definitionNames(s))
-            if (null != r && null != t && t != r)
-              throw ParseException(s"Type ${d.name} has at least two regular super types: ${r.name} and ${t.name}")
+            if (null != r && null != t && t != r) try {
+              r = moreSpecific(t, r)
+            } catch {
+              case e : Exception ⇒
+                throw ParseException(s"Type ${d.name} has at least two regular super types: ${r.name} and ${t.name}")
+            }
             else if (null == r && t != null)
               r = t
           }
@@ -112,8 +137,12 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
               && !typesVisited(definitionNames(s))
           ) {
             var t = recursiveSuperType(definitionNames(s))
-            if (null != r && null != t && t != r)
-              throw ParseException(s"Type ${d.name} has at least two regular super types: ${r.name} and ${t.name}")
+            if (null != r && null != t && t != r) try {
+              r = moreSpecific(t, r)
+            } catch {
+              case e : Exception ⇒
+                throw ParseException(s"Type ${d.name} has at least two regular super types: ${r.name} and ${t.name}")
+            }
             else if (null == r && t != null)
               r = t
           }
@@ -128,6 +157,9 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
 
       // visit types
       val r = recursiveSuperType(t)
+
+      if (parent.contains(t) && r != parent(t))
+        throw new Error(s"$r!=${parent(t)}");
 
       // set direct super type, if any
       if (null != r)
@@ -167,7 +199,10 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
     for (d ← interfaces) {
       val is = d.superTypes.map(definitionNames(_)).collect { case d : InterfaceDefinition ⇒ d }
       superInterfaces(d) = is
-      if (d.superTypes.size != is.size + parent.get(d).size)
+      // this check is so complicated, because the super type can be inherited implicitly
+      if (d.superTypes.size != is.size + parent.get(d).map {
+        x ⇒ if (d.superTypes.contains(x.name)) 1 else 0
+      }.getOrElse(0))
         throw ParseException(s"Type ${d.name} inherits something thats neither a user type nor an interface.")
     }
 
