@@ -6,7 +6,7 @@
 package de.ust.skill.generator.java
 
 import java.util.Date
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions._
 import de.ust.skill.generator.java.api.SkillFileMaker
 import de.ust.skill.generator.java.internal.AccessMaker
 import de.ust.skill.generator.java.internal.FieldDeclarationMaker
@@ -43,6 +43,7 @@ class Main extends FakeMain
     with StateMaker
     with SkillFileMaker
     with TypesMaker
+    with InterfacesMaker
     with DependenciesMaker {
 
   lineLength = 120

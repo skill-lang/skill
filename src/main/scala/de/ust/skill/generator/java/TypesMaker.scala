@@ -41,6 +41,10 @@ ${
 }public class ${name(t)} extends ${
         if (null != t.getSuperType()) { name(t.getSuperType) }
         else { "SkillObject" }
+      }${
+  if(t.getSuperInterfaces.isEmpty) ""
+  else
+    t.getSuperInterfaces.map(name(_)).mkString(" implements ", ", ", "")
       } {
 
     /**
@@ -69,15 +73,23 @@ ${
      */
     public ${name(t)}(long skillID${appendConstructorArguments(t)}) {
         super(skillID);
-        ${relevantFields.map{f ⇒ s"this.${name(f)} = ${name(f)};"}.mkString("\n    ")}
+        ${relevantFields.map{f ⇒ s"this.${name(f)} = ${name(f)};"}.mkString("\n        ")}
     }
 """)
 	}
 
+  var implementedFields = t.getFields.toSeq
+  def addFields(i : InterfaceType) {
+    implementedFields ++= i.getFields.toSeq
+    for(t <- i.getSuperInterfaces)
+      addFields(t)
+  }
+  t.getSuperInterfaces.foreach(addFields)
+
 	///////////////////////
 	// getters & setters //
 	///////////////////////
-	for(f <- t.getFields if !f.isInstanceOf[View]){
+	for(f <- implementedFields if !f.isInstanceOf[View]){
       def makeField:String = {
 		if(f.isIgnored)
 		  ""
@@ -149,7 +161,7 @@ ${
 
     // generic get
     locally{
-      val fields = t.getFields.filterNot(_.isIgnored)
+      val fields = implementedFields.filterNot(_.isIgnored)
       if(!fields.isEmpty)
         out.write(s"""
     /**
@@ -217,7 +229,7 @@ ${
             super(skillID);
             this.τPool = τPool;
         }
-        
+
         @Override
         public StoragePool<?, ?> τPool() {
           return τPool;

@@ -5,7 +5,7 @@
 \*                                                                            */
 package de.ust.skill.generator.java.internal
 
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions._
 import de.ust.skill.generator.java.GeneralOutputMaker
 import de.ust.skill.ir.restriction.SingletonRestriction
 import de.ust.skill.ir.GroundType
