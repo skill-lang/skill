@@ -6,7 +6,7 @@
 package de.ust.skill.generator.ada
 
 import java.util.Date
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions._
 import scala.collection.mutable.MutableList
 import de.ust.skill.generator.ada.api.APIBodyMaker
 import de.ust.skill.generator.ada.api.APISpecMaker
