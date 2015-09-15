@@ -75,7 +75,7 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
     }
 
     // build and check parent relation
-    // TODO should also work with multiple steps of interface inheritance
+    // step 1: invert sub-type relation
     for (
       (pn, subs) ← subtypes;
       p ← definitionNames.get(pn);
@@ -85,6 +85,36 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
       if (parent.contains(s))
         throw ParseException(s"Type ${s.name} has at least two regular super types: ${parent(s).name} and ${p.name}")
       parent(s) = p.asInstanceOf[UserType]
+    }
+    // step 2: closure over super-interface relation
+    def recursiveSuperType(d : Declaration) : UserType = {
+      var r = parent.get(d).getOrElse(null)
+      d match {
+        case i : UserType ⇒
+          for (s ← i.superTypes if s != "annotation" && definitionNames(s).isInstanceOf[InterfaceDefinition]) {
+            var t = recursiveSuperType(definitionNames(s))
+            if (null != r && null != t && t != r)
+              throw ParseException(s"Type ${d.name} has at least two regular super types: ${r.name} and ${t.name}")
+            else if (null == r && t != null)
+              r = t
+          }
+        case i : InterfaceDefinition ⇒
+          for (s ← i.superTypes if s != "annotation" && definitionNames(s).isInstanceOf[InterfaceDefinition]) {
+            var t = recursiveSuperType(definitionNames(s))
+            if (null != r && null != t && t != r)
+              throw ParseException(s"Type ${d.name} has at least two regular super types: ${r.name} and ${t.name}")
+            else if (null == r && t != null)
+              r = t
+          }
+
+        case _ ⇒ ??? // can not happen?
+      }
+      r
+    }
+    for (t ← userTypes) {
+      val r = recursiveSuperType(t)
+      if (null != r)
+        parent(t) = r
     }
 
     // build base type relation
@@ -111,7 +141,10 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
     for (d ← userTypes) {
       val is = d.superTypes.map(definitionNames(_)).collect { case d : InterfaceDefinition ⇒ d }
       superInterfaces(d) = is
-      if (d.superTypes.size != is.size + parent.get(d).size)
+      // this check is so complicated, because the super type can be inherited implicitly
+      if (d.superTypes.size != is.size + parent.get(d).map {
+        x ⇒ if (d.superTypes.contains(x.name)) 1 else 0
+      }.getOrElse(0))
         throw ParseException(s"Type ${d.name} inherits something thats neither a user type nor an interface.")
     }
     for (d ← interfaces) {
@@ -121,7 +154,7 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
         throw ParseException(s"Type ${d.name} inherits something thats neither a user type nor an interface.")
     }
 
-    (defs, baseType, parent, superInterfaces)
+    (baseType, parent, superInterfaces)
   }
 
 }

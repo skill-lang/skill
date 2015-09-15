@@ -42,13 +42,12 @@ public class Field {
      * @param name
      * @param value
      * @throws ParseException
-     *             if the argument type is not an integer or if illegal hints
-     *             are used
+     *             if the argument type is not an integer or if illegal hints are used
      */
     public Field(Type type, Name name, long value, Comment comment, List<Restriction> restrictions, List<Hint> hints)
             throws ParseException {
-        assert (null != type);
-        assert (null != name);
+        assert(null != type);
+        assert(null != name);
         if (!(type instanceof GroundType))
             throw new ParseException("Can not create a constant of non-integer type " + type);
         if (!((GroundType) type).isInteger())
@@ -76,8 +75,8 @@ public class Field {
      */
     public Field(Type type, Name name, boolean isAuto, Comment comment, List<Restriction> restrictions,
             Collection<Hint> hints) throws ParseException {
-        assert (null != type);
-        assert (null != name);
+        assert(null != type);
+        assert(null != name);
 
         isConstant = false;
         constantValue = 0;

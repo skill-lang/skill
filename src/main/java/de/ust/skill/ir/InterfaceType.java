@@ -138,12 +138,17 @@ final public class InterfaceType extends Declaration implements WithFields {
      *         in super types
      */
     public List<Field> getAllFields() {
-        if (superType instanceof UserType) {
-            List<Field> f = ((UserType) superType).getAllFields();
-            f.addAll(fields);
-            return f;
+        List<Field> rval = new ArrayList<>(fields);
+        if (superType instanceof UserType)
+            rval.addAll(((UserType) superType).getAllFields());
+
+        for (InterfaceType i : superInterfaces) {
+            List<Field> tmp = i.getAllFields();
+            tmp.removeAll(rval);
+            rval.addAll(tmp);
         }
-        return new ArrayList<>(fields);
+
+        return rval;
     }
 
     /**

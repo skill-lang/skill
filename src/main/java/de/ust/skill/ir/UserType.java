@@ -156,12 +156,17 @@ final public class UserType extends Declaration implements WithFields {
      */
     public List<Field> getAllFields() {
         assert isInitialized() : "you can not obtain fields of type " + name + " because it is not initialized";
-        if (null != superType) {
-            List<Field> f = superType.getAllFields();
-            f.addAll(fields);
-            return f;
+        List<Field> rval = new ArrayList<>(fields);
+        if (null != superType)
+            rval.addAll(superType.getAllFields());
+
+        for (InterfaceType i : interfaces) {
+            List<Field> tmp = i.getAllFields();
+            tmp.removeAll(rval);
+            rval.addAll(tmp);
         }
-        return new ArrayList<>(fields);
+
+        return rval;
     }
 
     /**

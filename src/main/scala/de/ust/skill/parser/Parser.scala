@@ -452,7 +452,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
   private def buildIR(defs : ArrayBuffer[Declaration]) : TypeContext = {
 
     // run the type checker to get information about the type hierarchy
-    val (_, baseType, parent, superInterfaces) = TypeCheck(defs)
+    val (baseType, parent, superInterfaces) = TypeCheck(defs)
 
     // skillname ⇀ definition
     val definitionNames = new HashMap[Name, Declaration];
