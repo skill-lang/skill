@@ -87,11 +87,18 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
       parent(s) = p.asInstanceOf[UserType]
     }
     // step 2: closure over super-interface relation
+    var typesVisited = Set[Declaration]()
     def recursiveSuperType(d : Declaration) : UserType = {
+      typesVisited += d
       var r = parent.get(d).getOrElse(null)
       d match {
         case i : UserType ⇒
-          for (s ← i.superTypes if s != "annotation" && definitionNames(s).isInstanceOf[InterfaceDefinition]) {
+          for (
+            s ← i.superTypes if s != "annotation"
+              && definitionNames(s).isInstanceOf[InterfaceDefinition]
+              && !typesVisited(definitionNames(s)
+              )
+          ) {
             var t = recursiveSuperType(definitionNames(s))
             if (null != r && null != t && t != r)
               throw ParseException(s"Type ${d.name} has at least two regular super types: ${r.name} and ${t.name}")
@@ -99,7 +106,11 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
               r = t
           }
         case i : InterfaceDefinition ⇒
-          for (s ← i.superTypes if s != "annotation" && definitionNames(s).isInstanceOf[InterfaceDefinition]) {
+          for (
+            s ← i.superTypes if s != "annotation"
+              && definitionNames(s).isInstanceOf[InterfaceDefinition]
+              && !typesVisited(definitionNames(s))
+          ) {
             var t = recursiveSuperType(definitionNames(s))
             if (null != r && null != t && t != r)
               throw ParseException(s"Type ${d.name} has at least two regular super types: ${r.name} and ${t.name}")
@@ -112,7 +123,13 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
       r
     }
     for (t ← userTypes) {
+      // reset visited types
+      typesVisited = Set[Declaration]()
+
+      // visit types
       val r = recursiveSuperType(t)
+
+      // set direct super type, if any
       if (null != r)
         parent(t) = r
     }
