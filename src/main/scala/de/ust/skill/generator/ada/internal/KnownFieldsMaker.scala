@@ -170,8 +170,8 @@ package body ${PackagePrefix}.Known_Field_$fn is
    is
       First : Natural;
       Last  : Natural;
-      Data  : Skill.Types.Annotation_Array    := Owner_Dyn (This)${if(tIsBaseType)""else".Base"}.Data;
-      Input : Skill.Streams.Reader.Sub_Stream := CE.Input;
+      Data  : constant Skill.Types.Annotation_Array    := Owner_Dyn (This)${if(tIsBaseType)""else".Base"}.Data;
+      Input : constant Skill.Streams.Reader.Sub_Stream := CE.Input;
    begin
       if CE.C.all in Skill.Internal.Parts.Simple_Chunk then
          First := Natural (CE.C.To_Simple.BPO);
@@ -200,8 +200,8 @@ ${readBlock(t, f)}
          Skill.Types.Uv64);
       pragma Inline_Always (Cast);
 
-      Rang   : Skill.Internal.Parts.Block   := This.Owner.Blocks.Last_Element;
-      Data   : Skill.Types.Annotation_Array := This.Owner.Base.Data;
+      Rang   : constant Skill.Internal.Parts.Block := This.Owner.Blocks.Last_Element;
+      Data   : constant Skill.Types.Annotation_Array := This.Owner.Base.Data;
       Result : Skill.Types.v64              := 0;
       Low    : constant Natural             := Natural (Rang.BPO);
       High   : constant Natural             := Natural (Rang.BPO + Rang.Count);
@@ -385,7 +385,7 @@ ${readBlock(t, f)}
 
           case fieldType : UserType ⇒ s"""$preludeData
         declare
-            Instance : ${mapType(f.getType)} := $dataAccessI.Get_${name(f)};
+            Instance : constant ${mapType(f.getType)} := $dataAccessI.Get_${name(f)};
             V : Skill.Types.Uv64;
          begin
             if null = Instance Then

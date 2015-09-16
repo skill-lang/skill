@@ -55,8 +55,6 @@ with Skill.Containers.Vectors;
 with Skill.Field_Declarations;
 with Skill.Field_Types.Builtin;
 with Skill.Field_Types.Builtin.String_Type_P;
-with Skill.Files;
-with Skill.Internal.File_Parsers;
 with Skill.Streams.Reader;
 with Skill.Streams.Writer;
 with Skill.Types;
@@ -270,7 +268,7 @@ package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_
       F_${name(f)} : ${mapType(f.getType)} := ${defaultValue(f)}"""
        ).mkString
      }) is
-      R : ${mapType(t)} := new ${mapType(t)}_T;
+      R : constant ${mapType(t)} := new ${mapType(t)}_T;
    begin
       R.Skill_ID := -1;${
        (
@@ -289,7 +287,7 @@ package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_
       F_${name(f)} : ${mapType(f.getType)} := ${defaultValue(f)}"""
        ).mkString
      }) return ${mapType(t)} is
-      R : ${mapType(t)} := new ${mapType(t)}_T;
+      R : constant ${mapType(t)} := new ${mapType(t)}_T;
    begin
       R.Skill_ID := -1;${
        (
