@@ -29,7 +29,6 @@ trait KnownFieldsMaker extends GeneralOutputMaker {
     val fn = fieldName(t, f)
 
     out.write(s"""
-with Skill.Files;
 with Skill.Field_Declarations;
 with Skill.Field_Types;
 with Skill.Streams.Writer;
@@ -101,9 +100,6 @@ end ${PackagePrefix}.Known_Field_$fn;
 with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 
-with Skill.Files;
-with Skill.Field_Declarations;
-with Skill.Field_Types;
 with Skill.Field_Types.Builtin;
 with Skill.Field_Types.Builtin.String_Type_P;
 with Skill.Internal.Parts;
@@ -124,8 +120,8 @@ package body ${PackagePrefix}.Known_Field_$fn is
    function Make
      (${
   if(f.isAuto())""
-  else"""
-      ID    : Natural;"""
+  else"""ID    : Natural;
+      """
 }T     : Skill.Field_Types.Field_Type;
       Owner : Skill.Field_Declarations.Owner_T)
       return Skill.Field_Declarations.Field_Declaration
@@ -436,8 +432,8 @@ ${readBlock(t, f)}
         (Skill.Types.v64,
          Skill.Types.Uv64);
 
-      Data : Skill.Types.Annotation_Array := This.Owner.Base.Data;
-      C    : Skill.Internal.Parts.Chunk   := This.Data_Chunks.Last_Element.C;
+      Data : constant Skill.Types.Annotation_Array := This.Owner.Base.Data;
+      C    : constant Skill.Internal.Parts.Chunk   := This.Data_Chunks.Last_Element.C;
       Low  : Natural;
       High : Natural;
    begin
@@ -447,7 +443,7 @@ ${readBlock(t, f)}
       else
          declare
             use type Skill.Types.Annotation;
-            Next : Skill.Types.Annotation := This.Owner.Dynamic.First_Dynamic_New_Instance;
+            Next : constant Skill.Types.Annotation := This.Owner.Dynamic.First_Dynamic_New_Instance;
          begin
             if null /= Next then
                Low := Next.Skill_ID;

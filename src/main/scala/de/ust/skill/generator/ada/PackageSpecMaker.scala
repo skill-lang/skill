@@ -74,12 +74,12 @@ ${
 
    -- reflective getter
    function Reflective_Get
-     (This : access ${name(t)}_T;
+     (This : not null access ${name(t)}_T;
       F : Skill.Field_Declarations.Field_Declaration) return Skill.Types.Box;
 
    -- reflective setter
    procedure Reflective_Set
-     (This : access ${name(t)}_T;
+     (This : not null access ${name(t)}_T;
       F : Skill.Field_Declarations.Field_Declaration;
       V : Skill.Types.Box);
 

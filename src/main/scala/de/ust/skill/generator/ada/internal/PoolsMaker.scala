@@ -234,9 +234,7 @@ with Skill.Field_Declarations;
 with Skill.Field_Types;
 with Skill.Internal.Parts;
 with Skill.Streams;
-with Skill.String_Pools;
 
-with $PackagePrefix.Api;
 with $PackagePrefix.Internal_Skill_Names;${
       (for (f ← t.getFields) yield s"""
 with $PackagePrefix.Known_Field_${escaped(t.getName.ada())}_${escaped(f.getName.ada())};""").mkString

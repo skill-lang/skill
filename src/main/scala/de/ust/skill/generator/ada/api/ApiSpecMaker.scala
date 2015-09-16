@@ -49,7 +49,7 @@ ${
         yield s"""
    package ${name(t)}_Pool_P renames ${poolsPackage}.${name(t)}_P;
    subtype ${name(t)}_Pool is ${name(t)}_Pool_P.Pool;
-   function ${name(t)}s (This : access File_T) return ${name(t)}_Pool;
+   function ${name(t)}s (This : not null access File_T) return ${name(t)}_Pool;
    pragma Inline (${name(t)}s);
 """).mkString
     }

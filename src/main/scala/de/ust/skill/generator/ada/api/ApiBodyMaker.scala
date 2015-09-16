@@ -228,7 +228,7 @@ ${
    end Close;
 ${
       (for (t ← IR) yield s"""
-   function ${name(t)}s (This : access File_T) return ${name(t)}_Pool is
+   function ${name(t)}s (This : not null access File_T) return ${name(t)}_Pool is
    begin
       return This.${name(t)}s;
    end ${name(t)}s;
