@@ -9,7 +9,7 @@ AbstractNode {
 }
 
 /** The property of being a colored Node */
-interface ColoredNode : AbstractNode with Colored {
+interface ColoredNode : AbstractNode with Colored with Marker {
 }
 
 /** a graph of colored nodes */
@@ -25,4 +25,11 @@ interface Colored {
 ColorHolder {
   Colored anAnnotation;
   ColoredNode anAbstractNode;
+}
+
+/**
+ * a marker interface intended to check propper multiple inheritance
+ * translation
+ */
+interface Marker {
 }
