@@ -23,6 +23,7 @@ import de.ust.skill.ir.restriction.NonNullRestriction
 import de.ust.skill.ir.View
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.SingleBaseTypeContainer
+import de.ust.skill.ir.InterfaceType
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -33,6 +34,11 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
 
       val nameT = mapType(t)
       val nameF = s"KnownField_${name(t)}_${name(f)}"
+
+      //      val fieldTypeBoxed = if (f.getType.isInstanceOf[InterfaceType])
+      //        mapType(f.getType.asInstanceOf[InterfaceType].getSuperType, true)
+      //      else
+      //        mapType(f.getType, true)
 
       // casting access to data array using index i
       val dataAccessI = if (null == t.getSuperType) "data[i]" else s"((${mapType(t)})data[i])"
@@ -88,6 +94,10 @@ ${
       }${
         // mark ignored fields as ignored; read function is inherited
         if (f.isIgnored()) ", IgnoredField"
+        else ""
+      }${
+        // mark interface fields
+        if (f.getType.isInstanceOf[InterfaceType]) ", InterfaceField"
         else ""
       } {
 
@@ -151,7 +161,7 @@ ${
             """
         return 0; // this field is constant"""
           else """
-        final Block range = owner.lastBlock();""" + {
+        final Block range = owner.lastBlock();"""+{
             // this prelude is common to most cases
             def preludeData : String =
               s"""final ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
@@ -160,19 +170,19 @@ ${
         final int high = null == range ? data.length : (int) (range.bpo + range.count);
         for (; i < high; i++) {"""
 
-            f.getType match {
+            def offsetCode(fieldType : Type) : String = fieldType match {
 
               // read next element
               case fieldType : GroundType ⇒ fieldType.getSkillName match {
 
                 case "annotation" ⇒ s"""
-        final Annotation t = (Annotation) type;
+        final Annotation t = Annotation.cast(type);
         $preludeData
-            SkillObject v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
+            ${mapType(f.getType)} v = $dataAccessI.get${escaped(f.getName.capital)}();
             if(null==v)
                 result += 2;
             else
-                result += t.singleOffset(v);
+                result += t.singleOffset(v${if (f.getType.isInstanceOf[InterfaceType]) ".toAnnotation()" else ""});
         }
         return result;"""
 
@@ -257,7 +267,10 @@ ${
         final FieldType keyType = t.keyType;
         final FieldType valueType = t.valueType;
         $preludeData
-            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
+            final ${mapType(f.getType)} v = (${
+                if (tIsBaseType) ""
+                else s"(${mapType(t)})"
+              }data[i]).get${escaped(f.getName.capital)}();
             if(null==v)
                 result++;
             else {
@@ -275,7 +288,7 @@ ${
                 result += 1;
                 continue;
             }
-            long v = instance.getSkillID();
+            long v = instance${if (f.getType.isInstanceOf[InterfaceType]) ".self()" else ""}.getSkillID();
 
             if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
                 result += 1;
@@ -298,9 +311,14 @@ ${
             }
         }
         return result;"""
+
+              case fieldType : InterfaceType ⇒ offsetCode(fieldType.getSuperType)
+
               case _ ⇒ s"""
         throw new NoSuchMethodError();"""
             }
+
+            offsetCode(f.getType)
           }
         }
     }

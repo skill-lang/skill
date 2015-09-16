@@ -6,19 +6,21 @@
 package de.ust.skill.generator.java.internal
 
 import scala.collection.JavaConversions._
+
 import de.ust.skill.generator.java.GeneralOutputMaker
-import de.ust.skill.ir.restriction.SingletonRestriction
-import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.SetType
+import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.InterfaceType
 import de.ust.skill.ir.ListType
-import de.ust.skill.ir.ConstantLengthArrayType
-import de.ust.skill.ir.Type
 import de.ust.skill.ir.MapType
-import de.ust.skill.ir.restriction.IntRangeRestriction
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.UserType
+import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.restriction.FloatRangeRestriction
+import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.NonNullRestriction
 
 trait AccessMaker extends GeneralOutputMaker {
@@ -191,6 +193,7 @@ ${
     /**
      * @return a new $nameT instance with default field values
      */
+    @Override
     public $typeT make() {
         $typeT rval = new $typeT();
         add(rval);
@@ -232,6 +235,13 @@ ${
         }""").mkString
       }
     }
+
+    /**
+     * punch a hole into the java type system :)
+     */
+    private static <T, U> FieldType<T> cast(FieldType<U> f) {
+        return (FieldType<T>) f;
+    }
 }
 """)
 
@@ -253,17 +263,33 @@ ${
       case "f64"        ⇒ "F64.get()"
       case "string"     ⇒ "string"
 
-      case s            ⇒ s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
+      case s ⇒ t match {
+        case t : InterfaceType ⇒ s"cast(${mapGroundType(t.getSuperType)})"
+        case _                 ⇒ s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
+      }
     }
 
     f.getType match {
-      case t : GroundType              ⇒ mapGroundType(t)
-      case t : ConstantLengthArrayType ⇒ s"new ConstantLengthArray<>(${t.getLength}, ${mapGroundType(t.getBaseType)})"
-      case t : VariableLengthArrayType ⇒ s"new VariableLengthArray<>(${mapGroundType(t.getBaseType)})"
-      case t : ListType                ⇒ s"new ListType<>(${mapGroundType(t.getBaseType)})"
-      case t : SetType                 ⇒ s"new SetType<>(${mapGroundType(t.getBaseType)})"
-      case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"new MapType<>($k, $v)")
-      case t : Declaration             ⇒ s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
+      case t : GroundType ⇒ mapGroundType(t)
+      case t : ConstantLengthArrayType ⇒
+        s"new ConstantLengthArray<>(${t.getLength}, ${mapGroundType(t.getBaseType)})"
+
+      case t : VariableLengthArrayType ⇒
+        s"new VariableLengthArray<>(${mapGroundType(t.getBaseType)})"
+
+      case t : ListType ⇒
+        s"new ListType<>(${mapGroundType(t.getBaseType)})"
+
+      case t : SetType ⇒
+        s"new SetType<>(${mapGroundType(t.getBaseType)})"
+
+      case t : MapType ⇒
+        t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"new MapType<>($k, $v)")
+
+      case t : InterfaceType ⇒ s"cast(${mapGroundType(t.getSuperType)})"
+      case t : Declaration ⇒
+        s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
+
     }
   }
 

@@ -216,6 +216,15 @@ ${
       else s"""+", const ${f.getName()}: ${f.constantValue()}""""
       ).mkString(""""(this: "+this""", "", """+")"""")
 
+      // fix toAnnotation
+      if(!t.getSuperInterfaces.isEmpty())
+        out.write("""
+    @Override
+    public SkillObject toAnnotation() {
+        return this;
+    }
+""")
+
       out.write(s"""
     /**
      * Generic sub types of this type.

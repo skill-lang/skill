@@ -42,7 +42,7 @@ ${
         else
           t.getSuperInterfaces.map(name(_)).mkString("extends ", ", ", "")
       } {${
-        if(t.getSuperType.isInstanceOf[UserType])
+        if (t.getSuperType.isInstanceOf[UserType])
           s"""
 
     /**
@@ -53,6 +53,20 @@ ${
     }
 """
         else ""
+      }${
+        s"""
+
+    /**
+     * @return this as an annotation, because all instances of skill interfaces are at least skill objects
+     */${
+          if (!t.getSuperInterfaces.isEmpty()) """
+    @Override"""
+          else ""
+        }
+    public default SkillObject toAnnotation() {
+        return (SkillObject) this;
+    }
+"""
       }
 ${
         // collect visible fields
