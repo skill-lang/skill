@@ -67,13 +67,19 @@ ${
         // allocate correct pool type
         switch (name) {${
       (for (t ← IR)
-        yield s"""
+        yield if (null == t.getSuperType) s"""
         case "${t.getSkillName}":
-            p = (StoragePool<T, B>) new ${name(t)}Access(types.size()${
-        if (null == t.getSuperType) ""
-        else s""", (${name(t.getSuperType)}Access)(poolByName.get("${t.getSuperType.getSkillName}"))"""
-      });
+            p = (StoragePool<T, B>) new ${name(t)}Access(types.size());
             break;
+"""
+        else  s"""
+        case "${t.getSkillName}": {
+            ${name(t.getSuperType)}Access parent = (${name(t.getSuperType)}Access)(poolByName.get("${t.getSuperType.getSkillName}"));
+            if (null == parent)
+                throw new ParseException(in, blockCounter, null, "file lacks expected super type ${name(t)}");
+            p = (StoragePool<T, B>) new ${name(t)}Access(types.size(), parent);
+            break;
+        }
 """).mkString("\n")
     }
         default:
