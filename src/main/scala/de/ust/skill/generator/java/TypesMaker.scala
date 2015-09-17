@@ -218,9 +218,9 @@ ${
 
       // fix toAnnotation
       if(!t.getSuperInterfaces.isEmpty())
-        out.write("""
+        out.write(s"""
     @Override
-    public SkillObject toAnnotation() {
+    public ${name(t)} self() {
         return this;
     }
 """)

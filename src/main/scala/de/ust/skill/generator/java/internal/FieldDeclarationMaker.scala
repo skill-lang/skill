@@ -141,6 +141,9 @@ ${
             ${
               // read next element
               f.getType match {
+                case t : InterfaceType ⇒
+                  s"""is.next().set${escaped(f.getName.capital)}((${mapType(f.getType)})target.getByID(in.v64()));"""
+
                 case t : GroundType ⇒ t.getSkillName match {
                   case "annotation" ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
                   case "string"     ⇒ s"""is.next().set${escaped(f.getName.capital)}(sp.get(in.v64()));"""
@@ -182,7 +185,7 @@ ${
             if(null==v)
                 result += 2;
             else
-                result += t.singleOffset(v${if (f.getType.isInstanceOf[InterfaceType]) ".toAnnotation()" else ""});
+                result += t.singleOffset(v${if (f.getType.isInstanceOf[InterfaceType]) ".self()" else ""});
         }
         return result;"""
 

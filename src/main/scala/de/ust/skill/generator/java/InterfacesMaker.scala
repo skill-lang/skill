@@ -41,33 +41,18 @@ ${
         if (t.getSuperInterfaces.isEmpty) ""
         else
           t.getSuperInterfaces.map(name(_)).mkString("extends ", ", ", "")
-      } {${
-        if (t.getSuperType.isInstanceOf[UserType])
-          s"""
+      } {
 
     /**
      * cast to concrete type
-     */
+     */${
+        if (!t.getSuperInterfaces.isEmpty()) """
+    @Override"""
+        else ""
+      }
     public default ${mapType(t.getSuperType)} self() {
         return (${mapType(t.getSuperType)}) this;
     }
-"""
-        else ""
-      }${
-        s"""
-
-    /**
-     * @return this as an annotation, because all instances of skill interfaces are at least skill objects
-     */${
-          if (!t.getSuperInterfaces.isEmpty()) """
-    @Override"""
-          else ""
-        }
-    public default SkillObject toAnnotation() {
-        return (SkillObject) this;
-    }
-"""
-      }
 ${
         // collect visible fields
         var visibleFields : HashSet[Field] = t.getFields.filterNot(_.isInstanceOf[View]).to;
