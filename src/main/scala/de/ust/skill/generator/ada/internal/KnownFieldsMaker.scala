@@ -432,29 +432,14 @@ ${readBlock(t, f)}
         (Skill.Types.v64,
          Skill.Types.Uv64);
 
-      Data : constant Skill.Types.Annotation_Array := This.Owner.Base.Data;
-      C    : constant Skill.Internal.Parts.Chunk   := This.Data_Chunks.Last_Element.C;
-      Low  : Natural;
-      High : Natural;
+      Rang   : constant Skill.Internal.Parts.Block := This.Owner.Blocks.Last_Element;
+      Data   : constant Skill.Types.Annotation_Array := This.Owner.Base.Data;
+      Result : Skill.Types.v64              := 0;
+      Low    : constant Natural             := Natural (Rang.BPO);
+      High   : constant Natural             := Natural (Rang.BPO + Rang.Count);
    begin
-      if C.all in Skill.Internal.Parts.Simple_Chunk then
-         Low  := Natural(Skill.Internal.Parts.Simple_Chunk(C.all).BPO);
-         High := Low + Natural(C.Count);
-      else
-         declare
-            use type Skill.Types.Annotation;
-            Next : constant Skill.Types.Annotation := This.Owner.Dynamic.First_Dynamic_New_Instance;
-         begin
-            if null /= Next then
-               Low := Next.Skill_ID;
-            else 
-               Low  := 1;
-            end if;
-         end;
-         High := Low + This.Owner.Size - 1;
-      end if;
 
-      for I in Low .. High loop
+      for I in Low + 1 .. High loop
          ${
           // read next element
           f.getType match {
