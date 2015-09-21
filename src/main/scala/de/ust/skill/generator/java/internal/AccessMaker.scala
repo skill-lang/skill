@@ -239,7 +239,7 @@ ${
     /**
      * punch a hole into the java type system :)
      */
-    private static <T, U> FieldType<T> cast(FieldType<U> f) {
+    static <T, U> FieldType<T> cast(FieldType<U> f) {
         return (FieldType<T>) f;
     }
 }

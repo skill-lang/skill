@@ -131,6 +131,9 @@ ${
               f.getType match {
                 case t : GroundType if "string".equals(t.getSkillName) ⇒ s"""
         final StringPool sp = (StringPool)owner.owner().Strings();"""
+                case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒ s"""
+        final ${name(t.getSuperType)}Access target = (${name(t.getSuperType)}Access)${name(t.getSuperType)}Access
+                .<${mapType(t.getSuperType)},${mapType(t)}>cast(type);"""
                 case t : UserType ⇒ s"""
         final ${name(t)}Access target = (${name(t)}Access)type;"""
                 case _ ⇒ ""
@@ -141,8 +144,11 @@ ${
             ${
               // read next element
               f.getType match {
-                case t : InterfaceType ⇒
+                case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒
                   s"""is.next().set${escaped(f.getName.capital)}((${mapType(f.getType)})target.getByID(in.v64()));"""
+
+                case t : InterfaceType ⇒
+                  s"""is.next().set${escaped(f.getName.capital)}((${mapType(f.getType)})type.readSingleField(in));"""
 
                 case t : GroundType ⇒ t.getSkillName match {
                   case "annotation" ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
