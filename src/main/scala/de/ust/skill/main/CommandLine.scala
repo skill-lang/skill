@@ -127,11 +127,11 @@ Opitions:
         )
       }
 
-      case option if option.matches("""-O@\w+:\w+=.+""") ⇒ locally {
+      case option if option.matches("""-O@?\w+:\w+=.+""") ⇒ locally {
         implicit class Regex(sc : StringContext) {
           def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ ⇒ "x") : _*)
         }
-        val r"""-O@(\w+)${ lang }:(\w+)${ opt }=(.+)${ value }""" = option
+        val r"""-O@?(\w+)${ lang }:(\w+)${ opt }=(.+)${ value }""" = option
         known.get(lang.toLowerCase).getOrElse(
           error(s"Language $lang is not known and can therefore not provided with options!")
         ).setOption(opt, value)
