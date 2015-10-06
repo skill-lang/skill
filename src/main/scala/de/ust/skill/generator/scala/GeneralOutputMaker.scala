@@ -97,8 +97,7 @@ trait GeneralOutputMaker extends Generator {
    * Translation of a type to its representation in the source code
    */
   protected def name(t : Type) : String = escaped(t.getName.capital)
-  protected def access(t : Type) : String = escaped(t.getName.capital+"Access")
-  protected def storagePool(t : Type) : String = escaped(t.getName.capital+"StoragePool")
+  protected def storagePool(t : Type) : String = escaped(t.getName.capital+"Pool")
   protected def subPool(t : Type) : String = escaped(t.getName.capital+"SubPool")
 
   protected def name(f : Field) : String = escaped(f.getName.camel)

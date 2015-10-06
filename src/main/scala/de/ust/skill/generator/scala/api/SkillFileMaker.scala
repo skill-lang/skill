@@ -18,83 +18,92 @@ trait SkillFileMaker extends GeneralOutputMaker {
     //package & imports
     out.write(s"""package ${packagePrefix}api
 
-import java.nio.file.Path
+
 import java.io.File
+import java.nio.file.Path
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
 
-import _root_.${packagePrefix}internal.FileParser
-import _root_.${packagePrefix}internal.State
-import _root_.${packagePrefix}internal.SkillType
+import de.ust.skill.common.jvm.streams.FileInputStream
+import de.ust.skill.common.scala.api.Access
+import de.ust.skill.common.scala.api.Create
+import de.ust.skill.common.scala.api.Read
+import de.ust.skill.common.scala.api.ReadMode
+import de.ust.skill.common.scala.api.SkillObject
+import de.ust.skill.common.scala.api.Write
+import de.ust.skill.common.scala.api.WriteMode
+import de.ust.skill.common.scala.internal.SkillState
+import de.ust.skill.common.scala.internal.StoragePool
+import de.ust.skill.common.scala.internal.StringPool
+import de.ust.skill.common.scala.internal.fieldTypes
 
 /**
- * The public interface to the in-memory representation of a SKilL file.
- * This class provides access to instances of types stored in a file as well as state management capabilities.
+ * A skill file that corresponds to your specification. Have fun!
  *
- * @note The well-formedness of a file can be checked at any time using the check() method
- * @todo changePath
- * @todo changeWriteMode
  * @author Timm Felden
  */
-trait SkillFile {
+final class SkillFile(
+  _path : Path,
+  _mode : WriteMode,
+  _String : StringPool,
+  _annotationType : fieldTypes.AnnotationType,
+  _types : ArrayBuffer[StoragePool[_ <: SkillObject, _ <: SkillObject]],
+  _typesByName : HashMap[String, StoragePool[_ <: SkillObject, _ <: SkillObject]])
+    extends SkillState(_path, _mode, _String, _annotationType, _types, _typesByName) {
 ${
-      (for (t ← IR) yield s"  val ${name(t)} : ${access(t)}").mkString("\n")
+      (for (t ← IR) yield s"""
+  val ${name(t)} : internal.${storagePool(t)} = typesByName("${t.getSkillName}").asInstanceOf[internal.${storagePool(t)}]""").mkString
     }
-
-  val String : StringAccess
-
-  def all : Iterator[Access[_ <: SkillType]]
-
-  /**
-   * changes output path
-   * @note in append mode, the old file will be copied to the new path; this may take some time
-   */
-  def changePath(path : Path) : Unit
-  /**
-   * change mode
-   * @note currently only append -> write is supported; if you want to change write -> append, you are probably looking
-   * for open(Create, Append) instead
-   */
-  def changeMode(writeMode : Mode) : Unit
-
-  /**
-   * Checks restrictions in types. Restrictions are checked before write/append, where an error is raised if they do not
-   * hold.
-   */
-  def check : Unit
-
-  /**
-   * Check consistency and write changes to disk.
-   * @note this will not sync the file to disk, but it will block until all in-memory changes are written to buffers.
-   * @note if check fails, then the state is guaranteed to be unmodified compared to the state before flush
-   */
-  def flush : Unit
-
-  /**
-   * Same as flush, but will also sync and close file, thus the state is not usable afterwards.
-   */
-  def close : Unit
 }
 
+
 /**
- * Modes for file handling.
+ * @author Timm Felden
  */
-sealed abstract class Mode;
-sealed abstract class OpenMode extends Mode;
-sealed abstract class WriteMode extends Mode;
-object Create extends OpenMode;
-object Read extends OpenMode;
-object Write extends WriteMode;
-object Append extends WriteMode;
-
 object SkillFile {
-
   /**
    * Reads a binary SKilL file and turns it into a SKilL state.
    */
-  def open(path : Path, flags : Mode*) : SkillFile = State.open(path, flags.to)
-  def open(file : File, flags : Mode*) : SkillFile = State.open(file.ensuring(exists(_)).toPath, flags.to)
-  def open(path : String, flags : Mode*) : SkillFile = State.open(new File(path).ensuring(exists(_)).toPath, flags.to)
+  def open(path : String, read : ReadMode = Read, write : WriteMode = Write) : SkillFile = readFile(new File(path).ensuring(exists(_)).toPath, read, write)
+  /**
+   * Reads a binary SKilL file and turns it into a SKilL state.
+   */
+  def open(file : File, read : ReadMode, write : WriteMode) : SkillFile = readFile(file.ensuring(exists(_)).toPath, read, write)
+  /**
+   * Reads a binary SKilL file and turns it into a SKilL state.
+   */
+  def open(path : Path, read : ReadMode, write : WriteMode) : SkillFile = readFile(path, read, write)
+
+  private def readFile(path : Path, read : ReadMode, write : WriteMode) : SkillFile = read match {
+    case Read ⇒ internal.FileParser.read(FileInputStream.open(path), write)
+
+    case Create ⇒
+      /**
+       *  initialization order of type information has to match file parser
+       *  and can not be done in place
+       */
+      ???
+    //               Strings : Skill.String_Pools.Pool :=
+    //                 Skill.String_Pools.Create (Skill.Streams.Input (null));
+    //               Types : Skill.Types.Pools.Type_Vector :=
+    //                 Skill.Types.Pools.P_Type_Vector.Empty_Vector;
+    //               String_Type : Skill.Field_Types.Builtin.String_Type_P
+    //                 .Field_Type :=
+    //                 Skill.Field_Types.Builtin.String_Type_P.Make (Strings);
+    //               Annotation_Type : Skill.Field_Types.Builtin.Annotation_Type_P
+    //                 .Field_Type :=
+    //                 Skill.Field_Types.Builtin.Annotation (Types);
+    //            begin
+    //               return Make_State
+    //                   (Path            => new String'(Path),
+    //                    Mode            => Write_M,
+    //                    Strings         => Strings,
+    //                    String_Type     => String_Type,
+    //                    Annotation_Type => Annotation_Type,
+    //                    Types           => Types,
+    //                    Types_By_Name   => Skill.Types.Pools.P_Type_Map.Empty_Map);
+  }
 
   // ensures existence :)
   private def exists(f : File) = {

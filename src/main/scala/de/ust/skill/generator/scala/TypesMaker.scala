@@ -24,10 +24,10 @@ trait TypesMaker extends GeneralOutputMaker {
     //package
     out.write(s"""package ${this.packageName}
 
-import _root_.${packagePrefix}api.Access
-import _root_.${packagePrefix}internal.FieldDeclaration
-import _root_.${packagePrefix}internal.SkillType
-import _root_.${packagePrefix}internal.NamedType
+import de.ust.skill.common.scala.SkillID
+import de.ust.skill.common.scala.api.SkillObject
+import de.ust.skill.common.scala.api.Access
+import de.ust.skill.common.scala.api.UnknownObject
 """)
 
     val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
@@ -40,16 +40,24 @@ import _root_.${packagePrefix}internal.NamedType
       out.write(s"""
 ${
         comment(t)
-}sealed class ${name(t)} private[$packageName] (skillID : Long) ${
+}sealed class ${name(t)} (_skillID : SkillID) ${
         if (null != t.getSuperType()) { s"extends ${name(t.getSuperType)}" }
-        else { "extends SkillType" }
-      }(skillID) {""")
+        else { "extends SkillObject" }
+      }(_skillID) {${
+	  if(t.getSuperType == null && revealSkillID)
+	  """
+
+  //reveale skill id
+  final def getSkillID = skillID
+"""
+	  else ""
+	}""")
 
       // constructor
 	if(!relevantFields.isEmpty){
     	out.write(s"""
-  private[$packageName] def this(skillID : Long${appendConstructorArguments(t)}) {
-    this(skillID)
+  private[$packageName] def this(_skillID : SkillID${appendConstructorArguments(t)}) {
+    this(_skillID)
     ${relevantFields.map{f ⇒ s"${localFieldName(f)} = ${fieldName(f)}"}.mkString("\n    ")}
   }
 """)
@@ -66,7 +74,7 @@ ${
 		  ""
 		else
 	      s"""
-  protected var $localFieldName : ${mapType(f.getType())} = ${defaultValue(f)}"""
+  final protected var $localFieldName : ${mapType(f.getType())} = ${defaultValue(f)}"""
 	  }
 
       def makeGetterImplementation:String = {
@@ -117,15 +125,19 @@ ${
 
       // pretty string
     out.write(s"""
-  override def prettyString : String = "${t.getName()}"+""")
+  override def prettyString : String = s"${name(t)}(#$$skillID${
+    (
+        for(f <- t.getAllFields)
+          yield if(f.isIgnored) s""", ${f.getName()}: <<ignored>>"""
+          else if (!f.isConstant) s""", ${if(f.isAuto)"auto "else""}${f.getName()}: $${${name(f)}}"""
+          else s""", const ${f.getName()}: ${f.constantValue()}"""
+    ).mkString
+  })"
+""")
 
-    val prettyStringArgs = (for(f <- t.getAllFields)
-      yield if(f.isIgnored) s"""+", ${f.getName()}: <<ignored>>" """
-      else if (!f.isConstant) s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+${localFieldName(f)}"""
-      else s"""+", const ${f.getName()}: ${f.constantValue()}""""
-      ).mkString(""""(this: "+this""", "", """+")"""")
-
-      out.write(prettyStringArgs)
+      out.write("""
+  override def getTypeName : String = "age"
+""")
 
     // toString
     out.write(s"""
@@ -140,9 +152,15 @@ ${ // create unapply method if the type has fields, that can be matched (none or
   if(fs.isEmpty() || fs.size > 12)""
   else s"""  def unapply(self : ${name(t)}) = ${(for (f ← fs) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
 """
-}  final class SubType private[$packageName] (val τName : String, skillID : Long) extends ${name(t)}(skillID) with NamedType {
-    override def prettyString : String = τName+$prettyStringArgs
-    override def toString = τName+"#"+skillID
+}
+  final class UnknownSubType(
+    _skillID : SkillID,
+    val owner : Access[_ <: ${name(t)}])
+      extends ${name(t)}(_skillID) with UnknownObject[${name(t)}] {
+
+    final override def getTypeName : String = owner.name
+
+    final override def prettyString : String = s"$$getTypeName#$$skillID"
   }
 }
 """);

@@ -48,10 +48,9 @@ package $packagePath
 
 import org.junit.Assert
 
+import de.ust.skill.common.scala.api.ParseException
+
 import $packagePath.api.SkillFile
-import $packagePath.internal.ParseException
-import $packagePath.internal.PoolSizeMissmatchError
-import $packagePath.internal.TypeMissmatchError
 import common.CommonTest
 
 /**

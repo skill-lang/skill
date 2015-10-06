@@ -6,22 +6,17 @@
 package de.ust.skill.generator.scala
 
 import java.util.Date
-import scala.collection.JavaConversions._
-import de.ust.skill.generator.common.Generator
-import de.ust.skill.generator.scala.api.AccessMaker
+
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.mutable.HashMap
+
 import de.ust.skill.generator.scala.api.SkillFileMaker
-import de.ust.skill.generator.scala.internal.ExceptionsMaker
-import de.ust.skill.generator.scala.internal.FieldDeclarationMaker
-import de.ust.skill.generator.scala.internal.FileParserMaker
-import de.ust.skill.generator.scala.internal.InternalInstancePropertiesMaker
-import de.ust.skill.generator.scala.internal.RestrictionsMaker
-import de.ust.skill.generator.scala.internal.SerializationFunctionsMaker
-import de.ust.skill.generator.scala.internal.SkillTypeMaker
-import de.ust.skill.generator.scala.internal.StateAppenderMaker
-import de.ust.skill.generator.scala.internal.StateMaker
-import de.ust.skill.generator.scala.internal.StateWriterMaker
-import de.ust.skill.generator.scala.internal.StringPoolMaker
-import de.ust.skill.generator.scala.internal.TypeInfoMaker
+import de.ust.skill.generator.scala.api.internal.FieldDeclarationMaker
+import de.ust.skill.generator.scala.api.internal.FileParserMaker
+import de.ust.skill.generator.scala.api.internal.PoolsMaker
+import de.ust.skill.generator.scala.api.internal.SerializationFunctionsMaker
+import de.ust.skill.generator.scala.api.internal.StateAppenderMaker
+import de.ust.skill.generator.scala.api.internal.StateWriterMaker
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
@@ -33,7 +28,6 @@ import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.View
-import scala.collection.mutable.HashMap
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -47,33 +41,26 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * @author Timm Felden
  */
 class Main extends FakeMain
-    with AccessMaker
-    with ExceptionsMaker
     with FieldDeclarationMaker
     with FileParserMaker
-    with InternalInstancePropertiesMaker
-    with RestrictionsMaker
-    with StateMaker
-    with SerializationFunctionsMaker
+//    with SerializationFunctionsMaker
     with SkillFileMaker
-    with SkillTypeMaker
-    with StateAppenderMaker
-    with StateWriterMaker
-    with StreamsMaker
-    with StringPoolMaker
-    with TypeInfoMaker
+//    with StateAppenderMaker
+//    with StateWriterMaker
+    with DependenciesMaker
+    with PoolsMaker
     with TypesMaker {
 
   lineLength = 120
   override def comment(d : Declaration) : String = d.getComment.format("/**\n", " * ", lineLength, " */\n")
-  override def comment(f : Field) : String = f.getComment.format("  /**\n", "   * ", lineLength, "   */\n")
+  override def comment(f : Field) : String = f.getComment.format("/**\n", "   * ", lineLength, "   */\n  ")
 
   /**
    * Translates types into scala type names.
    */
   override protected def mapType(t : Type) : String = t match {
     case t : GroundType ⇒ t.getName.lower match {
-      case "annotation" ⇒ "SkillType"
+      case "annotation" ⇒ "SkillObject"
 
       case "bool"       ⇒ "scala.Boolean"
 
@@ -175,9 +162,9 @@ Opitions (scala):
       case _                                    ⇒ "null"
     }
 
-    // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
+    case t : UserType ⇒ "null"
 
-    case _ ⇒ "null"
+    case _            ⇒ mapType(f.getType)+"()"
   }
 
   /**
@@ -192,7 +179,7 @@ Opitions (scala):
         "package" | "private" | "protected" | "return" | "sealed" | "super" | "this" | "throw" | "trait" | "true" |
         "try" | "type" | "var" | "while" | "with" | "yield" | "val" ⇒ s"`$target`"
 
-      case t if t.forall(Character.isLetterOrDigit(_)) ⇒ t
+      case t if t.forall(c ⇒ '_' == c || Character.isLetterOrDigit(c)) ⇒ t
 
       case _ ⇒ s"`$target`"
     }

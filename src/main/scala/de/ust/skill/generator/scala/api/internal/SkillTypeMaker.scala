@@ -3,7 +3,7 @@
 ** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
-package de.ust.skill.generator.scala.internal
+package de.ust.skill.generator.scala.api.internal
 
 import de.ust.skill.generator.scala.GeneralOutputMaker
 

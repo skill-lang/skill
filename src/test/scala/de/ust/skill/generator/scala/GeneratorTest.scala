@@ -20,7 +20,7 @@ class GeneratorTest extends FunSuite {
 
   def check(src : String, out : String) {
     CommandLine.exit = {s ⇒ fail(s)}
-    CommandLine.main(Array[String]("-L", "scala", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/scala/"+src, "testsuites"))
+    CommandLine.main(Array[String]("-L", "scala", "-Oscala:revealSkillID=true", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/scala/"+src, "testsuites"))
   }
 
   test("benchmark: colored graph")(check("benchmarks.coloredGraph.skill", "benchmarks.coloredGraph"))
