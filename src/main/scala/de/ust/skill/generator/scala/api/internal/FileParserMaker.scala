@@ -87,7 +87,7 @@ object FileParser extends SkillFileParser[SkillFile] {
         else s"""typesByName("${t.getSuperType.getSkillName}")"""
       }, StoragePool.noTypeRestrictions)
       types.append(p)
-      typesByName.put("age", p)
+      typesByName.put("${t.getSkillName}", p)
     }"""
       ).mkString
     }
