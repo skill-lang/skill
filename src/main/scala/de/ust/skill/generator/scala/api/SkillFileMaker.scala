@@ -26,6 +26,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import de.ust.skill.common.jvm.streams.FileInputStream
+import de.ust.skill.common.jvm.streams.MappedInStream
 import de.ust.skill.common.scala.api.Access
 import de.ust.skill.common.scala.api.Create
 import de.ust.skill.common.scala.api.Read
@@ -37,6 +38,7 @@ import de.ust.skill.common.scala.internal.SkillState
 import de.ust.skill.common.scala.internal.StoragePool
 import de.ust.skill.common.scala.internal.StringPool
 import de.ust.skill.common.scala.internal.fieldTypes
+import de.ust.skill.common.scala.internal.fieldTypes.AnnotationType
 
 /**
  * A skill file that corresponds to your specification. Have fun!
@@ -79,30 +81,12 @@ object SkillFile {
     case Read ⇒ internal.FileParser.read(FileInputStream.open(path), write)
 
     case Create ⇒
-      /**
-       *  initialization order of type information has to match file parser
-       *  and can not be done in place
-       */
-      ???
-    //               Strings : Skill.String_Pools.Pool :=
-    //                 Skill.String_Pools.Create (Skill.Streams.Input (null));
-    //               Types : Skill.Types.Pools.Type_Vector :=
-    //                 Skill.Types.Pools.P_Type_Vector.Empty_Vector;
-    //               String_Type : Skill.Field_Types.Builtin.String_Type_P
-    //                 .Field_Type :=
-    //                 Skill.Field_Types.Builtin.String_Type_P.Make (Strings);
-    //               Annotation_Type : Skill.Field_Types.Builtin.Annotation_Type_P
-    //                 .Field_Type :=
-    //                 Skill.Field_Types.Builtin.Annotation (Types);
-    //            begin
-    //               return Make_State
-    //                   (Path            => new String'(Path),
-    //                    Mode            => Write_M,
-    //                    Strings         => Strings,
-    //                    String_Type     => String_Type,
-    //                    Annotation_Type => Annotation_Type,
-    //                    Types           => Types,
-    //                    Types_By_Name   => Skill.Types.Pools.P_Type_Map.Empty_Map);
+      val String = new StringPool(null)
+      val types = new ArrayBuffer[StoragePool[_ <: SkillObject, _ <: SkillObject]]()
+      val typesByName = new HashMap[String, StoragePool[_ <: SkillObject, _ <: SkillObject]]()
+      val Annotation = new AnnotationType(types, typesByName)
+      val dataList = new ArrayBuffer[MappedInStream]()
+      internal.FileParser.makeState(path, write, String, Annotation, types, typesByName, dataList)
   }
 
   // ensures existence :)
