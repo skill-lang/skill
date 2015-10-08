@@ -239,6 +239,7 @@ ${
     /**
      * punch a hole into the java type system :)
      */
+    @SuppressWarnings("unchecked")
     static <T, U> FieldType<T> cast(FieldType<U> f) {
         return (FieldType<T>) f;
     }
