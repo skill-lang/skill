@@ -104,7 +104,7 @@ final class ${knownField(f)}(${
         }
   }
 
-  def offset: Long = {
+  def offset: Unit = {
     ???
   }
 
