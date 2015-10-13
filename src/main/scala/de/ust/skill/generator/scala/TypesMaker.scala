@@ -118,7 +118,7 @@ ${
 """)
       else
         out.write(s"""$makeField
-  ${comment(f)}final def $fieldName = $makeGetterImplementation
+  ${comment(f)}final def $fieldName : ${mapType(f.getType())} = $makeGetterImplementation
   ${comment(f)}final def $fieldAssignName(${name(f)} : ${mapType(f.getType())}) : scala.Unit = $makeSetterImplementation
 """)
     }
