@@ -82,7 +82,7 @@ object FileParser extends SkillFileParser[SkillFile] {
       (for (t ← IR)
         yield s"""
     typesByName.get("${t.getSkillName}").getOrElse {
-      val p = newPool(types.size, "${t.getSkillName}", ${
+      val p = newPool(types.size + 32, "${t.getSkillName}", ${
         if (null == t.getSuperType) "null"
         else s"""typesByName("${t.getSuperType.getSkillName}")"""
       }, StoragePool.noTypeRestrictions)
