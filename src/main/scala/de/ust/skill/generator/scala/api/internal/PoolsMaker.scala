@@ -11,6 +11,9 @@ import de.ust.skill.ir.View
 import de.ust.skill.ir.restriction.SingletonRestriction
 import de.ust.skill.ir.ReferenceType
 import de.ust.skill.ir.ContainerType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.UserType
 
 trait PoolsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -34,6 +37,7 @@ import de.ust.skill.common.scala.api.SkillObject
 import de.ust.skill.common.scala.api.TypeMissmatchError
 import de.ust.skill.common.scala.internal.BasePool
 import de.ust.skill.common.scala.internal.FieldDeclaration
+import de.ust.skill.common.scala.internal.SkillState
 import de.ust.skill.common.scala.internal.StoragePool
 import de.ust.skill.common.scala.internal.SubPool
 import de.ust.skill.common.scala.internal.fieldTypes.AnnotationType
@@ -96,28 +100,25 @@ final class ${storagePool(t)}(poolIndex : Int${
     dataFields += f
     return f
   }
-/*  override def addKnownField[T](name : String, mkType : FieldType[T] ⇒ FieldType[T]) {${
+  override def addKnownField[T](name : String, st : SkillState) {${
         if (fields.isEmpty) "/* no known fields */"
         else s"""
-    val f = (name match {
+    val state = st.asInstanceOf[SkillFile]
+    name match {
 ${
           (for (f ← fields)
-            yield s"""      case "${f.getSkillName}" ⇒ new ${knownField(f)}(${
-            if (f.isAuto()) ""
-            else "fields.size, "
-          }this${
-            val t = f.getType.getSkillName
-            if ("annotation" == t || "string" == t) s""",
-  _type : FieldType[${mapType(f.getType)}]"""
-            else ""
-          })"""
-          ).mkString("\n")
+            yield (
+            if (f.isAuto)
+              s"""      case "${f.getSkillName}" ⇒ 
+        autoFields += new ${knownField(f)}(this${mapFieldDefinition(f.getType)})"""
+            else
+              s"""      case "${f.getSkillName}" ⇒ 
+        dataFields += new ${knownField(f)}(dataFields.size + 1, this${mapFieldDefinition(f.getType)})"""
+          )).mkString("\n")
         }
-    }).asInstanceOf[FieldDeclaration[T, $typeName]]
-    f.t = mkType(f.t)
-    fields += f
+    }
   """
-      }} */
+      }}
 
   override def reflectiveAllocateInstance: $typeName = {
     val r = new $typeName(-1)
@@ -180,6 +181,8 @@ final class ${subPool(t)}(poolIndex : Int, name : String, superPool : StoragePoo
 
   override def makeSubPool(name : String, poolIndex : Int) = new ${subPool(t)}(poolIndex, name, this)
 
+  override def addKnownField[T](name : String, st : SkillState) {}
+
   override def allocateInstances {
       for (b ← blocks.par) {
         var i : SkillID = b.bpo
@@ -203,5 +206,15 @@ final class ${subPool(t)}(poolIndex : Int, name : String, superPool : StoragePoo
 
     //class prefix
     out.close()
+  }
+
+  def mapFieldDefinition(t : Type) : String = t match {
+    case t : GroundType ⇒ t.getSkillName match {
+      case "string"     ⇒ ", state.String"
+      case "annotation" ⇒ ", state.AnnotationType"
+      case _            ⇒ ""
+    }
+    case t : UserType ⇒ s", state.${name(t)}"
+    case _            ⇒ ", ???"
   }
 }
