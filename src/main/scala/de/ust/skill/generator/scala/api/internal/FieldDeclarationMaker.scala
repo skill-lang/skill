@@ -105,11 +105,33 @@ final class ${knownField(f)}(${
   }
 
   def offset: Unit = {
-    ???
+    val range = owner.blocks.last
+    val data = owner.data
+    var result = 0L
+
+    var i = range.bpo
+    val high = i + range.dynamicCount
+
+    while (i != high) {
+      val v = data(i).${name(f)}
+      ${offsetCode(f.getType)}
+      i += 1
+    }
+    cachedOffset = result
   }
 
   def write(out: MappedOutStream): Unit = {
-    ???
+    val range = owner.blocks.last
+    val data = owner.data
+
+    var i = range.bpo
+    val high = i + range.dynamicCount
+
+    while (i != high) {
+      val v = data(i).${name(f)}
+      ${writeCode(f.getType)}
+      i += 1
+    }
   }
 
 """
@@ -181,5 +203,43 @@ final class ${knownField(f)}(${
       case r : ConstantLengthPointerRestriction ⇒
         s"ConstantLengthPointer"
     }).mkString(", ")
+  }
+
+  private final def offsetCode(t : Type) : String = t match {
+    case t : GroundType ⇒ t.getSkillName match {
+      case "v64" ⇒ """result += (if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
+        1L
+      } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
+        2
+      } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
+        3
+      } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
+        4
+      } else if (0L == (v & 0xFFFFFFF800000000L)) {
+        5
+      } else if (0L == (v & 0xFFFFFC0000000000L)) {
+        6
+      } else if (0L == (v & 0xFFFE000000000000L)) {
+        7
+      } else if (0L == (v & 0xFF00000000000000L)) {
+        8
+      } else {
+        9
+      })"""
+
+      case _ ⇒ "???"
+    }
+
+    case _ ⇒ "???"
+  }
+
+  private final def writeCode(t : Type) : String = t match {
+    case t : GroundType ⇒ t.getSkillName match {
+      case "v64" ⇒ """out.v64(v)"""
+
+      case _     ⇒ "???"
+    }
+
+    case _ ⇒ "???"
   }
 }
