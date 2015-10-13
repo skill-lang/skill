@@ -96,7 +96,10 @@ Opitions:
     // report failures
     if (!failures.isEmpty)
       error((
-        for ((lang, err) ← failures) yield { err.printStackTrace(); s"$lang failed with message: ${err.getMessage}}" }
+        for ((lang, err) ← failures) yield {
+          err.printStackTrace();
+          s"$lang failed with message: ${err.getMessage}}"
+        }
       ).mkString("\n"))
   }
 
