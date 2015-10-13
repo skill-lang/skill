@@ -177,7 +177,16 @@ ${
           (for(f <- fields)
             yield s"""
         case "${f.getSkillName}":
-            return (T) (${mapType(f.getType, true)}) ${
+            return (T) ${
+              // cast, iff the object requires boxing
+              val boxed = mapType(f.getType, true)
+              val unboxed = mapType(f.getType, false)
+              if(boxed!=unboxed)
+                s"($boxed)"
+              else 
+                ""
+              }
+            ${
               if(f.isConstant()) "get" + f.getName.capital + "()"
               else name(f)
               };""").mkString
