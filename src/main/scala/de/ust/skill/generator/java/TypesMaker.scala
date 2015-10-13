@@ -182,11 +182,10 @@ ${
               val boxed = mapType(f.getType, true)
               val unboxed = mapType(f.getType, false)
               if(boxed!=unboxed)
-                s"($boxed)"
+                s"($boxed) "
               else 
                 ""
-              }
-            ${
+              }${
               if(f.isConstant()) "get" + f.getName.capital + "()"
               else name(f)
               };""").mkString
