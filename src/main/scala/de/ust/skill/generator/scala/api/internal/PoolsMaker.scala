@@ -14,6 +14,11 @@ import de.ust.skill.ir.ContainerType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.UserType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.VariableLengthArrayType
 
 trait PoolsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -40,9 +45,7 @@ import de.ust.skill.common.scala.internal.FieldDeclaration
 import de.ust.skill.common.scala.internal.SkillState
 import de.ust.skill.common.scala.internal.StoragePool
 import de.ust.skill.common.scala.internal.SubPool
-import de.ust.skill.common.scala.internal.fieldTypes.AnnotationType
-import de.ust.skill.common.scala.internal.fieldTypes.FieldType
-import de.ust.skill.common.scala.internal.fieldTypes.StringType
+import de.ust.skill.common.scala.internal.fieldTypes._
 import de.ust.skill.common.scala.internal.restrictions.FieldRestriction
 
 import _root_.${packagePrefix}api._
@@ -110,10 +113,10 @@ ${
             yield (
             if (f.isAuto)
               s"""      case "${f.getSkillName}" ⇒ 
-        autoFields += new ${knownField(f)}(this${mapFieldDefinition(f.getType)})"""
+        autoFields += new ${knownField(f)}(this, ${mapFieldDefinition(f.getType)})"""
             else
               s"""      case "${f.getSkillName}" ⇒ 
-        dataFields += new ${knownField(f)}(dataFields.size + 1, this${mapFieldDefinition(f.getType)})"""
+        dataFields += new ${knownField(f)}(dataFields.size + 1, this, ${mapFieldDefinition(f.getType)})"""
           )).mkString("\n")
         }
     }
@@ -208,13 +211,22 @@ final class ${subPool(t)}(poolIndex : Int, name : String, superPool : StoragePoo
     out.close()
   }
 
-  def mapFieldDefinition(t : Type) : String = t match {
+  protected def mapFieldDefinition(t : Type) : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
-      case "string"     ⇒ ", state.String"
-      case "annotation" ⇒ ", state.AnnotationType"
-      case _            ⇒ ""
+      case "string"     ⇒ "state.String"
+      case "annotation" ⇒ "state.AnnotationType"
+      case "bool"       ⇒ "BoolType"
+      case n            ⇒ n.capitalize
     }
-    case t : UserType ⇒ s", state.${name(t)}"
-    case _            ⇒ ", ???"
+    case t : UserType                ⇒ s"state.${name(t)}"
+
+    case t : ConstantLengthArrayType ⇒ s"ConstantLengthArray(${t.getLength}, ${mapFieldDefinition(t.getBaseType)})"
+    case t : VariableLengthArrayType ⇒ s"VariableLengthArray(${mapFieldDefinition(t.getBaseType)})"
+    case t : ListType                ⇒ s"ListType(${mapFieldDefinition(t.getBaseType)})"
+    case t : SetType                 ⇒ s"SetType(${mapFieldDefinition(t.getBaseType)})"
+    case t : MapType ⇒ t.getBaseTypes.init.foldRight(mapFieldDefinition(t.getBaseTypes.last)) {
+      case (t, str) ⇒ s"MapType(${mapFieldDefinition(t)}, $str)"
+    }
+    case _ ⇒ "???"
   }
 }

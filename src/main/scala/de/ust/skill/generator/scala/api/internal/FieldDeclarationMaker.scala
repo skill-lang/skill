@@ -65,15 +65,15 @@ final class ${knownField(f)}(${
         else """
   _index : Int,"""
       }
-  _owner : ${storagePool(t)}${
-        if (f.getType.isInstanceOf[ReferenceType] || f.getType.isInstanceOf[ContainerType]) s""",
-  _type : FieldType[${mapType(f.getType)}]"""
-        else ""
+  _owner : ${storagePool(t)},
+  _type : FieldType[${mapType(f.getType)}]${
+        if (f.getType.isInstanceOf[ReferenceType] || f.getType.isInstanceOf[ContainerType]) ""
+        else s" = ${mapToFieldType(f.getType)}"
       })
     extends ${
         if (f.isAuto()) "Auto"
         else "Known"
-      }Field[${mapType(f.getType)},${mapType(t)}](${mapToFieldType(f.getType)},
+      }Field[${mapType(f.getType)},${mapType(t)}](_type,
       "${f.getSkillName}",${
         if (f.isAuto()) """
       0,"""
@@ -178,11 +178,6 @@ final class ${knownField(f)}(${
 
     t match {
       case t : GroundType ⇒ mapGroundType(t)
-      //      case t : ConstantLengthArrayType ⇒ s"ConstantLengthArray(${t.getLength}, ${mapGroundType(t.getBaseType)})"
-      //      case t : VariableLengthArrayType ⇒ s"VariableLengthArray(${mapGroundType(t.getBaseType)})"
-      //      case t : ListType                ⇒ s"ListType(${mapGroundType(t.getBaseType)})"
-      //      case t : SetType                 ⇒ s"SetType(${mapGroundType(t.getBaseType)})"
-      //      case t : MapType                 ⇒ t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"MapType($k, $v)")
       case _              ⇒ "_type"
     }
   }
