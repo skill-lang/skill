@@ -46,9 +46,16 @@ class GenericTests extends common.GenericTests {
     rval.write(s"""
 package $packagePath
 
+import java.nio.file.Path
+
 import org.junit.Assert
 
+import de.ust.skill.common.scala.api.Access
+import de.ust.skill.common.scala.api.Create
 import de.ust.skill.common.scala.api.ParseException
+import de.ust.skill.common.scala.api.Read
+import de.ust.skill.common.scala.api.ReadOnly
+import de.ust.skill.common.scala.api.Write
 
 import $packagePath.api.SkillFile
 import common.CommonTest
@@ -70,8 +77,7 @@ class Generic${name}ReadTest extends CommonTest {
   }
 
   override def makeGenBinaryTests(name : String) {
-    
-    
+
     val tmp = collectBinaries(name);
     val accept = tmp._1
     val reject = tmp._2
@@ -86,6 +92,40 @@ class Generic${name}ReadTest extends CommonTest {
 
       for (f ← reject) out.write(s"""
   test("$name - read (reject): ${f.getName}") { intercept[ParseException] { Assert.assertNotNull(read("${f.getPath}")) } }
+""")
+      closeTestFile(out)
+    }
+
+    // reflective write tests
+    locally {
+      val out = newTestFile(name, "WriteReflective")
+
+      out.write(s"""
+  test("$name - write reflective") {
+    val path = tmpFile("write.generic");
+    val sf = SkillFile.open(path, Create, Write);
+    reflectiveInit(sf);
+    sf.close
+  }
+
+  test("$name - write reflective checked") {
+    val path = tmpFile("write.generic.checked");
+    val sf = SkillFile.open(path, Create, Write);
+    reflectiveInit(sf);
+    // write file
+    sf.flush
+
+    // create a name -> type map
+    val types : Map[String, Access[_]] = sf.map(t ⇒ t.name -> t).toMap
+
+    // read file and check skill IDs
+    val sf2 = SkillFile.open(path, Read, ReadOnly);
+    for (t2 ← sf2) {
+      val t = types(t2.name)
+      if(t.size != t2.size)
+        fail("size missmatch")
+    }
+  }
 """)
       closeTestFile(out)
     }

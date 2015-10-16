@@ -24,6 +24,7 @@ import de.ust.skill.ir.View
 import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
 import de.ust.skill.ir.ReferenceType
 import de.ust.skill.ir.ContainerType
+import de.ust.skill.ir.UserType
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -223,19 +224,25 @@ final class ${knownField(f)}(${
         9
       })"""
 
-      case _ ⇒ "???"
+      // TODO optimize calls to string and annotation types (requires prelude, check nesting!)
+      // constant offsets are not important
+      case _ ⇒ "t.offset(v)"
     }
 
-    case _ ⇒ "???"
+    case t : UserType ⇒ "???"
+    case _            ⇒ "???"
   }
 
   private final def writeCode(t : Type) : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
-      case "v64" ⇒ """out.v64(v)"""
+      // TODO optimize calls to string and annotation types (requires prelude, check nesting!)
+      case "annotation" | "string" ⇒ "t.write(v, out)"
 
-      case _     ⇒ "???"
+      case t                       ⇒ s"out.$t(v)"
     }
 
-    case _ ⇒ "???"
+    // TODO optimize user types (requires prelude, check nesting!)
+    case t : UserType ⇒ "???"
+    case _            ⇒ "???"
   }
 }
