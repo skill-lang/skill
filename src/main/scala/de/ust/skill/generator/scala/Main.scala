@@ -14,9 +14,7 @@ import de.ust.skill.generator.scala.api.SkillFileMaker
 import de.ust.skill.generator.scala.api.internal.FieldDeclarationMaker
 import de.ust.skill.generator.scala.api.internal.FileParserMaker
 import de.ust.skill.generator.scala.api.internal.PoolsMaker
-import de.ust.skill.generator.scala.api.internal.SerializationFunctionsMaker
 import de.ust.skill.generator.scala.api.internal.StateAppenderMaker
-import de.ust.skill.generator.scala.api.internal.StateWriterMaker
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
