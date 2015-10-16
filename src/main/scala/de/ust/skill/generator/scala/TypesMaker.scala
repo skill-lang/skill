@@ -123,7 +123,6 @@ ${
 """)
     }
 
-      // pretty string
     out.write(s"""
   override def prettyString : String = s"${name(t)}(#$$skillID${
     (
@@ -133,14 +132,9 @@ ${
           else s""", const ${f.getName()}: ${f.constantValue()}"""
     ).mkString
   })"
-""")
 
-      out.write("""
-  override def getTypeName : String = "age"
-""")
+  override def getTypeName : String = "${t.getSkillName}"
 
-    // toString
-    out.write(s"""
   override def toString = "${t.getName.capital}#"+skillID
 }
 """)
