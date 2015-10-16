@@ -91,7 +91,7 @@ final class ${knownField(f)}(${
         // generate a read function
         else s""" {
 
-  override def read(in : MappedInStream, target : Chunk) {${
+  override def read(part : MappedInStream, target : Chunk) {${
           if (f.isConstant()) """
     // reading constants is O(0)"""
           else s"""
@@ -99,6 +99,7 @@ final class ${knownField(f)}(${
       case c : SimpleChunk ⇒ owner.data.view(c.bpo.toInt, (c.bpo + c.count).toInt).iterator
       case bci : BulkChunk ⇒ owner.all
     }
+    val in = part.view(target.begin.toInt, target.end.toInt)
     for (i ← is)
       i.${escaped(f.getName.camel)} = t.read(in)"""
         }
