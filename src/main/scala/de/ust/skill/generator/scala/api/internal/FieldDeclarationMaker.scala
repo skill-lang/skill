@@ -226,7 +226,7 @@ final class ${knownField(f)}(${
 
       // TODO optimize calls to string and annotation types (requires prelude, check nesting!)
       // constant offsets are not important
-      case _ ⇒ "t.offset(v)"
+      case _ ⇒ "result += t.offset(v)"
     }
 
     case t : UserType ⇒ "???"
