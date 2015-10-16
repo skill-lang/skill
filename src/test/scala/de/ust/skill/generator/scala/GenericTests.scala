@@ -52,7 +52,7 @@ import org.junit.Assert
 
 import de.ust.skill.common.scala.api.Access
 import de.ust.skill.common.scala.api.Create
-import de.ust.skill.common.scala.api.ParseException
+import de.ust.skill.common.scala.api.SkillException
 import de.ust.skill.common.scala.api.Read
 import de.ust.skill.common.scala.api.ReadOnly
 import de.ust.skill.common.scala.api.Write
@@ -91,7 +91,7 @@ class Generic${name}ReadTest extends CommonTest {
 """)
 
       for (f ← reject) out.write(s"""
-  test("$name - read (reject): ${f.getName}") { intercept[ParseException] { Assert.assertNotNull(read("${f.getPath}")) } }
+  test("$name - read (reject): ${f.getName}") { intercept[SkillException] { read("${f.getPath}").check } }
 """)
       closeTestFile(out)
     }

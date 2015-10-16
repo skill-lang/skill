@@ -129,9 +129,9 @@ ${
           if (afs.isEmpty) "    // no auto fields\n  "
           else s"""    // auto fields
     autoFields.sizeHint(${afs.size})${
-            afs.zipWithIndex.map {
-              case (f, i) ⇒ s"""
-    autoFields($i) = new ${knownField(f)}(this, ${mapFieldDefinition(f.getType)})"""
+            afs.map { f ⇒
+              s"""
+    autoFields += new ${knownField(f)}(this, ${mapFieldDefinition(f.getType)})"""
             }.mkString
           }
   """)
