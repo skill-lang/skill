@@ -98,7 +98,9 @@ object FileParser extends SkillFileParser[SkillFile] {
 
     triggerFieldDeserialization(types, dataList)
 
-    new SkillFile(path, mode, String, Annotation, types, typesByName)
+    val r = new SkillFile(path, mode, String, Annotation, types, typesByName)
+    types.par.foreach(_.ensureKnownFields(r))
+    r
   }
 }
 """)

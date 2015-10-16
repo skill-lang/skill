@@ -19,6 +19,7 @@ import de.ust.skill.ir.SetType
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.Field
 
 trait PoolsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -69,11 +70,7 @@ final class ${storagePool(t)}(poolIndex : Int${
       "${t.getSkillName}"${
         if (t.getSuperType == null) ""
         else ",\nsuperPool"
-      },
-      Set(${
-        if (fields.isEmpty) ""
-        else (for (f ← fields) yield s"""\n        "${f.getSkillName}"""").mkString("", ",", "\n      ")
-      })
+      }
     ) {
   override def getInstanceClass: Class[$typeName] = classOf[$typeName]
 
@@ -103,24 +100,41 @@ final class ${storagePool(t)}(poolIndex : Int${
     dataFields += f
     return f
   }
-  override def addKnownField[T](name : String, st : SkillState) {${
-        if (fields.isEmpty) "/* no known fields */"
-        else s"""
-    val state = st.asInstanceOf[SkillFile]
-    name match {
+  override def ensureKnownFields(st : SkillState) {${
+        if (fields.isEmpty) ""
+        else """
+    val state = st.asInstanceOf[SkillFile]"""
+      }
+    ${
+        val (afs, dfs) = fields.partition(_.isAuto)
+        (if (dfs.isEmpty) "// no data fields\n"
+        else s"""// data fields
+    ${
+          (for (f ← dfs) yield s"val ${clsName(f)} = classOf[${knownField(f)}]").mkString("", "\n    ", "\n")
+        }
+    val fields = HashSet[Class[_ <: FieldDeclaration[_, ${mapType(t)}]]](${
+          (for (f ← dfs) yield s"${clsName(f)}").mkString(",")
+        })
+    for (f ← dataFields)
+      fields.remove(f.getClass)
+    fields.foreach {
 ${
-          (for (f ← fields)
-            yield (
-            if (f.isAuto)
-              s"""      case "${f.getSkillName}" ⇒ 
-        autoFields += new ${knownField(f)}(this, ${mapFieldDefinition(f.getType)})"""
-            else
-              s"""      case "${f.getSkillName}" ⇒ 
+          (for (f ← dfs)
+            yield s"""      case ${clsName(f)} ⇒ 
         dataFields += new ${knownField(f)}(dataFields.size + 1, this, ${mapFieldDefinition(f.getType)})"""
-          )).mkString("\n")
+          ).mkString("\n")
         }
     }
-  """
+""") + (
+          if (afs.isEmpty) "    // no auto fields\n  "
+          else s"""    // auto fields
+    autoFields.sizeHint(${afs.size})${
+            afs.zipWithIndex.map {
+              case (f, i) ⇒ s"""
+    autoFields($i) = new ${knownField(f)}(this, ${mapFieldDefinition(f.getType)})"""
+            }.mkString
+          }
+  """)
       }}
 
   override def reflectiveAllocateInstance: $typeName = {
@@ -177,14 +191,13 @@ final class ${subPool(t)}(poolIndex : Int, name : String, superPool : StoragePoo
     extends SubPool[$typeName.UnknownSubType, _root_.${packagePrefix}${name(t.getBaseType)}](
       poolIndex,
       name,
-      superPool,
-      StoragePool.noKnownFields
+      superPool
     ) {
   override def getInstanceClass : Class[$typeName.UnknownSubType] = classOf[$typeName.UnknownSubType]
 
   override def makeSubPool(name : String, poolIndex : Int) = new ${subPool(t)}(poolIndex, name, this)
 
-  override def addKnownField[T](name : String, st : SkillState) {}
+  override def ensureKnownFields(st : SkillState) {}
 
   override def allocateInstances {
       for (b ← blocks.par) {
@@ -210,6 +223,11 @@ final class ${subPool(t)}(poolIndex : Int, name : String, superPool : StoragePoo
     //class prefix
     out.close()
   }
+
+  /**
+   * escaped name for field classes
+   */
+  private final def clsName(f : Field) : String = escaped("Cls"+f.getName.camel)
 
   protected def mapFieldDefinition(t : Type) : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
