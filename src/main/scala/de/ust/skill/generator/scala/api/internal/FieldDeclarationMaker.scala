@@ -45,6 +45,7 @@ import java.util.Arrays
 
 import de.ust.skill.common.jvm.streams.MappedInStream
 import de.ust.skill.common.jvm.streams.MappedOutStream
+import de.ust.skill.common.scala.api.PoolSizeMissmatchError
 import de.ust.skill.common.scala.api.SkillObject
 import de.ust.skill.common.scala.internal.AutoField
 import de.ust.skill.common.scala.internal.BulkChunk
@@ -101,8 +102,22 @@ final class ${knownField(f)}(${
       case bci : BulkChunk ⇒ owner.all
     }
     val in = part.view(target.begin.toInt, target.end.toInt)
-    for (i ← is)
-      i.${escaped(f.getName.camel)} = t.read(in)"""
+    try {
+      for (i ← is)
+        i.${escaped(f.getName.camel)} = t.read(in)
+    } catch {
+      case e : BufferUnderflowException ⇒
+        throw new PoolSizeMissmatchError(dataChunks.size - 1,
+          part.position() + target.begin,
+          part.position() + target.end,
+          this, in.position())
+    }
+
+    if(!in.eof())
+      throw new PoolSizeMissmatchError(dataChunks.size - 1,
+        part.position() + target.begin,
+        part.position() + target.end,
+        this, in.position())"""
         }
   }
 
