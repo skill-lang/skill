@@ -248,8 +248,8 @@ ${
               }
 
               case fieldType : ConstantLengthArrayType ⇒ s"""
-        final SingleArgumentType t = (SingleArgumentType) type;
-        final FieldType baseType = t.groundType;
+        final SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}> t = (SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}>) type;
+        final FieldType<${mapType(fieldType.getBaseType, true)}> baseType = t.groundType;
         $preludeData
             final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
             assert null==v;
@@ -258,8 +258,8 @@ ${
         return result;"""
 
               case fieldType : SingleBaseTypeContainer ⇒ s"""
-        final SingleArgumentType t = (SingleArgumentType) type;
-        final FieldType baseType = t.groundType;
+        final SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}> t = (SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}>) type;
+        final FieldType<${mapType(fieldType.getBaseType, true)}> baseType = t.groundType;
         $preludeData
             final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
             if(null==v)
