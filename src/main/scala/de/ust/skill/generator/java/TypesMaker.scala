@@ -47,6 +47,11 @@ ${
     t.getSuperInterfaces.map(name(_)).mkString(" implements ", ", ", "")
       } {
 
+    @Override
+    public String skillName() {
+        return "${t.getSkillName}";
+    }
+
     /**
      * Create a new unmanaged ${t.getName.capital()}. Allocation of objects without using the
      * access factory method is discouraged.
@@ -253,13 +258,13 @@ ${
         }
 
         @Override
-        public String τName() {
+        public String skillName() {
             return τPool.name();
         }
 
         @Override
         public String toString() {
-            return τName() + "#" + skillID;
+            return skillName() + "#" + skillID;
         }
     }
 }
