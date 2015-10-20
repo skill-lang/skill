@@ -97,14 +97,32 @@ final class ${knownField(f)}(${
           if (f.isConstant()) """
     // reading constants is O(0)"""
           else s"""
-    val is = target match {
-      case c : SimpleChunk ⇒ owner.data.view(c.bpo.toInt, (c.bpo + c.count).toInt).iterator
-      case bci : BulkChunk ⇒ owner.all
-    }
+    val d = owner.data
     val in = part.view(target.begin.toInt, target.end.toInt)
+${mapKnownReadType(f.getType)}
     try {
-      for (i ← is)
-        i.${escaped(f.getName.camel)} = t.read(in)
+        target match {
+          case c : SimpleChunk ⇒
+            var i = c.bpo.toInt
+            val high = i + c.count
+            while (i != high) {
+              d(i).asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = t.read(in)
+              i += 1
+            }
+          case bci : BulkChunk ⇒
+            val blocks = owner.blocks
+            var blockIndex = 0
+            while (blockIndex < bci.blockCount) {
+              val b = blocks(blockIndex)
+              blockIndex += 1
+              var i = b.bpo
+              val end = i + b.dynamicCount
+              while (i != end) {
+                d(i).asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = t.read(in)
+                i += 1
+              }
+            }
+        }
     } catch {
       case e : BufferUnderflowException ⇒
         throw new PoolSizeMissmatchError(dataChunks.size - 1,
@@ -130,7 +148,7 @@ final class ${knownField(f)}(${
     val high = i + range.dynamicCount
 
     while (i != high) {
-      val v = data(i).${name(f)}
+      val v = data(i).asInstanceOf[${mapType(t)}].${name(f)}
       ${offsetCode(f.getType)}
       i += 1
     }
@@ -145,7 +163,7 @@ final class ${knownField(f)}(${
     val high = i + range.dynamicCount
 
     while (i != high) {
-      val v = data(i).${name(f)}
+      val v = data(i).asInstanceOf[${mapType(t)}].${name(f)}
       ${writeCode(f.getType)}
       i += 1
     }
@@ -217,6 +235,15 @@ final class ${knownField(f)}(${
     }).mkString(", ")
   }
 
+  /**
+   * tell the compiler which code will be executed, to support optimization
+   */
+  private final def mapKnownReadType(t : Type) : String = t match {
+
+    case t : UserType ⇒ s"    val t = this.t.asInstanceOf[${storagePool(t)}]"
+    case _            ⇒ "" // it is always an option not to tell anything
+  }
+
   private final def offsetCode(t : Type) : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
       case "v64" ⇒ """result += (if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
@@ -244,7 +271,7 @@ final class ${knownField(f)}(${
       case _ ⇒ "result += t.offset(v)"
     }
 
-    case t : UserType ⇒ "???"
+    case t : UserType ⇒ "result += (if (null == v) 1 else V64.offset(v.getSkillID))"
     case _            ⇒ "???"
   }
 
@@ -257,7 +284,7 @@ final class ${knownField(f)}(${
     }
 
     // TODO optimize user types (requires prelude, check nesting!)
-    case t : UserType ⇒ "???"
+    case t : UserType ⇒ "if (null == v) out.i8(0) else out.v64(v.getSkillID)"
     case _            ⇒ "???"
   }
 }

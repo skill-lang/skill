@@ -44,11 +44,10 @@ ${
         if (null != t.getSuperType()) { s"extends ${name(t.getSuperType)}" }
         else { "extends SkillObject" }
       }(_skillID) {${
-	  if(t.getSuperType == null && revealSkillID)
-	  """
+	  if(t.getSuperType == null) s"""
 
-  //reveale skill id
-  final def getSkillID = skillID
+  //reveal skill id
+  ${if(revealSkillID)"" else s"protected[${packageName}] "}final def getSkillID = skillID
 """
 	  else ""
 	}""")
