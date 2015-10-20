@@ -25,6 +25,7 @@ import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
 import de.ust.skill.ir.ReferenceType
 import de.ust.skill.ir.ContainerType
 import de.ust.skill.ir.UserType
+import de.ust.skill.ir.SingleBaseTypeContainer
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -271,8 +272,17 @@ ${mapKnownReadType(f.getType)}
       case _ ⇒ "result += t.offset(v)"
     }
 
-    case t : UserType ⇒ "result += (if (null == v) 1 else V64.offset(v.getSkillID))"
-    case _            ⇒ "???"
+    case t : UserType                ⇒ "result += (if (null == v) 1 else V64.offset(v.getSkillID))"
+
+    case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${offsetCode(t.getBaseType)} }"
+
+    case t : SingleBaseTypeContainer ⇒ s"""result += V64.offset(v.size)
+      v.foreach { v => ${offsetCode(t.getBaseType)} }"""
+
+    // @note this might be optimizable, but i dont care for now
+    case t : MapType ⇒ "result += t.offset(v)"
+
+    case _           ⇒ "???"
   }
 
   private final def writeCode(t : Type) : String = t match {
@@ -284,7 +294,16 @@ ${mapKnownReadType(f.getType)}
     }
 
     // TODO optimize user types (requires prelude, check nesting!)
-    case t : UserType ⇒ "if (null == v) out.i8(0) else out.v64(v.getSkillID)"
-    case _            ⇒ "???"
+    case t : UserType                ⇒ "if (null == v) out.i8(0) else out.v64(v.getSkillID)"
+
+    case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${writeCode(t.getBaseType)} }"
+
+    case t : SingleBaseTypeContainer ⇒ s"""out.v64(v.size)
+      v.foreach { v => ${writeCode(t.getBaseType)} }"""
+
+    // @note this might be optimizable, but i dont care for now
+    case t : MapType ⇒ "t.write(v, out)"
+
+    case _           ⇒ "???"
   }
 }
