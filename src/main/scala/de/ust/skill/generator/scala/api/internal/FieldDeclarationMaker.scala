@@ -182,7 +182,7 @@ ${mapKnownReadType(f.getType)}
         else s"i.${escaped(f.getName.camel)} = v"
       }
 
-  override def getR(i : SkillObject) = i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)}
+  override def getR(i : SkillObject) : ${mapType(f.getType)} = i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)}
   override def setR(i : SkillObject, v : ${mapType(f.getType)}) : Unit = ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
         else s"i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = v"
@@ -213,6 +213,27 @@ ${mapKnownReadType(f.getType)}
     t match {
       case t : GroundType ⇒ mapGroundType(t)
       case _              ⇒ "_type"
+    }
+  }
+  private def exactFieldType(t : Type) : String = {
+    //@note it is possible to pass <null> to the case classes, because they will be replaced anyway
+    @inline def mapGroundType(t : Type) : String = t.getSkillName match {
+      case "annotation" ⇒ "AnnotationType"
+      case "bool"       ⇒ "BoolType"
+      case "i8"         ⇒ "I8"
+      case "i16"        ⇒ "I16"
+      case "i32"        ⇒ "I32"
+      case "i64"        ⇒ "I64"
+      case "v64"        ⇒ "V64"
+      case "f32"        ⇒ "F32"
+      case "f64"        ⇒ "F64"
+      case "string"     ⇒ "StringType"
+    }
+
+    t match {
+      case t : GroundType ⇒ mapGroundType(t)
+      case t : UserType   ⇒ storagePool(t)
+      case _              ⇒ "_"
     }
   }
 
@@ -275,6 +296,12 @@ ${mapKnownReadType(f.getType)}
     case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${offsetCode(t.getBaseType)} }"
 
     case t : SingleBaseTypeContainer ⇒ s"""result += V64.offset(v.size)
+      ${
+      if (t.getBaseType.getSkillName == "v64") "" // we will emit concrete code anyway
+      else s"val t = this.t.asInstanceOf[SingleBaseTypeContainer[_,${mapType(t.getBaseType)}]].groundType.asInstanceOf[${
+        exactFieldType(t.getBaseType)
+      }]"
+    }
       v.foreach { v => ${offsetCode(t.getBaseType)} }"""
 
     // @note this might be optimizable, but i dont care for now
@@ -297,6 +324,12 @@ ${mapKnownReadType(f.getType)}
     case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${writeCode(t.getBaseType)} }"
 
     case t : SingleBaseTypeContainer ⇒ s"""out.v64(v.size)
+${
+      if (t.getBaseType.getSkillName == "v64") "" // we will emit concrete code anyway
+      else s"      val t = this.t.asInstanceOf[SingleBaseTypeContainer[_,${mapType(t.getBaseType)}]].groundType.asInstanceOf[${
+        exactFieldType(t.getBaseType)
+      }]"
+    }
       v.foreach { v => ${writeCode(t.getBaseType)} }"""
 
     // @note this might be optimizable, but i dont care for now

@@ -61,7 +61,6 @@ ${
     }
 }
 
-
 /**
  * @author Timm Felden
  */
@@ -69,11 +68,20 @@ object SkillFile {
   /**
    * Reads a binary SKilL file and turns it into a SKilL state.
    */
-  def open(path : String, read : ReadMode = Read, write : WriteMode = Write) : SkillFile = readFile(new File(path).ensuring(exists(_)).toPath, read, write)
+  def open(path : String, read : ReadMode = Read, write : WriteMode = Write) : SkillFile = {
+    val f = new File(path)
+    if (!f.exists())
+      f.createNewFile()
+    readFile(f.toPath, read, write)
+  }
   /**
    * Reads a binary SKilL file and turns it into a SKilL state.
    */
-  def open(file : File, read : ReadMode, write : WriteMode) : SkillFile = readFile(file.ensuring(exists(_)).toPath, read, write)
+  def open(file : File, read : ReadMode, write : WriteMode) : SkillFile = {
+    if (!file.exists())
+      file.createNewFile()
+    readFile(file.toPath, read, write)
+  }
   /**
    * Reads a binary SKilL file and turns it into a SKilL state.
    */
@@ -89,13 +97,6 @@ object SkillFile {
       val Annotation = new AnnotationType(types, typesByName)
       val dataList = new ArrayBuffer[MappedInStream]()
       internal.FileParser.makeState(path, write, String, Annotation, types, typesByName, dataList)
-  }
-
-  // ensures existence :)
-  private def exists(f : File) = {
-    if (!f.exists())
-      f.createNewFile()
-    true
   }
 }
 """)

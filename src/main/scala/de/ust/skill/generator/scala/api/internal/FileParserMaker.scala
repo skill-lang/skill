@@ -81,7 +81,7 @@ object FileParser extends SkillFileParser[SkillFile] {
     // ensure that pools exist at all${
       (for (t ← IR)
         yield s"""
-    typesByName.get("${t.getSkillName}").getOrElse {
+    if(!typesByName.contains("${t.getSkillName}")) {
       val p = newPool(types.size + 32, "${t.getSkillName}", ${
         if (null == t.getSuperType) "null"
         else s"""typesByName("${t.getSuperType.getSkillName}")"""
@@ -93,7 +93,11 @@ object FileParser extends SkillFileParser[SkillFile] {
     }
 
     // trigger allocation and instance creation
-    types.foreach(_.allocateData)
+    locally {
+      val ts = types.iterator
+      while(ts.hasNext)
+        ts.next.allocateData
+    }
     types.par.foreach(_.allocateInstances)
 
     triggerFieldDeserialization(types, dataList)

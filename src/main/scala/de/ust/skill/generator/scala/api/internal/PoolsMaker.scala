@@ -113,8 +113,11 @@ final class ${storagePool(t)}(poolIndex : Int${
     val fields = HashSet[Class[_ <: FieldDeclaration[_, ${mapType(t)}]]](${
           (for (f ← dfs) yield s"${clsName(f)}").mkString(",")
         })
-    for (f ← dataFields)
-      fields.remove(f.getClass)
+    var dfi = dataFields.size
+    while (dfi != 0) {
+      dfi -= 1
+      fields.remove(dataFields(dfi).getClass)
+    }
     fields.foreach {
 ${
           (for (f ← dfs)
