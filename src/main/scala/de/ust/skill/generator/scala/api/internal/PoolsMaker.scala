@@ -24,10 +24,15 @@ import de.ust.skill.ir.Field
 trait PoolsMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("api/internal/Pools.scala")
-    //package
-    out.write(s"""package ${packagePrefix}api.internal""")
-    out.write(s"""
+
+    for (t ← IR) {
+      val typeName = "_root_."+packagePrefix + name(t)
+      val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
+      val fields = t.getFields.filterNot(_.isInstanceOf[View])
+
+      val out = open(s"api/internal/Pool${t.getName.capital}.scala")
+      //package
+      out.write(s"""package ${packagePrefix}api.internal
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
@@ -50,14 +55,7 @@ import de.ust.skill.common.scala.internal.fieldTypes._
 import de.ust.skill.common.scala.internal.restrictions.FieldRestriction
 
 import _root_.${packagePrefix}api._
-""")
 
-    for (t ← IR) {
-      val typeName = "_root_."+packagePrefix + name(t)
-      val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
-      val fields = t.getFields.filterNot(_.isInstanceOf[View])
-
-      out.write(s"""
 final class ${storagePool(t)}(poolIndex : Int${
         if (t.getSuperType == null) ""
         else s",\nsuperPool: ${storagePool(t.getSuperType)}"
@@ -218,10 +216,8 @@ final class ${subPool(t)}(poolIndex : Int, name : String, superPool : StoragePoo
 }
 """)
       }
+      out.close()
     }
-
-    //class prefix
-    out.close()
   }
 
   /**

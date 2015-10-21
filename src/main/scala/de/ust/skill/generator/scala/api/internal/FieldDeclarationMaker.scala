@@ -30,9 +30,11 @@ import de.ust.skill.ir.SingleBaseTypeContainer
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("api/internal/FieldDeclaration.scala")
-    //package
-    out.write(s"""package ${packagePrefix}api.internal
+
+    for (t ← IR; f ← t.getFields; if !f.isInstanceOf[View]) {
+      val out = open(s"api/internal/${knownField(f)}.scala")
+      //package
+      out.write(s"""package ${packagePrefix}api.internal
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
@@ -56,10 +58,7 @@ import de.ust.skill.common.scala.internal.KnownField
 import de.ust.skill.common.scala.internal.SimpleChunk
 import de.ust.skill.common.scala.internal.fieldTypes._
 import de.ust.skill.common.scala.internal.restrictions._
-""");
 
-    for (t ← IR; f ← t.getFields; if !f.isInstanceOf[View])
-      out.write(s"""
 /**
  * ${f.getType.toString} ${t.getName.capital}.${f.getName.camel}
  */
@@ -190,9 +189,8 @@ ${mapKnownReadType(f.getType)}
       }
 }
 """)
-
-    //class prefix
-    out.close()
+      out.close()
+    }
   }
 
   private def mapToFieldType(t : Type) : String = {

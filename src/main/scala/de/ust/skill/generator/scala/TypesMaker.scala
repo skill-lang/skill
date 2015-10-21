@@ -13,16 +13,24 @@ import de.ust.skill.ir._
 import de.ust.skill.ir.restriction._
 
 trait TypesMaker extends GeneralOutputMaker {
+
+  @inline def fieldName(implicit f : Field) : String = escaped(f.getName.camel())
+  @inline def localFieldName(implicit f : Field) : String = escaped("_" + f.getName.camel())
+  @inline def fieldAssignName(implicit f : Field) : String = escaped(f.getName.camel() + "_=")
+
   abstract override def make {
     super.make
-    val out = open("Types.scala")
 
-    @inline def fieldName(implicit f : Field) : String = escaped(f.getName.camel())
-    @inline def localFieldName(implicit f : Field) : String = escaped("_" + f.getName.camel())
-    @inline def fieldAssignName(implicit f : Field) : String = escaped(f.getName.camel() + "_=")
+    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1)
+    else this.packageName;
 
-    //package
-    out.write(s"""package ${this.packageName}
+    // create one file for each type hierarchy to help parallel builds
+    for(base <- IR if null==base.getSuperType){
+
+      val out = open(s"TypesOf${base.getName.capital}.scala")
+
+      //package
+      out.write(s"""package ${this.packageName}
 
 import de.ust.skill.common.scala.SkillID
 import de.ust.skill.common.scala.api.SkillObject
@@ -30,9 +38,8 @@ import de.ust.skill.common.scala.api.Access
 import de.ust.skill.common.scala.api.UnknownObject
 """)
 
-    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
 
-    for (t ← IR) {
+    for (t ← IR if t.getBaseType == base) {
       val fields = t.getAllFields.filter(!_.isConstant)
       val relevantFields = fields.filter(!_.isIgnored)
 
@@ -160,5 +167,6 @@ ${ // create unapply method if the type has fields, that can be matched (none or
     }
 
     out.close()
+    }
   }
 }
