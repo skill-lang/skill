@@ -39,7 +39,7 @@ ${
 
    -- ${name(t)} type conversions
    function To_${name(t)} (This : Skill.Types.Annotation) return ${name(t)};
-   pragma Inline_Always (To_${name(t)});
+   pragma Inline (To_${name(t)});
    pragma Pure_Function (To_${name(t)});
 
    function Unchecked_Access (This : access ${name(t)}_T) return ${name(t)};
@@ -50,7 +50,7 @@ ${
         if (null != s) {
           r ++= s"""
    function To_${name(s)} (This : access ${name(t)}_T'Class) return ${name(s)};
-   pragma Inline_Always (To_${name(s)});
+   pragma Inline (To_${name(s)});
 """
           s = s.getSuperType
         }
@@ -59,7 +59,7 @@ ${
         def asSub(sub : UserType) {
           r ++= s"""
    function As_${name(sub)} (This : access ${name(t)}_T'Class) return ${name(sub)};
-   pragma Inline_Always (As_${name(sub)});
+   pragma Inline (As_${name(sub)});
 """
           sub.getSubTypes.foreach(asSub)
         }
@@ -88,10 +88,10 @@ ${
         (for (f ← t.getFields)
           yield s"""${comment(f)}
    function Get_${name(f)} (This : not null access ${name(t)}_T'Class) return ${mapType(f.getType)};
-   pragma Inline_Always (Get_${name(f)});
+   pragma Inline (Get_${name(f)});
 ${comment(f)}
    procedure Set_${name(f)} (This : not null access ${name(t)}_T'Class; V : ${mapType(f.getType)});
-   pragma Inline_Always (Set_${name(f)});
+   pragma Inline (Set_${name(f)});
 ${
           f.getType match {
             case ft : SingleBaseTypeContainer ⇒ s"""
