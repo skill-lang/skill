@@ -140,32 +140,60 @@ ${mapKnownReadType(f.getType)}
   }
 
   def offset: Unit = {
-    val range = owner.blocks.last
     val data = owner.data
     var result = 0L
-
-    var i = range.bpo
-    val high = i + range.dynamicCount
-
-    while (i != high) {
-      val v = data(i).asInstanceOf[${mapType(t)}].${name(f)}
-      ${offsetCode(f.getType)}
-      i += 1
+    dataChunks.last match {
+      case c : SimpleChunk ⇒
+        var i = c.bpo.toInt
+        val high = i + c.count
+        while (i != high) {
+          val v = data(i).asInstanceOf[${mapType(t)}].${name(f)}
+          ${offsetCode(f.getType)}
+          i += 1
+        }
+      case bci : BulkChunk ⇒
+        val blocks = owner.blocks
+        var blockIndex = 0
+        while (blockIndex < bci.blockCount) {
+          val b = blocks(blockIndex)
+          blockIndex += 1
+          var i = b.bpo
+          val end = i + b.dynamicCount
+          while (i != end) {
+          val v = data(i).asInstanceOf[${mapType(t)}].${name(f)}
+          ${offsetCode(f.getType)}
+          i += 1
+          }
+        }
     }
     cachedOffset = result
   }
 
   def write(out: MappedOutStream): Unit = {
-    val range = owner.blocks.last
     val data = owner.data
-
-    var i = range.bpo
-    val high = i + range.dynamicCount
-
-    while (i != high) {
-      val v = data(i).asInstanceOf[${mapType(t)}].${name(f)}
-      ${writeCode(f.getType)}
-      i += 1
+    dataChunks.last match {
+      case c : SimpleChunk ⇒
+        var i = c.bpo.toInt
+        val high = i + c.count
+        while (i != high) {
+          val v = data(i).asInstanceOf[${mapType(t)}].${name(f)}
+          ${writeCode(f.getType)}
+          i += 1
+        }
+      case bci : BulkChunk ⇒
+        val blocks = owner.blocks
+        var blockIndex = 0
+        while (blockIndex < bci.blockCount) {
+          val b = blocks(blockIndex)
+          blockIndex += 1
+          var i = b.bpo
+          val end = i + b.dynamicCount
+          while (i != end) {
+            val v = data(i).asInstanceOf[${mapType(t)}].${name(f)}
+            ${writeCode(f.getType)}
+            i += 1
+          }
+        }
     }
   }
 
@@ -267,24 +295,24 @@ ${mapKnownReadType(f.getType)}
   private final def offsetCode(t : Type) : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
       case "v64" ⇒ """result += (if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
-        1L
-      } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
-        2
-      } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
-        3
-      } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
-        4
-      } else if (0L == (v & 0xFFFFFFF800000000L)) {
-        5
-      } else if (0L == (v & 0xFFFFFC0000000000L)) {
-        6
-      } else if (0L == (v & 0xFFFE000000000000L)) {
-        7
-      } else if (0L == (v & 0xFF00000000000000L)) {
-        8
-      } else {
-        9
-      })"""
+              1L
+            } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
+              2
+            } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
+              3
+            } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
+              4
+            } else if (0L == (v & 0xFFFFFFF800000000L)) {
+              5
+            } else if (0L == (v & 0xFFFFFC0000000000L)) {
+              6
+            } else if (0L == (v & 0xFFFE000000000000L)) {
+              7
+            } else if (0L == (v & 0xFF00000000000000L)) {
+              8
+            } else {
+              9
+            })"""
 
       // TODO optimize calls to string and annotation types (requires prelude, check nesting!)
       // constant offsets are not important
