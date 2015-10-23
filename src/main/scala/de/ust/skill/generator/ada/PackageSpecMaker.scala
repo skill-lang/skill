@@ -38,9 +38,8 @@ ${
    function Skill_Name (This : access ${name(t)}_T) return Standard.Skill.Types.String_Access;
 
    -- ${name(t)} type conversions
-   function To_${name(t)} (This : Skill.Types.Annotation) return ${name(t)};
-   pragma Inline (To_${name(t)});
-   pragma Pure_Function (To_${name(t)});
+   function To_${name(t)} (This : Skill.Types.Annotation) return ${name(t)}
+     with Inline, Pure_Function;
 
    function Unchecked_Access (This : access ${name(t)}_T) return ${name(t)};
    pragma Inline (Unchecked_Access);${
