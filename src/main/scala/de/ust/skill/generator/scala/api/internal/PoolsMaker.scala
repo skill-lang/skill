@@ -118,14 +118,12 @@ final class ${storagePool(t)}(poolIndex : Int${
       dfi -= 1
       fields.remove(dataFields(dfi).getClass)
     }
-    fields.foreach {
 ${
           (for (f ← dfs)
-            yield s"""      case ${clsName(f)} ⇒ 
+            yield s"""    if(fields.contains(${clsName(f)}))
         dataFields += new ${knownField(f)}(dataFields.size + 1, this, ${mapFieldDefinition(f.getType)})"""
           ).mkString("\n")
         }
-    }
 """) + (
           if (afs.isEmpty) "    // no auto fields\n  "
           else s"""    // auto fields
