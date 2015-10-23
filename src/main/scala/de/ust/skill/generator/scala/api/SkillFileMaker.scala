@@ -87,6 +87,16 @@ object SkillFile {
    */
   def open(path : Path, read : ReadMode, write : WriteMode) : SkillFile = readFile(path, read, write)
 
+  /**
+   * same as open(create)
+   */
+  def create(path : Path, write : WriteMode = Write) : SkillFile = readFile(path, Create, write)
+
+  /**
+   * same as open(read)
+   */
+  def read(path : Path, write : WriteMode = Write) : SkillFile = readFile(path, Read, write)
+
   private def readFile(path : Path, read : ReadMode, write : WriteMode) : SkillFile = read match {
     case Read ⇒ internal.FileParser.read(FileInputStream.open(path), write)
 
