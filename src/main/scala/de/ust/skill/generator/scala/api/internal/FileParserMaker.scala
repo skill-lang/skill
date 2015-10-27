@@ -23,6 +23,7 @@ import de.ust.skill.common.jvm.streams.MappedInStream
 import de.ust.skill.common.scala.api.SkillObject
 import de.ust.skill.common.scala.api.TypeSystemError
 import de.ust.skill.common.scala.api.WriteMode
+import de.ust.skill.common.scala.internal.BasePool
 import de.ust.skill.common.scala.internal.SkillFileParser
 import de.ust.skill.common.scala.internal.StoragePool
 import de.ust.skill.common.scala.internal.StringPool
@@ -95,8 +96,12 @@ object FileParser extends SkillFileParser[SkillFile] {
     // trigger allocation and instance creation
     locally {
       val ts = types.iterator
-      while(ts.hasNext)
-        ts.next.allocateData
+      while(ts.hasNext) {
+        val t = ts.next
+        t.allocateData
+        if(t.isInstanceOf[BasePool[_]])
+          StoragePool.setNextPools(t)
+      }
     }
     types.par.foreach(_.allocateInstances)
 
