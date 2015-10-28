@@ -76,7 +76,7 @@ ${
     implicit val thisF = f;
 
       def makeField:String = {
-		if(f.isIgnored || f.isConstant)
+		if(f.isConstant)
 		  ""
 		else
 	      s"""
@@ -85,7 +85,8 @@ ${
 
       def makeGetterImplementation:String = {
         if(f.isIgnored)
-          s"""throw new IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
+          s"""throw new IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")
+  final private[$packageName] def Ignored$localFieldName = $localFieldName"""
         else if(f.isConstant)
           s"${f.constantValue().toString}.to${mapType(f.getType)}"
         else
@@ -94,7 +95,8 @@ ${
 
       def makeSetterImplementation:String = {
         if(f.isIgnored)
-          s"""throw new IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
+          s"""throw new IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")
+  final private[$packageName] def Ignored${localFieldName}_=(v : ${mapType(f.getType())}) = $localFieldName = v"""
         else
           s"{ ${ //@range check
             if(f.getType().isInstanceOf[GroundType]){

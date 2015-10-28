@@ -32,6 +32,9 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
     super.make
 
     for (t ← IR; f ← t.getFields; if !f.isInstanceOf[View]) {
+      val accessField = if (f.isIgnored) s""".asInstanceOf[${mapType(t)}].${escaped("Ignored_"+f.getName.camel)}"""
+      else s".asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)}"
+
       val out = open(s"api/internal/${knownField(f)}.scala")
       //package
       out.write(s"""package ${packagePrefix}api.internal
@@ -106,7 +109,7 @@ ${mapKnownReadType(f.getType)}
             var i = c.bpo.toInt
             val high = i + c.count
             while (i != high) {
-              d(i).asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = t.read(in)
+              d(i)$accessField = t.read(in)
               i += 1
             }
           case bci : BulkChunk ⇒
@@ -118,7 +121,7 @@ ${mapKnownReadType(f.getType)}
               var i = b.bpo
               val end = i + b.dynamicCount
               while (i != end) {
-                d(i).asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = t.read(in)
+                d(i)$accessField = t.read(in)
                 i += 1
               }
             }
@@ -147,7 +150,7 @@ ${mapKnownReadType(f.getType)}
         var i = c.bpo.toInt
         val high = i + c.count
         while (i != high) {
-          val v = data(i).asInstanceOf[${mapType(t)}].${name(f)}
+          val v = data(i)$accessField
           ${offsetCode(f.getType)}
           i += 1
         }
@@ -160,7 +163,7 @@ ${mapKnownReadType(f.getType)}
           var i = b.bpo
           val end = i + b.dynamicCount
           while (i != end) {
-          val v = data(i).asInstanceOf[${mapType(t)}].${name(f)}
+          val v = data(i)$accessField
           ${offsetCode(f.getType)}
           i += 1
           }
@@ -176,7 +179,7 @@ ${mapKnownReadType(f.getType)}
         var i = c.bpo.toInt
         val high = i + c.count
         while (i != high) {
-          val v = data(i).asInstanceOf[${mapType(t)}].${name(f)}
+          val v = data(i)$accessField
           ${writeCode(f.getType)}
           i += 1
         }
@@ -189,7 +192,7 @@ ${mapKnownReadType(f.getType)}
           var i = b.bpo
           val end = i + b.dynamicCount
           while (i != end) {
-            val v = data(i).asInstanceOf[${mapType(t)}].${name(f)}
+            val v = data(i)$accessField
             ${writeCode(f.getType)}
             i += 1
           }
@@ -210,6 +213,7 @@ ${mapKnownReadType(f.getType)}
         else s"i.${escaped(f.getName.camel)} = v"
       }
 
+  // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : ${mapType(f.getType)} = i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)}
   override def setR(i : SkillObject, v : ${mapType(f.getType)}) : Unit = ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
