@@ -16,9 +16,9 @@ final public class FloatRangeRestriction extends RangeRestriction {
         this.high = high;
         this.inclusiveHigh = inclusiveHigh;
 
-        if (this.low >= this.high)
+        if (getLowDouble() > getHighDouble())
             throw new IllegalStateException(
-                    "Integer range restriction has no legal values: " + this.low + " -> " + this.high);
+                    "Float range restriction has no legal values: " + this.low + " -> " + this.high);
     }
 
     /**

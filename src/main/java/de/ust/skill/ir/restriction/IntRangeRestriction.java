@@ -18,7 +18,7 @@ final public class IntRangeRestriction extends RangeRestriction {
 		else
 			this.high = high - 1L;
 
-		if (this.low >= this.high)
+        if (this.low > this.high)
 			throw new IllegalStateException("Integer range restriction has no legal values: " + this.low + " -> "
 					+ this.high);
 	}
