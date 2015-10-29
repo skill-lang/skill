@@ -26,6 +26,7 @@ import de.ust.skill.ir.ReferenceType
 import de.ust.skill.ir.ContainerType
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.SingleBaseTypeContainer
+import de.ust.skill.ir.Restriction
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -95,6 +96,15 @@ final class ${knownField(f)}(${
         if (f.isAuto()) " {"
         // generate a read function
         else s""" {
+"""
+      }${
+        (for (r ← f.getRestrictions)
+          yield s"""
+  restrictions += ${mkFieldRestriction(f.getType, r)}"""
+        ).mkString
+      }${
+        if (f.isAuto()) ""
+        else s"""
 
   override def read(part : MappedInStream, target : Chunk) {${
           if (f.isConstant()) """
@@ -198,13 +208,7 @@ ${mapKnownReadType(f.getType)}
           }
         }
     }
-  }
-
-"""
-      }${
-        if (f.getRestrictions.isEmpty()) ""
-        else s"""  restrictions ++= HashSet(${mkFieldRestrictions(f)})
-"""
+  }"""
       }
 
   //override def get(i : ${mapType(t)}) = i.${escaped(f.getName.camel)}
@@ -269,22 +273,35 @@ ${mapKnownReadType(f.getType)}
     }
   }
 
-  private def mkFieldRestrictions(f : Field) : String = {
-    f.getRestrictions.map(_ match {
-      case r : NonNullRestriction ⇒ s"NonNull[${mapType(f.getType)}]"
-      case r : IntRangeRestriction ⇒
-        s"Range(${
-          r.getLow
-        }L.to${mapType(f.getType)}, ${r.getHigh}L.to${mapType(f.getType)})"
-
-      case r : FloatRangeRestriction ⇒ f.getType.getSkillName match {
-        case "f32" ⇒ s"Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
-        case "f64" ⇒ s"Range(${r.getLowDouble}, ${r.getHighDouble})"
-        case t     ⇒ throw new IllegalStateException(s"parser should have rejected a float restriction on field $f")
+  private def mkFieldRestriction(t : Type, r : Restriction) : String = r match {
+    case r : NonNullRestriction ⇒ s"NonNull.apply[${mapType(t)}]"
+    case r : IntRangeRestriction ⇒
+      t.getSkillName match {
+        case "i8" ⇒ s"Range(${
+          Math.max(Byte.MinValue, r.getLow)
+        }.toByte, ${
+          Math.min(Byte.MaxValue, r.getHigh)
+        }.toByte)"
+        case "i16" ⇒ s"Range(${
+          Math.max(Short.MinValue, r.getLow)
+        }.toShort, ${
+          Math.min(Short.MaxValue, r.getHigh)
+        }.toShort)"
+        case "i32" ⇒ s"Range(${
+          Math.max(Int.MinValue, r.getLow)
+        }, ${
+          Math.min(Int.MaxValue, r.getHigh)
+        })"
+        case _ ⇒ s"Range(${r.getLow}L, ${r.getHigh}L)"
       }
-      case r : ConstantLengthPointerRestriction ⇒
-        s"ConstantLengthPointer"
-    }).mkString(", ")
+
+    case r : FloatRangeRestriction ⇒ t.getSkillName match {
+      case "f32" ⇒ s"Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
+      case "f64" ⇒ s"Range(${r.getLowDouble}, ${r.getHighDouble})"
+      case t     ⇒ throw new IllegalStateException(s"parser should have rejected a float restriction on a field of type $t")
+    }
+    case r : ConstantLengthPointerRestriction ⇒
+      s"ConstantLengthPointer"
   }
 
   /**
@@ -298,6 +315,9 @@ ${mapKnownReadType(f.getType)}
 
   private final def offsetCode(t : Type) : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
+      // TODO optimize calls to string and annotation types (requires prelude, check nesting!)
+      case "annotation" | "string" ⇒ "result += t.offset(v)"
+
       case "v64" ⇒ """result += (if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
               1L
             } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
@@ -318,9 +338,8 @@ ${mapKnownReadType(f.getType)}
               9
             })"""
 
-      // TODO optimize calls to string and annotation types (requires prelude, check nesting!)
-      // constant offsets are not important
-      case _ ⇒ "result += t.offset(v)"
+      // offsets where we know the type
+      case _ ⇒ s"result += ${exactFieldType(t : Type)}.offset(v)"
     }
 
     case t : UserType                ⇒ "result += (if (null == v) 1 else V64.offset(v.getSkillID))"
@@ -329,12 +348,16 @@ ${mapKnownReadType(f.getType)}
 
     case t : SingleBaseTypeContainer ⇒ s"""result += V64.offset(v.size)
       ${
-      if (t.getBaseType.getSkillName == "v64") "" // we will emit concrete code anyway
-      else s"val t = this.t.asInstanceOf[SingleBaseTypeContainer[_,${mapType(t.getBaseType)}]].groundType.asInstanceOf[${
-        exactFieldType(t.getBaseType)
-      }]"
+      t.getBaseType.getSkillName match {
+        case "string" | "annotation" ⇒ s"val t = this.t.asInstanceOf[SingleBaseTypeContainer[_,${
+          mapType(t.getBaseType)
+        }]].groundType.asInstanceOf[${
+          exactFieldType(t.getBaseType)
+        }]"
+        case _ ⇒ "" // we will emit concrete code anyway
+      }
     }
-      v.foreach { v => ${offsetCode(t.getBaseType)} }"""
+          v.foreach { v => ${offsetCode(t.getBaseType)} }"""
 
     // @note this might be optimizable, but i dont care for now
     case t : MapType ⇒ "result += t.offset(v)"
@@ -356,13 +379,17 @@ ${mapKnownReadType(f.getType)}
     case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${writeCode(t.getBaseType)} }"
 
     case t : SingleBaseTypeContainer ⇒ s"""out.v64(v.size)
-${
-      if (t.getBaseType.getSkillName == "v64") "" // we will emit concrete code anyway
-      else s"      val t = this.t.asInstanceOf[SingleBaseTypeContainer[_,${mapType(t.getBaseType)}]].groundType.asInstanceOf[${
-        exactFieldType(t.getBaseType)
-      }]"
+      ${
+      t.getBaseType.getSkillName match {
+        case "string" | "annotation" ⇒ s"val t = this.t.asInstanceOf[SingleBaseTypeContainer[_,${
+          mapType(t.getBaseType)
+        }]].groundType.asInstanceOf[${
+          exactFieldType(t.getBaseType)
+        }]"
+        case _ ⇒ "" // we will emit concrete code anyway
+      }
     }
-      v.foreach { v => ${writeCode(t.getBaseType)} }"""
+            v.foreach { v => ${writeCode(t.getBaseType)} }"""
 
     // @note this might be optimizable, but i dont care for now
     case t : MapType ⇒ "t.write(v, out)"
