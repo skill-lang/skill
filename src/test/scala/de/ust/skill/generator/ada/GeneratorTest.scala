@@ -25,5 +25,4 @@ class GeneratorTest extends FunSuite {
   test("graph_1")(check("graph1.skill", "graph_1"))
   test("graph_2")(check("graph2.skill", "graph_2"))
   test("node")(check("nodeExample.tool1.skill", "node"))
-  test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
 }
