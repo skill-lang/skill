@@ -33,8 +33,7 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
     super.make
 
     for (t ← IR; f ← t.getFields; if !f.isInstanceOf[View]) {
-      val accessField = if (f.isIgnored) s""".asInstanceOf[${mapType(t)}].${escaped("Ignored_"+f.getName.camel)}"""
-      else s".asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)}"
+      val accessField = s".asInstanceOf[${mapType(t)}].${escaped("Internal_"+f.getName.camel)}"
 
       val out = open(s"api/internal/${knownField(f)}.scala")
       //package

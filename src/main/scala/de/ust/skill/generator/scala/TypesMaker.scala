@@ -85,8 +85,7 @@ ${
 
       def makeGetterImplementation:String = {
         if(f.isIgnored)
-          s"""throw new IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")
-  final private[$packageName] def Ignored$localFieldName = $localFieldName"""
+          s"""throw new IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
         else if(f.isConstant)
           s"${f.constantValue().toString}.to${mapType(f.getType)}"
         else
@@ -95,8 +94,7 @@ ${
 
       def makeSetterImplementation:String = {
         if(f.isIgnored)
-          s"""throw new IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")
-  final private[$packageName] def Ignored${localFieldName}_=(v : ${mapType(f.getType())}) = $localFieldName = v"""
+          s"""throw new IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
         else
           s"{ ${ //@range check
             if(f.getType().isInstanceOf[GroundType]){
@@ -123,11 +121,14 @@ ${
       if(f.isConstant)
         out.write(s"""$makeField
   ${comment(f)}final def $fieldName = $makeGetterImplementation
+  final private[$packageName] def Internal$localFieldName = $makeGetterImplementation
 """)
       else
         out.write(s"""$makeField
   ${comment(f)}final def $fieldName : ${mapType(f.getType())} = $makeGetterImplementation
+  final private[$packageName] def ${escaped("Internal_"+f.getName.camel)} = $localFieldName
   ${comment(f)}final def $fieldAssignName(${name(f)} : ${mapType(f.getType())}) : scala.Unit = $makeSetterImplementation
+  final private[$packageName] def ${escaped("Internal_"+f.getName.camel + "_=")}(v : ${mapType(f.getType())}) = $localFieldName = v
 """)
     }
 
