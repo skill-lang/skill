@@ -30,6 +30,7 @@ import scala.collection.mutable.Stack
 import de.ust.skill.ir.Comment
 import de.ust.skill.ir.TypeContext
 import scala.collection.JavaConversions._
+import de.ust.skill.ir.restriction.AbstractRestriction
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -283,7 +284,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
 
         case "monotone"  ⇒ opt("(" ~ ")") ^^ { _ ⇒ new MonotoneRestriction }
 
-        case "abstract"  ⇒ opt("(" ~ ")") ^^ { _ ⇒ null }
+        case "abstract"  ⇒ opt("(" ~ ")") ^^ { _ ⇒ new AbstractRestriction }
 
         case "default"   ⇒ "(" ~> defaultRestrictionParameter <~ ")" ^^ { _ ⇒ null }
 

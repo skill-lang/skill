@@ -12,6 +12,7 @@ import de.ust.skill.ir.ContainerType
 import de.ust.skill.ir.InterfaceType
 import de.ust.skill.ir.EnumType
 import scala.annotation.tailrec
+import de.ust.skill.ir.restriction.AbstractRestriction
 /**
  * Creates user type equivalents.
  *
@@ -68,6 +69,7 @@ trait CSVMaker extends GeneralOutputMaker {
       out.write(s"interface;${tc.getInterfaces.size()}\n")
       out.write(s"enum;${tc.getEnums.size()}\n")
       out.write(s"user;${tc.getUsertypes.size()}\n")
+      out.write(s"..which are abstract;${tc.getUsertypes.filter(_.getRestrictions.exists(_.isInstanceOf[AbstractRestriction])).size()}\n")
       out.write(s"typedefs;${tc.getTypedefs.size()}\n")
       out.close()
     }
