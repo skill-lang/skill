@@ -36,8 +36,8 @@ trait AccessMaker extends GeneralOutputMaker {
       //package & imports
       out.write(s"""package ${packagePrefix}internal;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 
 import de.ust.skill.common.java.api.SkillException;
@@ -234,6 +234,44 @@ ${
             return this;
         }""").mkString
       }
+    }
+
+    /**
+     * used internally for type forest construction
+     */
+    @Override
+    public <S extends ${mapType(t)}> StoragePool<S, ${mapType(t.getBaseType)}> makeSubPool(int index, String name) {
+        return new UnknownSubPool(index, name, this);
+    }
+
+    private static final class UnknownSubPool<S extends ${mapType(t)}> extends SubPool<S, ${mapType(t.getBaseType)}> {
+        UnknownSubPool(int poolIndex, String name, StoragePool<? super S, ${mapType(t.getBaseType)}> superPool) {
+            super(poolIndex, name, superPool, Collections.emptySet(), noAutoFields());
+        }
+
+        @Override
+        public <SS extends S> StoragePool<SS, unknown.A> makeSubPool(int index, String name) {
+            return new UnknownSubPool(index, name, this);
+        }
+
+        @Override
+        public void insertInstances() {
+            final Block last = lastBlock();
+            int i = (int) last.bpo;
+            int high = (int) (last.bpo + last.count);
+            ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) basePool).data();
+            while (i < high) {
+                if (null != data[i])
+                    return;
+
+                @SuppressWarnings("unchecked")
+                S r = (S) (new ${mapType(t)}.SubType(this, i + 1));
+                data[i] = r;
+                staticData.add(r);
+
+                i += 1;
+            }
+        }
     }
 
     /**

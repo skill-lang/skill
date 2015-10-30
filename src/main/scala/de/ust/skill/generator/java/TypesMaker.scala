@@ -247,7 +247,8 @@ ${
     public static final class SubType extends ${name(t)} implements NamedType {
         private final StoragePool<?, ?> τPool;
 
-        SubType(StoragePool<?, ?> τPool, long skillID) {
+        /** internal use only!!! */
+        public SubType(StoragePool<?, ?> τPool, long skillID) {
             super(skillID);
             this.τPool = τPool;
         }
