@@ -86,7 +86,7 @@ ${
             if (null == superPool)
                 p = (StoragePool<T, B>) new BasePool<T>(types.size(), name, Collections.EMPTY_SET, noAutoFields());
             else
-                p = superPool.makeSubPool(types.size(), name);
+                p = (StoragePool<T, B>) superPool.makeSubPool(types.size(), name);
             break;
         }
 

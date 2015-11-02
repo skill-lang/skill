@@ -240,17 +240,17 @@ ${
      * used internally for type forest construction
      */
     @Override
-    public <S extends ${mapType(t)}> StoragePool<S, ${mapType(t.getBaseType)}> makeSubPool(int index, String name) {
+    public StoragePool<? extends ${mapType(t)}, ${mapType(t.getBaseType)}> makeSubPool(int index, String name) {
         return new UnknownSubPool(index, name, this);
     }
 
-    private static final class UnknownSubPool<S extends ${mapType(t)}> extends SubPool<S, ${mapType(t.getBaseType)}> {
-        UnknownSubPool(int poolIndex, String name, StoragePool<? super S, ${mapType(t.getBaseType)}> superPool) {
+    private static final class UnknownSubPool extends SubPool<${mapType(t)}.SubType, ${mapType(t.getBaseType)}> {
+        UnknownSubPool(int poolIndex, String name, StoragePool<? super ${mapType(t)}.SubType, ${mapType(t.getBaseType)}> superPool) {
             super(poolIndex, name, superPool, Collections.emptySet(), noAutoFields());
         }
 
         @Override
-        public <SS extends S> StoragePool<SS, unknown.A> makeSubPool(int index, String name) {
+        public StoragePool<? extends ${mapType(t)}.SubType, ${mapType(t.getBaseType)}> makeSubPool(int index, String name) {
             return new UnknownSubPool(index, name, this);
         }
 
@@ -265,7 +265,7 @@ ${
                     return;
 
                 @SuppressWarnings("unchecked")
-                S r = (S) (new ${mapType(t)}.SubType(this, i + 1));
+                ${mapType(t)}.SubType r = new ${mapType(t)}.SubType(this, i + 1);
                 data[i] = r;
                 staticData.add(r);
 
