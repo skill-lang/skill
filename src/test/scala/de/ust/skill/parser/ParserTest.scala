@@ -52,6 +52,7 @@ class ParserTest extends FunSuite {
   test("regression: report missing types") {
     val e = intercept[de.ust.skill.ir.ParseException] { Parser.process("/ParseException/missingTypeCausedBySpelling.skill", false, false).allTypeNames.size }
     assert("""The type "MessSage" parent of DatedMessage is unknown!
+Declaration in src/test/resources/frontend/ParseException/missingTypeCausedBySpelling.skill.
 Did you forget to include MessSage.skill?
 Known types are: Message, DatedMessage""" === e.getMessage())
   }
