@@ -52,6 +52,7 @@ object TypeCheck {
     for (d ← userTypes; parent ← d.superTypes) {
       val p = definitionNames.get(parent).getOrElse(
         ParseException(s"""The type "${parent}" parent of ${d.name} is unknown!
+Declaration in ${d.declaredIn}.
 Did you forget to include ${parent}.skill?
 Known types are: ${definitionNames.keySet.mkString(", ")}""")
       );
