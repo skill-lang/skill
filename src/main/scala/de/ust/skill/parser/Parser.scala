@@ -368,8 +368,10 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
           case min ~ max ⇒ List(stringToName(min.toString), stringToName(max.toString))
         })
         case "provider" | "owner" ⇒ success(name) ~ ("(" ~> repsep(id, ",") <~ ")")
-        case "pragma"             ⇒ success(name) ~ rep1(id)
-        case _                    ⇒ success(name) ~ success(List[Name]())
+        case "pragma" ⇒ success(name) ~ ((id ~ ("(" ~> repsep(id, ",") <~ ")")) ^^ {
+          case f ~ fs ⇒ List(f) ++ fs
+        })
+        case _ ⇒ success(name) ~ success(List[Name]())
       }
     } ^^ {
       case n ~ args ⇒
@@ -511,7 +513,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
         case _ ⇒
       }
       //@note lexical order in edges
-      edges = edges.map{case (k, e) ⇒ (k, e.sortWith(_.name.lowercase > _.name.lowercase))}
+      edges = edges.map { case (k, e) ⇒ (k, e.sortWith(_.name.lowercase > _.name.lowercase)) }
 
       // L ← Empty list that will contain the sorted nodes
       val L = ListBuffer[Declaration]()
