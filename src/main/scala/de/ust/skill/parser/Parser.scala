@@ -368,8 +368,8 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
           case min ~ max ⇒ List(stringToName(min.toString), stringToName(max.toString))
         })
         case "provider" | "owner" ⇒ success(name) ~ ("(" ~> repsep(id, ",") <~ ")")
-        case "pragma" ⇒ success(name) ~ ((id ~ ("(" ~> repsep(id, ",") <~ ")")) ^^ {
-          case f ~ fs ⇒ List(f) ++ fs
+        case "pragma" ⇒ success(name) ~ ((id ~ opt("(" ~> repsep(id, ",") <~ ")")) ^^ {
+          case f ~ fs ⇒ List(f) ++ fs.getOrElse(Nil)
         })
         case _ ⇒ success(name) ~ success(List[Name]())
       }
