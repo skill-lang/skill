@@ -82,6 +82,6 @@ UID {
 /** all expressions are pure */
 !pure
 @abstract
-!pragma tree(is a funny extension that is likely to be ignored in this form)
+!pragma tree(is, a, funny, extension, that, is, likely, to, be, ignored, in, this, form)
 Expression {
 }
