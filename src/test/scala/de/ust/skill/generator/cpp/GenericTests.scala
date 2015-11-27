@@ -1,0 +1,162 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
+package de.ust.skill.generator.cpp
+
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
+import java.nio.file.Files
+import scala.reflect.io.Directory
+import scala.reflect.io.Path.jfile2path
+import org.junit.runner.RunWith
+import org.scalatest.FunSuite
+import de.ust.skill.main.CommandLine
+import org.scalatest.junit.JUnitRunner
+import scala.collection.mutable.ArrayBuffer
+import de.ust.skill.generator.common
+
+/**
+ * Generic tests built for Java.
+ * Generic tests have an implementation for each programming language, because otherwise deleting the generated code
+ * upfront would be ugly.
+ *
+ * @author Timm Felden
+ */
+@RunWith(classOf[JUnitRunner])
+class GenericTests extends common.GenericTests {
+
+  override def language = "cpp"
+
+  override def deleteOutDir(out : String) {
+    import scala.reflect.io.Directory
+    Directory(new File("testsuites/cpp/src/", out)).deleteRecursively
+  }
+
+  def newTestFile(packagePath : String, name : String) = {
+    val f = new File(s"testsuites/cpp/test/$packagePath/generic${name}Test.cpp")
+    f.getParentFile.mkdirs
+    if (f.exists)
+      f.delete
+    f.createNewFile
+    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
+
+    rval.write(s"""
+#include <skill/streams/InStream.h>
+#include <skill/restrictions/TypeRestriction.h>
+#include <skill/internal/UnknownBasePool.h>
+#include <skill/api/SkillFile.h>
+#include <skill/internal/SkillState.h>
+#include <skill/internal/FileParser.h>
+
+#include <gtest/gtest.h>
+
+using namespace skill::streams;
+
+namespace parseTest {
+    using namespace skill::api;
+    using namespace skill::internal;
+    using namespace skill::restrictions;
+
+    //!create a new pool in the target type system
+    static AbstractStoragePool *testPool(skill::TypeID typeID,
+                                  skill::api::String name,
+                                  AbstractStoragePool *superPool,
+                                  std::set<TypeRestriction *> *restrictions) {
+        if (nullptr == superPool)
+            return new UnknownBasePool(typeID, name, restrictions);
+        else
+            return superPool->makeSubPool(typeID, name, restrictions);
+    }
+
+    //! create a new state in the target type system
+    static SkillFile *testMake(FileInputStream *in,
+                        WriteMode mode,
+                        StringPool *String,
+                        AnnotationType *Annotation,
+                        std::vector<AbstractStoragePool *> *types,
+                        skill::api::typeByName_t *typesByName,
+                        std::vector<MappedInStream *> &dataList) {
+        //! TODO read field data
+        for (auto map : dataList)
+            delete map;
+
+        // trigger allocation and instance creation
+        for (auto t : *types) {
+            t->allocateData();
+            //if (nullptr==t->superPool)
+            //  StoragePool.setNextPools(t);
+        }
+
+        return new SkillState(in, mode, String, Annotation, types, typesByName);
+    }
+
+    static SkillFile *open(std::string path) {
+        return skill::internal::parseFile<testPool, testMake>(
+                new FileInputStream(path), readOnly);
+    }
+}
+using namespace parseTest;
+
+
+TEST(${packagePath.capitalize}Parser, CanCompile) {
+    ASSERT_TRUE(true);
+}
+""")
+    rval
+  }
+
+  def closeTestFile(out : java.io.PrintWriter) {
+    out.write("""
+""")
+    out.close
+  }
+
+  override def makeGenBinaryTests(name : String) {
+    val (accept, reject) = collectBinaries(name)
+
+    // generate read tests
+    locally {
+      val out = newTestFile(name, "Read")
+
+      for (f ← accept) out.write(s"""
+TEST(${name.capitalize}Parser, Accept_${f.getName.replaceAll("\\W", "_")}) {
+    try {
+        auto s = open("../../${f.getPath}");
+        delete s;
+    } catch (skill::SkillException e) {
+        GTEST_FAIL() << "an exception was thrown:" << std::endl << e.message;
+    }
+    GTEST_SUCCEED();
+}
+""")
+      for (f ← reject) out.write(s"""
+TEST(${name.capitalize}Parser, Reject_${f.getName.replaceAll("\\W", "_")}) {
+    try {
+        auto s = open("../../${f.getPath}");
+        delete s;
+    } catch (skill::SkillException e) {
+        GTEST_SUCCEED();
+    }
+    GTEST_FAIL() << "expected an exception to be thrown.";
+}
+""")
+      closeTestFile(out)
+    }
+
+    //    mit generischem binding sf parsen um an zu erwartende daten zu kommen
+
+    //    mit parser spec parsen um an lesbare daten zu kommen:)
+
+    //    test generieren, der sicherstellt, dass sich die daten da raus lesen lassen
+
+  }
+
+  override def finalizeTests {
+    // nothing yet
+  }
+}
