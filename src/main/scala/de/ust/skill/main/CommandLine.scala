@@ -29,6 +29,9 @@ object CommandLine {
    */
   var exit : String ⇒ Unit = { s ⇒ System.err.println(s); System.exit(0) }
 
+  // this exception is used to quit normally
+  class DoneException extends Exception;
+
   private def printHelp(gens : Iterable[Generator]) : Unit = {
     println("""
 usage:
@@ -76,38 +79,43 @@ Opitions:
     val skillPath : String = args(args.length - 2)
     var outPath : String = args(args.length - 1)
 
-    val (header, packageName, languages) = parseOptions(args.view(0, args.length - 2).to)
+    try {
+      val (header, packageName, languages) = parseOptions(args.view(0, args.length - 2).to)
 
-    assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
+      assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
 
-    // invoke generators
-    val tc = Parser.process(new File(skillPath))
+      // invoke generators
+      val tc = Parser.process(new File(skillPath))
 
-    println(s"Parsed $skillPath -- found ${tc.allTypeNames.size - (new TypeContext().allTypeNames.size)} types.")
-    println(s"Generating sources into ${new File(outPath).getAbsolutePath()}")
+      println(s"Parsed $skillPath -- found ${tc.allTypeNames.size - (new TypeContext().allTypeNames.size)} types.")
+      println(s"Generating sources into ${new File(outPath).getAbsolutePath()}")
 
-    val failures = HashMap[String, Exception]()
-    for ((n, m) ← languages) {
-      m.setTC(tc)
-      m.setPackage(packageName)
-      m.headerInfo = header
-      m.outPath = outPath+"/"+n
+      val failures = HashMap[String, Exception]()
+      for ((n, m) ← languages) {
+        m.setTC(tc)
+        m.setPackage(packageName)
+        m.headerInfo = header
+        m.outPath = outPath+"/"+n
 
-      print(s"run $n: ")
-      try {
-        m.make
-        println("-done-")
-      } catch { case e : Exception ⇒ println("-FAILED-"); failures(n) = e }
+        print(s"run $n: ")
+        try {
+          m.make
+          println("-done-")
+        } catch { case e : Exception ⇒ println("-FAILED-"); failures(n) = e }
+      }
+
+      // report failures
+      if (!failures.isEmpty)
+        error((
+          for ((lang, err) ← failures) yield {
+            err.printStackTrace();
+            s"$lang failed with message: ${err.getMessage}}"
+          }
+        ).mkString("\n"))
+
+    } catch {
+      case e : DoneException ⇒ return ;
     }
-
-    // report failures
-    if (!failures.isEmpty)
-      error((
-        for ((lang, err) ← failures) yield {
-          err.printStackTrace();
-          s"$lang failed with message: ${err.getMessage}}"
-        }
-      ).mkString("\n"))
   }
 
   def parseOptions(args : Iterator[String]) = {
@@ -151,8 +159,10 @@ Opitions:
       case "--requiresEscaping" ⇒
         if (selectedLanguages.size != 1)
           error("Exactly one language has to be specified using the -L option before asking for escapings.")
-        else
+        else {
           println(checkEscaping(selectedLanguages.keySet.head, args))
+          throw new DoneException;
+        }
 
       case unknown ⇒ error(s"unknown option: $unknown")
     }
