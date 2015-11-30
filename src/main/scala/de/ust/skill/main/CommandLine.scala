@@ -44,6 +44,13 @@ Opitions:
 
   -L name|all            request a language to be built; default: all
   -O@<lang>:<opt>=<val>  set for a language an option to a value
+
+  --requiresEscaping [identifier]+
+                         requires option "-L name"
+                         checks the argument identifier list for necessity of
+                         escaping. Will return a space separated list of
+                         true/false. True, iff the identifier will be escaped
+                         in a generated binding.
 """)
     gens.foreach(_.printHelp)
   }
@@ -56,10 +63,10 @@ Opitions:
     ???
   }
 
-  def main(args : Array[String]) {
+  // get known generator for languages
+  val known = KnownGenerators.all.map(_.newInstance).map { g ⇒ g.getLanguageName -> g }.toMap
 
-    // get known generator for languages
-    val known = KnownGenerators.all.map(_.newInstance).map { g ⇒ g.getLanguageName -> g }.toMap
+  def main(args : Array[String]) {
 
     // process options
     if (2 > args.length) {
@@ -69,7 +76,7 @@ Opitions:
     val skillPath : String = args(args.length - 2)
     var outPath : String = args(args.length - 1)
 
-    val (header, packageName, languages) = parseOptions(args.view(0, args.length - 2).to, known)
+    val (header, packageName, languages) = parseOptions(args.view(0, args.length - 2).to)
 
     assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
 
@@ -103,7 +110,7 @@ Opitions:
       ).mkString("\n"))
   }
 
-  def parseOptions(args : Iterator[String], known : Map[String, Generator]) = {
+  def parseOptions(args : Iterator[String]) = {
 
     var packageName = List[String]()
     val header = new HeaderInfo()
@@ -141,6 +148,12 @@ Opitions:
 
       }
 
+      case "--requiresEscaping" ⇒
+        if (selectedLanguages.size != 1)
+          error("Exactly one language has to be specified using the -L option before asking for escapings.")
+        else
+          println(checkEscaping(selectedLanguages.keySet.head, args))
+
       case unknown ⇒ error(s"unknown option: $unknown")
     }
 
@@ -148,6 +161,11 @@ Opitions:
       selectedLanguages ++= known
 
     (header, packageName, selectedLanguages)
+  }
+
+  def checkEscaping(language : String, args : Iterator[String]) : String = {
+    val generator = known(language.toLowerCase)
+    args.map { s ⇒ s != generator.escapedLonely(s) }.mkString(" ")
   }
 
 }

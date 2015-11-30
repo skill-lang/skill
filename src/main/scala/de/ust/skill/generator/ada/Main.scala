@@ -261,7 +261,7 @@ Opitions (ada):
   /**
    * escape keywords and reserved words as well
    */
-  protected def escapedLonely(target : String) : String = target.toLowerCase match {
+  override final def escapedLonely(target : String) : String = target.toLowerCase match {
     //     keywords and reserved words get a suffix "_2"
     case "abort" | "else" | "new" | "return" | "abs" | "elsif" | "not" | "reverse" | "abstract" | "end" | "null" |
       "accept" | "entry" | "select" | "access" | "exception" | "of" | "separate" | "aliased" | "exit" | "or" |
@@ -277,7 +277,7 @@ Opitions (ada):
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
-  protected def escaped(target : String) : String = target.map {
+  final def escaped(target : String) : String = target.map {
     case ':'                                       ⇒ "_0"
     case c if Character.isUnicodeIdentifierPart(c) ⇒ c.toString
     case c                                         ⇒ "ZZ"+c.toHexString

@@ -78,7 +78,12 @@ trait Generator {
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
-  protected def escaped(target : String) : String;
+  def escaped(target : String) : String;
+
+  /**
+   * Escapes words, that appear without prefix or suffix.
+   */
+  def escapedLonely(target : String) : String = escaped(target)
 
   /**
    * Create a new file with a default header.

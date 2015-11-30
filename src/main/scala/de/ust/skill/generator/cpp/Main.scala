@@ -164,7 +164,7 @@ Opitions (cpp):
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
   private val escapeCache = new HashMap[String, String]();
-  protected def escaped(target : String) : String = escapeCache.getOrElse(target, {
+  final def escaped(target : String) : String = escapeCache.getOrElse(target, {
     val result = target match {
       //keywords get a suffix "_", because that way at least auto-completion will work as expected
       case "auto" | "const" | "double" | "float" | "int" | "short" | "struct" | "unsigned" | "break" | "continue"

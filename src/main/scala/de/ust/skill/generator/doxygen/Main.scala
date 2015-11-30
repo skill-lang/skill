@@ -126,7 +126,7 @@ Opitions (doxygen):
    * Tries to escape a string without decreasing the usability of the generated identifier.
    * TODO not correct
    */
-  protected def escaped(target : String) : String = {
+  final def escaped(target : String) : String = {
 
     target match {
       // keywords get a suffix "_2"

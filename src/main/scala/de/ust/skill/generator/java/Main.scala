@@ -170,7 +170,7 @@ Opitions (Java):
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
   private val escapeCache = new HashMap[String, String]();
-  protected def escaped(target : String) : String = escapeCache.getOrElse(target, {
+  final def escaped(target : String) : String = escapeCache.getOrElse(target, {
     val result = target match {
       //keywords get a suffix "_", because that way at least auto-completion will work as expected
       case "abstract" | "continue" | "for" | "new" | "switch" | "assert" | "default" | "if" | "package" | "synchronized"
