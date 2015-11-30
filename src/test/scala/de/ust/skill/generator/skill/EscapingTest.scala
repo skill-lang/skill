@@ -28,8 +28,10 @@ class EscapingTest extends FunSuite {
     assert(result === escaping.mkString(" "))
   }
 
+  val known = KnownGenerators.all.map(_.newInstance.getLanguageName)
+
   // if is a keyword in all real languages
-  for (l ← CommandLine.known.keySet if l != "skill" && l != "statistics")
+  for (l ← known if l != "skill" && l != "statistics")
     test(s"${l} - none")(check(l, Array("if"), Array(true)))
 
   // some language keywords

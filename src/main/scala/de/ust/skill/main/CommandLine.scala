@@ -66,10 +66,10 @@ Opitions:
     ???
   }
 
-  // get known generator for languages
-  val known = KnownGenerators.all.map(_.newInstance).map { g ⇒ g.getLanguageName -> g }.toMap
-
   def main(args : Array[String]) {
+
+    // get known generator for languages
+    val known = KnownGenerators.all.map(_.newInstance).map { g ⇒ g.getLanguageName -> g }.toMap
 
     // process options
     if (2 > args.length) {
@@ -80,7 +80,7 @@ Opitions:
     var outPath : String = args(args.length - 1)
 
     try {
-      val (header, packageName, languages) = parseOptions(args.view(0, args.length - 2).to)
+      val (header, packageName, languages) = parseOptions(args.view(0, args.length - 2).to, known)
 
       assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
 
@@ -118,7 +118,7 @@ Opitions:
     }
   }
 
-  def parseOptions(args : Iterator[String]) = {
+  def parseOptions(args : Iterator[String], known : Map[String, Generator]) = {
 
     var packageName = List[String]()
     val header = new HeaderInfo()
@@ -174,7 +174,9 @@ Opitions:
   }
 
   def checkEscaping(language : String, args : Iterator[String]) : String = {
-    val generator = known(language.toLowerCase)
+    val generator = KnownGenerators.all.map(_.newInstance).collect({
+      case g if g.getLanguageName == language.toLowerCase ⇒ g
+    }).head
     args.map { s ⇒ s != generator.escapedLonely(s) }.mkString(" ")
   }
 
