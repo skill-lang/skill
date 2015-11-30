@@ -105,7 +105,7 @@ trait GeneralOutputMaker extends Generator {
   protected def packagePrefix() : String
   protected def packageName = packagePrefix.substring(0, packagePrefix.length - 1)
 
-  private lazy val packagePath = if (packagePrefix.length > 0) {
+  private def packagePath = if (packagePrefix.length > 0) {
     packagePrefix.replace(".", "/")
   } else {
     ""
