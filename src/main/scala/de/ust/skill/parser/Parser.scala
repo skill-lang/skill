@@ -98,7 +98,9 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     /**
      * Includes are just strings containing relative paths to *our* path.
      */
-    private def includes = ("include" | "with") ~> rep(string);
+    private def includes = ("include" | "with") ~> rep(
+      string ^^ { s ⇒ new File(currentFile.getParentFile, s).getAbsolutePath }
+    );
 
     /**
      * Declarations add or modify user defined types.
@@ -413,9 +415,8 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
    */
   private def parseAll(input : File) = {
     val parser = new FileParser();
-    val base = input.getParentFile();
     val todo = new HashSet[String]();
-    todo.add(input.getName());
+    todo.add(input.getAbsolutePath);
     val done = new HashSet[String]();
     var rval = new ArrayBuffer[Declaration]();
     while (!todo.isEmpty) {
@@ -425,7 +426,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
         done += file;
 
         try {
-          val result = parser.process(new File(base, file))
+          val result = parser.process(new File(file))
 
           // add includes to the todo list
           result._1.foreach(todo += _)
@@ -438,8 +439,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
           case e : FileNotFoundException ⇒ ParseException(
             s"The include $file could not be resolved to an existing file: ${e.getMessage()} \nWD: ${
               FileSystems.getDefault().getPath(".").toAbsolutePath().toString()
-            }"
-          )
+            }", e)
         }
       }
     }
