@@ -61,6 +61,7 @@ namespace parseTest {
     using namespace skill::api;
     using namespace skill::internal;
     using namespace skill::restrictions;
+    using skill::fieldTypes::AnnotationType;
 
     //!create a new pool in the target type system
     static AbstractStoragePool *testPool(skill::TypeID typeID,
@@ -141,6 +142,7 @@ TEST(${name.capitalize}Parser, Reject_${f.getName.replaceAll("\\W", "_")}) {
         delete s;
     } catch (skill::SkillException e) {
         GTEST_SUCCEED();
+        return;
     }
     GTEST_FAIL() << "expected an exception to be thrown.";
 }

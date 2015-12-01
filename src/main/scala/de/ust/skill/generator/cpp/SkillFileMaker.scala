@@ -29,7 +29,7 @@ namespace api {
 class SkillFile : public ::skill::internal::SkillState {
 
         SkillFile(skill::streams::FileInputStream *in, const skill::api::WriteMode &mode,
-                  skill::internal::StringPool *stringPool, int *annotation,
+                  skill::internal::StringPool *stringPool, skill::fieldTypes::AnnotationType *annotation,
                   std::vector<skill::internal::AbstractStoragePool *> *types, skill::api::typeByName_t *typesByName)
                 : SkillState(in, mode, stringPool, annotation, types, typesByName) { }
 
