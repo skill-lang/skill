@@ -415,8 +415,9 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
    */
   private def parseAll(input : File) = {
     val parser = new FileParser();
+    val base = new File(System.getProperty("user.dir")).toURI();
     val todo = new HashSet[String]();
-    todo.add(input.getAbsolutePath);
+    todo.add(base.relativize(input.toURI()).getPath());
     val done = new HashSet[String]();
     var rval = new ArrayBuffer[Declaration]();
     while (!todo.isEmpty) {
@@ -429,7 +430,10 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
           val result = parser.process(new File(file))
 
           // add includes to the todo list
-          result._1.foreach(todo += _)
+          for (path ← result._1) {
+            // strip common prefix, if possible
+            todo += base.relativize(new File(path).toURI()).getPath();
+          }
 
           // add definitions
           rval = rval ++ result._2
