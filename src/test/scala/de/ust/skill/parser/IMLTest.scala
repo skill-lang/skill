@@ -56,4 +56,10 @@ class IMLTest extends FunSuite {
       CommandLine.main(Array("-p", "iml", "-L", "scala", specPath,
         System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
   }
+
+  test("create skill") {
+    if (Files.exists(filename.toPath))
+      CommandLine.main(Array("-p", "iml", "-L", "skill", specPath,
+        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
+  }
 }

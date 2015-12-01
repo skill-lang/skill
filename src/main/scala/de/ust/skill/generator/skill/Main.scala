@@ -37,7 +37,15 @@ class Main extends FakeMain
   /**
    * Translates the types into Ada types.
    */
-  override protected def mapType(t : Type) : String = t.getName.capital
+  override protected def mapType(t : Type) : String = t match {
+    case t : GroundType              ⇒ t.getSkillName
+    case t : ConstantLengthArrayType ⇒ s"${mapType(t.getBaseType)}[${t.getLength}]"
+    case t : VariableLengthArrayType ⇒ s"${mapType(t.getBaseType)}[]"
+    case t : ListType                ⇒ s"list<${mapType(t.getBaseType)}>"
+    case t : SetType                 ⇒ s"set<${mapType(t.getBaseType)}>"
+    case t : MapType                 ⇒ t.getBaseTypes.mkString("map<", ", ", ">")
+    case t                           ⇒ t.getName.capital
+  }
 
   /**
    * Provides the package prefix.

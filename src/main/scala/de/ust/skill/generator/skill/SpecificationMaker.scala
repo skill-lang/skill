@@ -69,7 +69,7 @@ ${mkFields(t.getFields.to)}
   ${
             t.getRestrictions.map(s ⇒ s"$s\n  ").mkString
           }${
-            t.getTarget.getName.capital
+            mapType(t.getTarget)
           };
 
 """
@@ -85,6 +85,6 @@ ${mkFields(t.getFields.to)}
     yield s"""
   ${comment(f)}${
     f.getRestrictions.map(s ⇒ s"$s\n  ").mkString
-  }${f.getType} ${f.getName.camel};"""
+  }${mapType(f.getType)} ${f.getName.camel};"""
   ).mkString("\n")
 }
