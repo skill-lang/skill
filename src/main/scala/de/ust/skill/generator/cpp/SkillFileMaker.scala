@@ -114,7 +114,7 @@ static ::skill::api::SkillFile *testMake(FileInputStream *in,
 
 $packageName::api::SkillFile *$packageName::api::SkillFile::open(const std::string &path) {
     return ($packageName::api::SkillFile *) skill::internal::parseFile<testPool, testMake>(
-            new FileInputStream(path), readOnly);
+            std::unique_ptr<FileInputStream>(new FileInputStream(path)), readOnly);
 }
 """)
 
