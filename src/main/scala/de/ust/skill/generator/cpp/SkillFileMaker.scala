@@ -28,11 +28,6 @@ namespace api {
  */
 class SkillFile : public ::skill::internal::SkillState {
 
-        SkillFile(skill::streams::FileInputStream *in, const skill::api::WriteMode &mode,
-                  skill::internal::StringPool *stringPool, skill::fieldTypes::AnnotationType *annotation,
-                  std::vector<skill::internal::AbstractStoragePool *> *types, skill::api::typeByName_t *typesByName)
-                : SkillState(in, mode, stringPool, annotation, types, typesByName) { }
-
 /*(
   _path : Path,
   _mode : WriteMode,
@@ -49,6 +44,15 @@ ${
     }
 }*/
 public:
+
+        /**
+         * !internal use only
+         */
+        SkillFile(skill::streams::FileInputStream *in, const skill::api::WriteMode &mode,
+                  skill::internal::StringPool *stringPool, skill::fieldTypes::AnnotationType *annotation,
+                  std::vector<std::unique_ptr<skill::internal::AbstractStoragePool>> *types,
+                  skill::api::typeByName_t *typesByName)
+                : SkillState(in, mode, stringPool, annotation, types, typesByName) { }
 
   /**
    * Reads a binary SKilL file and turns it into a SKilL state.
@@ -71,11 +75,46 @@ public:
     val out = open("File.cpp")
 
     out.write(s"""
+#include <skill/internal/UnknownBasePool.h>
+#include <skill/internal/FileParser.h>
 #include "File.h"
 
-using namespace $packageName::api;
+using namespace ::skill;
 
-static SkillFile *open(const std::string &path) {
+//!create a new pool in the target type system
+static internal::AbstractStoragePool *testPool(TypeID typeID,
+                                               api::String name,
+                                               internal::AbstractStoragePool *superPool,
+                                               std::set<TypeRestriction *> *restrictions) {
+    if (nullptr == superPool)
+        return new internal::UnknownBasePool(typeID, name, restrictions);
+    else
+        return superPool->makeSubPool(typeID, name, restrictions);
+}
+
+//! create a new state in the target type system
+static ::skill::api::SkillFile *testMake(FileInputStream *in,
+                                          WriteMode mode,
+                                          internal::StringPool *String,
+                                          AnnotationType *Annotation,
+                                          std::vector<std::unique_ptr<internal::AbstractStoragePool>> *types,
+                                          api::typeByName_t *typesByName,
+                                          std::vector<std::unique_ptr<MappedInStream>> &dataList) {
+    //! TODO read field data
+
+    // trigger allocation and instance creation
+    for (auto &t : *types) {
+        t->allocateData();
+        //if (nullptr==t->superPool)
+        //  StoragePool.setNextPools(t);
+    }
+
+    return new $packageName::api::SkillFile(in, mode, String, Annotation, types, typesByName);
+}
+
+$packageName::api::SkillFile *$packageName::api::SkillFile::open(const std::string &path) {
+    return ($packageName::api::SkillFile *) skill::internal::parseFile<testPool, testMake>(
+            new FileInputStream(path), readOnly);
 }
 """)
 

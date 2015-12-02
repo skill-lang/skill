@@ -38,6 +38,7 @@ class GenericTests extends common.GenericTests {
   }
 
   def newTestFile(packagePath : String, name : String) = {
+    val packageName = packagePath.split("/").map(EscapeFunction.apply).mkString("::")
     val f = new File(s"testsuites/cpp/test/$packagePath/generic${name}Test.cpp")
     f.getParentFile.mkdirs
     if (f.exists)
@@ -46,63 +47,10 @@ class GenericTests extends common.GenericTests {
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
 
     rval.write(s"""
-#include <skill/streams/InStream.h>
-#include <skill/restrictions/TypeRestriction.h>
-#include <skill/internal/UnknownBasePool.h>
-#include <skill/api/SkillFile.h>
-#include <skill/internal/SkillState.h>
-#include <skill/internal/FileParser.h>
-
 #include <gtest/gtest.h>
+#include "../../src/$packagePath/File.h"
 
-using namespace skill::streams;
-
-namespace parseTest {
-    using namespace skill::api;
-    using namespace skill::internal;
-    using namespace skill::restrictions;
-    using skill::fieldTypes::AnnotationType;
-
-    //!create a new pool in the target type system
-    static AbstractStoragePool *testPool(skill::TypeID typeID,
-                                  skill::api::String name,
-                                  AbstractStoragePool *superPool,
-                                  std::set<TypeRestriction *> *restrictions) {
-        if (nullptr == superPool)
-            return new UnknownBasePool(typeID, name, restrictions);
-        else
-            return superPool->makeSubPool(typeID, name, restrictions);
-    }
-
-    //! create a new state in the target type system
-    static SkillFile *testMake(FileInputStream *in,
-                        WriteMode mode,
-                        StringPool *String,
-                        AnnotationType *Annotation,
-                        std::vector<AbstractStoragePool *> *types,
-                        skill::api::typeByName_t *typesByName,
-                        std::vector<MappedInStream *> &dataList) {
-        //! TODO read field data
-        for (auto map : dataList)
-            delete map;
-
-        // trigger allocation and instance creation
-        for (auto t : *types) {
-            t->allocateData();
-            //if (nullptr==t->superPool)
-            //  StoragePool.setNextPools(t);
-        }
-
-        return new SkillState(in, mode, String, Annotation, types, typesByName);
-    }
-
-    static SkillFile *open(std::string path) {
-        return skill::internal::parseFile<testPool, testMake>(
-                new FileInputStream(path), readOnly);
-    }
-}
-using namespace parseTest;
-
+using ::$packageName::api::SkillFile;
 
 TEST(${packagePath.capitalize}Parser, CanCompile) {
     ASSERT_TRUE(true);
@@ -127,7 +75,7 @@ TEST(${packagePath.capitalize}Parser, CanCompile) {
       for (f ← accept) out.write(s"""
 TEST(${name.capitalize}Parser, Accept_${f.getName.replaceAll("\\W", "_")}) {
     try {
-        auto s = open("../../${f.getPath}");
+        auto s = SkillFile::open("../../${f.getPath}");
         delete s;
     } catch (skill::SkillException e) {
         GTEST_FAIL() << "an exception was thrown:" << std::endl << e.message;
@@ -138,13 +86,13 @@ TEST(${name.capitalize}Parser, Accept_${f.getName.replaceAll("\\W", "_")}) {
       for (f ← reject) out.write(s"""
 TEST(${name.capitalize}Parser, Reject_${f.getName.replaceAll("\\W", "_")}) {
     try {
-        auto s = open("../../${f.getPath}");
+        auto s = SkillFile::open("../../${f.getPath}");
         delete s;
     } catch (skill::SkillException e) {
         GTEST_SUCCEED();
         return;
     }
-    GTEST_FAIL() << "expected an exception to be thrown.";
+    GTEST_FAIL() << "expected an exception, but none was thrown.";
 }
 """)
       closeTestFile(out)

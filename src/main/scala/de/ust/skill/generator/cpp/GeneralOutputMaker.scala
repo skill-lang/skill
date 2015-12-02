@@ -107,7 +107,7 @@ trait GeneralOutputMaker extends Generator {
    * Assume a package prefix provider.
    */
   protected def packagePrefix() : String
-  protected lazy val packageParts : Array[String] = packagePrefix().split("\\.")
+  protected lazy val packageParts : Array[String] = packagePrefix().split("\\.").map(escaped)
   protected lazy val packageName : String = packageParts.mkString("::", "::", "")
 
   private lazy val packagePath = if (packagePrefix.length > 0) {

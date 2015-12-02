@@ -134,7 +134,7 @@ class Main extends FakeMain
   private var _packagePrefix = ""
 
   override def setPackage(names : List[String]) {
-    _packagePrefix = names.map(escaped).foldRight("")(_+"."+_)
+    _packagePrefix = names.foldRight("")(_+"."+_)
   }
 
   override def setOption(option : String, value : String) = option.toLowerCase match {
@@ -165,26 +165,7 @@ Opitions (cpp):
    */
   private val escapeCache = new HashMap[String, String]();
   final def escaped(target : String) : String = escapeCache.getOrElse(target, {
-    val result = target match {
-      //keywords get a suffix "_", because that way at least auto-completion will work as expected
-      case "auto" | "const" | "double" | "float" | "int" | "short" | "struct" | "unsigned" | "break" | "continue"
-        | "else" | "for" | "long" | "signed" | "switch" | "void" | "case" | "default" | "enum" | "goto" | "register"
-        | "sizeof" | "typedef" | "volatile" | "char" | "do" | "extern" | "if" | "return" | "static" | "union" | "while"
-        | "asm" | "dynamic_cast" | "namespace" | "reinterpret_cast" | "try" | "bool" | "explicit" | "new" | "static_cast"
-        | "typeid" | "catch" | "false" | "operator" | "template" | "typename" | "class" | "friend" | "private" | "this"
-        | "using" | "const_cast" | "inline" | "public" | "throw" | "virtual" | "delete" | "mutable" | "protected"
-        | "true" | "wchar_t" | "and" | "bitand" | "compl" | "not_eq" | "or_eq" | "xor_eq" | "and_eq" | "bitor" | "not"
-        | "or" | "xor" | "cin" | "endl" | "INT_MIN" | "iomanip" | "main" | "npos" | "std" | "cout" | "include"
-        | "INT_MAX" | "iostream" | "MAX_RAND" | "NULL" | "string" ⇒ s"_$target"
-
-      case t if t.forall(c ⇒ '_' == c || Character.isLetterOrDigit(c)) ⇒ t
-
-      case _ ⇒ target.map {
-        case 'Z' ⇒ "ZZ"
-        case c if '_' == c || Character.isLetterOrDigit(c) ⇒ ""+c
-        case c ⇒ "Z"+c.toHexString
-      }.mkString
-    }
+    val result = EscapeFunction(target)
     escapeCache(target) = result
     result
   })
@@ -239,5 +220,28 @@ Opitions (cpp):
         }(i.$fName, dataChunk)"
       }
     }
+  }
+}
+
+object EscapeFunction {
+  def apply(target : String) : String = target match {
+    //keywords get a suffix "_", because that way at least auto-completion will work as expected
+    case "auto" | "const" | "double" | "float" | "int" | "short" | "struct" | "unsigned" | "break" | "continue"
+      | "else" | "for" | "long" | "signed" | "switch" | "void" | "case" | "default" | "enum" | "goto" | "register"
+      | "sizeof" | "typedef" | "volatile" | "char" | "do" | "extern" | "if" | "return" | "static" | "union" | "while"
+      | "asm" | "dynamic_cast" | "namespace" | "reinterpret_cast" | "try" | "bool" | "explicit" | "new" | "static_cast"
+      | "typeid" | "catch" | "false" | "operator" | "template" | "typename" | "class" | "friend" | "private" | "this"
+      | "using" | "const_cast" | "inline" | "public" | "throw" | "virtual" | "delete" | "mutable" | "protected"
+      | "true" | "wchar_t" | "and" | "bitand" | "compl" | "not_eq" | "or_eq" | "xor_eq" | "and_eq" | "bitor" | "not"
+      | "or" | "xor" | "cin" | "endl" | "INT_MIN" | "iomanip" | "main" | "npos" | "std" | "cout" | "include"
+      | "INT_MAX" | "iostream" | "MAX_RAND" | "NULL" | "string" ⇒ s"_$target"
+
+    case t if t.forall(c ⇒ '_' == c || Character.isLetterOrDigit(c)) ⇒ t
+
+    case _ ⇒ target.map {
+      case 'Z' ⇒ "ZZ"
+      case c if '_' == c || Character.isLetterOrDigit(c) ⇒ ""+c
+      case c ⇒ "Z"+c.toHexString
+    }.mkString
   }
 }
