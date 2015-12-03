@@ -115,4 +115,9 @@ trait GeneralOutputMaker extends Generator {
   } else {
     ""
   }
+
+  /**
+   * all string literals used in type and field names
+   */
+  protected lazy val allStrings = IR.map(_.getSkillName).toSet ++ IR.flatMap(_.getFields).map(_.getSkillName).toSet
 }

@@ -78,43 +78,54 @@ public:
 #include <skill/internal/UnknownBasePool.h>
 #include <skill/internal/FileParser.h>
 #include "File.h"
+#include "StringKeeper.h"
 
-using namespace ::skill;
+${packageParts.mkString("namespace ", " {\nnamespace", " {")}
+    //! create the string pool
+    static ::skill::internal::StringPool *initializeStrings(::skill::streams::FileInputStream *in) {
+        auto keeper = new StringKeeper;
+        ::skill::internal::StringPool *pool = new ::skill::internal::StringPool(in, keeper);${
+      (for (s ← allStrings; name = escaped(s)) yield s"""
+        keeper->$name = pool->add("$s");""").mkString
+    }
+        return pool;
+    }
 
 //!create a new pool in the target type system
-static internal::AbstractStoragePool *testPool(TypeID typeID,
-                                               api::String name,
-                                               internal::AbstractStoragePool *superPool,
-                                               std::set<TypeRestriction *> *restrictions) {
+static ::skill::internal::AbstractStoragePool *testPool(::skill::TypeID typeID,
+                                               ::skill::api::String name,
+                                               ::skill::internal::AbstractStoragePool *superPool,
+                                               std::set<::skill::restrictions::TypeRestriction *> *restrictions) {
     if (nullptr == superPool)
-        return new internal::UnknownBasePool(typeID, name, restrictions);
+        return new ::skill::internal::UnknownBasePool(typeID, name, restrictions);
     else
         return superPool->makeSubPool(typeID, name, restrictions);
 }
 
 //! create a new state in the target type system
-static ::skill::api::SkillFile *testMake(FileInputStream *in,
-                                          WriteMode mode,
-                                          internal::StringPool *String,
-                                          AnnotationType *Annotation,
-                                          std::vector<std::unique_ptr<internal::AbstractStoragePool>> *types,
-                                          api::typeByName_t *typesByName,
-                                          std::vector<std::unique_ptr<MappedInStream>> &dataList) {
+static ::skill::api::SkillFile *testMake(::skill::streams::FileInputStream *in,
+                                          ::skill::WriteMode mode,
+                                          ::skill::internal::StringPool *String,
+                                          ::skill::fieldTypes::AnnotationType *Annotation,
+                                          std::vector<std::unique_ptr<::skill::internal::AbstractStoragePool>> *types,
+                                          ::skill::api::typeByName_t *typesByName,
+                                          std::vector<std::unique_ptr<::skill::streams::MappedInStream>> &dataList) {
     //! TODO read field data
 
     // trigger allocation and instance creation
     for (auto &t : *types) {
         t->allocateData();
+        t->allocateInstances();
         //if (nullptr==t->superPool)
         //  StoragePool.setNextPools(t);
     }
 
     return new $packageName::api::SkillFile(in, mode, String, Annotation, types, typesByName);
 }
-
+${packageParts.map(_ ⇒ "}").mkString}
 $packageName::api::SkillFile *$packageName::api::SkillFile::open(const std::string &path) {
-    return ($packageName::api::SkillFile *) skill::internal::parseFile<testPool, testMake>(
-            std::unique_ptr<FileInputStream>(new FileInputStream(path)), readOnly);
+    return ($packageName::api::SkillFile *) ::skill::internal::parseFile<$packageName::initializeStrings, $packageName::testPool, $packageName::testMake>(
+            std::unique_ptr<::skill::streams::FileInputStream>(new ::skill::streams::FileInputStream(path)), ::skill::api::readOnly);
 }
 """)
 

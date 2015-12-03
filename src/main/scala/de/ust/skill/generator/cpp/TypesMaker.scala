@@ -25,9 +25,6 @@ trait TypesMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1)
-    else this.packageName;
-
     val out = open(s"Types.h")
 
 

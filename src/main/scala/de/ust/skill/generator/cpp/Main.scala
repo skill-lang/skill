@@ -38,6 +38,7 @@ class Main extends FakeMain
     //    with FileParserMaker
     //    with SerializationFunctionsMaker
     with SkillFileMaker
+    with StringKeeperMaker
     //    with StateAppenderMaker
     //    with StateWriterMaker
     //    with DependenciesMaker
