@@ -76,7 +76,7 @@ ${
 """)
       // fields
 	    out.write((for(f <- t.getFields if !f.isInstanceOf[View] && !f.isConstant)
-        yield s"""${mapType(f.getType())} ${localFieldName(f)};
+        yield s"""    ${mapType(f.getType())} ${localFieldName(f)};
 """).mkString)
 
       // constructor
@@ -169,7 +169,7 @@ ${
     };
 
     class ${name(t)}_UnknownSubType : public ${name(t)} {
-        const char *_skillName;
+        const ::skill::internal::AbstractStoragePool *owner;
 
         //! bulk allocation constructor
         ${name(t)}_UnknownSubType() { };
@@ -182,18 +182,16 @@ ${
         /**
          * !internal use only!
          */
-        inline void byPassConstruction(::skill::SKilLID id, const char *name) {
+        inline void byPassConstruction(::skill::SKilLID id, const ::skill::internal::AbstractStoragePool *owner) {
             this->id = id;
-            _skillName = name;
+            this->owner = owner;
         }
 
-        ${name(t)}_UnknownSubType(::skill::SKilLID id) : _skillName(nullptr) {
+        ${name(t)}_UnknownSubType(::skill::SKilLID id) : owner(nullptr) {
             throw ::skill::SkillException("one cannot create an unknown object without supllying a name");
         }
 
-        virtual const char *skillName() const {
-            return _skillName;
-        }
+        virtual const char *skillName() const;
     };
 """);
     }
@@ -207,9 +205,14 @@ $endGuard""")
 
   private final def makeSource {
     val out = open(s"Types.cpp")
-    out.write(s"""#include "Types.h"${
+    out.write(s"""#include "Types.h"
+#include <skill/internal/AbstractStoragePool.h>${
 (for(t <- IR) yield s"""
-const char *const $packageName::${name(t)}::typeName = "${t.getSkillName}";""").mkString
+const char *const $packageName::${name(t)}::typeName = "${t.getSkillName}";
+const char *$packageName::${name(t)}_UnknownSubType::skillName() const {
+    return owner->name->c_str();
+}
+""").mkString
     }
 """)
     out.close()
