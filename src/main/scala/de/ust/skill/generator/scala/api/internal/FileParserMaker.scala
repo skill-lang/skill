@@ -52,7 +52,7 @@ object FileParser extends SkillFileParser[SkillFile] {
       case "${t.getSkillName}" ⇒${
         if (null == t.getSuperType) s"""
         if (null != superPool)
-          throw TypeSystemError(s"the opened file contains a type ${name(t)} with super type S{superPool.name}, but none was expected")
+          throw TypeSystemError(s"the opened file contains a type ${name(t)} with super type $${superPool.name}, but none was expected")
         else
           new ${storagePool(t)}(typeId)"""
         else s"""
