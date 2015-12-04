@@ -35,14 +35,13 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  */
 class Main extends FakeMain
     //    with FieldDeclarationMaker
-    //    with FileParserMaker
     //    with SerializationFunctionsMaker
     with SkillFileMaker
     with StringKeeperMaker
     //    with StateAppenderMaker
     //    with StateWriterMaker
     //    with DependenciesMaker
-    //    with PoolsMaker
+    with PoolsMaker
     with TypesMaker {
 
   lineLength = 120
@@ -54,7 +53,7 @@ class Main extends FakeMain
    */
   override protected def mapType(t : Type) : String = t match {
     case t : GroundType ⇒ t.getName.lower match {
-      case "annotation" ⇒ "::skill::api::object*"
+      case "annotation" ⇒ "::skill::api::Object*"
 
       case "bool"       ⇒ "bool"
 
@@ -70,13 +69,13 @@ class Main extends FakeMain
       case "string"     ⇒ "::skill::api::String"
     }
 
-    case t : ConstantLengthArrayType ⇒ s"$ArrayTypeName[${mapType(t.getBaseType())}]"
-    case t : VariableLengthArrayType ⇒ s"$VarArrayTypeName[${mapType(t.getBaseType())}]"
-    case t : ListType                ⇒ s"$ListTypeName[${mapType(t.getBaseType())}]"
-    case t : SetType                 ⇒ s"$SetTypeName[${mapType(t.getBaseType())}]"
-    case t : MapType                 ⇒ t.getBaseTypes().map(mapType).reduceRight((k, v) ⇒ s"$MapTypeName[$k, $v]")
+    case t : ConstantLengthArrayType ⇒ s"${mapType(t.getBaseType())}*"
+    case t : VariableLengthArrayType ⇒ s"::std::vector<${mapType(t.getBaseType())}>*"
+    case t : ListType                ⇒ s"::std::vector<${mapType(t.getBaseType())}>*"
+    case t : SetType                 ⇒ s"::std::set<${mapType(t.getBaseType())}>*"
+    case t : MapType                 ⇒ t.getBaseTypes().map(mapType).reduceRight((k, v) ⇒ s"::std::map<$k, $v>*")
 
-    case t : Declaration             ⇒ packageName+"::"+name(t)
+    case t : Declaration             ⇒ s"$packageName::${name(t)}*"
 
     case _                           ⇒ throw new IllegalStateException(s"Unknown type $t")
   }
@@ -242,7 +241,7 @@ object EscapeFunction {
     case _ ⇒ target.map {
       case 'Z' ⇒ "ZZ"
       case c if '_' == c || Character.isLetterOrDigit(c) ⇒ ""+c
-      case c ⇒ "Z"+c.toHexString
+      case c ⇒ f"Z$c%04X"
     }.mkString
   }
 }

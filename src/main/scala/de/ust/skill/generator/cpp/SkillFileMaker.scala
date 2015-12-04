@@ -16,7 +16,11 @@ trait SkillFileMaker extends GeneralOutputMaker {
     val out = open("File.h")
 
     out.write(s"""
-#include <skill/internal/SkillState.h>
+#include <skill/internal/SkillState.h>${
+      (for (t ← IR)
+        yield s"""
+#include "${storagePool(t)}.h"""").mkString
+    }
 
 ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
 namespace api {
@@ -95,7 +99,29 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
 static ::skill::internal::AbstractStoragePool *testPool(::skill::TypeID typeID,
                                                ::skill::api::String name,
                                                ::skill::internal::AbstractStoragePool *superPool,
-                                               std::set<::skill::restrictions::TypeRestriction *> *restrictions) {
+                                               std::set<::skill::restrictions::TypeRestriction *> *restrictions,
+                                               const ::skill::internal::AbstractStringKeeper *const keeper) {
+${
+      if (IR.isEmpty) ""
+      else """    const StringKeeper *const sk = (const StringKeeper *const) keeper;"""
+    }${
+      (for (t ← IR)
+        yield s"""
+    if (name == sk->${escaped(t.getSkillName)}) {${
+        if (null == t.getSuperType) s"""
+        if (nullptr != superPool)
+            throw ::skill::SkillException("the opened file contains a type ${name(t)} with super type, but none was expected");
+        else
+            return new ${storagePool(t)}(typeID, name, restrictions);"""
+        else s"""
+        if (nullptr == superPool)
+            throw ::skill::SkillException("the opened file contains a type ${name(t)} with no super type, but ${name(t.getSuperType)} was expected");
+        else
+            return new ${storagePool(t)}(typeID, superPool, name, restrictions);"""
+      }
+    }"""
+      ).mkString
+    }
     if (nullptr == superPool)
         return new ::skill::internal::UnknownBasePool(typeID, name, restrictions);
     else

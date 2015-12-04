@@ -49,12 +49,6 @@ trait GeneralOutputMaker extends Generator {
    */
   protected var revealSkillID = false;
 
-  val ArrayTypeName = "scala.collection.mutable.ArrayBuffer"
-  val VarArrayTypeName = "scala.collection.mutable.ArrayBuffer"
-  val ListTypeName = "scala.collection.mutable.ListBuffer"
-  val SetTypeName = "scala.collection.mutable.HashSet"
-  val MapTypeName = "scala.collection.mutable.HashMap"
-
   private[cpp] def header : String
 
   /**
@@ -120,4 +114,17 @@ trait GeneralOutputMaker extends Generator {
    * all string literals used in type and field names
    */
   protected lazy val allStrings = IR.map(_.getSkillName).toSet ++ IR.flatMap(_.getFields).map(_.getSkillName).toSet
+
+  /**
+   * start a guard word for a file
+   */
+  final protected def beginGuard(t : Type) : String = beginGuard(escaped(name(t)))
+  final protected def beginGuard(word : String) : String = {
+    val guard = "SKILL_CPP_GENERATED_"+packageParts.map(_.toUpperCase).mkString("", "_", "_") + word.toUpperCase
+    s"""#ifndef $guard
+#define $guard
+"""
+  }
+  final protected val endGuard : String = """
+#endif"""
 }

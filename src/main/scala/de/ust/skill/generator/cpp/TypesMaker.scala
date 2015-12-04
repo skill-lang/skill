@@ -19,20 +19,43 @@ import de.ust.skill.ir.restriction._
  */
 trait TypesMaker extends GeneralOutputMaker {
 
-  @inline def fieldName(implicit f : Field) : String = escaped(f.getName.capital())
-  @inline def localFieldName(implicit f : Field) : String = escaped("_" + f.getName.camel())
+  @inline private final def fieldName(implicit f : Field) : String = escaped(f.getName.capital())
+  @inline private final def localFieldName(implicit f : Field) : String = escaped("_" + f.getName.camel())
 
   abstract override def make {
     super.make
+    
+    makeHeader
+    makeSource
+  }
+  
+  private final def makeHeader {
 
     val out = open(s"Types.h")
 
-
       //includes package
-    out.write(s"""
-// include???
+    out.write(s"""${beginGuard("types")}
+#include <skill/api/Object.h>
+#include <skill/api/SkillException.h>
+#include <cassert>
+#include <vector>
+#include <set>
+#include <map>
+
+namespace skill{
+    namespace internal {
+        template<class T>
+        class Book;
+    }
+}
 
 ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
+
+    // type predef for cyclic dependencies${
+  (for (t ← IR) yield s"""
+    class ${name(t)};""").mkString
+}
+    // begin actual type defs
 """)
 
 
@@ -48,7 +71,8 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
 ${
         comment(t)
 }class $Name : public $SuperName {
-protected:
+        friend class ::skill::internal::Book<${name(t)}>;
+    protected:
 """)
       // fields
 	    out.write((for(f <- t.getFields if !f.isInstanceOf[View] && !f.isConstant)
@@ -57,17 +81,19 @@ protected:
 
       // constructor
     	out.write(s"""
-  $Name(::skill::SkillID _skillID) {
-    this->id = _skillID;
-  }
+        $Name() { }
 
-public:
+    public:
+
+        $Name(::skill::SKilLID _skillID) {
+            this->id = _skillID;
+        }
 """)
 
 	  // reveal skill id
       if(revealSkillID && null==t.getSuperType)
         out.write("""
-    inline ::skill:SkillID skillID() { return this->id; }
+    inline ::skill:SKilLID skillID() { return this->id; }
 """)
 
   //${if(revealSkillID)"" else s"protected[${packageName}] "}final def getSkillID = skillID
@@ -82,7 +108,7 @@ public:
         if(f.isIgnored)
           s"""throw ::skill::SkillException::IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint");"""
         else if(f.isConstant)
-          s"return ${f.constantValue().toString}.to${mapType(f.getType)};"
+          s"return (${mapType(f.getType)})0x${f.constantValue().toHexString};"
         else
           s"return $localFieldName;"
       }
@@ -94,11 +120,11 @@ public:
           s"${ //@range check
             if(f.getType().isInstanceOf[GroundType]){
               if(f.getType().asInstanceOf[GroundType].isInteger)
-                f.getRestrictions.collect{case r:IntRangeRestriction⇒r}.map{r ⇒ s"""assert(${r.getLow}L <= ${name(f)} && ${name(f)} <= ${r.getHigh}L, "${name(f)} has to be in range [${r.getLow};${r.getHigh}]"); """}.mkString("")
+                f.getRestrictions.collect{case r:IntRangeRestriction⇒r}.map{r ⇒ s"""assert(${r.getLow}L <= ${name(f)} && ${name(f)} <= ${r.getHigh}L); """}.mkString("")
               else if("f32".equals(f.getType.getName))
-                f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""assert(${r.getLowFloat}f <= ${name(f)} && ${name(f)} <= ${r.getHighFloat}f, "${name(f)} has to be in range [${r.getLowFloat};${r.getHighFloat}]"); """}.mkString("")
+                f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""assert(${r.getLowFloat}f <= ${name(f)} && ${name(f)} <= ${r.getHighFloat}f); """}.mkString("")
               else if("f64".equals(f.getType.getName))
-               f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""assert(${r.getLowDouble} <= ${name(f)} && ${name(f)} <= ${r.getHighDouble}, "${name(f)} has to be in range [${r.getLowDouble};${r.getHighDouble}]"); """}.mkString("")
+               f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""assert(${r.getLowDouble} <= ${name(f)} && ${name(f)} <= ${r.getHighDouble}); """}.mkString("")
               else
                 ""
             }
@@ -106,7 +132,7 @@ public:
               ""
           }${//@monotone modification check
             if(!t.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty){
-              s"""assert(skillID == -1L, "${t.getName} is specified to be monotone and this instance has already been subject to serialization!"); """
+              s"""assert(skillID == -1L); """
             }
             else
               ""
@@ -134,28 +160,58 @@ public:
     ).mkString
   })"*/
 
-private:
-  static const std::string typeName = std::string("${t.getSkillName}");
-public:
-  virtual const std::string* getTypeName() { return &typeName; }
+    private:
+        static const char *const typeName;
+    public:
+        virtual const char *skillName() const { return typeName; }
 
-  virtual std::string toString() { return typeName + std::to_string(this->id); }
-};
-""")
+        virtual std::string toString() { return std::string(typeName) + std::to_string(this->id); }
+    };
 
-      out.write(s"""
-namespace ${name(t)} {
-  class UnknownSubType {
+    class ${name(t)}_UnknownSubType : public ${name(t)} {
+        const char *_skillName;
 
-    //final override def prettyString : String = s"$$getTypeName#$$skillID"
-  };
-}
+        //! bulk allocation constructor
+        ${name(t)}_UnknownSubType() { };
+
+        friend class ::skill::internal::Book<${name(t)}_UnknownSubType>;
+
+        //final override def prettyString : String = s"$$getTypeName#$$skillID"
+
+    public:
+        /**
+         * !internal use only!
+         */
+        inline void byPassConstruction(::skill::SKilLID id, const char *name) {
+            this->id = id;
+            _skillName = name;
+        }
+
+        ${name(t)}_UnknownSubType(::skill::SKilLID id) : _skillName(nullptr) {
+            throw ::skill::SkillException("one cannot create an unknown object without supllying a name");
+        }
+
+        virtual const char *skillName() const {
+            return _skillName;
+        }
+    };
 """);
     }
 
     // close name spaces
-    out.write(s"${packageParts.map(_ ⇒ "}").mkString}")
+    out.write(s"""${packageParts.map(_ ⇒ "}").mkString}
+$endGuard""")
 
+    out.close()
+  }
+
+  private final def makeSource {
+    val out = open(s"Types.cpp")
+    out.write(s"""#include "Types.h"${
+(for(t <- IR) yield s"""
+const char *const $packageName::${name(t)}::typeName = "${t.getSkillName}";""").mkString
+    }
+""")
     out.close()
   }
 }
