@@ -132,7 +132,7 @@ ${
               ""
           }${//@monotone modification check
             if(!t.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty){
-              s"""assert(skillID == -1L); """
+              s"""assert(id == -1L); """
             }
             else
               ""
