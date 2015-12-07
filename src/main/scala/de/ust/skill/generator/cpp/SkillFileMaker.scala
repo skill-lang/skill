@@ -116,6 +116,8 @@ ${
         else s"""
         if (nullptr == superPool)
             throw ::skill::SkillException("the opened file contains a type ${name(t)} with no super type, but ${name(t.getSuperType)} was expected");
+        else if(superPool->name != sk->${escaped(t.getSuperType.getSkillName)})
+            throw ::skill::SkillException("the opened file contains a type ${name(t)} with supertype different from ${name(t.getSuperType)}");
         else
             return new ${storagePool(t)}(typeID, superPool, name, restrictions);"""
       }
