@@ -51,10 +51,6 @@ class GenericTests extends common.GenericTests {
 #include "../../src/$packagePath/File.h"
 
 using ::$packageName::api::SkillFile;
-
-TEST(${packagePath.capitalize}Parser, CanCompile) {
-    ASSERT_TRUE(true);
-}
 """)
     rval
   }
