@@ -75,8 +75,8 @@ TEST(${packagePath.capitalize}Parser, CanCompile) {
       for (f ← accept) out.write(s"""
 TEST(${name.capitalize}Parser, Accept_${f.getName.replaceAll("\\W", "_")}) {
     try {
-        auto s = SkillFile::open("../../${f.getPath}");
-        delete s;
+        auto s = std::unique_ptr<SkillFile>(SkillFile::open("../../${f.getPath}"));
+        s->check();
     } catch (skill::SkillException e) {
         GTEST_FAIL() << "an exception was thrown:" << std::endl << e.message;
     }
@@ -86,8 +86,8 @@ TEST(${name.capitalize}Parser, Accept_${f.getName.replaceAll("\\W", "_")}) {
       for (f ← reject) out.write(s"""
 TEST(${name.capitalize}Parser, Reject_${f.getName.replaceAll("\\W", "_")}) {
     try {
-        auto s = SkillFile::open("../../${f.getPath}");
-        delete s;
+        auto s = std::unique_ptr<SkillFile>(SkillFile::open("../../${f.getPath}"));
+        s->check();
     } catch (skill::SkillException e) {
         GTEST_SUCCEED();
         return;
