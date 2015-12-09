@@ -23,14 +23,13 @@ trait SkillFileMaker extends GeneralOutputMaker {
     }
 
 ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
-namespace api {
-
-/**
- * A skill file that corresponds to your specification. Have fun!
- *
- * @author Timm Felden
- */
-class SkillFile : public ::skill::internal::SkillState {
+    namespace api {
+        /**
+         * A skill file that corresponds to your specification. Have fun!
+         *
+         * @author Timm Felden
+         */
+        struct SkillFile : public ::skill::internal::SkillState {
 
 /*(
   _path : Path,
@@ -39,36 +38,35 @@ class SkillFile : public ::skill::internal::SkillState {
   _annotationType : fieldTypes.AnnotationType,
   _types : ArrayBuffer[StoragePool[_ <: SkillObject, _ <: SkillObject]],
   _typesByName : HashMap[String, StoragePool[_ <: SkillObject, _ <: SkillObject]])
-    extends SkillState(_path, _mode, _String, _annotationType, _types, _typesByName) {
-
-  private[api] def AnnotationType = annotationType
+    extends SkillState(_path, _mode, _String, _annotationType, _types, _typesByName) {*/
 ${
       (for (t ← IR) yield s"""
-  val ${name(t)} : internal.${storagePool(t)} = typesByName("${t.getSkillName}").asInstanceOf[internal.${storagePool(t)}]""").mkString
+            ${storagePool(t)} *const ${name(t)};""").mkString
     }
-}*/
-public:
 
-        /**
-         * !internal use only
-         */
-        SkillFile(skill::streams::FileInputStream *in, const skill::api::WriteMode &mode,
-                  skill::internal::StringPool *stringPool, skill::fieldTypes::AnnotationType *annotation,
-                  std::vector<std::unique_ptr<skill::internal::AbstractStoragePool>> *types,
-                  skill::api::typeByName_t *typesByName)
-                : SkillState(in, mode, stringPool, annotation, types, typesByName) { }
+            /**
+             * !internal use only
+             */
+            SkillFile(skill::streams::FileInputStream *in, const skill::api::WriteMode &mode,
+                      skill::internal::StringPool *stringPool, skill::fieldTypes::AnnotationType *annotation,
+                      std::vector<std::unique_ptr<skill::internal::AbstractStoragePool>> *types,
+                      skill::api::typeByName_t *typesByName)
+                    : SkillState(in, mode, stringPool, annotation, types, typesByName)${
+      (for (t ← IR) yield s""",
+                      ${name(t)}((${storagePool(t)} *) annotation->type(${name(t)}::typeName))""").mkString
+    } { }
 
-  /**
-   * Reads a binary SKilL file and turns it into a SKilL state.
-   *
-   * TODO modes
-   */
-  static SkillFile* open(const std::string& path);
+            /**
+             * Reads a binary SKilL file and turns it into a SKilL state.
+             *
+             * TODO modes
+             */
+            static SkillFile *open(const std::string &path);
 
 //  def create(path : Path, write : WriteMode = Write) : SkillFile = readFile(path, Create, write)
 
 //  def read(path : Path, write : WriteMode = Write) : SkillFile = readFile(path, Read, write)
-};
+        };
 }${packageParts.map(_ ⇒ "}").mkString}
 """)
 
