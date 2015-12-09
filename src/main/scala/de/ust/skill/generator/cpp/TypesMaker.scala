@@ -160,9 +160,8 @@ ${
     ).mkString
   })"*/
 
-    private:
         static const char *const typeName;
-    public:
+
         virtual const char *skillName() const { return typeName; }
 
         virtual std::string toString() { return std::string(typeName) + std::to_string(this->id); }

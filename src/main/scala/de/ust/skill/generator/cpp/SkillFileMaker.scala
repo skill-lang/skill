@@ -89,8 +89,11 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
     static ::skill::internal::StringPool *initializeStrings(::skill::streams::FileInputStream *in) {
         auto keeper = new StringKeeper;
         ::skill::internal::StringPool *pool = new ::skill::internal::StringPool(in, keeper);${
-      (for (s ← allStrings; name = escaped(s)) yield s"""
-        keeper->$name = pool->add("$s");""").mkString
+      (for (t ← IR; n = escaped(t.getSkillName)) yield s"""
+        keeper->$n = pool->addLiteral(${name(t)}::typeName);""").mkString
+    }${
+      (for (s ← allStrings._2; name = escaped(s)) yield s"""
+        keeper->$name = pool->addLiteral("$s");""").mkString
     }
         return pool;
     }

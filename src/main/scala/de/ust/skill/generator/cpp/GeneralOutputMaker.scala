@@ -113,7 +113,12 @@ trait GeneralOutputMaker extends Generator {
   /**
    * all string literals used in type and field names
    */
-  protected lazy val allStrings = IR.map(_.getSkillName).toSet ++ IR.flatMap(_.getFields).map(_.getSkillName).toSet
+  protected lazy val allStrings = {
+    val types = IR.map(_.getSkillName).toSet
+    val fields = IR.flatMap(_.getFields).map(_.getSkillName).toSet -- types
+
+    (types, fields)
+  }
 
   /**
    * start a guard word for a file

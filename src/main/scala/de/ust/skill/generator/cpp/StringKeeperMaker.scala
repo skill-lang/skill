@@ -34,7 +34,10 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
      * holds instances of all strings
      */
     struct StringKeeper : public ::skill::internal::AbstractStringKeeper {${
-      (for (s ← allStrings; name = escaped(s)) yield s"""
+      (for (s ← allStrings._1; name = escaped(s)) yield s"""
+        ::skill::api::String $name;""").mkString
+    }${
+      (for (s ← allStrings._2; name = escaped(s)) yield s"""
         ::skill::api::String $name;""").mkString
     }
     };
