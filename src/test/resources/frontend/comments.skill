@@ -23,3 +23,10 @@ T {
   string commentWithoutStars;
 
 }
+
+/**
+ * a 
+ * @note: have tags and a : in the text
+ */
+Tags {
+}

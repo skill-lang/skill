@@ -1,0 +1,11 @@
+
+CustomFields {
+  custom ada
+  !with "RFG.Node"
+  "RFG.Node" node;
+
+  custom java
+  !import "my.import"
+  !modifier "public synchronized"
+  "Object" any;
+}

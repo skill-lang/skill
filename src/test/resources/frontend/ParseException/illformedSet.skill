@@ -1,0 +1,4 @@
+Fail {
+	/** only one type allowed */
+	set<f32, f32> field;
+}
