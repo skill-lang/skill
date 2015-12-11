@@ -31,7 +31,7 @@ trait GeneralOutputMaker extends Generator {
   // remove special stuff
   final def setTC(tc : TypeContext) = {
     this.types = tc
-    val flat = tc.removeTypedefs.removeEnums.removeViews
+    val flat = tc.removeTypedefs.removeEnums
     this.IR = flat.getUsertypes.to
     this.interfaces = flat.getInterfaces.to
     // set large specification mode; leave some spare parameters

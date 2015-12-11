@@ -105,7 +105,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     /**
      * Declarations add or modify user defined types.
      */
-    private def declaration : Parser[Declaration] = typedef | enumType | interfaceType | fieldChange | userType
+    private def declaration : Parser[Declaration] = typedef | enumType | interfaceType | userType
 
     /**
      * creates a shorthand for a more complex type
@@ -126,19 +126,10 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      * A declaration may start with a description, is followed by modifiers and a name, might have a super class and has
      * a body.
      */
-    private def userType = opt(changeModifier) ~ typeDescription ~ id ~ rep((":" | "with" | "extends") ~> id) ~!
+    private def userType = typeDescription ~ id ~ rep((":" | "with" | "extends") ~> id) ~!
       ("{" ~> rep(field) <~ "}") ^^ {
-        case c ~ d ~ n ~ s ~ b ⇒ UserType(currentFile, c, d, n, s, b)
+        case d ~ n ~ s ~ b ⇒ UserType(currentFile, d, n, s, b)
       }
-
-    /**
-     * modifier prefix to type declarations if they are meant to be modified
-     */
-    private def changeModifier = (
-      "++" ^^ { _ ⇒ ChangeModifier.++ }
-      | "--" ^^ { _ ⇒ ChangeModifier.-- }
-      | "==" ^^ { _ ⇒ ChangeModifier.set }
-    )
 
     /**
      * creates an enum definition
@@ -154,26 +145,25 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     /**
      * creates an interface definition
      */
-    private def interfaceType = opt(comment) ~ ("interface" ~> id) ~ rep((":" | "with" | "extends") ~> id) ~ ("{" ~> rep(field) <~ "}") ^^ {
-      case c ~ n ~ i ~ f ⇒ new InterfaceDefinition(currentFile, c.getOrElse(Comment.NoComment.get), n, i, f)
-    }
-
-    /**
-     * modify the definition of a field
-     */
-    private def fieldChange = changeModifier ~ fieldDescription ~ opt("auto") ~ fieldType ~ id ~ ("." ~> id <~ ";") ^^ {
-      case c ~ d ~ a ~ t ~ cls ~ name ⇒ ???
-    }
+    private def interfaceType = opt(comment) ~ ("interface" ~> id) ~ rep((":" | "with" | "extends") ~> id) ~ (
+      "{" ~> rep(field) <~ "}") ^^ {
+        case c ~ n ~ i ~ f ⇒ new InterfaceDefinition(currentFile, c.getOrElse(Comment.NoComment.get), n, i, f)
+      }
 
     /**
      * A field is either a constant or a real data field.
      */
-    private def field = fieldDescription ~ ((view | constant | data) <~ ";") ^^ { case d ~ f ⇒ { f.description = d; f } }
+    private def field = (
+      (opt(comment) ^^ { c ⇒ c.getOrElse(Comment.NoComment.get) }) >> { c ⇒ view(c) | customField(c) } <~ ";"
+      | fieldDescription ~ ((constant | data) <~ ";") ^^ { case d ~ f ⇒ { f.description = d; f } }
+    )
 
     /**
      * View an existing view as something else.
      */
-    private def view = ("view" ~> opt(id <~ ".")) ~ (id <~ "as") ~ data ^^ { case t ~ f ~ target ⇒ new View(t, f, target) }
+    private def view(c : Comment) = ("view" ~> opt(id <~ ".")) ~ (id <~ "as") ~ fieldType ~! id ^^ {
+      case targetType ~ targetField ~ newType ~ newName ⇒ new View(c, targetType, targetField, newType, newName)
+    }
 
     /**
      * Constants a recognized by the keyword "const" and are required to have a value.
@@ -186,7 +176,17 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     private def data = opt("auto") ~ fieldType ~! id ^^ { case a ~ t ~ n ⇒ new Data(a.isDefined, t, n) }
 
     /**
-     * Unfortunately, the straigth forward definition of this would lead to recursive types, thus we disallowed ADTs as
+     * A field with language custom properties. This field will almost behave like an auto field.
+     */
+    private def customField(c : Comment) = ("custom" ~> id) ~ (rep(
+      ("!" ~> id ~ (opt(string) ^^ { s ⇒ s.toList } | ("(" ~> rep(string) <~ ")"))) ^^ {
+        case n ~ args ⇒ n -> args
+      }) ^^ { s ⇒ s.toMap }) ~ string ~! id <~ ";" ^^ {
+        case lang ~ opts ~ t ~ n ⇒ new Customization(c, lang, opts, t, n)
+      }
+
+    /**
+     * Unfortunately, the straight forward definition of this would lead to recursive types, thus we disallowed ADTs as
      * arguments to maps. Please note that this does not prohibit formulation of any structure, although it might
      * require the introduction of declarations, which essentially rename another more complex type. This has also an
      * impact on the way, data is and can be stored.
@@ -449,259 +449,15 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     }
     rval
   }
-
-  /**
-   * Turns the AST into IR.
-   *
-   * TODO the type checking should be separated and IR building should start over with the original AST and the
-   * knowledge, that it is in fact correct
-   */
-  private def buildIR(defs : ArrayBuffer[Declaration]) : TypeContext = {
-
-    // run the type checker to get information about the type hierarchy
-    val (baseType, parent, superInterfaces) = TypeCheck(defs)
-
-    // skillname ⇀ definition
-    val definitionNames = new HashMap[Name, Declaration];
-    for (d ← defs) definitionNames.put(d.name, d)
-
-    // create declarations
-    val toIRByName = definitionNames.map({
-      case (n, f : UserType) ⇒
-        (n, ir.UserType.newDeclaration(
-          tc,
-          n.ir,
-          f.description.comment,
-          f.description.restrictions,
-          f.description.hints
-        ))
-
-      case (n, f : InterfaceDefinition) ⇒
-        (n, ir.InterfaceType.newDeclaration(
-          tc,
-          n.ir,
-          f.comment
-        ))
-
-      case (n, f : EnumDefinition) ⇒
-        (n, ir.EnumType.newDeclaration(
-          tc,
-          n.ir,
-          f.comment,
-          f.instances.map(_.ir)
-        ))
-
-      case (n, f : Typedef) ⇒
-        (n, ir.Typedef.newDeclaration(
-          tc,
-          n.ir,
-          f.description.comment,
-          f.description.restrictions,
-          f.description.hints
-        ))
-    });
-    @inline def toIR(d : Declaration) : ir.Declaration = toIRByName(d.name)
-
-    // topological sort results into a list, in order to be able to intialize it correctly
-    /**
-     *  tarjan with lexical order of edges; not exactly the solution described in the TR but it works well
-     */
-    def topologicalSort(nodes : Iterable[Declaration]) : ListBuffer[Declaration] = {
-      // create edges, subtypes in alphabetical order
-      var edges = defs.map(_ -> ArrayBuffer[Declaration]()).toMap
-      nodes.foreach {
-        case t : UserType            ⇒ t.superTypes.map(definitionNames).foreach(edges(_) += t)
-        case t : InterfaceDefinition ⇒ t.superTypes.map(definitionNames).foreach(edges(_) += t)
-        case t : Typedef if (t.target.isInstanceOf[BaseType]) ⇒
-          definitionNames.get(t.target.asInstanceOf[BaseType].name).foreach(edges(_) += t)
-        case _ ⇒
-      }
-      //@note lexical order in edges
-      edges = edges.map { case (k, e) ⇒ (k, e.sortWith(_.name.lowercase > _.name.lowercase)) }
-
-      // L ← Empty list that will contain the sorted nodes
-      val L = ListBuffer[Declaration]()
-
-      val marked = HashSet[Declaration]()
-      val temporary = HashSet[Declaration]()
-
-      // function visit(node n)
-      def visit(n : Declaration) {
-        // if n has a temporary mark then stop (not a DAG)
-        if (temporary.contains(n))
-          throw ParseException(s"The type hierarchy contains a cicle involving type ${n.name}.\n See ${n.declaredIn}")
-
-        //    if n is not marked (i.e. has not been visited yet) then
-        if (marked(n)) {
-          return
-        }
-
-        //        mark n temporarily
-        temporary += n
-
-        edges(n).foreach(visit)
-        //        for each node m with an edge from n to m do
-        //            visit(m)
-
-        //        mark n permanently
-        marked += n
-        //        unmark n temporarily
-        temporary -= n
-        //        add n to head of L
-        L.prepend(n)
-      }
-
-      //  while there are unmarked nodes do
-      //    select an unmarked node n
-      //    visit(n)
-      // @note we do not use the unmarked set, because we known which nodes are roots of the DAG and the resulting order
-      // has to be created in that way
-      nodes.filter { p ⇒ p == baseType(p) }.toSeq.sortWith(_.name.lowercase > _.name.lowercase).foreach(visit)
-
-      L
-    }
-
-    // type order initialization of types
-    def mkType(t : Type) : ir.Type = t match {
-      case t : ConstantLengthArrayType ⇒ ir.ConstantLengthArrayType.make(tc, mkType(t.baseType), t.length)
-      case t : ArrayType               ⇒ ir.VariableLengthArrayType.make(tc, mkType(t.baseType))
-      case t : ListType                ⇒ ir.ListType.make(tc, mkType(t.baseType))
-      case t : SetType                 ⇒ ir.SetType.make(tc, mkType(t.baseType))
-      case t : MapType                 ⇒ ir.MapType.make(tc, t.baseTypes.map { mkType(_) })
-
-      // base types are something special, because they have already been created
-      case t : BaseType                ⇒ tc.get(t.name.lowercase)
-    }
-
-    // turns all AST fields of a Declaration into ir.Fields
-    def mkFields(d : Declaration, fields : List[Field]) : List[ir.Field] = try {
-      // turn an AST field into an ir.Field
-      def mkField(node : Field) : ir.Field = try {
-        node match {
-          case f : Data ⇒ new ir.Field(mkType(f.t), f.name.ir, f.isAuto,
-            f.description.comment, f.description.restrictions, f.description.hints)
-          case f : Constant ⇒ new ir.Field(mkType(f.t), f.name.ir, f.value,
-            f.description.comment, f.description.restrictions, f.description.hints)
-          case f : View ⇒
-            val declaredIn : Name = f.declaredInType.getOrElse {
-              // we have no explicit type so we have to do a lookup
-              def find(d : ir.Declaration) : Option[ir.Declaration] = d match {
-                case t : ir.UserType if t.getFields().exists(_.getSkillName == f.oldName.lowercase) ⇒ Some(d)
-                case t : ir.UserType ⇒ (for (s ← t.getAllSuperTypes().map(find); if s.isDefined) yield s).headOption.flatten
-
-                case t : ir.InterfaceType if t.getFields().exists(_.getSkillName == f.oldName.lowercase) ⇒ Some(d)
-                case t : ir.InterfaceType ⇒ (for (s ← t.getAllSuperTypes().map(find); if s.isDefined) yield s).headOption.flatten
-
-                case _ ⇒ None
-              }
-              (d match {
-                case t : UserType ⇒
-                  (for (s ← t.superTypes.map(definitionNames).map(toIR); f ← find(s)) yield f.getName).headOption
-                case t : InterfaceDefinition ⇒
-                  (for (s ← t.superTypes.map(definitionNames).map(toIR); f ← find(s)) yield f.getName).headOption
-                case _ ⇒ ???
-              }).map(new Name(_)).getOrElse(
-                throw ParseException(
-                  s"None of the super types of ${d.name} contains a field ${f.name} that can be used in a view.")
-              )
-            };
-            val fs = toIR(definitionNames(declaredIn)).asInstanceOf[ir.WithFields].getFields().toList
-            val target = fs.find(_.getName() == f.target.name.ir).getOrElse(
-              throw ParseException(
-                s"""The view of ${d.name} can not refer to a field ${declaredIn.CapitalCase}.${f.name}, because it seems not to exist:
- ${fs.map(_.getName).mkString(", ")}"""
-              )
-            );
-
-            new ir.View(declaredIn.ir, target, mkType(f.t), f.name.ir, f.description.comment)
-        }
-      } catch {
-        case e : ir.ParseException ⇒ ParseException(s"${node.name}: ${e.getMessage()}")
-      }
-
-      // sort fields before views to ensure that viewed field is already transformed
-      // @note that this will also sort fields in alphabetical order; this is nice, because it stabilizes API over changes
-      val fs = fields.sortWith {
-        case (f : View, g : View) ⇒ f.name < g.name
-        case (f : View, _)        ⇒ true
-        case (_, f : View)        ⇒ false
-        case (f, g)               ⇒ f.name < g.name
-      }
-      for (f ← fs)
-        yield mkField(f)
-    } catch { case e : ir.ParseException ⇒ ParseException(s"In ${d.name}.${e.getMessage}", e) }
-
-    // initialize the arguments ir companion
-    def initialize(d : Declaration) {
-      d match {
-        case definition : UserType ⇒ toIR(definition).asInstanceOf[ir.UserType].initialize(
-          parent.get(definition).map(toIR(_).asInstanceOf[ir.UserType]).getOrElse(null),
-          superInterfaces(definition).map(toIR(_).asInstanceOf[ir.InterfaceType]).to,
-          mkFields(d, definition.body)
-        )
-
-        case definition : InterfaceDefinition ⇒ toIR(definition).asInstanceOf[ir.InterfaceType].initialize(
-          parent.get(definition).map(toIR(_).asInstanceOf[ir.UserType]).getOrElse(tc.get("annotation")),
-          superInterfaces(definition).map(toIR(_).asInstanceOf[ir.InterfaceType]).to,
-          mkFields(d, definition.body)
-        )
-
-        case definition : EnumDefinition ⇒ toIR(definition).asInstanceOf[ir.EnumType].initialize(
-          mkFields(d, definition.body)
-        )
-
-        case definition : Typedef ⇒ toIR(definition).asInstanceOf[ir.Typedef].initialize(
-          mkType(definition.target)
-        )
-      }
-    }
-    val ordered = topologicalSort(defs)
-
-    for (t ← ordered) try {
-      initialize(t)
-    } catch { case e : Exception ⇒ throw ParseException(s"Initialization of type ${t.name} failed.\nSee ${t.declaredIn}", e) }
-
-    val rval = ordered.map(toIR(_))
-
-    // we initialized in type order starting at base types; if some types have not been initialized, then they are cyclic!
-    if (rval.exists(!_.isInitialized))
-      ParseException("there are uninitialized definitions including:\n "+rval.filter(!_.isInitialized).map(_.prettyPrint).mkString("\n "))
-
-    assume(defs.size == rval.size, "we lost some definitions")
-    assume(rval.forall { _.isInitialized }, s"we missed some initializations: ${rval.filter(!_.isInitialized).mkString(", ")}")
-
-    if (verboseOutput) {
-      println(s"types: ${ordered.size}")
-      @inline def fieldCount(c : Int, d : Declaration) : Int = d match {
-        case d : UserType            ⇒ c + d.body.size
-        case d : InterfaceDefinition ⇒ c + d.body.size
-        case _                       ⇒ c
-      }
-      println(s"fields: ${ordered.foldLeft(0)(fieldCount)}")
-    }
-
-    tc.setDefs(ordered.map(toIR).to)
-
-    // for now, sanity check typedefs by creating a typedef projection
-    try {
-      tc.removeTypedefs
-    } catch {
-      case e : ir.ParseException ⇒
-        throw new ir.ParseException("Failed to project away typedefs, see argument exception for a reason", e)
-    }
-
-    tc
-  }
 }
+
 object Parser {
-  import Parser._
 
   /**
    * @return a type context containing all type information obtained from the argument file
    */
   def process(input : File, delimitWithUnderscore : Boolean = true, delimitWithCamelCase : Boolean = true, verboseOutput : Boolean = false) : TypeContext = {
-    val p = new Parser(delimitWithUnderscore, delimitWithCamelCase)
-    p.buildIR(p.parseAll(input).to)
+    val p = new Parser(delimitWithUnderscore, delimitWithCamelCase, verboseOutput)
+    IRBuilder.buildIR(p.parseAll(input).to, verboseOutput)
   }
-
 }

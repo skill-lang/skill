@@ -28,7 +28,6 @@ trait GeneralOutputMaker extends Generator {
   object Interfaces extends Droppable;
   object Enums extends Droppable;
   object Typedefs extends Droppable;
-  object Views extends Droppable;
 
   // by default, nothing is dropped
   var droppedKinds = HashSet[Droppable]();

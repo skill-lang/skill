@@ -40,7 +40,9 @@ final case class BaseType(val name : Name) extends Type {
   override def toString : String = name.source
 }
 
-sealed abstract class Field(val t : Type, val name : Name) extends Node {
+sealed abstract class AbstractField(val name : Name) extends Node;
+
+sealed abstract class Field(val t : Type, name : Name) extends AbstractField(name) {
   var description : Description = new Description(Comment.NoComment.get, List[Restriction](), List[Hint]());
 }
 
@@ -48,12 +50,19 @@ final class Constant(t : Type, name : Name, val value : Long) extends Field(t, n
 
 final class Data(val isAuto : Boolean, t : Type, name : Name) extends Field(t, name);
 
-final case class View(val declaredInType : Option[Name], val oldName : Name, val target : Field) extends Field(target.t, target.name);
+final class View(val comment : Comment, val targetType : Option[Name], val targetField : Name, val t : Type,
+                 name : Name) extends AbstractField(name);
+
+final class Customization(val comment : Comment, val language : Name, val options : Map[Name, List[String]],
+                          val typeImage : String, name : Name)
+    extends AbstractField(name);
 
 /**
  * Representation of skill names.
  */
-final class Name(val source : String, delimitWithUnderscores : Boolean, delimitWithCamelCase : Boolean) extends Positional {
+final class Name(val source : String, delimitWithUnderscores : Boolean, delimitWithCamelCase : Boolean)
+    extends Positional {
+
   def this(irSource : de.ust.skill.ir.Name) = this(irSource.cStyle, true, false);
 
   // @note this may not be correct if more then two _ are used
@@ -104,25 +113,14 @@ final class Name(val source : String, delimitWithUnderscores : Boolean, delimitW
   def <(arg : Name) : Boolean = lowercase < arg.lowercase
 }
 
-object ChangeModifier extends Enumeration {
-  type ChangeModifier = Value
-  val ++, --, set = Value
-}
-
 final case class UserType(
     _declaredIn : File,
-    change : Option[ChangeModifier.ChangeModifier],
     description : Description,
-    _name : Name, superTypes : List[Name], body : List[Field]) extends Declaration(_name, _declaredIn) {
+    _name : Name, superTypes : List[Name], body : List[AbstractField]) extends Declaration(_name, _declaredIn) {
 
   override def equals(other : Any) : Boolean = other match {
-    case UserType(_, Some(ChangeModifier.set), _, n, _, _) if change.isDefined ⇒
-      change.get == ChangeModifier.set && n == name
-
-    case UserType(_, None, _, n, _, _) if !change.isDefined ⇒
-      n == name
-
-    case _ ⇒ false
+    case o : UserType ⇒ o.name == name
+    case _            ⇒ false
   }
 
   override def hashCode() : Int = name.hashCode
@@ -133,14 +131,14 @@ final case class EnumDefinition(
   comment : Comment,
   _name : Name,
   instances : List[Name],
-  body : List[Field]) extends Declaration(_name, _declaredIn);
+  body : List[AbstractField]) extends Declaration(_name, _declaredIn);
 
 final case class InterfaceDefinition(
   _declaredIn : File,
   comment : Comment,
   _name : Name,
   superTypes : List[Name],
-  body : List[Field]) extends Declaration(_name, _declaredIn);
+  body : List[AbstractField]) extends Declaration(_name, _declaredIn);
 
 final case class Typedef(
   _declaredIn : File,

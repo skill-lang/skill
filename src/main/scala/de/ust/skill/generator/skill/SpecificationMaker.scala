@@ -28,7 +28,6 @@ trait SpecificationMaker extends GeneralOutputMaker {
       case Interfaces ⇒ IR = IR.removeInterfaces()
       case Enums      ⇒ IR = IR.removeEnums()
       case Typedefs   ⇒ IR = IR.removeTypedefs()
-      case Views      ⇒ IR = IR.removeViews()
     }
 
     // write specification
