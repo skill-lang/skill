@@ -85,7 +85,7 @@ final public class UserType extends Declaration implements WithFields {
         // check for duplicate fields
         {
             Set<Name> names = new HashSet<>();
-            for (Field f : Fields) {
+            for (FieldLike f : Fields) {
                 names.add(f.name);
                 f.setDeclaredIn(this);
             }
@@ -179,7 +179,7 @@ final public class UserType extends Declaration implements WithFields {
             sb.append(":").append(superType.name);
         }
         sb.append("{");
-        for (Field f : fields)
+        for (FieldLike f : fields)
             sb.append("\t").append(f.toString()).append("\n");
         sb.append("}");
 

@@ -12,15 +12,12 @@ import java.util.Set;
  * 
  * @author Timm Felden
  */
-public class Field {
+final public class Field extends FieldLike {
     protected final boolean auto;
     protected final boolean isConstant;
     protected final long constantValue;
 
-    protected final Name name;
     protected final Type type;
-
-    protected Declaration declaredIn;
 
     /**
      * The restrictions applying to this field.
@@ -30,10 +27,6 @@ public class Field {
      * The restrictions applying to this field.
      */
     protected final Set<Hint> hints;
-    /**
-     * The comment from Specification.
-     */
-    protected final Comment comment;
 
     /**
      * Constructor for constant fields.
@@ -46,8 +39,8 @@ public class Field {
      */
     public Field(Type type, Name name, long value, Comment comment, List<Restriction> restrictions, List<Hint> hints)
             throws ParseException {
-        assert(null != type);
-        assert(null != name);
+        super(name, comment);
+        assert (null != type);
         if (!(type instanceof GroundType))
             throw new ParseException("Can not create a constant of non-integer type " + type);
         if (!((GroundType) type).isInteger())
@@ -56,9 +49,7 @@ public class Field {
         auto = false;
         isConstant = true;
         constantValue = value;
-        this.name = name;
         this.type = type;
-        this.comment = comment;
         this.restrictions = restrictions;
         this.hints = Collections.unmodifiableSet(new HashSet<Hint>(hints));
         Hint.checkField(this, this.hints);
@@ -75,31 +66,28 @@ public class Field {
      */
     public Field(Type type, Name name, boolean isAuto, Comment comment, List<Restriction> restrictions,
             Collection<Hint> hints) throws ParseException {
-        assert(null != type);
-        assert(null != name);
+        super(name, comment);
+        assert (null != type);
 
         isConstant = false;
         constantValue = 0;
         auto = isAuto;
-        this.name = name;
         this.type = type;
-        this.comment = comment;
         this.restrictions = restrictions;
         this.hints = Collections.unmodifiableSet(new HashSet<Hint>(hints));
         Hint.checkField(this, this.hints);
     }
 
-    protected Field(boolean auto, boolean isConstant, long constantValue, Name name, Type type, Declaration declaredIn,
+    private Field(boolean auto, boolean isConstant, long constantValue, Name name, Type type, Declaration declaredIn,
             ArrayList<Restriction> restrictions, HashSet<Hint> hints, Comment comment) {
+        super(name, comment);
         this.auto = auto;
         this.isConstant = isConstant;
         this.constantValue = constantValue;
-        this.name = name;
         this.type = type;
         this.declaredIn = declaredIn;
         this.restrictions = restrictions;
         this.hints = hints;
-        this.comment = comment;
     }
 
     public Field cloneWith(Type newType, Collection<Restriction> nrs, Collection<Hint> nhs) {
@@ -108,14 +96,6 @@ public class Field {
         HashSet<Hint> hs = new HashSet<>(nhs);
         hs.addAll(hints);
         return new Field(auto, isConstant, constantValue, name, newType, declaredIn, rs, hs, comment);
-    }
-
-    public Name getName() {
-        return name;
-    }
-
-    public String getSkillName() {
-        return name.lower();
     }
 
     public Type getType() {
@@ -184,19 +164,5 @@ public class Field {
         if (type instanceof UserType)
             return ((UserType) type).isIgnored();
         return false;
-    }
-
-    /**
-     * @return the enclosing declaration.
-     */
-    public Declaration getDeclaredIn() {
-        return declaredIn;
-    }
-
-    /**
-     * Invoked during construction of the enclosing declaration.
-     */
-    void setDeclaredIn(Declaration declaredIn) {
-        this.declaredIn = declaredIn;
     }
 }

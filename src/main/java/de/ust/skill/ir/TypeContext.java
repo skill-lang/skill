@@ -10,7 +10,6 @@ import de.ust.skill.ir.internal.EnumSubstitution;
 import de.ust.skill.ir.internal.InterfaceSubstitution;
 import de.ust.skill.ir.internal.Substitution;
 import de.ust.skill.ir.internal.TypedefSubstitution;
-import de.ust.skill.ir.internal.ViewSubstitution;
 
 /**
  * The Type Context corresponding to a given SKilL specification. The context provides information about sub types,
@@ -154,13 +153,6 @@ public final class TypeContext {
             return this;
 
         return substitute(new TypedefSubstitution());
-    }
-
-    /**
-     * @return an equivalent type context that is guaranteed not to have views
-     */
-    public TypeContext removeViews() throws ParseException {
-        return substitute(new ViewSubstitution());
     }
 
     /**

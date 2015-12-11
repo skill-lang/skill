@@ -120,7 +120,7 @@ final public class Hint {
      * @throws ParseException
      *             if there is any illegal usage of a hint
      */
-    static void checkField(Field field, Set<Hint> hints) throws ParseException {
+    static void checkField(FieldLike field, Set<Hint> hints) throws ParseException {
 
         if (hints.contains(unique))
             throw new ParseException("Illegal hint !unique on field declaration " + field);
