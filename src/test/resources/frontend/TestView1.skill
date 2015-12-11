@@ -1,0 +1,10 @@
+A : B {
+  view B.field as
+  C neuername;
+}
+
+B {
+  C field;
+}
+
+C {}

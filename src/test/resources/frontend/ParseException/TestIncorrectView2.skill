@@ -1,0 +1,12 @@
+A : B {
+  view B.field as
+  D field;
+}
+
+B {
+  C field;
+}
+
+C {}
+
+D {}

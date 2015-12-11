@@ -1,0 +1,12 @@
+interface A {
+  view B.field as
+  D field;
+}
+
+interface B {
+  C field;
+}
+
+C {}
+
+D : C {}

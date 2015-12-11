@@ -1,0 +1,19 @@
+A : B {
+  view B.field as 
+  F asdf;
+}
+
+B : C {
+  view C.field as
+  E field;
+}
+
+C {
+  D field;
+}
+
+interface D {}
+
+E : D {}
+
+interface F : E {}
