@@ -181,7 +181,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
     private def customField(c : Comment) = ("custom" ~> id) ~ (rep(
       ("!" ~> id ~ (opt(string) ^^ { s ⇒ s.toList } | ("(" ~> rep(string) <~ ")"))) ^^ {
         case n ~ args ⇒ n -> args
-      }) ^^ { s ⇒ s.toMap }) ~ string ~! id <~ ";" ^^ {
+      }) ^^ { s ⇒ s.toMap }) ~ string ~! id ^^ {
         case lang ~ opts ~ t ~ n ⇒ new Customization(c, lang, opts, t, n)
       }
 
