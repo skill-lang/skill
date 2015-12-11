@@ -1,4 +1,5 @@
+
+/** no instances */
 enum Fail {
-	/** no instances */
-	i8 f;
+   ;
 }
