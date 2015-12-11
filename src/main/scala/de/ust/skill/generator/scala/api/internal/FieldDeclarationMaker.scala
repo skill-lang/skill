@@ -32,7 +32,7 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    for (t ← IR; f ← t.getFields; if !f.isInstanceOf[View]) {
+    for (t ← IR; f ← t.getFields) {
       val accessField = s".asInstanceOf[${mapType(t)}].${escaped("Internal_"+f.getName.camel)}"
 
       val out = open(s"api/internal/${knownField(f)}.scala")

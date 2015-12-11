@@ -75,7 +75,7 @@ ${
     protected:
 """)
       // fields
-	    out.write((for(f <- t.getFields if !f.isInstanceOf[View] && !f.isConstant)
+	    out.write((for(f <- t.getFields if !f.isConstant)
         yield s"""    ${mapType(f.getType())} ${localFieldName(f)};
 """).mkString)
 
@@ -101,7 +101,7 @@ ${
 	///////////////////////
 	// getters & setters //
 	///////////////////////
-	    for(f <- t.getFields if !f.isInstanceOf[View]) {
+	    for(f <- t.getFields) {
         implicit val thisF = f;
 
       def makeGetterImplementation:String = {

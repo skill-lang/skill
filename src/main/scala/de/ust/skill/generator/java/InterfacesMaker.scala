@@ -54,16 +54,11 @@ ${
         return (${mapType(t.getSuperType)}) this;
     }
 ${
-        // collect visible fields
-        var visibleFields : HashSet[Field] = t.getFields.filterNot(_.isInstanceOf[View]).to;
-        if (t.getSuperType.isInstanceOf[UserType])
-          visibleFields ++= t.getSuperType.asInstanceOf[UserType].getAllFields.filterNot(_.isInstanceOf[View]);
-
         ///////////////////////
         // getters & setters //
         ///////////////////////
         (
-          for (f ← visibleFields) yield {
+          for (f ← t.getAllFields) yield {
             if (f.isConstant)
               s"""
     //TODO default? ${comment(f)}static public ${mapType(f.getType())} get${escaped(f.getName.capital)}();

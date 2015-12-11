@@ -28,7 +28,7 @@ trait PoolsMaker extends GeneralOutputMaker {
     for (t ← IR) {
       val typeName = "_root_."+packagePrefix + name(t)
       val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
-      val fields = t.getFields.filterNot(_.isInstanceOf[View])
+      val fields = t.getFields
 
       val out = open(s"api/internal/Pool${t.getName.capital}.scala")
       //package

@@ -86,10 +86,10 @@ class Main extends FakeMain
    * creates argument list of a constructor call, not including potential skillID or braces
    */
   override protected def makeConstructorArguments(t : UserType) = (
-    for (f ← t.getAllFields if !(f.isConstant || f.isIgnored || f.isInstanceOf[View]))
+    for (f ← t.getAllFields if !(f.isConstant || f.isIgnored))
       yield s"${mapType(f.getType())} ${name(f)}").mkString(", ")
   override protected def appendConstructorArguments(t : UserType, prependTypes : Boolean) = {
-    val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored || f.isInstanceOf[View] }
+    val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
     if (r.isEmpty) ""
     else if (prependTypes) r.map({ f ⇒ s", ${mapType(f.getType())} ${name(f)}" }).mkString("")
     else r.map({ f ⇒ s", ${name(f)}" }).mkString("")

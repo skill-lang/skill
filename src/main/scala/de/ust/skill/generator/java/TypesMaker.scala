@@ -94,7 +94,7 @@ ${
 	///////////////////////
 	// getters & setters //
 	///////////////////////
-	for(f <- implementedFields if !f.isInstanceOf[View]){
+	for(f <- implementedFields){
       def makeField:String = {
 		if(f.isIgnored)
 		  ""

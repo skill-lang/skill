@@ -72,7 +72,7 @@ ${
 	///////////////////////
 	// getters & setters //
 	///////////////////////
-	for(f <- t.getFields if !f.isInstanceOf[View]){
+	for(f <- t.getFields){
     implicit val thisF = f;
 
       def makeField:String = {

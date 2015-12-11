@@ -41,10 +41,10 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
 class Main extends FakeMain
     with FieldDeclarationMaker
     with FileParserMaker
-//    with SerializationFunctionsMaker
+    //    with SerializationFunctionsMaker
     with SkillFileMaker
-//    with StateAppenderMaker
-//    with StateWriterMaker
+    //    with StateAppenderMaker
+    //    with StateWriterMaker
     with DependenciesMaker
     with PoolsMaker
     with TypesMaker {
@@ -89,11 +89,11 @@ class Main extends FakeMain
    * creates argument list of a constructor call, not including potential skillID or braces
    */
   override protected def makeConstructorArguments(t : UserType) = (
-    for (f ← t.getAllFields if !(f.isConstant || f.isIgnored || f.isInstanceOf[View]))
+    for (f ← t.getAllFields if !(f.isConstant || f.isIgnored))
       yield s"${escaped(f.getName.camel)} : ${mapType(f.getType())}"
   ).mkString(", ")
   override protected def appendConstructorArguments(t : UserType) = {
-    val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored || f.isInstanceOf[View] }
+    val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
     if (r.isEmpty) ""
     else r.map({ f ⇒ s"${escaped(f.getName.camel)} : ${mapType(f.getType())}" }).mkString(", ", ", ", "")
   }

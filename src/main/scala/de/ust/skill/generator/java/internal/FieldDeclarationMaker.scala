@@ -29,7 +29,7 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    for (t ← IR; f ← t.getFields; if !f.isInstanceOf[View]) {
+    for (t ← IR; f ← t.getFields) {
       val tIsBaseType = t.getSuperType == null
 
       val nameT = mapType(t)

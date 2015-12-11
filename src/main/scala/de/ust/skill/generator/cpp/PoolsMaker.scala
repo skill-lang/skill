@@ -32,7 +32,7 @@ trait PoolsMaker extends GeneralOutputMaker {
     for (t ← IR) {
       val typeName = packageName+"::"+name(t)
       val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
-      val fields = t.getFields.filterNot(_.isInstanceOf[View])
+      val fields = t.getFields
 
       val out = open(s"${storagePool(t)}.h")
       //package
