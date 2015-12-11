@@ -128,7 +128,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      */
     private def userType = typeDescription ~ id ~ rep((":" | "with" | "extends") ~> id) ~!
       ("{" ~> rep(field) <~ "}") ^^ {
-        case d ~ n ~ s ~ b ⇒ UserType(currentFile, d, n, s, b)
+        case d ~ n ~ s ~ b ⇒ new UserType(currentFile, d, n, s, b)
       }
 
     /**

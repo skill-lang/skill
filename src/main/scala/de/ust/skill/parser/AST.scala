@@ -20,20 +20,51 @@ import de.ust.skill.ir.Comment
  * @author Timm Felden
  */
 sealed abstract class Node;
-sealed abstract class Declaration(val name : Name, val declaredIn : File) extends Node;
+sealed abstract class Declaration(val name : Name, val declaredIn : File) extends Node {
+  override def equals(other : Any) : Boolean = other match {
+    case o : Declaration ⇒ o.getClass == getClass && o.name == name
+    case _               ⇒ false
+  }
+
+  override def hashCode() : Int = name.hashCode
+}
+sealed abstract class DeclarationWithBody(_name : Name, _declaredIn : File, val body : List[AbstractField])
+  extends Declaration(_name, _declaredIn);
 
 final class Description(val comment : Comment, val restrictions : List[Restriction],
                         val hints : List[Hint]) extends Node;
 
-sealed abstract class Type extends Node;
+sealed abstract class Type extends Node {
+  override def equals(other : Any) : Boolean;
+}
 
-final class MapType(val baseTypes : List[BaseType]) extends Type;
+final class MapType(val baseTypes : List[BaseType]) extends Type {
+  override def equals(other : Any) : Boolean = other match {
+    case o : MapType ⇒ o.baseTypes.sameElements(baseTypes);
+    case _           ⇒ false
+  }
+}
 
-final class SetType(val baseType : BaseType) extends Type;
+final class SetType(val baseType : BaseType) extends Type {
+  override def equals(other : Any) : Boolean = other match {
+    case o : SetType ⇒ o.baseType == baseType
+    case _           ⇒ false
+  }
+}
 
-final class ListType(val baseType : BaseType) extends Type;
+final class ListType(val baseType : BaseType) extends Type {
+  override def equals(other : Any) : Boolean = other match {
+    case o : SetType ⇒ o.baseType == baseType
+    case _           ⇒ false
+  }
+}
 
-sealed class ArrayType(val baseType : BaseType) extends Type;
+sealed class ArrayType(val baseType : BaseType) extends Type {
+  override def equals(other : Any) : Boolean = other match {
+    case o : SetType ⇒ o.baseType == baseType
+    case _           ⇒ false
+  }
+}
 final class ConstantLengthArrayType(baseType : BaseType, val length : Long) extends ArrayType(baseType);
 
 final case class BaseType(val name : Name) extends Type {
@@ -50,8 +81,16 @@ final class Constant(t : Type, name : Name, val value : Long) extends Field(t, n
 
 final class Data(val isAuto : Boolean, t : Type, name : Name) extends Field(t, name);
 
-final class View(val comment : Comment, val targetType : Option[Name], val targetField : Name, val t : Type,
-                 name : Name) extends AbstractField(name);
+/**
+ * @param targetType if none, a type will be inserted by the type checker
+ */
+final class View(val comment : Comment, var targetType : Option[Name], val targetField : Name, val t : Type,
+                 name : Name) extends AbstractField(name) {
+  /**
+   * established by type checker
+   */
+  var target : AbstractField = _;
+}
 
 final class Customization(val comment : Comment, val language : Name, val options : Map[Name, List[String]],
                           val typeImage : String, name : Name)
@@ -113,32 +152,26 @@ final class Name(val source : String, delimitWithUnderscores : Boolean, delimitW
   def <(arg : Name) : Boolean = lowercase < arg.lowercase
 }
 
-final case class UserType(
-    _declaredIn : File,
-    description : Description,
-    _name : Name, superTypes : List[Name], body : List[AbstractField]) extends Declaration(_name, _declaredIn) {
-
-  override def equals(other : Any) : Boolean = other match {
-    case o : UserType ⇒ o.name == name
-    case _            ⇒ false
-  }
-
-  override def hashCode() : Int = name.hashCode
-};
-
-final case class EnumDefinition(
+final class UserType(
   _declaredIn : File,
-  comment : Comment,
+  val description : Description,
   _name : Name,
-  instances : List[Name],
-  body : List[AbstractField]) extends Declaration(_name, _declaredIn);
+  val superTypes : List[Name],
+  _body : List[AbstractField]) extends DeclarationWithBody(_name, _declaredIn, _body);
+
+final class EnumDefinition(
+  _declaredIn : File,
+  val comment : Comment,
+  _name : Name,
+  val instances : List[Name],
+  _body : List[AbstractField]) extends DeclarationWithBody(_name, _declaredIn, _body);
 
 final case class InterfaceDefinition(
   _declaredIn : File,
-  comment : Comment,
+  val comment : Comment,
   _name : Name,
-  superTypes : List[Name],
-  body : List[AbstractField]) extends Declaration(_name, _declaredIn);
+  val superTypes : List[Name],
+  _body : List[AbstractField]) extends DeclarationWithBody(_name, _declaredIn, _body);
 
 final case class Typedef(
   _declaredIn : File,

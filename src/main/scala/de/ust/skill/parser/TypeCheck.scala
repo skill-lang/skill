@@ -207,6 +207,91 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
         throw ParseException(s"Type ${d.name} inherits something thats neither a user type nor an interface.")
     }
 
+    for (t ← defs.collect { case c : DeclarationWithBody ⇒ c }.par) {
+      // check duplicate abstract field names?
+      if (t.body.size != t.body.map(_.name).toSet.size)
+        throw ParseException(s"Type ${t.name} uses the same name for multiple field like declarations.")
+
+      // check views
+      for (v ← t.body.collect { case v : View ⇒ v }) {
+        // ensure target type
+        val targetDef = try {
+          definitionNames.get(v.targetType.getOrElse {
+            def find(decl : Declaration) : Name = decl match {
+              case d : UserType ⇒
+                if (d.body.exists(f ⇒ f != v && f.name == v.targetField)) return d.name
+                else for (
+                  s ← d.superTypes; r = find(definitionNames(s))
+                ) if (null != r) return r;
+                return null;
+              case d : InterfaceDefinition ⇒
+                if (d.body.exists(f ⇒ f != v && f.name == v.targetField)) return d.name
+                else for (
+                  s ← d.superTypes; r = find(definitionNames(s))
+                ) if (null != r) return r;
+                return null;
+              case d : EnumDefinition if (d.body.exists(_.name == v.targetField)) ⇒ return d.name
+              case d : Typedef ⇒ return find(definitionNames(d.target.asInstanceOf[BaseType].name))
+              case _ ⇒ return null
+            }
+            val r = find(t)
+            if (null == r) { throw ParseException(s"View ${t.name}.${v.name} could not find source type.") }
+            v.targetType = Some(r)
+            r
+          }).getOrElse(
+            throw ParseException(s"View ${t.name}.${v.name} refers to unknown source type ${v.targetType.get}.")
+          ).asInstanceOf[DeclarationWithBody]
+        } catch {
+          case e : ClassCastException ⇒
+            throw ParseException(s"View ${t.name}.${v.name} cannot use source type ${v.targetType.get}.")
+        }
+
+        // check that target type contains the argument field
+        val targetField = targetDef.body.filter(_.name == v.targetField).headOption.getOrElse(
+          throw ParseException(s"View ${t.name}.${v.name} cannot use unknown source field ${v.targetType.get}.${v.targetField}.")
+        )
+
+        // get the views super type
+        val superType = targetField match {
+          case f : Field ⇒ f.t
+          case v : View  ⇒ v.t
+          case _         ⇒ throw ParseException(s"View ${t.name}.${v.name} cannot use invalid view target ${v.targetType.get}.${v.targetField}.")
+        }
+
+        def subtype(decl : Declaration, superDecl : Declaration) : Boolean = {
+          if (decl == superDecl) true
+          else decl match {
+            case d : UserType                  ⇒ d.superTypes.exists { x ⇒ subtype(definitionNames(x), superDecl) }
+            case d : InterfaceDefinition       ⇒ d.superTypes.exists { x ⇒ subtype(definitionNames(x), superDecl) }
+            case Typedef(_, _, _, BaseType(x)) ⇒ subtype(definitionNames(x), superDecl)
+            case _                             ⇒ false
+          }
+        }
+        // check that target type is in fact a super type
+        if (!subtype(t, targetDef))
+          throw ParseException(s"View ${t.name}.${v.name} cannot view a field of type $targetDef. Only super types can be used.")
+
+        // check type compatibility
+        if (v.t != superType) {
+          val decl = (v.t match {
+            case BaseType(n) ⇒ definitionNames.get(n)
+            case _           ⇒ None
+          }).getOrElse {
+            throw ParseException(s"View ${t.name}.${v.name} only user types can be retyped.")
+          }
+          val superDecl = (superType match {
+            case BaseType(n) ⇒ definitionNames.get(n)
+            case _           ⇒ None
+          }).getOrElse {
+            throw ParseException(s"View ${t.name}.${v.name} only user types can be retyped.")
+          }
+
+          if (!subtype(decl, superDecl))
+            throw ParseException(s"View ${t.name}.${v.name} illformed retype $decl is no subtype of $superDecl.")
+        }
+      }
+    }
+
     (baseType, parent, superInterfaces)
   }
 
