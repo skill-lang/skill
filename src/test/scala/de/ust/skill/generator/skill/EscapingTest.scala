@@ -23,7 +23,7 @@ class EscapingTest extends FunSuite {
 
   def check(language : String, words : Array[String], escaping : Array[Boolean]) {
     CommandLine.exit = { s ⇒ fail(s) }
-    val result = CommandLine.checkEscaping(language, words.iterator)
+    val result = CommandLine.checkEscaping(language, words)
 
     assert(result === escaping.mkString(" "))
   }

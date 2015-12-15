@@ -80,6 +80,9 @@ Opitions:
     var outPath : String = args(args.length - 1)
 
     try {
+      if (args.contains("--requiresEscaping"))
+        parseOptions(args.to, known)
+
       val (header, packageName, languages) = parseOptions(args.view(0, args.length - 2).to, known)
 
       assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
@@ -160,7 +163,8 @@ Opitions:
         if (selectedLanguages.size != 1)
           error("Exactly one language has to be specified using the -L option before asking for escapings.")
         else {
-          println(checkEscaping(selectedLanguages.keySet.head, args))
+          val words : Array[String] = args.toArray
+          println(checkEscaping(selectedLanguages.keySet.head, words))
           throw new DoneException;
         }
 
@@ -173,7 +177,7 @@ Opitions:
     (header, packageName, selectedLanguages)
   }
 
-  def checkEscaping(language : String, args : Iterator[String]) : String = {
+  def checkEscaping(language : String, args : Array[String]) : String = {
     val generator = KnownGenerators.all.map(_.newInstance).collect({
       case g if g.getLanguageName == language.toLowerCase ⇒ g
     }).head
