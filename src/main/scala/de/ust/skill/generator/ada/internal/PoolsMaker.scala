@@ -177,8 +177,7 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
 
    function Offset_Box
      (This : access Pool_T;
-      Target : Types.Box) return Types.V64 is
-     (Field_Types.Builtin.Offset_Single_V64(Types.V64(Unboxed(Target).Skill_ID)));
+      Target : Types.Box) return Types.V64;
 
    procedure Write_Box
      (This : access Pool_T;
@@ -638,6 +637,17 @@ ${
          (Lbpo_Map);
       end loop;
    end Update_After_Compress;
+
+   function Offset_Box
+     (This : access Pool_T;
+      Target : Types.Box) return Types.V64 is
+   begin
+      if null = Unboxed(Target) then
+         return 0;
+      else
+         return Field_Types.Builtin.Offset_Single_V64(Types.V64(Unboxed(Target).Skill_ID));
+      end if;
+   end Offset_Box;
 
    procedure Write_Box
      (This : access Pool_T;
