@@ -184,4 +184,11 @@ Opitions:
     args.map { s ⇒ s != generator.escapedLonely(s) }.mkString(" ")
   }
 
+  /**
+   * returns an array containing all language names reported by known generators
+   */
+  def getKnownGeneratorNames : Array[String] = {
+    KnownGenerators.all.map(_.newInstance.getLanguageName).to
+  }
+
 }
