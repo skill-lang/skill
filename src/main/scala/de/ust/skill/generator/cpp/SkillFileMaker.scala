@@ -16,7 +16,8 @@ trait SkillFileMaker extends GeneralOutputMaker {
     val out = open("File.h")
 
     out.write(s"""
-#include <skill/internal/SkillState.h>${
+#include <skill/fieldTypes/AnnotationType.h>
+#include <skill/api/SkillFile.h>${
       (for (t ← IR)
         yield s"""
 #include "${storagePool(t)}.h"""").mkString
@@ -29,7 +30,7 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
          *
          * @author Timm Felden
          */
-        struct SkillFile : public ::skill::internal::SkillState {
+        struct SkillFile : public ::skill::api::SkillFile {
 
 /*(
   _path : Path,
@@ -51,7 +52,7 @@ ${
                       skill::internal::StringPool *stringPool, skill::fieldTypes::AnnotationType *annotation,
                       std::vector<std::unique_ptr<skill::internal::AbstractStoragePool>> *types,
                       skill::api::typeByName_t *typesByName)
-                    : SkillState(in, mode, stringPool, annotation, types, typesByName)${
+                    : ::skill::api::SkillFile(in, mode, stringPool, annotation, types, typesByName)${
       (for (t ← IR) yield s""",
                       ${name(t)}((${storagePool(t)} *) annotation->type(${name(t)}::typeName))""").mkString
     } { }
@@ -97,7 +98,7 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
     }
 
 //!create a new pool in the target type system
-static ::skill::internal::AbstractStoragePool *testPool(::skill::TypeID typeID,
+static ::skill::internal::AbstractStoragePool *makePool(::skill::TypeID typeID,
                                                ::skill::api::String name,
                                                ::skill::internal::AbstractStoragePool *superPool,
                                                std::set<::skill::restrictions::TypeRestriction *> *restrictions,
@@ -132,28 +133,48 @@ ${
 }
 
 //! create a new state in the target type system
-static ::skill::api::SkillFile *testMake(::skill::streams::FileInputStream *in,
-                                          ::skill::WriteMode mode,
-                                          ::skill::internal::StringPool *String,
-                                          ::skill::fieldTypes::AnnotationType *Annotation,
-                                          std::vector<std::unique_ptr<::skill::internal::AbstractStoragePool>> *types,
-                                          ::skill::api::typeByName_t *typesByName,
-                                          std::vector<std::unique_ptr<::skill::streams::MappedInStream>> &dataList) {
-    //! TODO read field data
+    static ::skill::api::SkillFile *makeState(::skill::streams::FileInputStream *in,
+                                              ::skill::WriteMode mode,
+                                              ::skill::internal::StringPool *String,
+                                              ::skill::fieldTypes::AnnotationType *Annotation,
+                                              std::vector<std::unique_ptr<::skill::internal::AbstractStoragePool>> *types,
+                                              ::skill::api::typeByName_t *typesByName,
+                                              std::vector<std::unique_ptr<::skill::streams::MappedInStream>> &dataList) {
 
-    // trigger allocation and instance creation
-    for (auto &t : *types) {
-        t->allocateData();
-        t->allocateInstances();
-        //if (nullptr==t->superPool)
-        //  StoragePool.setNextPools(t);
+        auto &tbn = Annotation->init();
+        const StringKeeper *const sk = (const StringKeeper *const) String->keeper;
+        ::skill::api::String name;
+
+        // ensure that pools exist at all${
+      (for (t ← IR) yield s"""
+        name = sk->${escaped(t.getSkillName)};
+        if (!tbn[name->c_str()]) {
+            const auto p = new ${storagePool(t)}((::skill::TypeID) types->size()${
+        if (null == t.getSuperType) ""
+        else s", tbn[sk->${escaped(t.getSuperType.getSkillName)}->c_str()]"
+      }, name,
+                                       new std::set<::skill::restrictions::TypeRestriction *>);
+            tbn[name->c_str()] = p;
+            types->push_back(std::unique_ptr<::skill::internal::AbstractStoragePool>(p));
+            (*typesByName)[name] = p;
+        }""").mkString
     }
 
-    return new $packageName::api::SkillFile(in, mode, String, Annotation, types, typesByName);
-}
+        // trigger allocation and instance creation
+        for (auto &t : *types) {
+            t->allocateData();
+            t->allocateInstances();
+            if (nullptr == t->superPool)
+                ::skill::internal::AbstractStoragePool::setNextPools(t.get());
+        }
+
+        //! TODO read field data
+
+        return new $packageName::api::SkillFile(in, mode, String, Annotation, types, typesByName);
+    }
 ${packageParts.map(_ ⇒ "}").mkString}
 $packageName::api::SkillFile *$packageName::api::SkillFile::open(const std::string &path) {
-    return ($packageName::api::SkillFile *) ::skill::internal::parseFile<$packageName::initializeStrings, $packageName::testPool, $packageName::testMake>(
+    return ($packageName::api::SkillFile *) ::skill::internal::parseFile<$packageName::initializeStrings, $packageName::makePool, $packageName::makeState>(
             std::unique_ptr<::skill::streams::FileInputStream>(new ::skill::streams::FileInputStream(path)), ::skill::api::readOnly);
 }
 """)
