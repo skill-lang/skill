@@ -132,7 +132,7 @@ ${
         return superPool->makeSubPool(typeID, name, restrictions);
 }
 
-//! create a new state in the target type system
+    //! create a new state in the target type system
     static ::skill::api::SkillFile *makeState(::skill::streams::FileInputStream *in,
                                               ::skill::WriteMode mode,
                                               ::skill::internal::StringPool *String,
