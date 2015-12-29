@@ -31,6 +31,7 @@ import de.ust.skill.generator.common
 class GenericTests extends common.GenericTests {
 
   override def language = "scala"
+  override val languageOptions = ArrayBuffer[String]()
 
   override def deleteOutDir(out : String) {
     import scala.reflect.io.Directory

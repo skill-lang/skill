@@ -31,6 +31,7 @@ import de.ust.skill.parser.Name
 @RunWith(classOf[JUnitRunner])
 class GenericTests extends common.GenericTests {
   override def language = "ada"
+  override val languageOptions = ArrayBuffer[String]()
 
   val tests = new ArrayBuffer[Name]()
 

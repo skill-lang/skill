@@ -148,6 +148,7 @@ Opitions:
         )
       }
 
+      // @note language and options are case insensitive for all generators
       case option if option.matches("""-O@?\w+:\w+=.+""") ⇒ locally {
         implicit class Regex(sc : StringContext) {
           def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ ⇒ "x") : _*)
@@ -155,7 +156,7 @@ Opitions:
         val r"""-O@?(\w+)${ lang }:(\w+)${ opt }=(.+)${ value }""" = option
         known.get(lang.toLowerCase).getOrElse(
           error(s"Language $lang is not known and can therefore not provided with options!")
-        ).setOption(opt, value)
+        ).setOption(opt.toLowerCase, value)
 
       }
 

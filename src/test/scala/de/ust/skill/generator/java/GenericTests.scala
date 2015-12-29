@@ -30,7 +30,8 @@ import de.ust.skill.generator.common
 @RunWith(classOf[JUnitRunner])
 class GenericTests extends common.GenericTests {
 
-  override def language = "java"
+  override val language = "java"
+  override val languageOptions = ArrayBuffer[String]("-O@java:SuppressWarnings=true")
 
   override def deleteOutDir(out : String) {
     import scala.reflect.io.Directory

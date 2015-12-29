@@ -33,6 +33,11 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
   def language : String
 
   /**
+   * options used for generated tests. Can be used to improve generated tests.
+   */
+  def languageOptions : ArrayBuffer[String]
+
+  /**
    * This method should delete output directories, if they exist.
    * It is invoked once before invocation of CommandLine.main
    */
@@ -72,7 +77,7 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
 
     CommandLine.exit = { s ⇒ throw (new Error(s)) }
 
-    val args = ArrayBuffer[String]("-L", language, "-O@java:SuppressWarnings=true", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", name)
+    val args = languageOptions ++ ArrayBuffer[String]("-L", language, "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", name)
     if (options.size > 0)
       args ++= options.split("\\s+").to
     args += path.getPath
