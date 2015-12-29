@@ -165,6 +165,10 @@ ${
         virtual const char *skillName() const { return typeName; }
 
         virtual std::string toString() { return std::string(typeName) + std::to_string(this->id); }
+
+        virtual void prettyString(std::ostream &os) const {
+            os << "${t.getName.capital}#" << id;
+        }
     };
 
     class ${name(t)}_UnknownSubType : public ${name(t)} {
