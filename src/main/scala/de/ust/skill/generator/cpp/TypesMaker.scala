@@ -93,7 +93,7 @@ ${
 	  // reveal skill id
       if(revealSkillID && null==t.getSuperType)
         out.write("""
-    inline ::skill:SKilLID skillID() { return this->id; }
+    inline ::skill::SKilLID skillID() { return this->id; }
 """)
 
   //${if(revealSkillID)"" else s"protected[${packageName}] "}final def getSkillID = skillID
