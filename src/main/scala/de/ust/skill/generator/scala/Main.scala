@@ -142,7 +142,7 @@ class Main extends FakeMain
     _packagePrefix = names.foldRight("")(_+"."+_)
   }
 
-  override def setOption(option : String, value : String) = option.toLowerCase match {
+  override def setOption(option : String, value : String) = option match {
     case "revealskillid" ⇒ revealSkillID = ("true" == value)
     case unknown         ⇒ sys.error(s"unkown Argument: $unknown")
   }
