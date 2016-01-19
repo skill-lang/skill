@@ -1,0 +1,16 @@
+# ICGT16 example
+
+@abstract Type {}
+@abstract Object {
+  Type t;
+}
+
+FunctionType extends Type {
+  /* ... */
+  Type result;
+}
+
+Function extends Object {
+  view Object.t as
+  FunctionType t;
+}

@@ -43,6 +43,6 @@ class GenericFrontendTest extends FunSuite {
     }
   }
 
-  for (f ← new File("src/test/resources/frontend").listFiles() if f.isFile()) succeedOn(f)
-  for (f ← new File("src/test/resources/frontend/ParseException").listFiles() if f.isFile()) failOn(f)
+  for (f ← new File("src/test/resources/frontend").listFiles() if f.isFile() && f.getName.endsWith(".skill")) succeedOn(f)
+  for (f ← new File("src/test/resources/frontend/ParseException").listFiles() if f.isFile() && f.getName.endsWith(".skill")) failOn(f)
 }
