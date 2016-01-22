@@ -8,6 +8,7 @@ package de.ust.skill.generator.cpp
 import scala.collection.JavaConversions._
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
+import de.ust.skill.ir.GroundType
 
 trait FieldDeclarationsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -72,7 +73,7 @@ $endGuard""")
 #include "FieldDeclarations.h"
 ${
       (for (t ← IR; f ← t.getFields) yield {
-        val readI = s"d[i]->${internalName(f)} = (${mapType(f.getType)})type->read(in).${unbox(f.getType)};"
+        val readI = s"d[i]->${internalName(f)} = ${readType(f.getType)};"
         s"""
 void $packageName::internal::${knownField(f)}::read(
         const ::skill::streams::MappedInStream *part,
@@ -83,8 +84,7 @@ ${
     auto d = ((${storagePool(t)} *) owner)->data;
     skill::streams::MappedInStream in(part, target->begin, target->end);
 
-//${mapKnownReadType(f.getType)}
-/*    try*/ {
+    try {
         if (target->isSimple()) {
             for (::skill::SKilLID i = 1 + ((::skill::internal::SimpleChunk *) target)->bpo,
                          high = i + target->count; i != high; i++)
@@ -96,19 +96,23 @@ ${
                     $readI
             }
         }
-    }/* catch {
-      case e : BufferUnderflowException ⇒
-        throw new PoolSizeMissmatchError(dataChunks.size - 1,
-          part.position() + target.begin,
-          part.position() + target.end,
-          this, in.position())
+    } catch (::skill::SkillException e) {
+        throw ParseException(
+                in.getPosition(),
+                part->getPosition() + target->begin,
+                part->getPosition() + target->end, e.message);
+    } catch (...) {
+        throw ParseException(
+                in.getPosition(),
+                part->getPosition() + target->begin,
+                part->getPosition() + target->end, "unexpected foreign exception");
     }
 
-    if(!in.eof())
-      throw new PoolSizeMissmatchError(dataChunks.size - 1,
-        part.position() + target.begin,
-        part.position() + target.end,
-        this, in.position())*/"""
+    if (!in.eof())
+        throw ParseException(
+                in.getPosition(),
+                part->getPosition() + target->begin,
+                part->getPosition() + target->end, "did not consume all bytes");"""
         }
 }
 """
@@ -119,11 +123,17 @@ ${
   }
 
   /**
-   * tell the compiler which code will be executed, to support optimization
+   * choose a good parse expression
    */
-  private final def mapKnownReadType(t : Type) : String = t match {
+  private final def readType(t : Type) : String = t match {
+    case t : GroundType ⇒ t.getSkillName match {
+      case "annotation" ⇒ "type->read(in).annotation"
+      case "string"     ⇒ "type->read(in).string"
+      case "bool"       ⇒ "in.boolean()"
+      case t            ⇒ s"in.$t()"
+    }
 
-    case t : UserType ⇒ s"    val t = this.t.asInstanceOf[${storagePool(t)}]"
-    case _            ⇒ "" // it is always an option not to tell anything
+    //case t : UserType ⇒ s"    val t = this.t.asInstanceOf[${storagePool(t)}]"
+    case _ ⇒ s"(${mapType(t)})type->read(in).${unbox(t)}"
   }
 }
