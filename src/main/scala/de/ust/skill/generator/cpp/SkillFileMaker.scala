@@ -15,7 +15,7 @@ trait SkillFileMaker extends GeneralOutputMaker {
   private def makeHeader {
     val out = open("File.h")
 
-    out.write(s"""
+    out.write(s"""${beginGuard("file")}
 #include <skill/fieldTypes/AnnotationType.h>
 #include <skill/api/SkillFile.h>${
       (for (t ← IR)
@@ -69,7 +69,7 @@ ${
 //  def read(path : Path, write : WriteMode = Write) : SkillFile = readFile(path, Read, write)
         };
 }${packageParts.map(_ ⇒ "}").mkString}
-""")
+$endGuard""")
 
     out.close()
   }
@@ -168,7 +168,7 @@ ${
                 ::skill::internal::AbstractStoragePool::setNextPools(t.get());
         }
 
-        //! TODO read field data
+        ::skill::internal::triggerFieldDeserialization(types, dataList);
 
         return new $packageName::api::SkillFile(in, mode, String, Annotation, types, typesByName);
     }

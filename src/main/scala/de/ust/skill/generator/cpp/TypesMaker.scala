@@ -20,15 +20,15 @@ import de.ust.skill.ir.restriction._
 trait TypesMaker extends GeneralOutputMaker {
 
   @inline private final def fieldName(implicit f : Field) : String = escaped(f.getName.capital())
-  @inline private final def localFieldName(implicit f : Field) : String = escaped("_" + f.getName.camel())
+  @inline private final def localFieldName(implicit f : Field) : String = internalName(f)
 
   abstract override def make {
     super.make
-    
+
     makeHeader
     makeSource
   }
-  
+
   private final def makeHeader {
 
     val out = open(s"Types.h")
@@ -55,6 +55,12 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
   (for (t ← IR) yield s"""
     class ${name(t)};""").mkString
 }
+    // type predef known fields for friend declarations
+    namespace internal {${
+  (for (t ← IR; f <- t.getFields) yield s"""
+        class ${knownField(f)};""").mkString
+}
+    }
     // begin actual type defs
 """)
 
@@ -71,7 +77,11 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
 ${
         comment(t)
 }class $Name : public $SuperName {
-        friend class ::skill::internal::Book<${name(t)}>;
+        friend class ::skill::internal::Book<${name(t)}>;${
+  (for (f <- t.getFields) yield s"""
+        friend class internal::${knownField(f)};""").mkString
+}
+
     protected:
 """)
       // fields

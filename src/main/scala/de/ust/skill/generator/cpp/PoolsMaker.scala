@@ -36,7 +36,8 @@ trait PoolsMaker extends GeneralOutputMaker {
 
       val out = open(s"${storagePool(t)}.h")
       //package
-      out.write(s"""#include <skill/api/String.h>
+      out.write(s"""${beginGuard(storagePool(t))}
+#include <skill/api/String.h>
 #include <skill/internal/${if (t.getSuperType == null) "Base" else "Sub"}Pool.h>
 #include <skill/internal/UnknownSubPool.h>
 #include <skill/internal/UnknownSubPool.implementation.h>
@@ -68,12 +69,13 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
                     typeID, this, name, restrictions);
         }
 
-        virtual ::skill::internal::FieldDeclaration *addField(::skill::TypeID id,
+        virtual ::skill::internal::FieldDeclaration *addField(const ::skill::internal::AbstractStringKeeper *const keeper,
+                                                              ::skill::TypeID id,
                                                               const ::skill::fieldTypes::FieldType *type,
                                                               ::skill::api::String name);
     };
 ${packageParts.map(_ ⇒ "}").mkString}
-""")
+$endGuard""")
       out.close()
     }
   }
@@ -82,13 +84,29 @@ ${packageParts.map(_ ⇒ "}").mkString}
     for (t ← IR) {
       val out = open(s"${storagePool(t)}.cpp")
       out.write(s"""#include "${storagePool(t)}.h"
+#include "FieldDeclarations.h"
+#include "StringKeeper.h"
 #include <skill/internal/LazyField.h>
 
 ::skill::internal::FieldDeclaration *$packageName::${storagePool(t)}::addField(
+        const ::skill::internal::AbstractStringKeeper *const keeper,
         ::skill::TypeID id, const ::skill::fieldTypes::FieldType *type, ::skill::api::String name) {
-    auto rval = new ::skill::internal::LazyField(type, name);
-    dataFields.push_back(rval);
-    return rval;
+    ::skill::internal::FieldDeclaration *target;
+    ${
+        if (t.getFields.isEmpty) "target = new ::skill::internal::LazyField(type, name, this);"
+        else s"""const StringKeeper *const sk = (const StringKeeper *const) keeper;
+   ${
+          (for (f ← t.getFields)
+            yield s""" if (name == sk->${escaped(f.getSkillName)})
+        target = new $packageName::internal::${knownField(f)}(type, name, this);
+    else"""
+          ).mkString
+        }
+        target = new ::skill::internal::LazyField(type, name, this);
+"""
+      }
+    dataFields.push_back(target);
+    return target;
 }
 """)
       out.close

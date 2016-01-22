@@ -34,7 +34,7 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * @author Timm Felden
  */
 class Main extends FakeMain
-    //    with FieldDeclarationMaker
+    with FieldDeclarationsMaker
     //    with SerializationFunctionsMaker
     with SkillFileMaker
     with StringKeeperMaker
@@ -80,6 +80,25 @@ class Main extends FakeMain
     case _                           ⇒ throw new IllegalStateException(s"Unknown type $t")
   }
 
+  override protected def unbox(t : Type) : String = t match {
+
+    case t : GroundType ⇒ t.getName.lower match {
+      case "bool" ⇒ "boolean"
+      case "v64"  ⇒ "i64"
+      case t      ⇒ t;
+    }
+
+    case t : ConstantLengthArrayType ⇒ "array"
+    case t : VariableLengthArrayType ⇒ "list"
+    case t : ListType                ⇒ "list"
+    case t : SetType                 ⇒ "set"
+    case t : MapType                 ⇒ "map"
+
+    case t : Declaration             ⇒ "annotation"
+
+    case _                           ⇒ throw new IllegalStateException(s"Unknown type $t")
+  }
+
   /**
    * creates argument list of a constructor call, not including potential skillID or braces
    */
@@ -102,7 +121,7 @@ class Main extends FakeMain
     val headerLineLength = 51
     val headerLine1 = Some((headerInfo.line1 match {
       case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: "+_).getOrElse("Your SKilL Scala Binding")
+      case None    ⇒ headerInfo.license.map("LICENSE: "+_).getOrElse("Your SKilL C++ Binding")
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
     val headerLine2 = Some((headerInfo.line2 match {
       case Some(s) ⇒ s

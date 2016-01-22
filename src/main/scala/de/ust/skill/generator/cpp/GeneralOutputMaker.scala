@@ -70,6 +70,11 @@ trait GeneralOutputMaker extends Generator {
    * Assume the existence of a translation function for types.
    */
   protected def mapType(t : Type) : String
+  /**
+   * Returns the selector required to turn a box into a useful type.
+   * @note does not include . or -> to allow usage in both cases
+   */
+  protected def unbox(t : Type) : String
 
   /**
    * creates argument list of a constructor call, not including potential skillID or braces
@@ -95,6 +100,7 @@ trait GeneralOutputMaker extends Generator {
   protected def subPool(t : Type) : String = escaped(t.getName.capital+"SubPool")
 
   protected def name(f : Field) : String = escaped(f.getName.camel)
+  protected def internalName(f : Field) : String = escaped("_" + f.getName.camel())
   protected def knownField(f : Field) : String = escaped(s"KnownField_${f.getDeclaredIn.getName.capital()}_${f.getName.camel()}")
 
   /**
