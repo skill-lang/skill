@@ -114,12 +114,14 @@ ${
 ${
         if (f.isAuto) "" else s"""
     @Override
-    public void read(MappedInStream in, Chunk last) {${
+    public void read(ChunkEntry ce) {${
           if (f.isConstant())
             """
         // this field is constant"""
           else
             s"""
+        final MappedInStream in = ce.in;
+        final Chunk last = ce.c;
         final Iterator<$nameT> is;
         if (last instanceof SimpleChunk) {
             SimpleChunk c = (SimpleChunk) last;
