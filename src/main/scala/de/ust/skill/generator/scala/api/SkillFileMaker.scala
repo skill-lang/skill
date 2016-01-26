@@ -31,6 +31,7 @@ import de.ust.skill.common.scala.api.Access
 import de.ust.skill.common.scala.api.Create
 import de.ust.skill.common.scala.api.Read
 import de.ust.skill.common.scala.api.ReadMode
+import de.ust.skill.common.scala.api.ReadOnly
 import de.ust.skill.common.scala.api.SkillObject
 import de.ust.skill.common.scala.api.Write
 import de.ust.skill.common.scala.api.WriteMode
@@ -98,7 +99,7 @@ object SkillFile {
   def read(path : Path, write : WriteMode = Write) : SkillFile = readFile(path, Read, write)
 
   private def readFile(path : Path, read : ReadMode, write : WriteMode) : SkillFile = read match {
-    case Read ⇒ internal.FileParser.read(FileInputStream.open(path), write)
+    case Read ⇒ internal.FileParser.read(FileInputStream.open(path, write == ReadOnly), write)
 
     case Create ⇒
       val String = new StringPool(null)
