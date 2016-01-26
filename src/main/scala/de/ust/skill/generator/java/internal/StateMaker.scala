@@ -126,7 +126,7 @@ ${
             return new SkillState(strings, types, stringType, annotation, path, actualMode.close);
 
         case Read:
-            return FileParser.read(FileInputStream.open(path), actualMode.close);
+            return FileParser.read(FileInputStream.open(path, actualMode.close == Mode.ReadOnly), actualMode.close);
 
         default:
             throw new IllegalStateException("should never happen");
