@@ -90,8 +90,9 @@ ${
                          high = i + target->count; i != high; i++)
                 $readI
         } else {
-          //case bci : BulkChunk ⇒
-            for(const auto& b : owner->blocks){
+            //case bci : BulkChunk ⇒
+            for (int i = 0; i < ((::skill::internal::BulkChunk *) target)->blockCount; i++) {
+                const auto &b = owner->blocks[i];
                 for(::skill::SKilLID i = 1 + b.bpo, end = i + b.dynamicCount; i != end; i++)
                     $readI
             }
