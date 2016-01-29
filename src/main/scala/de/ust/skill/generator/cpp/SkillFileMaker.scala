@@ -50,7 +50,7 @@ ${
              */
             SkillFile(skill::streams::FileInputStream *in, const skill::api::WriteMode &mode,
                       skill::internal::StringPool *stringPool, skill::fieldTypes::AnnotationType *annotation,
-                      std::vector<std::unique_ptr<skill::internal::AbstractStoragePool>> *types,
+                      std::vector<skill::internal::AbstractStoragePool*> *types,
                       skill::api::typeByName_t *typesByName)
                     : ::skill::api::SkillFile(in, mode, stringPool, annotation, types, typesByName)${
       (for (t ← IR) yield s""",
@@ -137,7 +137,7 @@ ${
                                               ::skill::WriteMode mode,
                                               ::skill::internal::StringPool *String,
                                               ::skill::fieldTypes::AnnotationType *Annotation,
-                                              std::vector<std::unique_ptr<::skill::internal::AbstractStoragePool>> *types,
+                                              std::vector<::skill::internal::AbstractStoragePool*> *types,
                                               ::skill::api::typeByName_t *typesByName,
                                               std::vector<std::unique_ptr<::skill::streams::MappedInStream>> &dataList) {
 
@@ -155,7 +155,7 @@ ${
       }, name,
                                        new std::set<::skill::restrictions::TypeRestriction *>);
             tbn[name->c_str()] = p;
-            types->push_back(std::unique_ptr<::skill::internal::AbstractStoragePool>(p));
+            types->push_back(p);
             (*typesByName)[name] = p;
         }""").mkString
     }
@@ -165,7 +165,7 @@ ${
             t->allocateData();
             t->allocateInstances();
             if (nullptr == t->superPool)
-                ::skill::internal::AbstractStoragePool::setNextPools(t.get());
+                ::skill::internal::AbstractStoragePool::setNextPools(t);
         }
 
         ::skill::internal::triggerFieldDeserialization(types, dataList);
