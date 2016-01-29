@@ -45,6 +45,12 @@ class IMLTest extends FunSuite {
         System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
   }
 
+  test("create c++") {
+    if (Files.exists(filename.toPath))
+      CommandLine.main(Array("-p", "siml", "-L", "cpp", specPath,
+        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
+  }
+
   test("create java") {
     if (Files.exists(filename.toPath))
       CommandLine.main(Array("-p", "iml", "-L", "java", "-O@java:suppressWarnings=true", specPath,

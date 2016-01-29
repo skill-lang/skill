@@ -9,6 +9,11 @@ import scala.collection.JavaConversions._
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.Restriction
+import de.ust.skill.ir.restriction.NonNullRestriction
+import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
+import de.ust.skill.ir.restriction.IntRangeRestriction
+import de.ust.skill.ir.restriction.FloatRangeRestriction
 
 trait FieldDeclarationsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -18,20 +23,21 @@ trait FieldDeclarationsMaker extends GeneralOutputMaker {
     makeSource
   }
   private def makeHeader {
-    val out = open("FieldDeclarations.h")
 
-    out.write(s"""${beginGuard("field_declarations")}
+    // one file per base type
+    for (base ← IR.par if null == base.getSuperType) {
+      val out = open(s"${name(base)}FieldDeclarations.h")
+
+      out.write(s"""${beginGuard(s"${name(base)}_field_declarations")}
 #include <skill/fieldTypes/AnnotationType.h>
-#include <skill/api/SkillFile.h>${
-      (for (t ← IR)
-        yield s"""
-#include "${storagePool(t)}.h"""").mkString
-    }
+#include <skill/api/SkillFile.h>
+#include "${storagePool(base)}s.h"
 
 ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
     namespace internal {
-${
-      (for (t ← IR; f ← t.getFields) yield s"""
+""")
+
+      out.write((for (t ← IR if base == t.getBaseType; f ← t.getFields) yield s"""
         /**
          * ${f.getType.toString} ${t.getName.capital}.${f.getName.camel}
          */
@@ -39,8 +45,9 @@ ${
         public:
             ${knownField(f)}(
                     const ::skill::FieldType *const type, const ::skill::string_t *name,
-                    ::skill::internal::AbstractStoragePool *const owner)
-                    : FieldDeclaration(type, name, owner) { }
+                    ::skill::internal::AbstractStoragePool *const owner);
+
+            virtual bool check() const;
 
             virtual void read(const ::skill::streams::MappedInStream *in,
                               const ::skill::internal::Chunk *target);
@@ -57,30 +64,46 @@ ${
         else s"""
                 ((${mapType(t)})i)->${internalName(f)} = (${mapType(f.getType)})v.${unbox(f.getType)};"""
       }}
-        };""").mkString
-    }
+        };""").mkString)
+
+      out.write(s"""
     }
 ${packageParts.map(_ ⇒ "}").mkString}
 $endGuard""")
 
-    out.close()
+      out.close()
+    }
   }
 
   private def makeSource {
-    val out = open("FieldDeclarations.cpp")
 
-    out.write(s"""
-#include "FieldDeclarations.h"
+    // one file per base type
+    for (base ← IR.par if null == base.getSuperType) {
+      val out = open(s"${name(base)}FieldDeclarations.cpp")
+
+      out.write(s"""
+#include "${name(base)}FieldDeclarations.h"
 ${
-      (for (t ← IR; f ← t.getFields) yield {
-        val readI = s"d[i]->${internalName(f)} = ${readType(f.getType)};"
-        s"""
+        (for (t ← IR if base == t.getBaseType; f ← t.getFields) yield {
+          val readI = s"d[i]->${internalName(f)} = ${readType(f.getType)}; // TODO schlicht und ergreifend falsch, weil hier boxen produziert werden"
+          s"""
+$packageName::internal::${knownField(f)}::${knownField(f)}(
+        const ::skill::FieldType *const type,
+        const ::skill::string_t *name,
+        ::skill::internal::AbstractStoragePool *const owner)
+        : FieldDeclaration(type, name, owner) {
+${
+            (for (r ← f.getRestrictions) yield s"""
+    addRestriction(${makeRestriction(f.getType, r)});""").mkString
+          }
+}
+
 void $packageName::internal::${knownField(f)}::read(
         const ::skill::streams::MappedInStream *part,
         const ::skill::internal::Chunk *target) {
 ${
-          if (f.isConstant()) "    // reading constants is O(0)"
-          else s"""
+            if (f.isConstant()) "    // reading constants is O(0)"
+            else s"""
     auto d = ((${storagePool(t)} *) owner)->data;
     skill::streams::MappedInStream in(part, target->begin, target->end);
 
@@ -114,13 +137,29 @@ ${
                 in.getPosition(),
                 part->getPosition() + target->begin,
                 part->getPosition() + target->end, "did not consume all bytes");"""
+          }
+}
+
+bool $packageName::internal::${knownField(f)}::check() const {${
+            if (f.isConstant) "\n    // constants are always correct"
+            else s"""
+    if (checkedRestrictions.size()) {
+        ${storagePool(t)} *p = (${storagePool(t)} *) owner;
+        for (const auto& i : *p) {
+            for (auto r : checkedRestrictions)
+                if (!r->check(::skill::api::box(i.${internalName(f)})))
+                    return false;
         }
+    }"""
+          }
+    return true;
 }
 """
-      }).mkString
-    }""")
+        }).mkString
+      }""")
 
-    out.close()
+      out.close()
+    }
   }
 
   /**
@@ -136,5 +175,19 @@ ${
 
     //case t : UserType ⇒ s"    val t = this.t.asInstanceOf[${storagePool(t)}]"
     case _ ⇒ s"(${mapType(t)})type->read(in).${unbox(t)}"
+  }
+
+  private final def makeRestriction(t : Type, r : Restriction) : String = r match {
+    case r : NonNullRestriction ⇒ "::skill::restrictions::NonNull::get()"
+    case r : IntRangeRestriction ⇒
+      val typename = s"int${t.getSkillName.substring(1)}_t"
+      s"new ::skill::restrictions::Range<$typename>(($typename)${r.getLow}L, ($typename)${r.getHigh}L)"
+
+    case r : FloatRangeRestriction ⇒ t.getSkillName match {
+      case "f32" ⇒ s"new ::skill::restrictions::Range<float>(${r.getLowFloat}f, ${r.getHighFloat}f)"
+      case "f64" ⇒ s"new ::skill::restrictions::Range<double>(${r.getLowDouble}, ${r.getHighDouble})"
+    }
+    case r : ConstantLengthPointerRestriction ⇒
+      "::skill::restrictions::ConstantLengthPointer::get()"
   }
 }

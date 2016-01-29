@@ -18,9 +18,9 @@ trait SkillFileMaker extends GeneralOutputMaker {
     out.write(s"""${beginGuard("file")}
 #include <skill/fieldTypes/AnnotationType.h>
 #include <skill/api/SkillFile.h>${
-      (for (t ← IR)
+      (for (t ← IR if null == t.getSuperType)
         yield s"""
-#include "${storagePool(t)}.h"""").mkString
+#include "${storagePool(t)}s.h"""").mkString
     }
 
 ${packageParts.mkString("namespace ", " {\nnamespace", " {")}

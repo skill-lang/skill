@@ -31,11 +31,13 @@ trait TypesMaker extends GeneralOutputMaker {
 
   private final def makeHeader {
 
-    val out = open(s"Types.h")
+    // one header per base type
+    for(base <- IR.par if null == base.getSuperType) {
+      val out = open(s"TypesOf${name(base)}.h")
 
       //includes package
-    out.write(s"""${beginGuard("types")}
-#include <skill/api/Object.h>
+      out.write(s"""${beginGuard(s"types_of_${name(base)}")}
+#include <skill/api/types.h>
 #include <skill/api/SkillException.h>
 #include <cassert>
 #include <vector>
@@ -57,7 +59,7 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
 }
     // type predef known fields for friend declarations
     namespace internal {${
-  (for (t ← IR; f <- t.getFields) yield s"""
+  (for (t ← IR if base == t.getBaseType; f <- t.getFields) yield s"""
         class ${knownField(f)};""").mkString
 }
     }
@@ -65,7 +67,7 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
 """)
 
 
-    for (t ← IR){
+    for (t ← IR if base == t.getBaseType){
       val fields = t.getAllFields.filter(!_.isConstant)
       val relevantFields = fields.filter(!_.isIgnored)
       val Name = name(t)
@@ -103,7 +105,7 @@ ${
 	  // reveal skill id
       if(revealSkillID && null==t.getSuperType)
         out.write("""
-    inline ::skill::SKilLID skillID() { return this->id; }
+    inline ::skill::SKilLID skillID() const { return this->id; }
 """)
 
   //${if(revealSkillID)"" else s"protected[${packageName}] "}final def getSkillID = skillID
@@ -151,11 +153,11 @@ ${
 
       if(f.isConstant)
         out.write(s"""
-  ${comment(f)}inline ${mapType(f.getType)} get$fieldName() {$makeGetterImplementation}
+  ${comment(f)}inline ${mapType(f.getType)} get$fieldName() const {$makeGetterImplementation}
 """)
       else
         out.write(s"""
-  ${comment(f)}inline ${mapType(f.getType)} get$fieldName() {$makeGetterImplementation}
+  ${comment(f)}inline ${mapType(f.getType)} get$fieldName() const {$makeGetterImplementation}
   ${comment(f)}inline void set$fieldName(${mapType(f.getType)} ${name(f)}) {$makeSetterImplementation}
 """)
     }
@@ -174,7 +176,7 @@ ${
 
         virtual const char *skillName() const { return typeName; }
 
-        virtual std::string toString() { return std::string(typeName) + std::to_string(this->id); }
+        virtual std::string toString() const { return std::string(typeName) + std::to_string(this->id); }
 
         virtual void prettyString(std::ostream &os) const {
             os << "${t.getName.capital}#" << id;
@@ -214,13 +216,17 @@ ${
 $endGuard""")
 
     out.close()
+    }
   }
 
   private final def makeSource {
-    val out = open(s"Types.cpp")
-    out.write(s"""#include "Types.h"
+
+    // one file per base type
+    for(base <- IR.par if null == base.getSuperType) {
+      val out = open(s"TypesOf${name(base)}.cpp")
+      out.write(s"""#include "TypesOf${name(base)}.h"
 #include <skill/internal/AbstractStoragePool.h>${
-(for(t <- IR) yield s"""
+      (for(t <- IR if base == t.getBaseType) yield s"""
 const char *const $packageName::${name(t)}::typeName = "${t.getSkillName}";
 const char *$packageName::${name(t)}_UnknownSubType::skillName() const {
     return owner->name->c_str();
@@ -228,6 +234,7 @@ const char *$packageName::${name(t)}_UnknownSubType::skillName() const {
 """).mkString
     }
 """)
-    out.close()
+      out.close()
+    }
   }
 }

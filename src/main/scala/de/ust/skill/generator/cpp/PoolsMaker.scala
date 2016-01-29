@@ -29,38 +29,44 @@ trait PoolsMaker extends GeneralOutputMaker {
 
   private final def makeHeader {
 
-    for (t ← IR) {
-      val typeName = packageName+"::"+name(t)
-      val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
-      val fields = t.getFields
+    // one header file per base type
+    for (base ← IR.par if null == base.getSuperType) {
+      val out = open(s"${storagePool(base)}s.h")
 
-      val out = open(s"${storagePool(t)}.h")
-      //package
-      out.write(s"""${beginGuard(storagePool(t))}
+      //prefix
+      out.write(s"""${beginGuard(storagePool(base))}
 #include <skill/api/String.h>
-#include <skill/internal/${if (t.getSuperType == null) "Base" else "Sub"}Pool.h>
+#include <skill/internal/BasePool.h>
+#include <skill/internal/SubPool.h>
 #include <skill/internal/UnknownSubPool.h>
 #include <skill/internal/UnknownSubPool.implementation.h>
 
-#include "Types.h"
+#include "TypesOf${name(base)}.h"
 
 ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
+""")
 
+      for (t ← IR if base == t.getBaseType) {
+        val typeName = packageName+"::"+name(t)
+        val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
+        val fields = t.getFields
+
+        out.write(s"""
     struct ${storagePool(t)} : public ::skill::internal::${
-        if (t.getSuperType == null) s"BasePool<$typeName>"
-        else s"SubPool<$typeName, $packageName::${name(t.getBaseType)}>"
-      } {
+          if (t.getSuperType == null) s"BasePool<$typeName>"
+          else s"SubPool<$typeName, $packageName::${name(t.getBaseType)}>"
+        } {
         ${storagePool(t)}(::skill::TypeID typeID${
-        if (t.getSuperType == null) ""
-        else s", AbstractStoragePool *superPool"
-      }, ::skill::api::String name, std::set<::skill::restrictions::TypeRestriction *> *restrictions)
+          if (t.getSuperType == null) ""
+          else s", AbstractStoragePool *superPool"
+        }, ::skill::api::String name, std::set<::skill::restrictions::TypeRestriction *> *restrictions)
                 : ::skill::internal::${
-        if (t.getSuperType == null) s"BasePool<$typeName>"
-        else s"SubPool<$typeName, $packageName::${name(t.getBaseType)}>"
-      }(typeID${
-        if (t.getSuperType == null) ""
-        else s", superPool"
-      }, name, restrictions) { }
+          if (t.getSuperType == null) s"BasePool<$typeName>"
+          else s"SubPool<$typeName, $packageName::${name(t.getBaseType)}>"
+        }(typeID${
+          if (t.getSuperType == null) ""
+          else s", superPool"
+        }, name, restrictions) { }
 
         virtual AbstractStoragePool *makeSubPool(::skill::TypeID typeID,
                                                  ::skill::api::String name,
@@ -73,7 +79,10 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
                                                               ::skill::TypeID id,
                                                               const ::skill::fieldTypes::FieldType *type,
                                                               ::skill::api::String name);
-    };
+    };""")
+      }
+
+      out.write(s"""
 ${packageParts.map(_ ⇒ "}").mkString}
 $endGuard""")
       out.close()
@@ -81,34 +90,42 @@ $endGuard""")
   }
 
   private final def makeSource {
-    for (t ← IR) {
-      val out = open(s"${storagePool(t)}.cpp")
-      out.write(s"""#include "${storagePool(t)}.h"
-#include "FieldDeclarations.h"
+
+    // one file per base type
+    for (base ← IR.par if null == base.getSuperType) {
+      val out = open(s"${storagePool(base)}s.cpp")
+
+      // common includes
+      out.write(s"""#include "${storagePool(base)}s.h"
+#include "${name(base)}FieldDeclarations.h"
 #include "StringKeeper.h"
 #include <skill/internal/LazyField.h>
+""")
 
+      for (t ← IR if base == t.getBaseType) {
+        out.write(s"""
 ::skill::internal::FieldDeclaration *$packageName::${storagePool(t)}::addField(
         const ::skill::internal::AbstractStringKeeper *const keeper,
         ::skill::TypeID id, const ::skill::fieldTypes::FieldType *type, ::skill::api::String name) {
     ::skill::internal::FieldDeclaration *target;
     ${
-        if (t.getFields.isEmpty) "target = new ::skill::internal::LazyField(type, name, this);"
-        else s"""const StringKeeper *const sk = (const StringKeeper *const) keeper;
+          if (t.getFields.isEmpty) "target = new ::skill::internal::LazyField(type, name, this);"
+          else s"""const StringKeeper *const sk = (const StringKeeper *const) keeper;
    ${
-          (for (f ← t.getFields)
-            yield s""" if (name == sk->${escaped(f.getSkillName)})
+            (for (f ← t.getFields)
+              yield s""" if (name == sk->${escaped(f.getSkillName)})
         target = new $packageName::internal::${knownField(f)}(type, name, this);
     else"""
-          ).mkString
-        }
+            ).mkString
+          }
         target = new ::skill::internal::LazyField(type, name, this);
 """
-      }
+        }
     dataFields.push_back(target);
     return target;
 }
 """)
+      }
       out.close
     }
   }

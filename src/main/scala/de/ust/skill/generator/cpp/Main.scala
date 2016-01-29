@@ -69,11 +69,11 @@ class Main extends FakeMain
       case "string"     ⇒ "::skill::api::String"
     }
 
-    case t : ConstantLengthArrayType ⇒ s"${mapType(t.getBaseType())}*"
-    case t : VariableLengthArrayType ⇒ s"::std::vector<${mapType(t.getBaseType())}>*"
-    case t : ListType                ⇒ s"::std::vector<${mapType(t.getBaseType())}>*"
-    case t : SetType                 ⇒ s"::std::set<${mapType(t.getBaseType())}>*"
-    case t : MapType                 ⇒ t.getBaseTypes().map(mapType).reduceRight((k, v) ⇒ s"::std::map<$k, $v>*")
+    case t : ConstantLengthArrayType ⇒ s"::skill::api::Array<${mapType(t.getBaseType())}>*"
+    case t : VariableLengthArrayType ⇒ s"::skill::api::Array<${mapType(t.getBaseType())}>*"
+    case t : ListType                ⇒ s"::skill::api::Array<${mapType(t.getBaseType())}>*"
+    case t : SetType                 ⇒ s"::skill::api::Set<${mapType(t.getBaseType())}>*"
+    case t : MapType                 ⇒ t.getBaseTypes().map(mapType).reduceRight((k, v) ⇒ s"::skill::api::Map<$k, $v>*")
 
     case t : Declaration             ⇒ s"$packageName::${name(t)}*"
 
