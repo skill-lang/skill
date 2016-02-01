@@ -141,11 +141,14 @@ ${
                                               ::skill::api::typeByName_t *typesByName,
                                               std::vector<std::unique_ptr<::skill::streams::MappedInStream>> &dataList) {
 
-        auto &tbn = Annotation->init();
+        auto &tbn = Annotation->init();${
+      if (IR.isEmpty) ""
+      else """
         const StringKeeper *const sk = (const StringKeeper *const) String->keeper;
         ::skill::api::String name;
-
-        // ensure that pools exist at all${
+"""
+    }
+      // ensure that pools exist at all${
       (for (t ← IR) yield s"""
         name = sk->${escaped(t.getSkillName)};
         if (!tbn[name->c_str()]) {
