@@ -160,12 +160,24 @@ ${
         }""").mkString
     }
 
-        // trigger allocation and instance creation
+        // create field structure
         for (auto &t : *types) {
             t->allocateData();
-            t->allocateInstances();
-            if (nullptr == t->superPool)
+            if (nullptr == t->superPool) {
                 ::skill::internal::AbstractStoragePool::setNextPools(t);
+            }
+        }
+        {
+            // allocate instances
+            std::vector<std::future<void>> jobs;
+            for (::skill::internal::AbstractStoragePool *t : *types) {
+                jobs.push_back(::skill::concurrent::ThreadPool::global.execute(
+                        [](::skill::internal::AbstractStoragePool *t) -> void {
+                            t->allocateInstances();
+                        }, t));
+            }
+            for (auto &j : jobs)
+                j.get();
         }
 
         ::skill::internal::triggerFieldDeserialization(types, dataList);
