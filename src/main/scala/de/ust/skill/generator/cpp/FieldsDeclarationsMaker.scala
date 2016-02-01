@@ -108,13 +108,13 @@ ${
     skill::streams::MappedInStream in(part, target->begin, target->end);
 
     try {
-        if (target->isSimple()) {
-            for (::skill::SKilLID i = 1 + ((::skill::internal::SimpleChunk *) target)->bpo,
+        if (dynamic_cast<const ::skill::internal::SimpleChunk *>(target)) {
+            for (::skill::SKilLID i = 1 + ((const ::skill::internal::SimpleChunk *) target)->bpo,
                          high = i + target->count; i != high; i++)
                 $readI
         } else {
             //case bci : BulkChunk ⇒
-            for (int i = 0; i < ((::skill::internal::BulkChunk *) target)->blockCount; i++) {
+            for (int i = 0; i < ((const ::skill::internal::BulkChunk *) target)->blockCount; i++) {
                 const auto &b = owner->blocks[i];
                 for(::skill::SKilLID i = 1 + b.bpo, end = i + b.dynamicCount; i != end; i++)
                     $readI
