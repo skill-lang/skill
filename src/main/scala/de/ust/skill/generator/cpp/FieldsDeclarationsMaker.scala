@@ -25,7 +25,7 @@ trait FieldDeclarationsMaker extends GeneralOutputMaker {
   private def makeHeader {
 
     // one file per base type
-    for (base ← IR.par if null == base.getSuperType) {
+    for (base ← IR if null == base.getSuperType) {
       val out = open(s"${name(base)}FieldDeclarations.h")
 
       out.write(s"""${beginGuard(s"${name(base)}_field_declarations")}
@@ -44,7 +44,7 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
         class ${knownField(f)} : public ::skill::internal::FieldDeclaration {
         public:
             ${knownField(f)}(
-                    const ::skill::FieldType *const type, const ::skill::string_t *name,
+                    const ::skill::FieldType *const type, const ::skill::string_t *name, ::skill::TypeID index,
                     ::skill::internal::AbstractStoragePool *const owner);
 
             virtual bool check() const;
@@ -64,6 +64,10 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
         else s"""
                 ((${mapType(t)})i)->${internalName(f)} = (${mapType(f.getType)})v.${unbox(f.getType)};"""
       }}
+
+            virtual size_t offset() const;
+
+            virtual void write(::skill::streams::MappedOutStream* out) const;
         };""").mkString)
 
       out.write(s"""
@@ -78,27 +82,28 @@ $endGuard""")
   private def makeSource {
 
     // one file per base type
-    for (base ← IR.par if null == base.getSuperType) {
+    for (base ← IR if null == base.getSuperType) {
       val out = open(s"${name(base)}FieldDeclarations.cpp")
 
       out.write(s"""
 #include "${name(base)}FieldDeclarations.h"
 ${
         (for (t ← IR if base == t.getBaseType; f ← t.getFields) yield {
+          val fieldName = s"$packageName::internal::${knownField(f)}"
           val readI = s"d[i]->${internalName(f)} = ${readType(f.getType)}; // TODO schlicht und ergreifend falsch, weil hier boxen produziert werden"
           s"""
-$packageName::internal::${knownField(f)}::${knownField(f)}(
+$fieldName::${knownField(f)}(
         const ::skill::FieldType *const type,
-        const ::skill::string_t *name,
+        const ::skill::string_t *name, ::skill::TypeID index,
         ::skill::internal::AbstractStoragePool *const owner)
-        : FieldDeclaration(type, name, owner) {
+        : FieldDeclaration(type, name, index, owner) {
 ${
             (for (r ← f.getRestrictions) yield s"""
     addRestriction(${makeRestriction(f.getType, r)});""").mkString
           }
 }
 
-void $packageName::internal::${knownField(f)}::read(
+void $fieldName::read(
         const ::skill::streams::MappedInStream *part,
         const ::skill::internal::Chunk *target) {
 ${
@@ -140,7 +145,15 @@ ${
           }
 }
 
-bool $packageName::internal::${knownField(f)}::check() const {${
+size_t $fieldName::offset() const {
+    return 0;
+}
+
+void $fieldName::write(::skill::streams::MappedOutStream *out) const {
+
+}
+
+bool $fieldName::check() const {${
             if (f.isConstant) "\n    // constants are always correct"
             else s"""
     if (checkedRestrictions.size()) {

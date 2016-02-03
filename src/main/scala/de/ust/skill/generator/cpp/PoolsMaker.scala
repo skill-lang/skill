@@ -109,16 +109,16 @@ $endGuard""")
         ::skill::TypeID id, const ::skill::fieldTypes::FieldType *type, ::skill::api::String name) {
     ::skill::internal::FieldDeclaration *target;
     ${
-          if (t.getFields.isEmpty) "target = new ::skill::internal::LazyField(type, name, this);"
+          if (t.getFields.isEmpty) "target = new ::skill::internal::LazyField(type, name, id, this);"
           else s"""const StringKeeper *const sk = (const StringKeeper *const) keeper;
    ${
             (for (f ← t.getFields)
               yield s""" if (name == sk->${escaped(f.getSkillName)})
-        target = new $packageName::internal::${knownField(f)}(type, name, this);
+        target = new $packageName::internal::${knownField(f)}(type, name, id, this);
     else"""
             ).mkString
           }
-        target = new ::skill::internal::LazyField(type, name, this);
+        target = new ::skill::internal::LazyField(type, name, id, this);
 """
         }
     dataFields.push_back(target);
