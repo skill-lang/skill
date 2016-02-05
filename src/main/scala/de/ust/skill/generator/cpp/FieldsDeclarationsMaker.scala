@@ -5,15 +5,15 @@
 \*                                                                            */
 package de.ust.skill.generator.cpp
 
-import scala.collection.JavaConversions._
-import de.ust.skill.ir.Type
-import de.ust.skill.ir.UserType
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.Restriction
-import de.ust.skill.ir.restriction.NonNullRestriction
+import de.ust.skill.ir.Type
 import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
-import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
+import de.ust.skill.ir.restriction.IntRangeRestriction
+import de.ust.skill.ir.restriction.NonNullRestriction
 
 trait FieldDeclarationsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -190,11 +190,25 @@ bool $fieldName::check() const {${
     case _ ⇒ s"(${mapType(t)})type->read(in).${unbox(t)}"
   }
 
+  private final def hex(t : Type, x : Long) : String = {
+    val v : Long = (if (x == Long.MaxValue || x == Long.MinValue)
+      x >> (64 - t.getSkillName.substring(1).toInt);
+    else
+      x);
+
+    t.getSkillName match {
+      case "i8"  ⇒ "0x%02X".format(v.toByte)
+      case "i16" ⇒ "0x%04X".format(v.toShort)
+      case "i32" ⇒ "0x%08X".format(v.toInt)
+      case _     ⇒ "0x%016X".format(v)
+    }
+  }
+
   private final def makeRestriction(t : Type, r : Restriction) : String = r match {
     case r : NonNullRestriction ⇒ "::skill::restrictions::NonNull::get()"
     case r : IntRangeRestriction ⇒
       val typename = s"int${t.getSkillName.substring(1)}_t"
-      s"new ::skill::restrictions::Range<$typename>(($typename)${r.getLow}L, ($typename)${r.getHigh}L)"
+      s"new ::skill::restrictions::Range<$typename>(($typename)${hex(t, r.getLow)}, ($typename)${hex(t, r.getHigh)})"
 
     case r : FloatRangeRestriction ⇒ t.getSkillName match {
       case "f32" ⇒ s"new ::skill::restrictions::Range<float>(${r.getLowFloat}f, ${r.getHighFloat}f)"
