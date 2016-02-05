@@ -48,6 +48,9 @@ namespace skill{
     namespace internal {
         template<class T>
         class Book;
+
+        template<class T, class B>
+        class StoragePool;
     }
 }
 
@@ -76,10 +79,11 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
 
       //class declaration
       out.write(s"""
-${
+    ${
         comment(t)
 }class $Name : public $SuperName {
-        friend class ::skill::internal::Book<${name(t)}>;${
+        friend class ::skill::internal::Book<${name(t)}>;
+        friend class ::skill::internal::StoragePool<${name(t)},${name(t.getBaseType)}>;${
   (for (f <- t.getFields) yield s"""
         friend class internal::${knownField(f)};""").mkString
 }
@@ -95,17 +99,23 @@ ${
     	out.write(s"""
         $Name() { }
 
-    public:
-
-        $Name(::skill::SKilLID _skillID) {
-            this->id = _skillID;
+        $Name(::skill::SKilLID _skillID${
+    	  (for(f <- t.getAllFields if !f.isConstant()) yield s""",
+    	    ${mapType(f.getType)} __${name(f)} = ${defaultValue(f)}""").mkString
+    	}) {
+            this->id = _skillID;${
+    	  (for(f <- t.getAllFields if !f.isConstant()) yield s"""
+            this->${localFieldName(f)} = __${name(f)};""").mkString
+    	}
         }
+
+    public:
 """)
 
 	  // reveal skill id
       if(revealSkillID && null==t.getSuperType)
         out.write("""
-    inline ::skill::SKilLID skillID() const { return this->id; }
+        inline ::skill::SKilLID skillID() const { return this->id; }
 """)
 
   //${if(revealSkillID)"" else s"protected[${packageName}] "}final def getSkillID = skillID
@@ -129,36 +139,37 @@ ${
         if(f.isIgnored)
           s"""throw ::skill::SkillException::IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint");"""
         else
-          s"${ //@range check
-            if(f.getType().isInstanceOf[GroundType]){
-              if(f.getType().asInstanceOf[GroundType].isInteger)
-                f.getRestrictions.collect{case r:IntRangeRestriction⇒r}.map{r ⇒ s"""assert(${r.getLow}L <= ${name(f)} && ${name(f)} <= ${r.getHigh}L); """}.mkString("")
-              else if("f32".equals(f.getType.getName))
-                f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""assert(${r.getLowFloat}f <= ${name(f)} && ${name(f)} <= ${r.getHighFloat}f); """}.mkString("")
-              else if("f64".equals(f.getType.getName))
-               f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""assert(${r.getLowDouble} <= ${name(f)} && ${name(f)} <= ${r.getHighDouble}); """}.mkString("")
-              else
-                ""
+          s"${
+          f.getRestrictions.map {
+            //@range
+            case r:IntRangeRestriction ⇒
+              (r.getLow == Long.MinValue, r.getHigh == Long.MaxValue) match {
+              case (true, true)   ⇒ ""
+              case (true, false)  ⇒ s"assert(${name(f)} <= ${r.getHigh}L);"
+              case (false, true)  ⇒ s"assert(${r.getLow}L <= ${name(f)});"
+              case (false, false) ⇒ s"assert(${r.getLow}L <= ${name(f)} && ${name(f)} <= ${r.getHigh}L);"
             }
-            else
-              ""
-          }${//@monotone modification check
-            if(!t.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty){
-              s"""assert(id == -1L); """
-            }
-            else
-              ""
-        }$localFieldName = ${name(f)};"
+            case r:FloatRangeRestriction if("f32".equals(f.getType.getName)) ⇒
+              s"assert(${r.getLowFloat}f <= ${name(f)} && ${name(f)} <= ${r.getHighFloat}f);"
+            case r:FloatRangeRestriction ⇒
+              s"assert(${r.getLowDouble} <= ${name(f)} && ${name(f)} <= ${r.getHighDouble});"
+
+            //@monotone modification check
+            case r:MonotoneRestriction ⇒ "assert(id == -1L); "
+
+            case _ ⇒ ""
+          }.mkString
+          }$localFieldName = ${name(f)};"
       }
 
       if(f.isConstant)
         out.write(s"""
-  ${comment(f)}inline ${mapType(f.getType)} get$fieldName() const {$makeGetterImplementation}
+        ${comment(f)}inline ${mapType(f.getType)} get$fieldName() const {$makeGetterImplementation}
 """)
       else
         out.write(s"""
-  ${comment(f)}inline ${mapType(f.getType)} get$fieldName() const {$makeGetterImplementation}
-  ${comment(f)}inline void set$fieldName(${mapType(f.getType)} ${name(f)}) {$makeSetterImplementation}
+        ${comment(f)}inline ${mapType(f.getType)} get$fieldName() const {$makeGetterImplementation}
+        ${comment(f)}inline void set$fieldName(${mapType(f.getType)} ${name(f)}) {$makeSetterImplementation}
 """)
     }
 
@@ -222,7 +233,7 @@ $endGuard""")
   private final def makeSource {
 
     // one file per base type
-    for(base <- IR.par if null == base.getSuperType) {
+    for(base <- IR if null == base.getSuperType) {
       val out = open(s"TypesOf${name(base)}.cpp")
       out.write(s"""#include "TypesOf${name(base)}.h"
 #include <skill/internal/AbstractStoragePool.h>${

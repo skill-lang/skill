@@ -45,8 +45,8 @@ class Main extends FakeMain
     with TypesMaker {
 
   lineLength = 120
-  override def comment(d : Declaration) : String = d.getComment.format("/**\n", " * ", lineLength, " */\n")
-  override def comment(f : Field) : String = f.getComment.format("/**\n", "   * ", lineLength, "   */\n  ")
+  override def comment(d : Declaration) : String = d.getComment.format("/**\n", "     * ", lineLength, "     */\n    ")
+  override def comment(f : Field) : String = f.getComment.format("/**\n", "         * ", lineLength, "         */\n        ")
 
   /**
    * Translates types into scala type names.
@@ -166,18 +166,19 @@ Opitions (cpp):
   revealSkillID: true/false  if set to true, the generated binding will reveal SKilL IDs in the API
 """)
 
-  override protected def defaultValue(f : Field) = f.getType match {
-    case t : GroundType ⇒ t.getSkillName() match {
-      case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
-      case "f32" | "f64"                        ⇒ "0.0f"
-      case "bool"                               ⇒ "false"
-      case _                                    ⇒ "null"
+  override protected def defaultValue(f : Field) =
+    f.getType match {
+      case t : GroundType ⇒ t.getSkillName() match {
+        case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
+        case "f32" | "f64"                        ⇒ "0.0"
+        case "bool"                               ⇒ "false"
+        case _                                    ⇒ "nullptr"
+      }
+
+      case t : UserType ⇒ "nullptr"
+
+      case _            ⇒ "nullptr"
     }
-
-    case t : UserType ⇒ "null"
-
-    case _            ⇒ mapType(f.getType)+"()"
-  }
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.

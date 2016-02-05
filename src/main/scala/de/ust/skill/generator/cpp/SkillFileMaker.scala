@@ -59,14 +59,20 @@ ${
 
             /**
              * Reads a binary SKilL file and turns it into a SKilL state.
-             *
-             * TODO modes
              */
-            static SkillFile *open(const std::string &path);
+            static SkillFile *open(const std::string &path,
+                                   ::skill::api::ReadMode rm = ::skill::api::ReadMode::read,
+                                   ::skill::api::WriteMode wm = ::skill::api::WriteMode::write);
 
-//  def create(path : Path, write : WriteMode = Write) : SkillFile = readFile(path, Create, write)
+            static SkillFile *create(const std::string &path,
+                                     ::skill::api::WriteMode wm = ::skill::api::WriteMode::write) {
+                return open(path, ::skill::api::ReadMode::create, wm);
+            }
 
-//  def read(path : Path, write : WriteMode = Write) : SkillFile = readFile(path, Read, write)
+            static SkillFile *read(const std::string &path,
+                                     ::skill::api::WriteMode wm = ::skill::api::WriteMode::write) {
+                return open(path, ::skill::api::ReadMode::read, wm);
+            }
         };
 }${packageParts.map(_ ⇒ "}").mkString}
 $endGuard""")
@@ -141,26 +147,26 @@ ${
                                               ::skill::api::typeByName_t *typesByName,
                                               std::vector<std::unique_ptr<::skill::streams::MappedInStream>> &dataList) {
 
-        auto &tbn = Annotation->init();${
-      if (IR.isEmpty) ""
-      else """
+        ${
+      if (IR.isEmpty) "Annotation->init();"
+      else s"""auto &tbn = Annotation->init();
         const StringKeeper *const sk = (const StringKeeper *const) String->keeper;
         ::skill::api::String name;
-"""
-    }
-      // ensure that pools exist at all${
-      (for (t ← IR) yield s"""
+
+        // ensure that pools exist at all${
+        (for (t ← IR) yield s"""
         name = sk->${escaped(t.getSkillName)};
         if (!tbn[name->c_str()]) {
             const auto p = new ${storagePool(t)}((::skill::TypeID) types->size()${
-        if (null == t.getSuperType) ""
-        else s", tbn[sk->${escaped(t.getSuperType.getSkillName)}->c_str()]"
-      }, name,
+          if (null == t.getSuperType) ""
+          else s", tbn[sk->${escaped(t.getSuperType.getSkillName)}->c_str()]"
+        }, name,
                                        new std::set<::skill::restrictions::TypeRestriction *>);
             tbn[name->c_str()] = p;
             types->push_back(p);
             (*typesByName)[name] = p;
         }""").mkString
+      }"""
     }
 
         // create field structure
@@ -188,9 +194,22 @@ ${
         return new $packageName::api::SkillFile(in, mode, String, Annotation, types, typesByName);
     }
 ${packageParts.map(_ ⇒ "}").mkString}
-$packageName::api::SkillFile *$packageName::api::SkillFile::open(const std::string &path) {
-    return ($packageName::api::SkillFile *) ::skill::internal::parseFile<$packageName::initializeStrings, $packageName::makePool, $packageName::makeState>(
-            std::unique_ptr<::skill::streams::FileInputStream>(new ::skill::streams::FileInputStream(path)), ::skill::api::readOnly);
+$packageName::api::SkillFile *$packageName::api::SkillFile::open(const std::string &path,
+                                                   ::skill::api::ReadMode rm,
+                                                   ::skill::api::WriteMode wm) {
+    return ($packageName::api::SkillFile *) (
+            (::skill::api::ReadMode::create == rm) ?
+            ::skill::internal::newFile<
+                    $packageName::initializeStrings,
+                    $packageName::makePool,
+                    $packageName::makeState>(path, wm) :
+            ::skill::internal::parseFile<
+                    $packageName::initializeStrings,
+                    $packageName::makePool,
+                    $packageName::makeState>(
+                    std::unique_ptr<::skill::streams::FileInputStream>(
+                            new ::skill::streams::FileInputStream(path)),
+                    wm));
 }
 """)
 

@@ -5,7 +5,7 @@
 \*                                                                            */
 package de.ust.skill.generator.cpp
 
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions._
 
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Field
@@ -30,7 +30,7 @@ trait PoolsMaker extends GeneralOutputMaker {
   private final def makeHeader {
 
     // one header file per base type
-    for (base ← IR.par if null == base.getSuperType) {
+    for (base ← IR if null == base.getSuperType) {
       val out = open(s"${storagePool(base)}s.h")
 
       //prefix
@@ -75,10 +75,16 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
                     typeID, this, name, restrictions);
         }
 
-        virtual ::skill::internal::FieldDeclaration *addField(const ::skill::internal::AbstractStringKeeper *const keeper,
-                                                              ::skill::TypeID id,
-                                                              const ::skill::fieldTypes::FieldType *type,
-                                                              ::skill::api::String name);
+        virtual ::skill::internal::FieldDeclaration *addField(
+                const ::skill::internal::AbstractStringKeeper *const keeper,
+                ::skill::TypeID id,
+                const ::skill::fieldTypes::FieldType *type,
+                ::skill::api::String name);${
+          if (t.getFields.isEmpty) ""
+          else """
+
+        virtual void complete(::skill::api::SkillFile *owner) override;"""
+        }
     };""")
       }
 
@@ -92,13 +98,14 @@ $endGuard""")
   private final def makeSource {
 
     // one file per base type
-    for (base ← IR.par if null == base.getSuperType) {
+    for (base ← IR if null == base.getSuperType) {
       val out = open(s"${storagePool(base)}s.cpp")
 
       // common includes
       out.write(s"""#include "${storagePool(base)}s.h"
 #include "${name(base)}FieldDeclarations.h"
 #include "StringKeeper.h"
+#include "File.h"
 #include <skill/internal/LazyField.h>
 """)
 
@@ -123,7 +130,49 @@ $endGuard""")
         }
     dataFields.push_back(target);
     return target;
-}
+}${
+          if (t.getFields.isEmpty) ""
+          else s"""
+
+void $packageName::${storagePool(t)}::complete(::skill::api::SkillFile *owner) {
+    $packageName::api::SkillFile *const state = ($packageName::api::SkillFile *) owner;
+    this->owner = state;
+
+    ${
+            val (afs, dfs) = t.getFields.partition(_.isAuto)
+            (if (dfs.isEmpty) "// no data fields\n"
+            else s"""// data fields
+    const StringKeeper *const sk = (const StringKeeper *const)
+            ((::skill::internal::StringPool *) state->strings)->keeper;
+    std::unordered_set<::skill::api::String> fields;
+${
+              (for (f ← dfs) yield s"""
+    fields.insert(sk->${escaped(f.getSkillName)});""").mkString
+            }
+
+    for (auto f : dataFields)
+        fields.erase(f->name);${
+              (for (f ← dfs)
+                yield s"""
+
+    if (fields.end() != fields.find(sk->${escaped(f.getSkillName)}))
+        dataFields.push_back(new $packageName::internal::${knownField(f)}(
+                ${mapFieldDefinition(f.getType)}, sk->${escaped(f.getSkillName)}, dataFields.size() + 1, this));"""
+              ).mkString
+            }
+""") + (
+              if (afs.isEmpty) "    // no auto fields\n  "
+              else s"""    // auto fields
+//    autoFields.sizeHint(${afs.size})${
+                afs.map { f ⇒
+                  s"""
+//    autoFields += new ${knownField(f)}(this, ${mapFieldDefinition(f.getType)})"""
+                }.mkString
+              }
+  """)
+          }
+}"""
+        }
 """)
       }
       out.close
@@ -137,19 +186,19 @@ $endGuard""")
 
   protected def mapFieldDefinition(t : Type) : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
-      case "string"     ⇒ "state.String"
-      case "annotation" ⇒ "state.AnnotationType"
-      case "bool"       ⇒ "BoolType"
-      case n            ⇒ n.capitalize
+      case "string"     ⇒ "state->strings"
+      case "annotation" ⇒ "state->getAnnotationType()"
+      case "bool"       ⇒ "&::skill::fieldTypes::BoolType"
+      case n            ⇒ "&::skill::fieldTypes::"+n.capitalize
     }
-    case t : UserType                ⇒ s"state.${name(t)}"
+    case t : UserType                ⇒ s"state->${name(t)}"
 
-    case t : ConstantLengthArrayType ⇒ s"ConstantLengthArray(${t.getLength}, ${mapFieldDefinition(t.getBaseType)})"
-    case t : VariableLengthArrayType ⇒ s"VariableLengthArray(${mapFieldDefinition(t.getBaseType)})"
-    case t : ListType                ⇒ s"ListType(${mapFieldDefinition(t.getBaseType)})"
-    case t : SetType                 ⇒ s"SetType(${mapFieldDefinition(t.getBaseType)})"
+    case t : ConstantLengthArrayType ⇒ s"new ::skill::fieldTypes::ConstantLengthArray(${t.getLength}, ${mapFieldDefinition(t.getBaseType)})"
+    case t : VariableLengthArrayType ⇒ s"new ::skill::fieldTypes::VariableLengthArray(${mapFieldDefinition(t.getBaseType)})"
+    case t : ListType                ⇒ s"new ::skill::fieldTypes::ListType(${mapFieldDefinition(t.getBaseType)})"
+    case t : SetType                 ⇒ s"new ::skill::fieldTypes::SetType(${mapFieldDefinition(t.getBaseType)})"
     case t : MapType ⇒ t.getBaseTypes.init.foldRight(mapFieldDefinition(t.getBaseTypes.last)) {
-      case (t, str) ⇒ s"MapType(${mapFieldDefinition(t)}, $str)"
+      case (t, str) ⇒ s"new ::skill::fieldTypes::MapType(${mapFieldDefinition(t)}, $str)"
     }
     case _ ⇒ "???"
   }
