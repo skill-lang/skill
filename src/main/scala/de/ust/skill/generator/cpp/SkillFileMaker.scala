@@ -55,7 +55,9 @@ ${
                     : ::skill::api::SkillFile(in, mode, stringPool, annotation, types, typesByName)${
       (for (t ← IR) yield s""",
                       ${name(t)}((${storagePool(t)} *) annotation->type(${name(t)}::typeName))""").mkString
-    } { }
+    } {
+                ensureFields();
+            }
 
             /**
              * Reads a binary SKilL file and turns it into a SKilL state.
