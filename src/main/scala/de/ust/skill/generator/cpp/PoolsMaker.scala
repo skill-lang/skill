@@ -47,7 +47,7 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
 """)
 
       for (t ← IR if base == t.getBaseType) {
-        val typeName = packageName+"::"+name(t)
+        val typeName = packageName + "::" + name(t)
         val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
         val fields = t.getFields
 
@@ -182,14 +182,14 @@ ${
   /**
    * escaped name for field classes
    */
-  private final def clsName(f : Field) : String = escaped("Cls"+f.getName.camel)
+  private final def clsName(f : Field) : String = escaped("Cls" + f.getName.camel)
 
   protected def mapFieldDefinition(t : Type) : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
       case "string"     ⇒ "state->strings"
       case "annotation" ⇒ "state->getAnnotationType()"
       case "bool"       ⇒ "&::skill::fieldTypes::BoolType"
-      case n            ⇒ "&::skill::fieldTypes::"+n.capitalize
+      case n            ⇒ "&::skill::fieldTypes::" + n.capitalize
     }
     case t : UserType                ⇒ s"state->${name(t)}"
 

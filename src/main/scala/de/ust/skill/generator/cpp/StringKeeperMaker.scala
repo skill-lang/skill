@@ -24,7 +24,6 @@ trait StringKeeperMaker extends GeneralOutputMaker {
 
     val out = open(s"StringKeeper.h")
 
-
     //includes package
     out.write(s"""#include <skill/api/String.h>
 

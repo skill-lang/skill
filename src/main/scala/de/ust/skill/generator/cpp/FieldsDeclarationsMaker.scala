@@ -6,7 +6,6 @@
 package de.ust.skill.generator.cpp
 
 import scala.collection.JavaConversions.asScalaBuffer
-
 import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.Restriction
 import de.ust.skill.ir.Type
@@ -14,6 +13,12 @@ import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
 import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.NonNullRestriction
+import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.SingleBaseTypeContainer
+import de.ust.skill.ir.UserType
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.Field
 
 trait FieldDeclarationsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -86,11 +91,17 @@ $endGuard""")
       val out = open(s"${name(base)}FieldDeclarations.cpp")
 
       out.write(s"""
-#include "${name(base)}FieldDeclarations.h"
+#include "${name(base)}FieldDeclarations.h"${
+        (for (t ← IR if null == t.getSuperType) yield s"""
+#include "${storagePool(t)}s.h"""").mkString
+      }
 ${
         (for (t ← IR if base == t.getBaseType; f ← t.getFields) yield {
+          val tIsBaseType = t.getSuperType == null
+
           val fieldName = s"$packageName::internal::${knownField(f)}"
-          val readI = s"d[i]->${internalName(f)} = ${readType(f.getType)}; // TODO schlicht und ergreifend falsch, weil hier boxen produziert werden"
+          val accessI = s"d[i]->${internalName(f)}"
+          val readI = s"$accessI = ${readType(f.getType)}; // TODO schlicht und ergreifend falsch, weil hier boxen produziert werden"
           s"""
 $fieldName::${knownField(f)}(
         const ::skill::FieldType *const type,
@@ -145,12 +156,136 @@ ${
           }
 }
 
-size_t $fieldName::offset() const {
-    return 0;
+size_t $fieldName::offset() const {${
+            if (f.isConstant())
+              """
+    return 0; // this field is constant"""
+            else {
+              def offsetCode(fieldType : Type) : String = fieldType match {
+
+                // read next element
+                case fieldType : GroundType ⇒ fieldType.getSkillName match {
+
+                  case "annotation" ⇒ s"""result += type->offset(::skill::box($accessI));"""
+
+                  case "string" ⇒ s"""
+            auto t = (::skill::internal::StringPool*) type;
+            auto v = $accessI;
+            if(nullptr==v)
+                result++;
+            else
+                result += t->offset(v);"""
+
+                  case "i8" | "bool" ⇒ s"""
+        return target->count;"""
+
+                  case "i16" ⇒ s"""
+        return 2 * target->count;"""
+
+                  case "i32" | "f32" ⇒ s"""
+        return 4 * target->count;"""
+
+                  case "i64" | "f64" ⇒ s"""
+        return 8 * target->count;"""
+
+                  case "v64" ⇒ s"""const int64_t v = $accessI;
+
+            if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
+                result += 1;
+            } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
+                result += 2;
+            } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
+                result += 3;
+            } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
+                result += 4;
+            } else if (0L == (v & 0xFFFFFFF800000000L)) {
+                result += 5;
+            } else if (0L == (v & 0xFFFFFC0000000000L)) {
+                result += 6;
+            } else if (0L == (v & 0xFFFE000000000000L)) {
+                result += 7;
+            } else if (0L == (v & 0xFF00000000000000L)) {
+                result += 8;
+            } else {
+                result += 9;
+            }"""
+                  case _ ⇒ s"""
+        throw new NoSuchMethodError();"""
+                }
+
+                case fieldType : UserType ⇒ s"""${mapType(f.getType)} instance = $accessI;
+            if (nullptr == instance) {
+                result += 1;
+            } else {
+            long v = instance->skillID();
+
+            if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
+                result += 1;
+            } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
+                result += 2;
+            } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
+                result += 3;
+            } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
+                result += 4;
+            } else if (0L == (v & 0xFFFFFFF800000000L)) {
+                result += 5;
+            } else if (0L == (v & 0xFFFFFC0000000000L)) {
+                result += 6;
+            } else if (0L == (v & 0xFFFE000000000000L)) {
+                result += 7;
+            } else if (0L == (v & 0xFF00000000000000L)) {
+                result += 8;
+            } else {
+                result += 9;
+            }}"""
+
+                case fieldType : InterfaceType ⇒ offsetCode(fieldType.getSuperType)
+
+                case _                         ⇒ s"""result += type->offset(::skill::box($accessI));"""
+              }
+
+              s"""
+    ${mapType(t)}* d = ((${storagePool(t)}*) owner)->data;
+    const ::skill::internal::Chunk *target = dataChunks.back();
+    size_t result = 0L;
+    if (dynamic_cast<const ::skill::internal::SimpleChunk *>(target)) {
+        for (::skill::SKilLID i = 1 + ((const ::skill::internal::SimpleChunk *) target)->bpo,
+                     high = i + target->count; i != high; i++) {
+            ${offsetCode(f.getType)}
+        }
+    } else {
+        for (int i = 0; i < ((const ::skill::internal::BulkChunk *) target)->blockCount; i++) {
+          const auto &b = owner->blocks[i];
+          for (::skill::SKilLID i = 1 + b.bpo, end = i + b.dynamicCount; i != end; i++) {
+            ${offsetCode(f.getType)}
+          }
+        }
+    }
+    return result;"""
+            }
+          }
 }
 
-void $fieldName::write(::skill::streams::MappedOutStream *out) const {
-
+void $fieldName::write(::skill::streams::MappedOutStream *out) const {${
+            if (f.isConstant()) """
+    // -done-"""
+            else s"""
+    ${mapType(t)}* d = ((${storagePool(t)}*) owner)->data;
+    const ::skill::internal::Chunk *target = dataChunks.back();
+    if (dynamic_cast<const ::skill::internal::SimpleChunk *>(target)) {
+        for (::skill::SKilLID i = 1 + ((const ::skill::internal::SimpleChunk *) target)->bpo,
+                     high = i + target->count; i != high; i++) {
+            ${writeCode(accessI, f)}
+        }
+    } else {
+        for (int i = 0; i < ((const ::skill::internal::BulkChunk *) target)->blockCount; i++) {
+          const auto &b = owner->blocks[i];
+          for (::skill::SKilLID i = 1 + b.bpo, end = i + b.dynamicCount; i != end; i++) {
+            ${writeCode(accessI, f)}
+          }
+        }
+    }"""
+          }
 }
 
 bool $fieldName::check() const {${
@@ -216,5 +351,22 @@ bool $fieldName::check() const {${
     }
     case r : ConstantLengthPointerRestriction ⇒
       "::skill::restrictions::ConstantLengthPointer::get()"
+  }
+
+  def writeCode(accessI : String, f : Field) = f.getType match {
+    case t : GroundType ⇒ t.getSkillName match {
+      case "annotation" | "string" ⇒ s"""auto b = ::skill::box($accessI);
+            type->write(out, b);"""
+      case "bool" ⇒ s"out->i8($accessI?0xff:0);"
+      case _ ⇒ s"""out->${t.getSkillName}($accessI);"""
+    }
+
+    case t : UserType ⇒ s"""${mapType(t)} v = $accessI;
+            if (v)
+                out->v64(v->skillID());
+            else
+                out->i8(0);"""
+    case _ ⇒ s"""auto b = ::skill::box($accessI);
+            type->write(out, b);"""
   }
 }
