@@ -575,8 +575,8 @@ end ${PackagePrefix}.Known_Field_$fn;
       case ft : ListType                ⇒ s"""
       declare
          B : ${fullTypePackage(ft)}.Ref;
-         Typ : Skill.Field_Types.Builtin.Var_Arrays_P.Field_Type
-             := Skill.Field_Types.Builtin.Var_Arrays_P.Field_Type (This.T);
+         Typ : Skill.Field_Types.Builtin.List_Type_P.Field_Type
+             := Skill.Field_Types.Builtin.List_Type_P.Field_Type (This.T);
       begin
          for I in First + 1 .. Last loop
             B := ${fullTypePackage(ft)}.Make;
