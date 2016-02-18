@@ -304,7 +304,7 @@ end ${PackagePrefix};
    end Unbox_${name(f)}_${Vs}V;
 """)
         case vs : List[Type] ⇒ Seq(s"""
-   function Box_${name(f)}_${Vs}V (This : access ${name(t)}_T'Class; V : Skill.Types.Boxed_Map) return Skill.Types.Box is
+   function Box_${name(f)}_${Vs}V (This : access ${name(t)}_T'Class; V : access Skill.Containers.Boxed_Map_T'Class) return Skill.Types.Box is
       pragma Warnings (Off);
       function Convert is new Ada.Unchecked_Conversion (Skill.Types.Boxed_Map, Skill.Types.Box);
    begin

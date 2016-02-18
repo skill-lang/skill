@@ -60,10 +60,8 @@ trait GeneralOutputMaker extends Generator {
    * Will yield an exact type in case of containers
    */
   protected final def mapType(f : Field) : String = f.getType match {
-    case t : SetType                 ⇒ "Standard.Skill.Types.Boxed_Set"
-    case t : SingleBaseTypeContainer ⇒ fullTypePackage(t) + ".Ref"
-    case t : MapType                 ⇒ "Standard.Skill.Types.Boxed_Map"
-    case _                           ⇒ mapType(f.getType)
+    case t : ContainerType ⇒ fullTypePackage(t) + ".Ref"
+    case _                 ⇒ mapType(f.getType)
   }
 
   /**

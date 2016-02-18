@@ -347,11 +347,11 @@ ${readBlock(t, f)}
                     case fieldType : MapType ⇒ s"""
       declare
          pragma Warnings (Off);
-         use type ${mapType(f.getType)};
+         use type ${mapType(f)};
 
          function Boxed is new Ada.Unchecked_Conversion (${mapType(f)}, Skill.Types.Box);
 
-         V   : ${mapType(f.getType)};
+         V   : ${mapType(f)};
       begin
          for I in Low + 1 .. High loop
             V := $fieldAccessI;
@@ -465,9 +465,7 @@ ${readBlock(t, f)}
             ($fieldAccessI));"""
 
             case t : MapType ⇒ s"""Skill.Field_Types.Builtin.Map_Type_P.Field_Type
-           (This.T).Write_Box
-         (Output, Skill.Field_Types.Builtin.Map_Type_P.Boxed
-            ($fieldAccessI));"""
+           (This.T).Write_Box (Output, Boxed ($fieldAccessI));"""
           }
         }
       end loop;
@@ -556,60 +554,69 @@ end ${PackagePrefix}.Known_Field_$fn;
          end loop;
       end;"""
 
-      case ft : VariableLengthArrayType ⇒ s"""
+      case ft : SingleBaseTypeContainer ⇒  
+        val fieldType = "Skill.Field_Types.Builtin." + (ft match {
+          case t : VariableLengthArrayType ⇒ "Var_Arrays_P"
+          case t : ListType ⇒ "List_Type_P"
+          case t : SetType ⇒ "Set_Type_P"
+        }) + ".Field_Type"
+      s"""
       declare
          B : ${fullTypePackage(ft)}.Ref;
-         Typ : Skill.Field_Types.Builtin.Var_Arrays_P.Field_Type
-             := Skill.Field_Types.Builtin.Var_Arrays_P.Field_Type (This.T);
+         Typ : $fieldType :=
+           $fieldType (This.T);
       begin
          for I in First + 1 .. Last loop
             B := ${fullTypePackage(ft)}.Make;
             for Idx in 1 .. Input.V64 loop
-               B.Append (Typ.Base.Read_Box (Input));
+               B.Add (Typ.Base.Read_Box (Input));
             end loop; 
             
             To_${name(t)} (Data (I)).Set_${name(f)} (B);
          end loop;
       end;"""
 
-      case ft : ListType                ⇒ s"""
+      case ft : MapType                 ⇒
+        val fieldType = "Skill.Field_Types.Builtin.Map_Type_P.Field_Type"
+        s"""
       declare
          B : ${fullTypePackage(ft)}.Ref;
-         Typ : Skill.Field_Types.Builtin.List_Type_P.Field_Type
-             := Skill.Field_Types.Builtin.List_Type_P.Field_Type (This.T);
+         T1 : $fieldType :=
+           $fieldType (This.T);
+         K,V1 : Skill.Types.Box;
       begin
          for I in First + 1 .. Last loop
             B := ${fullTypePackage(ft)}.Make;
             for Idx in 1 .. Input.V64 loop
-               B.Append (Typ.Base.Read_Box (Input));
-            end loop; 
-            
-            To_${name(t)} (Data (I)).Set_${name(f)} (B);
-         end loop;
-      end;"""
-
-      case ft : SetType                 ⇒ s"""
-      declare
-         B : Skill.Types.Boxed_Set;
-      begin
-         for I in First + 1 .. Last loop
-            B := Skill.Field_Types.Builtin.Set_Type_P.Unboxed
-            (This.T.Read_Box (Input));
-            To_${name(t)} (Data (I)).Set_${name(f)} (B);
-         end loop;
-      end;"""
-
-      case ft : MapType                 ⇒ s"""
-      declare
-         B : Skill.Types.Boxed_Map;
-      begin
-         for I in First + 1 .. Last loop
-            B := Skill.Field_Types.Builtin.Map_Type_P.Unboxed
-            (This.T.Read_Box (Input));
+               K := T1.Key.Read_Box (Input);
+               ${readInnerMap(ft.getBaseTypes.toList.tail, 2)}
+               B.Update (K, V1);
+            end loop;
             To_${name(t)} (Data (I)).Set_${name(f)} (B);
          end loop;
       end;"""
       case _ ⇒ ???
+    }
+  }
+  
+  private final def readInnerMap(ts : List[Type], depth : Int) : String = {
+    if(ts.length == 1) s"V${depth-1} := T${depth-1}.Value.Read_Box (Input);"
+    else {
+      val mapType = ts.map { x ⇒ escaped(x.getSkillName) }.mkString(s"Standard.$PackagePrefix.Skill_Map_", "_", "")
+      s"""
+               declare
+                  M$depth : $mapType.Ref := $mapType.Make;
+                  T$depth : Skill.Field_Types.Builtin.Map_Type_P.Field_Type :=
+                         Skill.Field_Types.Builtin.Map_Type_P.Field_Type (T${depth-1}.Value);
+                  K$depth,V$depth : Skill.Types.Box;
+               begin
+                  for Idx$depth in 1 .. Input.V64 loop
+                     K$depth := T$depth.Key.Read_Box (Input);
+                     ${readInnerMap(ts.tail, depth+1)}
+                     M$depth.Update (K$depth, V$depth);
+                  end loop;
+                  V${depth-1} := Skill.Field_Types.Builtin.Map_Type_P.Boxed (M$depth);
+               end;"""
     }
   }
 }

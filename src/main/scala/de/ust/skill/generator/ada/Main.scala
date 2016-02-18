@@ -94,7 +94,7 @@ class Main extends FakeMain
   /**
    * Translates the types into Ada types.
    */
-  override protected def mapType(t : Type) : String = "Standard."+(t match {
+  override protected def mapType(t : Type) : String = "Standard." + (t match {
     case t : GroundType ⇒ t.getName.lower match {
       case "annotation" ⇒ "Skill.Types.Annotation"
 
@@ -112,7 +112,7 @@ class Main extends FakeMain
       case "string"     ⇒ "Skill.Types.String_Access"
     }
 
-    case t : SetType                 ⇒ "Skill.Types.Boxed_Set"
+    case t : SetType                 ⇒ "Skill.Containers.Boxed_Set"
     case t : MapType                 ⇒ "Skill.Types.Boxed_Map"
     case t : SingleBaseTypeContainer ⇒ "Skill.Containers.Boxed_Array"
 
@@ -133,11 +133,9 @@ class Main extends FakeMain
    * creates call to right "unboxed"-function
    */
   protected def unboxCall(t : Type) : String = t match {
-    case t : GroundType              ⇒ s"Standard.Skill.Field_Types.Builtin.${t.getName.capital}_Type_P.Unboxed"
-    case t : SetType                 ⇒ "Standard.Skill.Field_Types.Builtin.Set_Type_P.Unboxed"
-    case t : SingleBaseTypeContainer ⇒ fullTypePackage(t) + ".Unboxed"
-    case t : MapType                 ⇒ "Standard.Skill.Field_Types.Builtin.Map_Type_P.Unboxed"
-    case t                           ⇒ s"$poolsPackage.${name(t)}_P.Unboxed"
+    case t : GroundType    ⇒ s"Standard.Skill.Field_Types.Builtin.${t.getName.capital}_Type_P.Unboxed"
+    case t : ContainerType ⇒ fullTypePackage(t) + ".Unboxed"
+    case t                 ⇒ s"$poolsPackage.${name(t)}_P.Unboxed"
   }
 
   /**
@@ -187,9 +185,9 @@ class Main extends FakeMain
 
   override def setPackage(names : List[String]) {
     if (!names.isEmpty) {
-      _packagePrefix = names.map(_.toLowerCase).reduce(_+"-"+_)
-      _PackagePrefix = names.map(_.toLowerCase.capitalize).reduce(_+"."+_)
-      _poolsPackage = s"Skill.Types.Pools.${names.map(_.toLowerCase.capitalize).reduce(_+"_"+_)}_Pools"
+      _packagePrefix = names.map(_.toLowerCase).reduce(_ + "-" + _)
+      _PackagePrefix = names.map(_.toLowerCase.capitalize).reduce(_ + "." + _)
+      _poolsPackage = s"Skill.Types.Pools.${names.map(_.toLowerCase.capitalize).reduce(_ + "_" + _)}_Pools"
     }
   }
 
@@ -202,18 +200,18 @@ class Main extends FakeMain
     val headerLineLength = 51
     val headerLine1 = Some((headerInfo.line1 match {
       case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: "+_).getOrElse("Your SKilL Scala Binding")
+      case None    ⇒ headerInfo.license.map("LICENSE: " + _).getOrElse("Your SKilL Scala Binding")
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
     val headerLine2 = Some((headerInfo.line2 match {
       case Some(s) ⇒ s
-      case None ⇒ "generated: "+(headerInfo.date match {
+      case None ⇒ "generated: " + (headerInfo.date match {
         case Some(s) ⇒ s
         case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
       })
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
     val headerLine3 = Some((headerInfo.line3 match {
       case Some(s) ⇒ s
-      case None ⇒ "by: "+(headerInfo.userName match {
+      case None ⇒ "by: " + (headerInfo.userName match {
         case Some(s) ⇒ s
         case None    ⇒ System.getProperty("user.name")
       })
@@ -244,11 +242,9 @@ Opitions (ada):
       case _                                    ⇒ "null"
     }
     f.getType match {
-      case t : GroundType              ⇒ defaultValue(t)
-      case t : SetType                 ⇒ "new Standard.Skill.Types.Sets_P.Set"
-      case t : SingleBaseTypeContainer ⇒ s"${fullTypePackage(t)}.Make"
-      case t : MapType                 ⇒ "new Standard.Skill.Types.Maps_P.Map"
-      case _                           ⇒ "null"
+      case t : GroundType    ⇒ defaultValue(t)
+      case t : ContainerType ⇒ s"${fullTypePackage(t)}.Make"
+      case _                 ⇒ "null"
     }
   }
 
@@ -264,7 +260,7 @@ Opitions (ada):
       "body" | "private" | "then" | "if" | "procedure" | "type" | "case" | "in" | "protected" | "constant" |
       "interface" | "until" | "is" | "raise" | "use" | "declare" | "range" | "delay" | "limited" | "record" |
       "when" | "delta" | "loop" | "rem" | "while" | "digits" | "renames" | "with" | "do" | "mod" | "requeue" |
-      "xor" | "boolean" ⇒ return target+"_2"
+      "xor" | "boolean" ⇒ return target + "_2"
     case _ ⇒ escaped(target)
   }
 
@@ -274,6 +270,6 @@ Opitions (ada):
   final def escaped(target : String) : String = target.map {
     case ':'                                       ⇒ "_0"
     case c if Character.isUnicodeIdentifierPart(c) ⇒ c.toString
-    case c                                         ⇒ "ZZ"+c.toHexString
+    case c                                         ⇒ "ZZ" + c.toHexString
   }.reduce(_ + _)
 }

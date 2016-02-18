@@ -14,13 +14,25 @@ trait PackageSpecMaker extends GeneralOutputMaker {
     val out = open(s"""${packagePrefix}.ads""")
 
     out.write(s"""
+with Ada.Containers;
+with Ada.Unchecked_Conversion;
+
 with Skill.Containers;
 with Skill.Containers.Arrays;
+with Skill.Containers.Maps;
+with Skill.Containers.Sets;
+with Skill.Equals;
+with Skill.Hashes;
 with Skill.Types;
 with Skill.Field_Declarations;
 
 -- types generated out of the specification
 package ${PackagePrefix} is
+   pragma Warnings (Off);
+   use Skill.Equals;
+   use Skill.Hashes;
+   use type Skill.Types.V64;
+   use type Skill.Types.String_Access;
 ${
       (for (t ← IR)
         yield s"""
@@ -31,18 +43,20 @@ ${
 ${comment(t)}
    type ${name(t)} is access ${name(t)}_T;
    type ${name(t)}_Dyn is access ${name(t)}_T'Class;
+   function Hash is new Ada.Unchecked_Conversion(${name(t)}, Ada.Containers.Hash_Type);
+   function Equals (ZA, ZB : ${name(t)}) return Boolean is (ZA = ZB);
 """).mkString
     }${
       // predefine known containers
-      (for (t ← IR; f ← t.getFields if f.getType.isInstanceOf[ContainerType]) yield s"""
-   package ${simpleTypePackage(f.getType)} ${
-        f.getType match {
-          case t : SetType                 ⇒ """renames Skill.Types.Sets_P"""
-          case t : SingleBaseTypeContainer ⇒ s"is new Standard.Skill.Containers.Arrays(${mapType(t.getBaseType)})"
-          case t : MapType                 ⇒ """renames Skill.Types.Maps_P"""
-        }
-      };""").toSet.mkString
-    }${
+      (for (t ← IR; f ← t.getFields if f.getType.isInstanceOf[ContainerType]) yield f.getType match {
+        case t : SetType ⇒ Set(s"""
+   package ${simpleTypePackage(f.getType)} is new Standard.Skill.Containers.Sets(${mapType(t.getBaseType)});""")
+        case t : SingleBaseTypeContainer ⇒ Set(s"""
+   package ${simpleTypePackage(f.getType)} is new Standard.Skill.Containers.Arrays(${mapType(t.getBaseType)});""")
+        case t : MapType ⇒ makeMapDeclarations(t.getBaseTypes.to)
+      }).toSet.flatten.toArray.sortBy(_.size).mkString
+    }
+${
       (for (t ← IR)
         yield s"""
    overriding
@@ -121,7 +135,7 @@ ${
    function Unbox_${name(f)}_${Vs}V (This : access ${name(t)}_T'Class; V : Skill.Types.Box) return ${mapType(v)};
 """)
                     case vs : List[Type] ⇒ Seq(s"""
-   function Box_${name(f)}_${Vs}V (This : access ${name(t)}_T'Class; V : Skill.Types.Boxed_Map) return Skill.Types.Box;
+   function Box_${name(f)}_${Vs}V (This : access ${name(t)}_T'Class; V : access Skill.Containers.Boxed_Map_T'Class) return Skill.Types.Box;
    function Unbox_${name(f)}_${Vs}V (This : access ${name(t)}_T'Class; V : Skill.Types.Box) return Skill.Types.Boxed_Map;
 """) ++ boxing(Vs + "V", vs)
                   })
@@ -159,5 +173,17 @@ ${
 end ${PackagePrefix};
 """)
     out.close()
+  }
+
+  private final def mapName(ts : List[Type]) : String = ts.map { x ⇒ escaped(x.getSkillName) }.mkString("Skill_Map_", "_", "");
+
+  private final def makeMapDeclarations(ts : List[Type]) : Set[String] = {
+    val head = if (ts.size > 2) makeMapDeclarations(ts.tail) else Set[String]()
+    head + s"""
+   package ${mapName(ts)} is new Standard.Skill.Containers.Maps(${mapType(ts.head)}, ${
+      if (ts.size > 2) mapName(ts.tail) + ".Ref"
+      else mapType(ts(1))
+    });
+   use type ${mapName(ts)}.Ref;"""
   }
 }
