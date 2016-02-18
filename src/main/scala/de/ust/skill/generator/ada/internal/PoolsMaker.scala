@@ -17,6 +17,9 @@ import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.UserType
+import de.ust.skill.ir.ContainerType
+import de.ust.skill.ir.SingleBaseTypeContainer
+import scala.collection.mutable.HashSet
 
 trait PoolsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -52,6 +55,7 @@ end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools;
 with Ada.Unchecked_Conversion;
 
 with Skill.Containers.Vectors;
+with Skill.Containers.Arrays;
 with Skill.Field_Declarations;
 with Skill.Field_Types.Builtin;
 with Skill.Field_Types.Builtin.String_Type_P;
@@ -80,7 +84,7 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
        (
          for (f ← t.getAllFields)
            yield s""";
-      F_${name(f)} : ${mapType(f.getType)} := ${defaultValue(f)}"""
+      F_${name(f)} : ${mapType(f)} := ${defaultValue(f)}"""
        ).mkString
      });
    function Make
@@ -88,7 +92,7 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
        (
          for (f ← t.getAllFields)
            yield s""";
-      F_${name(f)} : ${mapType(f.getType)} := ${defaultValue(f)}"""
+      F_${name(f)} : ${mapType(f)} := ${defaultValue(f)}"""
        ).mkString
      }) return ${mapType(t)};
 
@@ -262,7 +266,7 @@ package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_
        (
          for (f ← t.getAllFields)
            yield s""";
-      F_${name(f)} : ${mapType(f.getType)} := ${defaultValue(f)}"""
+      F_${name(f)} : ${mapType(f)} := ${defaultValue(f)}"""
        ).mkString
      }) is
       R : constant ${mapType(t)} := new ${mapType(t)}_T;
@@ -281,7 +285,7 @@ package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_
        (
          for (f ← t.getAllFields)
            yield s""";
-      F_${name(f)} : ${mapType(f.getType)} := ${defaultValue(f)}"""
+      F_${name(f)} : ${mapType(f)} := ${defaultValue(f)}"""
        ).mkString
      }) return ${mapType(t)} is
       R : constant ${mapType(t)} := new ${mapType(t)}_T;

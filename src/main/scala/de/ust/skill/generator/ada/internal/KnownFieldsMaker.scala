@@ -116,6 +116,7 @@ with $poolsPackage.${name(t)}_P;""").mkString
 with ${PackagePrefix}.Internal_Skill_Names;
 
 package body ${PackagePrefix}.Known_Field_$fn is
+   pragma Warnings(Off);
 
    function Make
      (${
@@ -323,30 +324,14 @@ ${readBlock(t, f)}
         raise Constraint_Error with "TODO";"""
           }
 
-                    case fieldType : ConstantLengthArrayType ⇒ s"""
-      declare
-         pragma Warnings (Off);
-         use type ${mapType(f.getType)};
-
-         function Boxed is new Ada.Unchecked_Conversion (${mapType(f.getType)}, Skill.Types.Box);
-
-         V   : ${mapType(f.getType)};
-      begin
-         for I in Low + 1 .. High loop
-            V := $fieldAccessI;
-            Result := Result + This.T.Offset_Box (Boxed (V));
-         end loop;
-      end;
-      This.Future_Offset := Result;"""
-
                     case fieldType : SingleBaseTypeContainer ⇒ s"""
       declare
          pragma Warnings (Off);
-         use type ${mapType(f.getType)};
+         use type ${mapType(f)};
 
-         function Boxed is new Ada.Unchecked_Conversion (${mapType(f.getType)}, Skill.Types.Box);
+         function Boxed is new Ada.Unchecked_Conversion (${mapType(f)}, Skill.Types.Box);
 
-         V   : ${mapType(f.getType)};
+         V   : ${mapType(f)};
       begin
          for I in Low + 1 .. High loop
             V := $fieldAccessI;
@@ -364,7 +349,7 @@ ${readBlock(t, f)}
          pragma Warnings (Off);
          use type ${mapType(f.getType)};
 
-         function Boxed is new Ada.Unchecked_Conversion (${mapType(f.getType)}, Skill.Types.Box);
+         function Boxed is new Ada.Unchecked_Conversion (${mapType(f)}, Skill.Types.Box);
 
          V   : ${mapType(f.getType)};
       begin
@@ -432,6 +417,8 @@ ${readBlock(t, f)}
         (Skill.Types.v64,
          Skill.Types.Uv64);
 
+      function Boxed is new Ada.Unchecked_Conversion (${mapType(f)}, Skill.Types.Box);
+
       Rang   : constant Skill.Internal.Parts.Block := This.Owner.Blocks.Last_Element;
       Data   : constant Skill.Types.Annotation_Array := This.Owner.Base.Data;
       Result : Skill.Types.v64              := 0;
@@ -464,19 +451,13 @@ ${readBlock(t, f)}
          end;"""
 
             case t : ConstantLengthArrayType ⇒ s"""Skill.Field_Types.Builtin.Const_Arrays_P.Field_Type
-           (This.T).Write_Box
-         (Output, Skill.Field_Types.Builtin.Const_Arrays_P.Boxed
-            ($fieldAccessI));"""
+           (This.T).Write_Box (Output, Boxed ($fieldAccessI));"""
 
             case t : VariableLengthArrayType ⇒ s"""Skill.Field_Types.Builtin.Var_Arrays_P.Field_Type
-           (This.T).Write_Box
-         (Output, Skill.Field_Types.Builtin.Var_Arrays_P.Boxed
-            ($fieldAccessI));"""
+           (This.T).Write_Box (Output, Boxed ($fieldAccessI));"""
 
             case t : ListType ⇒ s"""Skill.Field_Types.Builtin.List_Type_P.Field_Type
-           (This.T).Write_Box
-         (Output, Skill.Field_Types.Builtin.List_Type_P.Boxed
-            ($fieldAccessI));"""
+           (This.T).Write_Box (Output, Boxed ($fieldAccessI));"""
 
             case t : SetType ⇒ s"""Skill.Field_Types.Builtin.Set_Type_P.Field_Type
            (This.T).Write_Box
@@ -561,33 +542,48 @@ end ${PackagePrefix}.Known_Field_$fn;
 
       case ft : ConstantLengthArrayType ⇒ s"""
       declare
-         B : Skill.Types.Boxed_Array;
+         B : ${fullTypePackage(ft)}.ref;
+         Typ : Skill.Field_Types.Builtin.Const_Arrays_P.Field_Type
+             := Skill.Field_Types.Builtin.Const_Arrays_P.Field_Type (This.T);
       begin
          for I in First + 1 .. Last loop
-            B := Skill.Field_Types.Builtin.Const_Arrays_P.Unboxed
-                (This.T.Read_Box (Input));
+            B := ${fullTypePackage(ft)}.Make;
+            for Idx in 1 .. Typ.Length loop
+               B.Append (Typ.Base.Read_Box (Input));
+            end loop; 
+            
             To_${name(t)} (Data (I)).Set_${name(f)} (B);
          end loop;
       end;"""
 
       case ft : VariableLengthArrayType ⇒ s"""
       declare
-         B : Skill.Types.Boxed_Array;
+         B : ${fullTypePackage(ft)}.Ref;
+         Typ : Skill.Field_Types.Builtin.Var_Arrays_P.Field_Type
+             := Skill.Field_Types.Builtin.Var_Arrays_P.Field_Type (This.T);
       begin
          for I in First + 1 .. Last loop
-            B := Skill.Field_Types.Builtin.Var_Arrays_P.Unboxed
-            (This.T.Read_Box (Input));
+            B := ${fullTypePackage(ft)}.Make;
+            for Idx in 1 .. Input.V64 loop
+               B.Append (Typ.Base.Read_Box (Input));
+            end loop; 
+            
             To_${name(t)} (Data (I)).Set_${name(f)} (B);
          end loop;
       end;"""
 
       case ft : ListType                ⇒ s"""
       declare
-         B : Skill.Types.Boxed_List;
+         B : ${fullTypePackage(ft)}.Ref;
+         Typ : Skill.Field_Types.Builtin.Var_Arrays_P.Field_Type
+             := Skill.Field_Types.Builtin.Var_Arrays_P.Field_Type (This.T);
       begin
          for I in First + 1 .. Last loop
-            B := Skill.Field_Types.Builtin.List_Type_P.Unboxed
-            (This.T.Read_Box (Input));
+            B := ${fullTypePackage(ft)}.Make;
+            for Idx in 1 .. Input.V64 loop
+               B.Append (Typ.Base.Read_Box (Input));
+            end loop; 
+            
             To_${name(t)} (Data (I)).Set_${name(f)} (B);
          end loop;
       end;"""

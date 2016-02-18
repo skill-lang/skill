@@ -24,6 +24,8 @@ import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.SingleBaseTypeContainer
+import de.ust.skill.ir.ContainerType
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -110,11 +112,9 @@ class Main extends FakeMain
       case "string"     ⇒ "Skill.Types.String_Access"
     }
 
-    case t : ConstantLengthArrayType ⇒ "Skill.Types.Boxed_Array"
-    case t : VariableLengthArrayType ⇒ "Skill.Types.Boxed_Array"
-    case t : ListType                ⇒ "Skill.Types.Boxed_List"
     case t : SetType                 ⇒ "Skill.Types.Boxed_Set"
     case t : MapType                 ⇒ "Skill.Types.Boxed_Map"
+    case t : SingleBaseTypeContainer ⇒ "Skill.Containers.Boxed_Array"
 
     case t : Declaration             ⇒ s"${PackagePrefix}.${name(t)}"
   })
@@ -124,10 +124,8 @@ class Main extends FakeMain
    */
   protected def boxCall(t : Type) : String = t match {
     case t : GroundType              ⇒ s"Standard.Skill.Field_Types.Builtin.${t.getName.capital}_Type_P.Boxed"
-    case t : ConstantLengthArrayType ⇒ "Standard.Skill.Field_Types.Builtin.Const_Arrays_P.Boxed"
-    case t : VariableLengthArrayType ⇒ "Standard.Skill.Field_Types.Builtin.Var_Arrays_P.Boxed"
-    case t : ListType                ⇒ "Standard.Skill.Field_Types.Builtin.List_Type_P.Boxed"
     case t : SetType                 ⇒ "Standard.Skill.Field_Types.Builtin.Set_Type_P.Boxed"
+    case t : SingleBaseTypeContainer ⇒ "Standard.Skill.Field_Types.Builtin.Const_Arrays_P.Boxed"
     case t : MapType                 ⇒ "Standard.Skill.Field_Types.Builtin.Map_Type_P.Boxed"
     case t                           ⇒ s"$poolsPackage.${name(t)}_P.Boxed"
   }
@@ -136,10 +134,8 @@ class Main extends FakeMain
    */
   protected def unboxCall(t : Type) : String = t match {
     case t : GroundType              ⇒ s"Standard.Skill.Field_Types.Builtin.${t.getName.capital}_Type_P.Unboxed"
-    case t : ConstantLengthArrayType ⇒ "Standard.Skill.Field_Types.Builtin.Const_Arrays_P.Unboxed"
-    case t : VariableLengthArrayType ⇒ "Standard.Skill.Field_Types.Builtin.Var_Arrays_P.Unboxed"
-    case t : ListType                ⇒ "Standard.Skill.Field_Types.Builtin.List_Type_P.Unboxed"
     case t : SetType                 ⇒ "Standard.Skill.Field_Types.Builtin.Set_Type_P.Unboxed"
+    case t : SingleBaseTypeContainer ⇒ fullTypePackage(t) + ".Unboxed"
     case t : MapType                 ⇒ "Standard.Skill.Field_Types.Builtin.Map_Type_P.Unboxed"
     case t                           ⇒ s"$poolsPackage.${name(t)}_P.Unboxed"
   }
@@ -249,10 +245,8 @@ Opitions (ada):
     }
     f.getType match {
       case t : GroundType              ⇒ defaultValue(t)
-      case t : ConstantLengthArrayType ⇒ "Standard.Skill.Types.Arrays_P.Empty_Vector"
-      case t : VariableLengthArrayType ⇒ "Standard.Skill.Types.Arrays_P.Empty_Vector"
-      case t : ListType                ⇒ "new Standard.Skill.Types.Lists_P.List"
       case t : SetType                 ⇒ "new Standard.Skill.Types.Sets_P.Set"
+      case t : SingleBaseTypeContainer ⇒ s"${fullTypePackage(t)}.Make"
       case t : MapType                 ⇒ "new Standard.Skill.Types.Maps_P.Map"
       case _                           ⇒ "null"
     }

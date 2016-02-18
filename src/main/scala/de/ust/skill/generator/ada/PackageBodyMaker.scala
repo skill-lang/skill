@@ -139,7 +139,7 @@ ${
 ${
           (for (f ← t.getFields)
             yield s"""
-   function Get_${name(f)} (This : not null access ${name(t)}_T'Class) return ${mapType(f.getType)}
+   function Get_${name(f)} (This : not null access ${name(t)}_T'Class) return ${mapType(f)}
    is
       use Interfaces;
    begin
@@ -149,7 +149,7 @@ ${
           };
    end Get_${name(f)};
 
-   procedure Set_${name(f)} (This : not null access ${name(t)}_T'Class; V : ${mapType(f.getType)})
+   procedure Set_${name(f)} (This : not null access ${name(t)}_T'Class; V : ${mapType(f)})
    is
    begin
       ${

@@ -56,6 +56,15 @@ trait GeneralOutputMaker extends Generator {
    */
   protected def mapTypeToId(t : Type, f : Field) : String
   protected def mapType(t : Type) : String
+  /**
+   * Will yield an exact type in case of containers
+   */
+  protected final def mapType(f : Field) : String = f.getType match {
+    case t : SetType                 ⇒ "Standard.Skill.Types.Boxed_Set"
+    case t : SingleBaseTypeContainer ⇒ fullTypePackage(t) + ".Ref"
+    case t : MapType                 ⇒ "Standard.Skill.Types.Boxed_Map"
+    case _                           ⇒ mapType(f.getType)
+  }
 
   /**
    * creates call to right "boxed"-function
@@ -133,4 +142,20 @@ trait GeneralOutputMaker extends Generator {
     case '2' ⇒ f.constantValue.toInt.toString
     case '4' ⇒ f.constantValue.toString
   }
+
+  /**
+   * maps field type template package instantiations to their name
+   */
+  protected final def simpleTypePackage(t : Type) : String = t match {
+    case t : SetType                 ⇒ s"Skill_Set_${escaped(t.getBaseType.getSkillName)}"
+    case t : SingleBaseTypeContainer ⇒ s"Skill_Array_${escaped(t.getBaseType.getSkillName)}"
+    case t : MapType                 ⇒ t.getBaseTypes.map { x ⇒ escaped(x.getSkillName) }.mkString("Skill_Map_", "_", "");
+    case _                           ⇒ ???
+  }
+
+  /**
+   * maps field type template package instantiations to their name as it has to be used outside of the pools package
+   */
+  protected final def fullTypePackage(t : Type) : String =
+    s"Standard.$PackagePrefix.${simpleTypePackage(t)}"
 }
