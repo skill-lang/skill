@@ -20,6 +20,7 @@ import de.ust.skill.ir.UserType
 import de.ust.skill.ir.ContainerType
 import de.ust.skill.ir.SingleBaseTypeContainer
 import scala.collection.mutable.HashSet
+import scala.annotation.tailrec
 
 trait PoolsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -339,6 +340,8 @@ package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_
            Base          => Super.Base,"""
      }
            Sub_Pools     => Sub_Pool_Vector_P.Empty_Vector,
+           Next     => null, -- can only be calculated after all types are known
+           Super_Type_Count => ${superTypeCount(t)},
            Data_Fields_F =>
              Skill.Field_Declarations.Field_Vector_P.Empty_Vector,
            Auto_Fields => (others => null),
@@ -669,6 +672,11 @@ end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P;
 
     out.close()
   }
+  
+  @tailrec
+  private final def superTypeCount(t : UserType, count : Int = 0) : Int = 
+    if(t.getSuperType!=null) superTypeCount(t.getSuperType, count + 1)
+    else count
 
    private final def mapToFieldType(f : Field, isBase : Boolean) : String = {
     //@note temporary string & annotation will be replaced later on

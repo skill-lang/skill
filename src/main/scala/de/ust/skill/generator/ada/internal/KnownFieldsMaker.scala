@@ -58,6 +58,9 @@ package ${PackagePrefix}.Known_Field_$fn is
       return ${poolsPackage}.${name(t)}_P.Pool;
 
    overriding
+   function Check (This : access Known_Field_${fn}_T) return Boolean;
+   
+   overriding
    procedure Read
      (This : access Known_Field_${fn}_T;
       CE   : Skill.Field_Declarations.Chunk_Entry);
@@ -160,6 +163,11 @@ package body ${PackagePrefix}.Known_Field_$fn is
    begin
       return Cast (This.Owner);
    end Owner_Dyn;
+   
+   function Check (This : access Known_Field_${fn}_T) return Boolean is
+   begin
+      return True;
+   end Check;
 
    procedure Read
      (This : access Known_Field_${fn}_T;

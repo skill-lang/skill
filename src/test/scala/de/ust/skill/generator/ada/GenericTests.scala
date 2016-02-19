@@ -102,6 +102,7 @@ ${
    procedure Read_${file2ID(f)} is
       State : Standard.$adaStyle.Api.File := Standard.$adaStyle.Api.Open("../../${f.getPath}");
    begin
+      State.Check;
       State.Free;
    end Read_${file2ID(f)};
 """).mkString
@@ -112,6 +113,7 @@ ${
       State : Standard.$adaStyle.Api.File;
    begin
       State := Standard.$adaStyle.Api.Open("../../${f.getPath}");
+      State.Check;
       State.Free;
       Ahven.Fail("expected an exception to be thrown");
    exception
