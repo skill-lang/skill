@@ -31,12 +31,8 @@ with ${PackagePrefix}.Internal_Skill_Names;
 ${
         (
           for (t ← IR) yield s"""
-with $poolsPackage.${name(t)}_P;"""+
-            (
-              for (f ← t.getFields if !f.isConstant)
-                yield s"""
-with ${PackagePrefix}.Known_Field_${fieldName(t, f)};"""
-            ).mkString
+with $poolsPackage.${name(t)}_P;
+with $PackagePrefix.Known_Field_${name(t)};"""
         ).mkString
       }
 
@@ -108,7 +104,7 @@ ${
    begin${
           (
             for (f ← t.getAllFields if !f.isConstant) yield s"""
-      if F.all in Standard.${PackagePrefix}.Known_Field_${fieldName(f.getDeclaredIn, f)}.Known_Field_${fieldName(f.getDeclaredIn, f)}_T then
+      if F.all in Standard.${PackagePrefix}.Known_Field_${name(f.getDeclaredIn)}.Known_Field_${fieldName(f.getDeclaredIn, f)}_T then
          return ${boxCall(f.getType)} (This.${name(f)});
       end if;"""
           ).mkString
@@ -125,7 +121,7 @@ ${
    begin${
           (
             for (f ← t.getAllFields if !f.isConstant) yield s"""
-      if F.all in Standard.${PackagePrefix}.Known_Field_${fieldName(f.getDeclaredIn, f)}.Known_Field_${fieldName(f.getDeclaredIn, f)}_T then
+      if F.all in Standard.${PackagePrefix}.Known_Field_${name(f.getDeclaredIn)}.Known_Field_${fieldName(f.getDeclaredIn, f)}_T then
          This.${name(f)} := ${unboxCall(f.getType)} (V);
          return;
       end if;"""

@@ -13,20 +13,17 @@ trait KnownFieldsMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    for (
-      t ← IR.par;
-      f ← t.getFields.par
-    ) {
-      makeSpec(t, f)
-      makeBody(t, f)
+    for (t ← IR) {
+      makeSpec(t)
+      makeBody(t)
     }
   }
 
-  private final def makeSpec(t : UserType, f : Field) {
+  private final def makeSpec(t : UserType) {
 
-    val out = open(s"""${packagePrefix}-known_field_${escaped(t.getName.ada).toLowerCase}_${escaped(f.getName.ada).toLowerCase}.ads""")
-
-    val fn = fieldName(t, f)
+    val out = open(s"""${packagePrefix}-known_field_${name(t).toLowerCase}.ads""")
+    
+    val thisPackage = s"${PackagePrefix}.Known_Field_${name(t)}"
 
     out.write(s"""
 with Skill.Field_Declarations;
@@ -35,16 +32,21 @@ with Skill.Streams.Writer;
 
 limited with ${poolsPackage}.${name(t)}_P;
 
-package ${PackagePrefix}.Known_Field_$fn is
+package $thisPackage is
+""")
+
+    for(f <- t.getFields){
+      val fn = fieldName(t, f)
+      out.write(s"""
 
    type Known_Field_${fn}_T is
-     new Skill.Field_Declarations.Field_Declaration_T with private;
+     new Skill.Field_Declarations.Field_Declaration_T with null record;
    type Known_Field_$fn is access Known_Field_${fn}_T'Class;
 
-   function Make
+   function Make_${name(f)}
      (${
-  if(f.isAuto())""
-  else"""
+      if(f.isAuto())""
+      else"""
       ID    : Natural;"""
 }T     : Skill.Field_Types.Field_Type;
       Owner : Skill.Field_Declarations.Owner_T)
@@ -72,32 +74,26 @@ package ${PackagePrefix}.Known_Field_$fn is
    procedure Write
      (This   : access Known_Field_${fn}_T;
       Output : Skill.Streams.Writer.Sub_Stream);
-
-private
-
-   type Known_Field_${fn}_T is new Skill.Field_Declarations
-     .Field_Declaration_T with
-   record
-      null;
-   end record;
-
-end ${PackagePrefix}.Known_Field_$fn;
+""")
+}
+    out.write(s"""
+end $thisPackage;
 """)
 
     out.close()
   }
 
-  private final def makeBody(t : UserType, f : Field) {
+  private final def makeBody(t : UserType) {
+    
+    // do not create empty package bodies
+    if(t.getFields.isEmpty)
+      return;
 
     val tIsBaseType = t.getSuperType == null
+    val thisPackage = s"${PackagePrefix}.Known_Field_${name(t)}"
 
-    // casting access to data array using index i
-    val dataAccessI = s"Standard.$PackagePrefix.To_${name(t)} (Data (I))"
-    val fieldAccessI = s"$dataAccessI.Get_${name(f)}"
+    val out = open(s"""${packagePrefix}-known_field_${name(t).toLowerCase}.adb""")
 
-    val out = open(s"""${packagePrefix}-known_field_${escaped(t.getName.ada).toLowerCase}_${escaped(f.getName.ada).toLowerCase}.adb""")
-
-    val fn = fieldName(t, f)
 
     out.write(s"""
 with Ada.Unchecked_Conversion;
@@ -118,10 +114,17 @@ with $poolsPackage.${name(t)}_P;""").mkString
 
 with ${PackagePrefix}.Internal_Skill_Names;
 
-package body ${PackagePrefix}.Known_Field_$fn is
+package body $thisPackage is
    pragma Warnings(Off);
-
-   function Make
+""")
+    for(f <- t.getFields) {
+    val fn = fieldName(t, f)
+    // casting access to data array using index i
+    val dataAccessI = s"Standard.$PackagePrefix.To_${name(t)} (Data (I))"
+    val fieldAccessI = s"$dataAccessI.Get_${name(f)}"
+    
+      out.write(s"""
+   function Make_${name(f)}
      (${
   if(f.isAuto())""
   else"""ID    : Natural;
@@ -138,7 +141,7 @@ package body ${PackagePrefix}.Known_Field_$fn is
            Index         => ${if(f.isAuto())"0" else "ID"},
            Owner         => Owner,
            Future_Offset => 0);
-   end Make;
+   end Make_${name(f)};
 
    procedure Free (This : access Known_Field_${fn}_T) is
       type P is access all Known_Field_${fn}_T;
@@ -479,8 +482,11 @@ ${readBlock(t, f)}
       end loop;
    end Write;"""
     }
-
-end ${PackagePrefix}.Known_Field_$fn;
+""")
+    }
+    
+    out.write(s"""
+end $thisPackage;
 """)
 
     out.close()

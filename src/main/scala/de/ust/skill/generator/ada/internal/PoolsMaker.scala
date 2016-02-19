@@ -239,10 +239,8 @@ with Skill.Field_Types;
 with Skill.Internal.Parts;
 with Skill.Streams;
 
-with $PackagePrefix.Internal_Skill_Names;${
-      (for (f ← t.getFields) yield s"""
-with $PackagePrefix.Known_Field_${escaped(t.getName.ada())}_${escaped(f.getName.ada())};""").mkString
-    }
+with $PackagePrefix.Internal_Skill_Names;
+with $PackagePrefix.Known_Field_${name(t)};
 
 -- instantiated pool packages
 package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
@@ -455,7 +453,7 @@ ${
           (Name,
            ${internalSkillName(f)})
       then
-         F := Standard.${PackagePrefix}.Known_Field_${escaped(t.getName.ada)}_${escaped(f.getName.ada)}.Make (ID, T, Convert (P (This)));
+         F := Standard.${PackagePrefix}.Known_Field_${name(t)}.Make_${name(f)} (ID, T, Convert (P (This)));
       else$s
       end if;"""
        }
@@ -508,7 +506,7 @@ ${
           (${internalSkillName(f)},
            Name)
       then
-         F := Standard.$PackagePrefix.Known_Field_${fieldName(t, f)}.Make
+         F := Standard.$PackagePrefix.Known_Field_${name(t)}.Make_${name(f)}
            (T     => ${mapToFieldType(f, isBase)},
             Owner => Convert (P (This)));
          This.Auto_Fields(${index += 1; index - 1}) := F;
