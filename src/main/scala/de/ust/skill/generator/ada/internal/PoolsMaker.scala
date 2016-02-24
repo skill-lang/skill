@@ -144,9 +144,6 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
       Name : String_Access) return Skill.Types.Pools.Pool is
      (Sub_Pools.Make (This.To_Pool, ID, Name));
 
-   overriding function First_Dynamic_New_Instance
-     (This : access Pool_T) return Annotation;
-
    -- RTTI implementation
    function Boxed is new Ada.Unchecked_Conversion
      ($Type, Types.Box);
@@ -508,22 +505,6 @@ ${
          ID         := ID + 1;
       end loop;
    end Resize_Pool;
-
-   overriding function First_Dynamic_New_Instance
-     (This : access Pool_T) return Annotation is
-
-      Rval : Annotation;
-   begin
-      if This.New_Objects.Is_Empty then
-         for I in 1 .. This.Sub_Pools.Length loop
-            Rval := This.Sub_Pools.Element(I-1).Dynamic.First_Dynamic_New_Instance;
-            exit when null /= Rval;
-         end loop;
-         return Rval;
-      else
-         return This.New_Objects.First_Element.To_Annotation;
-      end if;
-   end First_Dynamic_New_Instance;
 
    function Offset_Box
      (This : access Pool_T;
