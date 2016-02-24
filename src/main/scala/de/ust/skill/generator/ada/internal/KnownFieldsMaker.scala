@@ -188,7 +188,7 @@ ${readBlock(t, f)}
       else
          for Block_Index in 1 .. CE.C.To_Bulk.Block_Count loop
             First := Natural (This.Owner.Blocks.Element (Block_Index - 1).BPO);
-            Last  := First + Natural (This.Owner.Blocks.Element (Block_Index - 1).Count);
+            Last  := First + Natural (This.Owner.Blocks.Element (Block_Index - 1).Dynamic_Count);
 ${readBlock(t, f)}
          end loop;
       end if;
@@ -212,7 +212,7 @@ ${readBlock(t, f)}
       Data   : constant Skill.Types.Annotation_Array := This.Owner.Base.Data;
       Result : Skill.Types.v64              := 0;
       Low    : constant Natural             := Natural (Rang.BPO);
-      High   : constant Natural             := Natural (Rang.BPO + Rang.Count);
+      High   : constant Natural             := Natural (Rang.BPO + Rang.Dynamic_Count);
    begin"""+{
         // this prelude is common to most cases
         val preludeData : String = """
@@ -292,16 +292,16 @@ ${readBlock(t, f)}
       This.Future_Offset := Result;"""
 
             case "i8" | "bool" ⇒ s"""
-        This.Future_Offset := Rang.Count;"""
+        This.Future_Offset := Skill.Types.v64 (Rang.Dynamic_Count);"""
 
             case "i16" ⇒ s"""
-        This.Future_Offset := 2 * Rang.Count;"""
+        This.Future_Offset := 2 * Skill.Types.v64 (Rang.Dynamic_Count);"""
 
             case "i32" | "f32" ⇒ s"""
-        This.Future_Offset := 4 * Rang.Count;"""
+        This.Future_Offset := 4 * Skill.Types.v64 (Rang.Dynamic_Count);"""
 
             case "i64" | "f64" ⇒ s"""
-        This.Future_Offset := 8 * Rang.Count;"""
+        This.Future_Offset := 8 * Skill.Types.v64 (Rang.Dynamic_Count);"""
 
             case "v64" ⇒ s"""$preludeData
          declare
@@ -434,7 +434,7 @@ ${readBlock(t, f)}
       Data   : constant Skill.Types.Annotation_Array := This.Owner.Base.Data;
       Result : Skill.Types.v64              := 0;
       Low    : constant Natural             := Natural (Rang.BPO);
-      High   : constant Natural             := Natural (Rang.BPO + Rang.Count);
+      High   : constant Natural             := Natural (Rang.BPO + Rang.Dynamic_Count);
    begin
 
       for I in Low + 1 .. High loop

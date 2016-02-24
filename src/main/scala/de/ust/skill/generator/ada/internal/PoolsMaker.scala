@@ -151,10 +151,6 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
    overriding function First_Dynamic_New_Instance
      (This : access Pool_T) return Annotation;
 
-   procedure Update_After_Compress
-     (This     : access Pool_T;
-      Lbpo_Map : Skill.Internal.Lbpo_Map_T);
-
    -- RTTI implementation
    function Boxed is new Ada.Unchecked_Conversion
      ($Type, Types.Box);
@@ -487,21 +483,11 @@ ${
    -- @note: this might not be correct in general (first/last index calculation)
    procedure Resize_Pool (This : access Pool_T) is
       ID   : Skill_ID_T := 1 + Skill_ID_T (This.Blocks.Last_Element.BPO);
-      Last : Skill_ID_T := ID - 1 + Natural (This.Blocks.Last_Element.Count);
-      Size : Natural;
+      Size : Skill_ID_T := This.Blocks.Last_Element.Static_Count;
 
       Data : Skill.Types.Annotation_Array;
 
       SD : Book_P.Page;
-      R  : $Type;
-
-      procedure Max_BPO (P : Pools.Sub_Pool) is
-         Tmp_Bpo : Skill_ID_T := Skill_ID_T(P.Blocks.Last_Element.BPO);
-      begin
-         if (ID - 2) < Tmp_Bpo and then Tmp_Bpo < Last then
-            Last := Tmp_Bpo;
-         end if;
-      end Max_BPO;
 
       use Interfaces;
    begin${
@@ -511,12 +497,8 @@ ${
      }
       Data := This${if(isBase)""else".Base"}.Data;
 
-      This.Sub_Pools.Foreach (Max_BPO'Access);
-
-      Size := (Last - Id) + 1;
       This.Static_Data_Instances := This.Static_Data_Instances + Size;
-      
-      
+
       if 0 = Size then
          return;
       end if;
@@ -524,8 +506,7 @@ ${
       SD := This.Book.Make_Page(Size);
 
       -- set skill IDs and insert into data
-      for I in SD'Range loop
-         R          := SD (I)'access;
+      for R of SD.all loop
          R.Skill_ID := ID;
          Data (ID)  := R.To_Annotation;
          ID         := ID + 1;
@@ -560,22 +541,6 @@ ${
          return This.New_Objects.First_Element.To_Annotation;
       end if;
    end First_Dynamic_New_Instance;
-
-   procedure Update_After_Compress
-     (This     : access Pool_T;
-      Lbpo_Map : Skill.Internal.Lbpo_Map_T)
-   is
-   begin
-      This.Blocks.Clear;
-      This.Blocks.Append
-      (Skill.Internal.Parts.Block'
-         (Types.v64 (Lbpo_Map (This.Pool_Offset)), Types.v64 (This.Size)));
-
-      for I in 0 .. This.Sub_Pools.Length - 1 loop
-         This.Sub_Pools.Element (I).Dynamic.Update_After_Compress
-         (Lbpo_Map);
-      end loop;
-   end Update_After_Compress;
 
    function Offset_Box
      (This : access Pool_T;
