@@ -55,6 +55,7 @@ end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools;
     out.write(s"""
 with Ada.Unchecked_Conversion;
 
+with Skill.Books;
 with Skill.Containers.Vectors;
 with Skill.Containers.Arrays;
 with Skill.Field_Declarations;
@@ -131,15 +132,6 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
    overriding
    procedure Resize_Pool (This : access Pool_T);
 
-   overriding function Static_Size (This : access Pool_T) return Natural;
-
-   overriding function New_Objects_Size (This : access Pool_T) return Natural;
-
-   -- applies F for each element in this
---        procedure Foreach
---          (This : access Pool_T;
---           F    : access procedure (I : $Name));
-
    package Sub_Pools is new Sub
      (T    => ${Type}_T,
       P    => $Type,
@@ -150,12 +142,6 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
       ID   : Natural;
       Name : String_Access) return Skill.Types.Pools.Pool is
      (Sub_Pools.Make (This.To_Pool, ID, Name));
-
-   --        function Iterator (This : access Pool_T) return Age_Iterator is abstract;
-
-   overriding
-   procedure Do_For_Static_Instances (This : access Pool_T;
-                                      F : not null access procedure(I : Annotation));
 
    overriding
    procedure Foreach_Dynamic_New_Instance
@@ -192,25 +178,16 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
      (${Type}_T'Tag);
 
 private
-
-   -- note: this trick makes treatment of new objects more complicated; there
-   -- is an almost trivial solution to the problem in C++
-   type Static_Data_Array_T is array (Positive range <>) of aliased ${Type}_T;
-   type Static_Data_Array is access Static_Data_Array_T;
-
-   package A1 is new Containers.Vectors (Natural, $Type);
-   subtype New_Instance_Vector is A1.Vector;
-
-   package A2 is new Containers.Vectors (Natural, Static_Data_Array);
-   subtype Static_Instance_Vector is A2.Vector;
+   
+   package Book_P is new Skill.Books(${Type}_T, $Type);
 
    type Auto_Field_Array is
      array (0 .. ${t.getFields.filter { _.isAuto() }.size - 1}) of Skill.Field_Declarations.Field_Declaration;
 
    type Pool_T is new ${if(isBase)"Base"else"Sub"}_Pool_T with record
-      Static_Data : Static_Instance_Vector;
-      New_Objects : New_Instance_Vector;
-
+      -- memory management
+      Book : aliased Book_P.Book;
+      
       -- the list of all auto fields
       Auto_Fields : Auto_Field_Array;
    end record;
@@ -268,7 +245,7 @@ package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_
       F_${name(f)} : ${mapType(f)} := ${defaultValue(f)}"""
        ).mkString
      }) is
-      R : constant ${mapType(t)} := new ${mapType(t)}_T;
+      R : constant ${mapType(t)} := This.Book.Next;
    begin
       R.Skill_ID := -1;${
        (
@@ -277,7 +254,7 @@ package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_
       R.Set_${name(f)} (F_${name(f)});"""
        ).mkString
      }
-      This.New_Objects.Append (R);
+      This.New_Objects.Append (R.To_Annotation);
    end Make;
    function Make
      (This  : access Pool_T${
@@ -287,7 +264,7 @@ package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_
       F_${name(f)} : ${mapType(f)} := ${defaultValue(f)}"""
        ).mkString
      }) return ${mapType(t)} is
-      R : constant ${mapType(t)} := new ${mapType(t)}_T;
+      R : constant ${mapType(t)} := This.Book.Next;
    begin
       R.Skill_ID := -1;${
        (
@@ -296,7 +273,7 @@ package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_
       R.Set_${name(f)} (F_${name(f)});"""
        ).mkString
      }
-      This.New_Objects.Append (R);
+      This.New_Objects.Append (R.To_Annotation);
       return R;
    end Make;
 
@@ -355,8 +332,9 @@ package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_
            Blocks      => Skill.Internal.Parts.Blocks_P.Empty_Vector,
            Fixed       => False,
            Cached_Size => 0,
-           Static_Data => A2.Empty_Vector,
-           New_Objects => A1.Empty_Vector);
+           Book        => <>,
+           Static_Data_Instances => 0,
+           New_Objects => New_Objects_P.Empty_Vector);
 ${
        if (null == t.getSuperType) """
       This.Base := Convert (This);"""
@@ -379,17 +357,6 @@ ${
       begin
          This.Free;
       end Delete;
-
-      procedure Delete_SA (This : Static_Data_Array) is
-         type P is access all Static_Data_Array_T;
-         D : P := P (This);
-
-         procedure Free is new Ada.Unchecked_Deallocation
-           (Static_Data_Array_T,
-            P);
-      begin
-         Free (D);
-      end Delete_SA;
 ${
            if(isBase)"""
       Data : Annotation_Array := This.Data;"""
@@ -419,8 +386,7 @@ ${
       This.Data_Fields_F.Foreach (Delete'Access);
       This.Data_Fields_F.Free;
       This.Blocks.Free;
-      This.Static_Data.Foreach (Delete_SA'Access);
-      This.Static_Data.Free;
+      This.Book.Free;
       This.New_Objects.Free;
       if No_Known_Fields /= This.Known_Fields then
          Delete(This.Known_Fields);
@@ -520,15 +486,14 @@ ${
 
    -- @note: this might not be correct in general (first/last index calculation)
    procedure Resize_Pool (This : access Pool_T) is
-      Size : Natural;
       ID   : Skill_ID_T := 1 + Skill_ID_T (This.Blocks.Last_Element.BPO);
+      Last : Skill_ID_T := ID - 1 + Natural (This.Blocks.Last_Element.Count);
+      Size : Natural;
 
       Data : Skill.Types.Annotation_Array;
 
-      SD : Static_Data_Array;
+      SD : Book_P.Page;
       R  : $Type;
-
-      Last : Skill_ID_T := ID - 1 + Natural (This.Blocks.Last_Element.Count);
 
       procedure Max_BPO (P : Pools.Sub_Pool) is
          Tmp_Bpo : Skill_ID_T := Skill_ID_T(P.Blocks.Last_Element.BPO);
@@ -549,54 +514,18 @@ ${
       This.Sub_Pools.Foreach (Max_BPO'Access);
 
       Size := (Last - Id) + 1;
+      This.Static_Data_Instances := This.Static_Data_Instances + Size;
 
-      SD := new Static_Data_Array_T (1 .. Size);
-      This.Static_Data.Append (SD);
+      SD := This.Book.Make_Page(Size);
 
       -- set skill IDs and insert into data
       for I in SD'Range loop
-         R          := SD (I).Unchecked_Access;
+         R          := SD (I)'access;
          R.Skill_ID := ID;
          Data (ID)  := R.To_Annotation;
          ID         := ID + 1;
       end loop;
    end Resize_Pool;
-
-   overriding function Static_Size (This : access Pool_T) return Natural is
-      Rval : Natural := This.New_Objects.Length;
-
-      procedure Collect(This : Static_Data_Array) is
-      begin
-         Rval := Rval + This'Length;
-      end Collect;
-
-   begin
-      This.Static_Data.Foreach(Collect'Access);
-      return Rval;
-   end Static_Size;
-
-   overriding function New_Objects_Size (This : access Pool_T) return Natural is
-     (This.New_Objects.Length);
-
-   type T is not null access procedure (I : ${mapType(t)});
-   type U is not null access procedure (I : Annotation);
-
-   function Cast is new Ada.Unchecked_Conversion(U, T);
-
-   procedure Do_For_Static_Instances
-     (This : access Pool_T;
-      F : not null access procedure(I : Annotation)) 
-   is
-      procedure Defer (arr : Static_Data_Array) is
-      begin
-         for I in arr'Range loop
-            F (arr (I).To_Annotation);
-         end loop;
-      end Defer;
-   begin
-      This.Static_Data.Foreach (Defer'Access);
-      This.New_Objects.Foreach(Cast(F));
-   end Do_For_Static_Instances;
 
    procedure Foreach_Dynamic_New_Instance
      (This : access Pool_T;
@@ -607,7 +536,7 @@ ${
          This.Dynamic.Foreach_Dynamic_New_Instance (F);
       end Make;
    begin
-      This.New_Objects.Foreach (Cast (F));
+      This.New_Objects.Foreach (F);
       This.Sub_Pools.Foreach (Make'Access);
    end Foreach_Dynamic_New_Instance;
 
