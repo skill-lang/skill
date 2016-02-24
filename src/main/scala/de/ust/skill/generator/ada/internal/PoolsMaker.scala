@@ -137,16 +137,12 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
       P    => $Type,
       To_P => Standard.${PackagePrefix}.To_$Name);
 
+   overriding
    function Make_Sub_Pool
      (This : access Pool_T;
       ID   : Natural;
       Name : String_Access) return Skill.Types.Pools.Pool is
      (Sub_Pools.Make (This.To_Pool, ID, Name));
-
-   overriding
-   procedure Foreach_Dynamic_New_Instance
-     (This : access Pool_T;
-      F    : not null access procedure (I : Annotation));
 
    overriding function First_Dynamic_New_Instance
      (This : access Pool_T) return Annotation;
@@ -512,19 +508,6 @@ ${
          ID         := ID + 1;
       end loop;
    end Resize_Pool;
-
-   procedure Foreach_Dynamic_New_Instance
-     (This : access Pool_T;
-      F    : not null access procedure (I : Annotation)) is
-
-      procedure Make (This : Sub_Pool) is
-      begin
-         This.Dynamic.Foreach_Dynamic_New_Instance (F);
-      end Make;
-   begin
-      This.New_Objects.Foreach (F);
-      This.Sub_Pools.Foreach (Make'Access);
-   end Foreach_Dynamic_New_Instance;
 
    overriding function First_Dynamic_New_Instance
      (This : access Pool_T) return Annotation is
