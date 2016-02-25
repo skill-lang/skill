@@ -27,6 +27,7 @@ trait KnownFieldsMaker extends GeneralOutputMaker {
 
     out.write(s"""
 with Skill.Field_Declarations;
+with Skill.Field_Restrictions;
 with Skill.Field_Types;
 with Skill.Streams.Writer;
 
@@ -46,10 +47,11 @@ package $thisPackage is
    function Make_${name(f)}
      (${
       if(f.isAuto())""
-      else"""
-      ID    : Natural;"""
+      else"""ID    : Natural;
+      """
 }T     : Skill.Field_Types.Field_Type;
-      Owner : Skill.Field_Declarations.Owner_T)
+      Owner : Skill.Field_Declarations.Owner_T;
+      Restrictions : Skill.Field_Restrictions.Vector)
       return Skill.Field_Declarations.Field_Declaration;
 
    overriding
@@ -58,9 +60,6 @@ package $thisPackage is
    function Owner_Dyn
      (This : access Known_Field_${fn}_T)
       return ${poolsPackage}.${name(t)}_P.Pool;
-
-   overriding
-   function Check (This : access Known_Field_${fn}_T) return Boolean;
    
    overriding
    procedure Read
@@ -130,7 +129,8 @@ package body $thisPackage is
   else"""ID    : Natural;
       """
 }T     : Skill.Field_Types.Field_Type;
-      Owner : Skill.Field_Declarations.Owner_T)
+      Owner : Skill.Field_Declarations.Owner_T;
+      Restrictions : Skill.Field_Restrictions.Vector)
       return Skill.Field_Declarations.Field_Declaration
    is
    begin
@@ -140,7 +140,8 @@ package body $thisPackage is
            Name          => ${internalSkillName(f)},
            Index         => ${if(f.isAuto())"0" else "ID"},
            Owner         => Owner,
-           Future_Offset => 0);
+           Future_Offset => 0,
+           Restrictions  => Restrictions);
    end Make_${name(f)};
 
    procedure Free (This : access Known_Field_${fn}_T) is
@@ -166,11 +167,6 @@ package body $thisPackage is
    begin
       return Cast (This.Owner);
    end Owner_Dyn;
-   
-   function Check (This : access Known_Field_${fn}_T) return Boolean is
-   begin
-      return True;
-   end Check;
 
    procedure Read
      (This : access Known_Field_${fn}_T;

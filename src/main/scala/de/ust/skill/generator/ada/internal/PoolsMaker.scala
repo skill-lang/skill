@@ -120,7 +120,8 @@ package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P is
      (This : access Pool_T;
       ID   : Natural;
       T    : Field_Types.Field_Type;
-      Name : String_Access)
+      Name : String_Access;
+      Restrictions : Field_Restrictions.Vector)
       return Skill.Field_Declarations.Field_Declaration;
 
    procedure Add_Known_Field
@@ -387,7 +388,8 @@ ${
      (This : access Pool_T;
       ID   : Natural;
       T    : Field_Types.Field_Type;
-      Name : String_Access)
+      Name : String_Access;
+      Restrictions : Field_Restrictions.Vector)
       return Skill.Field_Declarations.Field_Declaration
    is
       pragma Warnings (Off);
@@ -402,13 +404,13 @@ ${
    begin
 ${
        t.getFields.filterNot { _.isAuto }.foldRight("""
-      return Super (This).Add_Field (ID, T, Name);""") {
+      return Super (This).Add_Field (ID, T, Name, Restrictions);""") {
          case (f, s) ⇒ s"""
       if Skill.Equals.Equals
           (Name,
            ${internalSkillName(f)})
       then
-         F := Standard.${PackagePrefix}.Known_Field_${name(t)}.Make_${name(f)} (ID, T, Convert (P (This)));
+         F := Standard.${PackagePrefix}.Known_Field_${name(t)}.Make_${name(f)} (ID, T, Convert (P (This)), Restrictions);
       else$s
       end if;"""
        }
@@ -416,9 +418,7 @@ ${
        if (t.getFields.isEmpty()) ""
        else """
 
-      -- TODO restrictions
-      --          for (FieldRestriction<?> r : restrictions)
-      --              f.addRestriction(r);
+      F.Restrictions := Restrictions;
       This.Data_Fields.Append (F);
 
       return F;"""
@@ -449,7 +449,8 @@ ${
            This.Add_Field
            (ID => 1 + This.Data_Fields_F.Length,
             T => ${mapToFieldType(f, isBase)},
-            Name => Name);
+            Name => Name,
+            Restrictions => Field_Restrictions.Empty);
          return;
       end if;"""
        ).mkString
@@ -463,7 +464,8 @@ ${
       then
          F := Standard.$PackagePrefix.Known_Field_${name(t)}.Make_${name(f)}
            (T     => ${mapToFieldType(f, isBase)},
-            Owner => Convert (P (This)));
+            Owner => Convert (P (This)),
+            Restrictions => Field_Restrictions.Empty);
          This.Auto_Fields(${index += 1; index - 1}) := F;
          return;
       end if;"""
