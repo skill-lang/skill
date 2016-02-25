@@ -418,17 +418,11 @@ ${readBlock(t, f)}
       else
         s"""
       use type Skill.Types.v64;
-      use type Skill.Types.Uv64;
-
-      function Cast is new Ada.Unchecked_Conversion
-        (Skill.Types.v64,
-         Skill.Types.Uv64);
 
       function Boxed is new Ada.Unchecked_Conversion (${mapType(f)}, Skill.Types.Box);
 
       Rang   : constant Skill.Internal.Parts.Block := This.Owner.Blocks.Last_Element;
       Data   : constant Skill.Types.Annotation_Array := This.Owner.Base.Data;
-      Result : Skill.Types.v64              := 0;
       Low    : constant Natural             := Natural (Rang.BPO);
       High   : constant Natural             := Natural (Rang.BPO + Rang.Dynamic_Count);
    begin
