@@ -159,7 +159,7 @@ ${
         (for (t ← IR) yield s"""
         name = sk->${escaped(t.getSkillName)};
         if (!tbn[name->c_str()]) {
-            const auto p = new ${storagePool(t)}((::skill::TypeID) types->size()${
+            const auto p = new ${storagePool(t)}((::skill::TypeID) types->size() + 32${
           if (null == t.getSuperType) ""
           else s", tbn[sk->${escaped(t.getSuperType.getSkillName)}->c_str()]"
         }, name,
