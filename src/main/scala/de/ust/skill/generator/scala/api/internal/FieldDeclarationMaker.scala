@@ -345,7 +345,7 @@ ${mapKnownReadType(f.getType)}
 
     case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${offsetCode(t.getBaseType)} }"
 
-    case t : SingleBaseTypeContainer ⇒ s"""result += V64.offset(v.size)
+    case t : SingleBaseTypeContainer ⇒ s"""result += if(null == v) 1 else V64.offset(v.size)
       ${
       t.getBaseType.getSkillName match {
         case "string" | "annotation" ⇒ s"val t = this.t.asInstanceOf[SingleBaseTypeContainer[_,${
@@ -356,10 +356,10 @@ ${mapKnownReadType(f.getType)}
         case _ ⇒ "" // we will emit concrete code anyway
       }
     }
-          v.foreach { v => ${offsetCode(t.getBaseType)} }"""
+          if(null != v) v.foreach { v => ${offsetCode(t.getBaseType)} }"""
 
     // @note this might be optimizable, but i dont care for now
-    case t : MapType ⇒ "result += t.offset(v)"
+    case t : MapType ⇒ "result += if(null == v) 1 else t.offset(v)"
 
     case _           ⇒ "???"
   }
@@ -377,7 +377,7 @@ ${mapKnownReadType(f.getType)}
 
     case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${writeCode(t.getBaseType)} }"
 
-    case t : SingleBaseTypeContainer ⇒ s"""out.v64(v.size)
+    case t : SingleBaseTypeContainer ⇒ s"""if(null == v) out.i8(0) else { out.v64(v.size)
       ${
       t.getBaseType.getSkillName match {
         case "string" | "annotation" ⇒ s"val t = this.t.asInstanceOf[SingleBaseTypeContainer[_,${
@@ -388,7 +388,7 @@ ${mapKnownReadType(f.getType)}
         case _ ⇒ "" // we will emit concrete code anyway
       }
     }
-            v.foreach { v => ${writeCode(t.getBaseType)} }"""
+            v.foreach { v => ${writeCode(t.getBaseType)} }}"""
 
     // @note this might be optimizable, but i dont care for now
     case t : MapType ⇒ "t.write(v, out)"
