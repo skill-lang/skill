@@ -90,7 +90,7 @@ class Main extends FakeMain
    */
   override protected def makeConstructorArguments(t : UserType) = (
     for (f ← t.getAllFields if !(f.isConstant || f.isIgnored))
-      yield s"${escaped(f.getName.camel)} : ${mapType(f.getType())}"
+      yield s"${escaped(f.getName.camel)} : ${mapType(f.getType())} = ${defaultValue(f)}"
   ).mkString(", ")
   override protected def appendConstructorArguments(t : UserType) = {
     val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
