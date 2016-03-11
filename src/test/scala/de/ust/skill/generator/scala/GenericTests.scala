@@ -114,7 +114,7 @@ class Generic${name}ReadTest extends CommonTest {
     val sf = SkillFile.open(path, Create, Write);
     reflectiveInit(sf);
     // write file
-    sf.flush
+    sf.flush()
 
     // create a name -> type map
     val types : Map[String, Access[_]] = sf.map(t ⇒ t.name -> t).toMap
