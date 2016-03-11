@@ -175,7 +175,7 @@ ${
   def get = theInstance"""
         else
           s"""  def make(${makeConstructorArguments(t)}) = {
-    val r = new $typeName(-1${appendConstructorArguments(t)})
+    val r = new $typeName(-1 - newObjects.size${appendConstructorArguments(t)})
     newObjects.append(r)
     r
   }"""
