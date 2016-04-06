@@ -47,7 +47,7 @@ class IMLTest extends FunSuite {
 
   test("create c++") {
     if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "siml", "-L", "cpp", specPath,
+      CommandLine.main(Array("-p", "siml", "-L", "cpp", "-O@cpp:revealSkillID=true", specPath,
         System.getProperty("user.home")+"/Desktop/iml.sf/generated"))
   }
 

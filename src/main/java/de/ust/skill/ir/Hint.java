@@ -10,7 +10,6 @@ import java.util.Set;
  */
 final public class Hint {
 
-    @SuppressWarnings("hiding")
     public static enum Type {
         // note: names need to be lowercase, because this enum will be accessed
         // using the valueOf method
