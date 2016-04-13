@@ -46,7 +46,7 @@ trait GeneralOutputMaker extends Generator {
    */
   var largeSpecificationMode = false
 
-  override def getLanguageName = "java";
+  override def getLanguageName = "javaforeign";
 
   // options
   /**

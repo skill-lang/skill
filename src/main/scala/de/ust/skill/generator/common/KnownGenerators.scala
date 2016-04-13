@@ -16,6 +16,7 @@ object KnownGenerators {
     classOf[java.Main],
     classOf[scala.Main],
     classOf[skill.Main],
-    classOf[statistics.Main]
+    classOf[statistics.Main],
+    classOf[javaforeign.Main]
   )
 }
