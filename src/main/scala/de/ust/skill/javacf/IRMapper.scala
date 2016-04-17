@@ -13,6 +13,7 @@ import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
 import javassist.ClassPool
 import javassist.CtClass
+import de.ust.skill.ir.Type
 
 /**
  * Maps classes by name from a given classpath to IR representation.
@@ -84,14 +85,9 @@ class IRMapper(classpaths: List[String]) {
    * Loads a CtClass for a class name from the class path.
    */
   def loadType(name: String): CtClass = pool.get(name)
-
-  /**
-   * Returns the IR fields for a given class.
-   */
-  def mapFields(clazz: CtClass): List[Field] = {
-    clazz.getFields.map { field ⇒
-      {
-        val typ = field.getType match {
+  
+  def mapType(clazz: CtClass): Type = {
+        clazz match {
           case `boolt` | `Boolt` ⇒ tc.get("bool")
           case `bytet` | `Bytet` ⇒ tc.get("i8")
           case `shortt` | `Shortt` ⇒ tc.get("i16")
@@ -102,8 +98,13 @@ class IRMapper(classpaths: List[String]) {
           case `stringt` ⇒ tc.get("string")
           case other : CtClass  ⇒ collectType(other)
         }
-        new Field(typ, new Name(List(field.getName).asJava, field.getName), false, new Comment(), new java.util.ArrayList[Restriction], new java.util.ArrayList[Hint])
-      }
-    }.to
+  }
+
+  /**
+   * Returns the IR fields for a given class.
+   */
+  def mapFields(clazz: CtClass): List[Field] = {
+    clazz.getFields.map { field ⇒ new Field(mapType(field.getType), new Name(List(field.getName).asJava, field.getName),
+        false, new Comment(), new java.util.ArrayList[Restriction], new java.util.ArrayList[Hint]) }.to
   }
 }
