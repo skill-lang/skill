@@ -42,6 +42,9 @@ class IRMapper(classpaths: List[String]) {
 
   def collectType(name: String): UserType = collectType(loadType(name))
 
+  /**
+   * Returns the IR type for a class and possibly also adds its super types to the type context.
+   */
   def collectType(clazz: CtClass): UserType = {
     if (knownClasses contains clazz) return knownClasses(clazz)
 
@@ -61,8 +64,14 @@ class IRMapper(classpaths: List[String]) {
     ntype
   }
 
+  /**
+   * Loads a CtClass for a class name from the class path.
+   */
   def loadType(name: String): CtClass = pool.get(name)
 
+  /**
+   * Returns the IR fields for a given class.
+   */
   def mapFields(clazz: CtClass): List[Field] = {
     clazz.getFields.map { field ⇒
       {
