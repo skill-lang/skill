@@ -32,6 +32,22 @@ class IRMapper(classpaths: List[String]) {
 
   val knownClasses = new HashMap[CtClass, UserType];
   
+  val boolt = CtClass.booleanType
+  val Boolt = pool.get("java.lang.Boolean")
+  val bytet = CtClass.byteType
+  val Bytet = pool.get("java.lang.Byte")
+  val shortt = CtClass.shortType
+  val Shortt = pool.get("java.lang.Short")
+  val intt = CtClass.intType
+  val Intt = pool.get("java.lang.Integer")
+  val longt = CtClass.longType
+  val Longt = pool.get("java.lang.Long")
+  val floatt = CtClass.floatType
+  val Floatt = pool.get("java.lang.Float")
+  val doublet = CtClass.doubleType
+  val Doublet = pool.get("java.lang.Double")
+  val stringt = pool.get("java.lang.String")
+
   /**
    * Takes a list of class names and returns a TypeContext representing containing the IR of those types.
    */
@@ -75,16 +91,16 @@ class IRMapper(classpaths: List[String]) {
   def mapFields(clazz: CtClass): List[Field] = {
     clazz.getFields.map { field ⇒
       {
-        val typ = field.getType.getName match {
-          case "java.lang.Boolean" | "boolean" ⇒ tc.get("bool")
-          case "java.lang.Byte" | "byte" ⇒ tc.get("i8")
-          case "java.lang.Short" | "short" ⇒ tc.get("i16")
-          case "java.lang.Integer" | "int" ⇒ tc.get("i32")
-          case "java.lang.Long" | "long" ⇒ tc.get("i64")
-          case "java.lang.Float" | "float"  ⇒ tc.get("f32")
-          case "java.lang.Double" | "double" ⇒ tc.get("f64")
-          case "java.lang.String" ⇒ tc.get("string")
-          case _ ⇒ collectType(field.getType)
+        val typ = field.getType match {
+          case `boolt` | `Boolt` ⇒ tc.get("bool")
+          case `bytet` | `Bytet` ⇒ tc.get("i8")
+          case `shortt` | `Shortt` ⇒ tc.get("i16")
+          case `intt` | `Intt` ⇒ tc.get("i32")
+          case `longt` | `Longt` ⇒ tc.get("i64")
+          case `floatt` | `Floatt` ⇒ tc.get("f32")
+          case `doublet` | `Doublet` ⇒ tc.get("f64")
+          case `stringt` ⇒ tc.get("string")
+          case other : CtClass  ⇒ collectType(other)
         }
         new Field(typ, new Name(List(field.getName).asJava, field.getName), false, new Comment(), new java.util.ArrayList[Restriction], new java.util.ArrayList[Hint])
       }
