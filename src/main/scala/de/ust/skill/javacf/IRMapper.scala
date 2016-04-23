@@ -54,8 +54,9 @@ class IRMapper(classpaths: List[String]) {
    * Takes a list of class names and returns a TypeContext representing containing the IR of those types.
    */
   def mapClasses(list: List[String]): TypeContext = {
-    list foreach(collect)
-    knownTypes.keys.foreach { mapType(_) }
+    list.foreach(collect)
+    // map all given types
+    knownTypes.keys.foreach(translateType)
     val decls = mappedTypes.values.map { _.asInstanceOf[Declaration] }.toList
     tc.setDefs(decls.asJava)
     tc
@@ -96,33 +97,32 @@ class IRMapper(classpaths: List[String]) {
     case `floatt` | `Floatt` ⇒ tc.get("f32")
     case `doublet` | `Doublet` ⇒ tc.get("f64")
     case `stringt` ⇒ tc.get("string")
-    case other: CtClass ⇒ {
-      if (mappedTypes contains clazz) mappedTypes(clazz) else {
-        // get supertype or null if has only Object as supertype
-        val supertype: UserType = if (clazz.getSuperclass != javaObjectType) {
-          val skillsupertype = mapType(clazz.getSuperclass)
-          if (skillsupertype.isInstanceOf[UserType]) skillsupertype.asInstanceOf[UserType]
-          else throw new RuntimeException(s"Cannot inherit from non-usertype ${skillsupertype.getName}")
-        } else null
+    case other : CtClass ⇒ knownTypes(other)
+  }
 
-        val skilltype = knownTypes(clazz)
-        // map fields
-        skilltype.initialize(supertype, new java.util.ArrayList[InterfaceType], new java.util.ArrayList[Field])
-        mappedTypes += (clazz → skilltype)
-        skilltype
-      }
+  def translateType(clazz: CtClass): Type = {
+    if (mappedTypes contains clazz) mappedTypes(clazz) else {
+      // get supertype or null if has only Object as supertype
+      val supertype: UserType = if (clazz.getSuperclass != javaObjectType) {
+        val skillsupertype = translateType(clazz.getSuperclass)
+        if (skillsupertype.isInstanceOf[UserType]) skillsupertype.asInstanceOf[UserType]
+        else throw new RuntimeException(s"Cannot inherit from non-usertype ${skillsupertype.getName}")
+      } else null
+
+      val skilltype = knownTypes(clazz)
+      skilltype.initialize(supertype, new java.util.ArrayList[InterfaceType], mapFields(clazz).asJava)
+      mappedTypes += (clazz → skilltype)
+      skilltype
     }
   }
 
   /**
    * Returns the IR fields for a given class.
    */
-  def mapFields(clazz: CtClass): List[Field] = {
+  def mapFields(clazz: CtClass): List[Field] = clazz.getDeclaredFields.map { field ⇒
     val comment = new Comment()
     comment.init(List().asJava)
-    clazz.getFields.map { field ⇒
-      new Field(mapType(field.getType), new Name(List(field.getName).asJava, field.getName),
-        false, comment, new java.util.ArrayList[Restriction], new java.util.ArrayList[Hint])
-    }.to
-  }
+    new Field(mapType(field.getType), new Name(List(field.getName).asJava, field.getName),
+      false, comment, new java.util.ArrayList[Restriction], new java.util.ArrayList[Hint])
+  }.to
 }
