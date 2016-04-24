@@ -50,6 +50,10 @@ class IRMapper(classpaths: List[String]) {
   val Doublet = pool.get("java.lang.Double")
   val stringt = pool.get("java.lang.String")
 
+  val ilistt = pool.get("java.util.List")
+  val isett = pool.get("java.util.Set")
+  val imapt = pool.get("java.util.Map")
+
   /**
    * Takes a list of class names and returns a TypeContext representing containing the IR of those types.
    */
@@ -97,7 +101,7 @@ class IRMapper(classpaths: List[String]) {
     case `floatt` | `Floatt` ⇒ tc.get("f32")
     case `doublet` | `Doublet` ⇒ tc.get("f64")
     case `stringt` ⇒ tc.get("string")
-    case other : CtClass ⇒ knownTypes(other)
+    case other: CtClass ⇒ knownTypes.get(other).orNull
   }
 
   def translateType(clazz: CtClass): Type = {
@@ -120,9 +124,22 @@ class IRMapper(classpaths: List[String]) {
    * Returns the IR fields for a given class.
    */
   def mapFields(clazz: CtClass): List[Field] = clazz.getDeclaredFields.map { field ⇒
+    val javatype = field.getType
+    val skilltype = mapType(javatype)
+
+    if (skilltype == null) {
+      if (javatype.getInterfaces.contains(ilistt)) {
+        // type is a list
+      } else if (javatype.getInterfaces.contains(isett)) {
+        // type is a set
+      } else if (javatype.getInterfaces.contains(imapt)) {
+        // type is a map
+      }
+    }
+
     val comment = new Comment()
     comment.init(List().asJava)
-    new Field(mapType(field.getType), new Name(List(field.getName).asJava, field.getName),
+    new Field(skilltype, new Name(List(field.getName).asJava, field.getName),
       false, comment, new java.util.ArrayList[Restriction], new java.util.ArrayList[Hint])
   }.to
 }
