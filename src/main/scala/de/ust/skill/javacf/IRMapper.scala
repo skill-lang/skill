@@ -15,6 +15,7 @@ import javassist.CtClass
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.InterfaceType
+import sun.reflect.generics.parser.SignatureParser
 
 /**
  * Maps classes by name from a given classpath to IR representation.
@@ -128,6 +129,14 @@ class IRMapper(classpaths: List[String]) {
     val skilltype = mapType(javatype)
 
     if (skilltype == null) {
+      val signature = field.getGenericSignature
+      val sigparser = SignatureParser.make();
+      val fieldsig = sigparser.parseClassSig(signature)
+      val sigvisitor = new SignatureVisitor();
+      val fieldtype = fieldsig.accept(sigvisitor)
+
+      println(fieldtype)
+
       if (javatype.getInterfaces.contains(ilistt)) {
         // type is a list
       } else if (javatype.getInterfaces.contains(isett)) {
