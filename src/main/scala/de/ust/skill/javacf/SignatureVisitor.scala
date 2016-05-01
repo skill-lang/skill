@@ -35,7 +35,7 @@ import javassist.NotFoundException
 /**
  * This is a nasty stateful visitor (thanks to the lack of generic arguments to the visit methods).
  */
-class SignatureVisitor(tc: TypeContext, pool: ClassPool, mapInUserContext: CtClass ⇒ Type)
+class SignatureVisitor(tc: TypeContext, pool: ClassPool, mapInUserContext: CtClass ⇒ Option[Type])
     extends sun.reflect.generics.visitor.Visitor[Type] {
 
   var topLevel: Boolean = true
@@ -61,8 +61,6 @@ class SignatureVisitor(tc: TypeContext, pool: ClassPool, mapInUserContext: CtCla
   }
 
   override def visitSimpleClassTypeSignature(sct: SimpleClassTypeSignature): Unit = {
-    println("name: " + sct.getName)
-
     if (topLevel) {
       topLevel = false
       val clazz = utilPool.get(sct.getName)
@@ -89,7 +87,7 @@ class SignatureVisitor(tc: TypeContext, pool: ClassPool, mapInUserContext: CtCla
         case e: NotFoundException ⇒ // do nothing!
       }
       val ta = mapInUserContext(pool.get(sct.getName))
-      typeargs += ta
+      typeargs += ta.get
     }
   }
 

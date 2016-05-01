@@ -93,16 +93,16 @@ class IRMapper(classpaths: List[String]) {
    */
   def loadType(name: String): CtClass = pool.get(name)
 
-  def mapType(clazz: CtClass): Type = clazz match {
-    case `boolt` | `Boolt` ⇒ tc.get("bool")
-    case `bytet` | `Bytet` ⇒ tc.get("i8")
-    case `shortt` | `Shortt` ⇒ tc.get("i16")
-    case `intt` | `Intt` ⇒ tc.get("i32")
-    case `longt` | `Longt` ⇒ tc.get("i64")
-    case `floatt` | `Floatt` ⇒ tc.get("f32")
-    case `doublet` | `Doublet` ⇒ tc.get("f64")
-    case `stringt` ⇒ tc.get("string")
-    case other: CtClass ⇒ knownTypes.get(other).orNull
+  def mapType(clazz: CtClass): Option[Type] = clazz match {
+    case `boolt` | `Boolt` ⇒ Some(tc.get("bool"))
+    case `bytet` | `Bytet` ⇒ Some(tc.get("i8"))
+    case `shortt` | `Shortt` ⇒ Some(tc.get("i16"))
+    case `intt` | `Intt` ⇒ Some(tc.get("i32"))
+    case `longt` | `Longt` ⇒ Some(tc.get("i64"))
+    case `floatt` | `Floatt` ⇒ Some(tc.get("f32"))
+    case `doublet` | `Doublet` ⇒ Some(tc.get("f64"))
+    case `stringt` ⇒ Some(tc.get("string"))
+    case other: CtClass ⇒ knownTypes.get(other)
   }
 
   def translateType(clazz: CtClass): Type = {
@@ -126,26 +126,16 @@ class IRMapper(classpaths: List[String]) {
    */
   def mapFields(clazz: CtClass): List[Field] = clazz.getDeclaredFields.map { field ⇒
     val javatype = field.getType
-    val skilltype = mapType(javatype)
-
-    if (skilltype == null) {
+    val skilltype = mapType(javatype).orElse ({
       val signature = field.getGenericSignature
       val sigparser = SignatureParser.make();
       val fieldsig = sigparser.parseClassSig(signature)
-      val sigvisitor = new SignatureVisitor(tc, pool, mapType);
+      val sigvisitor = new SignatureVisitor(tc, pool, mapType)
       fieldsig.accept(sigvisitor)
-      val fieldtype = sigvisitor.getResult()
-
-      println(fieldtype.getSkillName)
-
-      if (javatype.getInterfaces.contains(ilistt)) {
-        // type is a list
-      } else if (javatype.getInterfaces.contains(isett)) {
-        // type is a set
-      } else if (javatype.getInterfaces.contains(imapt)) {
-        // type is a map
-      }
-    }
+      Some(sigvisitor.getResult())
+    }).getOrElse({
+      throw new RuntimeException("Could not map type: " + javatype.getName)
+    })
 
     val comment = new Comment()
     comment.init(List().asJava)
