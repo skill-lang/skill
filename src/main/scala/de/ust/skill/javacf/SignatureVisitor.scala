@@ -1,5 +1,6 @@
 package de.ust.skill.javacf
 
+import scala.collection.JavaConversions._
 import de.ust.skill.ir.Type
 import sun.reflect.generics.tree.LongSignature
 import sun.reflect.generics.tree.FloatSignature
@@ -20,19 +21,83 @@ import sun.reflect.generics.tree.Wildcard
 import javassist.CtClass
 import sun.reflect.generics.tree.MethodTypeSignature
 import sun.reflect.generics.tree.ClassSignature
+import de.ust.skill.ir.TypeContext
+import de.ust.skill.ir.ListType
+import scala.collection.mutable.ArrayLike
+import scala.collection.mutable.ListBuffer
+import javassist.ClassPool
+import scala.collection.mutable.HashMap
+import de.ust.skill.ir.UserType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.MapType
+import javassist.NotFoundException
 
-class SignatureVisitor()
+/**
+ * This is a nasty stateful visitor (thanks to the lack of generic arguments to the visit methods).
+ */
+class SignatureVisitor(tc: TypeContext, pool: ClassPool, mapInUserContext: CtClass ⇒ Type)
     extends sun.reflect.generics.visitor.Visitor[Type] {
 
-  override def visitClassSignature(cs: ClassSignature): Unit = {}
-  override def visitMethodTypeSignature(ms: MethodTypeSignature): Unit = {}
-  override def getResult(): Type = { null }
-  override def visitFormalTypeParameter(ftp: FormalTypeParameter): Unit = {}
-  override def visitClassTypeSignature(ct: ClassTypeSignature): Unit = {}
+  var topLevel: Boolean = true
+  var typeargs = new ListBuffer[Type]
+  var result: Type = null
+
+  val utilPool = new ClassPool(true)
+  utilPool.importPackage("java.util.*")
+  val listt = utilPool.get("java.util.List")
+  val sett = utilPool.get("java.util.Set")
+  val mapt = utilPool.get("java.util.Map")
+
+  override def getResult(): Type = { result }
+
+  override def visitClassSignature(cs: ClassSignature): Unit = {
+    cs.getSuperInterfaces.foreach { x => x.accept(this) }
+    cs.getFormalTypeParameters.foreach { x => x.accept(this) }
+    cs.getSuperclass.accept(this)
+  }
+
+  override def visitClassTypeSignature(ct: ClassTypeSignature): Unit = {
+    ct.getPath.foreach { x => x.accept(this) }
+  }
+
+  override def visitSimpleClassTypeSignature(sct: SimpleClassTypeSignature): Unit = {
+    println("name: " + sct.getName)
+
+    if (topLevel) {
+      topLevel = false
+      val clazz = utilPool.get(sct.getName)
+      if (clazz.subtypeOf(listt)) {
+        sct.getTypeArguments.foreach { _.accept(this) }
+        assert(typeargs.size == 1)
+        result = ListType.make(tc, typeargs.get(0))
+      } else if (clazz.subtypeOf(sett)) {
+        sct.getTypeArguments.foreach { _.accept(this) }
+        assert(typeargs.size == 1)
+        result = SetType.make(tc, typeargs.get(0))
+      } else if (clazz.subtypeOf(mapt)) {
+        sct.getTypeArguments.foreach { _.accept(this) }
+        result = MapType.make(tc, typeargs)
+      }
+    } else {
+      try {
+        val clazz = utilPool.get(sct.getName)
+        if (clazz.subtypeOf(mapt)) {
+          sct.getTypeArguments.foreach { _.accept(this) }
+          return
+        }
+      } catch {
+        case e: NotFoundException ⇒ // do nothing!
+      }
+      val ta = mapInUserContext(pool.get(sct.getName))
+      typeargs += ta
+    }
+  }
+
   override def visitArrayTypeSignature(a: ArrayTypeSignature): Unit = {}
   override def visitTypeVariableSignature(tv: TypeVariableSignature): Unit = {}
   override def visitWildcard(w: Wildcard): Unit = {}
-  override def visitSimpleClassTypeSignature(sct: SimpleClassTypeSignature): Unit = {}
+  override def visitMethodTypeSignature(ms: MethodTypeSignature): Unit = {}
+  override def visitFormalTypeParameter(ftp: FormalTypeParameter): Unit = {}
   override def visitBottomSignature(b: BottomSignature): Unit = {}
   override def visitByteSignature(b: ByteSignature): Unit = {}
   override def visitBooleanSignature(b: BooleanSignature): Unit = {}
@@ -43,6 +108,5 @@ class SignatureVisitor()
   override def visitFloatSignature(f: FloatSignature): Unit = {}
   override def visitDoubleSignature(d: DoubleSignature): Unit = {}
   override def visitVoidDescriptor(v: VoidDescriptor): Unit = {}
-
 
 }

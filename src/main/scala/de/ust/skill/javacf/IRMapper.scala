@@ -132,10 +132,11 @@ class IRMapper(classpaths: List[String]) {
       val signature = field.getGenericSignature
       val sigparser = SignatureParser.make();
       val fieldsig = sigparser.parseClassSig(signature)
-      val sigvisitor = new SignatureVisitor();
-      val fieldtype = fieldsig.accept(sigvisitor)
+      val sigvisitor = new SignatureVisitor(tc, pool, mapType);
+      fieldsig.accept(sigvisitor)
+      val fieldtype = sigvisitor.getResult()
 
-      println(fieldtype)
+      println(fieldtype.getSkillName)
 
       if (javatype.getInterfaces.contains(ilistt)) {
         // type is a list
