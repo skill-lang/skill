@@ -11,5 +11,8 @@ class Mapping {
     typeMappings += ntm
     ntm
   }
+  
+  
+  override def toString(): String = typeMappings.map(_.toString()).mkString("\n")
 
 }

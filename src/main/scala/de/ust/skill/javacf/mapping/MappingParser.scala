@@ -2,7 +2,7 @@ package de.ust.skill.javacf.mapping
 
 import scala.io.Source
 
-class MappingParser {
+object MappingParser {
 
   def parseFile(path: String): Mapping = {
     val mapping = new Mapping
