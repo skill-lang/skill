@@ -110,7 +110,6 @@ trait Generator {
     val f = new File(rps.mkString("/"));
 
     f.getParentFile.mkdirs
-    println(f.getAbsolutePath)
     f.createNewFile
 
     f

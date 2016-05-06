@@ -26,6 +26,7 @@ import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.View
+import de.ust.skill.ir.InterfaceType
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -80,7 +81,7 @@ class Main extends FakeMain
     case t : SetType                 ⇒ s"$SetTypeName[${mapType(t.getBaseType())}]"
     case t : MapType                 ⇒ t.getBaseTypes().map(mapType).reduceRight((k, v) ⇒ s"$MapTypeName[$k, $v]")
 
-    case t : Declaration             ⇒ "_root_."+packagePrefix + name(t)
+    case t : Declaration             ⇒ "_root_." + packagePrefix + name(t)
 
     case _                           ⇒ throw new IllegalStateException(s"Unknown type $t")
   }
@@ -107,18 +108,18 @@ class Main extends FakeMain
     val headerLineLength = 51
     val headerLine1 = Some((headerInfo.line1 match {
       case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: "+_).getOrElse("Your SKilL Scala Binding")
+      case None    ⇒ headerInfo.license.map("LICENSE: " + _).getOrElse("Your SKilL Scala Binding")
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
     val headerLine2 = Some((headerInfo.line2 match {
       case Some(s) ⇒ s
-      case None ⇒ "generated: "+(headerInfo.date match {
+      case None ⇒ "generated: " + (headerInfo.date match {
         case Some(s) ⇒ s
         case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
       })
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
     val headerLine3 = Some((headerInfo.line3 match {
       case Some(s) ⇒ s
-      case None ⇒ "by: "+(headerInfo.userName match {
+      case None ⇒ "by: " + (headerInfo.userName match {
         case Some(s) ⇒ s
         case None    ⇒ System.getProperty("user.name")
       })
@@ -139,7 +140,7 @@ class Main extends FakeMain
   private var _packagePrefix = ""
 
   override def setPackage(names : List[String]) {
-    _packagePrefix = names.foldRight("")(_+"."+_)
+    _packagePrefix = names.foldRight("")(_ + "." + _)
   }
 
   override def setOption(option : String, value : String) = option match {
@@ -160,9 +161,10 @@ Opitions (scala):
       case _                                    ⇒ "null"
     }
 
-    case t : UserType ⇒ "null"
+    case t : UserType      ⇒ "null"
+    case t : InterfaceType ⇒ "null"
 
-    case _            ⇒ mapType(f.getType)+"()"
+    case _                 ⇒ mapType(f.getType) + "()"
   }
 
   /**

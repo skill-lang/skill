@@ -178,7 +178,7 @@ ${
                 ::skill::internal::AbstractStoragePool::setNextPools(t);
             }
         }
-        {
+        /*{
             // allocate instances
             std::vector<std::future<void>> jobs;
             for (::skill::internal::AbstractStoragePool *t : *types) {
@@ -189,7 +189,9 @@ ${
             }
             for (auto &j : jobs)
                 j.get();
-        }
+        }*/
+        for (::skill::internal::AbstractStoragePool *t : *types)
+            t->allocateInstances();
 
         ::skill::internal::triggerFieldDeserialization(types, dataList);
 

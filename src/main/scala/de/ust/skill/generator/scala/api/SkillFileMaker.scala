@@ -9,6 +9,10 @@ import scala.collection.JavaConversions._
 import de.ust.skill.generator.scala.GeneralOutputMaker
 import de.ust.skill.ir.restriction.MonotoneRestriction
 import de.ust.skill.ir.restriction.SingletonRestriction
+import de.ust.skill.ir.UserType
+import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.Typedef
 
 trait SkillFileMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -40,6 +44,7 @@ import de.ust.skill.common.scala.internal.StoragePool
 import de.ust.skill.common.scala.internal.StringPool
 import de.ust.skill.common.scala.internal.fieldTypes
 import de.ust.skill.common.scala.internal.fieldTypes.AnnotationType
+import de.ust.skill.common.scala.internal.InterfacePool
 
 /**
  * A skill file that corresponds to your specification. Have fun!
@@ -59,6 +64,17 @@ final class SkillFile(
 ${
       (for (t ← IR) yield s"""
   val ${name(t)} : internal.${storagePool(t)} = typesByName("${t.getSkillName}").asInstanceOf[internal.${storagePool(t)}]""").mkString
+    }
+${
+      (for (t ← IRInterfaces) yield s"""
+  val ${name(t)} : InterfacePool[${mapType(t)}, ${mapType(t.getBaseType)}] = 
+    new InterfacePool[${mapType(t)}, ${mapType(t.getBaseType)}]("${name(t)}", ${
+        if (t.getSuperType.isInstanceOf[UserType]) name(t.getSuperType)
+        else "null"
+      },
+      Array[StoragePool[_ <: ${mapType(t)}, _ <: ${mapType(t.getBaseType)}]](${
+        collectRealizationNames(t).map(name).mkString(", ")
+      }));""").mkString
     }
 }
 
@@ -113,5 +129,16 @@ object SkillFile {
 """)
 
     out.close()
+  }
+
+  private def collectRealizationNames(target : InterfaceType) : Seq[UserType] = {
+    def reaches(t : Type) : Boolean = t match {
+      case t : UserType      ⇒ t.getSuperInterfaces.contains(target) || t.getSuperInterfaces.exists(reaches)
+      case t : InterfaceType ⇒ t.getSuperInterfaces.contains(target) || t.getSuperInterfaces.exists(reaches)
+      case t : Typedef       ⇒ reaches(t.getTarget)
+      case _                 ⇒ false
+    }
+
+    IR.filter(reaches).toSeq
   }
 }

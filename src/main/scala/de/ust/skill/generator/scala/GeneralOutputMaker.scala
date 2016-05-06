@@ -18,6 +18,7 @@ import de.ust.skill.generator.common.Generator
 import scala.collection.JavaConversions._
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
+import de.ust.skill.ir.InterfaceType
 
 /**
  * The parent class for all output makers.
@@ -29,12 +30,14 @@ trait GeneralOutputMaker extends Generator {
   // remove special stuff
   final def setTC(tc : TypeContext) = {
     this.types = tc
-    this.IR = tc.removeSpecialDeclarations.getUsertypes.to
+    this.IR = tc.removeTypedefs.removeEnums.getUsertypes.to
+    this.IRInterfaces = tc.removeTypedefs.removeEnums.getInterfaces.to
     // set large specification mode; leave some spare parameters
     largeSpecificationMode = IR.size > 200
   }
   var types : TypeContext = _
   var IR : List[UserType] = _
+  var IRInterfaces : List[InterfaceType] = _
 
   /**
    * This flag is set iff the specification is too large to be passed as parameter list

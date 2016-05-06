@@ -7,10 +7,17 @@ package de.ust.skill.generator.scala
 
 import java.io.PrintWriter
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.bufferAsJavaList
 
-import de.ust.skill.ir._
-import de.ust.skill.ir.restriction._
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.UserType
+import de.ust.skill.ir.WithFields
+import de.ust.skill.ir.restriction.FloatRangeRestriction
+import de.ust.skill.ir.restriction.IntRangeRestriction
+import de.ust.skill.ir.restriction.MonotoneRestriction
 
 trait TypesMaker extends GeneralOutputMaker {
 
@@ -23,6 +30,9 @@ trait TypesMaker extends GeneralOutputMaker {
 
     val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1)
     else this.packageName;
+    
+    // create one file for all base-less interfaces
+    createAnnotationInterfaces;
 
     // create one file for each type hierarchy to help parallel builds
     for(base <- IR if null==base.getSuperType){
@@ -50,7 +60,10 @@ ${
 }sealed class ${name(t)} (_skillID : SkillID) ${
         if (null != t.getSuperType()) { s"extends ${name(t.getSuperType)}" }
         else { "extends SkillObject" }
-      }(_skillID) {${
+      }(_skillID)${
+  (for(s <- t.getSuperInterfaces)
+    yield " with " + name(s)).mkString
+} {${
 	  if(t.getSuperType == null) s"""
 
   //reveal skill id
@@ -69,10 +82,59 @@ ${
 """)
 	}
 
+	makeGetterAndSetter(out, t)
+
+    out.write(s"""
+  override def prettyString : String = s"${name(t)}(#$$skillID${
+    (
+        for(f <- t.getAllFields)
+          yield if(f.isIgnored) s""", ${f.getName()}: <<ignored>>"""
+          else if (!f.isConstant) s""", ${if(f.isAuto)"auto "else""}${f.getName()}: $${${name(f)}}"""
+          else s""", const ${f.getName()}: ${f.constantValue()}"""
+    ).mkString
+  })"
+
+  override def getTypeName : String = "${t.getSkillName}"
+
+  override def toString = "${t.getName.capital}#"+skillID
+}
+""")
+
+      out.write(s"""
+object ${name(t)} {
+${ // create unapply method if the type has fields, that can be matched (none or more then 12 is pointless)
+  val fs = t.getAllFields().filterNot(_.isConstant())
+  if(fs.isEmpty() || fs.size > 12)""
+  else s"""  def unapply(self : ${name(t)}) = ${(for (f ← fs) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
+"""
+}
+  final class UnknownSubType(
+    _skillID : SkillID,
+    val owner : Access[_ <: ${name(t)}])
+      extends ${name(t)}(_skillID) with UnknownObject[${name(t)}] {
+
+    final override def getTypeName : String = owner.name
+
+    final override def prettyString : String = s"$$getTypeName#$$skillID"
+  }
+}
+""");
+    }
+      
+    createInterfaces(out, base)
+
+    out.close()
+    }
+  }
+  
 	///////////////////////
 	// getters & setters //
 	///////////////////////
-	for(f <- t.getFields){
+  def makeGetterAndSetter(out : PrintWriter, t : Declaration with WithFields) {
+    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1)
+    else this.packageName;
+    
+    for(f <- t.getFields){
     implicit val thisF = f;
 
       def makeField:String = {
@@ -131,45 +193,67 @@ ${
   final private[$packageName] def ${escaped("Internal_"+f.getName.camel + "_=")}(v : ${mapType(f.getType())}) = $localFieldName = v
 """)
     }
+  }
+  
+  /**
+   * interfaces required to type fields
+   * 
+   * interfaces created here inherit some type defined in this file, i.e. they have a super class
+   */
+  def createInterfaces(out : PrintWriter, base : UserType) {
+    for(t <- IRInterfaces if t.getBaseType == base) {
+      out.write(s"""
+${
+        comment(t)
+}sealed trait ${name(t)} extends ${name(t.getSuperType)}${
+  (for(s <- t.getSuperInterfaces)
+    yield " with " + name(s)).mkString
+} {""")
 
-    out.write(s"""
-  override def prettyString : String = s"${name(t)}(#$$skillID${
-    (
-        for(f <- t.getAllFields)
-          yield if(f.isIgnored) s""", ${f.getName()}: <<ignored>>"""
-          else if (!f.isConstant) s""", ${if(f.isAuto)"auto "else""}${f.getName()}: $${${name(f)}}"""
-          else s""", const ${f.getName()}: ${f.constantValue()}"""
-    ).mkString
-  })"
+      makeGetterAndSetter(out, t)
 
-  override def getTypeName : String = "${t.getSkillName}"
+      out.write("""
+}        
+""")
+    }
+  }
+  
+  /**
+   * interfaces required to type fields
+   * 
+   * interfaces created here inherit no regular type, i.e. they have no super class
+   */
+  def createAnnotationInterfaces {
+    if(IRInterfaces.forall(_.getBaseType.isInstanceOf[UserType]))
+      return;
 
-  override def toString = "${t.getName.capital}#"+skillID
-}
+    val out = open(s"TypesOfAnnotation.scala")
+
+    //package
+    out.write(s"""package ${this.packageName}
+
+import de.ust.skill.common.scala.SkillID
+import de.ust.skill.common.scala.api.SkillObject
+import de.ust.skill.common.scala.api.Access
+import de.ust.skill.common.scala.api.UnknownObject
 """)
 
+    for(t <- IRInterfaces if !t.getBaseType.isInstanceOf[UserType]) {
       out.write(s"""
-object ${name(t)} {
-${ // create unapply method if the type has fields, that can be matched (none or more then 12 is pointless)
-  val fs = t.getAllFields().filterNot(_.isConstant())
-  if(fs.isEmpty() || fs.size > 12)""
-  else s"""  def unapply(self : ${name(t)}) = ${(for (f ← fs) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
-"""
-}
-  final class UnknownSubType(
-    _skillID : SkillID,
-    val owner : Access[_ <: ${name(t)}])
-      extends ${name(t)}(_skillID) with UnknownObject[${name(t)}] {
+${
+        comment(t)
+}trait ${name(t)} extends SkillObject${
+  (for(s <- t.getSuperInterfaces)
+    yield " with " + name(s)).mkString
+} {""")
 
-    final override def getTypeName : String = owner.name
+      makeGetterAndSetter(out, t)
 
-    final override def prettyString : String = s"$$getTypeName#$$skillID"
-  }
-}
-""");
+      out.write("""
+}        
+""")
     }
-
-    out.close()
-    }
+      
+    out.close
   }
 }

@@ -19,6 +19,9 @@ import de.ust.skill.ir.UserType
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.Field
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.SetType
 
 trait FieldDeclarationsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -101,7 +104,7 @@ ${
 
           val fieldName = s"$packageName::internal::${knownField(f)}"
           val accessI = s"d[i]->${internalName(f)}"
-          val readI = s"$accessI = ${readType(f.getType)}; // TODO schlicht und ergreifend falsch, weil hier boxen produziert werden"
+          val readI = s"$accessI = ${readType(f.getType, accessI)};"
           s"""
 $fieldName::${knownField(f)}(
         const ::skill::FieldType *const type,
@@ -125,15 +128,20 @@ ${
 
     try {
         if (dynamic_cast<const ::skill::internal::SimpleChunk *>(target)) {
-            for (::skill::SKilLID i = 1 + ((const ::skill::internal::SimpleChunk *) target)->bpo,
-                         high = i + target->count; i != high; i++)
+            ::skill::SKilLID i = 1 + ((const ::skill::internal::SimpleChunk *) target)->bpo;
+            const ::skill::SKilLID high = i + target->count;
+            for (; i != high; i++) {
                 $readI
+            }
         } else {
             //case bci : BulkChunk ⇒
-            for (int i = 0; i < ((const ::skill::internal::BulkChunk *) target)->blockCount; i++) {
-                const auto &b = owner->blocks[i];
-                for(::skill::SKilLID i = 1 + b.bpo, end = i + b.dynamicCount; i != end; i++)
+            for (int j = 0; j < ((const ::skill::internal::BulkChunk *) target)->blockCount; j++) {
+                const auto &b = owner->blocks[j];
+                ::skill::SKilLID i = 1 + b.bpo;
+                const ::skill::SKilLID end = i + b.dynamicCount;
+                for(; i != end; i++) {
                     $readI
+                }
             }
         }
     } catch (::skill::SkillException e) {
@@ -161,6 +169,13 @@ size_t $fieldName::offset() const {${
               """
     return 0; // this field is constant"""
             else {
+              def fastOffset(fieldType : Type) : Boolean = fieldType match {
+                case fieldType : GroundType ⇒ fieldType.getSkillName match {
+                  case "annotation" | "string" | "v64" ⇒ false
+                  case _                               ⇒ true
+                }
+                case _ ⇒ false
+              }
               def offsetCode(fieldType : Type) : String = fieldType match {
 
                 // read next element
@@ -244,7 +259,13 @@ size_t $fieldName::offset() const {${
                 case _                         ⇒ s"""result += type->offset(::skill::box($accessI));"""
               }
 
-              s"""
+              if (fastOffset(f.getType)) {
+                s"""
+    const ::skill::internal::Chunk *target = dataChunks.back();
+    ${offsetCode(f.getType)}"""
+                
+              } else {
+                s"""
     ${mapType(t)}* d = ((${storagePool(t)}*) owner)->data;
     const ::skill::internal::Chunk *target = dataChunks.back();
     size_t result = 0L;
@@ -262,6 +283,7 @@ size_t $fieldName::offset() const {${
         }
     }
     return result;"""
+              }
             }
           }
 }
@@ -273,8 +295,9 @@ void $fieldName::write(::skill::streams::MappedOutStream *out) const {${
     ${mapType(t)}* d = ((${storagePool(t)}*) owner)->data;
     const ::skill::internal::Chunk *target = dataChunks.back();
     if (dynamic_cast<const ::skill::internal::SimpleChunk *>(target)) {
-        for (::skill::SKilLID i = 1 + ((const ::skill::internal::SimpleChunk *) target)->bpo,
-                     high = i + target->count; i != high; i++) {
+        ::skill::SKilLID i = 1 + ((const ::skill::internal::SimpleChunk *) target)->bpo;
+        ::skill::SKilLID high = i + target->count;
+        for (; i != high; i++) {
             ${writeCode(accessI, f)}
         }
     } else {
@@ -312,17 +335,57 @@ bool $fieldName::check() const {${
 
   /**
    * choose a good parse expression
+   *
+   * @note accessI is only used to create inner maps correctly
    */
-  private final def readType(t : Type) : String = t match {
+  private final def readType(t : Type, accessI : String, typ : String = "type") : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
-      case "annotation" ⇒ "type->read(in).annotation"
-      case "string"     ⇒ "type->read(in).string"
+      case "annotation" ⇒ s"$typ->read(in).annotation"
+      case "string"     ⇒ s"$typ->read(in).string"
       case "bool"       ⇒ "in.boolean()"
       case t            ⇒ s"in.$t()"
     }
 
+    case t : ConstantLengthArrayType ⇒ s"((skill::fieldTypes::ConstantLengthArray*)$typ)->read<${mapType(t.getBaseType)}>(in)"
+    case t : VariableLengthArrayType ⇒ s"((skill::fieldTypes::VariableLengthArray*)$typ)->read<${mapType(t.getBaseType)}>(in)"
+    case t : ListType                ⇒ s"((skill::fieldTypes::ListType*)$typ)->read<${mapType(t.getBaseType)}>(in)"
+    case t : SetType                 ⇒ s"((skill::fieldTypes::SetType*)$typ)->read<${mapType(t.getBaseType)}>(in)"
+
+    case t : MapType ⇒
+      s"""nullptr;
+                ${mapType(t)} m = new ${newMapType(t.getBaseTypes.toList)};
+                const auto t1 = (skill::fieldTypes::MapType*)type;
+
+                for(auto idx = in.v64(); idx > 0; idx--) {
+                    auto k1 = ${readType(t.getBaseTypes.get(0), "", s"t1->key")};
+                    ${readInnerMap(t.getBaseTypes.toList.tail, 2)}
+                    (*m)[k1] = v1;
+                }
+                $accessI = m"""
+
     //case t : UserType ⇒ s"    val t = this.t.asInstanceOf[${storagePool(t)}]"
-    case _ ⇒ s"(${mapType(t)})type->read(in).${unbox(t)}"
+    case _ ⇒ s"(${mapType(t)})$typ->read(in).${unbox(t)}"
+  }
+
+  def innerMapType(ts : List[Type]) : String = ts.map(mapType).reduceRight((k, v) ⇒ s"::skill::api::Map<$k, $v>*")
+  def newMapType(ts : List[Type]) : String = {
+    val s = innerMapType(ts)
+    // drop last * because we want to allocate the map itself
+    s.substring(0, s.length - 1)
+  }
+
+  private final def readInnerMap(ts : List[Type], depth : Int) : String = {
+    if (ts.length == 1) s"auto v${depth - 1} = ${readType(ts.head, "", s"t${depth - 1}->value")};"
+    else {
+      s"""${innerMapType(ts)} v${depth - 1} = new ${newMapType(ts)};
+                    const auto t$depth = (skill::fieldTypes::MapType*)(t${depth - 1}->value);
+
+                    for(auto idx$depth = in.v64(); idx$depth > 0; idx$depth--) {
+                        auto k$depth = ${readType(ts.head, "", s"t${depth - 1}->key")};
+                        ${readInnerMap(ts.tail, depth + 1)}
+                        (*v${depth - 1})[k$depth] = v$depth;
+                    }"""
+    }
   }
 
   private final def hex(t : Type, x : Long) : String = {
@@ -358,7 +421,7 @@ bool $fieldName::check() const {${
       case "annotation" | "string" ⇒ s"""auto b = ::skill::box($accessI);
             type->write(out, b);"""
       case "bool" ⇒ s"out->i8($accessI?0xff:0);"
-      case _ ⇒ s"""out->${t.getSkillName}($accessI);"""
+      case _      ⇒ s"""out->${t.getSkillName}($accessI);"""
     }
 
     case t : UserType ⇒ s"""${mapType(t)} v = $accessI;

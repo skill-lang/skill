@@ -32,8 +32,15 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
+    // override IR with projected definitions
+    val IR = this.types.removeSpecialDeclarations.getUsertypes
+
     for (t ← IR; f ← t.getFields) {
-      val accessField = s".asInstanceOf[${mapType(t)}].${escaped("Internal_"+f.getName.camel)}"
+      // the type without the interface projection
+      val fieldActualType = this.types.removeTypedefs.removeEnums.get(t.getSkillName).asInstanceOf[UserType]
+        .getAllFields.find(_.getName == f.getName).map(_.getType).map(mapType).get
+
+      val accessField = s".asInstanceOf[${mapType(t)}].${escaped("Internal_" + f.getName.camel)}"
 
       val out = open(s"api/internal/${knownField(f)}.scala")
       //package
@@ -118,7 +125,7 @@ ${mapKnownReadType(f.getType)}
             var i = c.bpo.toInt
             val high = i + c.count
             while (i != high) {
-              d(i)$accessField = t.read(in)
+              d(i)$accessField = t.read(in).asInstanceOf[$fieldActualType]
               i += 1
             }
           case bci : BulkChunk ⇒
@@ -130,7 +137,7 @@ ${mapKnownReadType(f.getType)}
               var i = b.bpo
               val end = i + b.dynamicCount
               while (i != end) {
-                d(i)$accessField = t.read(in)
+                d(i)$accessField = t.read(in).asInstanceOf[$fieldActualType]
                 i += 1
               }
             }
@@ -213,14 +220,14 @@ ${mapKnownReadType(f.getType)}
   //override def get(i : ${mapType(t)}) = i.${escaped(f.getName.camel)}
   //override def set(i : ${mapType(t)}, v : ${mapType(f.getType)}) = ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
-        else s"i.${escaped(f.getName.camel)} = v"
+        else s"i.${escaped(f.getName.camel)} = v.asInstanceOf[$fieldActualType]"
       }
 
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : ${mapType(f.getType)} = i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)}
   override def setR(i : SkillObject, v : ${mapType(f.getType)}) : Unit = ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
-        else s"i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = v"
+        else s"i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = v.asInstanceOf[$fieldActualType]"
       }
 }
 """)
