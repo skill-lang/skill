@@ -1,6 +1,7 @@
 package de.ust.skill.javacf.mapping
 
 import scala.collection.mutable.ListBuffer
+import de.ust.skill.ir.TypeContext
 
 class Mapping {
 
@@ -12,6 +13,8 @@ class Mapping {
     ntm
   }
   
+  def deriveEquations(fromTc: TypeContext, toTc: TypeContext): List[TypeEquation] = 
+    typeMappings.flatMap { tm => tm.deriveEquations(fromTc, toTc) }.toList
   
   override def toString(): String = typeMappings.map(_.toString()).mkString("\n")
 
