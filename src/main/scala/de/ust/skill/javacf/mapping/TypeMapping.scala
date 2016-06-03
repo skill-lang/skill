@@ -24,7 +24,6 @@ class TypeMapping(skillType: String, javaType: String) {
     val jfields = jtype.getFields.map { x => (x.getName.lower → x) }.toMap
 
     val fieldEquations: List[TypeEquation] = fieldMappings.map(kv ⇒ {
-      println(s"$kv._1 --> $kv._2")
       val sfieldtype = sfields.get(kv._1).get.getType
       val jfieldtype = jfields.get(kv._2).get.getType
       new TypeEquation(sfieldtype, jfieldtype)
