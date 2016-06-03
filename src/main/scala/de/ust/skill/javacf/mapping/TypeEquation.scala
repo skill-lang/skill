@@ -2,7 +2,7 @@ package de.ust.skill.javacf.mapping
 
 import de.ust.skill.ir.Type
 
-class TypeEquation(left: Type, right: Type) {
+class TypeEquation(left: Type, right: Type) extends TypeRule {
 
   def getLeft: Type = left
 
