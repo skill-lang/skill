@@ -16,17 +16,17 @@ class TypeMapping(skillType: String, javaType: String) {
 
   def mapField(skill: String, java: String): Unit = fieldMappings += (skill → java)
 
-  def deriveEquations(fromTc: TypeContext, toTc: TypeContext): List[TypeEquation] = {
+  def deriveEquations(fromTc: TypeContext, toTc: TypeContext): List[TypeRule] = {
     val stype = fromTc.get(skillType).asInstanceOf[UserType]
     val jtype = toTc.get(javaType).asInstanceOf[UserType]
     
     val sfields = stype.getFields.map { x => (x.getName.lower → x) }.toMap
     val jfields = jtype.getFields.map { x => (x.getName.lower → x) }.toMap
 
-    val fieldEquations: List[TypeEquation] = fieldMappings.map(kv ⇒ {
+    val fieldEquations: List[TypeRule] = fieldMappings.map(kv ⇒ {
       val sfieldtype = sfields.get(kv._1).get.getType
       val jfieldtype = jfields.get(kv._2).get.getType
-      new TypeEquation(sfieldtype, jfieldtype)
+      new TypeEquation(sfieldtype, jfieldtype).asInstanceOf[TypeRule]
     }).to
     new TypeEquation(stype, jtype) :: fieldEquations
   }

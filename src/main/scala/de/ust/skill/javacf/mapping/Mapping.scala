@@ -13,7 +13,7 @@ class Mapping {
     ntm
   }
   
-  def deriveEquations(fromTc: TypeContext, toTc: TypeContext): List[TypeEquation] = 
+  def deriveEquations(fromTc: TypeContext, toTc: TypeContext): List[TypeRule] = 
     typeMappings.flatMap { tm => tm.deriveEquations(fromTc, toTc) }.toList
   
   override def toString(): String = typeMappings.map(_.toString()).mkString("\n")
