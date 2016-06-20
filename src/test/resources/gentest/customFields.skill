@@ -24,7 +24,7 @@ Custom {
   "Object" any;
 
   custom ScaLa
-  !modifier "private[this]"
+  !modifier "/* no modifier */"
   "Any" any;
 
   custom cpp

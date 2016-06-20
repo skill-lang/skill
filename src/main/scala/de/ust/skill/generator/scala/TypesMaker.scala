@@ -7,8 +7,7 @@ package de.ust.skill.generator.scala
 
 import java.io.PrintWriter
 
-import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.JavaConversions.bufferAsJavaList
+import scala.collection.JavaConversions._
 
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
@@ -46,7 +45,12 @@ import de.ust.skill.common.scala.SkillID
 import de.ust.skill.common.scala.api.SkillObject
 import de.ust.skill.common.scala.api.Access
 import de.ust.skill.common.scala.api.UnknownObject
-""")
+${(for(t ← IR if t.getBaseType == base;
+        c <- t.getCustomizations if c.language.equals("scala");
+        is <- c.getOptions.toMap.get("import").toArray;
+        i  <- is
+        ) yield s"import $i;\n").mkString}""")
+    
 
 
     for (t ← IR if t.getBaseType == base) {
@@ -83,7 +87,17 @@ ${
 	}
 
 	makeGetterAndSetter(out, t)
+	
+	// custom fields
+    for(c <- t.getCustomizations if c.language.equals("scala")){
+      val mod = c.getOptions.toMap.get("modifier").map(_.head).getOrElse("public")
+      
+      out.write(s"""
+  ${comment(c)}$mod var ${name(c)} : ${c.`type`}; 
+""")
+    }
 
+	// usability methods
     out.write(s"""
   override def prettyString : String = s"${name(t)}(#$$skillID${
     (

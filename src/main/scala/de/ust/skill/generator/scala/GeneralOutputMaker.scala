@@ -19,6 +19,7 @@ import scala.collection.JavaConversions._
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.FieldLike
 
 /**
  * The parent class for all output makers.
@@ -110,7 +111,7 @@ trait GeneralOutputMaker extends Generator {
   protected def storagePool(t : Type) : String = escaped(t.getName.capital + "Pool")
   protected def subPool(t : Type) : String = escaped(t.getName.capital + "SubPool")
 
-  protected def name(f : Field) : String = escaped(f.getName.camel)
+  protected def name(f : FieldLike) : String = escaped(f.getName.camel)
   protected def knownField(f : Field) : String = escaped(s"KnownField_${f.getDeclaredIn.getName.capital()}_${f.getName.camel()}")
 
   /**
