@@ -209,11 +209,11 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
 
     for (t ← defs.collect { case c : DeclarationWithBody ⇒ c }.par) {
       // check duplicate abstract field names?
-      val (custom : List[Customization], regular) = t.body.partition(_.isInstanceOf[Customization])
+      val (custom, regular) = t.body.partition(_.isInstanceOf[Customization])
       if (regular.size != regular.map(_.name).toSet.size)
         throw ParseException(s"Type ${t.name} uses the same name for multiple field like declarations.")
 
-      if (custom.map { x ⇒ (x.name, x.language) }.toSet.size != custom.size)
+      if (custom.asInstanceOf[List[Customization]].map { x ⇒ (x.name, x.language) }.toSet.size != custom.size)
         throw ParseException(s"Type ${t.name} uses the same name for multiple custom field declarations in the same language.")
 
       // check views
