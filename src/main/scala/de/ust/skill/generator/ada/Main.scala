@@ -26,6 +26,7 @@ import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.SingleBaseTypeContainer
 import de.ust.skill.ir.ContainerType
+import de.ust.skill.ir.FieldLike
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -52,7 +53,7 @@ class Main extends FakeMain
   // fix gnat bug
   lineLength = 79
   override def comment(d : Declaration) : String = d.getComment.format("", "   -- ", lineLength, "   ")
-  override def comment(f : Field) : String = f.getComment.format("", "   -- ", lineLength, "   ")
+  override def comment(f : FieldLike) : String = f.getComment.format("", "   -- ", lineLength, "   ")
 
   /**
    * Translates the types into the skill type id's.
@@ -233,6 +234,9 @@ class Main extends FakeMain
 Opitions (ada):
   (none)
 """)
+
+  override def customFieldManual = """
+!with string+    Argument strings are added to the head of the generated file and each included with a with."""
 
   override protected def defaultValue(f : Field) = {
     def defaultValue(t : Type) = t.getSkillName() match {

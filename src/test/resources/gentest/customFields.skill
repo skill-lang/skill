@@ -1,4 +1,4 @@
-#
+#! custom
 # custom field test code; defines data structures in languages.
 #
 # @note The language name is case-insensitive.
@@ -17,9 +17,10 @@ Custom {
   !say "Rlyeh"
   "<not chechked> can contain anything ☢@Πᚠ!" any;
 
+  /** some comment */
   custom java
   !import "java.lang.Object"
-  !modifier "public synchronized"
+  !modifier "public transient"
   "Object" any;
 
   custom ScaLa

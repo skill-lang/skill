@@ -32,7 +32,7 @@ class Main extends FakeMain
 
   lineLength = 80
   override def comment(d : Declaration) : String = d.getComment.format("/**\n", " * ", lineLength, " */\n")
-  override def comment(f : Field) : String = f.getComment.format("/**\n", "   * ", lineLength, "   */\n  ")
+  override def comment(f : FieldLike) : String = f.getComment.format("/**\n", "   * ", lineLength, "   */\n  ")
 
   /**
    * Translates the types into Ada types.
@@ -73,6 +73,8 @@ class Main extends FakeMain
 Opitions (skill):
   drop: (interfaces|enums|typedefs|views|all)  drops the argument kind from the specification, defaults is none
 """)
+
+  override def customFieldManual = "will keep all custom fields as-is"
 
   // unused
   override protected def defaultValue(f : Field) = throw new NoSuchMethodError

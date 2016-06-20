@@ -13,6 +13,7 @@ import de.ust.skill.ir.Restriction;
 import de.ust.skill.ir.Type;
 import de.ust.skill.ir.TypeContext;
 import de.ust.skill.ir.UserType;
+import de.ust.skill.ir.View;
 
 /**
  * Substitutes interfaces.
@@ -74,7 +75,8 @@ public class InterfaceSubstitution extends Substitution {
 
         UserType superType = findSuperType(t);
 
-        d.initialize((UserType) substitute(tc, superType), Collections.emptyList(), fields);
+        d.initialize((UserType) substitute(tc, superType), Collections.emptyList(), fields, Collections.<View> emptyList(),
+				t.getCustomizations());
     }
 
     private static UserType findSuperType(UserType t) {

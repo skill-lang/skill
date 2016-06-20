@@ -27,6 +27,7 @@ import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.View
 import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.FieldLike
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -52,7 +53,7 @@ class Main extends FakeMain
 
   lineLength = 120
   override def comment(d : Declaration) : String = d.getComment.format("/**\n", " * ", lineLength, " */\n")
-  override def comment(f : Field) : String = f.getComment.format("/**\n", "   * ", lineLength, "   */\n  ")
+  override def comment(f : FieldLike) : String = f.getComment.format("/**\n", "   * ", lineLength, "   */\n  ")
 
   /**
    * Translates types into scala type names.
@@ -152,6 +153,10 @@ class Main extends FakeMain
 Opitions (scala):
   revealSkillID: true/false  if set to true, the generated binding will reveal SKilL IDs in the API
 """)
+
+  override def customFieldManual = """
+!import string+    A list of imports that will be added where required.
+!modifier string   A modifier, that will be put in front of the variable declaration."""
 
   override protected def defaultValue(f : Field) = f.getType match {
     case t : GroundType ⇒ t.getSkillName() match {
