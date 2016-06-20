@@ -1,0 +1,32 @@
+#
+# custom field test code; defines data structures in languages.
+#
+# @note The language name is case-insensitive.
+
+/**
+ * Demonstration of the capabilities of custom fields.
+ *
+ * @note Despite the appearance in the specification, for any given language, the Type has at most one field.
+ */
+Custom {
+  custom ada
+  !with "System.Address"
+  "System.Address" any;
+
+  custom Cthulhu
+  !say "Rlyeh"
+  "<not chechked> can contain anything ☢@Πᚠ!" any;
+
+  custom java
+  !import "java.lang.Object"
+  !modifier "public synchronized"
+  "Object" any;
+
+  custom ScaLa
+  !modifier "private[this]"
+  "Any" any;
+
+  custom cpp
+  !include "cstdint"
+  "uint8_t*" any;
+}
