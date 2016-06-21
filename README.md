@@ -15,4 +15,4 @@ Ada 2012 |auto,append,documented,escaped,lazy| yes |commonAda| incomplete resour
 C 99 |mainly core features| does not compile | - | SKilL TR13, not maintained
 C++ 11 |documented,escaped,lazy| yes | commonC++ | 
 Java 8 |auto,append,customs,documented,escaped,interfaces,lazy| yes | commonJVM, commonJava | some multi-state support, last Arch.8 implementation
-Scala 2.11 |auto,append,customs,documented,escaped,lazy| yes | commonJVM, commonScala | most complete implementation
+Scala 2.11 |auto,append,customs,documented,escaped,interfaces,lazy| yes | commonJVM, commonScala | most complete implementation
