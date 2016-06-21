@@ -93,7 +93,7 @@ ${
       val mod = c.getOptions.toMap.get("modifier").map(_.head).getOrElse("public")
       
       out.write(s"""
-  ${comment(c)}$mod var ${name(c)} : ${c.`type`}; 
+  ${comment(c)}$mod var ${name(c)} : ${c.`type`} = _; 
 """)
     }
 
