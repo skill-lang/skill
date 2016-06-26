@@ -83,7 +83,7 @@ Opitions:
       if (args.contains("--requiresEscaping"))
         parseOptions(args.to, known)
 
-      val (header, packageName, languages) = parseOptions(args.view(0, args.length - 2).to, known)
+      val (header, packageName, languages, optionalOpts) = parseOptions(args.view(0, args.length - 2).to, known)
 
       assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
 
@@ -126,6 +126,7 @@ Opitions:
     var packageName = List[String]()
     val header = new HeaderInfo()
     val selectedLanguages = new HashMap[String, Generator]()
+    val optionalOpts = new HashMap[String, String]
 
     while (args.hasNext) args.next match {
 
@@ -168,6 +169,7 @@ Opitions:
           println(checkEscaping(selectedLanguages.keySet.head, words))
           throw new DoneException;
         }
+      case "-M" ⇒ optionalOpts += ("mappingFile" → args.next)
 
       case unknown ⇒ error(s"unknown option: $unknown")
     }
@@ -175,7 +177,7 @@ Opitions:
     if (selectedLanguages.isEmpty)
       selectedLanguages ++= known
 
-    (header, packageName, selectedLanguages)
+    (header, packageName, selectedLanguages, optionalOpts)
   }
 
   def checkEscaping(language : String, args : Array[String]) : String = {
