@@ -29,11 +29,14 @@ class IRMapper(classpaths: List[String]) {
 
   val tc = new TypeContext
 
-  val javaObjectType = pool.get("java.lang.Object")
-
+  /** Types we've seen before. */
   val knownTypes = new HashMap[CtClass, UserType];
 
+  /** Types that are already mapped. */
   val mappedTypes = new HashMap[CtClass, UserType];
+
+  /** Basic types that must always be around. */
+  val javaObjectType = pool.get("java.lang.Object")
 
   val boolt = CtClass.booleanType
   val Boolt = pool.get("java.lang.Boolean")
@@ -50,10 +53,6 @@ class IRMapper(classpaths: List[String]) {
   val doublet = CtClass.doubleType
   val Doublet = pool.get("java.lang.Double")
   val stringt = pool.get("java.lang.String")
-
-  val ilistt = pool.get("java.util.List")
-  val isett = pool.get("java.util.Set")
-  val imapt = pool.get("java.util.Map")
 
   /**
    * Takes a list of class names and returns a TypeContext representing containing the IR of those types.
