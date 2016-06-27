@@ -10,7 +10,6 @@ import de.ust.skill.generator.common.Generator
 import de.ust.skill.parser.Parser
 import java.io.File
 import de.ust.skill.generator.common.HeaderInfo
-import scala.annotation.tailrec
 import scala.collection.mutable.HashMap
 import scala.collection.JavaConversions._
 import de.ust.skill.ir.TypeContext
@@ -87,9 +86,19 @@ Opitions:
 
       assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
 
-      // invoke generators
-      val tc = Parser.process(new File(skillPath))
+      // skill TypeContext
+      // this is either the result of parsing a skill file or an empty type context if "-" is specified
+      val tc = if (skillPath != "-") Parser.process(new File(skillPath)) else new TypeContext
 
+      // process mapping
+      if (languages contains "javaForeign") {
+        if (optionalOpts contains "mappingFile")
+          JavaForeign.run(optionalOpts("mapping"), tc)
+        else
+          error("-M option is missing for javaForeign")
+      }
+
+      // invoke generators
       println(s"Parsed $skillPath -- found ${tc.allTypeNames.size - (new TypeContext().allTypeNames.size)} types.")
       println(s"Generating sources into ${new File(outPath).getAbsolutePath()}")
 
