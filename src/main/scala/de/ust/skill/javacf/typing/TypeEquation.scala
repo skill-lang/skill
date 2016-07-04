@@ -1,4 +1,4 @@
-package de.ust.skill.javacf.mapping
+package de.ust.skill.javacf.typing
 
 import de.ust.skill.ir.Type
 

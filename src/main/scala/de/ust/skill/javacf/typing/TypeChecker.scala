@@ -1,10 +1,11 @@
-package de.ust.skill.javacf.mapping
+package de.ust.skill.javacf.typing
+
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.Set
 
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.TypeContext
-import scala.collection.JavaConverters._
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.Set
 
 class TypeChecker {
 
@@ -12,16 +13,16 @@ class TypeChecker {
     val fromTypes: Set[Type] = collection.mutable.Set() ++ from.getUsertypes.asScala
     val toTypes: Set[Type] = collection.mutable.Set() ++ to.getUsertypes.asScala
     val checked = HashMap.empty[Type, Type]
-    
-        checked += (from.get("bool") → to.get("bool"))
-        checked += (from.get("i8") → to.get("i8"))
-        checked += (from.get("i16") → to.get("i16"))
-        checked += (from.get("i32") → to.get("i32"))
-        checked += (from.get("i64") → to.get("i64"))
-        //checked += (from.get("v64") → to.get("v64")) ??
-        checked += (from.get("f32") → to.get("f32"))
-        checked += (from.get("f64") → to.get("f64"))
-        checked += (from.get("string") → to.get("string"))
+
+    checked += (from.get("bool") → to.get("bool"))
+    checked += (from.get("i8") → to.get("i8"))
+    checked += (from.get("i16") → to.get("i16"))
+    checked += (from.get("i32") → to.get("i32"))
+    checked += (from.get("i64") → to.get("i64"))
+    //checked += (from.get("v64") → to.get("v64")) ??
+    checked += (from.get("f32") → to.get("f32"))
+    checked += (from.get("f64") → to.get("f64"))
+    checked += (from.get("string") → to.get("string"))
 
     rules.foreach {
       _ match {
