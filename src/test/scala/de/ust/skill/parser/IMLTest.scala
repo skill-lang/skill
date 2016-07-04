@@ -60,7 +60,7 @@ class IMLTest extends FunSuite {
 
   test("create java") {
     if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "iml", "-L", "java", "-O@java:suppressWarnings=true", specPath,
+      CommandLine.main(Array("-p", "siml", "-L", "java", "-O@java:suppressWarnings=true", specPath,
         System.getProperty("user.home")+"/Desktop/iml.sf/generated"))
   }
 
@@ -73,6 +73,12 @@ class IMLTest extends FunSuite {
   test("create skill") {
     if (Files.exists(filename.toPath))
       CommandLine.main(Array("-p", "iml", "-L", "skill", specPath,
+        System.getProperty("user.home")+"/Desktop/iml.sf/generated"))
+  }
+
+  test("create ecore") {
+    if (Files.exists(filename.toPath))
+      CommandLine.main(Array("-p", "iml", "-L", "ecore", specPath,
         System.getProperty("user.home")+"/Desktop/iml.sf/generated"))
   }
 }
