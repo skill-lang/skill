@@ -15,7 +15,8 @@ object JavaForeign {
   def run(mappingFile: String, skillTc: TypeContext): Unit = {
 
     val mappingParser = new MappingParser()
-    println(mappingParser.parse(mappingParser.mappingFile, new FileReader(mappingFile)))
+    val parseResult = mappingParser.parse(mappingParser.mappingFile, new FileReader(mappingFile))
+    println(parseResult.get.mkString("\n\n"))
     //val mapper = new IRMapper(List("../test-cases/bin"))
     //val tc = mapper.mapClasses(List("simple.SimpleType", "simplereference.SimpleReference"))
   }
