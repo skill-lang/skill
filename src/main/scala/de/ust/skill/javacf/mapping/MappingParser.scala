@@ -16,6 +16,8 @@ class MappingParser extends RegexParsers {
       new FieldMappingRule(skill, java)
   }
 
-  def mappingFile: Parser[List[ExplicitMappingRule]] = rep(explicitMapping) ^^ { case x => x }
+  def mapping: Parser[MappingRule] = explicitMapping
+
+  def mappingFile: Parser[List[MappingRule]] = rep(mapping) ^^ { case x => x }
 
 }
