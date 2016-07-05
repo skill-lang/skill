@@ -91,9 +91,9 @@ Opitions:
       val tc = if (skillPath != "-") Parser.process(new File(skillPath)) else new TypeContext
 
       // process mapping
-      if (languages contains "javaForeign") {
+      if (languages contains "javaforeign") {
         if (optionalOpts contains "mappingFile")
-          JavaForeign.run(optionalOpts("mapping"), tc)
+          JavaForeign.run(optionalOpts("mappingFile"), tc)
         else
           error("-M option is missing for javaForeign")
       }
