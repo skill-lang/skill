@@ -94,7 +94,7 @@ Opitions:
       // process mapping
       if (languages contains "javaforeign") {
         if (optionalOpts contains "mappingFile")
-          JavaForeign.run(optionalOpts("mappingFile"), tc)
+          JavaForeign.run(optionalOpts("mappingFile"), tc, foreignSources)
         else
           error("-M option is missing for javaForeign")
       }
@@ -190,7 +190,7 @@ Opitions:
     if (selectedLanguages.isEmpty)
       selectedLanguages ++= known
 
-    (header, packageName, selectedLanguages, foreignSources, optionalOpts)
+    (header, packageName, selectedLanguages, foreignSources.toList, optionalOpts)
   }
 
   def checkEscaping(language : String, args : Array[String]) : String = {

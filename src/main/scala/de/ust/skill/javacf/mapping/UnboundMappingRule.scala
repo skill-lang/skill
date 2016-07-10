@@ -5,4 +5,5 @@ class UnboundMappingRule(javaType: String, fieldNames: List[String], total: Bool
   override def toString(): String = if (total)
     s"new! $javaType;" else s"new $javaType {\n${fieldNames.mkString(";\n")}\n}"
 
+  override def getJavaTypeName(): String = javaType;
 }

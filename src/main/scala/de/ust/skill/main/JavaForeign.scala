@@ -12,13 +12,23 @@ import java.io.FileReader
 object JavaForeign {
 
   /** Runner for java-foreign specific stuff. */
-  def run(mappingFile: String, skillTc: TypeContext): Unit = {
+  def run(mappingFile: String, skillTc: TypeContext, foreignSources: List[String]): Unit = {
 
     val mappingParser = new MappingParser()
-    val parseResult = mappingParser.parse(mappingParser.mappingFile, new FileReader(mappingFile))
-    println(parseResult.get.mkString("\n\n"))
-    //val mapper = new IRMapper(List("../test-cases/bin"))
-    //val tc = mapper.mapClasses(List("simple.SimpleType", "simplereference.SimpleReference"))
+    val parserResult = mappingParser.parse(mappingParser.mappingFile, new FileReader(mappingFile))
+    val mappingRules = parserResult.get
+    println("****** MAPPING *******")
+    println(mappingRules.mkString("\n\n"))
+    println("**********************\n\n")
+
+    // get list of java class names that we want to map
+    val javaTypeNames = mappingRules.map { _.getJavaTypeName }
+    println("****** Classes *******")
+    println(javaTypeNames.mkString("\n"))
+    println("**********************\n\n")
+
+    val mapper = new IRMapper(foreignSources)
+    val foreignTc = mapper.mapClasses(javaTypeNames)
   }
 
 }

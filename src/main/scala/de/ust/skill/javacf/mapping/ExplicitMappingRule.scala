@@ -11,4 +11,6 @@ class ExplicitMappingRule(fromSkillType: String, toJavaType: String, fieldMappin
     s"map $fromSkillType -> $toJavaType {\n${fieldMappings.mkString("\n")}\n}"
   }
 
+  override def getJavaTypeName(): String = toJavaType;
+
 }
