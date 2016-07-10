@@ -17,7 +17,11 @@ class MappingParser extends RegexParsers {
   }
 
   def unboundMapping: Parser[UnboundMappingRule] = "new" ~ name ~ "{" ~ fieldList ~ "}" ^^ {
-    case _ ~ java ~ _ ~ fields ~ _ => new UnboundMappingRule(java, fields)
+    case _ ~ java ~ _ ~ fields ~ _ => new UnboundMappingRule(java, fields, false)
+  }
+
+  def unboundTotalMapping: Parser[UnboundMappingRule] = "new!" ~ name ~ ";" ^^ {
+    case _ ~ java ~ _ => new UnboundMappingRule(java, List(), true);
   }
 
   def fieldMapping: Parser[FieldMappingRule] = name ~ "->" ~ name ~ ";" ^^ {
@@ -27,7 +31,7 @@ class MappingParser extends RegexParsers {
 
   def fieldList: Parser[List[String]] = rep(name ~ ";" ^^ { case n ~ _ => n })
 
-  def mapping: Parser[MappingRule] = explicitMapping | implicitMapping | unboundMapping
+  def mapping: Parser[MappingRule] = explicitMapping | implicitMapping | unboundMapping | unboundTotalMapping
 
   def mappingFile: Parser[List[MappingRule]] = rep(mapping)
 
