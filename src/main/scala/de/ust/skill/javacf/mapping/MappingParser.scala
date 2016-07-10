@@ -16,13 +16,19 @@ class MappingParser extends RegexParsers {
     case _ ~ skill ~ _ ~ java ~ _ ~ fields ~ _ => new ExplicitMappingRule(skill, java, fields)
   }
 
+  def unboundMapping: Parser[UnboundMappingRule] = "new" ~ name ~ "{" ~ fieldList ~ "}" ^^ {
+    case _ ~ java ~ _ ~ fields ~ _ => new UnboundMappingRule(java, fields)
+  }
+
   def fieldMapping: Parser[FieldMappingRule] = name ~ "->" ~ name ~ ";" ^^ {
     case skill ~ _ ~ java ~ _ =>
       new FieldMappingRule(skill, java)
   }
 
-  def mapping: Parser[MappingRule] = explicitMapping | implicitMapping
+  def fieldList: Parser[List[String]] = rep(name ~ ";" ^^ { case n ~ _ => n })
 
-  def mappingFile: Parser[List[MappingRule]] = rep(mapping) ^^ { case x => x }
+  def mapping: Parser[MappingRule] = explicitMapping | implicitMapping | unboundMapping
+
+  def mappingFile: Parser[List[MappingRule]] = rep(mapping)
 
 }
