@@ -45,7 +45,7 @@ One can specify an implicit type mapping by using the implicit keyword:
 ## Implicit total mapping
 To make the implicit mapping total, use the 'total' keyword instead:
 
-	total mySkillType -> my.ecactly.matching.JavaType;
+	implicit! mySkillType -> my.ecactly.matching.JavaType;
 
 ## Explicit mapping
 Explicit mappings are specified by the 'map' keyword followed by a list
@@ -77,4 +77,4 @@ field list:
 Unbound total mappings are specified using the total' keyword without a
 mapping afterwards:
 
-	total com.example.SomeType;
+	new! com.example.SomeType;

@@ -7,9 +7,9 @@ class MappingParser extends RegexParsers {
 
   def name: Parser[String] = """[a-zA-Z.0-9]+""".r ^^ { _.toString() }
 
-  def implicitMapping: Parser[ImplicitMappingRule] = ("implicit" | "total") ~ name ~ "->" ~ name ~ ";" ^^ {
+  def implicitMapping: Parser[ImplicitMappingRule] = ("implicit!" | "implicit") ~ name ~ "->" ~ name ~ ";" ^^ {
     case "implicit" ~ skill ~ _ ~ java ~ _ => new ImplicitMappingRule(skill, java, false)
-    case "total" ~ skill ~ _ ~ java ~ _ => new ImplicitMappingRule(skill, java, true)
+    case "implicit!" ~ skill ~ _ ~ java ~ _ => new ImplicitMappingRule(skill, java, true)
   }
 
   def explicitMapping: Parser[ExplicitMappingRule] = "map" ~ name ~ "->" ~ name ~ "{" ~ rep(fieldMapping) ~ "}" ^^ {
