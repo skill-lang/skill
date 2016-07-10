@@ -13,6 +13,7 @@ import de.ust.skill.generator.common.HeaderInfo
 import scala.collection.mutable.HashMap
 import scala.collection.JavaConversions._
 import de.ust.skill.ir.TypeContext
+import scala.collection.mutable.ListBuffer
 
 /**
  * Command line interface to the skill compilers
@@ -82,7 +83,7 @@ Opitions:
       if (args.contains("--requiresEscaping"))
         parseOptions(args.to, known)
 
-      val (header, packageName, languages, optionalOpts) = parseOptions(args.view(0, args.length - 2).to, known)
+      val (header, packageName, languages, foreignSources, optionalOpts) = parseOptions(args.view(0, args.length - 2).to, known)
 
       assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
 
@@ -135,6 +136,7 @@ Opitions:
     var packageName = List[String]()
     val header = new HeaderInfo()
     val selectedLanguages = new HashMap[String, Generator]()
+    val foreignSources = new ListBuffer[String]()
     val optionalOpts = new HashMap[String, String]
 
     while (args.hasNext) args.next match {
@@ -180,13 +182,15 @@ Opitions:
         }
       case "-M" ⇒ optionalOpts += ("mappingFile" → args.next)
 
+      case "-F" => foreignSources += args.next()
+
       case unknown ⇒ error(s"unknown option: $unknown")
     }
 
     if (selectedLanguages.isEmpty)
       selectedLanguages ++= known
 
-    (header, packageName, selectedLanguages, optionalOpts)
+    (header, packageName, selectedLanguages, foreignSources, optionalOpts)
   }
 
   def checkEscaping(language : String, args : Array[String]) : String = {
