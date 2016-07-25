@@ -26,7 +26,7 @@ class GenericTests extends FunSuite with BeforeAndAfterAll {
 
   def deleteOutDir(out: String) {
     import scala.reflect.io.Directory
-    Directory(new File("testsuites/javaForeign/src/main/java/", out)).deleteRecursively
+    Directory(new File("testsuites/javaforeign/src/main/java/", out)).deleteRecursively
   }
 
   def makeGenBinaryTests(name: String): Unit = {
@@ -54,7 +54,7 @@ class GenericTests extends FunSuite with BeforeAndAfterAll {
   def finalizeTests(): Unit = {}
 
   final def makeTest(path: File, name: String, mappingFile: File, skillFilePath: String) = test("generic: " + name) {
-    deleteOutDir(name)
+    deleteOutDir(name + "skill")
 
     CommandLine.exit = { s ⇒ throw (new Error(s)) }
 
