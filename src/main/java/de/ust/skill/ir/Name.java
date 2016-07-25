@@ -20,10 +20,16 @@ final public class Name implements Comparable<Name> {
      */
     final private String skillName;
     final private List<String> parts;
+    final private String packagePath;
 
     public Name(List<String> parts, String skillName) {
+        this(parts, skillName, "");
+    }
+
+    public Name(List<String> parts, String skillName, String packagePath) {
         this.parts = Collections.unmodifiableList(parts);
         this.skillName = skillName;
+        this.packagePath = packagePath;
     }
 
     /**
@@ -36,6 +42,7 @@ final public class Name implements Comparable<Name> {
         parts.add(skillName);
         this.parts = Collections.unmodifiableList(parts);
         this.skillName = skillName;
+        this.packagePath = "";
     }
 
     public String getSkillName() {
@@ -144,4 +151,9 @@ final public class Name implements Comparable<Name> {
 
         return Character.toUpperCase(arg.charAt(0)) + arg.substring(1);
     }
+
+	public String getPackagePath() {
+		return packagePath;
+	}
+
 }
