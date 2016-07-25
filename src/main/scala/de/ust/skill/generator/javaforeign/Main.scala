@@ -42,7 +42,6 @@ class Main extends FakeMain
     with FileParserMaker
     with StateMaker
     with SkillFileMaker
-    with TypesMaker
     with InterfacesMaker
     with DependenciesMaker {
 
