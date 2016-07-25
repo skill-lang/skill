@@ -12,7 +12,7 @@ import java.io.FileReader
 object JavaForeign {
 
   /** Runner for java-foreign specific stuff. */
-  def run(mappingFile: String, skillTc: TypeContext, foreignSources: List[String]): Unit = {
+  def run(mappingFile: String, skillTc: TypeContext, foreignSources: List[String]): TypeContext = {
 
     val mappingParser = new MappingParser()
     val parserResult = mappingParser.parse(mappingParser.mappingFile, new FileReader(mappingFile))
@@ -29,6 +29,8 @@ object JavaForeign {
 
     val mapper = new IRMapper(foreignSources)
     val foreignTc = mapper.mapClasses(javaTypeNames)
+
+    foreignTc
   }
 
 }

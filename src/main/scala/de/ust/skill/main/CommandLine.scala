@@ -92,12 +92,11 @@ Opitions:
       val tc = if (skillPath != "-") Parser.process(new File(skillPath)) else new TypeContext
 
       // process mapping
+      val jforeignTc =
       if (languages contains "javaforeign") {
-        if (optionalOpts contains "mappingFile")
+        if (!optionalOpts.contains("mappingFile")) error("-M option is missing for javaForeign")
           JavaForeign.run(optionalOpts("mappingFile"), tc, foreignSources)
-        else
-          error("-M option is missing for javaForeign")
-      }
+      } else null;
 
       // invoke generators
       println(s"Parsed $skillPath -- found ${tc.allTypeNames.size - (new TypeContext().allTypeNames.size)} types.")
@@ -105,7 +104,7 @@ Opitions:
 
       val failures = HashMap[String, Exception]()
       for ((n, m) ← languages) {
-        m.setTC(tc)
+        m.setTC(if (n == "javaforeign") jforeignTc else tc)
         m.setPackage(packageName)
         m.headerInfo = header
         m.outPath = outPath+"/"+n
