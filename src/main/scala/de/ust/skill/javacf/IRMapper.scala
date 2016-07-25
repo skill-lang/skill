@@ -80,7 +80,7 @@ class IRMapper(classpaths: List[String]) {
     val comment = new Comment()
     comment.init(List().asJava)
 
-    val ntype = UserType.newDeclaration(tc, new Name(List(clazz.getSimpleName).asJava, clazz.getSimpleName), comment,
+    val ntype = UserType.newDeclaration(tc, new Name(List(clazz.getSimpleName).asJava, clazz.getSimpleName, clazz.getPackageName), comment,
       new java.util.ArrayList, new java.util.ArrayList)
     knownTypes += (clazz → ntype)
     if (clazz.getSuperclass != javaObjectType) collect(clazz.getSuperclass)

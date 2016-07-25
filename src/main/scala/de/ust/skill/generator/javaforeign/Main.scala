@@ -76,7 +76,7 @@ class Main extends FakeMain
     case t : SetType                 ⇒ s"$SetTypeName<${mapType(t.getBaseType(), true)}>"
     case t : MapType                 ⇒ t.getBaseTypes().map(mapType(_, true)).reduceRight((k, v) ⇒ s"$MapTypeName<$k, $v>")
 
-    case t : Declaration             ⇒ packagePrefix + name(t)
+    case t : Declaration             ⇒ userPackagePrefix(t) + name(t)
 
     case _                           ⇒ throw new IllegalStateException(s"Unknown type $t")
   }

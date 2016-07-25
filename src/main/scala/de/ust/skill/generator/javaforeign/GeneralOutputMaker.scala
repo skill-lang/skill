@@ -98,7 +98,11 @@ trait GeneralOutputMaker extends Generator {
    * Translation of a field to its representation in the source code
    */
   protected def name(f : Field) : String = escaped(f.getName.camel)
-
+  /**
+   * Translates a possible non-empty package name into a package prefix.
+   */
+  protected def userPackagePrefix(t: Type) : String = if (t.getName.getPackagePath.size > 0)
+    t.getName.getPackagePath + "." else ""
   /**
    * Assume a package prefix provider.
    */
