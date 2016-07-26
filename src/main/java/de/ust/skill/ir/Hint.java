@@ -13,7 +13,7 @@ final public class Hint {
     public static enum Type {
         // note: names need to be lowercase, because this enum will be accessed
         // using the valueOf method
-        owner, provider, removeunknownrestrictions, constantmutator, mixin, flat, unique, pure, distributed, ondemand,
+        owner, provider, removerestrictions, constantmutator, mixin, flat, unique, pure, distributed, ondemand,
         monotone, readonly, ignore, hide, pragma;
     }
 
@@ -28,7 +28,7 @@ final public class Hint {
     static final Hint ondemand = new Hint(Type.ondemand);
     static final Hint pure = new Hint(Type.pure);
     static final Hint readonly = new Hint(Type.readonly);
-    static final Hint removeUnknownRestrictions = new Hint(Type.removeunknownrestrictions);
+    static final Hint removeRestrictions = new Hint(Type.removerestrictions);
     static final Hint unique = new Hint(Type.unique);
 
     private final Type type;
@@ -84,8 +84,8 @@ final public class Hint {
             return pure;
         case readonly:
             return readonly;
-        case removeunknownrestrictions:
-            return removeUnknownRestrictions;
+        case removerestrictions:
+            return removeRestrictions;
         case unique:
             return unique;
         default:

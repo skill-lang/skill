@@ -35,7 +35,7 @@ class ProjectionTest extends FunSuite {
   for (f ← (new File("src/test/resources/skill")).listFiles if f.getName.endsWith(".skill"))
     test(s"${f.getName} - none")(check(f.getName, "none/"+f.getName.replace(".skill", "")))
 
-  // ordinary spec
+  // ordinary spec without interfaces
   for (f ← (new File("src/test/resources/skill")).listFiles if f.getName.endsWith(".skill"))
     test(s"${f.getName} - interfaces")(
       check(f.getName, "interface/"+f.getName.replace(".skill", ""), Array("-O@skill:drop=interfaces"))
