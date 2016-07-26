@@ -1,0 +1,3 @@
+EncodedString extends string {
+  string encoding;
+}

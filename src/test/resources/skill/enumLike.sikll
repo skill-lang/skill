@@ -1,0 +1,6 @@
+@abstract Weekday {
+  string name;
+  i8 index;
+}
+@singleton Monday : Weekday {}
+@singleton Tuesday : Weekday {}

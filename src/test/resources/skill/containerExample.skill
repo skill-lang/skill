@@ -1,0 +1,15 @@
+/** E.g. a user in a social network. */
+User {
+  string name;
+  
+  /** friends of this user */
+  list<User> friends;
+  
+  /** default values of permissions can be overriden on a per-user basis. The value is stored explicitly to ensure that the override survives changes of the permissions default value. */
+  map<User, Permission, Bool> permissionOverrides;
+}
+
+Permission {
+  string name;
+  bool default;
+}

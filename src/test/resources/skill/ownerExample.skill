@@ -1,0 +1,9 @@
+!owner(ColorOwner)
+Color { i8 r; i8 g; i8 b; }
+
+/* A GraphOwner modifies graphs. ColorOwner modifies colored graphs. */
+!owner(ColorOwner, GraphOwner)
+Node {
+  Color color;
+  set<Node> edges;
+}

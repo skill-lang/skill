@@ -1,0 +1,6 @@
+enum Weekday {
+  Monday, Tuesday;
+  
+  string name;
+  i8 index;
+}

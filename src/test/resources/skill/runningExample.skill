@@ -1,0 +1,32 @@
+/** A location in a file pointing to a character in that file. Assumes ordinary text files. */
+Location {
+
+  /** the line of the character starting from 0 */
+  i16 line;
+  
+  /** the column of the character starting from 0 */
+  i16 column;
+  
+  /** the file containing the location */
+  File path;
+}
+
+/** A range of characters in a file. */
+Range {
+
+  /** first character; inclusive */
+  Location begin;
+  
+  /** last character; exclusive */
+  Location end;
+}
+
+/** A hierarchy of file/directory names. */
+File {
+
+  /** Name of this file/directory. */
+  string name;
+
+  /** NULL iff root directory. */
+  File directory;
+}
