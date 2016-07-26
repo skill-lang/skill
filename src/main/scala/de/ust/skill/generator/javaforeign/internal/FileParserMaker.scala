@@ -17,18 +17,18 @@ trait FileParserMaker extends GeneralOutputMaker {
 import java.util.Collections;
 import java.util.HashSet;
 
-import de.ust.skill.common.java.api.SkillException;
-import de.ust.skill.common.java.api.SkillFile.Mode;
-import de.ust.skill.common.java.internal.BasePool;
-import de.ust.skill.common.java.internal.ParseException;
-import de.ust.skill.common.java.internal.SkillObject;
-import de.ust.skill.common.java.internal.StoragePool;
-import de.ust.skill.common.java.restrictions.TypeRestriction;
+import de.ust.skill.common.jforeign.api.SkillException;
+import de.ust.skill.common.jforeign.api.SkillFile.Mode;
+import de.ust.skill.common.jforeign.internal.BasePool;
+import de.ust.skill.common.jforeign.internal.ParseException;
+import de.ust.skill.common.jforeign.internal.SkillObject;
+import de.ust.skill.common.jforeign.internal.StoragePool;
+import de.ust.skill.common.jforeign.restrictions.TypeRestriction;
 import de.ust.skill.common.jvm.streams.FileInputStream;
 
 ${
   suppressWarnings
-}final public class FileParser extends de.ust.skill.common.java.internal.FileParser<SkillState> {
+}final public class FileParser extends de.ust.skill.common.jforeign.internal.FileParser<SkillState> {
 
     public final SkillState state;
 

@@ -32,15 +32,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import de.ust.skill.common.java.api.Access;
-import de.ust.skill.common.java.api.FieldDeclaration;
-import de.ust.skill.common.java.api.SkillException;
-import de.ust.skill.common.java.internal.BasePool;
-import de.ust.skill.common.java.internal.SkillObject;
-import de.ust.skill.common.java.internal.StoragePool;
-import de.ust.skill.common.java.internal.StringPool;
-import de.ust.skill.common.java.internal.fieldTypes.Annotation;
-import de.ust.skill.common.java.internal.fieldTypes.StringType;
+import de.ust.skill.common.jforeign.api.Access;
+import de.ust.skill.common.jforeign.api.FieldDeclaration;
+import de.ust.skill.common.jforeign.api.SkillException;
+import de.ust.skill.common.jforeign.internal.BasePool;
+import de.ust.skill.common.jforeign.internal.SkillObject;
+import de.ust.skill.common.jforeign.internal.StoragePool;
+import de.ust.skill.common.jforeign.internal.StringPool;
+import de.ust.skill.common.jforeign.internal.fieldTypes.Annotation;
+import de.ust.skill.common.jforeign.internal.fieldTypes.StringType;
 import de.ust.skill.common.jvm.streams.FileInputStream;
 
 import ${packagePrefix}api.SkillFile;
@@ -53,7 +53,7 @@ import ${packagePrefix}api.SkillFile;
  */
 ${
   suppressWarnings
-}public final class SkillState extends de.ust.skill.common.java.internal.SkillState implements SkillFile {
+}public final class SkillState extends de.ust.skill.common.jforeign.internal.SkillState implements SkillFile {
 
     // types by skill name
     private final HashMap<String, StoragePool<?, ?>> poolByName;

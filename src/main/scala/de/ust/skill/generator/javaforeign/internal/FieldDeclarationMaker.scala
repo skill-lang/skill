@@ -50,17 +50,17 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
 import java.io.IOException;
 import java.util.Iterator;
 
-import de.ust.skill.common.java.internal.*;
-import de.ust.skill.common.java.internal.fieldDeclarations.*;
-import de.ust.skill.common.java.internal.fieldTypes.Annotation;
-import de.ust.skill.common.java.internal.fieldTypes.MapType;
-import de.ust.skill.common.java.internal.fieldTypes.SingleArgumentType;
-import de.ust.skill.common.java.internal.fieldTypes.StringType;
-import de.ust.skill.common.java.internal.fieldTypes.V64;
-import de.ust.skill.common.java.internal.parts.Block;
-import de.ust.skill.common.java.internal.parts.Chunk;
-import de.ust.skill.common.java.internal.parts.SimpleChunk;
-import de.ust.skill.common.java.iterators.IterableArrayView;
+import de.ust.skill.common.jforeign.internal.*;
+import de.ust.skill.common.jforeign.internal.fieldDeclarations.*;
+import de.ust.skill.common.jforeign.internal.fieldTypes.Annotation;
+import de.ust.skill.common.jforeign.internal.fieldTypes.MapType;
+import de.ust.skill.common.jforeign.internal.fieldTypes.SingleArgumentType;
+import de.ust.skill.common.jforeign.internal.fieldTypes.StringType;
+import de.ust.skill.common.jforeign.internal.fieldTypes.V64;
+import de.ust.skill.common.jforeign.internal.parts.Block;
+import de.ust.skill.common.jforeign.internal.parts.Chunk;
+import de.ust.skill.common.jforeign.internal.parts.SimpleChunk;
+import de.ust.skill.common.jforeign.iterators.IterableArrayView;
 import de.ust.skill.common.jvm.streams.MappedInStream;
 import de.ust.skill.common.jvm.streams.MappedOutStream;
 

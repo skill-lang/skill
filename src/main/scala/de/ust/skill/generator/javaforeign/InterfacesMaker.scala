@@ -21,10 +21,10 @@ trait InterfacesMaker extends GeneralOutputMaker {
       //package
       out.write(s"""package ${this.packageName};
 
-import de.ust.skill.common.java.api.FieldDeclaration;
-import de.ust.skill.common.java.internal.NamedType;
-import de.ust.skill.common.java.internal.SkillObject;
-import de.ust.skill.common.java.internal.StoragePool;
+import de.ust.skill.common.jforeign.api.FieldDeclaration;
+import de.ust.skill.common.jforeign.internal.NamedType;
+import de.ust.skill.common.jforeign.internal.SkillObject;
+import de.ust.skill.common.jforeign.internal.StoragePool;
 """)
 
       val packageName = if (this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.') + 1) else this.packageName;

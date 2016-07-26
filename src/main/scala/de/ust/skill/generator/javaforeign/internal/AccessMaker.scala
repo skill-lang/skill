@@ -40,12 +40,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 
-import de.ust.skill.common.java.api.SkillException;
-import de.ust.skill.common.java.internal.*;
-import de.ust.skill.common.java.internal.fieldDeclarations.AutoField;
-import de.ust.skill.common.java.internal.fieldTypes.*;
-import de.ust.skill.common.java.internal.parts.Block;
-import de.ust.skill.common.java.restrictions.FieldRestriction;
+import de.ust.skill.common.jforeign.api.SkillException;
+import de.ust.skill.common.jforeign.internal.*;
+import de.ust.skill.common.jforeign.internal.fieldDeclarations.AutoField;
+import de.ust.skill.common.jforeign.internal.fieldTypes.*;
+import de.ust.skill.common.jforeign.internal.parts.Block;
+import de.ust.skill.common.jforeign.restrictions.FieldRestriction;
 """)
 
       //class declaration
@@ -122,8 +122,8 @@ ${
     @Override
     public void addKnownField(
         String name,
-        de.ust.skill.common.java.internal.fieldTypes.StringType string,
-        de.ust.skill.common.java.internal.fieldTypes.Annotation annotation) {
+        de.ust.skill.common.jforeign.internal.fieldTypes.StringType string,
+        de.ust.skill.common.jforeign.internal.fieldTypes.Annotation annotation) {
 
         final FieldDeclaration<?, $typeT> f;
         switch (name) {${
