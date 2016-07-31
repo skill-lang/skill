@@ -244,13 +244,13 @@ ${
         return new UnknownSubPool(index, name, this);
     }
 
-    private static final class UnknownSubPool extends SubPool<${mapType(t)}.SubType, ${mapType(t.getBaseType)}> {
-        UnknownSubPool(int poolIndex, String name, StoragePool<? super ${mapType(t)}.SubType, ${mapType(t.getBaseType)}> superPool) {
+    private static final class UnknownSubPool extends SubPool<${packagePrefix() +"internal." + name(t)}SubType, ${mapType(t.getBaseType)}> {
+        UnknownSubPool(int poolIndex, String name, StoragePool<? super ${packagePrefix() + "internal." + name(t)}SubType, ${mapType(t.getBaseType)}> superPool) {
             super(poolIndex, name, superPool, Collections.emptySet(), noAutoFields());
         }
 
         @Override
-        public StoragePool<? extends ${mapType(t)}.SubType, ${mapType(t.getBaseType)}> makeSubPool(int index, String name) {
+        public StoragePool<? extends ${packagePrefix() + "internal." + name(t)}SubType, ${mapType(t.getBaseType)}> makeSubPool(int index, String name) {
             return new UnknownSubPool(index, name, this);
         }
 
@@ -265,7 +265,7 @@ ${
                     return;
 
                 @SuppressWarnings("unchecked")
-                ${mapType(t)}.SubType r = new ${mapType(t)}.SubType(this, i + 1);
+                ${packagePrefix() + "internal." + name(t)}SubType r = new ${packagePrefix() + "internal." + name(t)}SubType(this, i + 1);
                 data[i] = r;
                 staticData.add(r);
 
