@@ -2,23 +2,23 @@ package simple;
 
 public class SimpleType {
 	
-	long x;
+	public long x;
 	
-	long y;
+	public long y;
 	
-	byte b;
+	public byte b;
 	
-	short s;
+	public short s;
 	
-	int i;
+	public int i;
 	
-	long l;
+	public long l;
 	
-	float f;
+	public float f;
 	
-	double d;
+	public double d;
 	
-	String str;
+	public String str;
 	
 	public SimpleType(byte b, short s, int i, long l, float f, double d, String str) {
 		super();
