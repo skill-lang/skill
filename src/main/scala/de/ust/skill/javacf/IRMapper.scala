@@ -35,6 +35,9 @@ class IRMapper(classpaths: List[String]) {
   /** Types that are already mapped. */
   val mappedTypes = new HashMap[CtClass, UserType];
 
+  /** Mapping from skill type to original Java class. */
+  val reflection = new HashMap[Type, CtClass];
+
   /** Basic types that must always be around. */
   val javaObjectType = pool.get("java.lang.Object")
 
@@ -57,13 +60,13 @@ class IRMapper(classpaths: List[String]) {
   /**
    * Takes a list of class names and returns a TypeContext representing containing the IR of those types.
    */
-  def mapClasses(list: List[String]): TypeContext = {
+  def mapClasses(list: List[String]): (TypeContext, HashMap[Type, CtClass]) = {
     list.foreach(collect)
     // map all given types
     knownTypes.keys.foreach(translateType)
     val decls = mappedTypes.values.map { _.asInstanceOf[Declaration] }.toList
     tc.setDefs(decls.asJava)
-    tc
+    (tc, reflection)
   }
 
   /**
@@ -80,9 +83,11 @@ class IRMapper(classpaths: List[String]) {
     val comment = new Comment()
     comment.init(List().asJava)
 
-    val ntype = UserType.newDeclaration(tc, new Name(List(clazz.getSimpleName).asJava, clazz.getSimpleName, clazz.getPackageName), comment,
-      new java.util.ArrayList, new java.util.ArrayList)
+    val ntype = UserType.newDeclaration(tc, new Name(List(clazz.getSimpleName).asJava, clazz.getSimpleName, clazz.getPackageName),
+        comment, new java.util.ArrayList, new java.util.ArrayList)
+    reflection += (ntype → clazz)
     knownTypes += (clazz → ntype)
+
     if (clazz.getSuperclass != javaObjectType) collect(clazz.getSuperclass)
     ntype
   }
