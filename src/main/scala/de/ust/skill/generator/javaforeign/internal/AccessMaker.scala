@@ -206,7 +206,12 @@ ${
      * @return a new age instance with the argument field values
      */
     public $typeT make(${makeConstructorArguments(t)}) {
-        $typeT rval = new $typeT(-1${appendConstructorArguments(t, false)});
+        $typeT rval = new $typeT(-1);
+${
+  t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map {
+    f ⇒ s"""        rval.${setterOrFieldAccess(t, f)}${name(f)};"""
+  }.mkString("\n")
+}
         add(rval);
         return rval;
     }
@@ -230,7 +235,7 @@ ${
           yield s"""
 
         public ${nameT}Builder ${name(f)}(${mapType(f.getType)} ${name(f)}) {
-            instance.set${escaped(f.getName.capital)}(${name(f)});
+            instance.${setterOrFieldAccess(t, f)}(${name(f)});
             return this;
         }""").mkString
       }

@@ -24,8 +24,10 @@ import de.ust.skill.ir.View
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.SingleBaseTypeContainer
 import de.ust.skill.ir.InterfaceType
+import javassist.NotFoundException
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
+
   abstract override def make {
     super.make
 
@@ -146,20 +148,20 @@ ${
             ${
               // read next element
               f.getType match {
-                case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒
-                  s"""is.next().set${escaped(f.getName.capital)}((${mapType(f.getType)})target.getByID(in.v64()));"""
+                case ft : InterfaceType if ft.getSuperType.getSkillName != "annotation" ⇒
+                  s"""is.next().${setterOrFieldAccess(t, f)}((${mapType(f.getType)})target.getByID(in.v64()));"""
 
-                case t : InterfaceType ⇒
+                case ft : InterfaceType ⇒
                   s"""is.next().set${escaped(f.getName.capital)}((${mapType(f.getType)})type.readSingleField(in));"""
 
-                case t : GroundType ⇒ t.getSkillName match {
-                  case "annotation" ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
-                  case "string"     ⇒ s"""is.next().set${escaped(f.getName.capital)}(sp.get(in.v64()));"""
-                  case _            ⇒ s"""is.next().set${escaped(f.getName.capital)}(in.${t.getSkillName}());"""
+                case ft : GroundType ⇒ ft.getSkillName match {
+                  case "annotation" ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(type.readSingleField(in));"""
+                  case "string"     ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(sp.get(in.v64()));"""
+                  case _            ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(in.${ft.getSkillName}());"""
                 }
 
-                case t : UserType ⇒ s"""is.next().set${escaped(f.getName.capital)}(target.getByID(in.v64()));"""
-                case _            ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
+                case ft : UserType ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(target.getByID(in.v64()));"""
+                case _            ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(type.readSingleField(in));"""
               }
             }
         }"""
@@ -189,7 +191,7 @@ ${
                 case "annotation" ⇒ s"""
         final Annotation t = Annotation.cast(type);
         $preludeData
-            ${mapType(f.getType)} v = $dataAccessI.get${escaped(f.getName.capital)}();
+            ${mapType(f.getType)} v = $dataAccessI.${getterOrFieldAccess(t, f)};
             if(null==v)
                 result += 2;
             else
@@ -200,7 +202,7 @@ ${
                 case "string" ⇒ s"""
         final StringType t = (StringType) type;
         $preludeData
-            String v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
+            String v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).${getterOrFieldAccess(t, f)};
             if(null==v)
                 result++;
             else
@@ -294,7 +296,7 @@ ${
 
               case fieldType : UserType ⇒ s"""
         $preludeData
-            final ${mapType(f.getType)} instance = $dataAccessI.get${escaped(f.getName.capital)}();
+            final ${mapType(f.getType)} instance = $dataAccessI.${getterOrFieldAccess(t, f)};
             if (null == instance) {
                 result += 1;
                 continue;
@@ -366,17 +368,17 @@ ${
             ${
               // read next element
               f.getType match {
-                case t : GroundType ⇒ t.getSkillName match {
-                  case "annotation" | "string" ⇒ s"""type.writeSingleField($dataAccessI.get${escaped(f.getName.capital)}(), out);"""
-                  case _                       ⇒ s"""out.${t.getSkillName}($dataAccessI.get${escaped(f.getName.capital)}());"""
+                case ft : GroundType ⇒ ft.getSkillName match {
+                  case "annotation" | "string" ⇒ s"""type.writeSingleField($dataAccessI.${getterOrFieldAccess(t, f)}, out);"""
+                  case _                       ⇒ s"""out.${ft.getSkillName}($dataAccessI.${getterOrFieldAccess(t, f)});"""
                 }
 
-                case t : UserType ⇒ s"""${mapType(t)} v = $dataAccessI.get${escaped(f.getName.capital)}();
+                case ft : UserType ⇒ s"""${mapType(ft)} v = $dataAccessI.${getterOrFieldAccess(t, f)};
             if (null == v)
                 out.i8((byte) 0);
             else
                 out.v64(v.getSkillID());"""
-                case _ ⇒ s"""type.writeSingleField($dataAccessI.get${escaped(f.getName.capital)}(), out);"""
+                case _ ⇒ s"""type.writeSingleField($dataAccessI.${getterOrFieldAccess(t, f)}, out);"""
               }
             }
         }"""
@@ -388,7 +390,7 @@ ${
     public ${mapType(f.getType, true)} getR(SkillObject ref) {
         ${
         if (f.isConstant()) s"return ${mapType(t)}.get${escaped(f.getName.capital)}();"
-        else s"return ((${mapType(t)}) ref).get${escaped(f.getName.capital)}();"
+        else s"return ((${mapType(t)}) ref).${getterOrFieldAccess(t, f)};"
       }
     }
 
@@ -396,7 +398,7 @@ ${
     public void setR(SkillObject ref, ${mapType(f.getType, true)} value) {
         ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
-        else s"((${mapType(t)}) ref).set${escaped(f.getName.capital)}(value);"
+        else s"((${mapType(t)}) ref).${setterOrFieldAccess(t, f)}(value);"
       }
     }
 
@@ -404,7 +406,7 @@ ${
     public ${mapType(f.getType)} get(${mapType(t)} ref) {
         ${
         if (f.isConstant()) s"return ${mapType(t)}.get${escaped(f.getName.capital)}();"
-        else s"return ref.get${escaped(f.getName.capital)}();"
+        else s"return ref.${getterOrFieldAccess(t, f)};"
       }
     }
 
@@ -412,7 +414,7 @@ ${
     public void set(${mapType(t)} ref, ${mapType(f.getType)} value) {
         ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
-        else s"ref.set${escaped(f.getName.capital)}(value);"
+        else s"ref.${setterOrFieldAccess(t, f)}(value);"
       }
     }
 }

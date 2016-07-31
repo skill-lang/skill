@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import ${packagePrefix}internal.SkillState;
-import de.ust.skill.common.java.api.SkillException;
+import de.ust.skill.common.jforeign.api.SkillException;
 
 /**
  * An abstract skill file that is hiding all the dirty implementation details
@@ -33,7 +33,7 @@ import de.ust.skill.common.java.api.SkillException;
  */
 ${
       suppressWarnings
-    }public interface SkillFile extends de.ust.skill.common.java.api.SkillFile {
+    }public interface SkillFile extends de.ust.skill.common.jforeign.api.SkillFile {
 
     /**
      * Create a new skill file based on argument path and mode.
