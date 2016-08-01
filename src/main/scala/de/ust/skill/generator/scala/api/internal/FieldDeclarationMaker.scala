@@ -27,6 +27,11 @@ import de.ust.skill.ir.ContainerType
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.SingleBaseTypeContainer
 import de.ust.skill.ir.Restriction
+import de.ust.skill.ir.restriction.DefaultRestriction
+import de.ust.skill.ir.restriction.IntDefaultRestriction
+import de.ust.skill.ir.restriction.StringDefaultRestriction
+import de.ust.skill.ir.restriction.FloatDefaultRestriction
+import de.ust.skill.ir.restriction.NameDefaultRestriction
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -66,6 +71,7 @@ import de.ust.skill.common.scala.internal.Chunk
 import de.ust.skill.common.scala.internal.IgnoredField
 import de.ust.skill.common.scala.internal.KnownField
 import de.ust.skill.common.scala.internal.SimpleChunk
+import de.ust.skill.common.scala.internal.SingletonStoragePool
 import de.ust.skill.common.scala.internal.fieldTypes._
 import de.ust.skill.common.scala.internal.restrictions._
 
@@ -305,8 +311,12 @@ ${mapKnownReadType(f.getType)}
       case "f64" ⇒ s"Range(${r.getLowDouble}, ${r.getHighDouble})"
       case t ⇒ throw new IllegalStateException(s"parser should have rejected a float restriction on a field of type $t")
     }
-    case r: ConstantLengthPointerRestriction ⇒
-      s"ConstantLengthPointer"
+    case r: ConstantLengthPointerRestriction ⇒ "ConstantLengthPointer"
+
+    case r: IntDefaultRestriction ⇒ s"DefaultRestriction(${r.getValue})"
+    case r: FloatDefaultRestriction ⇒ s"DefaultRestriction(${r.getValue})"
+    case r: NameDefaultRestriction ⇒ s"DefaultRestriction(_owner.basePool.owner(${r.getValue.mkString("\"", ":", "\"")}).asInstanceOf[SingletonStoragePool[_ <: de.ust.skill.common.scala.api.SkillObject, _ <: de.ust.skill.common.scala.api.SkillObject]].get)"
+    case r: StringDefaultRestriction ⇒ s"""DefaultRestriction("${r.getValue}")"""
 
     case r ⇒ println("[scala] unhandled restriction: " + r.getName); ""
   }

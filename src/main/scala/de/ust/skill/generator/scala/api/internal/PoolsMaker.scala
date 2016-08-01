@@ -53,6 +53,7 @@ import de.ust.skill.common.scala.api.TypeMissmatchError
 import de.ust.skill.common.scala.internal.BasePool
 import de.ust.skill.common.scala.internal.FieldDeclaration
 import de.ust.skill.common.scala.internal.SkillState
+import de.ust.skill.common.scala.internal.SingletonStoragePool
 import de.ust.skill.common.scala.internal.StoragePool
 import de.ust.skill.common.scala.internal.SubPool
 import de.ust.skill.common.scala.internal.fieldTypes._
@@ -73,7 +74,10 @@ final class ${storagePool(t)}(poolIndex : Int${
         if (t.getSuperType == null) ""
         else ",\nsuperPool"
       }
-    ) {
+    )${
+      if(isSingleton) s" with SingletonStoragePool[$typeName, ${packagePrefix}${t.getBaseType.getName.capital}]"
+      else ""
+    } {
   override def getInstanceClass: Class[$typeName] = classOf[$typeName]
 
   override def addField[T : Manifest](ID : Int, t : FieldType[T], name : String,
@@ -168,17 +172,8 @@ ${
   }
 
 ${
-        if (isSingleton)
-          s"""  lazy val theInstance = if (staticInstances.hasNext) {
-    staticInstances.next
-  } else {
-    val r = new $typeName(-1)
-    newObjects.append(r)
-    r
-  }
-  def get = theInstance"""
-        else
-          s"""  def make(${makeConstructorArguments(t)}) = {
+        if (isSingleton) ""
+        else s"""  def make(${makeConstructorArguments(t)}) = {
     val r = new $typeName(-1 - newObjects.size${appendConstructorArguments(t)})
     newObjects.append(r)
     r
