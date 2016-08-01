@@ -104,7 +104,10 @@ object FileParser extends SkillFileParser[SkillFile] {
       }
     }
     types.par.foreach(_.allocateInstances)
+    
+    // create restrictions (may contain references to instances)
 
+    // read eager fields
     triggerFieldDeserialization(types, dataList)
 
     val r = new SkillFile(path, mode, String, Annotation, types, typesByName)
