@@ -106,8 +106,7 @@ final class ${knownField(f)}(${
       }${
         (for (r ← f.getRestrictions)
           yield s"""
-  restrictions += ${mkFieldRestriction(f.getType, r)}"""
-        ).mkString
+  restrictions += ${mkFieldRestriction(f.getType, r)}""").mkString
       }${
         if (f.isAuto()) ""
         else s"""
@@ -235,53 +234,53 @@ ${mapKnownReadType(f.getType)}
     }
   }
 
-  private def mapToFieldType(t : Type) : String = {
+  private def mapToFieldType(t: Type): String = {
     //@note it is possible to pass <null> to the case classes, because they will be replaced anyway
-    @inline def mapGroundType(t : Type) : String = t.getSkillName match {
+    @inline def mapGroundType(t: Type): String = t.getSkillName match {
       case "annotation" ⇒ "_type"
-      case "bool"       ⇒ "BoolType"
-      case "i8"         ⇒ "I8"
-      case "i16"        ⇒ "I16"
-      case "i32"        ⇒ "I32"
-      case "i64"        ⇒ "I64"
-      case "v64"        ⇒ "V64"
-      case "f32"        ⇒ "F32"
-      case "f64"        ⇒ "F64"
-      case "string"     ⇒ "_type"
+      case "bool" ⇒ "BoolType"
+      case "i8" ⇒ "I8"
+      case "i16" ⇒ "I16"
+      case "i32" ⇒ "I32"
+      case "i64" ⇒ "I64"
+      case "v64" ⇒ "V64"
+      case "f32" ⇒ "F32"
+      case "f64" ⇒ "F64"
+      case "string" ⇒ "_type"
 
-      case s            ⇒ "_type"
+      case s ⇒ "_type"
     }
 
     t match {
-      case t : GroundType ⇒ mapGroundType(t)
-      case _              ⇒ "_type"
+      case t: GroundType ⇒ mapGroundType(t)
+      case _ ⇒ "_type"
     }
   }
-  private def exactFieldType(t : Type) : String = {
+  private def exactFieldType(t: Type): String = {
     //@note it is possible to pass <null> to the case classes, because they will be replaced anyway
-    @inline def mapGroundType(t : Type) : String = t.getSkillName match {
+    @inline def mapGroundType(t: Type): String = t.getSkillName match {
       case "annotation" ⇒ "AnnotationType"
-      case "bool"       ⇒ "BoolType"
-      case "i8"         ⇒ "I8"
-      case "i16"        ⇒ "I16"
-      case "i32"        ⇒ "I32"
-      case "i64"        ⇒ "I64"
-      case "v64"        ⇒ "V64"
-      case "f32"        ⇒ "F32"
-      case "f64"        ⇒ "F64"
-      case "string"     ⇒ "StringType"
+      case "bool" ⇒ "BoolType"
+      case "i8" ⇒ "I8"
+      case "i16" ⇒ "I16"
+      case "i32" ⇒ "I32"
+      case "i64" ⇒ "I64"
+      case "v64" ⇒ "V64"
+      case "f32" ⇒ "F32"
+      case "f64" ⇒ "F64"
+      case "string" ⇒ "StringType"
     }
 
     t match {
-      case t : GroundType ⇒ mapGroundType(t)
-      case t : UserType   ⇒ storagePool(t)
-      case _              ⇒ "_"
+      case t: GroundType ⇒ mapGroundType(t)
+      case t: UserType ⇒ storagePool(t)
+      case _ ⇒ "_"
     }
   }
 
-  private def mkFieldRestriction(t : Type, r : Restriction) : String = r match {
-    case r : NonNullRestriction ⇒ s"NonNull.apply[${mapType(t)}]"
-    case r : IntRangeRestriction ⇒
+  private def mkFieldRestriction(t: Type, r: Restriction): String = r match {
+    case r: NonNullRestriction ⇒ s"NonNull.apply[${mapType(t)}]"
+    case r: IntRangeRestriction ⇒
       t.getSkillName match {
         case "i8" ⇒ s"Range(${
           Math.max(Byte.MinValue, r.getLow)
@@ -301,26 +300,28 @@ ${mapKnownReadType(f.getType)}
         case _ ⇒ s"Range(${r.getLow}L, ${r.getHigh}L)"
       }
 
-    case r : FloatRangeRestriction ⇒ t.getSkillName match {
+    case r: FloatRangeRestriction ⇒ t.getSkillName match {
       case "f32" ⇒ s"Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
       case "f64" ⇒ s"Range(${r.getLowDouble}, ${r.getHighDouble})"
-      case t     ⇒ throw new IllegalStateException(s"parser should have rejected a float restriction on a field of type $t")
+      case t ⇒ throw new IllegalStateException(s"parser should have rejected a float restriction on a field of type $t")
     }
-    case r : ConstantLengthPointerRestriction ⇒
+    case r: ConstantLengthPointerRestriction ⇒
       s"ConstantLengthPointer"
+
+    case r ⇒ println("[scala] unhandled restriction: " + r.getName); ""
   }
 
   /**
    * tell the compiler which code will be executed, to support optimization
    */
-  private final def mapKnownReadType(t : Type) : String = t match {
+  private final def mapKnownReadType(t: Type): String = t match {
 
-    case t : UserType ⇒ s"    val t = this.t.asInstanceOf[${storagePool(t)}]"
-    case _            ⇒ "" // it is always an option not to tell anything
+    case t: UserType ⇒ s"    val t = this.t.asInstanceOf[${storagePool(t)}]"
+    case _ ⇒ "" // it is always an option not to tell anything
   }
 
-  private final def offsetCode(t : Type) : String = t match {
-    case t : GroundType ⇒ t.getSkillName match {
+  private final def offsetCode(t: Type): String = t match {
+    case t: GroundType ⇒ t.getSkillName match {
       // TODO optimize calls to string and annotation types (requires prelude, check nesting!)
       case "annotation" | "string" ⇒ "result += t.offset(v)"
 
@@ -345,14 +346,14 @@ ${mapKnownReadType(f.getType)}
             })"""
 
       // offsets where we know the type
-      case _ ⇒ s"result += ${exactFieldType(t : Type)}.offset(v)"
+      case _ ⇒ s"result += ${exactFieldType(t: Type)}.offset(v)"
     }
 
-    case t : UserType                ⇒ "result += (if (null == v) 1 else V64.offset(v.getSkillID))"
+    case t: UserType ⇒ "result += (if (null == v) 1 else V64.offset(v.getSkillID))"
 
-    case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${offsetCode(t.getBaseType)} }"
+    case t: ConstantLengthArrayType ⇒ s"v.foreach { v => ${offsetCode(t.getBaseType)} }"
 
-    case t : SingleBaseTypeContainer ⇒ s"""result += (if(null == v) 1 else V64.offset(v.size))
+    case t: SingleBaseTypeContainer ⇒ s"""result += (if(null == v) 1 else V64.offset(v.size))
       ${
       t.getBaseType.getSkillName match {
         case "string" | "annotation" ⇒ s"val t = this.t.asInstanceOf[SingleBaseTypeContainer[_,${
@@ -366,25 +367,25 @@ ${mapKnownReadType(f.getType)}
           if(null != v) v.foreach { v => ${offsetCode(t.getBaseType)} }"""
 
     // @note this might be optimizable, but i dont care for now
-    case t : MapType ⇒ "result += (if(null == v) 1 else t.offset(v))"
+    case t: MapType ⇒ "result += (if(null == v) 1 else t.offset(v))"
 
-    case _           ⇒ "???"
+    case _ ⇒ "???"
   }
 
-  private final def writeCode(t : Type) : String = t match {
-    case t : GroundType ⇒ t.getSkillName match {
+  private final def writeCode(t: Type): String = t match {
+    case t: GroundType ⇒ t.getSkillName match {
       // TODO optimize calls to string and annotation types (requires prelude, check nesting!)
       case "annotation" | "string" ⇒ "t.write(v, out)"
 
-      case t                       ⇒ s"out.$t(v)"
+      case t ⇒ s"out.$t(v)"
     }
 
     // TODO optimize user types (requires prelude, check nesting!)
-    case t : UserType                ⇒ "if (null == v) out.i8(0) else out.v64(v.getSkillID)"
+    case t: UserType ⇒ "if (null == v) out.i8(0) else out.v64(v.getSkillID)"
 
-    case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${writeCode(t.getBaseType)} }"
+    case t: ConstantLengthArrayType ⇒ s"v.foreach { v => ${writeCode(t.getBaseType)} }"
 
-    case t : SingleBaseTypeContainer ⇒ s"""if(null == v) out.i8(0) else { out.v64(v.size)
+    case t: SingleBaseTypeContainer ⇒ s"""if(null == v) out.i8(0) else { out.v64(v.size)
       ${
       t.getBaseType.getSkillName match {
         case "string" | "annotation" ⇒ s"val t = this.t.asInstanceOf[SingleBaseTypeContainer[_,${
@@ -398,8 +399,8 @@ ${mapKnownReadType(f.getType)}
             v.foreach { v => ${writeCode(t.getBaseType)} }}"""
 
     // @note this might be optimizable, but i dont care for now
-    case t : MapType ⇒ "t.write(v, out)"
+    case t: MapType ⇒ "t.write(v, out)"
 
-    case _           ⇒ "???"
+    case _ ⇒ "???"
   }
 }
