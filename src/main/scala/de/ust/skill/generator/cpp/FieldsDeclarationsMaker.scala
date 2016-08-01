@@ -415,7 +415,7 @@ bool $fieldName::check() const {${
     case r: ConstantLengthPointerRestriction ⇒
       "::skill::restrictions::ConstantLengthPointer::get()"
 
-    case r ⇒ println("[c++] unhandled restriction: " + r.getName); ""
+    case r ⇒ println("[c++] unhandled restriction: " + r.getName); "nullptr"
   }
 
   def writeCode(accessI: String, f: Field) = f.getType match {
