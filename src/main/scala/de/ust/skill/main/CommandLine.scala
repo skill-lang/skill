@@ -96,7 +96,7 @@ Opitions:
       if (languages contains "javaforeign") {
         if (!optionalOpts.contains("mappingFile")) error("-M option is missing for javaForeign")
           JavaForeign.run(optionalOpts("mappingFile"), tc, foreignSources)
-      } else null;
+      } else (null, null);
 
       // invoke generators
       println(s"Parsed $skillPath -- found ${tc.allTypeNames.size - (new TypeContext().allTypeNames.size)} types.")
