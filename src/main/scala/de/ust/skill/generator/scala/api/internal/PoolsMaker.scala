@@ -142,7 +142,11 @@ ${
             }.mkString
           }
   """)
-      }}
+      }
+
+    for(f <- dataFields ++ autoFields)
+      f.createKnownRestrictions
+  }
 
   override def reflectiveAllocateInstance: $typeName = {
     val r = new $typeName(-1)
