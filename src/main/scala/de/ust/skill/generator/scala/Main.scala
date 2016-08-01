@@ -28,6 +28,12 @@ import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.View
 import de.ust.skill.ir.InterfaceType
 import de.ust.skill.ir.FieldLike
+import de.ust.skill.ir.restriction.DefaultRestriction
+import de.ust.skill.ir.restriction.IntDefaultRestriction
+import de.ust.skill.ir.restriction.FloatDefaultRestriction
+import de.ust.skill.ir.restriction.RangeRestriction
+import de.ust.skill.ir.restriction.FloatRangeRestriction
+import de.ust.skill.ir.restriction.IntRangeRestriction
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -92,8 +98,7 @@ class Main extends FakeMain
    */
   override protected def makeConstructorArguments(t : UserType) = (
     for (f ← t.getAllFields if !(f.isConstant || f.isIgnored))
-      yield s"${escaped(f.getName.camel)} : ${mapType(f.getType())} = ${defaultValue(f)}"
-  ).mkString(", ")
+      yield s"${escaped(f.getName.camel)} : ${mapType(f.getType())} = ${defaultValue(f)}").mkString(", ")
   override protected def appendConstructorArguments(t : UserType) = {
     val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
     if (r.isEmpty) ""
@@ -158,18 +163,50 @@ Opitions (scala):
 !import string+    A list of imports that will be added where required.
 !modifier string   A modifier, that will be put in front of the variable declaration."""
 
-  override protected def defaultValue(f : Field) = f.getType match {
-    case t : GroundType ⇒ t.getSkillName() match {
-      case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
-      case "f32" | "f64"                        ⇒ "0.0f"
-      case "bool"                               ⇒ "false"
-      case _                                    ⇒ "null"
-    }
+  override protected def defaultValue(f : Field) : String = {
+    val fr = f.getRestrictions.collect {
+      case f : DefaultRestriction ⇒ f
+      case f : RangeRestriction   ⇒ f
+    };
+    if (!fr.isEmpty) {
+      fr.find { x ⇒ x.isInstanceOf[DefaultRestriction] }.map(
+        _ match {
+          case r : IntDefaultRestriction ⇒ r.getValue.toString
+          case r : FloatDefaultRestriction if f.getType.getSkillName.equals("f64") ⇒ r.getValue.toString
+          case r : FloatDefaultRestriction ⇒ r.getValue.toString + "f"
+          case _ ⇒ "???"
+        }).getOrElse {
+          fr.collect {
+            case r : FloatRangeRestriction ⇒
+              if (r.getHighDouble < 0.0 || r.getLowDouble > 0.0) {
+                if (f.getType.getSkillName.equals("f64")) r.getLowDouble.toString
+                else r.getLowFloat.toString + "f"
+              } else "0.0f"
 
-    case t : UserType      ⇒ "null"
-    case t : InterfaceType ⇒ "null"
+            case r : IntRangeRestriction ⇒
+              if (r.getHigh < 0L || r.getLow > 0L) {
+                if (f.getType.getSkillName.endsWith("64")) r.getLow.toString + "L"
+                else math.max(r.getLow, Int.MinValue).toString
+              } else "0"
+          }.head
+        }
+    } else
+      // TODO type default restrictions
 
-    case _                 ⇒ mapType(f.getType) + "()"
+      // else -> language defined default
+      f.getType match {
+        case t : GroundType ⇒ t.getSkillName() match {
+          case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
+          case "f32" | "f64"                        ⇒ "0.0f"
+          case "bool"                               ⇒ "false"
+          case _                                    ⇒ "null"
+        }
+
+        case t : UserType      ⇒ "null"
+        case t : InterfaceType ⇒ "null"
+
+        case _                 ⇒ mapType(f.getType) + "()"
+      }
   }
 
   /**
