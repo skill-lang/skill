@@ -209,7 +209,7 @@ ${
         $typeT rval = new $typeT(-1);
 ${
   t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map {
-    f ⇒ s"""        rval.${setterOrFieldAccess(t, f)}${name(f)};"""
+    f ⇒ s"""        rval.${setterOrFieldAccess(t, f)}(${name(f)});"""
   }.mkString("\n")
 }
         add(rval);

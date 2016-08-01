@@ -138,8 +138,8 @@ trait GeneralOutputMaker extends Generator {
   } else {
     val javaType = reflectionMap(t);
     try {
-      javaType.getDeclaredMethod(s"get${f.getName.capital}()")
-      s"get${f.getName.capital()}"
+      javaType.getDeclaredMethod(s"get${f.getName.capital}")
+      s"get${f.getName.capital()}()"
     } catch {
       case e: NotFoundException ⇒ s"${f.getName}"
     }
