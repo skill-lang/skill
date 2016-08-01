@@ -3,7 +3,7 @@ package de.ust.skill.ir.restriction;
 import java.util.Iterator;
 import java.util.List;
 
-import de.ust.skill.parser.Name;
+import de.ust.skill.ir.Name;
 
 /**
  * @author Dennis Przytarski

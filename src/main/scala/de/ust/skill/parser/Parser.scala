@@ -304,14 +304,13 @@ final class Parser(delimitWithUnderscore: Boolean = true, delimitWithCamelCase: 
         case "nonnull" ⇒ opt("(" ~ ")") ^^ { _ ⇒ new NonNullRestriction }
 
         case "default" ⇒ "(" ~> (
-            int ^^ { new IntDefaultRestriction(_) }
-            |
-            string ^^ { new StringDefaultRestriction(_) }
-            |
-            floatingPointNumber ^^ { new FloatDefaultRestriction(_) }
-            |
-            repsep(id, "." | "::") ^^ { new NameDefaultRestriction(_) }
-        ) <~ ")"
+          int ^^ { new IntDefaultRestriction(_) }
+          |
+          string ^^ { new StringDefaultRestriction(_) }
+          |
+          floatingPointNumber ^^ { new FloatDefaultRestriction(_) }
+          |
+          repsep(id, "." | "::") ^^ { _.map(_.ir) } ^^ { new NameDefaultRestriction(_) }) <~ ")"
 
         case "min" ⇒ "(" ~> (
           int ~ opt("," ~> string) ^^ {
