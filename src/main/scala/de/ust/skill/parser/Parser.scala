@@ -18,11 +18,15 @@ import de.ust.skill.ir
 import de.ust.skill.ir.Hint
 import de.ust.skill.ir.Restriction
 import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
+import de.ust.skill.ir.restriction.FloatDefaultRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
 import de.ust.skill.ir.restriction.IntRangeRestriction
+import de.ust.skill.ir.restriction.IntDefaultRestriction
 import de.ust.skill.ir.restriction.MonotoneRestriction
+import de.ust.skill.ir.restriction.NameDefaultRestriction
 import de.ust.skill.ir.restriction.NonNullRestriction
 import de.ust.skill.ir.restriction.SingletonRestriction
+import de.ust.skill.ir.restriction.StringDefaultRestriction
 import de.ust.skill.ir.restriction.UniqueRestriction
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
@@ -299,7 +303,15 @@ final class Parser(delimitWithUnderscore: Boolean = true, delimitWithCamelCase: 
 
         case "nonnull" ⇒ opt("(" ~ ")") ^^ { _ ⇒ new NonNullRestriction }
 
-        case "default" ⇒ "(" ~> defaultRestrictionParameter <~ ")" ^^ { _ ⇒ null }
+        case "default" ⇒ "(" ~> (
+            int ^^ { new IntDefaultRestriction(_) }
+            |
+            string ^^ { new StringDefaultRestriction(_) }
+            |
+            floatingPointNumber ^^ { new FloatDefaultRestriction(_) }
+            |
+            repsep(id, "." | "::") ^^ { new NameDefaultRestriction(_) }
+        ) <~ ")"
 
         case "min" ⇒ "(" ~> (
           int ~ opt("," ~> string) ^^ {
