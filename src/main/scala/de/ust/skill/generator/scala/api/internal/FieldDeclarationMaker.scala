@@ -112,7 +112,7 @@ final class ${knownField(f)}(${
       }${
         (for (r ← f.getRestrictions)
           yield s"""restrictions += ${mkFieldRestriction(f.getType, r)}""").mkString("""
-  protected[internal] def createKnownRestrictions : Unit = {
+  override def createKnownRestrictions : Unit = {
     """, """
     """, """
   }""")
