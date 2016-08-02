@@ -22,6 +22,9 @@ import de.ust.skill.ir.Field
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.ListType
 import de.ust.skill.ir.SetType
+import de.ust.skill.ir.restriction.DefaultRestriction
+import de.ust.skill.ir.restriction.IntDefaultRestriction
+import de.ust.skill.ir.restriction.FloatDefaultRestriction
 
 trait FieldDeclarationsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -169,17 +172,17 @@ size_t $fieldName::offset() const {${
               """
     return 0; // this field is constant"""
             else {
-              def fastOffset(fieldType: Type): Boolean = fieldType match {
-                case fieldType: GroundType ⇒ fieldType.getSkillName match {
+              def fastOffset(fieldType : Type) : Boolean = fieldType match {
+                case fieldType : GroundType ⇒ fieldType.getSkillName match {
                   case "annotation" | "string" | "v64" ⇒ false
-                  case _ ⇒ true
+                  case _                               ⇒ true
                 }
                 case _ ⇒ false
               }
-              def offsetCode(fieldType: Type): String = fieldType match {
+              def offsetCode(fieldType : Type) : String = fieldType match {
 
                 // read next element
-                case fieldType: GroundType ⇒ fieldType.getSkillName match {
+                case fieldType : GroundType ⇒ fieldType.getSkillName match {
 
                   case "annotation" ⇒ s"""result += type->offset(::skill::box($accessI));"""
 
@@ -228,7 +231,7 @@ size_t $fieldName::offset() const {${
         throw new NoSuchMethodError();"""
                 }
 
-                case fieldType: UserType ⇒ s"""${mapType(f.getType)} instance = $accessI;
+                case fieldType : UserType ⇒ s"""${mapType(f.getType)} instance = $accessI;
             if (nullptr == instance) {
                 result += 1;
             } else {
@@ -254,9 +257,9 @@ size_t $fieldName::offset() const {${
                 result += 9;
             }}"""
 
-                case fieldType: InterfaceType ⇒ offsetCode(fieldType.getSuperType)
+                case fieldType : InterfaceType ⇒ offsetCode(fieldType.getSuperType)
 
-                case _ ⇒ s"""result += type->offset(::skill::box($accessI));"""
+                case _                         ⇒ s"""result += type->offset(::skill::box($accessI));"""
               }
 
               if (fastOffset(f.getType)) {
@@ -338,20 +341,20 @@ bool $fieldName::check() const {${
    *
    * @note accessI is only used to create inner maps correctly
    */
-  private final def readType(t: Type, accessI: String, typ: String = "type"): String = t match {
-    case t: GroundType ⇒ t.getSkillName match {
+  private final def readType(t : Type, accessI : String, typ : String = "type") : String = t match {
+    case t : GroundType ⇒ t.getSkillName match {
       case "annotation" ⇒ s"$typ->read(in).annotation"
-      case "string" ⇒ s"$typ->read(in).string"
-      case "bool" ⇒ "in.boolean()"
-      case t ⇒ s"in.$t()"
+      case "string"     ⇒ s"$typ->read(in).string"
+      case "bool"       ⇒ "in.boolean()"
+      case t            ⇒ s"in.$t()"
     }
 
-    case t: ConstantLengthArrayType ⇒ s"((skill::fieldTypes::ConstantLengthArray*)$typ)->read<${mapType(t.getBaseType)}>(in)"
-    case t: VariableLengthArrayType ⇒ s"((skill::fieldTypes::VariableLengthArray*)$typ)->read<${mapType(t.getBaseType)}>(in)"
-    case t: ListType ⇒ s"((skill::fieldTypes::ListType*)$typ)->read<${mapType(t.getBaseType)}>(in)"
-    case t: SetType ⇒ s"((skill::fieldTypes::SetType*)$typ)->read<${mapType(t.getBaseType)}>(in)"
+    case t : ConstantLengthArrayType ⇒ s"((skill::fieldTypes::ConstantLengthArray*)$typ)->read<${mapType(t.getBaseType)}>(in)"
+    case t : VariableLengthArrayType ⇒ s"((skill::fieldTypes::VariableLengthArray*)$typ)->read<${mapType(t.getBaseType)}>(in)"
+    case t : ListType                ⇒ s"((skill::fieldTypes::ListType*)$typ)->read<${mapType(t.getBaseType)}>(in)"
+    case t : SetType                 ⇒ s"((skill::fieldTypes::SetType*)$typ)->read<${mapType(t.getBaseType)}>(in)"
 
-    case t: MapType ⇒
+    case t : MapType ⇒
       s"""nullptr;
                 ${mapType(t)} m = new ${newMapType(t.getBaseTypes.toList)};
                 const auto t1 = (skill::fieldTypes::MapType*)type;
@@ -367,14 +370,14 @@ bool $fieldName::check() const {${
     case _ ⇒ s"(${mapType(t)})$typ->read(in).${unbox(t)}"
   }
 
-  def innerMapType(ts: List[Type]): String = ts.map(mapType).reduceRight((k, v) ⇒ s"::skill::api::Map<$k, $v>*")
-  def newMapType(ts: List[Type]): String = {
+  def innerMapType(ts : List[Type]) : String = ts.map(mapType).reduceRight((k, v) ⇒ s"::skill::api::Map<$k, $v>*")
+  def newMapType(ts : List[Type]) : String = {
     val s = innerMapType(ts)
     // drop last * because we want to allocate the map itself
     s.substring(0, s.length - 1)
   }
 
-  private final def readInnerMap(ts: List[Type], depth: Int): String = {
+  private final def readInnerMap(ts : List[Type], depth : Int) : String = {
     if (ts.length == 1) s"auto v${depth - 1} = ${readType(ts.head, "", s"t${depth - 1}->value")};"
     else {
       s"""${innerMapType(ts)} v${depth - 1} = new ${newMapType(ts)};
@@ -388,45 +391,61 @@ bool $fieldName::check() const {${
     }
   }
 
-  private final def hex(t: Type, x: Long): String = {
-    val v: Long = (if (x == Long.MaxValue || x == Long.MinValue)
+  private final def hex(t : Type, x : Long) : String = {
+    val v : Long = (if (x == Long.MaxValue || x == Long.MinValue)
       x >> (64 - t.getSkillName.substring(1).toInt);
     else
       x);
 
     t.getSkillName match {
-      case "i8" ⇒ "0x%02X".format(v.toByte)
+      case "i8"  ⇒ "0x%02X".format(v.toByte)
       case "i16" ⇒ "0x%04X".format(v.toShort)
       case "i32" ⇒ "0x%08X".format(v.toInt)
-      case _ ⇒ "0x%016X".format(v)
+      case _     ⇒ "0x%016X".format(v)
     }
   }
 
-  private final def makeRestriction(t: Type, r: Restriction): String = r match {
-    case r: NonNullRestriction ⇒ "::skill::restrictions::NonNull::get()"
-    case r: IntRangeRestriction ⇒
+  private final def makeRestriction(t : Type, r : Restriction) : String = r match {
+    case r : NonNullRestriction ⇒ "::skill::restrictions::NonNull::get()"
+    case r : IntRangeRestriction ⇒
       val typename = s"int${t.getSkillName.substring(1)}_t"
       s"new ::skill::restrictions::Range<$typename>(($typename)${hex(t, r.getLow)}, ($typename)${hex(t, r.getHigh)})"
 
-    case r: FloatRangeRestriction ⇒ t.getSkillName match {
+    case r : FloatRangeRestriction ⇒ t.getSkillName match {
       case "f32" ⇒ s"new ::skill::restrictions::Range<float>(${r.getLowFloat}f, ${r.getHighFloat}f)"
       case "f64" ⇒ s"new ::skill::restrictions::Range<double>(${r.getLowDouble}, ${r.getHighDouble})"
     }
-    case r: ConstantLengthPointerRestriction ⇒
+    case r : ConstantLengthPointerRestriction ⇒
       "::skill::restrictions::ConstantLengthPointer::get()"
 
-    case r ⇒ println("[c++] unhandled restriction: " + r.getName); "nullptr"
+    case r : FloatDefaultRestriction ⇒
+      t.getSkillName match {
+        case "f32" ⇒ s"new ::skill::restrictions::FieldDefault<float>(${r.getValue}f)"
+        case "f64" ⇒ s"new ::skill::restrictions::FieldDefault<double>(${r.getValue})"
+      }
+
+    case r : IntDefaultRestriction ⇒
+      t.getSkillName match {
+        case "i8"  ⇒ s"new ::skill::restrictions::FieldDefault<int8_t>(${r.getValue})"
+        case "i16" ⇒ s"new ::skill::restrictions::FieldDefault<int16_t>(${r.getValue})"
+        case "i32" ⇒ s"new ::skill::restrictions::FieldDefault<int32_t>(${r.getValue})"
+        case _     ⇒ s"new ::skill::restrictions::FieldDefault<int64_t>(${r.getValue}L)"
+      }
+
+    case r : DefaultRestriction ⇒
+      println("[c++] unhandled restriction: " + r.getName);
+      s"new ::skill::restrictions::FieldDefault<${mapType(t)}>(nullptr)"
   }
 
-  def writeCode(accessI: String, f: Field) = f.getType match {
-    case t: GroundType ⇒ t.getSkillName match {
+  def writeCode(accessI : String, f : Field) = f.getType match {
+    case t : GroundType ⇒ t.getSkillName match {
       case "annotation" | "string" ⇒ s"""auto b = ::skill::box($accessI);
             type->write(out, b);"""
       case "bool" ⇒ s"out->i8($accessI?0xff:0);"
-      case _ ⇒ s"""out->${t.getSkillName}($accessI);"""
+      case _      ⇒ s"""out->${t.getSkillName}($accessI);"""
     }
 
-    case t: UserType ⇒ s"""${mapType(t)} v = $accessI;
+    case t : UserType ⇒ s"""${mapType(t)} v = $accessI;
             if (v)
                 out->v64(v->skillID());
             else
