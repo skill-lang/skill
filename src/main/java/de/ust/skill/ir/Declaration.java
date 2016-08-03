@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import de.ust.skill.ir.restriction.AbstractRestriction;
+
 /**
  * A declared user type.
  * 
@@ -73,6 +75,15 @@ public abstract class Declaration extends Type implements ReferenceType {
 
 	public List<Restriction> getRestrictions() {
 		return restrictions;
+	}
+
+	public boolean isAbstract() {
+		for (Restriction restriction : restrictions) {
+			if (restriction instanceof AbstractRestriction) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public boolean isUnique() {
