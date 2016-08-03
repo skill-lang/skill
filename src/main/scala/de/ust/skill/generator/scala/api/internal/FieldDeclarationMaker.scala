@@ -111,7 +111,14 @@ final class ${knownField(f)}(${
 """
       }${
         (for (r ← f.getRestrictions)
-          yield s"""restrictions += ${mkFieldRestriction(f.getType, r)}""").mkString("""
+          yield s"""restrictions += ${mkFieldRestriction(f.getType, r)}${
+          // add key to strings
+          r match {
+            case r : StringDefaultRestriction ⇒ s"""
+    t.asInstanceOf[de.ust.skill.common.scala.internal.StringPool].add("${r.getValue}")"""
+            case _                            ⇒ ""
+          }
+        }""").mkString("""
   override def createKnownRestrictions : Unit = {
     """, """
     """, """
@@ -316,8 +323,8 @@ ${mapKnownReadType(f.getType)}
     }
     case r : ConstantLengthPointerRestriction ⇒ "ConstantLengthPointer"
 
-    case r : IntDefaultRestriction            ⇒ s"DefaultRestriction(${r.getValue})"
-    case r : FloatDefaultRestriction          ⇒ s"DefaultRestriction(${r.getValue})"
+    case r : IntDefaultRestriction            ⇒ s"DefaultRestriction(${r.getValue}L.to${mapType(t)})"
+    case r : FloatDefaultRestriction          ⇒ s"DefaultRestriction(${r.getValue}.to${mapType(t)})"
     case r : NameDefaultRestriction           ⇒ s"DefaultRestriction(_owner.basePool.owner(${r.getValue.mkString("\"", ":", "\"")}).asInstanceOf[SingletonStoragePool[_ <: de.ust.skill.common.scala.api.SkillObject, _ <: de.ust.skill.common.scala.api.SkillObject]].get)"
     case r : StringDefaultRestriction         ⇒ s"""DefaultRestriction("${r.getValue}")"""
 

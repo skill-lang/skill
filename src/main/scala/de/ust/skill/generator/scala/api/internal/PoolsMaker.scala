@@ -75,9 +75,9 @@ final class ${storagePool(t)}(poolIndex : Int${
         else ",\nsuperPool"
       }
     )${
-      if(isSingleton) s" with SingletonStoragePool[$typeName, ${packagePrefix}${t.getBaseType.getName.capital}]"
-      else ""
-    } {
+        if (isSingleton) s" with SingletonStoragePool[$typeName, ${packagePrefix}${t.getBaseType.getName.capital}]"
+        else ""
+      } {
   override def getInstanceClass: Class[$typeName] = classOf[$typeName]
 
   override def addField[T : Manifest](ID : Int, t : FieldType[T], name : String,
@@ -148,12 +148,6 @@ ${
       f.createKnownRestrictions
   }
 
-  override def reflectiveAllocateInstance: $typeName = {
-    val r = new $typeName(-1)
-    this.newObjects.append(r)
-    r
-  }
-
   override def makeSubPool(name : String, poolIndex : Int) = ${
         if (isSingleton) s"""throw new NoSuchMethodError("${t.getName.capital} is a Singleton and can therefore not have any subtypes.")"""
         else s"new ${subPool(t)}(poolIndex, name, this)"
@@ -162,7 +156,29 @@ ${
 
   override def allocateData : Unit = data = new Array[$typeName](cachedSize)"""
         else""
-      }
+      }${
+        if (isSingleton) s"""
+
+  override def reflectiveAllocateInstance : $typeName = {
+    if (null != this.data && 0 != this.staticDataInstances) {
+      val r = staticInstances.next
+      if (null != r) r
+      else new $typeName(-1)
+    } else if (!newObjects.isEmpty) {
+      newObjects.head
+    } else {
+      val r = new $typeName(-1)
+      this.newObjects.append(r)
+      r
+    }
+  }
+"""
+        else s"""
+  override def reflectiveAllocateInstance: $typeName = {
+    val r = new $typeName(-1)
+    this.newObjects.append(r)
+    r
+  }
 
   override def allocateInstances {
     for (b ← blocks.par) {
@@ -175,9 +191,7 @@ ${
     }
   }
 
-${
-        if (isSingleton) ""
-        else s"""  def make(${makeConstructorArguments(t)}) = {
+  def make(${makeConstructorArguments(t)}) = {
     val r = new $typeName(-1 - newObjects.size${appendConstructorArguments(t)})
     newObjects.append(r)
     r
