@@ -12,13 +12,18 @@ final public class View extends FieldLike {
 
 	final private Name ownerName;
 	final private Type type;
-	final private FieldLike target;
+	private FieldLike target;
 
-	public View(Name declaredIn, FieldLike target, Type type, Name name, Comment comment) {
+	public View(Name declaredIn, Type type, Name name, Comment comment) {
 		super(name, comment);
 		ownerName = declaredIn;
-		this.target = target;
+		this.target = null;
 		this.type = type;
+	}
+
+	public void initialize(FieldLike target) {
+		assert null == this.target;
+		this.target = target;
 	}
 
 	public Name getOwnerName() {
@@ -31,5 +36,10 @@ final public class View extends FieldLike {
 
 	public FieldLike getTarget() {
 		return target;
+	}
+
+	@Override
+	public String toString() {
+		return "view " + target.getDeclaredIn() + "." + target.getName() + "as\n" + type + " " + name;
 	}
 }

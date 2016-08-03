@@ -96,7 +96,10 @@ ${
 	  val fieldAssignName = escaped(v.getName.camel + "_=")
 	  
 	  out.write(s"""
-	${comment(v)}def $fieldName : ${mapType(v.getType())} = $target.asInstanceOf[${mapType(v.getType())}]
+	${comment(v)}${
+	  if(v.getName == v.getTarget.getName) "override "
+	  else ""
+	}def $fieldName : ${mapType(v.getType())} = $target.asInstanceOf[${mapType(v.getType())}]
   ${comment(v)}def $fieldAssignName($fieldName : ${mapType(v.getType())}) : scala.Unit = $target = $fieldName""")
 	}
 	

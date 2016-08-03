@@ -1,5 +1,5 @@
 A : B {
-  view B.field as 
+  view C.field as 
   F asdf;
 }
 

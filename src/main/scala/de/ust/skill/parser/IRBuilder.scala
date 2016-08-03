@@ -166,10 +166,8 @@ object IRBuilder {
 
     // turns AST view to IR
     def mkFieldViews(d : Declaration, fields : List[View]) : List[ir.View] = for (f ← fields) yield {
-      val target = toIRByName(f.targetType.getOrElse(d.name)).asInstanceOf[ir.UserType].getFields.find(_.getSkillName.equals(f.targetField.lowercase)).get;
       new ir.View(
         d.name.ir,
-        target,
         mkType(f.t),
         f.name.ir,
         f.comment
@@ -206,11 +204,38 @@ object IRBuilder {
         )
       }
     }
+
+    // initialize the views of the argument declaration
+    def initializeViews(d : Declaration) {
+      d match {
+        case definition : DeclarationWithBody ⇒ definition.body.collect {
+          case v : View ⇒
+            val targetName = v.targetField.lowercase
+            val targetType = toIRByName(v.targetType.getOrElse(definition.name)).asInstanceOf[ir.WithFields]
+
+            val target = targetType.getFields.find(_.getSkillName.equals(targetName)).getOrElse(
+              targetType.getViews.find(_.getSkillName.equals(targetName)).getOrElse(
+                throw new ir.ParseException(s"$v has no valid target")
+              ))
+
+            toIR(definition).asInstanceOf[ir.WithFields].getViews.find {
+              case f ⇒ f.getName == v.name.ir
+            }.get.initialize(target)
+        }
+
+        case definition : Typedef ⇒ // no action required
+      }
+    }
     val ordered = topologicalSort(defs)
 
+    // initialize types
     for (t ← ordered) try {
       initialize(t)
     } catch { case e : Exception ⇒ throw ParseException(s"Initialization of type ${t.name} failed.\nSee ${t.declaredIn}", e) }
+
+    // initialize views (requires second pass, as they can refer to other views)
+    for (t ← ordered)
+      initializeViews(t)
 
     val rval = ordered.map(toIR(_))
 

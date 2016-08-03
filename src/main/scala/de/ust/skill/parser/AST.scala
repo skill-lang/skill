@@ -90,6 +90,11 @@ final class View(val comment : Comment, var targetType : Option[Name], val targe
    * established by type checker
    */
   var target : AbstractField = _;
+
+  override def toString() = s"""
+  view ${targetType.map(_.CapitalCase + ".").getOrElse("")}$targetField as
+  $t $name;
+"""
 }
 
 final class Customization(val comment : Comment, val language : Name, val options : Map[Name, List[String]],
@@ -134,9 +139,9 @@ final class Name(val source : String, delimitWithUnderscores : Boolean, delimitW
 
   lazy val CapitalCase : String = parts.tail.foldLeft(parts.head.capitalize)(_ + _.capitalize)
 
-  lazy val Ada_Style : String = parts.tail.foldLeft(parts.head.capitalize)(_+"_"+_.capitalize)
+  lazy val Ada_Style : String = parts.tail.foldLeft(parts.head.capitalize)(_ + "_" + _.capitalize)
 
-  lazy val c_style : String = parts.tail.foldLeft(parts.head.toLowerCase)(_+"_"+_.toLowerCase)
+  lazy val c_style : String = parts.tail.foldLeft(parts.head.toLowerCase)(_ + "_" + _.toLowerCase)
 
   def ir : de.ust.skill.ir.Name = new de.ust.skill.ir.Name(parts, lowercase);
 
