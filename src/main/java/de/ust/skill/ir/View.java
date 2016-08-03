@@ -3,7 +3,7 @@ package de.ust.skill.ir;
 /**
  * A view onto another field.
  * 
- * @see SKilL V1.0 §6.?
+ * @see SKilL V1.0 §4.4.4
  * @author Timm Felden
  * 
  * @note Views will not quite make it through Substitutions.
@@ -21,35 +21,15 @@ final public class View extends FieldLike {
 		this.type = type;
 	}
 
-	// private View(Name typeName, Name field, boolean auto, boolean isConstant,
-	// long constantValue, Name name,
-	// Type newType, Declaration declaredIn, ArrayList<Restriction> rs,
-	// HashSet<Hint> hs, Comment comment) {
-	// this.typeName = typeName;
-	// this.field = field;
-	// }
+	public Name getOwnerName() {
+		return ownerName;
+	}
 
-	// /**
-	// * removes a !hide hint if present
-	// */
-	// private static Collection<Hint> unhide(Set<Hint> hints) {
-	// if (hints.contains(Hint.hide)) {
-	// HashSet<Hint> rval = new HashSet<>(hints);
-	// rval.remove(Hint.hide);
-	// return rval;
-	// }
-	// return hints;
-	// }
+	public Type getType() {
+		return type;
+	}
 
-	// @Override
-	// public View cloneWith(Type newType, Collection<Restriction> nrs,
-	// Collection<Hint> nhs) {
-	// ArrayList<Restriction> rs = new ArrayList<>(nrs);
-	// rs.addAll(restrictions);
-	// HashSet<Hint> hs = new HashSet<>(nhs);
-	// hs.addAll(hints);
-	// return new View(typeName, field, auto, isConstant, constantValue, name,
-	// newType, declaredIn, rs, hs, comment);
-	// }
-
+	public FieldLike getTarget() {
+		return target;
+	}
 }

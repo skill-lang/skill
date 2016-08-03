@@ -1,6 +1,6 @@
 package de.ust.skill.parser;
 
-import scala.collection.JavaConversions.seqAsJavaList
+import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
@@ -166,7 +166,14 @@ object IRBuilder {
 
     // turns AST view to IR
     def mkFieldViews(d : Declaration, fields : List[View]) : List[ir.View] = for (f ← fields) yield {
-      new ir.View(d.name.ir, null, null, f.name.ir, f.comment)
+      val target = toIRByName(f.targetType.getOrElse(d.name)).asInstanceOf[ir.UserType].getFields.find(_.getSkillName.equals(f.targetField.lowercase)).get;
+      new ir.View(
+        d.name.ir,
+        target,
+        mkType(f.t),
+        f.name.ir,
+        f.comment
+      )
     }
 
     // initialize the arguments ir companion

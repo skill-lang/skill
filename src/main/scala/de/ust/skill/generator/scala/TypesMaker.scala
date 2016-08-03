@@ -88,6 +88,18 @@ ${
 
 	makeGetterAndSetter(out, t)
 	
+	// views
+	for(v <- t.getViews){
+	  // just redirect to the actual field so it's way simpler than getters & setters
+	  val fieldName = escaped(v.getName.camel)
+	  val target = escaped("_" + v.getTarget.getName.camel())
+	  val fieldAssignName = escaped(v.getName.camel + "_=")
+	  
+	  out.write(s"""
+	${comment(v)}def $fieldName : ${mapType(v.getType())} = $target.asInstanceOf[${mapType(v.getType())}]
+  ${comment(v)}def $fieldAssignName($fieldName : ${mapType(v.getType())}) : scala.Unit = $target = $fieldName""")
+	}
+	
 	// custom fields
     for(c <- t.getCustomizations if c.language.equals("scala")){
       val mod = c.getOptions.toMap.get("modifier").map(_.head).getOrElse("public")
@@ -201,9 +213,9 @@ ${ // create unapply method if the type has fields, that can be matched (none or
 """)
       else
         out.write(s"""$makeField
-  ${comment(f)}final def $fieldName : ${mapType(f.getType())} = $makeGetterImplementation
+  ${comment(f)}def $fieldName : ${mapType(f.getType())} = $makeGetterImplementation
   final private[$packageName] def ${escaped("Internal_"+f.getName.camel)} = $localFieldName
-  ${comment(f)}final def $fieldAssignName(${name(f)} : ${mapType(f.getType())}) : scala.Unit = $makeSetterImplementation
+  ${comment(f)}def $fieldAssignName(${name(f)} : ${mapType(f.getType())}) : scala.Unit = $makeSetterImplementation
   final private[$packageName] def ${escaped("Internal_"+f.getName.camel + "_=")}(v : ${mapType(f.getType())}) = $localFieldName = v
 """)
     }

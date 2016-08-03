@@ -1,6 +1,5 @@
 package de.ust.skill.ir.internal;
 
-import java.util.Collections;
 import java.util.List;
 
 import de.ust.skill.ir.Declaration;
@@ -9,7 +8,6 @@ import de.ust.skill.ir.ParseException;
 import de.ust.skill.ir.Type;
 import de.ust.skill.ir.TypeContext;
 import de.ust.skill.ir.UserType;
-import de.ust.skill.ir.View;
 
 /**
  * Type substitution that can be used to modify a type context. The substitution
@@ -53,7 +51,6 @@ abstract public class Substitution {
 		UserType t = (UserType) fromTC.types.get(d.getSkillName());
 		d.initialize((UserType) substitute(tc, t.getSuperType()),
 				TypeContext.substituteTypes(this, tc, t.getSuperInterfaces()),
-				TypeContext.substituteFields(this, tc, t.getFields()), Collections.<View> emptyList(),
-				t.getCustomizations());
+				TypeContext.substituteFields(this, tc, t.getFields()), t.getViews(), t.getCustomizations());
 	}
 }

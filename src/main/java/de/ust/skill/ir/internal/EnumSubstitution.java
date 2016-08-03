@@ -43,8 +43,8 @@ public class EnumSubstitution extends Substitution {
 		// add abstract classes for enum names and singletons for enum instances
 		for (EnumType t : enums) {
 			// TODO @abstract
-			UserType top = UserType.newDeclaration(tc, t.getName(), t.getComment(),
-					Collections.<Restriction> emptySet(), Collections.<Hint> emptySet());
+			UserType top = UserType.newDeclaration(tc, t.getName(), t.getComment(), Collections.<Restriction>emptySet(),
+					Collections.<Hint>emptySet());
 			defs.add(top);
 
 			// enum values become singletons!
@@ -54,7 +54,7 @@ public class EnumSubstitution extends Substitution {
 				Name name = new Name(Arrays.asList(skillname), skillname);
 
 				UserType sub = UserType.newDeclaration(tc, name, Comment.NoComment.get(),
-						Arrays.<Restriction> asList(new SingletonRestriction()), Collections.<Hint> emptySet());
+						Arrays.<Restriction>asList(new SingletonRestriction()), Collections.<Hint>emptySet());
 				defs.add(sub);
 				tops.put(sub, top);
 			}
@@ -74,8 +74,8 @@ public class EnumSubstitution extends Substitution {
 		// just replace interface types by base types, this can be done in an
 		// field agnostic way
 
-		return f.cloneWith(substitute(tc, f.getType()), Collections.<Restriction> emptySet(),
-				Collections.<Hint> emptySet());
+		return f.cloneWith(substitute(tc, f.getType()), Collections.<Restriction>emptySet(),
+				Collections.<Hint>emptySet());
 	}
 
 	@Override
@@ -99,23 +99,22 @@ public class EnumSubstitution extends Substitution {
 		// case 1: source is null, i.e. the type has been created by us (this
 		// happens in case of enum instances)
 		if (null == source) {
-			d.initialize(tops.get(d), Collections.<InterfaceType> emptyList(), Collections.<Field> emptyList(),
-					Collections.<View> emptyList(), Collections.<LanguageCustomization> emptyList());
+			d.initialize(tops.get(d), Collections.<InterfaceType>emptyList(), Collections.<Field>emptyList(),
+					Collections.<View>emptyList(), Collections.<LanguageCustomization>emptyList());
 		}
 		// case 2: d always was a user type ⇒ behave as always
 		else if (source instanceof UserType) {
 			UserType t = (UserType) source;
 			d.initialize((UserType) substitute(tc, t.getSuperType()),
 					TypeContext.substituteTypes(this, tc, t.getSuperInterfaces()),
-					TypeContext.substituteFields(this, tc, t.getFields()), Collections.<View> emptyList(),
-					t.getCustomizations());
+					TypeContext.substituteFields(this, tc, t.getFields()), t.getViews(), t.getCustomizations());
 		}
 		// case 3: we replaced an enum
 		else {
 			WithFields t = (WithFields) source;
 			List<Field> fs = TypeContext.substituteFields(this, tc, t.getFields());
-			d.initialize(null, Collections.<InterfaceType> emptyList(), fs, Collections.<View> emptyList(),
-					Collections.<LanguageCustomization> emptyList());
+			d.initialize(null, Collections.<InterfaceType>emptyList(), fs, Collections.<View>emptyList(),
+					Collections.<LanguageCustomization>emptyList());
 		}
 	}
 
