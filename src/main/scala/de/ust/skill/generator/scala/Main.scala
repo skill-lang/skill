@@ -34,6 +34,7 @@ import de.ust.skill.ir.restriction.FloatDefaultRestriction
 import de.ust.skill.ir.restriction.RangeRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
 import de.ust.skill.ir.restriction.IntRangeRestriction
+import de.ust.skill.ir.restriction.StringDefaultRestriction
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -174,7 +175,8 @@ Opitions (scala):
           case r : IntDefaultRestriction ⇒ r.getValue.toString
           case r : FloatDefaultRestriction if f.getType.getSkillName.equals("f64") ⇒ r.getValue.toString
           case r : FloatDefaultRestriction ⇒ r.getValue.toString + "f"
-          case _ ⇒ "???"
+          case r : StringDefaultRestriction ⇒ "\"" + r.getValue + "\""
+          case _ ⇒ null // TODO find a way to access the state object
         }).getOrElse {
           fr.collect {
             case r : FloatRangeRestriction ⇒
