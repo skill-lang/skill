@@ -40,8 +40,8 @@ ${
         if (null == t.getSuperType) "Skill.Types.Skill_Object"
         else name(t.getSuperType) + "_T"
       } with private;
-${comment(t)}
-   type ${name(t)} is access all ${name(t)}_T;
+
+${comment(t)}type ${name(t)} is access all ${name(t)}_T;
    type ${name(t)}_Dyn is access ${name(t)}_T'Class;
    function Hash is new Ada.Unchecked_Conversion(${name(t)}, Ada.Containers.Hash_Type);
    function Equals (ZA, ZB : ${name(t)}) return Boolean is (ZA = ZB);
@@ -110,11 +110,11 @@ ${
    -- ${name(t)} fields
 ${
         (for (f ← t.getFields)
-          yield s"""${comment(f)}
-   function Get_${name(f)} (This : not null access ${name(t)}_T'Class) return ${mapType(f)};
+          yield s"""
+${comment(f)}function Get_${name(f)} (This : not null access ${name(t)}_T'Class) return ${mapType(f)};
    pragma Inline (Get_${name(f)});
-${comment(f)}
-   procedure Set_${name(f)} (This : not null access ${name(t)}_T'Class; V : ${mapType(f)});
+
+${comment(f)}procedure Set_${name(f)} (This : not null access ${name(t)}_T'Class; V : ${mapType(f)});
    pragma Inline (Set_${name(f)});
 ${
           f.getType match {
