@@ -133,13 +133,13 @@ ${
 //                ""
 //            }
 //            else
-              ""
-          }${//@monotone modification check
-            if(!t.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty){
-              s"""assert skillID == -1L : "${t.getName} is specified to be monotone and this instance has already been subject to serialization!";
-        """
-            }
-            else
+//              ""
+//          }${//@monotone modification check
+//            if(!t.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty){
+//              s"""assert skillID == -1L : "${t.getName} is specified to be monotone and this instance has already been subject to serialization!";
+//        """
+//            }
+//            else
               ""
         }this.${name(f)} = ${name(f)};"
       }
