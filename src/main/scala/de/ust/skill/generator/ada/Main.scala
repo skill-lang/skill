@@ -223,6 +223,7 @@ class Main extends FakeMain
 -- \\__ \\ ' <| | | |__     ${headerLine2.get} --
 -- |___/_|\\_\\_|_|____|    ${headerLine3.get} --
 --                                                                            --
+pragma Ada_2012;
 """
   }
 
