@@ -73,7 +73,6 @@ ${
      */
     public static SkillState open(String path, Mode... mode) throws IOException, SkillException {
         File f = new File(path);
-        assert f.exists() : "can only open files that already exist in genarel, because of java.nio restrictions";
         return open(f, mode);
     }
 
@@ -86,6 +85,10 @@ ${
      *             on file or specification consistency errors
      */
     public static SkillState open(File path, Mode... mode) throws IOException, SkillException {
+        for (Mode m : mode) {
+            if (m == Mode.Create && !path.exists())
+                path.createNewFile();
+        }
         assert path.exists() : "can only open files that already exist in genarel, because of java.nio restrictions";
         return open(path.toPath(), mode);
     }
