@@ -42,7 +42,7 @@ ${
       } with private;
 
 ${comment(t)}type ${name(t)} is access all ${name(t)}_T;
-   type ${name(t)}_Dyn is access ${name(t)}_T'Class;
+   type ${name(t)}_Dyn is access all ${name(t)}_T'Class;
    function Hash is new Ada.Unchecked_Conversion(${name(t)}, Ada.Containers.Hash_Type);
    function Equals (ZA, ZB : ${name(t)}) return Boolean is (ZA = ZB);
 """).mkString
