@@ -174,8 +174,8 @@ package body $thisPackage is
    is
       First : Natural;
       Last  : Natural;
-      Data  : constant Skill.Types.Annotation_Array    := Owner_Dyn (This)${if(tIsBaseType)""else".Base"}.Data;
-      Input : constant Skill.Streams.Reader.Sub_Stream := CE.Input;
+      Data  : constant Skill.Types.Annotation_Array := Owner_Dyn (This)${if(tIsBaseType)""else".Base"}.Data;
+      Input : constant Skill.Streams.Reader.Stream  := CE.Input.To;
    begin
       if CE.C.all in Skill.Internal.Parts.Simple_Chunk then
          First := Natural (CE.C.To_Simple.BPO);
