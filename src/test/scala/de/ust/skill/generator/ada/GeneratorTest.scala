@@ -14,8 +14,8 @@ import de.ust.skill.main.CommandLine
 class GeneratorTest extends FunSuite {
 
   def check(src : String, out : String) {
-    CommandLine.exit = {s ⇒ fail(s)}
-    CommandLine.main(Array[String]("-L", "ada", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/ada/"+src, "testsuites/"))
+    CommandLine.exit = { s ⇒ fail(s) }
+    CommandLine.main(Array[String]("-L", "ada", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/ada/" + src, "testsuites/"))
   }
 
   test("aircraft")(check("aircraft.skill", "aircraft"))
@@ -25,4 +25,6 @@ class GeneratorTest extends FunSuite {
   test("graph_1")(check("graph1.skill", "graph_1"))
   test("graph_2")(check("graph2.skill", "graph_2"))
   test("node")(check("nodeExample.tool1.skill", "node"))
+
+  test("views: simple retyping")(check("views.skill", "retyping"))
 }

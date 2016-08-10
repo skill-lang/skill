@@ -148,9 +148,24 @@ ${
         }"""
         ).mkString
       }
-"""
-      ).mkString
-    }private
+""").mkString
+    }
+   -----------
+   -- views --
+   -----------
+${
+      // views
+      (for (
+        t ← IR;
+        v ← t.getViews
+      ) yield {
+        s"""
+${comment(v)}function View_${name(v)} (This : not null access ${name(t)}_T) return ${mapType(v.getType)} is
+   (This.Get_${name(v.getTarget)}.As_${v.getType.getName.ada()});
+   pragma Inline (View_${name(v)});"""
+      }).mkString
+    }
+private
 ${
       (for (t ← IR)
         yield s"""
