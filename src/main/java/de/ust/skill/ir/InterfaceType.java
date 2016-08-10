@@ -93,6 +93,9 @@ final public class InterfaceType extends Declaration implements WithFields {
 				names.add(f.name);
 				f.setDeclaredIn(this);
 			}
+            for (FieldLike f : views) {
+                f.setDeclaredIn(this);
+            }
 			if (names.size() != Fields.size())
 				throw new ParseException("Type " + name + " contains duplicate field definitions.");
 		}
