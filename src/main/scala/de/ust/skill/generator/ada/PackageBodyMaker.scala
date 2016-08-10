@@ -11,6 +11,7 @@ import de.ust.skill.ir.SingleBaseTypeContainer
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.Field
+import de.ust.skill.ir.View
 
 trait PackageBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -181,85 +182,26 @@ ${
           ).mkString
         }"""
         ).mkString
+      }${
+        // views
+        (for (
+          t ← IR;
+          v ← t.getViews
+        ) yield {
+          s"""
+${comment(v)}procedure Set_${name(v)} (This : not null access ${name(t)}_T'Class; V : ${mapType(v.getType)})
+   is
+   begin
+      Set_${name(v.getTarget)} (This.To_${v.getTarget.getDeclaredIn.getName.ada}, V.To_${v.getTarget match {
+        case f : View ⇒ f.getType.getName.ada
+        case f : Field ⇒ f.getType.getName.ada
+        }
+      });
+   end Set_${name(v)};"""
+        }).mkString
       }
 end ${PackagePrefix};
 """)
-
-      //    out.write(s"""
-      //package body ${packagePrefix.capitalize} is
-      //
-      //   function Hash (Element : Short_Short_Integer) return Ada.Containers.Hash_Type is
-      //      (Ada.Containers.Hash_Type'Mod (Element));
-      //
-      //   function Hash (Element : Short) return Ada.Containers.Hash_Type is
-      //      (Ada.Containers.Hash_Type'Mod (Element));
-      //
-      //   function Hash (Element : Integer) return Ada.Containers.Hash_Type is
-      //      (Ada.Containers.Hash_Type'Mod (Element));
-      //
-      //   function Hash (Element : Long) return Ada.Containers.Hash_Type is
-      //      (Ada.Containers.Hash_Type'Mod (Element));
-      //
-      //   function Hash (Element : String_Access) return Ada.Containers.Hash_Type is
-      //      (Ada.Strings.Hash (Element.all));
-      //
-      //   function Equals (Left, Right : String_Access) return Boolean is
-      //      (Left = Right or else ((Left /= null and Right /= null) and then Left.all = Right.all));
-      //
-      //   function Hash (Element : Skill_Type_Access) return Ada.Containers.Hash_Type is
-      //      function Convert is new Ada.Unchecked_Conversion (Skill_Type_Access, i64);
-      //   begin
-      //      return Ada.Containers.Hash_Type'Mod (Convert (Element));
-      //   end;
-      //${
-      //
-      //      /**
-      //       * Provides the hash function of every type.
-      //       */
-      //      (for (t ← IR)
-      //        yield s"""
-      //   function Hash (Element : ${name(t)}_Type_Access) return Ada.Containers.Hash_Type is
-      //      (Hash (Skill_Type_Access (Element)));
-      //""").mkString
-      //    }
-      //${
-      //      /**
-      //       * Provides the accessor functions to the fields of every type.
-      //       */
-      //      (for (
-      //        d ← IR;
-      //        f ← d.getAllFields if !f.isIgnored
-      //      ) yield if (f.isConstant) {
-      //        s"""
-      //   function Get_${name(f)} (Object : ${name(d)}_Type) return ${mapType(f.getType, f.getDeclaredIn, f)} is
-      //      (${
-      //          f.getType.getName.getSkillName match {
-      //            case "i8"  ⇒ f.constantValue.toByte
-      //            case "i16" ⇒ f.constantValue.toShort
-      //            case "i32" ⇒ f.constantValue.toInt
-      //            case _     ⇒ f.constantValue
-      //          }
-      //        });
-      //"""
-      //      } else {
-      //        s"""
-      //   function Get_${name(f)} (Object : ${name(d)}_Type) return ${mapType(f.getType, f.getDeclaredIn, f)} is
-      //      (Object.${escapedLonely(f.getSkillName)});
-      //
-      //   procedure Set_${name(f)} (
-      //      Object : in out ${name(d)}_Type;
-      //      Value  :        ${mapType(f.getType, f.getDeclaredIn, f)}
-      //   ) is
-      //   begin
-      //      Object.${escapedLonely(f.getSkillName)} := Value;
-      //   end Set_${name(f)};
-      //"""
-      //      }
-      //      ).mkString
-      //    }
-      //
-      //end ${packagePrefix.capitalize};
-      //""")
 
       out.close()
     }
@@ -313,7 +255,7 @@ end ${PackagePrefix};
    begin
       return Convert (V);
    end Unbox_${name(f)}_${Vs}V;
-""") ++ map_boxing(t, f, Vs+"V", vs)
+""") ++ map_boxing(t, f, Vs + "V", vs)
 
       })
   }

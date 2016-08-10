@@ -160,9 +160,11 @@ ${
         v ← t.getViews
       ) yield {
         s"""
-${comment(v)}function View_${name(v)} (This : not null access ${name(t)}_T) return ${mapType(v.getType)} is
+${comment(v)}function View_${name(v)} (This : not null access ${name(t)}_T'Class) return ${mapType(v.getType)} is
    (This.Get_${name(v.getTarget)}.As_${v.getType.getName.ada()});
-   pragma Inline (View_${name(v)});"""
+   pragma Inline (View_${name(v)});
+${comment(v)}procedure Set_${name(v)} (This : not null access ${name(t)}_T'Class; V : ${mapType(v.getType)});
+   pragma Inline (Set_${name(v)});"""
       }).mkString
     }
 private
