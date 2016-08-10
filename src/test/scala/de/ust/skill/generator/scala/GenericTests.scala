@@ -88,7 +88,7 @@ class Generic${name}ReadTest extends CommonTest {
       val out = newTestFile(name, "Read")
 
       for (f ← accept) out.write(s"""
-  test("$name - read (accept): ${f.getName}") { Assert.assertNotNull(read("${f.getPath}")) }
+  test("$name - read (accept): ${f.getName}") { read("${f.getPath}").check }
 """)
 
       for (f ← reject) out.write(s"""
