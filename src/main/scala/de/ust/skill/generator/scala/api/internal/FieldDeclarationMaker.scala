@@ -324,12 +324,13 @@ ${mapKnownReadType(f.getType)}
     }
     case r : ConstantLengthPointerRestriction ⇒ "ConstantLengthPointer"
 
-    case r : IntDefaultRestriction            ⇒ s"DefaultRestriction(${r.getValue}L.to${mapType(t)})"
-    case r : FloatDefaultRestriction          ⇒ s"DefaultRestriction(${r.getValue}.to${mapType(t)})"
-    case r : NameDefaultRestriction           ⇒ s"DefaultRestriction(_owner.basePool.owner(${r.getValue.mkString("\"", ":", "\"")}).asInstanceOf[SingletonStoragePool[_ <: de.ust.skill.common.scala.api.SkillObject, _ <: de.ust.skill.common.scala.api.SkillObject]].get)"
-    case r : StringDefaultRestriction         ⇒ s"""DefaultRestriction("${r.getValue}")"""
+    case r : IntDefaultRestriction ⇒ s"DefaultRestriction(${r.getValue}L.to${mapType(t)})"
+    case r : FloatDefaultRestriction ⇒ s"DefaultRestriction(${r.getValue}.to${mapType(t)})"
+    case r : NameDefaultRestriction if t.getSkillName.equals("bool") ⇒ s"DefaultRestriction(${r.getValue.head})"
+    case r : NameDefaultRestriction ⇒ s"DefaultRestriction(_owner.basePool.owner(${r.getValue.mkString("\"", ":", "\"")}).asInstanceOf[SingletonStoragePool[_ <: de.ust.skill.common.scala.api.SkillObject, _ <: de.ust.skill.common.scala.api.SkillObject]].get)"
+    case r : StringDefaultRestriction ⇒ s"""DefaultRestriction("${r.getValue}")"""
 
-    case r                                    ⇒ println("[scala] unhandled restriction: " + r.getName); ""
+    case r ⇒ println("[scala] unhandled restriction: " + r.getName); ""
   }
 
   /**
@@ -370,7 +371,8 @@ ${mapKnownReadType(f.getType)}
       case _ ⇒ s"result += ${exactFieldType(t : Type)}.offset(v)"
     }
 
-    case t : UserType                ⇒ "result += (if (null == v) 1 else V64.offset(v.getSkillID))"
+    case t : UserType ⇒ "result += (if (null == v) 1 else V64.offset(v.getSkillID))"
+    case t : InterfaceType if t.getSuperType.isInstanceOf[UserType] ⇒ "result += (if (null == v) 1 else V64.offset(v.getSkillID))"
 
     case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${offsetCode(t.getBaseType)} }"
 
@@ -403,7 +405,8 @@ ${mapKnownReadType(f.getType)}
     }
 
     // TODO optimize user types (requires prelude, check nesting!)
-    case t : UserType                ⇒ "if (null == v) out.i8(0) else out.v64(v.getSkillID)"
+    case t : UserType ⇒ "if (null == v) out.i8(0) else out.v64(v.getSkillID)"
+    case t : InterfaceType if t.getSuperType.isInstanceOf[UserType] ⇒ "if (null == v) out.i8(0) else out.v64(v.getSkillID)"
 
     case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${writeCode(t.getBaseType)} }"
 
