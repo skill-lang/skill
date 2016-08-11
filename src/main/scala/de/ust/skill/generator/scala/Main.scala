@@ -14,28 +14,26 @@ import de.ust.skill.generator.scala.api.SkillFileMaker
 import de.ust.skill.generator.scala.api.internal.FieldDeclarationMaker
 import de.ust.skill.generator.scala.api.internal.FileParserMaker
 import de.ust.skill.generator.scala.api.internal.PoolsMaker
-import de.ust.skill.generator.scala.api.internal.StateAppenderMaker
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
+import de.ust.skill.ir.FieldLike
 import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.InterfaceType
 import de.ust.skill.ir.ListType
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.View
-import de.ust.skill.ir.InterfaceType
-import de.ust.skill.ir.FieldLike
 import de.ust.skill.ir.restriction.DefaultRestriction
-import de.ust.skill.ir.restriction.IntDefaultRestriction
 import de.ust.skill.ir.restriction.FloatDefaultRestriction
-import de.ust.skill.ir.restriction.RangeRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
+import de.ust.skill.ir.restriction.IntDefaultRestriction
 import de.ust.skill.ir.restriction.IntRangeRestriction
-import de.ust.skill.ir.restriction.StringDefaultRestriction
 import de.ust.skill.ir.restriction.NameDefaultRestriction
+import de.ust.skill.ir.restriction.RangeRestriction
+import de.ust.skill.ir.restriction.StringDefaultRestriction
 
 /**
  * Fake Main implementation required to make trait stacking work.
