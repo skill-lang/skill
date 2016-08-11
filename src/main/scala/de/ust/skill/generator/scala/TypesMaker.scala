@@ -61,9 +61,9 @@ ${(for(t ← IR if t.getBaseType == base;
       out.write(s"""
 ${
         comment(t)
-}sealed class ${name(t)} (_skillID : SkillID) ${
-        if (null != t.getSuperType()) { s"extends ${name(t.getSuperType)}" }
-        else { "extends SkillObject" }
+}sealed class ${name(t)} (_skillID : SkillID) extends ${
+        if (null != t.getSuperType()) s"${name(t.getSuperType)}"
+        else "SkillObject"
       }(_skillID)${
   (for(s <- t.getSuperInterfaces)
     yield " with " + name(s)).mkString

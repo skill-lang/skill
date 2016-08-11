@@ -16,6 +16,12 @@ interface ColoredNode : AbstractNode with Colored with Marker {
 Node : ColoredNode {
 }
 
+/** check that projection wont interfere with regular subtyping */
+SubNode : Node {
+  Marker f;
+  Node n;
+}
+
 /** anything that has a color is colored */
 interface Colored {
   string color;

@@ -27,12 +27,12 @@ trait PoolsMaker extends GeneralOutputMaker {
     super.make
 
     // override IR with projected definitions
-    val flatIR = this.types.removeSpecialDeclarations.getUsertypes
+    //val flatIR = this.types.removeSpecialDeclarations.getUsertypes
 
     for (t ← IR) {
       val typeName = "_root_." + packagePrefix + name(t)
       val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
-      val fields = flatIR.find(_.getName == t.getName).get.getFields
+      val fields = t.getFields//flatIR.find(_.getName == t.getName).get.getFields
 
       val out = open(s"api/internal/Pool${t.getName.capital}.scala")
       //package
@@ -251,7 +251,7 @@ final class ${subPool(t)}(poolIndex : Int, name : String, superPool : StoragePoo
       case n            ⇒ n.capitalize
     }
     case t : UserType                ⇒ s"state.${name(t)}"
-    case t : InterfaceType           ⇒ throw new IllegalStateException("wrong type context; interfaces must be projected")
+    case t : InterfaceType           ⇒ s"state.${name(t)}"
 
     case t : ConstantLengthArrayType ⇒ s"ConstantLengthArray(${t.getLength}, ${mapFieldDefinition(t.getBaseType)})"
     case t : VariableLengthArrayType ⇒ s"VariableLengthArray(${mapFieldDefinition(t.getBaseType)})"

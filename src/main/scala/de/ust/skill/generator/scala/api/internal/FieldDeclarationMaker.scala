@@ -38,7 +38,7 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
     super.make
 
     // override IR with projected definitions
-    val IR = this.types.removeSpecialDeclarations.getUsertypes
+    //val IR = this.types.removeSpecialDeclarations.getUsertypes
 
     for (t ← IR; f ← t.getFields) {
       // the type without the interface projection
