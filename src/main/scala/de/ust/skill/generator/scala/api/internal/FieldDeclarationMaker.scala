@@ -32,6 +32,7 @@ import de.ust.skill.ir.restriction.IntDefaultRestriction
 import de.ust.skill.ir.restriction.StringDefaultRestriction
 import de.ust.skill.ir.restriction.FloatDefaultRestriction
 import de.ust.skill.ir.restriction.NameDefaultRestriction
+import de.ust.skill.ir.InterfaceType
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -116,7 +117,7 @@ final class ${knownField(f)}(${
           r match {
             case r : StringDefaultRestriction ⇒ s"""
     t.asInstanceOf[de.ust.skill.common.scala.internal.StringPool].add("${r.getValue}")"""
-            case _                            ⇒ ""
+            case _ ⇒ ""
           }
         }""").mkString("""
   override def createKnownRestrictions : Unit = {
@@ -387,9 +388,10 @@ ${mapKnownReadType(f.getType)}
           if(null != v) v.foreach { v => ${offsetCode(t.getBaseType)} }"""
 
     // @note this might be optimizable, but i dont care for now
-    case t : MapType ⇒ "result += (if(null == v) 1 else t.offset(v))"
+    case t : MapType       ⇒ "result += (if(null == v) 1 else t.offset(v))"
+    case t : InterfaceType ⇒ "result += t.offset(v)"
 
-    case _           ⇒ "???"
+    case _                 ⇒ "???"
   }
 
   private final def writeCode(t : Type) : String = t match {
@@ -419,8 +421,9 @@ ${mapKnownReadType(f.getType)}
             v.foreach { v => ${writeCode(t.getBaseType)} }}"""
 
     // @note this might be optimizable, but i dont care for now
-    case t : MapType ⇒ "t.write(v, out)"
+    case t : MapType       ⇒ "t.write(v, out)"
+    case t : InterfaceType ⇒ "t.write(v, out)"
 
-    case _           ⇒ "???"
+    case _                 ⇒ "???"
   }
 }

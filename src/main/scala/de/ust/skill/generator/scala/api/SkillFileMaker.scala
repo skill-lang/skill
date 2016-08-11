@@ -45,6 +45,7 @@ import de.ust.skill.common.scala.internal.StringPool
 import de.ust.skill.common.scala.internal.fieldTypes
 import de.ust.skill.common.scala.internal.fieldTypes.AnnotationType
 import de.ust.skill.common.scala.internal.InterfacePool
+import de.ust.skill.common.scala.internal.UnrootedInterfacePool
 
 /**
  * A skill file that corresponds to your specification. Have fun!
@@ -66,12 +67,17 @@ ${
   val ${name(t)} : internal.${storagePool(t)} = typesByName("${t.getSkillName}").asInstanceOf[internal.${storagePool(t)}]""").mkString
     }
 ${
-      (for (t ← IRInterfaces) yield s"""
+      (for (t ← IRInterfaces if !t.getSuperType.isInstanceOf[UserType]) yield s"""
+  val ${name(t)} : UnrootedInterfacePool[${mapType(t)}] = 
+    new UnrootedInterfacePool[${mapType(t)}]("${name(t)}", AnnotationType,
+      Array[StoragePool[_ <: ${mapType(t)}, _ <: SkillObject]](${
+        collectRealizationNames(t).map(name).mkString(", ")
+      }));""").mkString
+    }
+${
+      (for (t ← IRInterfaces if t.getSuperType.isInstanceOf[UserType]) yield s"""
   val ${name(t)} : InterfacePool[${mapType(t)}, ${mapType(t.getBaseType)}] = 
-    new InterfacePool[${mapType(t)}, ${mapType(t.getBaseType)}]("${name(t)}", ${
-        if (t.getSuperType.isInstanceOf[UserType]) name(t.getSuperType)
-        else "null"
-      },
+    new InterfacePool[${mapType(t)}, ${mapType(t.getBaseType)}]("${name(t)}", ${name(t.getSuperType)},
       Array[StoragePool[_ <: ${mapType(t)}, _ <: ${mapType(t.getBaseType)}]](${
         collectRealizationNames(t).map(name).mkString(", ")
       }));""").mkString
