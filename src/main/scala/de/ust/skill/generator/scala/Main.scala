@@ -35,6 +35,7 @@ import de.ust.skill.ir.restriction.RangeRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
 import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.StringDefaultRestriction
+import de.ust.skill.ir.restriction.NameDefaultRestriction
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -50,10 +51,7 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
 class Main extends FakeMain
     with FieldDeclarationMaker
     with FileParserMaker
-    //    with SerializationFunctionsMaker
     with SkillFileMaker
-    //    with StateAppenderMaker
-    //    with StateWriterMaker
     with DependenciesMaker
     with PoolsMaker
     with TypesMaker {
@@ -176,6 +174,10 @@ Opitions (scala):
           case r : FloatDefaultRestriction if f.getType.getSkillName.equals("f64") ⇒ r.getValue.toString
           case r : FloatDefaultRestriction ⇒ r.getValue.toString + "f"
           case r : StringDefaultRestriction ⇒ "\"" + r.getValue + "\""
+          case r : NameDefaultRestriction if f.getType.getSkillName.equals("bool") ⇒
+            if (r.getValue.head.equals("true")) "true"
+            else "false"
+
           case _ ⇒ null // TODO find a way to access the state object
         }).getOrElse {
           fr.collect {

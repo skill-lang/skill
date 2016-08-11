@@ -230,7 +230,7 @@ ${ // create unapply method if the type has fields, that can be matched (none or
    * interfaces created here inherit some type defined in this file, i.e. they have a super class
    */
   def createInterfaces(out : PrintWriter, base : UserType) {
-    for(t <- IRInterfaces if t.getBaseType == base) {
+    for(t <- IRInterfaces if t.getBaseType.getSkillName.equals(base.getSkillName)) {
       out.write(s"""
 ${
         comment(t)
