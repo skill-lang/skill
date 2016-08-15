@@ -26,13 +26,19 @@ trait PoolsMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    // override IR with projected definitions
-    //val flatIR = this.types.removeSpecialDeclarations.getUsertypes
+    // reflection has to know projected definitions
+    val flatIR = this.types.removeSpecialDeclarations.getUsertypes
 
     for (t ← IR) {
       val typeName = "_root_." + packagePrefix + name(t)
       val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
-      val fields = t.getFields//flatIR.find(_.getName == t.getName).get.getFields
+
+      // find all fields that belong to the projected version, but use the unprojected variant
+      val flatIRFieldNames = flatIR.find(_.getName == t.getName).get.getFields.map(_.getSkillName).toSet
+      val fields = t.getAllFields.filter(f ⇒ flatIRFieldNames.contains(f.getSkillName))
+      val projectedField = flatIR.find(_.getName == t.getName).get.getFields.map {
+        case f ⇒ fields.find(_.getSkillName.equals(f.getSkillName)).get -> f
+      }.toMap
 
       val out = open(s"api/internal/Pool${t.getName.capital}.scala")
       //package
@@ -85,7 +91,7 @@ final class ${storagePool(t)}(poolIndex : Int${
     val f = (name match {${
         (for (f ← fields)
           yield s"""
-      case "${f.getSkillName}" ⇒ new ${knownField(f)}(${
+      case "${f.getSkillName}" ⇒ new ${knownField(projectedField(f))}(${
           if (f.isAuto()) ""
           else "ID, "
         }this${
@@ -116,7 +122,7 @@ final class ${storagePool(t)}(poolIndex : Int${
         (if (dfs.isEmpty) "// no data fields\n"
         else s"""// data fields
     ${
-          (for (f ← dfs) yield s"val ${clsName(f)} = classOf[${knownField(f)}]").mkString("", "\n    ", "\n")
+          (for (f ← dfs) yield s"val ${clsName(f)} = classOf[${knownField(projectedField(f))}]").mkString("", "\n    ", "\n")
         }
     val fields = HashSet[Class[_ <: FieldDeclaration[_, ${mapType(t)}]]](${
           (for (f ← dfs) yield s"${clsName(f)}").mkString(",")
@@ -129,7 +135,7 @@ final class ${storagePool(t)}(poolIndex : Int${
 ${
           (for (f ← dfs)
             yield s"""    if(fields.contains(${clsName(f)}))
-        dataFields += new ${knownField(f)}(dataFields.size + 1, this, ${mapFieldDefinition(f.getType)})"""
+        dataFields += new ${knownField(projectedField(f))}(dataFields.size + 1, this, ${mapFieldDefinition(f.getType)})"""
           ).mkString("\n")
         }
 """) + (
@@ -138,7 +144,7 @@ ${
     autoFields.sizeHint(${afs.size})${
             afs.map { f ⇒
               s"""
-    autoFields += new ${knownField(f)}(this, ${mapFieldDefinition(f.getType)})"""
+    autoFields += new ${knownField(projectedField(f))}(this, ${mapFieldDefinition(f.getType)})"""
             }.mkString
           }
   """)

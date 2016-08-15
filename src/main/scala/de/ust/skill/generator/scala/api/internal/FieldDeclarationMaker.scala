@@ -38,8 +38,8 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    // override IR with projected definitions
-    //val IR = this.types.removeSpecialDeclarations.getUsertypes
+    // project IR, so that reflection implements the binary file format correctly
+    val IR = this.types.removeSpecialDeclarations.getUsertypes
 
     for (t ← IR; f ← t.getFields) {
       // the type without the interface projection
@@ -85,14 +85,14 @@ final class ${knownField(f)}(${
   _index : Int,"""
       }
   _owner : ${storagePool(t)},
-  _type : FieldType[${mapType(f.getType)}]${
+  _type : FieldType[$fieldActualType]${
         if (f.getType.isInstanceOf[ReferenceType] || f.getType.isInstanceOf[ContainerType]) ""
         else s" = ${mapToFieldType(f.getType)}"
       })
     extends ${
         if (f.isAuto()) "Auto"
         else "Known"
-      }Field[${mapType(f.getType)},${mapType(t)}](_type,
+      }Field[$fieldActualType,${mapType(t)}](_type,
       "${f.getSkillName}",${
         if (f.isAuto()) """
       0,"""
@@ -240,8 +240,8 @@ ${mapKnownReadType(f.getType)}
       }
 
   // note: reflective field access will raise exception for ignored fields
-  override def getR(i : SkillObject) : ${mapType(f.getType)} = i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)}
-  override def setR(i : SkillObject, v : ${mapType(f.getType)}) : Unit = ${
+  override def getR(i : SkillObject) : $fieldActualType = i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)}
+  override def setR(i : SkillObject, v : $fieldActualType) : Unit = ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
         else s"i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = v.asInstanceOf[$fieldActualType]"
       }
