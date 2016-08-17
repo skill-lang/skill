@@ -15,8 +15,8 @@ class UnboundMappingRule(javaType: String, fieldNames: List[String], total: Bool
     java.getUsertypes.foreach { ut =>
       {
         ut.getFields.foreach { f =>
-          if (!java.types.containsKey(f.getName.getFqdn))
-            throw new RuntimeException(s"Field ${f.getName.getSkillName} in type ${ut.getName.getFqdn} was mapped but the respective type does not exit.")
+          if (!java.types.containsKey(f.getType.getName.getFqdn))
+            throw new RuntimeException(s"Field ${f.getName.getSkillName} in type ${ut.getName.getFqdn} was mapped but the respective type (${f.getType.getName.getFqdn}) does not exist.")
         }
       }
     }
