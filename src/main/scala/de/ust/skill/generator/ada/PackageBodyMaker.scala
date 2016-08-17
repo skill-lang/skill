@@ -86,8 +86,10 @@ ${
 """
             sub.getSubTypes.foreach(asSub)
           }
-
-          t.getSubTypes.foreach(asSub)
+          
+          // only base types get unsafe conversions, as they are inherited to subtypes and completely identical
+          if (null == t.getSuperType)
+            t.getSubTypes.foreach(asSub)
 
           r.toString
         }
@@ -192,11 +194,12 @@ ${
 ${comment(v)}procedure Set_${name(v)} (This : not null access ${name(t)}_T'Class; V : ${mapType(v.getType)})
    is
    begin
-      Set_${name(v.getTarget)} (This.To_${v.getTarget.getDeclaredIn.getName.ada}, V.To_${v.getTarget match {
-        case f : View ⇒ f.getType.getName.ada
-        case f : Field ⇒ f.getType.getName.ada
-        }
-      });
+      Set_${name(v.getTarget)} (This.To_${v.getTarget.getDeclaredIn.getName.ada}, V.To_${
+            v.getTarget match {
+              case f : View  ⇒ f.getType.getName.ada
+              case f : Field ⇒ f.getType.getName.ada
+            }
+          });
    end Set_${name(v)};"""
         }).mkString
       }

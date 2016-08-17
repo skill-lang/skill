@@ -88,7 +88,9 @@ ${
           sub.getSubTypes.foreach(asSub)
         }
 
-        t.getSubTypes.foreach(asSub)
+        // only base types get unsafe conversions, as they are inherited to subtypes and completely identical
+        if (null == t.getSuperType)
+          t.getSubTypes.foreach(asSub)
 
         r.toString
       }
