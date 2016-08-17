@@ -1,0 +1,32 @@
+#! fancy
+#
+# uses a combination of fancy types to challenge code generators.
+
+@abstract
+A {
+  A Parent;
+}
+
+@abstract
+B : A {}
+
+@abstract
+C : B {
+  C Value;
+}
+
+D : C {
+
+  view Value as
+  D Value;
+}
+
+interface E : C {}
+
+interface F : C {}
+
+G : C with E with F {
+
+  view Value as
+  G Value;
+}
