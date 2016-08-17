@@ -11,6 +11,7 @@ import java.io.FileReader
 import javassist.CtClass
 import scala.collection.mutable.HashMap
 import de.ust.skill.ir.Type
+import de.ust.skill.javacf.typing.TypeChecker
 
 object JavaForeign {
 
@@ -31,7 +32,15 @@ object JavaForeign {
     println("**********************\n\n")
 
     val mapper = new IRMapper(foreignSources)
-    mapper.mapClasses(javaTypeNames)
+    val (javaTc, reflectionMap) = mapper.mapClasses(javaTypeNames)
+
+    val typeRules = mappingRules.flatMap { r => r.bind(skillTc, javaTc) }
+    val checker = new TypeChecker
+    checker.check(typeRules, skillTc, javaTc)
+    println("***** Type Rules *****")
+    println(typeRules.mkString("\n"))
+    println("**********************\n\n")
+    (javaTc, reflectionMap)
   }
 
 }
