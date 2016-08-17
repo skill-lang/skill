@@ -55,7 +55,7 @@ final public class UserType extends Declaration implements WithFields {
      */
     public static UserType newDeclaration(TypeContext tc, Name name, Comment comment,
             Collection<Restriction> restrictions, Collection<Hint> hints) throws ParseException {
-        String skillName = name.getSkillName();
+        String skillName = name.getFqdn();
         if (tc.types.containsKey(skillName))
             throw new ParseException("Duplicate declaration of type " + name);
 

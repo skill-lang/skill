@@ -155,5 +155,10 @@ final public class Name implements Comparable<Name> {
 	public String getPackagePath() {
 		return packagePath;
 	}
+	
+	public String getFqdn() {
+		if (getPackagePath().length() > 0) return getPackagePath() + "." + skillName;
+		else return skillName;
+	}
 
 }

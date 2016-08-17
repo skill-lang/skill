@@ -43,7 +43,7 @@ One can specify an implicit type mapping by using the implicit keyword:
 	implicit mySkillType -> com.example.MyJavaType;
 
 ## Implicit total mapping
-To make the implicit mapping total, use the 'total' keyword instead:
+To make the implicit mapping total, use the 'implicit!' keyword instead:
 
 	implicit! mySkillType -> my.ecactly.matching.JavaType;
 
