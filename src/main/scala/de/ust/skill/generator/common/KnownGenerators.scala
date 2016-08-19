@@ -14,6 +14,7 @@ object KnownGenerators {
     classOf[cpp.Main],
     classOf[doxygen.Main],
     classOf[ecore.Main],
+    classOf[haskell.Main],
     classOf[java.Main],
     classOf[scala.Main],
     classOf[skill.Main],
