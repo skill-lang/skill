@@ -1,1 +1,2 @@
 new! container.ContainerFields;
+new! container.Stupid;
