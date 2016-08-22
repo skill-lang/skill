@@ -25,6 +25,7 @@ import de.ust.skill.ir.SetType
 import de.ust.skill.ir.restriction.DefaultRestriction
 import de.ust.skill.ir.restriction.IntDefaultRestriction
 import de.ust.skill.ir.restriction.FloatDefaultRestriction
+import de.ust.skill.ir.restriction.NameDefaultRestriction
 
 trait FieldDeclarationsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -431,6 +432,9 @@ bool $fieldName::check() const {${
         case "i32" ⇒ s"new ::skill::restrictions::FieldDefault<int32_t>(${r.getValue})"
         case _     ⇒ s"new ::skill::restrictions::FieldDefault<int64_t>(${r.getValue}L)"
       }
+    
+    case r : NameDefaultRestriction if t.getSkillName.equals("bool") ⇒ 
+      s"new ::skill::restrictions::FieldDefault<bool>(${r.getValue.head})"
 
     case r : DefaultRestriction ⇒
       println("[c++] unhandled restriction: " + r.getName);
