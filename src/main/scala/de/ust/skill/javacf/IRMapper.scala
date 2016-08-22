@@ -90,7 +90,7 @@ class IRMapper(classpaths: List[String]) {
     comment.init(List().asJava)
 
     val ntype = UserType.newDeclaration(tc, new Name(List(clazz.getSimpleName).asJava, clazz.getSimpleName, clazz.getPackageName),
-        comment, new java.util.ArrayList, new java.util.ArrayList)
+      comment, new java.util.ArrayList, new java.util.ArrayList)
     reflection += (ntype → clazz)
     knownTypes += (clazz → ntype)
 
@@ -136,7 +136,7 @@ class IRMapper(classpaths: List[String]) {
    */
   def mapFields(clazz: CtClass): List[Field] = clazz.getDeclaredFields.map { field ⇒
     val javatype = field.getType
-    val skilltype = mapType(javatype).orElse ({
+    val skilltype = mapType(javatype).orElse({
       val signature = field.getGenericSignature
       val sigparser = SignatureParser.make();
       val fieldsig = sigparser.parseClassSig(signature)
