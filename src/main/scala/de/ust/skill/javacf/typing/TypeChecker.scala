@@ -42,6 +42,13 @@ class TypeChecker {
             checked += (left → right)
           }
         }
+        case targetExists: TargetTypeExists ⇒ {
+          toTypes -= targetExists.getTargetType
+          if (!toTypes.contains(targetExists.getTargetType)) {
+            failed = true;
+            println(s"${targetExists.getTargetType.getName} not found but must exist!")
+          }
+        }
       }
     }
     fromTypes.foreach { unmapped => println(s"warning: SKilL type $unmapped has not been mapped to any Java type") }
