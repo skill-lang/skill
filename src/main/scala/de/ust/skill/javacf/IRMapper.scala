@@ -16,6 +16,7 @@ import de.ust.skill.ir.Type
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.InterfaceType
 import sun.reflect.generics.parser.SignatureParser
+import javassist.NotFoundException
 
 /**
  * Maps classes by name from a given classpath to IR representation.
@@ -72,7 +73,12 @@ class IRMapper(classpaths: List[String]) {
   /**
    * Collect a type and its transitive supertype closure.
    */
-  def collect(name: String): UserType = collect(loadType(name))
+  def collect(name: String): UserType = try {
+    collect(loadType(name))
+  } catch {
+    case e: NotFoundException ⇒
+      throw new RuntimeException(s"IR-Mapper cannot load class $name: not found in any given class path:\n${classpaths.mkString("\n")}");
+  }
 
   /**
    * Collect a type and its transitive supertype closure.
