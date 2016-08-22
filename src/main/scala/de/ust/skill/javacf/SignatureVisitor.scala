@@ -51,8 +51,6 @@ class SignatureVisitor(tc: TypeContext, pool: ClassPool, mapInUserContext: CtCla
   override def getResult(): Type = { result }
 
   override def visitClassSignature(cs: ClassSignature): Unit = {
-    cs.getSuperInterfaces.foreach { x => x.accept(this) }
-    cs.getFormalTypeParameters.foreach { x => x.accept(this) }
     cs.getSuperclass.accept(this)
   }
 
@@ -87,7 +85,7 @@ class SignatureVisitor(tc: TypeContext, pool: ClassPool, mapInUserContext: CtCla
         case e: NotFoundException ⇒ // do nothing!
       }
       val ta = mapInUserContext(pool.get(sct.getName))
-      typeargs += ta.get
+      typeargs += ta.getOrElse(throw new RuntimeException(s"Class not found: ${sct.getName} (used as type argument)"))
     }
   }
 

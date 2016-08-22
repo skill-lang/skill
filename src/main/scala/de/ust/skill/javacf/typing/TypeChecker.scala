@@ -44,7 +44,7 @@ class TypeChecker {
         }
         case targetExists: TargetTypeExists ⇒ {
           toTypes -= targetExists.getTargetType
-          if (!toTypes.contains(targetExists.getTargetType)) {
+          if (to.get(targetExists.getTargetType.getName.getFqdn) == null) {
             failed = true;
             println(s"${targetExists.getTargetType.getName} not found but must exist!")
           }
