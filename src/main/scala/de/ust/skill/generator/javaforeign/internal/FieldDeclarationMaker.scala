@@ -265,7 +265,7 @@ ${
         final SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}> t = (SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}>) type;
         final FieldType<${mapType(fieldType.getBaseType, true)}> baseType = t.groundType;
         $preludeData
-            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
+            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).${getterOrFieldAccess(t, f)};
             if(null==v)
                 result++;
             else {
@@ -283,7 +283,7 @@ ${
             final ${mapType(f.getType)} v = (${
                 if (tIsBaseType) ""
                 else s"(${mapType(t)})"
-              }data[i]).get${escaped(f.getName.capital)}();
+              }data[i]).${getterOrFieldAccess(t, f)};
             if(null==v)
                 result++;
             else {
@@ -389,7 +389,7 @@ ${
     @Override
     public ${mapType(f.getType, true)} getR(SkillObject ref) {
         ${
-        if (f.isConstant()) s"return ${mapType(t)}.get${escaped(f.getName.capital)}();"
+        if (f.isConstant()) s"return ${mapType(t)}.${getterOrFieldAccess(t, f)};"
         else s"return ((${mapType(t)}) ref).${getterOrFieldAccess(t, f)};"
       }
     }
@@ -405,7 +405,7 @@ ${
     @Override
     public ${mapType(f.getType)} get(${mapType(t)} ref) {
         ${
-        if (f.isConstant()) s"return ${mapType(t)}.get${escaped(f.getName.capital)}();"
+        if (f.isConstant()) s"return ${mapType(t)}.${getterOrFieldAccess(t, f)};"
         else s"return ref.${getterOrFieldAccess(t, f)};"
       }
     }
