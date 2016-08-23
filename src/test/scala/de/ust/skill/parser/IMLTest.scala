@@ -54,7 +54,7 @@ class IMLTest extends FunSuite {
   }
 
   test("create c++sf") {
-    val outDir = System.getProperty("user.home") + "/projekte/bauhausSF/functionNames++"
+    val outDir = System.getProperty("user.home") + "/projekte/bauhausSF/functionNames++Lazy"
     if (Files.exists(filename.toPath))
       CommandLine.main(Array("-p", "siml", "-L", "cpp", outDir + "/iml.spec",
         outDir))
