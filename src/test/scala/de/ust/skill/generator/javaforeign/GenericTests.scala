@@ -74,7 +74,7 @@ class GenericTests extends FunSuite with BeforeAndAfterAll {
     def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ ⇒ "x"): _*)
   }
 
-  for (path ← new File("src/test/resources/javaForeign").listFiles() if path.isDirectory() && path.getName.endsWith(testOnly)) {
+  for (path ← new File("src/test/resources/javaForeign/readwrite").listFiles() if path.isDirectory() && path.getName.endsWith(testOnly)) {
     val baseName: String = path.getName
     val mappingFile = new File(path.getAbsolutePath + "/mapping")
     assert(mappingFile.exists(), s"Mapping file not found in ${path.getAbsolutePath}")
