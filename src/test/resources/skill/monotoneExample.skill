@@ -1,0 +1,8 @@
+@Monotone PublicPost {
+  string message;
+}
+
+/** this is monotone as well */
+PrivatePost extends PublicPost {
+  string recipient;
+}

@@ -178,18 +178,11 @@ ${
                 ::skill::internal::AbstractStoragePool::setNextPools(t);
             }
         }
-        {
-            // allocate instances
-            std::vector<std::future<void>> jobs;
-            for (::skill::internal::AbstractStoragePool *t : *types) {
-                jobs.push_back(::skill::concurrent::ThreadPool::global.execute(
-                        [](::skill::internal::AbstractStoragePool *t) -> void {
-                            t->allocateInstances();
-                        }, t));
-            }
-            for (auto &j : jobs)
-                j.get();
-        }
+
+        // allocate instances
+#pragma omp parallel for schedule(dynamic)
+        for (size_t i = 0; i < types->size(); i++)
+            types->at(i)->allocateInstances();
 
         ::skill::internal::triggerFieldDeserialization(types, dataList);
 

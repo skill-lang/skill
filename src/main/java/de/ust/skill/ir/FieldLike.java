@@ -7,7 +7,7 @@ abstract public class FieldLike {
     /**
      * The comment from Specification.
      */
-    protected final Comment comment;
+    private final Comment comment;
 
     public FieldLike(Name name, Comment comment) {
         assert (null != name);
@@ -36,5 +36,9 @@ abstract public class FieldLike {
     protected void setDeclaredIn(Declaration declaredIn) {
         this.declaredIn = declaredIn;
     }
+
+	public final Comment getComment() {
+		return comment;
+	}
 
 }

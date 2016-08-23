@@ -1,0 +1,13 @@
+/**
+ A matrix definition
+ */
+Matrix {
+  /** this field should feel like f32[4][4] */
+  innerMatrix[4] innerMatrix;
+}
+
+/** only used inside of Matrix */
+!flat
+innerMatrix {
+  f32[4] data;
+}

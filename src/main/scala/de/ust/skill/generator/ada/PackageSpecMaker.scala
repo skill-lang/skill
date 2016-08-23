@@ -40,9 +40,9 @@ ${
         if (null == t.getSuperType) "Skill.Types.Skill_Object"
         else name(t.getSuperType) + "_T"
       } with private;
-${comment(t)}
-   type ${name(t)} is access all ${name(t)}_T;
-   type ${name(t)}_Dyn is access ${name(t)}_T'Class;
+
+${comment(t)}type ${name(t)} is access all ${name(t)}_T;
+   type ${name(t)}_Dyn is access all ${name(t)}_T'Class;
    function Hash is new Ada.Unchecked_Conversion(${name(t)}, Ada.Containers.Hash_Type);
    function Equals (ZA, ZB : ${name(t)}) return Boolean is (ZA = ZB);
 """).mkString
@@ -88,7 +88,9 @@ ${
           sub.getSubTypes.foreach(asSub)
         }
 
-        t.getSubTypes.foreach(asSub)
+        // only base types get unsafe conversions, as they are inherited to subtypes and completely identical
+        if (null == t.getSuperType)
+          t.getSubTypes.foreach(asSub)
 
         r.toString
       }
@@ -110,11 +112,11 @@ ${
    -- ${name(t)} fields
 ${
         (for (f ← t.getFields)
-          yield s"""${comment(f)}
-   function Get_${name(f)} (This : not null access ${name(t)}_T'Class) return ${mapType(f)};
+          yield s"""
+${comment(f)}function Get_${name(f)} (This : not null access ${name(t)}_T'Class) return ${mapType(f)};
    pragma Inline (Get_${name(f)});
-${comment(f)}
-   procedure Set_${name(f)} (This : not null access ${name(t)}_T'Class; V : ${mapType(f)});
+
+${comment(f)}procedure Set_${name(f)} (This : not null access ${name(t)}_T'Class; V : ${mapType(f)});
    pragma Inline (Set_${name(f)});
 ${
           f.getType match {
@@ -148,9 +150,26 @@ ${
         }"""
         ).mkString
       }
-"""
-      ).mkString
-    }private
+""").mkString
+    }
+   -----------
+   -- views --
+   -----------
+${
+      // views
+      (for (
+        t ← IR;
+        v ← t.getViews
+      ) yield {
+        s"""
+${comment(v)}function View_${name(v)} (This : not null access ${name(t)}_T'Class) return ${mapType(v.getType)} is
+   (This.Get_${name(v.getTarget)}.As_${v.getType.getName.ada()});
+   pragma Inline (View_${name(v)});
+${comment(v)}procedure Set_${name(v)} (This : not null access ${name(t)}_T'Class; V : ${mapType(v.getType)});
+   pragma Inline (Set_${name(v)});"""
+      }).mkString
+    }
+private
 ${
       (for (t ← IR)
         yield s"""

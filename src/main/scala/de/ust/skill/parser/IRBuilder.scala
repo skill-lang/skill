@@ -1,6 +1,6 @@
 package de.ust.skill.parser;
 
-import scala.collection.JavaConversions.seqAsJavaList
+import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
@@ -143,39 +143,6 @@ object IRBuilder {
             f.description.comment, f.description.restrictions, f.description.hints)
           case f : Constant ⇒ new ir.Field(mkType(f.t), f.name.ir, f.value,
             f.description.comment, f.description.restrictions, f.description.hints)
-          //          case f : View ⇒
-          //            val declaredIn : Name = f.declaredInType.getOrElse {
-          //              // we have no explicit type so we have to do a lookup
-          //              def find(d : ir.Declaration) : Option[ir.Declaration] = d match {
-          //                case t : ir.UserType if t.getFields().exists(_.getSkillName == f.oldName.lowercase) ⇒ Some(d)
-          //                case t : ir.UserType ⇒ (for (s ← t.getAllSuperTypes().map(find); if s.isDefined) yield s).headOption.flatten
-          //
-          //                case t : ir.InterfaceType if t.getFields().exists(_.getSkillName == f.oldName.lowercase) ⇒ Some(d)
-          //                case t : ir.InterfaceType ⇒ (for (s ← t.getAllSuperTypes().map(find); if s.isDefined) yield s).headOption.flatten
-          //
-          //                case _ ⇒ None
-          //              }
-          //              (d match {
-          //                case t : UserType ⇒
-          //                  (for (s ← t.superTypes.map(definitionNames).map(toIR); f ← find(s)) yield f.getName).headOption
-          //                case t : InterfaceDefinition ⇒
-          //                  (for (s ← t.superTypes.map(definitionNames).map(toIR); f ← find(s)) yield f.getName).headOption
-          //                case _ ⇒ ???
-          //              }).map(new Name(_)).getOrElse(
-          //                throw ParseException(
-          //                  s"None of the super types of ${d.name} contains a field ${f.name} that can be used in a view.")
-          //              )
-          //            };
-          //            val declIR = toIR(definitionNames(declaredIn)).asInstanceOf[ir.WithFields]
-          //            val fs = declIR.getFields().toList
-          //            val target = fs.find(_.getName() == f.target.name.ir).getOrElse(
-          //              throw ParseException(
-          //                s"""The view of ${d.name} can not refer to a field ${declaredIn.CapitalCase}.${f.name}, because it seems not to exist:
-          // ${fs.map(_.getName).mkString(", ")}"""
-          //              )
-          //            );
-          //
-          //            new ir.View(declaredIn.ir, target, mkType(f.t), f.name.ir, f.description.comment)
         }
       } catch {
         case e : ir.ParseException ⇒ ParseException(s"${node.name}: ${e.getMessage()}")
@@ -189,23 +156,47 @@ object IRBuilder {
         yield mkField(f)
     } catch { case e : ir.ParseException ⇒ ParseException(s"In ${d.name}.${e.getMessage}", e) }
 
+    // turns AST language customizations to IR
+    def mkCustomFields(fields : List[Customization]) : List[ir.LanguageCustomization] = for (f ← fields) yield {
+      var options = new java.util.HashMap[String, java.util.List[String]]()
+      for ((k, v) ← f.options)
+        options.put(k.lowercase, v.to)
+      new ir.LanguageCustomization(f.name.ir, f.comment, f.language.ir, f.typeImage, options)
+    }
+
+    // turns AST view to IR
+    def mkFieldViews(d : Declaration, fields : List[View]) : List[ir.View] = for (f ← fields) yield {
+      new ir.View(
+        d.name.ir,
+        mkType(f.t),
+        f.name.ir,
+        f.comment
+      )
+    }
+
     // initialize the arguments ir companion
     def initialize(d : Declaration) {
       d match {
         case definition : UserType ⇒ toIR(definition).asInstanceOf[ir.UserType].initialize(
           parent.get(definition).map(toIR(_).asInstanceOf[ir.UserType]).getOrElse(null),
           superInterfaces(definition).map(toIR(_).asInstanceOf[ir.InterfaceType]).to,
-          mkFields(d, definition.body.collect { case f : Field ⇒ f })
+          mkFields(d, definition.body.collect { case f : Field ⇒ f }),
+          mkFieldViews(d, definition.body.collect { case f : View ⇒ f }),
+          mkCustomFields(definition.body.collect { case f : Customization ⇒ f })
         )
 
         case definition : InterfaceDefinition ⇒ toIR(definition).asInstanceOf[ir.InterfaceType].initialize(
           parent.get(definition).map(toIR(_).asInstanceOf[ir.UserType]).getOrElse(tc.get("annotation")),
           superInterfaces(definition).map(toIR(_).asInstanceOf[ir.InterfaceType]).to,
-          mkFields(d, definition.body.collect { case f : Field ⇒ f })
+          mkFields(d, definition.body.collect { case f : Field ⇒ f }),
+          mkFieldViews(d, definition.body.collect { case f : View ⇒ f }),
+          mkCustomFields(definition.body.collect { case f : Customization ⇒ f })
         )
 
         case definition : EnumDefinition ⇒ toIR(definition).asInstanceOf[ir.EnumType].initialize(
-          mkFields(d, definition.body.collect { case f : Field ⇒ f })
+          mkFields(d, definition.body.collect { case f : Field ⇒ f }),
+          mkFieldViews(d, definition.body.collect { case f : View ⇒ f }),
+          mkCustomFields(definition.body.collect { case f : Customization ⇒ f })
         )
 
         case definition : Typedef ⇒ toIR(definition).asInstanceOf[ir.Typedef].initialize(
@@ -213,17 +204,44 @@ object IRBuilder {
         )
       }
     }
+
+    // initialize the views of the argument declaration
+    def initializeViews(d : Declaration) {
+      d match {
+        case definition : DeclarationWithBody ⇒ definition.body.collect {
+          case v : View ⇒
+            val targetName = v.targetField.lowercase
+            val targetType = toIRByName(v.targetType.getOrElse(definition.name)).asInstanceOf[ir.WithFields]
+
+            val target = targetType.getFields.find(_.getSkillName.equals(targetName)).getOrElse(
+              targetType.getViews.find(_.getSkillName.equals(targetName)).getOrElse(
+                throw new ir.ParseException(s"$v has no valid target")
+              ))
+
+            toIR(definition).asInstanceOf[ir.WithFields].getViews.find {
+              case f ⇒ f.getName == v.name.ir
+            }.get.initialize(target)
+        }
+
+        case definition : Typedef ⇒ // no action required
+      }
+    }
     val ordered = topologicalSort(defs)
 
+    // initialize types
     for (t ← ordered) try {
       initialize(t)
     } catch { case e : Exception ⇒ throw ParseException(s"Initialization of type ${t.name} failed.\nSee ${t.declaredIn}", e) }
+
+    // initialize views (requires second pass, as they can refer to other views)
+    for (t ← ordered)
+      initializeViews(t)
 
     val rval = ordered.map(toIR(_))
 
     // we initialized in type order starting at base types; if some types have not been initialized, then they are cyclic!
     if (rval.exists(!_.isInitialized))
-      ParseException("there are uninitialized definitions including:\n "+rval.filter(!_.isInitialized).map(_.prettyPrint).mkString("\n "))
+      ParseException("there are uninitialized definitions including:\n " + rval.filter(!_.isInitialized).map(_.prettyPrint).mkString("\n "))
 
     assume(defs.size == rval.size, "we lost some definitions")
     assume(rval.forall { _.isInitialized }, s"we missed some initializations: ${rval.filter(!_.isInitialized).mkString(", ")}")

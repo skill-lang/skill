@@ -1,0 +1,5 @@
+with "example2a.skill"
+
+B {
+  A a;
+}

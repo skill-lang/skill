@@ -13,6 +13,7 @@ import de.ust.skill.ir.TypeContext
 import java.nio.file.Paths
 import java.io.File
 import scala.collection.mutable.ListBuffer
+import de.ust.skill.ir.FieldLike
 
 /**
  * Use this to create a 5 lines header that looks similar in all languages.
@@ -71,6 +72,11 @@ trait Generator {
   def printHelp : Unit;
 
   /**
+   * Returns the custom field manual for this generator.
+   */
+  def customFieldManual : String;
+
+  /**
    * Provides a string representation of the default value of f.
    */
   protected def defaultValue(f : Field) : String;
@@ -110,7 +116,6 @@ trait Generator {
     val f = new File(rps.mkString("/"));
 
     f.getParentFile.mkdirs
-    println(f.getAbsolutePath)
     f.createNewFile
 
     f
@@ -129,7 +134,7 @@ trait Generator {
   /**
    * Transform a comment of a field into the language's comment system
    */
-  protected def comment(d : Field) : String;
+  protected def comment(d : FieldLike) : String;
 
   /**
    * Makes the output. Use trait stacking, i.e. traits must invoke super.make!!!

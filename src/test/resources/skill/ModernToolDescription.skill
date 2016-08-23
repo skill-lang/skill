@@ -1,0 +1,8 @@
+URL {
+}
+
+Tool {
+  string name;
+  /* not null, if a public repository containing the tool exists */
+  URL repository;
+}

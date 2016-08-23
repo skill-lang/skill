@@ -1,0 +1,18 @@
+/** A multi-graph with a weighted edges and labeled nodes. */
+Graph {
+  Node[] nodes;
+  Edge[] edges;
+}
+
+Node {
+  @default("")
+  string label;
+}
+
+Edge {
+  Node from;
+  Node to;
+  
+  @default(1.0)
+  f32 weight;
+}

@@ -18,6 +18,8 @@ trait TypesMaker extends GeneralOutputMaker {
 
     for(t <- IR){
       val out = open(name(t)+".java")
+      
+      val customizations = t.getCustomizations.filter(_.language.equals("java")).toArray
 
     //package
     out.write(s"""package ${this.packageName};
@@ -26,7 +28,10 @@ import de.ust.skill.common.java.api.FieldDeclaration;
 import de.ust.skill.common.java.internal.NamedType;
 import de.ust.skill.common.java.internal.SkillObject;
 import de.ust.skill.common.java.internal.StoragePool;
+${customizations.flatMap(_.getOptions.get("import")).map(i⇒s"import $i;\n").mkString}
 """)
+    
+    
 
     val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
 
@@ -46,6 +51,7 @@ ${
   else
     t.getSuperInterfaces.map(name(_)).mkString(" implements ", ", ", "")
       } {
+    private static final long serialVersionUID = 0x5c11L + ((long) "${t.getSkillName}".hashCode()) << 32;
 
     @Override
     public String skillName() {
@@ -127,13 +133,13 @@ ${
 //                ""
 //            }
 //            else
-              ""
-          }${//@monotone modification check
-            if(!t.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty){
-              s"""assert skillID == -1L : "${t.getName} is specified to be monotone and this instance has already been subject to serialization!";
-        """
-            }
-            else
+//              ""
+//          }${//@monotone modification check
+//            if(!t.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty){
+//              s"""assert skillID == -1L : "${t.getName} is specified to be monotone and this instance has already been subject to serialization!";
+//        """
+//            }
+//            else
               ""
         }this.${name(f)} = ${name(f)};"
       }
@@ -161,6 +167,15 @@ ${
     ${comment(f)}final public void set${escaped(f.getName.capital)}(${mapType(f.getType())} ${name(f)}) {
         $makeSetterImplementation
     }
+""")
+    }
+  
+    // custom fields
+    for(c <- customizations){
+      val mod = c.getOptions.toMap.get("modifier").map(_.head).getOrElse("public")
+      
+      out.write(s"""
+    ${comment(c)}$mod ${c.`type`} ${name(c)}; 
 """)
     }
 

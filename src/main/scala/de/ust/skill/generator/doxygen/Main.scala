@@ -36,7 +36,7 @@ class Main extends FakeMain
   lineLength = 80
   override def comment(d : Declaration) : String =
     d.getComment.format("/*!\n", " * ", lineLength, " */\n").replace('<', '⟨').replace('>', '⟩')
-  override def comment(f : Field) : String =
+  override def comment(f : FieldLike) : String =
     f.getComment.format("    /*!\n", "     * ", lineLength, "     */\n").replace('<', '⟨').replace('>', '⟩')
 
   /**
@@ -118,6 +118,8 @@ class Main extends FakeMain
 Opitions (doxygen):
   (none)
 """)
+
+  override def customFieldManual = """(unsupported)"""
 
   // unused
   override protected def defaultValue(f : Field) = throw new NoSuchMethodError

@@ -1,0 +1,9 @@
+A { A a; }
+B : A {
+  /* rename and retype */
+  view A.a as
+  B b;
+  /* rename a second time */
+  view a as
+  A c;
+}

@@ -8,10 +8,9 @@ package de.ust.skill.generator.skill
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import de.ust.skill.main.CommandLine
-import java.io.File
-import scala.sys.process._
+
 import de.ust.skill.generator.common.KnownGenerators
+import de.ust.skill.main.CommandLine
 
 /**
  * Java specific tests.
@@ -31,7 +30,7 @@ class EscapingTest extends FunSuite {
   val known = KnownGenerators.all.map(_.newInstance.getLanguageName)
 
   // if is a keyword in all real languages
-  for (l ← known if l != "skill" && l != "statistics")
+  for (l ← known if !Set[String]("skill", "statistics", "ecore").contains(l))
     test(s"${l} - none")(check(l, Array("if"), Array(true)))
 
   // some language keywords

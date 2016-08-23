@@ -20,15 +20,25 @@ import de.ust.skill.ir.MapType
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.Field
+import de.ust.skill.ir.InterfaceType
 
 trait PoolsMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
+    // reflection has to know projected definitions
+    val flatIR = this.types.removeSpecialDeclarations.getUsertypes
+
     for (t ← IR) {
-      val typeName = "_root_."+packagePrefix + name(t)
+      val typeName = "_root_." + packagePrefix + name(t)
       val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
-      val fields = t.getFields
+
+      // find all fields that belong to the projected version, but use the unprojected variant
+      val flatIRFieldNames = flatIR.find(_.getName == t.getName).get.getFields.map(_.getSkillName).toSet
+      val fields = t.getAllFields.filter(f ⇒ flatIRFieldNames.contains(f.getSkillName))
+      val projectedField = flatIR.find(_.getName == t.getName).get.getFields.map {
+        case f ⇒ fields.find(_.getSkillName.equals(f.getSkillName)).get -> f
+      }.toMap
 
       val out = open(s"api/internal/Pool${t.getName.capital}.scala")
       //package
@@ -49,6 +59,7 @@ import de.ust.skill.common.scala.api.TypeMissmatchError
 import de.ust.skill.common.scala.internal.BasePool
 import de.ust.skill.common.scala.internal.FieldDeclaration
 import de.ust.skill.common.scala.internal.SkillState
+import de.ust.skill.common.scala.internal.SingletonStoragePool
 import de.ust.skill.common.scala.internal.StoragePool
 import de.ust.skill.common.scala.internal.SubPool
 import de.ust.skill.common.scala.internal.fieldTypes._
@@ -69,7 +80,10 @@ final class ${storagePool(t)}(poolIndex : Int${
         if (t.getSuperType == null) ""
         else ",\nsuperPool"
       }
-    ) {
+    )${
+        if (isSingleton) s" with SingletonStoragePool[$typeName, ${packagePrefix}${t.getBaseType.getName.capital}]"
+        else ""
+      } {
   override def getInstanceClass: Class[$typeName] = classOf[$typeName]
 
   override def addField[T : Manifest](ID : Int, t : FieldType[T], name : String,
@@ -77,7 +91,7 @@ final class ${storagePool(t)}(poolIndex : Int${
     val f = (name match {${
         (for (f ← fields)
           yield s"""
-      case "${f.getSkillName}" ⇒ new ${knownField(f)}(${
+      case "${f.getSkillName}" ⇒ new ${knownField(projectedField(f))}(${
           if (f.isAuto()) ""
           else "ID, "
         }this${
@@ -108,7 +122,7 @@ final class ${storagePool(t)}(poolIndex : Int${
         (if (dfs.isEmpty) "// no data fields\n"
         else s"""// data fields
     ${
-          (for (f ← dfs) yield s"val ${clsName(f)} = classOf[${knownField(f)}]").mkString("", "\n    ", "\n")
+          (for (f ← dfs) yield s"val ${clsName(f)} = classOf[${knownField(projectedField(f))}]").mkString("", "\n    ", "\n")
         }
     val fields = HashSet[Class[_ <: FieldDeclaration[_, ${mapType(t)}]]](${
           (for (f ← dfs) yield s"${clsName(f)}").mkString(",")
@@ -121,7 +135,7 @@ final class ${storagePool(t)}(poolIndex : Int${
 ${
           (for (f ← dfs)
             yield s"""    if(fields.contains(${clsName(f)}))
-        dataFields += new ${knownField(f)}(dataFields.size + 1, this, ${mapFieldDefinition(f.getType)})"""
+        dataFields += new ${knownField(projectedField(f))}(dataFields.size + 1, this, ${mapFieldDefinition(f.getType)})"""
           ).mkString("\n")
         }
 """) + (
@@ -130,16 +144,14 @@ ${
     autoFields.sizeHint(${afs.size})${
             afs.map { f ⇒
               s"""
-    autoFields += new ${knownField(f)}(this, ${mapFieldDefinition(f.getType)})"""
+    autoFields += new ${knownField(projectedField(f))}(this, ${mapFieldDefinition(f.getType)})"""
             }.mkString
           }
   """)
-      }}
+      }
 
-  override def reflectiveAllocateInstance: $typeName = {
-    val r = new $typeName(-1)
-    this.newObjects.append(r)
-    r
+    for(f <- dataFields ++ autoFields)
+      f.createKnownRestrictions
   }
 
   override def makeSubPool(name : String, poolIndex : Int) = ${
@@ -150,7 +162,29 @@ ${
 
   override def allocateData : Unit = data = new Array[$typeName](cachedSize)"""
         else""
-      }
+      }${
+        if (isSingleton) s"""
+
+  override def reflectiveAllocateInstance : $typeName = {
+    if (null != this.data && 0 != this.staticDataInstances) {
+      val r = staticInstances.next
+      if (null != r) r
+      else new $typeName(-1)
+    } else if (!newObjects.isEmpty) {
+      newObjects.head
+    } else {
+      val r = new $typeName(-1)
+      this.newObjects.append(r)
+      r
+    }
+  }
+"""
+        else s"""
+  override def reflectiveAllocateInstance: $typeName = {
+    val r = new $typeName(-1)
+    this.newObjects.append(r)
+    r
+  }
 
   override def allocateInstances {
     for (b ← blocks.par) {
@@ -163,18 +197,7 @@ ${
     }
   }
 
-${
-        if (isSingleton)
-          s"""  lazy val theInstance = if (staticInstances.hasNext) {
-    staticInstances.next
-  } else {
-    val r = new $typeName(-1)
-    newObjects.append(r)
-    r
-  }
-  def get = theInstance"""
-        else
-          s"""  def make(${makeConstructorArguments(t)}) = {
+  def make(${makeConstructorArguments(t)}) = {
     val r = new $typeName(-1 - newObjects.size${appendConstructorArguments(t)})
     newObjects.append(r)
     r
@@ -224,7 +247,7 @@ final class ${subPool(t)}(poolIndex : Int, name : String, superPool : StoragePoo
   /**
    * escaped name for field classes
    */
-  private final def clsName(f : Field) : String = escaped("Cls"+f.getName.camel)
+  private final def clsName(f : Field) : String = escaped("Cls" + f.getName.camel)
 
   protected def mapFieldDefinition(t : Type) : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
@@ -234,6 +257,7 @@ final class ${subPool(t)}(poolIndex : Int, name : String, superPool : StoragePoo
       case n            ⇒ n.capitalize
     }
     case t : UserType                ⇒ s"state.${name(t)}"
+    case t : InterfaceType           ⇒ s"state.${name(t)}"
 
     case t : ConstantLengthArrayType ⇒ s"ConstantLengthArray(${t.getLength}, ${mapFieldDefinition(t.getBaseType)})"
     case t : VariableLengthArrayType ⇒ s"VariableLengthArray(${mapFieldDefinition(t.getBaseType)})"

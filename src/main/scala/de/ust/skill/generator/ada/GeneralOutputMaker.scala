@@ -104,7 +104,7 @@ trait GeneralOutputMaker extends Generator {
 
   private final val nameCache = HashMap[Type, String]()
   protected final def name(d : Type) = nameCache.get(d).getOrElse { val r = escapedLonely(d.getName.ada); nameCache(d) = r; r }
-  protected final def name(f : Field) = escapedLonely(f.getName.ada)
+  protected final def name(f : FieldLike) = escapedLonely(f.getName.ada)
 
   /**
    * creates references to generated skill names package

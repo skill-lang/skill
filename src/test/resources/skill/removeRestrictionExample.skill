@@ -1,0 +1,9 @@
+/** in the past, there was only one display, i.e. we want to remove the @singleton */
+!removeRestrictions
+Display {  }
+
+/** From now on, we allow to specify a dedicated primary display */
+@Singleton
+PrimaryDisplay{
+  Display current;
+}

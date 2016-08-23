@@ -31,7 +31,7 @@ class Main extends FakeMain
     with CSVMaker {
 
   override def comment(d : Declaration) = throw new NoSuchMethodError
-  override def comment(f : Field) = throw new NoSuchMethodError
+  override def comment(f : FieldLike) = throw new NoSuchMethodError
 
   /**
    * Translates the types into Ada types.
@@ -45,7 +45,7 @@ class Main extends FakeMain
   private var _packagePrefix = ""
 
   override def setPackage(names : List[String]) {
-    _packagePrefix = names.foldRight("")(_+"."+_)
+    _packagePrefix = names.foldRight("")(_ + "." + _)
   }
 
   override def setOption(option : String, value : String) = option match {
@@ -61,6 +61,8 @@ class Main extends FakeMain
 Opitions (statistics):
   (none)
 """)
+
+  override def customFieldManual = "Custom fields will be ignored."
 
   // unused
   override protected def defaultValue(f : Field) = throw new NoSuchMethodError

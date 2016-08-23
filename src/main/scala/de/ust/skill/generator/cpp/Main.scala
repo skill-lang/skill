@@ -21,6 +21,7 @@ import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.View
+import de.ust.skill.ir.FieldLike
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -35,18 +36,14 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  */
 class Main extends FakeMain
     with FieldDeclarationsMaker
-    //    with SerializationFunctionsMaker
     with SkillFileMaker
     with StringKeeperMaker
-    //    with StateAppenderMaker
-    //    with StateWriterMaker
-    //    with DependenciesMaker
     with PoolsMaker
     with TypesMaker {
 
   lineLength = 120
   override def comment(d : Declaration) : String = d.getComment.format("/**\n", "     * ", lineLength, "     */\n    ")
-  override def comment(f : Field) : String = f.getComment.format("/**\n", "         * ", lineLength, "         */\n        ")
+  override def comment(f : FieldLike) : String = f.getComment.format("/**\n", "         * ", lineLength, "         */\n        ")
 
   /**
    * Translates types into scala type names.
@@ -121,18 +118,18 @@ class Main extends FakeMain
     val headerLineLength = 51
     val headerLine1 = Some((headerInfo.line1 match {
       case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: "+_).getOrElse("Your SKilL C++ Binding")
+      case None    ⇒ headerInfo.license.map("LICENSE: " + _).getOrElse("Your SKilL C++ Binding")
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
     val headerLine2 = Some((headerInfo.line2 match {
       case Some(s) ⇒ s
-      case None ⇒ "generated: "+(headerInfo.date match {
+      case None ⇒ "generated: " + (headerInfo.date match {
         case Some(s) ⇒ s
         case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
       })
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
     val headerLine3 = Some((headerInfo.line3 match {
       case Some(s) ⇒ s
-      case None ⇒ "by: "+(headerInfo.userName match {
+      case None ⇒ "by: " + (headerInfo.userName match {
         case Some(s) ⇒ s
         case None    ⇒ System.getProperty("user.name")
       })
@@ -153,7 +150,7 @@ class Main extends FakeMain
   private var _packagePrefix = ""
 
   override def setPackage(names : List[String]) {
-    _packagePrefix = names.foldRight("")(_+"."+_)
+    _packagePrefix = names.foldRight("")(_ + "." + _)
   }
 
   override def setOption(option : String, value : String) = option match {
@@ -165,6 +162,10 @@ class Main extends FakeMain
 Opitions (cpp):
   revealSkillID: true/false  if set to true, the generated binding will reveal SKilL IDs in the API
 """)
+
+  override def customFieldManual = """
+!include string+    Argument strings are added to the head of the generated file and included using
+                    <> around the strings content."""
 
   override protected def defaultValue(f : Field) =
     f.getType match {
@@ -260,7 +261,7 @@ object EscapeFunction {
 
     case _ ⇒ target.map {
       case 'Z' ⇒ "ZZ"
-      case c if '_' == c || Character.isLetterOrDigit(c) ⇒ ""+c
+      case c if '_' == c || Character.isLetterOrDigit(c) ⇒ "" + c
       case c ⇒ f"Z$c%04X"
     }.mkString
   }

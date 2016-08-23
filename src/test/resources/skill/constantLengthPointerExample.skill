@@ -1,0 +1,7 @@
+/* stored points-to information may exceed the available main memory, thus we access it directly from disk */
+PointsToTargets {
+
+  @constantLengthPointer
+  PointsToSet targets;
+}
+typedef PointsToSet set<PointsToTargets>;

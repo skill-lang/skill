@@ -1,0 +1,8 @@
+@default(Metric)
+Units {
+  string length;
+  string time;
+}
+
+@singleton
+Metric : Units {}

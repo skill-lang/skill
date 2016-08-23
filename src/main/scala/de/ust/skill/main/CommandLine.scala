@@ -54,6 +54,8 @@ Opitions:
                          escaping. Will return a space separated list of
                          true/false. True, iff the identifier will be escaped
                          in a generated binding.
+
+  --printCFM language    print custom field manual for the argument language
 """)
     gens.foreach(_.printHelp)
   }
@@ -80,7 +82,7 @@ Opitions:
     var outPath : String = args(args.length - 1)
 
     try {
-      if (args.contains("--requiresEscaping"))
+      if (args.contains("--requiresEscaping") || args.contains("--printCFM"))
         parseOptions(args.to, known)
 
       val (header, packageName, languages, foreignSources, optionalOpts) = parseOptions(args.view(0, args.length - 2).to, known)
@@ -109,7 +111,7 @@ Opitions:
         m.setTC(if (n == "javaforeign") jforeignTc else tc)
         m.setPackage(packageName)
         m.headerInfo = header
-        m.outPath = outPath+"/"+n
+        m.outPath = outPath + "/" + n
 
         print(s"run $n: ")
         try {
@@ -184,6 +186,19 @@ Opitions:
       case "-M" ⇒ optionalOpts += ("mappingFile" → args.next)
 
       case "-F" => foreignSources += args.next()
+
+      case "--printCFM" ⇒
+        if (!args.hasNext)
+          error("Exactly one language has to be specified when using --printCFM.")
+
+        val language = args.next
+        if (!known.contains(language.toLowerCase))
+          error(s"Unknown language: $language.")
+        else {
+          println(s"Custom Field Manual for language $language:")
+          println(known(language.toLowerCase).customFieldManual)
+          throw new DoneException;
+        }
 
       case unknown ⇒ error(s"unknown option: $unknown")
     }

@@ -27,13 +27,26 @@ import de.ust.skill.ir.ContainerType
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.SingleBaseTypeContainer
 import de.ust.skill.ir.Restriction
+import de.ust.skill.ir.restriction.DefaultRestriction
+import de.ust.skill.ir.restriction.IntDefaultRestriction
+import de.ust.skill.ir.restriction.StringDefaultRestriction
+import de.ust.skill.ir.restriction.FloatDefaultRestriction
+import de.ust.skill.ir.restriction.NameDefaultRestriction
+import de.ust.skill.ir.InterfaceType
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
+    // project IR, so that reflection implements the binary file format correctly
+    val IR = this.types.removeSpecialDeclarations.getUsertypes
+
     for (t ← IR; f ← t.getFields) {
-      val accessField = s".asInstanceOf[${mapType(t)}].${escaped("Internal_"+f.getName.camel)}"
+      // the type without the interface projection
+      val fieldActualType = this.types.removeTypedefs.removeEnums.get(t.getSkillName).asInstanceOf[UserType]
+        .getAllFields.find(_.getName == f.getName).map(_.getType).map(mapType).get
+
+      val accessField = s".asInstanceOf[${mapType(t)}].${escaped("Internal_" + f.getName.camel)}"
 
       val out = open(s"api/internal/${knownField(f)}.scala")
       //package
@@ -59,6 +72,7 @@ import de.ust.skill.common.scala.internal.Chunk
 import de.ust.skill.common.scala.internal.IgnoredField
 import de.ust.skill.common.scala.internal.KnownField
 import de.ust.skill.common.scala.internal.SimpleChunk
+import de.ust.skill.common.scala.internal.SingletonStoragePool
 import de.ust.skill.common.scala.internal.fieldTypes._
 import de.ust.skill.common.scala.internal.restrictions._
 
@@ -71,14 +85,14 @@ final class ${knownField(f)}(${
   _index : Int,"""
       }
   _owner : ${storagePool(t)},
-  _type : FieldType[${mapType(f.getType)}]${
+  _type : FieldType[$fieldActualType]${
         if (f.getType.isInstanceOf[ReferenceType] || f.getType.isInstanceOf[ContainerType]) ""
         else s" = ${mapToFieldType(f.getType)}"
       })
     extends ${
         if (f.isAuto()) "Auto"
         else "Known"
-      }Field[${mapType(f.getType)},${mapType(t)}](_type,
+      }Field[$fieldActualType,${mapType(t)}](_type,
       "${f.getSkillName}",${
         if (f.isAuto()) """
       0,"""
@@ -98,9 +112,18 @@ final class ${knownField(f)}(${
 """
       }${
         (for (r ← f.getRestrictions)
-          yield s"""
-  restrictions += ${mkFieldRestriction(f.getType, r)}"""
-        ).mkString
+          yield s"""restrictions += ${mkFieldRestriction(f.getType, r)}${
+          // add key to strings
+          r match {
+            case r : StringDefaultRestriction ⇒ s"""
+    t.asInstanceOf[de.ust.skill.common.scala.internal.StringPool].add("${r.getValue}")"""
+            case _ ⇒ ""
+          }
+        }""").mkString("""
+  override def createKnownRestrictions : Unit = {
+    """, """
+    """, """
+  }""")
       }${
         if (f.isAuto()) ""
         else s"""
@@ -118,7 +141,7 @@ ${mapKnownReadType(f.getType)}
             var i = c.bpo.toInt
             val high = i + c.count
             while (i != high) {
-              d(i)$accessField = t.read(in)
+              d(i)$accessField = t.read(in).asInstanceOf[$fieldActualType]
               i += 1
             }
           case bci : BulkChunk ⇒
@@ -130,7 +153,7 @@ ${mapKnownReadType(f.getType)}
               var i = b.bpo
               val end = i + b.dynamicCount
               while (i != end) {
-                d(i)$accessField = t.read(in)
+                d(i)$accessField = t.read(in).asInstanceOf[$fieldActualType]
                 i += 1
               }
             }
@@ -213,14 +236,14 @@ ${mapKnownReadType(f.getType)}
   //override def get(i : ${mapType(t)}) = i.${escaped(f.getName.camel)}
   //override def set(i : ${mapType(t)}, v : ${mapType(f.getType)}) = ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
-        else s"i.${escaped(f.getName.camel)} = v"
+        else s"i.${escaped(f.getName.camel)} = v.asInstanceOf[$fieldActualType]"
       }
 
   // note: reflective field access will raise exception for ignored fields
-  override def getR(i : SkillObject) : ${mapType(f.getType)} = i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)}
-  override def setR(i : SkillObject, v : ${mapType(f.getType)}) : Unit = ${
+  override def getR(i : SkillObject) : $fieldActualType = i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)}
+  override def setR(i : SkillObject, v : $fieldActualType) : Unit = ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
-        else s"i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = v"
+        else s"i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = v.asInstanceOf[$fieldActualType]"
       }
 }
 """)
@@ -299,8 +322,15 @@ ${mapKnownReadType(f.getType)}
       case "f64" ⇒ s"Range(${r.getLowDouble}, ${r.getHighDouble})"
       case t     ⇒ throw new IllegalStateException(s"parser should have rejected a float restriction on a field of type $t")
     }
-    case r : ConstantLengthPointerRestriction ⇒
-      s"ConstantLengthPointer"
+    case r : ConstantLengthPointerRestriction ⇒ "ConstantLengthPointer"
+
+    case r : IntDefaultRestriction ⇒ s"DefaultRestriction(${r.getValue}L.to${mapType(t)})"
+    case r : FloatDefaultRestriction ⇒ s"DefaultRestriction(${r.getValue}.to${mapType(t)})"
+    case r : NameDefaultRestriction if t.getSkillName.equals("bool") ⇒ s"DefaultRestriction(${r.getValue.head})"
+    case r : NameDefaultRestriction ⇒ s"DefaultRestriction(_owner.basePool.owner(${r.getValue.mkString("\"", ":", "\"")}).asInstanceOf[SingletonStoragePool[_ <: de.ust.skill.common.scala.api.SkillObject, _ <: de.ust.skill.common.scala.api.SkillObject]].get)"
+    case r : StringDefaultRestriction ⇒ s"""DefaultRestriction("${r.getValue}")"""
+
+    case r ⇒ println("[scala] unhandled restriction: " + r.getName); ""
   }
 
   /**
@@ -341,7 +371,8 @@ ${mapKnownReadType(f.getType)}
       case _ ⇒ s"result += ${exactFieldType(t : Type)}.offset(v)"
     }
 
-    case t : UserType                ⇒ "result += (if (null == v) 1 else V64.offset(v.getSkillID))"
+    case t : UserType ⇒ "result += (if (null == v) 1 else V64.offset(v.getSkillID))"
+    case t : InterfaceType if t.getSuperType.isInstanceOf[UserType] ⇒ "result += (if (null == v) 1 else V64.offset(v.getSkillID))"
 
     case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${offsetCode(t.getBaseType)} }"
 
@@ -359,9 +390,10 @@ ${mapKnownReadType(f.getType)}
           if(null != v) v.foreach { v => ${offsetCode(t.getBaseType)} }"""
 
     // @note this might be optimizable, but i dont care for now
-    case t : MapType ⇒ "result += (if(null == v) 1 else t.offset(v))"
+    case t : MapType       ⇒ "result += (if(null == v) 1 else t.offset(v))"
+    case t : InterfaceType ⇒ "result += t.offset(v)"
 
-    case _           ⇒ "???"
+    case _                 ⇒ "???"
   }
 
   private final def writeCode(t : Type) : String = t match {
@@ -373,7 +405,8 @@ ${mapKnownReadType(f.getType)}
     }
 
     // TODO optimize user types (requires prelude, check nesting!)
-    case t : UserType                ⇒ "if (null == v) out.i8(0) else out.v64(v.getSkillID)"
+    case t : UserType ⇒ "if (null == v) out.i8(0) else out.v64(v.getSkillID)"
+    case t : InterfaceType if t.getSuperType.isInstanceOf[UserType] ⇒ "if (null == v) out.i8(0) else out.v64(v.getSkillID)"
 
     case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${writeCode(t.getBaseType)} }"
 
@@ -391,8 +424,9 @@ ${mapKnownReadType(f.getType)}
             v.foreach { v => ${writeCode(t.getBaseType)} }}"""
 
     // @note this might be optimizable, but i dont care for now
-    case t : MapType ⇒ "t.write(v, out)"
+    case t : MapType       ⇒ "t.write(v, out)"
+    case t : InterfaceType ⇒ "t.write(v, out)"
 
-    case _           ⇒ "???"
+    case _                 ⇒ "???"
   }
 }

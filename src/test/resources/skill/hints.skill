@@ -40,7 +40,7 @@ Abuser {
  @todo provide a test binary to check this hint (where it should be abstract; and a fail, where it has a subclass,  because it can not be a singleton in that case)
  @note this is readOnly; should not matter, because it has no mutable state
  */
-!removeUnknownRestrictions
+!removeRestrictions("unknown")
 !readOnly
 @Singleton 
 NowASingleton {

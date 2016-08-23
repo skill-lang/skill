@@ -20,6 +20,7 @@ import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
 import java.nio.file.Paths
 import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.FieldLike
 
 /**
  * The parent class for all output makers.
@@ -97,7 +98,7 @@ trait GeneralOutputMaker extends Generator {
   /**
    * Translation of a field to its representation in the source code
    */
-  protected def name(f : Field) : String = escaped(f.getName.camel)
+  protected def name(f : FieldLike) : String = escaped(f.getName.camel)
 
   /**
    * Assume a package prefix provider.

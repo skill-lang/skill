@@ -29,7 +29,7 @@ RegularProperty : Properties {
 /* some properties of the target system */
 @singleton
 System : Properties {
-  @nonnull
+
   @constantLengthPointer
   string name;
 

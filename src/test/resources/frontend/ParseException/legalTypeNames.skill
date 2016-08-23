@@ -1,0 +1,5 @@
+/** The german word for "car". */
+Auto {
+  /* Keyword detection is case sensitive, while type names are not, so use "Auto" instead. */
+  auto previousCar;
+}

@@ -181,7 +181,7 @@ ${
         }
 
             current_field->type_info = ${prefix}type_information_new();${
-          if (f.isConstant()) ""
+          if (!f.isConstant()) ""
           else s"""
             current_field->type_info->constant_value = ${f.constantValue};"""
         }${

@@ -86,7 +86,7 @@ final class Main extends FakeMain
 
   lineLength = 80
   override def comment(d : Declaration) : String = d.getComment.format("", "//! ", lineLength, "")
-  override def comment(f : Field) : String = f.getComment.format("", "//! ", lineLength, "")
+  override def comment(f : FieldLike) : String = f.getComment.format("", "//! ", lineLength, "")
 
   /**
    * Translates the types into C99 types.
@@ -172,18 +172,18 @@ final class Main extends FakeMain
     val headerLineLength = 51
     val headerLine1 = Some((headerInfo.line1 match {
       case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: "+_).getOrElse("Your SKilL C Binding")
+      case None    ⇒ headerInfo.license.map("LICENSE: " + _).getOrElse("Your SKilL C Binding")
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
     val headerLine2 = Some((headerInfo.line2 match {
       case Some(s) ⇒ s
-      case None ⇒ "generated: "+(headerInfo.date match {
+      case None ⇒ "generated: " + (headerInfo.date match {
         case Some(s) ⇒ s
         case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
       })
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
     val headerLine3 = Some((headerInfo.line3 match {
       case Some(s) ⇒ s
-      case None ⇒ "by: "+(headerInfo.userName match {
+      case None ⇒ "by: " + (headerInfo.userName match {
         case Some(s) ⇒ s
         case None    ⇒ System.getProperty("user.name")
       })
@@ -199,7 +199,7 @@ final class Main extends FakeMain
 
   var outPostfix = s"/genereted/${
     if (packagePrefix.isEmpty()) ""
-    else packagePrefix.replace('.', '/')+"/"
+    else packagePrefix.replace('.', '/') + "/"
   }"
 
   /**
@@ -231,9 +231,9 @@ final class Main extends FakeMain
     case "gendir" ⇒
       outPostfix = value
       if (!outPostfix.startsWith("/"))
-        outPostfix = "/"+outPostfix
+        outPostfix = "/" + outPostfix
       if (!outPostfix.endsWith("/"))
-        outPostfix = outPostfix+"/"
+        outPostfix = outPostfix + "/"
     case "unsafe" ⇒ unsafe = value == "true"
     case unknown  ⇒ sys.error(s"unkown Argument: $unknown")
   }
@@ -244,6 +244,8 @@ Opitions (C):
   unsafe                 remove all generated runtime type checks, if set to "true"
 """)
 
+  override def customFieldManual : String = "not supported"
+
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
@@ -251,7 +253,7 @@ Opitions (C):
     case "auto" | "_Bool" | "break" | "case" | "char" | "_Complex" | "const" | "continue" | "default" | "do" | "double"
       | "else" | "enum" | "extern" | "float" | "for" | "goto" | "if" | "_Imaginary" | "inline" | "int" | "long" |
       "register" | "restrict" | "return" | "short" | "signed" | "sizeof" | "static" | "struct" | "switch" | "typedef"
-      | "union" | "unsigned" | "void" | "volatile" | "while" ⇒ "ZZ_"+target
+      | "union" | "unsigned" | "void" | "volatile" | "while" ⇒ "ZZ_" + target
 
     // the string is fine anyway
     case _ ⇒ target

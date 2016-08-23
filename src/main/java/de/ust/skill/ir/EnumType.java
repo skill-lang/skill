@@ -15,6 +15,8 @@ final public class EnumType extends Declaration implements WithFields {
     // fields
     private List<Field> fields = null;
     private final List<Name> instances;
+    private List<View> views;
+    private List<LanguageCustomization> customizations;
 
     /**
      * Creates a declaration of type name.
@@ -26,7 +28,7 @@ final public class EnumType extends Declaration implements WithFields {
      *       pre-order over the type hierarchy.
      */
     private EnumType(Name name, Comment comment, List<Name> instances) throws ParseException {
-        super(name, comment, Collections.<Restriction> emptyList(), Collections.<Hint> emptyList());
+        super(name, comment, Collections.<Restriction>emptyList(), Collections.<Hint>emptyList());
         this.instances = instances;
     }
 
@@ -73,7 +75,8 @@ final public class EnumType extends Declaration implements WithFields {
      *             thrown if the declaration is illegal, e.g. because it
      *             contains illegal hints
      */
-    public void initialize(List<Field> Fields) throws ParseException {
+    public void initialize(List<Field> Fields, List<View> views, List<LanguageCustomization> customizations)
+            throws ParseException {
         assert !isInitialized() : "multiple initialization";
         assert null != Fields : "no fields supplied";
         // check for duplicate fields
@@ -83,11 +86,16 @@ final public class EnumType extends Declaration implements WithFields {
                 names.add(f.name);
                 f.setDeclaredIn(this);
             }
+            for (FieldLike f : views) {
+                f.setDeclaredIn(this);
+            }
             if (names.size() != Fields.size())
                 throw new ParseException("Type " + name + " contains duplicate field definitions.");
         }
 
         this.fields = Fields;
+        this.views = views;
+        this.customizations = customizations;
     }
 
     /**
@@ -129,5 +137,15 @@ final public class EnumType extends Declaration implements WithFields {
 
     public List<Name> getInstances() {
         return instances;
+    }
+
+    @Override
+    public List<View> getViews() {
+        return views;
+    }
+
+    @Override
+    public List<LanguageCustomization> getCustomizations() {
+        return customizations;
     }
 }

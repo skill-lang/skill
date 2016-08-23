@@ -95,7 +95,7 @@ final public class Field extends FieldLike {
         rs.addAll(restrictions);
         HashSet<Hint> hs = new HashSet<>(nhs);
         hs.addAll(hints);
-        return new Field(auto, isConstant, constantValue, name, newType, declaredIn, rs, hs, comment);
+        return new Field(auto, isConstant, constantValue, name, newType, declaredIn, rs, hs, getComment());
     }
 
     public Type getType() {
@@ -127,10 +127,6 @@ final public class Field extends FieldLike {
             sb.append(" = ").append(constantValue);
 
         return sb.toString();
-    }
-
-    public Comment getComment() {
-        return comment;
     }
 
     public List<Restriction> getRestrictions() {
