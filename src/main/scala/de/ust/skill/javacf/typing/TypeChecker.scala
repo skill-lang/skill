@@ -6,10 +6,13 @@ import scala.collection.mutable.Set
 
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.TypeContext
+import javassist.CtClass
+import javassist.Modifier
+import javassist.NotFoundException
 
 class TypeChecker {
 
-  def check(rules: List[TypeRule], from: TypeContext, to: TypeContext) {
+  def check(rules: List[TypeRule], from: TypeContext, to: TypeContext, reflectionMap: HashMap[Type, CtClass]) {
     val fromTypes: Set[Type] = collection.mutable.Set() ++ from.getUsertypes.asScala
     val toTypes: Set[Type] = collection.mutable.Set() ++ to.getUsertypes.asScala
     val checked = HashMap.empty[Type, Type]
@@ -48,6 +51,24 @@ class TypeChecker {
             failed = true;
             println(s"${targetExists.getTargetType.getName} not found but must exist!")
           }
+        }
+        case fieldAccessible: FieldAccessible ⇒ {
+          val field = fieldAccessible.getField
+          val typ = fieldAccessible.getType
+          val reflection = reflectionMap.get(typ).get
+          val fieldReflection = reflection.getField(field.getName.getSkillName)
+
+          val hasGetter = try {
+            reflection.getDeclaredMethod(s"get${field.getName.capital()}")
+            true
+          } catch {
+            case e: NotFoundException ⇒ false
+          }
+          if (!hasGetter && ((fieldReflection.getModifiers & Modifier.PUBLIC) != Modifier.PUBLIC)) {
+            failed = true
+            println(s"Need either Method 'public ${field.getType.getSkillName} get${field.getName.capital()}()' or field ${field.getName.getSkillName} must be public in type ${typ.getName.getSkillName}.");
+          }
+
         }
       }
     }

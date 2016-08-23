@@ -36,7 +36,7 @@ object JavaForeign {
 
     val typeRules = mappingRules.flatMap { r => r.bind(skillTc, javaTc) }
     val checker = new TypeChecker
-    checker.check(typeRules, skillTc, javaTc)
+    checker.check(typeRules, skillTc, javaTc, reflectionMap)
     println("***** Type Rules *****")
     println(typeRules.mkString("\n"))
     println("**********************\n\n")

@@ -5,6 +5,7 @@ import de.ust.skill.ir.TypeContext
 import de.ust.skill.javacf.typing.TypeRule
 import de.ust.skill.ir.UserType
 import de.ust.skill.javacf.typing.TargetTypeExists
+import de.ust.skill.javacf.typing.FieldAccessible
 
 class UnboundMappingRule(javaTypeName: String, fieldNames: List[String], total: Boolean) extends MappingRule {
 
@@ -15,6 +16,8 @@ class UnboundMappingRule(javaTypeName: String, fieldNames: List[String], total: 
 
   def bind(skill: TypeContext, java: TypeContext): List[TypeRule] = {
     if (!total) throw new RuntimeException("Not implemented: non-total unbound mappings");
-    List(new TargetTypeExists(java.get(javaTypeName)))
+
+    val javaType = java.get(javaTypeName)
+    List(new TargetTypeExists(javaType)) ++ javaType.asInstanceOf[UserType].getFields.map { f => new FieldAccessible(javaType, f) }.toList
   }
 }

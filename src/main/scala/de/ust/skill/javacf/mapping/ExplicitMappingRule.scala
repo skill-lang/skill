@@ -31,10 +31,10 @@ class ExplicitMappingRule(fromSkillType: String, toJavaType: String, fieldMappin
       val skillFieldMap = skilltype.getFields.toList.map { f => (f.getName.toString → f) }.toMap
       val javaFieldMap = javatype.getFields.toList.map { f => (f.getName.toString → f) }.toMap
 
-      fieldMappings.map {
-        _.bind(skillFieldMap, javaFieldMap)
+      fieldMappings.flatMap {
+        _.bind(skillFieldMap, javaFieldMap, javatype)
       }.toList
-    } else List()
+    } else List[TypeRule]()
     new TypeEquation(stype, jtype) :: fieldrules
   }
 }
