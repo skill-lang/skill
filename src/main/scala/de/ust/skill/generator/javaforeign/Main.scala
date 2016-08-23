@@ -24,6 +24,7 @@ import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.View
 import scala.collection.mutable.HashMap
+import de.ust.skill.ir.FieldLike
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -49,7 +50,7 @@ class Main extends FakeMain
 
   lineLength = 120
   override def comment(d : Declaration) : String = d.getComment.format("/**\n", " * ", lineLength, " */\n")
-  override def comment(f : Field) : String = f.getComment.format("/**\n", "     * ", lineLength, "     */\n    ")
+  override def comment(f : FieldLike) : String = f.getComment.format("/**\n", "     * ", lineLength, "     */\n    ")
 
   /**
    * Translates types into scala type names.
@@ -105,18 +106,18 @@ class Main extends FakeMain
     val headerLineLength = 51
     val headerLine1 = Some((headerInfo.line1 match {
       case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: "+_).getOrElse("Your SKilL Java 8 Binding")
+      case None    ⇒ headerInfo.license.map("LICENSE: " + _).getOrElse("Your SKilL Java 8 Binding")
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
     val headerLine2 = Some((headerInfo.line2 match {
       case Some(s) ⇒ s
-      case None ⇒ "generated: "+(headerInfo.date match {
+      case None ⇒ "generated: " + (headerInfo.date match {
         case Some(s) ⇒ s
         case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
       })
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
     val headerLine3 = Some((headerInfo.line3 match {
       case Some(s) ⇒ s
-      case None ⇒ "by: "+(headerInfo.userName match {
+      case None ⇒ "by: " + (headerInfo.userName match {
         case Some(s) ⇒ s
         case None    ⇒ System.getProperty("user.name")
       })
@@ -137,7 +138,7 @@ class Main extends FakeMain
   private var _packagePrefix = ""
 
   override def setPackage(names : List[String]) {
-    _packagePrefix = names.foldRight("")(_+"."+_)
+    _packagePrefix = names.foldRight("")(_ + "." + _)
   }
 
   override def setOption(option : String, value : String) : Unit = option match {
@@ -153,6 +154,10 @@ Opitions (Java):
   srcPath:          <path>      set a relative path used as source folder in generated code
   suppressWarnings: true/false  add a @SuppressWarnings("all") annotation to generated classes
 """)
+
+  override def customFieldManual = """
+!import string+    A list of imports that will be added where required.
+!modifier string   A modifier, that will be put in front of the variable declaration."""
 
   override protected def defaultValue(f : Field) = f.getType match {
     case t : GroundType ⇒ t.getSkillName() match {
@@ -178,13 +183,13 @@ Opitions (Java):
         | "boolean" | "do" | "goto" | "private" | "this" | "break" | "double" | "implements" | "protected" | "throw"
         | "byte" | "else" | "import" | "public" | "throws" | "case" | "enum" | "instanceof" | "return" | "transient"
         | "catch" | "extends" | "int" | "short" | "try" | "char" | "final" | "interface" | "static" | "void" | "class"
-        | "finally" | "long" | "strictfp" | "volatile" | "const" | "float" | "native" | "super" | "while" ⇒ target+"_"
+        | "finally" | "long" | "strictfp" | "volatile" | "const" | "float" | "native" | "super" | "while" ⇒ target + "_"
 
       //the string is fine anyway
       case _ ⇒ target.map {
         case ':'                                    ⇒ "$"
         case c if Character.isJavaIdentifierPart(c) ⇒ c.toString
-        case c                                      ⇒ "ZZ"+c.toHexString
+        case c                                      ⇒ "ZZ" + c.toHexString
       }.reduce(_ + _)
     }
     escapeCache(target) = result

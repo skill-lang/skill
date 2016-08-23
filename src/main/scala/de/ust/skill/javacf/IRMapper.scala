@@ -125,7 +125,7 @@ class IRMapper(classpaths: List[String]) {
       } else null
 
       val skilltype = knownTypes(clazz)
-      skilltype.initialize(supertype, new java.util.ArrayList[InterfaceType], mapFields(clazz).asJava)
+      skilltype.initialize(supertype, List().asJava, mapFields(clazz).asJava, List().asJava, List().asJava)
       mappedTypes += (clazz → skilltype)
       skilltype
     }
