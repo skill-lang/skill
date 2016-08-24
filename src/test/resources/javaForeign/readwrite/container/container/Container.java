@@ -14,6 +14,8 @@ public class Container {
     public HashSet<Stupid> stupidset;
     public HashMap<Stupid, Stupid> stupidmap;
 
+    public HashMap<Stupid, HashMap<Stupid, HashMap<Stupid, Integer> > > ffs;
+
     public LinkedList<Integer> getIntlist() { return intlist; }
     public HashSet<String> getStrset() { return strset; }
     public void setIntlist(LinkedList<Integer> il) { intlist = il; }
