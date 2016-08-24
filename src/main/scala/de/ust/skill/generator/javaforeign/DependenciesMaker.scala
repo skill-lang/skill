@@ -39,7 +39,7 @@ trait DependenciesMaker extends GeneralOutputMaker {
     }
   }
 
-  val jars = Seq("skill.jvm.common.jar", "skill.java.common.jar")
+  val jars = Seq("skill.jvm.common.jar", "skill.jforeign.common.jar")
   lazy val commonJarSum = jars.map { s ⇒ (s -> sha256("deps/" + s)) }.toMap
 
   final def sha256(name : String) : String = sha256(new File("src/test/resources/"+name).toPath)
