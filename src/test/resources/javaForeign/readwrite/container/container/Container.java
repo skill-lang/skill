@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.HashSet;
 import java.util.HashMap;
 
-public class ContainerFields {
+public class Container {
 
     public LinkedList<Integer> intlist;
 

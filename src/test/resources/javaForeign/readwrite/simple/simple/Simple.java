@@ -1,6 +1,6 @@
-package simpleunbound;
+package simple;
 
-public class SimpleType {
+public class Simple {
 	
 	public long x;
 	
@@ -20,7 +20,7 @@ public class SimpleType {
 	
 	public String str;
 	
-	public SimpleType(byte b, short s, int i, long l, float f, double d, String str) {
+	public Simple(byte b, short s, int i, long l, float f, double d, String str) {
 		super();
 		this.b = b;
 		this.s = s;
