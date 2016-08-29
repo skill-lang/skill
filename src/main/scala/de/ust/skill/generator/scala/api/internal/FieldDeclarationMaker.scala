@@ -111,7 +111,8 @@ final class ${knownField(f)}(${
         else s""" {
 """
       }${
-        (for (r ← f.getRestrictions)
+        // TODO re-enable default restrictions 
+        (for (r ← f.getRestrictions if !r.isInstanceOf[DefaultRestriction])
           yield s"""restrictions += ${mkFieldRestriction(f.getType, r)}${
           // add key to strings
           r match {

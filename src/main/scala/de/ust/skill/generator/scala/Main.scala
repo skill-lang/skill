@@ -172,9 +172,16 @@ Opitions (scala):
           case r : FloatDefaultRestriction if f.getType.getSkillName.equals("f64") ⇒ r.getValue.toString
           case r : FloatDefaultRestriction ⇒ r.getValue.toString + "f"
           case r : StringDefaultRestriction ⇒ "\"" + r.getValue + "\""
-          case r : NameDefaultRestriction if f.getType.getSkillName.equals("bool") ⇒
-            if (r.getValue.head.equals("true")) "true"
-            else "false"
+          case r : NameDefaultRestriction ⇒
+
+            f.getType.getSkillName match {
+              case "bool" ⇒
+                if (r.getValue.head.equals("true")) "true"
+                else "false"
+
+              case "v64" ⇒ "0"
+              case _     ⇒ null
+            }
 
           case _ ⇒ null // TODO find a way to access the state object
         }).getOrElse {
