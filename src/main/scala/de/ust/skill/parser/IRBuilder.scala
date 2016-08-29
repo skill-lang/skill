@@ -78,7 +78,7 @@ object IRBuilder {
         case _ ⇒
       }
       //@note lexical order in edges
-      edges = edges.map { case (k, e) ⇒ (k, e.sortWith(_.name.lowercase > _.name.lowercase)) }
+      //edges = edges.map { case (k, e) ⇒ (k, e.sortWith(_.name.lowercase > _.name.lowercase)) }
 
       // L ← Empty list that will contain the sorted nodes
       val L = ListBuffer[Declaration]()
@@ -152,7 +152,8 @@ object IRBuilder {
       val fs = fields.sortWith {
         case (f, g) ⇒ f.name < g.name
       }
-      for (f ← fs)
+//      println(fields.map(_.name))
+      for (f ← fields) // bauhaus: do not sort
         yield mkField(f)
     } catch { case e : ir.ParseException ⇒ ParseException(s"In ${d.name}.${e.getMessage}", e) }
 
