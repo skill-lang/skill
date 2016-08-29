@@ -16,7 +16,7 @@ object IRBuilder {
    * TODO the type checking should be separated and IR building should start over with the original AST and the
    * knowledge, that it is in fact correct
    */
-  def buildIR(defs : ArrayBuffer[Declaration], verboseOutput : Boolean) : TypeContext = {
+  def buildIR(defs : ArrayBuffer[Declaration], verboseOutput : Boolean, keepSpecificationOrder : Boolean) : TypeContext = {
     val tc = new ir.TypeContext
 
     // run the type checker to get information about the type hierarchy
@@ -78,7 +78,8 @@ object IRBuilder {
         case _ ⇒
       }
       //@note lexical order in edges
-      //edges = edges.map { case (k, e) ⇒ (k, e.sortWith(_.name.lowercase > _.name.lowercase)) }
+      if (!keepSpecificationOrder)
+        edges = edges.map { case (k, e) ⇒ (k, e.sortWith(_.name.lowercase > _.name.lowercase)) }
 
       // L ← Empty list that will contain the sorted nodes
       val L = ListBuffer[Declaration]()
@@ -149,11 +150,11 @@ object IRBuilder {
       }
 
       // sort fields in alphabetical order, because it stabilizes API over changes
-      val fs = fields.sortWith {
-        case (f, g) ⇒ f.name < g.name
-      }
-//      println(fields.map(_.name))
-      for (f ← fields) // bauhaus: do not sort
+      val fs =
+        if (keepSpecificationOrder) fields
+        else fields.sortWith { case (f, g) ⇒ f.name < g.name }
+
+      for (f ← fields)
         yield mkField(f)
     } catch { case e : ir.ParseException ⇒ ParseException(s"In ${d.name}.${e.getMessage}", e) }
 

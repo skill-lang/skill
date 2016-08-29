@@ -5,15 +5,16 @@
 \*                                                                            */
 package de.ust.skill.main
 
-import de.ust.skill.generator.common.KnownGenerators
-import de.ust.skill.generator.common.Generator
-import de.ust.skill.parser.Parser
 import java.io.File
-import de.ust.skill.generator.common.HeaderInfo
-import scala.annotation.tailrec
+
+import scala.annotation.migration
 import scala.collection.mutable.HashMap
-import scala.collection.JavaConversions._
+
+import de.ust.skill.generator.common.Generator
+import de.ust.skill.generator.common.HeaderInfo
+import de.ust.skill.generator.common.KnownGenerators
 import de.ust.skill.ir.TypeContext
+import de.ust.skill.parser.Parser
 
 /**
  * Command line interface to the skill compilers
@@ -39,6 +40,7 @@ usage:
 
 Opitions:
   -p packageName         set a package name used by all emitted code.
+  -keepSpecOrder         keep order from the specification where possible.
 
   -h1|h2|h3 content      overrides the content of the respective header line
   -u userName            set a user name
@@ -85,12 +87,12 @@ Opitions:
       if (args.contains("--requiresEscaping") || args.contains("--printCFM"))
         parseOptions(args.to, known)
 
-      val (header, packageName, languages) = parseOptions(args.view(0, args.length - 2).to, known)
+      val (header, packageName, languages, keepSpecificationOrder) = parseOptions(args.view(0, args.length - 2).to, known)
 
       assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
 
       // invoke generators
-      val tc = Parser.process(new File(skillPath))
+      val tc = Parser.process(new File(skillPath), keepSpecificationOrder)
 
       println(s"Parsed $skillPath -- found ${tc.allTypeNames.size - (new TypeContext().allTypeNames.size)} types.")
       println(s"Generating sources into ${new File(outPath).getAbsolutePath()}")
@@ -128,20 +130,22 @@ Opitions:
     var packageName = List[String]()
     val header = new HeaderInfo()
     val selectedLanguages = new HashMap[String, Generator]()
+    var keepSpecificationOrder = false;
 
     while (args.hasNext) args.next match {
 
-      case "-p"       ⇒ packageName = args.next.split('.').toList
+      case "-p"             ⇒ packageName = args.next.split('.').toList
+      case "-keepSpecOrder" ⇒ keepSpecificationOrder = true;
 
-      case "-h1"      ⇒ header.line1 = Some(args.next)
-      case "-h2"      ⇒ header.line2 = Some(args.next)
-      case "-h3"      ⇒ header.line3 = Some(args.next)
+      case "-h1"            ⇒ header.line1 = Some(args.next)
+      case "-h2"            ⇒ header.line2 = Some(args.next)
+      case "-h3"            ⇒ header.line3 = Some(args.next)
 
-      case "-u"       ⇒ header.userName = Some(args.next)
+      case "-u"             ⇒ header.userName = Some(args.next)
 
-      case "-date"    ⇒ header.date = Some(args.next)
+      case "-date"          ⇒ header.date = Some(args.next)
 
-      case "-license" ⇒ header.license = Some(args.next)
+      case "-license"       ⇒ header.license = Some(args.next)
 
       case "-L" ⇒ args.next match {
         case "all" ⇒ selectedLanguages ++= known
@@ -190,7 +194,7 @@ Opitions:
     if (selectedLanguages.isEmpty)
       selectedLanguages ++= known
 
-    (header, packageName, selectedLanguages)
+    (header, packageName, selectedLanguages, keepSpecificationOrder)
   }
 
   def checkEscaping(language : String, args : Array[String]) : String = {
