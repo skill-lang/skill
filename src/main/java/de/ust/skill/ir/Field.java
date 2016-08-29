@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -152,6 +153,28 @@ final public class Field extends FieldLike {
     public boolean isIgnored() {
         return hints.contains(Hint.ignore) || hasIgnoredType();
     }
+
+    public Collection<Hint> getHints() {
+		return hints;
+	}
+
+	/**
+	 * Search hints for a pragma of argument name. Return null, if not present.
+	 *
+	 * @param id
+	 *            name of the pragma
+	 * @return list of arguments, if present, null else
+	 */
+	public List<Name> getPragma(String id) {
+		Optional<Hint> hint = hints.stream().filter(
+				h -> Hint.Type.pragma == h.type() && h.arguments().get(0).getSkillName().equals(id.toLowerCase()))
+				.findFirst();
+		if (hint.isPresent()) {
+			List<Name> args = hint.get().arguments();
+			return args.subList(1, args.size());
+		}
+		return null;
+	}
 
     /**
      * @return true, iff the field's type has an ignore hint
