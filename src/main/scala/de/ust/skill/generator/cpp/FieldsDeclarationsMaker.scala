@@ -438,7 +438,7 @@ bool $fieldName::check() const {${
 
     case r : DefaultRestriction ⇒
       println("[c++] unhandled restriction: " + r.getName);
-      s"new ::skill::restrictions::FieldDefault<${mapType(t)}>(nullptr)"
+      s"new ::skill::restrictions::FieldDefault<${mapType(t)}>(0)"
   }
 
   def writeCode(accessI : String, f : Field) = f.getType match {
