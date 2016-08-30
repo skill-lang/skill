@@ -154,7 +154,7 @@ object IRBuilder {
         if (keepSpecificationOrder) fields
         else fields.sortWith { case (f, g) ⇒ f.name < g.name }
 
-      for (f ← fields)
+      for (f ← fs)
         yield mkField(f)
     } catch { case e : ir.ParseException ⇒ ParseException(s"In ${d.name}.${e.getMessage}", e) }
 
