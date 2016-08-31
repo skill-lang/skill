@@ -24,6 +24,7 @@ import javassist.CtClass
 import scala.collection.mutable.HashMap
 import javassist.NotFoundException
 import de.ust.skill.ir.GroundType
+import de.ust.skill.javacf.ReflectionContext
 
 /**
  * The parent class for all output makers.
@@ -44,9 +45,9 @@ trait GeneralOutputMaker extends Generator {
   var types : TypeContext = _
   var IR : List[UserType] = _
   var interfaces : List[InterfaceType] = _
-  var reflectionMap: HashMap[Type, CtClass] = _
+  var rc: ReflectionContext = _
 
-  def setReflectionMap(rm: HashMap[Type, CtClass]): Unit = { this.reflectionMap = rm }
+  def setReflectionContext(rc: ReflectionContext): Unit = { this.rc = rc }
 
   /**
    * This flag is set iff the specification is too large to be passed as parameter list
@@ -136,7 +137,7 @@ trait GeneralOutputMaker extends Generator {
   def getterOrFieldAccess(t: Type, f: Field): String = if (t.isInstanceOf[GroundType]) {
     s"get${escaped(f.getName.capital())}"
   } else {
-    val javaType = reflectionMap(t);
+    val javaType = rc.map(t);
     try {
       javaType.getDeclaredMethod(s"get${f.getName.capital}")
       s"get${f.getName.capital()}()"
@@ -148,7 +149,7 @@ trait GeneralOutputMaker extends Generator {
   def setterOrFieldAccess(t: Type, f: Field): String = if (t.isInstanceOf[GroundType]) {
     s"set${escaped(f.getName.capital())}"
   } else {
-    val javaType = reflectionMap(t);
+    val javaType = rc.map(t);
     try {
       javaType.getDeclaredMethod(s"set${f.getName.capital}") // TODO: fix this
       s"set${f.getName.capital()}"

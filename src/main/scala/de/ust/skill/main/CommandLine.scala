@@ -94,7 +94,7 @@ Opitions:
       val tc = if (skillPath != "-") Parser.process(new File(skillPath)) else new TypeContext
 
       // process mapping
-      val (jforeignTc, reflectionMap) =
+      val (jforeignTc, rc) =
       if (languages contains "javaforeign") {
         if (!optionalOpts.contains("mappingFile")) error("-M option is missing for javaForeign")
           JavaForeign.run(optionalOpts("mappingFile"), tc, foreignSources)
@@ -107,7 +107,7 @@ Opitions:
       val failures = HashMap[String, Exception]()
       for ((n, m) ← languages) {
         if (m.isInstanceOf[de.ust.skill.generator.javaforeign.GeneralOutputMaker])
-          m.asInstanceOf[de.ust.skill.generator.javaforeign.GeneralOutputMaker].setReflectionMap(reflectionMap)
+          m.asInstanceOf[de.ust.skill.generator.javaforeign.GeneralOutputMaker].setReflectionContext(rc)
         m.setTC(if (n == "javaforeign") jforeignTc else tc)
         m.setPackage(packageName)
         m.headerInfo = header

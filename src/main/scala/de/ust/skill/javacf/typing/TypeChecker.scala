@@ -9,10 +9,11 @@ import de.ust.skill.ir.TypeContext
 import javassist.CtClass
 import javassist.Modifier
 import javassist.NotFoundException
+import de.ust.skill.javacf.ReflectionContext
 
 class TypeChecker {
 
-  def check(rules: List[TypeRule], from: TypeContext, to: TypeContext, reflectionMap: HashMap[Type, CtClass]) {
+  def check(rules: List[TypeRule], from: TypeContext, to: TypeContext, rc: ReflectionContext) {
     val fromTypes: Set[Type] = collection.mutable.Set() ++ from.getUsertypes.asScala
     val toTypes: Set[Type] = collection.mutable.Set() ++ to.getUsertypes.asScala
     val checked = HashMap.empty[Type, Type]
@@ -55,7 +56,7 @@ class TypeChecker {
         case fieldAccessible: FieldAccessible ⇒ {
           val field = fieldAccessible.getField
           val typ = fieldAccessible.getType
-          val reflection = reflectionMap.get(typ).get
+          val reflection = rc.map(typ)
           val fieldReflection = reflection.getField(field.getName.getSkillName)
 
           val hasGetter = try {

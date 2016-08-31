@@ -12,11 +12,12 @@ import javassist.CtClass
 import scala.collection.mutable.HashMap
 import de.ust.skill.ir.Type
 import de.ust.skill.javacf.typing.TypeChecker
+import de.ust.skill.javacf.ReflectionContext
 
 object JavaForeign {
 
   /** Runner for java-foreign specific stuff. */
-  def run(mappingFile: String, skillTc: TypeContext, foreignSources: List[String]): (TypeContext, HashMap[Type, CtClass]) = {
+  def run(mappingFile: String, skillTc: TypeContext, foreignSources: List[String]): (TypeContext, ReflectionContext) = {
 
     val mappingParser = new MappingParser()
     val parserResult = mappingParser.parse(mappingParser.mappingFile, new FileReader(mappingFile))
@@ -32,15 +33,15 @@ object JavaForeign {
     println("**********************\n\n")
 
     val mapper = new IRMapper(foreignSources)
-    val (javaTc, reflectionMap) = mapper.mapClasses(javaTypeNames)
+    val (javaTc, rc) = mapper.mapClasses(javaTypeNames)
 
     val typeRules = mappingRules.flatMap { r => r.bind(skillTc, javaTc) }
     val checker = new TypeChecker
-    checker.check(typeRules, skillTc, javaTc, reflectionMap)
+    checker.check(typeRules, skillTc, javaTc, rc)
     println("***** Type Rules *****")
     println(typeRules.mkString("\n"))
     println("**********************\n\n")
-    (javaTc, reflectionMap)
+    (javaTc, rc)
   }
 
 }
