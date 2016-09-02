@@ -36,7 +36,7 @@ public aspect ${name(t)}Aspects {
     public void ${t.getName}.setSkillID(long skillID) { this.skillID = skillID; }
     public String ${t.getName}.skillName() { return "${t.getName}"; }
 
-    public ${t.getName}.new() { super(); }
+    //public ${t.getName}.new() { super(); }
     public ${t.getName}.new(long skillID) { super(); this.skillID = skillID; }
 
     declare parents : ${t.getName} implements SkillObject;
