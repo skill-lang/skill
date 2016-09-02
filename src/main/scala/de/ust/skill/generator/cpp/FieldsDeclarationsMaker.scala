@@ -443,8 +443,14 @@ bool $fieldName::check() const {${
 
   def writeCode(accessI : String, f : Field) = f.getType match {
     case t : GroundType ⇒ t.getSkillName match {
-      case "annotation" | "string" ⇒ s"""auto b = ::skill::box($accessI);
+      case "annotation" ⇒ s"""auto b = ::skill::box($accessI);
             type->write(out, b);"""
+      
+      case "string" ⇒  s"""const ::skill::SKilLID v = ((::skill::api::String)$accessI)->getID();
+            if (v)
+                out->v64(v);
+            else
+                out->i8(0);"""
       case "bool" ⇒ s"out->i8($accessI?0xff:0);"
       case _      ⇒ s"""out->${t.getSkillName}($accessI);"""
     }
