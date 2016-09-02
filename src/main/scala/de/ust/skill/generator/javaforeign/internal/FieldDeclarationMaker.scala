@@ -55,7 +55,9 @@ import java.util.Iterator;
 import de.ust.skill.common.jforeign.internal.*;
 import de.ust.skill.common.jforeign.internal.fieldDeclarations.*;
 import de.ust.skill.common.jforeign.internal.fieldTypes.Annotation;
+import de.ust.skill.common.jforeign.internal.fieldTypes.ListType;
 import de.ust.skill.common.jforeign.internal.fieldTypes.MapType;
+import de.ust.skill.common.jforeign.internal.fieldTypes.SetType;
 import de.ust.skill.common.jforeign.internal.fieldTypes.SingleArgumentType;
 import de.ust.skill.common.jforeign.internal.fieldTypes.StringType;
 import de.ust.skill.common.jforeign.internal.fieldTypes.V64;
@@ -161,6 +163,19 @@ ${
                 }
 
                 case ft : UserType ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(target.getByID(in.v64()));"""
+                case ft : ListType ⇒ s"""${rc.map(f).getName}<${mapType(ft.getBaseType, true)}> l = new ${rc.map(f).getName}<>();
+            ((ListType)type).readSingleField(in, l);
+            is.next().${setterOrFieldAccess(t, f)}(l);"""
+                case ft : SetType ⇒ s"""${rc.map(f).getName}<${mapType(ft.getBaseType, true)}> s = new ${rc.map(f).getName}<>();
+            ((SetType)type).readSingleField(in, s);
+            is.next().${setterOrFieldAccess(t, f)}(s);"""
+                case ft : MapType ⇒ {
+                  val last :: rest = ft.getBaseTypes.reverse.toList
+                  val actualType : String = rest.foldLeft(mapType(last, true))((acc, curr) ⇒ s"${rc.map(f).getName}<${mapType(curr, true)}, ${acc}>")
+
+                  s"""$actualType m = new ${rc.map(f).getName}<>();
+            ((MapType)type).readSingleField(in, m);"""
+                }
                 case _            ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(type.readSingleField(in));"""
               }
             }

@@ -149,7 +149,9 @@ class IRMapper(classpaths: List[String]) {
 
     val comment = new Comment()
     comment.init(List().asJava)
-    new Field(skilltype, new Name(List(field.getName).asJava, field.getName),
+    val f: Field = new Field(skilltype, new Name(List(field.getName).asJava, field.getName),
       false, comment, new java.util.ArrayList[Restriction], new java.util.ArrayList[Hint])
+    rc.add(f, field.getType)
+    f
   }.to
 }
