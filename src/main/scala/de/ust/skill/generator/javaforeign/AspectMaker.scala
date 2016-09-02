@@ -40,6 +40,10 @@ public aspect ${name(t)}Aspects {
     public ${t.getName}.new(long skillID) { super(); this.skillID = skillID; }
 
     declare parents : ${t.getName} implements SkillObject;
+
+    before(${t.getName} x): target(x) && execution(${t.getName}.new(..)) {
+        x.skillID = -1;
+    }
 }
 """);
 
