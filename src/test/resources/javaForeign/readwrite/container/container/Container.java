@@ -6,19 +6,16 @@ import java.util.HashMap;
 
 public class Container {
 
-    public LinkedList<Integer> intlist;
 
-    public HashSet<String> strset;
+    public Container() {
+        maps = new HashMap<>();
+        list = new LinkedList<>();
+        map = new HashMap<>();
+        set = new HashSet<>();
+    }
 
-    public LinkedList<Stupid> stupidlist;
-    public HashSet<Stupid> stupidset;
-    public HashMap<Stupid, Stupid> stupidmap;
-
-    public HashMap<Stupid, HashMap<Stupid, HashMap<Stupid, Integer> > > ffs;
-
-    public LinkedList<Integer> getIntlist() { return intlist; }
-    public HashSet<String> getStrset() { return strset; }
-    public void setIntlist(LinkedList<Integer> il) { intlist = il; }
-    public void setStrset(HashSet<String> ss) { strset = ss; }
-
+    public LinkedList<Stupid> list;
+    public HashSet<String> set;
+    public HashMap<Integer, Stupid> map;
+    public HashMap<Integer, HashMap<Integer, Integer>> maps;
 }
