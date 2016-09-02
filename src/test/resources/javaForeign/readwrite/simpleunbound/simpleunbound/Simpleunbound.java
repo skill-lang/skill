@@ -1,6 +1,8 @@
 package simpleunbound;
 
 public class Simpleunbound {
+
+    public Simpleunbound() { }
 	
 	public long x;
 	

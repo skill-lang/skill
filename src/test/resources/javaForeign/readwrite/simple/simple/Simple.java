@@ -1,6 +1,8 @@
 package simple;
 
 public class Simple {
+
+    public Simple()  { };
 	
 	public long x;
 	
