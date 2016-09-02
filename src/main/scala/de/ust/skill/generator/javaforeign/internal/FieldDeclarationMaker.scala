@@ -174,7 +174,8 @@ ${
                   val actualType : String = rest.foldLeft(mapType(last, true))((acc, curr) ⇒ s"${rc.map(f).getName}<${mapType(curr, true)}, ${acc}>")
 
                   s"""$actualType m = new ${rc.map(f).getName}<>();
-            ((MapType)type).readSingleField(in, m);"""
+            ((MapType)type).readSingleField(in, m);
+            is.next().${setterOrFieldAccess(t, f)}(m);"""
                 }
                 case _            ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(type.readSingleField(in));"""
               }
