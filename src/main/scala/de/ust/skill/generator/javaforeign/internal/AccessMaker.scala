@@ -108,7 +108,8 @@ ${
             if (null != data[i])
                 return;
 
-            $typeT r = new $typeT(i + 1);
+            $typeT r = new $typeT();
+            r.setSkillID(i + 1);
             data[i] = r;
             staticData.add(r);
 
@@ -206,7 +207,7 @@ ${
      * @return a new age instance with the argument field values
      */
     public $typeT make(${makeConstructorArguments(t)}) {
-        $typeT rval = new $typeT(-1);
+        $typeT rval = new $typeT();
 ${
   t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map {
     f ⇒ s"""        rval.${setterOrFieldAccess(t, f)}(${name(f)});"""

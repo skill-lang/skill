@@ -35,7 +35,8 @@ public final class ${name(t)}SubType extends ${name(t)} implements NamedType {
 
     /** internal use only!!! */
     public ${name(t)}SubType(StoragePool<?, ?> τPool, long skillID) {
-        super(skillID);
+        super();
+        this.setSkillID(skillID);
         this.τPool = τPool;
     }
 
