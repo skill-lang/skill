@@ -23,13 +23,16 @@ import ${t.getName.getPackagePath}.${t.getName};
 /**
  * Aspects for ${t.getName}.
  *
- * @author Timm Felden
+ * @author Constantin Weißer
  */
 public aspect ${name(t)}Aspects {
 
+    // add skillID to ${name(t)}
     public long ${t.getName}.skillID;
+    // getter and setter for skillID
     public long ${t.getName}.getSkillID() { return this.skillID; }
     public void ${t.getName}.setSkillID(long skillID) { this.skillID = skillID; }
+    // Access to skillName
     public String ${t.getName}.skillName() { return "${t.getName}"; }
 
     ${
@@ -43,8 +46,10 @@ public aspect ${name(t)}Aspects {
         }
       }
 
+    // Add SkillObject interface
     declare parents : ${t.getName} implements SkillObject;
 
+    // Initialize skillID no matter which constructor is called
     before(${t.getName} x): target(x) && execution(${t.getName}.new(..)) {
         x.skillID = -1;
     }
