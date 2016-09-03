@@ -5,11 +5,7 @@
 \*                                                                            */
 package de.ust.skill.generator.javaforeign
 
-import java.io.PrintWriter
-import scala.collection.JavaConversions._
-import de.ust.skill.ir._
-import de.ust.skill.ir.restriction._
-import scala.collection.mutable.HashSet
+import javassist.NotFoundException
 
 trait AspectMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -36,8 +32,16 @@ public aspect ${name(t)}Aspects {
     public void ${t.getName}.setSkillID(long skillID) { this.skillID = skillID; }
     public String ${t.getName}.skillName() { return "${t.getName}"; }
 
-    //public ${t.getName}.new() { super(); }
-    public ${t.getName}.new(long skillID) { super(); this.skillID = skillID; }
+    ${
+        try {
+          rc.map(t).getConstructor("()V")
+          s"""// Default constructor is available, need not inject one
+    //public ${t.getName}.new() { super(); }""";
+        } catch {
+          case e: NotFoundException ⇒ s"""// Add default constructor
+    public ${t.getName}.new() { super(); }""";
+        }
+      }
 
     declare parents : ${t.getName} implements SkillObject;
 
