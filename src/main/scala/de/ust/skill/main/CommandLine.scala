@@ -5,15 +5,16 @@
 \*                                                                            */
 package de.ust.skill.main
 
-import de.ust.skill.generator.common.KnownGenerators
-import de.ust.skill.generator.common.Generator
-import de.ust.skill.parser.Parser
 import java.io.File
-import de.ust.skill.generator.common.HeaderInfo
+
 import scala.collection.mutable.HashMap
-import scala.collection.JavaConversions._
-import de.ust.skill.ir.TypeContext
 import scala.collection.mutable.ListBuffer
+
+import de.ust.skill.generator.common.Generator
+import de.ust.skill.generator.common.HeaderInfo
+import de.ust.skill.generator.common.KnownGenerators
+import de.ust.skill.ir.TypeContext
+import de.ust.skill.parser.Parser
 
 /**
  * Command line interface to the skill compilers
