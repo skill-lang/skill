@@ -159,6 +159,7 @@ ${
                 }
 
                 case t : UserType ⇒ s"""is.next().set${escaped(f.getName.capital)}(target.getByID(in.v64()));"""
+                
                 case _            ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
               }
             }

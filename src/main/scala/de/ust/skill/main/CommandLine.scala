@@ -7,6 +7,7 @@ package de.ust.skill.main
 
 import java.io.File
 
+import scala.annotation.migration
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 
@@ -40,6 +41,7 @@ usage:
 
 Opitions:
   -p packageName         set a package name used by all emitted code.
+  -keepSpecOrder         keep order from the specification where possible.
 
   -h1|h2|h3 content      overrides the content of the respective header line
   -u userName            set a user name
@@ -86,13 +88,13 @@ Opitions:
       if (args.contains("--requiresEscaping") || args.contains("--printCFM"))
         parseOptions(args.to, known)
 
-      val (header, packageName, languages, foreignSources, mappingFile) = parseOptions(args.view(0, args.length - 2).to, known)
+      val (header, packageName, languages, foreignSources, mappingFile, keepSpecificationOrder) = parseOptions(args.view(0, args.length - 2).to, known)
 
       assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
 
       // skill TypeContext
       // this is either the result of parsing a skill file or an empty type context if "-" is specified
-      val tc = if (skillPath != "-") Parser.process(new File(skillPath)) else new TypeContext
+      val tc = if (skillPath != "-") Parser.process(new File(skillPath), keepSpecificationOrder) else new TypeContext
 
       // process mapping
       val (jforeignTc, rc) =
@@ -140,22 +142,24 @@ Opitions:
     var packageName = List[String]()
     val header = new HeaderInfo()
     val selectedLanguages = new HashMap[String, Generator]()
+    var keepSpecificationOrder = false;
     val foreignSources = new ListBuffer[String]()
     var mappingFile: Option[String] = None;
 
     while (args.hasNext) args.next match {
 
-      case "-p"       ⇒ packageName = args.next.split('.').toList
+      case "-p"             ⇒ packageName = args.next.split('.').toList
+      case "-keepSpecOrder" ⇒ keepSpecificationOrder = true;
 
-      case "-h1"      ⇒ header.line1 = Some(args.next)
-      case "-h2"      ⇒ header.line2 = Some(args.next)
-      case "-h3"      ⇒ header.line3 = Some(args.next)
+      case "-h1"            ⇒ header.line1 = Some(args.next)
+      case "-h2"            ⇒ header.line2 = Some(args.next)
+      case "-h3"            ⇒ header.line3 = Some(args.next)
 
-      case "-u"       ⇒ header.userName = Some(args.next)
+      case "-u"             ⇒ header.userName = Some(args.next)
 
-      case "-date"    ⇒ header.date = Some(args.next)
+      case "-date"          ⇒ header.date = Some(args.next)
 
-      case "-license" ⇒ header.license = Some(args.next)
+      case "-license"       ⇒ header.license = Some(args.next)
 
       case "-L" ⇒ args.next match {
         case "all" ⇒ selectedLanguages ++= known
@@ -207,7 +211,7 @@ Opitions:
     if (selectedLanguages.isEmpty)
       selectedLanguages ++= known
 
-    (header, packageName, selectedLanguages, foreignSources.toList, mappingFile)
+    (header, packageName, selectedLanguages, foreignSources.toList, mappingFile, keepSpecificationOrder)
   }
 
   def checkEscaping(language : String, args : Array[String]) : String = {

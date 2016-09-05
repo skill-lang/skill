@@ -260,6 +260,11 @@ size_t $fieldName::offset() const {${
 
                 case fieldType : InterfaceType ⇒ offsetCode(fieldType.getSuperType)
 
+                //                case t : ConstantLengthArrayType ⇒ s"((skill::fieldTypes::ConstantLengthArray*)type)->offset($accessI)"
+                //                case t : VariableLengthArrayType ⇒ s"((skill::fieldTypes::VariableLengthArray*)type)->offset(::skill::box($accessI))"
+                case t : ListType              ⇒ s"result += ((skill::fieldTypes::ListType*)type)->offset<${mapType(t.getBaseType)}>($accessI);"
+                //                case t : SetType                 ⇒ s"((skill::fieldTypes::SetType*)type)->offset(::skill::box($accessI))"
+
                 case _                         ⇒ s"""result += type->offset(::skill::box($accessI));"""
               }
 
@@ -315,17 +320,18 @@ void $fieldName::write(::skill::streams::MappedOutStream *out) const {${
           }
 }
 
-bool $fieldName::check() const {${
-            if (f.isConstant) "\n    // constants are always correct"
+bool $fieldName::check() const {
+${
+            val checks = (for (r ← f.getRestrictions)
+              yield checkRestriction(f.getType, r)).mkString;
+            if (f.isConstant || checks.isEmpty()) "    // nothing to check"
             else s"""
-    if (checkedRestrictions.size()) {
-        ${storagePool(t)} *p = (${storagePool(t)} *) owner;
-        for (const auto& i : *p) {
-            for (auto r : checkedRestrictions)
-                if (!r->check(::skill::api::box(i.${internalName(f)})))
-                    return false;
-        }
-    }"""
+    ${storagePool(t)} *p = (${storagePool(t)} *) owner;
+    for (const auto& i : *p) {
+        const auto v = i.${internalName(f)};
+$checks
+    }
+"""
           }
     return true;
 }
@@ -432,19 +438,43 @@ bool $fieldName::check() const {${
         case "i32" ⇒ s"new ::skill::restrictions::FieldDefault<int32_t>(${r.getValue})"
         case _     ⇒ s"new ::skill::restrictions::FieldDefault<int64_t>(${r.getValue}L)"
       }
-    
-    case r : NameDefaultRestriction if t.getSkillName.equals("bool") ⇒ 
+
+    case r : NameDefaultRestriction if t.getSkillName.equals("bool") ⇒
       s"new ::skill::restrictions::FieldDefault<bool>(${r.getValue.head})"
 
     case r : DefaultRestriction ⇒
       println("[c++] unhandled restriction: " + r.getName);
-      s"new ::skill::restrictions::FieldDefault<${mapType(t)}>(nullptr)"
+      s"new ::skill::restrictions::FieldDefault<${mapType(t)}>(0)"
+  }
+
+  private final def checkRestriction(t : Type, r : Restriction) : String = r match {
+    case r : NonNullRestriction ⇒ """
+            if(nullptr == v) return false;"""
+    case r : IntRangeRestriction ⇒
+      val typename = s"int${t.getSkillName.substring(1)}_t"
+      s"""
+            if((($typename)${hex(t, r.getLow)}) > v || v > ($typename)${hex(t, r.getHigh)}) return false;"""
+
+    case r : FloatRangeRestriction ⇒ t.getSkillName match {
+      case "f32" ⇒ s"""
+            if(${r.getLowFloat}f > v || v > ${r.getHighFloat}f) return false;"""
+      case "f64" ⇒ s"""
+            if(${r.getLowDouble} > v || v > ${r.getHighDouble})) return false;"""
+    }
+
+    case _ ⇒ "" // unchecked restriction
   }
 
   def writeCode(accessI : String, f : Field) = f.getType match {
     case t : GroundType ⇒ t.getSkillName match {
-      case "annotation" | "string" ⇒ s"""auto b = ::skill::box($accessI);
+      case "annotation" ⇒ s"""auto b = ::skill::box($accessI);
             type->write(out, b);"""
+
+      case "string" ⇒ s"""const ::skill::SKilLID v = ((::skill::api::String)$accessI)->getID();
+            if (v)
+                out->v64(v);
+            else
+                out->i8(0);"""
       case "bool" ⇒ s"out->i8($accessI?0xff:0);"
       case _      ⇒ s"""out->${t.getSkillName}($accessI);"""
     }
@@ -454,6 +484,9 @@ bool $fieldName::check() const {${
                 out->v64(v->skillID());
             else
                 out->i8(0);"""
+
+    case t : ListType ⇒ s"((skill::fieldTypes::ListType*)type)->write<${mapType(t.getBaseType)}>(out, $accessI);"
+
     case _ ⇒ s"""auto b = ::skill::box($accessI);
             type->write(out, b);"""
   }

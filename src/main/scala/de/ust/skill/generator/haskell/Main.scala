@@ -147,7 +147,7 @@ final class Main extends FakeMain {
 """
   }
 
-  var outPostfix = s"/genereted/${
+  var outPostfix = s"/generated/${
     if (packagePrefix.isEmpty()) ""
     else packagePrefix.replace('.', '/') + "/"
   }"
