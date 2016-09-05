@@ -86,7 +86,7 @@ Opitions:
       if (args.contains("--requiresEscaping") || args.contains("--printCFM"))
         parseOptions(args.to, known)
 
-      val (header, packageName, languages, foreignSources, optionalOpts) = parseOptions(args.view(0, args.length - 2).to, known)
+      val (header, packageName, languages, foreignSources, mappingFile) = parseOptions(args.view(0, args.length - 2).to, known)
 
       assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
 
@@ -97,8 +97,8 @@ Opitions:
       // process mapping
       val (jforeignTc, rc) =
       if (languages contains "javaforeign") {
-        if (!optionalOpts.contains("mappingFile")) error("-M option is missing for javaForeign")
-          JavaForeign.run(optionalOpts("mappingFile"), tc, foreignSources)
+        if (mappingFile.isEmpty) error("-M option is missing for javaForeign")
+          JavaForeign.run(mappingFile.get, tc, foreignSources)
       } else (null, null);
 
       // invoke generators
@@ -141,7 +141,7 @@ Opitions:
     val header = new HeaderInfo()
     val selectedLanguages = new HashMap[String, Generator]()
     val foreignSources = new ListBuffer[String]()
-    val optionalOpts = new HashMap[String, String]
+    var mappingFile: Option[String] = None;
 
     while (args.hasNext) args.next match {
 
@@ -184,7 +184,7 @@ Opitions:
           println(checkEscaping(selectedLanguages.keySet.head, words))
           throw new DoneException;
         }
-      case "-M" ⇒ optionalOpts += ("mappingFile" → args.next)
+      case "-M" ⇒ mappingFile = Some(args.next)
 
       case "-F" => foreignSources += args.next()
 
@@ -207,7 +207,7 @@ Opitions:
     if (selectedLanguages.isEmpty)
       selectedLanguages ++= known
 
-    (header, packageName, selectedLanguages, foreignSources.toList, optionalOpts)
+    (header, packageName, selectedLanguages, foreignSources.toList, mappingFile)
   }
 
   def checkEscaping(language : String, args : Array[String]) : String = {
