@@ -62,11 +62,11 @@ trait GeneralOutputMaker extends Generator {
    */
   protected var revealSkillID = false;
 
-  val ArrayTypeName = "java.util.ArrayList"
-  val VarArrayTypeName = "java.util.ArrayList"
-  val ListTypeName = "java.util.LinkedList"
-  val SetTypeName = "java.util.HashSet"
-  val MapTypeName = "java.util.HashMap"
+  val ArrayTypeName = "java.util.List"
+  val VarArrayTypeName = "java.util.List"
+  val ListTypeName = "java.util.List"
+  val SetTypeName = "java.util.Set"
+  val MapTypeName = "java.util.Map"
 
   private[javaforeign] def header : String
 
@@ -88,6 +88,8 @@ trait GeneralOutputMaker extends Generator {
    * Assume the existence of a translation function for types.
    */
   protected def mapType(t : Type, boxed : Boolean = false) : String
+
+  protected def mapType(f : Field, boxed : Boolean) : String
 
   /**
    * creates argument list of a constructor call, not including potential skillID or braces

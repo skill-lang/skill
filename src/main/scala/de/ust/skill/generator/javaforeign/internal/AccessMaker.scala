@@ -235,7 +235,7 @@ ${
         (for (f ← t.getAllFields if !f.isIgnored() && !f.isConstant())
           yield s"""
 
-        public ${nameT}Builder ${name(f)}(${mapType(f.getType)} ${name(f)}) {
+        public ${nameT}Builder ${name(f)}(${mapType(f, false)} ${name(f)}) {
             instance.${setterOrFieldAccess(t, f)}(${name(f)});
             return this;
         }""").mkString

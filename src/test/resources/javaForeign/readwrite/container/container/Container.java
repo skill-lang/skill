@@ -1,21 +1,26 @@
 package container;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.TreeMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.List;
 
 public class Container {
 
 
     public Container() {
-        maps = new HashMap<>();
-        list = new LinkedList<>();
-        map = new HashMap<>();
+        maps = new LinkedHashMap<>();
+        list = new ArrayList<>();
+        map = new TreeMap<>();
         set = new HashSet<>();
     }
 
-    public LinkedList<Stupid> list;
-    public HashSet<String> set;
-    public HashMap<Integer, Stupid> map;
-    public HashMap<Integer, HashMap<Integer, Integer>> maps;
+    public List<Stupid> list;
+    public Set<String> set;
+    public Map<Integer, Stupid> map;
+    public Map<Integer, Map<Integer, Integer>> maps;
 }

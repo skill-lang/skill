@@ -93,7 +93,7 @@ ${
             case "annotation" | "string" ⇒ s"""KnownField<${mapType(f.getType)}, ${mapType(t)}>"""
             case ft                      ⇒ "???missing specialization for type "+ft
           }
-          case _ ⇒ s"""KnownField<${mapType(f.getType)}, ${mapType(t)}>"""
+          case _ ⇒ s"""KnownField<${mapType(f, false)}, ${mapType(t)}>"""
         }
       }${
         // mark ignored fields as ignored; read function is inherited
@@ -163,17 +163,26 @@ ${
                 }
 
                 case ft : UserType ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(target.getByID(in.v64()));"""
-                case ft : ListType ⇒ s"""${rc.map(f).getName}<${mapType(ft.getBaseType, true)}> l = new ${rc.map(f).getName}<>();
+                case ft : ListType ⇒ s"""${rc.map(f).getName}<${mapType(ft.getBaseType, true)}> l = new ${
+                  val actual = rc.map(f).getName
+                  if (actual == "java.util.List") s"java.util.LinkedList" else actual
+                  }<>();
             ((ListType)type).readSingleField(in, l);
             is.next().${setterOrFieldAccess(t, f)}(l);"""
-                case ft : SetType ⇒ s"""${rc.map(f).getName}<${mapType(ft.getBaseType, true)}> s = new ${rc.map(f).getName}<>();
+                case ft : SetType ⇒ s"""${rc.map(f).getName}<${mapType(ft.getBaseType, true)}> s = new ${
+                  val actual = rc.map(f).getName
+                  if (actual == "java.util.Set") s"java.util.HashSet" else actual
+                  }<>();
             ((SetType)type).readSingleField(in, s);
             is.next().${setterOrFieldAccess(t, f)}(s);"""
                 case ft : MapType ⇒ {
                   val last :: rest = ft.getBaseTypes.reverse.toList
                   val actualType : String = rest.foldLeft(mapType(last, true))((acc, curr) ⇒ s"${rc.map(f).getName}<${mapType(curr, true)}, ${acc}>")
 
-                  s"""$actualType m = new ${rc.map(f).getName}<>();
+                  s"""$actualType m = new ${
+                    val actual = rc.map(f).getName
+                    if (actual == "java.util.Map") s"java.util.HashMap" else actual
+                    }<>();
             ((MapType)type).readSingleField(in, m);
             is.next().${setterOrFieldAccess(t, f)}(m);"""
                 }
@@ -281,7 +290,7 @@ ${
         final SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}> t = (SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}>) type;
         final FieldType<${mapType(fieldType.getBaseType, true)}> baseType = t.groundType;
         $preludeData
-            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).${getterOrFieldAccess(t, f)};
+            final ${mapType(f, false)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).${getterOrFieldAccess(t, f)};
             if(null==v)
                 result++;
             else {
@@ -296,7 +305,7 @@ ${
         final FieldType keyType = t.keyType;
         final FieldType valueType = t.valueType;
         $preludeData
-            final ${mapType(f.getType)} v = (${
+            final ${mapType(f, false)} v = (${
                 if (tIsBaseType) ""
                 else s"(${mapType(t)})"
               }data[i]).${getterOrFieldAccess(t, f)};
@@ -414,12 +423,12 @@ ${
     public void setR(SkillObject ref, ${mapType(f.getType, true)} value) {
         ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
-        else s"((${mapType(t)}) ref).${setterOrFieldAccess(t, f)}(value);"
+        else s"((${mapType(t)}) ref).${setterOrFieldAccess(t, f)}((${mapType(f, true)})value);"
       }
     }
 
     @Override
-    public ${mapType(f.getType)} get(${mapType(t)} ref) {
+    public ${mapType(f, false)} get(${mapType(t)} ref) {
         ${
         if (f.isConstant()) s"return ${mapType(t)}.${getterOrFieldAccess(t, f)};"
         else s"return ref.${getterOrFieldAccess(t, f)};"
@@ -427,7 +436,7 @@ ${
     }
 
     @Override
-    public void set(${mapType(t)} ref, ${mapType(f.getType)} value) {
+    public void set(${mapType(t)} ref, ${mapType(f, false)} value) {
         ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
         else s"ref.${setterOrFieldAccess(t, f)}(value);"

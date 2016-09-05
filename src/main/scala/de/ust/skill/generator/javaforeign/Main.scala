@@ -84,12 +84,20 @@ class Main extends FakeMain
     case _                           ⇒ throw new IllegalStateException(s"Unknown type $t")
   }
 
+  override protected def mapType(f: Field, boxed : Boolean): String = f.getType match {
+    case t : ListType                ⇒ s"${rc.map(f).getName}<${mapType(t.getBaseType(), true)}>"
+    case t : SetType                 ⇒ s"${rc.map(f).getName}<${mapType(t.getBaseType(), true)}>"
+    case t : MapType                 ⇒ t.getBaseTypes().map(mapType(_, true)).reduceRight((k, v) ⇒ s"${rc.map(f).getName}<$k, $v>")
+    case _ ⇒ mapType(f.getType, boxed)
+  }
+
   /**
    * creates argument list of a constructor call, not including potential skillID or braces
    */
   override protected def makeConstructorArguments(t : UserType) = (
     for (f ← t.getAllFields if !(f.isConstant || f.isIgnored))
-      yield s"${mapType(f.getType())} ${name(f)}").mkString(", ")
+      yield s"${mapType(f, false)} ${name(f)}").mkString(", ")
+
   override protected def appendConstructorArguments(t : UserType, prependTypes : Boolean) = {
     val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
     if (r.isEmpty) ""
