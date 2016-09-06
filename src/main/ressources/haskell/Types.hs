@@ -5,14 +5,14 @@ import Data.Int
 import Data.ByteString.Lazy
 import Data.Binary.Get
 
-type Ordered    = ([String], [TypeDesc], [String])
-type BlockPair  = ([String], [TypeDesc])
-type TypeDesc   = (String, Int, Maybe Int, Maybe Int, [FieldDesc]) --nameID, count, superID, LBPO, fieldDescriptors
-type FieldDesc  = (Int, Maybe String, Maybe (Get Something), FieldData) --fieldID, name, getter, endOffset, fieldData
-type FieldData  = ByteString
+type Ordered   = ([String], [TypeDesc], [String])
 
-type Pointer = (Int, Int) -- skill name 'Annotation'
-type UserType = String
+data TypeDesc  = TD (String, [FieldDesc], [TypeDesc])
+type FieldDesc = (String, Get [Something], FieldData) --name, getter, fieldData
+
+type FieldData = ByteString
+type Pointer   = (Int, Int) -- skill name 'Annotation'
+type UserType  = String
 
 data Something = CInt8   Int8             -- 0
                | CInt16  Int16            -- 1
@@ -30,8 +30,10 @@ data Something = CInt8   Int8             -- 0
                | GDouble  Double          -- 13
                | GString  Int             -- 14
                | GFArray  [Something]     -- 15
-               | GVArray  Something       -- 17
-               | GList    Something       -- 18
-               | GSet     Something       -- 19
+               | GVArray  [Something]     -- 17
+               | GList    [Something]     -- 18
+               | GSet     [Something]     -- 19
                | GMap Something Something -- 20
+                     deriving (Show)
+
                -- TODO ?              -- 21+
