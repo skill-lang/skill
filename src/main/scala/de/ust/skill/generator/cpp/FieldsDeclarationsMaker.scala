@@ -459,7 +459,7 @@ $checks
       case "f32" ⇒ s"""
             if(${r.getLowFloat}f > v || v > ${r.getHighFloat}f) return false;"""
       case "f64" ⇒ s"""
-            if(${r.getLowDouble} > v || v > ${r.getHighDouble})) return false;"""
+            if(${r.getLowDouble} > v || v > ${r.getHighDouble}) return false;"""
     }
 
     case _ ⇒ "" // unchecked restriction
