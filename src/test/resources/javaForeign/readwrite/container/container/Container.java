@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.List;
 
 public class Container {
@@ -16,11 +17,11 @@ public class Container {
         maps = new LinkedHashMap<>();
         list = new ArrayList<>();
         map = new TreeMap<>();
-        set = new HashSet<>();
+        set = new TreeSet<>();
     }
 
-    public List<Stupid> list;
-    public Set<String> set;
-    public Map<Integer, Stupid> map;
+    public ArrayList<Stupid> list;
+    public TreeSet<String> set;
+    public TreeMap<Integer, Stupid> map;
     public Map<Integer, Map<Integer, Integer>> maps;
 }
