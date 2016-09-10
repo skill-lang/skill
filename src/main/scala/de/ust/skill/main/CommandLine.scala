@@ -7,6 +7,7 @@ package de.ust.skill.main
 
 import java.io.File
 
+import scala.collection.JavaConversions._
 import scala.annotation.migration
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
@@ -16,6 +17,10 @@ import de.ust.skill.generator.common.HeaderInfo
 import de.ust.skill.generator.common.KnownGenerators
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.parser.Parser
+import java.io.PrintWriter
+import java.io.OutputStreamWriter
+import java.io.BufferedWriter
+import java.io.FileOutputStream
 
 /**
  * Command line interface to the skill compilers
@@ -115,6 +120,16 @@ Opitions:
         m.setPackage(packageName)
         m.headerInfo = header
         m.outPath = outPath + "/" + n
+
+        if (n == "javaforeign") {
+          val f = new File(s"$outPath/$n/${packageName.mkString(".")}.skill")
+          val prettySkillSpec = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
+
+          jforeignTc.removeInterfaces().getUsertypes.foreach { ut => {
+            prettySkillSpec.write(ut.prettyPrint() + "\n")
+            }}
+          prettySkillSpec.close()
+        }
 
         print(s"run $n: ")
         try {

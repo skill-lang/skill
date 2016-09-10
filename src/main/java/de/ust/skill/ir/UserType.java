@@ -193,7 +193,7 @@ final public class UserType extends Declaration implements WithFields {
 		}
 		sb.append("{");
 		for (FieldLike f : fields)
-			sb.append("\t").append(f.toString()).append("\n");
+			sb.append("\t").append(f.toString()).append(";\n");
 		sb.append("}");
 
 		return sb.toString();
