@@ -3,9 +3,9 @@
 ** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
-package de.ust.skill.generator.javaforeign.internal
+package de.ust.skill.generator.jforeign.internal
 
-import de.ust.skill.generator.javaforeign.GeneralOutputMaker
+import de.ust.skill.generator.jforeign.GeneralOutputMaker
 
 trait FileParserMaker extends GeneralOutputMaker {
   abstract override def make {

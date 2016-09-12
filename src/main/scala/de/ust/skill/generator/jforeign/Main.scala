@@ -3,15 +3,15 @@
 ** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
-package de.ust.skill.generator.javaforeign
+package de.ust.skill.generator.jforeign
 
 import java.util.Date
 import scala.collection.JavaConversions._
-import de.ust.skill.generator.javaforeign.api.SkillFileMaker
-import de.ust.skill.generator.javaforeign.internal.AccessMaker
-import de.ust.skill.generator.javaforeign.internal.FieldDeclarationMaker
-import de.ust.skill.generator.javaforeign.internal.FileParserMaker
-import de.ust.skill.generator.javaforeign.internal.StateMaker
+import de.ust.skill.generator.jforeign.api.SkillFileMaker
+import de.ust.skill.generator.jforeign.internal.AccessMaker
+import de.ust.skill.generator.jforeign.internal.FieldDeclarationMaker
+import de.ust.skill.generator.jforeign.internal.FileParserMaker
+import de.ust.skill.generator.jforeign.internal.StateMaker
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
@@ -108,7 +108,7 @@ class Main extends FakeMain
   /**
    * Provide a nice file header:)
    */
-  override private[javaforeign] def header : String = _header
+  override private[jforeign] def header : String = _header
   private lazy val _header = {
     // create header from options
     val headerLineLength = 51

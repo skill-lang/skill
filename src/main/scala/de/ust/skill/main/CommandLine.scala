@@ -114,8 +114,8 @@ Opitions:
 
       val failures = HashMap[String, Exception]()
       for ((n, m) ← languages) {
-        if (m.isInstanceOf[de.ust.skill.generator.javaforeign.GeneralOutputMaker])
-          m.asInstanceOf[de.ust.skill.generator.javaforeign.GeneralOutputMaker].setReflectionContext(rc)
+        if (m.isInstanceOf[de.ust.skill.generator.jforeign.GeneralOutputMaker])
+          m.asInstanceOf[de.ust.skill.generator.jforeign.GeneralOutputMaker].setReflectionContext(rc)
         m.setTC(if (n == "javaforeign") jforeignTc else tc)
         m.setPackage(packageName)
         m.headerInfo = header

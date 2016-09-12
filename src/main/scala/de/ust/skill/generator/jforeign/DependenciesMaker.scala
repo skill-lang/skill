@@ -3,7 +3,7 @@
 ** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
-package de.ust.skill.generator.javaforeign
+package de.ust.skill.generator.jforeign
 
 import java.io.File
 import java.io.IOException

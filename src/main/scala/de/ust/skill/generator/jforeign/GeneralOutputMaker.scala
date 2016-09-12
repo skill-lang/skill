@@ -3,7 +3,7 @@
 ** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
-package de.ust.skill.generator.javaforeign
+package de.ust.skill.generator.jforeign
 
 import java.io.File
 import java.io.PrintWriter
@@ -68,7 +68,7 @@ trait GeneralOutputMaker extends Generator {
   val SetTypeName = "java.util.Set"
   val MapTypeName = "java.util.Map"
 
-  private[javaforeign] def header : String
+  private[jforeign] def header : String
 
   /**
    * Creates the correct PrintWriter for the argument file.

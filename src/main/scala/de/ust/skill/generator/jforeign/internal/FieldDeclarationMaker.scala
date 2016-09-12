@@ -3,10 +3,10 @@
 ** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
-package de.ust.skill.generator.javaforeign.internal
+package de.ust.skill.generator.jforeign.internal
 
 import java.io.PrintWriter
-import de.ust.skill.generator.javaforeign.GeneralOutputMaker
+import de.ust.skill.generator.jforeign.GeneralOutputMaker
 import scala.collection.JavaConversions._
 import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.VariableLengthArrayType
