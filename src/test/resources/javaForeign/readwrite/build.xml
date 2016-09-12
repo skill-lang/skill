@@ -4,5 +4,7 @@
         <ant antfile="simple/build.xml" />
         <ant antfile="simpleunbound/build.xml" />
         <ant antfile="container/build.xml" />
+        <ant antfile="baseContainer/build.xml" />
+        <ant antfile="genericNonsense/build.xml" />
     </target>
 </project>
