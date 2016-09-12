@@ -140,12 +140,12 @@ class IRMapper(classpaths: List[String]) {
     val javatype = field.getType
     mapType(javatype).orElse({
       val signature = field.getGenericSignature
-      if (signature != null) {
+      if (signature != null && javatype != javaObjectType) {
         val sigparser = SignatureParser.make();
         val fieldsig = sigparser.parseClassSig(signature)
         val sigvisitor = new SignatureVisitor(tc, pool, mapType)
         fieldsig.accept(sigvisitor)
-        Option(sigvisitor.getResult())
+        sigvisitor.getResult()
       } else {
         None
       }

@@ -36,11 +36,11 @@ import javassist.NotFoundException
  * This is a nasty stateful visitor (thanks to the lack of generic arguments to the visit methods).
  */
 class SignatureVisitor(tc: TypeContext, pool: ClassPool, mapInUserContext: CtClass ⇒ Option[Type])
-    extends sun.reflect.generics.visitor.Visitor[Type] {
+    extends sun.reflect.generics.visitor.Visitor[Option[Type]] {
 
   var topLevel: Boolean = true
   var typeargs = new ListBuffer[Type]
-  var result: Type = null
+  var result: Option[Type] = None
 
   val utilPool = new ClassPool(true)
   utilPool.importPackage("java.util.*")
@@ -48,7 +48,7 @@ class SignatureVisitor(tc: TypeContext, pool: ClassPool, mapInUserContext: CtCla
   val sett = utilPool.get("java.util.Set")
   val mapt = utilPool.get("java.util.Map")
 
-  override def getResult(): Type = { result }
+  override def getResult(): Option[Type] = { result }
 
   override def visitClassSignature(cs: ClassSignature): Unit = {
     cs.getSuperclass.accept(this)
@@ -62,17 +62,21 @@ class SignatureVisitor(tc: TypeContext, pool: ClassPool, mapInUserContext: CtCla
     if (topLevel) {
       topLevel = false
       val clazz = utilPool.get(sct.getName)
+      sct.getTypeArguments.foreach { _.accept(this) }
+      if (typeargs.size < 1) {
+        result = None
+        return
+      }
+
       if (clazz.subtypeOf(listt)) {
-        sct.getTypeArguments.foreach { _.accept(this) }
         assert(typeargs.size == 1)
-        result = ListType.make(tc, typeargs.get(0))
+        result = Some(ListType.make(tc, typeargs.get(0)))
       } else if (clazz.subtypeOf(sett)) {
-        sct.getTypeArguments.foreach { _.accept(this) }
         assert(typeargs.size == 1)
-        result = SetType.make(tc, typeargs.get(0))
+        result = Some(SetType.make(tc, typeargs.get(0)))
       } else if (clazz.subtypeOf(mapt)) {
-        sct.getTypeArguments.foreach { _.accept(this) }
-        result = MapType.make(tc, typeargs)
+        if (typeargs.size < 2) result = None
+        else result = Some(MapType.make(tc, typeargs))
       }
     } else {
       try {
@@ -90,7 +94,9 @@ class SignatureVisitor(tc: TypeContext, pool: ClassPool, mapInUserContext: CtCla
   }
 
   override def visitArrayTypeSignature(a: ArrayTypeSignature): Unit = {}
-  override def visitTypeVariableSignature(tv: TypeVariableSignature): Unit = {}
+  override def visitTypeVariableSignature(tv: TypeVariableSignature): Unit = {
+    // we do nothing here, because we cannot deal with a type variable as argument
+  }
   override def visitWildcard(w: Wildcard): Unit = {}
   override def visitMethodTypeSignature(ms: MethodTypeSignature): Unit = {}
   override def visitFormalTypeParameter(ftp: FormalTypeParameter): Unit = {}
