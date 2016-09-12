@@ -1,4 +1,4 @@
-package de.ust.skill.javacf.typing
+package de.ust.skill.jforeign.typing
 
 import de.ust.skill.ir.Field
 import de.ust.skill.ir.Type

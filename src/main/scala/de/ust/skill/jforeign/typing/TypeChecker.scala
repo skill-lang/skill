@@ -1,4 +1,4 @@
-package de.ust.skill.javacf.typing
+package de.ust.skill.jforeign.typing
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.mutable.HashMap
@@ -9,7 +9,7 @@ import de.ust.skill.ir.TypeContext
 import javassist.CtClass
 import javassist.Modifier
 import javassist.NotFoundException
-import de.ust.skill.javacf.ReflectionContext
+import de.ust.skill.jforeign.ReflectionContext
 
 class TypeChecker {
 

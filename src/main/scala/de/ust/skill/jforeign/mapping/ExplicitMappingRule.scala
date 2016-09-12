@@ -1,10 +1,10 @@
-package de.ust.skill.javacf.mapping
+package de.ust.skill.jforeign.mapping
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
 import de.ust.skill.ir.TypeContext
-import de.ust.skill.javacf.typing.TypeRule
-import de.ust.skill.javacf.typing.TypeEquation
+import de.ust.skill.jforeign.typing.TypeRule
+import de.ust.skill.jforeign.typing.TypeEquation
 import de.ust.skill.ir.UserType
 
 class ExplicitMappingRule(fromSkillType: String, toJavaType: String, fieldMappings: List[FieldMappingRule])

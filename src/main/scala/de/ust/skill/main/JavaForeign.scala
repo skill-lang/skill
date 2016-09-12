@@ -1,18 +1,18 @@
 package de.ust.skill.main
 
-import de.ust.skill.javacf.mapping.ExplicitMappingRule
-import de.ust.skill.javacf.IRMapper
+import de.ust.skill.jforeign.mapping.ExplicitMappingRule
+import de.ust.skill.jforeign.IRMapper
 import de.ust.skill.ir.TypeContext
-import de.ust.skill.javacf.mapping.MappingParser
-import de.ust.skill.javacf.mapping.MappingParser
+import de.ust.skill.jforeign.mapping.MappingParser
+import de.ust.skill.jforeign.mapping.MappingParser
 import scala.io.Source
 import scala.util.parsing.input.Reader
 import java.io.FileReader
 import javassist.CtClass
 import scala.collection.mutable.HashMap
 import de.ust.skill.ir.Type
-import de.ust.skill.javacf.typing.TypeChecker
-import de.ust.skill.javacf.ReflectionContext
+import de.ust.skill.jforeign.typing.TypeChecker
+import de.ust.skill.jforeign.ReflectionContext
 
 object JavaForeign {
 

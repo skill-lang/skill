@@ -1,11 +1,11 @@
-package de.ust.skill.javacf.mapping
+package de.ust.skill.jforeign.mapping
 
 import scala.collection.JavaConversions._
 import de.ust.skill.ir.TypeContext
-import de.ust.skill.javacf.typing.TypeRule
+import de.ust.skill.jforeign.typing.TypeRule
 import de.ust.skill.ir.UserType
-import de.ust.skill.javacf.typing.TargetTypeExists
-import de.ust.skill.javacf.typing.FieldAccessible
+import de.ust.skill.jforeign.typing.TargetTypeExists
+import de.ust.skill.jforeign.typing.FieldAccessible
 
 class UnboundMappingRule(javaTypeName: String, fieldNames: List[String], total: Boolean) extends MappingRule {
 

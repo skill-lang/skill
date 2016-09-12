@@ -1,4 +1,4 @@
-package de.ust.skill.javacf
+package de.ust.skill.jforeign
 
 import scala.collection.JavaConversions._
 import de.ust.skill.ir.Type

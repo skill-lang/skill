@@ -1,4 +1,4 @@
-package de.ust.skill.javacf.mapping
+package de.ust.skill.jforeign.mapping
 
 import scala.io.Source
 import scala.util.parsing.combinator._

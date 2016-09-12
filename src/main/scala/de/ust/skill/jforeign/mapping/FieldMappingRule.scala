@@ -1,11 +1,11 @@
-package de.ust.skill.javacf.mapping
+package de.ust.skill.jforeign.mapping
 
 import de.ust.skill.ir.Type
-import de.ust.skill.javacf.typing.TypeRule
+import de.ust.skill.jforeign.typing.TypeRule
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.Field
-import de.ust.skill.javacf.typing.TypeEquation
-import de.ust.skill.javacf.typing.FieldAccessible
+import de.ust.skill.jforeign.typing.TypeEquation
+import de.ust.skill.jforeign.typing.FieldAccessible
 
 class FieldMappingRule(fromSkillField: String, toJavaField: String) {
 

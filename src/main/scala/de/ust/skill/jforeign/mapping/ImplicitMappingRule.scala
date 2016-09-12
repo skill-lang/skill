@@ -1,6 +1,6 @@
-package de.ust.skill.javacf.mapping
+package de.ust.skill.jforeign.mapping
 
-import de.ust.skill.javacf.typing.TypeRule
+import de.ust.skill.jforeign.typing.TypeRule
 import de.ust.skill.ir.TypeContext
 
 class ImplicitMappingRule(fromSkillType: String, toJavaType: String, total: Boolean) extends MappingRule {

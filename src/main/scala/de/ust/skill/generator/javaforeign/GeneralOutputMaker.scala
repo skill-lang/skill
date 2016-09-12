@@ -24,7 +24,7 @@ import javassist.CtClass
 import scala.collection.mutable.HashMap
 import javassist.NotFoundException
 import de.ust.skill.ir.GroundType
-import de.ust.skill.javacf.ReflectionContext
+import de.ust.skill.jforeign.ReflectionContext
 
 /**
  * The parent class for all output makers.
