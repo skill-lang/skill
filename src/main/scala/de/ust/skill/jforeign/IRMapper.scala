@@ -112,6 +112,7 @@ class IRMapper(classpaths: List[String]) {
     case `floatt` | `Floatt` ⇒ Some(tc.get("f32"))
     case `doublet` | `Doublet` ⇒ Some(tc.get("f64"))
     case `stringt` ⇒ Some(tc.get("string"))
+    case `javaObjectType` ⇒ None
     case other: CtClass ⇒ knownTypes.get(other)
   }
 
@@ -125,7 +126,8 @@ class IRMapper(classpaths: List[String]) {
       } else null
 
       val skilltype = knownTypes(clazz)
-      skilltype.initialize(supertype, List().asJava, mapFields(clazz).asJava, List().asJava, List().asJava)
+      skilltype.initialize(supertype, List().asJava, mapFields(clazz).filter(_.isDefined).map(_.get).asJava,
+          List().asJava, List().asJava)
       mappedTypes += (clazz → skilltype)
       skilltype
     }
@@ -134,24 +136,26 @@ class IRMapper(classpaths: List[String]) {
   /**
    * Returns the IR fields for a given class.
    */
-  def mapFields(clazz: CtClass): List[Field] = clazz.getDeclaredFields.map { field ⇒
+  def mapFields(clazz: CtClass): List[Option[Field]] = clazz.getDeclaredFields.map { field ⇒
     val javatype = field.getType
-    val skilltype = mapType(javatype).orElse({
+    mapType(javatype).orElse({
       val signature = field.getGenericSignature
-      val sigparser = SignatureParser.make();
-      val fieldsig = sigparser.parseClassSig(signature)
-      val sigvisitor = new SignatureVisitor(tc, pool, mapType)
-      fieldsig.accept(sigvisitor)
-      Some(sigvisitor.getResult())
-    }).getOrElse({
-      throw new RuntimeException("Could not map type: " + javatype.getName)
-    })
-
-    val comment = new Comment()
-    comment.init(List().asJava)
-    val f: Field = new Field(skilltype, new Name(List(field.getName).asJava, field.getName),
-      false, comment, new java.util.ArrayList[Restriction], new java.util.ArrayList[Hint])
-    rc.add(f, field.getType)
-    f
-  }.to
+      if (signature != null) {
+        val sigparser = SignatureParser.make();
+        val fieldsig = sigparser.parseClassSig(signature)
+        val sigvisitor = new SignatureVisitor(tc, pool, mapType)
+        fieldsig.accept(sigvisitor)
+        Option(sigvisitor.getResult())
+      } else {
+        None
+      }
+    }).map { t =>
+      val comment = new Comment()
+      comment.init(List().asJava)
+      val f: Field = new Field(t, new Name(List(field.getName).asJava, field.getName),
+        false, comment, new java.util.ArrayList[Restriction], new java.util.ArrayList[Hint])
+      rc.add(f, field.getType)
+      f
+    }
+  }.toList
 }

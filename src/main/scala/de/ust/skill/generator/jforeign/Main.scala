@@ -57,7 +57,7 @@ class Main extends FakeMain
    */
   override protected def mapType(t : Type, boxed : Boolean) : String = t match {
     case t : GroundType ⇒ t.getName.lower match {
-      case "annotation" ⇒ "de.ust.skill.common.java.internal.SkillObject"
+      case "annotation" ⇒ "de.ust.skill.common.jforeign.internal.SkillObject"
 
       case "bool"       ⇒ if (boxed) "java.lang.Boolean" else "boolean"
 
