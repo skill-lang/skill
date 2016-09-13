@@ -121,6 +121,12 @@ Opitions:
         m.headerInfo = header
         m.outPath = outPath + "/" + n
 
+        print(s"run $n: ")
+        try {
+          m.make
+          println("-done-")
+        } catch { case e : Exception ⇒ println("-FAILED-"); failures(n) = e }
+
         if (n == "javaforeign") {
           val f = new File(s"$outPath/$n/${packageName.mkString(".")}.skill")
           val prettySkillSpec = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
@@ -130,12 +136,6 @@ Opitions:
             }}
           prettySkillSpec.close()
         }
-
-        print(s"run $n: ")
-        try {
-          m.make
-          println("-done-")
-        } catch { case e : Exception ⇒ println("-FAILED-"); failures(n) = e }
       }
 
       // report failures
