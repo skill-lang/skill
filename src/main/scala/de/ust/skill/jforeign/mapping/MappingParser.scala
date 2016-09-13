@@ -2,6 +2,7 @@ package de.ust.skill.jforeign.mapping
 
 import scala.io.Source
 import scala.util.parsing.combinator._
+import java.io.Reader
 
 class MappingParser extends RegexParsers {
 
@@ -35,4 +36,11 @@ class MappingParser extends RegexParsers {
 
   def mappingFile: Parser[List[MappingRule]] = rep(mapping)
 
+  def process(reader: Reader): (List[MappingRule]) = {
+
+    parseAll(mappingFile, reader) match {
+      case Success(rval, _) ⇒ rval
+      case f ⇒ throw new RuntimeException(s"Parsing mapping failed: $f");
+    }
+  }
 }

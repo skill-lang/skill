@@ -20,8 +20,7 @@ object JavaForeign {
   def run(mappingFile: String, skillTc: TypeContext, foreignSources: List[String]): (TypeContext, ReflectionContext) = {
 
     val mappingParser = new MappingParser()
-    val parserResult = mappingParser.parse(mappingParser.mappingFile, new FileReader(mappingFile))
-    val mappingRules = parserResult.get
+    val mappingRules = mappingParser.process(new FileReader(mappingFile))
     println("****** MAPPING *******")
     println(mappingRules.mkString("\n\n"))
     println("**********************\n\n")

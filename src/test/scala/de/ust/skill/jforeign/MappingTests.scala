@@ -39,28 +39,27 @@ class MappingTests extends FunSuite with BeforeAndAfterAll {
     args += "/tmp"
     CommandLine.main(args.toArray)
   }
-  
 
-  def fail[E <: Exception](f : ⇒ Unit)(implicit manifest : scala.reflect.Manifest[E]) : E = try {
+  def fail[E <: Exception](f: ⇒ Unit)(implicit manifest: scala.reflect.Manifest[E]): E = try {
     f;
     fail(s"expected ${manifest.runtimeClass.getName()}, but no exception was thrown");
   } catch {
-    case e : TestFailedException ⇒ throw e
-    case e : E ⇒
+    case e: TestFailedException ⇒ throw e
+    case e: E ⇒
       println(e.getMessage()); e
-    case e : Throwable ⇒ e.printStackTrace(); assert(e.getClass() === manifest.runtimeClass); null.asInstanceOf[E]
+    case e: Throwable ⇒ e.printStackTrace(); assert(e.getClass() === manifest.runtimeClass); null.asInstanceOf[E]
   }
 
-  def succeedOn(file : File) = test("succeedOn: "+file.getName()) {
+  def succeedOn(file: File) = test("succeedOn: " + file.getPath()) {
     makeTest(new File("src/test/resources/javaForeign/mapping"), file.getName, file, "src/test/resources/javaForeign/mapping/simple.skill")
   }
 
-  def failOn(file : File) = test("failOn: "+file.getName()) {
+  def failOn(file: File) = test("failOn: " + file.getPath()) {
     fail[RuntimeException] {
       makeTest(new File("src/test/resources/javaForeign/mapping"), file.getName, file, "src/test/resources/javaForeign/mapping/simple.skill")
     }
   }
-  
+
   for (path ← new File("src/test/resources/javaForeign/mapping/succeed").listFiles()) if (path.isFile()) succeedOn(path)
   for (path ← new File("src/test/resources/javaForeign/mapping/fail").listFiles()) if (path.isFile()) failOn(path)
 
