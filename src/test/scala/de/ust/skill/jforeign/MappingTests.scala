@@ -15,6 +15,7 @@ import org.scalatest.ConfigMap
 import org.scalatest.FunSuite
 
 import de.ust.skill.main.CommandLine
+import org.scalatest.exceptions.TestFailedException
 
 class MappingTests extends FunSuite with BeforeAndAfterAll {
 
@@ -35,23 +36,32 @@ class MappingTests extends FunSuite with BeforeAndAfterAll {
     args += "-F"
     args += path.getAbsolutePath
     args += skillFilePath
-    args += "testsuites"
+    args += "/tmp"
     CommandLine.main(args.toArray)
   }
-
   
-  def mappingTest(file : File, succeed : Boolean) = test(s"mapping test ${file.getPath}") {
-    try {
-      makeTest(new File("src/test/resources/javaForeign/mapping"), "simple", file,
-          "src/test/resources/javaForeign/mapping/simple.skill")
-      assert(succeed)
-    } catch {
-      case e: Exception ⇒
-        println(e.toString())
-        assert(!succeed)
+
+  def fail[E <: Exception](f : ⇒ Unit)(implicit manifest : scala.reflect.Manifest[E]) : E = try {
+    f;
+    fail(s"expected ${manifest.runtimeClass.getName()}, but no exception was thrown");
+  } catch {
+    case e : TestFailedException ⇒ throw e
+    case e : E ⇒
+      println(e.getMessage()); e
+    case e : Throwable ⇒ e.printStackTrace(); assert(e.getClass() === manifest.runtimeClass); null.asInstanceOf[E]
+  }
+
+  def succeedOn(file : File) = test("succeedOn: "+file.getName()) {
+    makeTest(new File("src/test/resources/javaForeign/mapping"), file.getName, file, "src/test/resources/javaForeign/mapping/simple.skill")
+  }
+
+  def failOn(file : File) = test("failOn: "+file.getName()) {
+    fail[RuntimeException] {
+      makeTest(new File("src/test/resources/javaForeign/mapping"), file.getName, file, "src/test/resources/javaForeign/mapping/simple.skill")
     }
   }
   
-  for (path ← new File("src/test/resources/javaForeign/mapping/succeed").listFiles()) if (path.isFile()) mappingTest(path, true)
+  for (path ← new File("src/test/resources/javaForeign/mapping/succeed").listFiles()) if (path.isFile()) succeedOn(path)
+  for (path ← new File("src/test/resources/javaForeign/mapping/fail").listFiles()) if (path.isFile()) failOn(path)
 
 }
