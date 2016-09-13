@@ -10,6 +10,7 @@ import javassist.CtClass
 import javassist.Modifier
 import javassist.NotFoundException
 import de.ust.skill.jforeign.ReflectionContext
+import de.ust.skill.ir.Field
 
 class TypeChecker {
 
@@ -18,6 +19,9 @@ class TypeChecker {
     val toTypes: Set[Type] = collection.mutable.Set() ++ to.getUsertypes.asScala
     val checked = HashMap.empty[Type, Type]
     var failed: Boolean = false
+
+    val mappedFields: Set[Field] = Set()
+    val mappedTypes: Set[Type] = Set()
 
     checked += (from.get("bool") → to.get("bool"))
     checked += (from.get("i8") → to.get("i8"))
@@ -69,7 +73,18 @@ class TypeChecker {
             failed = true
             println(s"Need either Method 'public ${field.getType.getSkillName} get${field.getName.capital()}()' or field ${field.getName.getSkillName} must be public in type ${typ.getName.getSkillName}.");
           }
-
+        }
+        case fmo: FieldMappedOnce ⇒ {
+          if (mappedFields contains fmo.getField()) {
+            failed = true
+            println(s"Field ${fmo.getField.getName.getSkillName} of type ${fmo.getDeclaringType.getName.getSkillName} participates in more than one mapping")
+          } else mappedFields += fmo.getField
+        }
+        case tmo: TypeMappedOnce ⇒ {
+          if (mappedTypes contains tmo.getType()) {
+            failed = true
+            println(s"Type ${tmo.getType.getName.getSkillName} participates in more than one mapping")
+          } else mappedTypes += tmo.getType
         }
       }
     }

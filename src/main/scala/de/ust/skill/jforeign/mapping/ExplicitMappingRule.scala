@@ -6,6 +6,7 @@ import de.ust.skill.ir.TypeContext
 import de.ust.skill.jforeign.typing.TypeRule
 import de.ust.skill.jforeign.typing.TypeEquation
 import de.ust.skill.ir.UserType
+import de.ust.skill.jforeign.typing.TypeMappedOnce
 
 class ExplicitMappingRule(fromSkillType: String, toJavaType: String, fieldMappings: List[FieldMappingRule])
     extends MappingRule {
@@ -24,6 +25,7 @@ class ExplicitMappingRule(fromSkillType: String, toJavaType: String, fieldMappin
       throw new RuntimeException(s"$fromSkillType is not defined in any skill file, invalid mapping $fromSkillType -> $toJavaType")
     if (jtype == null)
       throw new RuntimeException(s"$toJavaType not found, invalid mapping $fromSkillType -> $toJavaType")
+
     val fieldrules = if (stype.isInstanceOf[UserType] && jtype.isInstanceOf[UserType]) {
       val skilltype = stype.asInstanceOf[UserType];
       val javatype = jtype.asInstanceOf[UserType];
@@ -32,9 +34,9 @@ class ExplicitMappingRule(fromSkillType: String, toJavaType: String, fieldMappin
       val javaFieldMap = javatype.getFields.toList.map { f => (f.getName.toString → f) }.toMap
 
       fieldMappings.flatMap {
-        _.bind(skillFieldMap, javaFieldMap, javatype)
+        _.bind(skillFieldMap, javaFieldMap, skilltype, javatype)
       }.toList
     } else List[TypeRule]()
-    new TypeEquation(stype, jtype) :: fieldrules
+    new TypeMappedOnce(stype) :: new TypeMappedOnce(jtype) :: new TypeEquation(stype, jtype) :: fieldrules
   }
 }
