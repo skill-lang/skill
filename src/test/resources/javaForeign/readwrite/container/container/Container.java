@@ -23,5 +23,5 @@ public class Container {
     public ArrayList<Stupid> list;
     public TreeSet<String> set;
     public TreeMap<Integer, Stupid> map;
-    public Map<Integer, Map<Integer, Integer>> maps;
+    public HashMap<Integer, HashMap<Integer, Integer>> maps;
 }
