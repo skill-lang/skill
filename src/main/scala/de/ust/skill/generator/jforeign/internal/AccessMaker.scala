@@ -163,7 +163,7 @@ ${
           (for (f ← t.getFields if !f.isAuto)
             yield s"""
         case "${f.getSkillName}":
-            f = (FieldDeclaration<R, $typeT>) new KnownField_${nameT}_${name(f)}((FieldType<${mapType(f.getType, true)}>) type, ID, this);
+            f = (FieldDeclaration<R, $typeT>) new KnownField_${nameT}_${name(f)}((FieldType<${mapType(f, true)}>) type, ID, this);
             break;
 """
           ).mkString

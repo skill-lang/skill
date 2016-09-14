@@ -79,7 +79,7 @@ ${
       }final class $nameF extends ${
         if (f.isAuto) "AutoField"
         else "FieldDeclaration"
-      }<${mapType(f.getType, true)}, ${mapType(t)}> implements
+      }<${mapType(f, true)}, ${mapType(t)}> implements
                ${
         f.getType match {
           case ft : GroundType ⇒ ft.getSkillName match {
@@ -105,7 +105,7 @@ ${
         else ""
       } {
 
-    public $nameF(FieldType<${mapType(f.getType, true)}> type, ${
+    public $nameF(FieldType<${mapType(f, true)}> type, ${
         if (f.isAuto()) ""
         else "int index, "
       }${name(t)}Access owner) {
@@ -287,7 +287,7 @@ ${
         return result;"""
 
               case fieldType : SingleBaseTypeContainer ⇒ s"""
-        final SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}> t = (SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}>) type;
+        final SingleArgumentType<${mapType(f, true)}, ${mapType(fieldType.getBaseType, true)}> t = (SingleArgumentType<${mapType(f, true)}, ${mapType(fieldType.getBaseType, true)}>) type;
         final FieldType<${mapType(fieldType.getBaseType, true)}> baseType = t.groundType;
         $preludeData
             final ${mapType(f, false)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).${getterOrFieldAccess(t, f)};
@@ -412,7 +412,7 @@ ${
 """
       }
     @Override
-    public ${mapType(f.getType, true)} getR(SkillObject ref) {
+    public ${mapType(f, true)} getR(SkillObject ref) {
         ${
         if (f.isConstant()) s"return ${mapType(t)}.${getterOrFieldAccess(t, f)};"
         else s"return ((${mapType(t)}) ref).${getterOrFieldAccess(t, f)};"
@@ -420,10 +420,10 @@ ${
     }
 
     @Override
-    public void setR(SkillObject ref, ${mapType(f.getType, true)} value) {
+    public void setR(SkillObject ref, ${mapType(f, true)} value) {
         ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
-        else s"((${mapType(t)}) ref).${setterOrFieldAccess(t, f)}((${mapType(f, true)})value);"
+        else s"((${mapType(t)}) ref).${setterOrFieldAccess(t, f)}(value);"
       }
     }
 
