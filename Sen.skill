@@ -1,0 +1,19 @@
+A {
+i8 a;
+}
+
+B extends A {
+i8 b;
+}
+
+C extends A {
+i8 c;
+}
+
+D extends B {
+i8 d;
+}
+
+E extends D {
+i8 e;
+}

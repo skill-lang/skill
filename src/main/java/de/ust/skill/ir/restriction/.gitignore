@@ -1,0 +1,14 @@
+/AbstractRestriction.class
+/ConstantLengthPointerRestriction.class
+/DefaultRestriction.class
+/FloatDefaultRestriction.class
+/FloatRangeRestriction.class
+/IntDefaultRestriction.class
+/IntRangeRestriction.class
+/MonotoneRestriction.class
+/NameDefaultRestriction.class
+/NonNullRestriction.class
+/RangeRestriction.class
+/SingletonRestriction.class
+/StringDefaultRestriction.class
+/UniqueRestriction.class

@@ -52,14 +52,13 @@ printOrdered :: ([String], [TypeDesc], [String]) -> IO ()
 printOrdered (strings, typeDescs, _) = mapM_ printTypeDesc typeDescs >> eL 2
 
 printTypeDesc :: TypeDesc -> IO ()
-printTypeDesc (TD (name, fieldDescs, subtypes))
-            = putStrLn ("   ### Type " ++ name) >> eL 1 >> mapM_ printFieldDesc fieldDescs
+printTypeDesc (TD (id, name, fieldDescs, subtypes))
+            = putStrLn ("   ### Type " ++ show id ++ " : " ++ name ++ " ###") >> eL 1 >> mapM_ printFieldDesc fieldDescs
               >> eL 1 >> putStr "Number of Subtypes: " >> print (L.length subtypes) >> mapM_ printTypeDesc subtypes
 
-printFieldDesc :: FieldDesc -> IO ()
-printFieldDesc (name, getter, data') = putStr ("      > Field " ++ name ++ ": ") >> printData data'
-                                      >> putStr " -> " >> printRealData getter data'
-                                      >> eL 1
+printFieldDesc :: FieldDescTest -> IO ()
+printFieldDesc (name, data', rawData) = putStr ("      > Field " ++ name ++ ": ") >> printData rawData
+                                     >> putStr " -> " >> printList data' >> eL 1
 
 printData :: S.ByteString -> IO ()
 printData data' = printList (runGet getter data')
@@ -102,9 +101,8 @@ replace' 0 newElem (x : r_list) = newElem : r_list
 replace' i newElem (x : r_list) = x : replace' (i-1) newElem r_list
 
 replaceSection :: Int -> Int -> a -> [a] -> [a]
-replaceSection 0 count newElem list = L.replicate count newElem ++ L.drop count list
+replaceSection 0 count newElem list         = L.replicate count newElem ++ L.drop count list
 replaceSection i count newElem (e : r_list) = e : replaceSection (i-1) count newElem r_list
-
 
 -- cutSlice [1,2,3,4,5,6,7,8,9] (3, 5) = ([1,2,3,9],[4,5,6,7,8])
 cutSlice :: [a] -> (Int, Int) -> ([a], [a])
@@ -113,7 +111,7 @@ cutSlice xs (offset, count) = (xsA1 ++ xsA2, xsB)
           (xsB, xsA2) = L.splitAt count xsR
 
 splitGet :: (Int, Int) -> Get [a] -> (Get [a], Get [a])
-splitGet (offset, count) getter = (subList offset count `fmap` getter, dropMid offset count `fmap` getter)
+splitGet (offset, count) getter = (dropMid offset count `fmap` getter, subList offset count `fmap` getter)
 
 subList :: Int -> Int -> [a] -> [a]
 subList offset count = L.take count . L.drop offset

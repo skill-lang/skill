@@ -67,15 +67,13 @@ parseTypeDescription = readV64 >>= go
          go 15 = do n         <- readV64
                     action    <- parseTypeDescription
                     let getter = remodel $ L.replicate n action
-                    return $ GFArray `fmap` getter
-         go 17 = (\g -> readV64 >>= \i -> GVArray `fmap` repeatGet i g) `fmap` parseTypeDescription
-         go 18 = (\g -> readV64 >>= \i -> GList   `fmap` repeatGet i g) `fmap` parseTypeDescription
-         go 19 = (\g -> readV64 >>= \i -> GSet    `fmap` repeatGet i g) `fmap` parseTypeDescription
-         go 20 = do d1 <- parseTypeDescription
-                    d2 <- parseTypeDescription
-                    v1 <- d1
-                    v2 <- d2
-                    (return . return) $ GMap v1 v2
+                    return (GFArray `fmap` getter)
+         go 17 = (\g        -> readV64 >>= \i -> GVArray `fmap` repeatGet i g) `fmap` parseTypeDescription
+         go 18 = (\g        -> readV64 >>= \i -> GList   `fmap` repeatGet i g) `fmap` parseTypeDescription
+         go 19 = (\g        -> readV64 >>= \i -> GSet    `fmap` repeatGet i g) `fmap` parseTypeDescription
+         go 20 = (\(g1, g2) -> readV64 >>= \i -> GMap    `fmap` repeatGet i (remodel' (g1, g2))) `fmap` doubleGetter
+                        where doubleGetter = remodel' (parseTypeDescription, parseTypeDescription)
+
 
 
 readFloat :: Get Float
