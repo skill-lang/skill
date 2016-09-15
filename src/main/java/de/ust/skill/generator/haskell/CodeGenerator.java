@@ -26,10 +26,6 @@ public class CodeGenerator {
 		System.out.println("\n\n");
 		
 		
-		String binaryPath = "C:\\\\skill\\\\src\\\\test\\\\resources\\\\genbinary\\\\auto\\\\accept\\\\insertnamehere.sf";
-
-		PrintWriter typeDeclarations = main.open("SkillTypes.hs");
-
 		StringBuilder b = new StringBuilder();
 
 		for (UserType userType : IR) {
@@ -181,8 +177,8 @@ public class CodeGenerator {
 
 	public void copyStaticFiles() {
 		// set filepaths here
-		inputPath = "C:\\Workspace\\Hask2\\src\\";
-		outputPath = "C:\\output\\haskell\\generated\\";
+		inputPath = "src/main/resources/haskell/";
+		outputPath = "/tmp/gen/";
 		// I can't make this field global ... ??
 		String[] fileNames = {"Deserialize.hs", "Methods.hs", "ReadFields.hs", "Types.hs"};
 
