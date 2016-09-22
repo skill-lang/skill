@@ -334,8 +334,6 @@ ${
       return Convert (This);
    exception
       when E : others =>
-         Skill.Errors.Print_Stacktrace (E);
-         Skill.Errors.Print_Stacktrace;
          raise Skill.Errors.Skill_Error with "$Name pool allocation failed";
    end Make_Pool;
 

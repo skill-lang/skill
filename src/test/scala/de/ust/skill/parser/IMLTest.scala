@@ -53,11 +53,17 @@ class IMLTest extends FunSuite {
         System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
   }
 
-  test("create c++sf") {
+  test("create lazy specs") {
     val outDir = System.getProperty("user.home") + "/projekte/bauhausSF/functionNames++Lazy"
-    if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "siml", "-L", "cpp", outDir + "/iml.spec",
+    if (Files.exists(filename.toPath)) {
+      CommandLine.main(Array("-p", "siml", "-L", "cpp", "-O@cpp:revealSkillID=true", outDir + "/iml.spec",
         outDir))
+      CommandLine.main(Array("-p", "iml", "-L", "scala", outDir + "/iml.spec",
+        outDir))
+      CommandLine.main(Array("-p", "iml", "-L", "java", "-O@java:suppressWarnings=true", outDir + "/iml.spec",
+        outDir))
+      CommandLine.main(Array("-p", "siml", "-L", "ada", outDir + "/iml.spec", outDir))
+    }
   }
 
   test("create java") {
