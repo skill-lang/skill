@@ -18,22 +18,17 @@ final public class LanguageCustomization extends FieldLike {
     /**
      * options provided to the field using '!'.
      */
-    private final Map<String, List<String>> options;
+    //private final Map<String, List<String>> options;
 
     /**
      * the type is provided in form of a string, in order to type the field
      */
     public final String type;
 
-    public LanguageCustomization(Name name, Comment comment, Name language, String type,
-            Map<String, List<String>> options) {
+    public LanguageCustomization(Name name, Comment comment, Name language, String type) {
         super(name, comment);
         this.language = language.lower();
-        this.options = options;
         this.type = type;
     }
 
-	public Map<String, List<String>> getOptions() {
-		return options;
-	}
 }
