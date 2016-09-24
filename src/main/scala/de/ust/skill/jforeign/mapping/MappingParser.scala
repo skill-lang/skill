@@ -6,7 +6,7 @@ import java.io.Reader
 
 class MappingParser extends RegexParsers {
 
-  def name: Parser[String] = """[a-zA-Z.0-9]+""".r ^^ { _.toString() }
+  def name: Parser[String] = """[a-zA-Z.0-9$]+""".r ^^ { _.toString() }
 
   def implicitMapping: Parser[ImplicitMappingRule] = ("implicit!" | "implicit") ~ name ~ "->" ~ name ~ ";" ^^ {
     case "implicit" ~ skill ~ _ ~ java ~ _ => new ImplicitMappingRule(skill, java, false)
