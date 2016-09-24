@@ -6,5 +6,6 @@
         <ant antfile="container/build.xml" />
         <ant antfile="baseContainer/build.xml" />
         <ant antfile="genericNonsense/build.xml" />
+        <ant antfile="inherit/build.xml" />
     </target>
 </project>

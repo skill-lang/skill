@@ -1,0 +1,2 @@
+new! inherit.Parent;
+new! inherit.Child;
