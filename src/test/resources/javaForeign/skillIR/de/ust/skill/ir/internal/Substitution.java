@@ -17,7 +17,7 @@ import de.ust.skill.ir.UserType;
  * 
  * @author Timm Felden
  */
-abstract public class Substitution {
+public class Substitution {
 
 	/**
 	 * Substitution is done on fields, because some type
@@ -27,22 +27,22 @@ abstract public class Substitution {
 	 * @note the substitution will copy the type of the argument field by using
 	 *       types available in the argument type context
 	 */
-	public abstract Field substitute(TypeContext tc, Field f) throws ParseException;
+	public Field substitute(TypeContext tc, Field f) throws ParseException {return null;}
 
 	/**
 	 * Substitution of super and target types.
 	 */
-	public abstract Type substitute(TypeContext tc, Type t) throws ParseException;
+	public Type substitute(TypeContext tc, Type t) throws ParseException {return null;}
 
 	/**
 	 * decides to drop a type from the type context
 	 */
-	public abstract boolean drop(Type t);
+	public boolean drop(Type t) {return false;}
 
 	/**
 	 * hook used to add new types before initialization of types
 	 */
-	public abstract void addTypes(TypeContext tc, List<Declaration> defs) throws ParseException;
+	public void addTypes(TypeContext tc, List<Declaration> defs) throws ParseException {}
 
 	/**
 	 * initialize a user type inside of tc

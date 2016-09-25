@@ -134,7 +134,7 @@ public class TypeContext {
 	}
 
 	/**
-	 * The intended translation of an enum is to create an abstract class and a
+	 * The intended translation of an enum is to create an class and a
 	 * namespace for each enum type and to add singletons into that namespace
 	 * for each instance of the enum.
 	 * 

@@ -7,7 +7,7 @@ import de.ust.skill.ir.Restriction;
  *
  * @author Dennis Przytarski
  */
-abstract public class DefaultRestriction extends Restriction {
+public class DefaultRestriction extends Restriction {
 
 	@Override
 	public String getName() {
@@ -15,6 +15,6 @@ abstract public class DefaultRestriction extends Restriction {
 	}
 
 	@Override
-	abstract public String toString();
+	public String toString() {return null;}
 
 }

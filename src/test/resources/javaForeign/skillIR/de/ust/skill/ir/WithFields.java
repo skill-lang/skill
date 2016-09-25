@@ -7,15 +7,15 @@ public interface WithFields {
 	/**
 	 * @return the fields added in this type
 	 */
-	public abstract List<Field> getFields();
+	public List<Field> getFields();
 
 	/**
 	 * @return views of this entity
 	 */
-	public abstract List<View> getViews();
+	public List<View> getViews();
 
 	/**
 	 * @return language customizations of this entity
 	 */
-	public abstract List<LanguageCustomization> getCustomizations();
+	public List<LanguageCustomization> getCustomizations();
 }

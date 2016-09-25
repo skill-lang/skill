@@ -14,7 +14,7 @@ import java.util.Stack;
  * 
  * @author Timm Felden
  */
-public abstract class Type implements Comparable<Type> {
+public class Type implements Comparable<Type> {
 
 	/**
 	 * Implements the type order as defined in the paper.
@@ -83,11 +83,11 @@ public abstract class Type implements Comparable<Type> {
 	 *         space-free representation as it may occur in a skill
 	 *         specification file.
 	 */
-	abstract public String getSkillName();
+	public String getSkillName() {return null;}
 
 	/**
 	 * @return the name of the type as it occurred in the declaration; for
 	 *         built-in types, this is equal to the skill name
 	 */
-    abstract public Name getName();
+    public Name getName() {return null;}
 }

@@ -5,15 +5,14 @@ package de.ust.skill.ir;
  * 
  * @author Timm Felden
  */
-public abstract class Restriction {
+public class Restriction {
 	/**
 	 * @return the name of the restriction
 	 */
-	public abstract String getName();
-
+	public String getName() {return null;}
 	/**
 	 * @return the default representation of the restriction
 	 */
 	@Override
-	public abstract String toString();
+	public String toString() {return null;}
 }

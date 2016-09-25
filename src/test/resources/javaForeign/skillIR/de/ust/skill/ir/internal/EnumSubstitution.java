@@ -40,7 +40,7 @@ public class EnumSubstitution extends Substitution {
 
 	@Override
 	public void addTypes(TypeContext tc, List<Declaration> defs) throws ParseException {
-		// add abstract classes for enum names and singletons for enum instances
+		// add classes for enum names and singletons for enum instances
 		for (EnumType t : enums) {
 			// TODO @abstract
 			UserType top = UserType.newDeclaration(tc, t.getName(), t.getComment(), Collections.<Restriction>emptySet(),

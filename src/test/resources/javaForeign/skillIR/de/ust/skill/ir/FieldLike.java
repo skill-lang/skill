@@ -1,6 +1,6 @@
 package de.ust.skill.ir;
 
-abstract public class FieldLike {
+public class FieldLike {
 
     public Name name;
     public Declaration declaredIn;

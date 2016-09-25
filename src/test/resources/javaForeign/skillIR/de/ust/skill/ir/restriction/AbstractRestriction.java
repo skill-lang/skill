@@ -3,7 +3,7 @@ package de.ust.skill.ir.restriction;
 import de.ust.skill.ir.Restriction;
 
 /**
- * The abstract restrictions.
+ * The restrictions.
  *
  * @author Timm Felden
  */

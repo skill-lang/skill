@@ -10,7 +10,7 @@ import de.ust.skill.ir.Restriction;
  *
  * @author Timm Felden
  */
-abstract public class RangeRestriction extends Restriction {
+public class RangeRestriction extends Restriction {
 
 	@Override
 	public String getName() {
