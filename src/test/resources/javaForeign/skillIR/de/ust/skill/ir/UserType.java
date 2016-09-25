@@ -86,8 +86,8 @@ final public class UserType extends Declaration implements WithFields {
 	 */
 	public void initialize(UserType SuperType, List<InterfaceType> interfaces, List<Field> Fields, List<View> views,
 			List<LanguageCustomization> customizations) throws ParseException {
-		assert !isInitialized() : "multiple initialization";
-		assert null != Fields : "no fields supplied";
+		
+		
 		// check for duplicate fields
 		{
 			Set<Name> names = new HashSet<>();
@@ -103,7 +103,7 @@ final public class UserType extends Declaration implements WithFields {
 		}
 
 		if (null != SuperType) {
-			assert null != SuperType.baseType : "types have to be initialized in pre-order";
+			
 
 			this.superType = SuperType;
 			this.baseType = SuperType.baseType;
@@ -159,7 +159,7 @@ final public class UserType extends Declaration implements WithFields {
 	 */
 	@Override
 	public List<Field> getFields() {
-		assert isInitialized() : this.name + " has not been initialized";
+		
 		return fields;
 	}
 
@@ -168,7 +168,7 @@ final public class UserType extends Declaration implements WithFields {
 	 *         in super types
 	 */
 	public List<Field> getAllFields() {
-		assert isInitialized() : "you can not obtain fields of type " + name + " because it is not initialized";
+		
 		List<Field> rval = new ArrayList<>(fields);
 		if (null != superType)
 			rval.addAll(superType.getAllFields());

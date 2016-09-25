@@ -84,8 +84,8 @@ final public class InterfaceType extends Declaration implements WithFields {
 	public void initialize(Type superType, List<InterfaceType> superInterfaces, List<Field> Fields, List<View> views,
 			List<LanguageCustomization> customizations) throws ParseException {
 		this.superInterfaces = superInterfaces;
-		assert !isInitialized() : "multiple initialization";
-		assert null != Fields : "no fields supplied";
+		
+		
 		// check for duplicate fields
 		{
 			Set<Name> names = new HashSet<>();
@@ -136,7 +136,7 @@ final public class InterfaceType extends Declaration implements WithFields {
 	 */
 	@Override
 	public List<Field> getFields() {
-		assert isInitialized() : this.name + " has not been initialized";
+		
 		return fields;
 	}
 

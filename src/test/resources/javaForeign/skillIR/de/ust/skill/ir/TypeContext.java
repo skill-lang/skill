@@ -101,7 +101,7 @@ public final class TypeContext {
 	 * called by the parser after initialization of all declarations
 	 */
 	public void setDefs(List<Declaration> orderedDeclarations) {
-		assert null == declarations : "cannot initialize a context twice";
+		
 
 		declarations = orderedDeclarations;
 		for (Declaration d : declarations) {

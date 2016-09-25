@@ -68,7 +68,7 @@ final public class Typedef extends Declaration {
      *             contains illegal hints
      */
     public void initialize(Type target) throws ParseException {
-        assert !isInitialized() : "multiple initialization";
+        
         this.target = target;
     }
 

@@ -41,7 +41,7 @@ final public class Field extends FieldLike {
     public Field(Type type, Name name, long value, Comment comment, List<Restriction> restrictions, List<Hint> hints)
             throws ParseException {
         super(name, comment);
-        assert (null != type);
+        
         if (!(type instanceof GroundType))
             throw new ParseException("Can not create a constant of non-integer type " + type);
         if (!((GroundType) type).isInteger())
@@ -68,7 +68,7 @@ final public class Field extends FieldLike {
     public Field(Type type, Name name, boolean isAuto, Comment comment, List<Restriction> restrictions,
             Collection<Hint> hints) throws ParseException {
         super(name, comment);
-        assert (null != type);
+        
 
         isConstant = false;
         constantValue = 0;
@@ -112,7 +112,7 @@ final public class Field extends FieldLike {
     }
 
     public long constantValue() {
-        assert isConstant : "only constants have a constant value";
+        
         return constantValue;
     }
 

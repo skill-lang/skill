@@ -10,7 +10,7 @@ abstract public class FieldLike {
     public final Comment comment;
 
     public FieldLike(Name name, Comment comment) {
-        assert (null != name);
+        
         this.name = name;
         this.comment = comment;
     }

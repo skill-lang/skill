@@ -49,7 +49,7 @@ final public class EnumType extends Declaration implements WithFields {
      */
     public static EnumType newDeclaration(TypeContext tc, Name name, Comment comment, List<Name> instances)
             throws ParseException {
-        assert !instances.isEmpty() : "enums must have at least one instance";
+        
 
         String skillName = name.getSkillName();
         if (tc.types.containsKey(skillName))
@@ -77,8 +77,8 @@ final public class EnumType extends Declaration implements WithFields {
      */
     public void initialize(List<Field> Fields, List<View> views, List<LanguageCustomization> customizations)
             throws ParseException {
-        assert !isInitialized() : "multiple initialization";
-        assert null != Fields : "no fields supplied";
+        
+        
         // check for duplicate fields
         {
             Set<Name> names = new HashSet<>();
@@ -103,7 +103,7 @@ final public class EnumType extends Declaration implements WithFields {
      */
     @Override
     public List<Field> getFields() {
-        assert isInitialized() : this.name + " has not been initialized";
+        
         return fields;
     }
 

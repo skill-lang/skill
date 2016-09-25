@@ -22,7 +22,7 @@ final public class View extends FieldLike {
 	}
 
 	public void initialize(FieldLike target) {
-		assert null == this.target;
+		
 		this.target = target;
 	}
 
