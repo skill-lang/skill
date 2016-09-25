@@ -17,6 +17,7 @@ import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.InterfaceType
 import sun.reflect.generics.parser.SignatureParser
 import javassist.NotFoundException
+import scala.collection.mutable.ListBuffer
 
 /**
  * Maps classes by name from a given classpath to IR representation.
@@ -35,6 +36,7 @@ class IRMapper(classpaths: List[String]) {
 
   /** Types that are already mapped. */
   val mappedTypes = new HashMap[CtClass, UserType];
+  val orderedTypes = new ListBuffer[Declaration]
 
   /** Reflection context keeps the mapping from IR types back to java types. */
   val rc = new ReflectionContext
@@ -65,8 +67,7 @@ class IRMapper(classpaths: List[String]) {
     list.foreach(collect)
     // map all given types
     knownTypes.keys.foreach(translateType)
-    val decls = mappedTypes.values.map { _.asInstanceOf[Declaration] }.toList
-    tc.setDefs(decls.asJava)
+    tc.setDefs(orderedTypes.asJava)
     (tc, rc)
   }
 
@@ -95,6 +96,7 @@ class IRMapper(classpaths: List[String]) {
       comment, new java.util.ArrayList, new java.util.ArrayList)
     rc.add(ntype, clazz)
     knownTypes += (clazz → ntype)
+    orderedTypes += ntype
     ntype
   }
 
