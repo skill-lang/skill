@@ -18,18 +18,18 @@ final public class Hint {
     }
 
     // unique hints
-    static final Hint constantMutator = new Hint(Type.constantmutator);
-    static final Hint distributed = new Hint(Type.distributed);
-    static final Hint flat = new Hint(Type.flat);
-    static final Hint hide = new Hint(Type.hide);
-    static final Hint ignore = new Hint(Type.ignore);
-    static final Hint mixin = new Hint(Type.mixin);
-    static final Hint monotone = new Hint(Type.monotone);
-    static final Hint ondemand = new Hint(Type.ondemand);
-    static final Hint pure = new Hint(Type.pure);
-    static final Hint readonly = new Hint(Type.readonly);
-    static final Hint removeRestrictions = new Hint(Type.removerestrictions);
-    static final Hint unique = new Hint(Type.unique);
+    public static final Hint constantMutator = new Hint(Type.constantmutator);
+    public static final Hint distributed = new Hint(Type.distributed);
+    public static final Hint flat = new Hint(Type.flat);
+    public static final Hint hide = new Hint(Type.hide);
+    public static final Hint ignore = new Hint(Type.ignore);
+    public static final Hint mixin = new Hint(Type.mixin);
+    public static final Hint monotone = new Hint(Type.monotone);
+    public static final Hint ondemand = new Hint(Type.ondemand);
+    public static final Hint pure = new Hint(Type.pure);
+    public static final Hint readonly = new Hint(Type.readonly);
+    public static final Hint removeRestrictions = new Hint(Type.removerestrictions);
+    public static final Hint unique = new Hint(Type.unique);
 
     public final Type type;
 

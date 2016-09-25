@@ -36,8 +36,8 @@ public class Comment {
         }
     }
 
-    List<String> text = null;
-    LinkedList<Tag> tags = new LinkedList<Tag>();
+    public List<String> text = null;
+    public LinkedList<Tag> tags = new LinkedList<Tag>();
 
     /**
      * A tag with text. See language specification for details.
@@ -45,8 +45,8 @@ public class Comment {
      * @author Timm Felden
      */
     public static final class Tag {
-        final String name;
-        List<String> text;
+        public final String name;
+        public List<String> text;
 
         public Tag(String name) {
             this.name = name;
