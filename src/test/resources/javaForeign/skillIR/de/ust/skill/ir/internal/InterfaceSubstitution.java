@@ -50,7 +50,7 @@ public class InterfaceSubstitution extends Substitution {
 			return null;
 
 		// substitute interfaces with their super types
-		final Type target;
+		Type target;
 		if (t instanceof InterfaceType)
 			target = ((InterfaceType) t).getSuperType();
 		else

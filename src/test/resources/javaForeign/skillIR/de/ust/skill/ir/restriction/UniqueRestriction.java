@@ -7,7 +7,7 @@ import de.ust.skill.ir.Restriction;
  * 
  * @author Timm Felden
  */
-final public class UniqueRestriction extends Restriction {
+public class UniqueRestriction extends Restriction {
 
 	@Override
 	public String getName() {

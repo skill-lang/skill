@@ -11,14 +11,14 @@ import java.util.Set;
  * 
  * @author Timm Felden
  */
-final public class UserType extends Declaration implements WithFields {
+public class UserType extends Declaration implements WithFields {
 
 	/**
 	 * super type is the type above this type. base type is the base type of the
 	 * formed type tree. This can even be <i>this</i>.
 	 */
 	public UserType superType = null, baseType = null;
-	public final List<UserType> children = new ArrayList<>();
+	public List<UserType> children = new ArrayList<>();
 
 	// fields
 	public List<Field> fields = null;

@@ -3,9 +3,9 @@ package de.ust.skill.ir.restriction;
 /**
  * @author Timm Felden
  */
-final public class IntRangeRestriction extends RangeRestriction {
+public class IntRangeRestriction extends RangeRestriction {
 
-	public final long low, high;
+	public long low, high;
 
 	public IntRangeRestriction(long low, long high, boolean inclusiveLow, boolean inclusiveHigh) {
 		if (inclusiveLow)

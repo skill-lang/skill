@@ -7,7 +7,7 @@ import de.ust.skill.ir.Restriction;
  * 
  * @author Timm Felden
  */
-final public class NonNullRestriction extends Restriction {
+public class NonNullRestriction extends Restriction {
 
 	@Override
 	public String getName() {

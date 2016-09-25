@@ -8,8 +8,8 @@ import de.ust.skill.ir.internal.Substitution;
  * @author Timm Felden
  */
 public class ConstantLengthArrayType extends ContainerType  implements SingleBaseTypeContainer{
-	public final Type baseType;
-	public final long length;
+	public Type baseType;
+	public long length;
 
 	public static Type make(TypeContext tc, Type baseType, long length) throws ParseException {
 		if (length < 0)

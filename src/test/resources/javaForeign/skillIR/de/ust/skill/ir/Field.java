@@ -13,21 +13,21 @@ import java.util.Set;
  * 
  * @author Timm Felden
  */
-final public class Field extends FieldLike {
-    public final boolean auto;
-    public final boolean isConstant;
-    public final long constantValue;
+public class Field extends FieldLike {
+    public boolean auto;
+    public boolean isConstant;
+    public long constantValue;
 
-    public final Type type;
+    public Type type;
 
     /**
      * The restrictions applying to this field.
      */
-    public final List<Restriction> restrictions;
+    public List<Restriction> restrictions;
     /**
      * The restrictions applying to this field.
      */
-    public final Set<Hint> hints;
+    public Set<Hint> hints;
 
     /**
      * Constructor for constant fields.

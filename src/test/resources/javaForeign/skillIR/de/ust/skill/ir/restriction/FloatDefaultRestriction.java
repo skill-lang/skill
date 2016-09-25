@@ -3,9 +3,9 @@ package de.ust.skill.ir.restriction;
 /**
  * @author Dennis Przytarski
  */
-final public class FloatDefaultRestriction extends DefaultRestriction {
+public class FloatDefaultRestriction extends DefaultRestriction {
 
-	public final double value;
+	public double value;
 
 	public FloatDefaultRestriction(double value) {
 		this.value = value;

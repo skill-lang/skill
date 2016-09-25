@@ -8,10 +8,10 @@ package de.ust.skill.ir;
  * 
  * @note Views will not quite make it through Substitutions.
  */
-final public class View extends FieldLike {
+public class View extends FieldLike {
 
-	final public Name ownerName;
-	final public Type type;
+	public Name ownerName;
+	public Type type;
 	public FieldLike target;
 
 	public View(Name declaredIn, Type type, Name name, Comment comment) {

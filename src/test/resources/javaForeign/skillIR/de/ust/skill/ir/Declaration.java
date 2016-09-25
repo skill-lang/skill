@@ -18,20 +18,20 @@ import de.ust.skill.ir.restriction.AbstractRestriction;
 public abstract class Declaration extends Type implements ReferenceType {
 
 	// names
-	public final Name name;
+	public Name name;
 
 	/**
 	 * The restrictions applying to this declaration.
 	 */
-	public final List<Restriction> restrictions;
+	public List<Restriction> restrictions;
 	/**
 	 * The restrictions applying to this declaration.
 	 */
-	public final Set<Hint> hints;
+	public Set<Hint> hints;
 	/**
 	 * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
 	 */
-	public final Comment comment;
+	public Comment comment;
 
 	public Declaration(Name name, Comment comment, Collection<Restriction> restrictions, Collection<Hint> hints) {
 		this.name = name;
@@ -54,12 +54,12 @@ public abstract class Declaration extends Type implements ReferenceType {
 	public abstract String prettyPrint();
 
 	@Override
-	final public String getSkillName() {
+	public String getSkillName() {
 		return name.getSkillName();
 	}
 
 	@Override
-	final public Name getName() {
+	public Name getName() {
 		return name;
 	}
 

@@ -8,7 +8,7 @@ import de.ust.skill.ir.Restriction;
  * 
  * @author Timm Felden
  */
-final public class ConstantLengthPointerRestriction extends Restriction {
+public class ConstantLengthPointerRestriction extends Restriction {
 
 	@Override
 	public String getName() {

@@ -8,22 +8,22 @@ import java.util.Map;
  * 
  * @author Timm Felden
  */
-final public class LanguageCustomization extends FieldLike {
+public class LanguageCustomization extends FieldLike {
 
     /**
      * the name of the target language generator
      */
-    public final String language;
+    public String language;
 
     /**
      * options provided to the field using '!'.
      */
-    //public final Map<String, List<String>> options;
+    //public Map<String, List<String>> options;
 
     /**
      * the type is provided in form of a string, in order to type the field
      */
-    public final String type;
+    public String type;
 
     public LanguageCustomization(Name name, Comment comment, Name language, String type) {
         super(name, comment);

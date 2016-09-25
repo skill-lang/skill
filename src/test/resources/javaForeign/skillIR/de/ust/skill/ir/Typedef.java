@@ -8,7 +8,7 @@ import java.util.List;
  * 
  * @author Timm Felden
  */
-final public class Typedef extends Declaration {
+public class Typedef extends Declaration {
 
     public Type target = null;
 

@@ -9,7 +9,7 @@ import de.ust.skill.ir.internal.Substitution;
  * @author Timm Felden
  */
 public class MapType extends ContainerType {
-    public final List<Type> baseTypes;
+    public List<Type> baseTypes;
 
     public static Type make(TypeContext tc, List<Type> baseTypes) {
         return tc.unifyType(new MapType(baseTypes));

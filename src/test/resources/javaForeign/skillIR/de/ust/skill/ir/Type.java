@@ -20,7 +20,7 @@ public abstract class Type implements Comparable<Type> {
 	 * Implements the type order as defined in the paper.
 	 */
 	@Override
-	final public int compareTo(Type o) {
+	public int compareTo(Type o) {
 		// it is necessary, that we can assume this!=o later on
 		if (this == o)
 			return 0;
@@ -73,7 +73,7 @@ public abstract class Type implements Comparable<Type> {
 	}
 
 	@Override
-	final public String toString() {
+	public String toString() {
 		return getSkillName();
 	}
 

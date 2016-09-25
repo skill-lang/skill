@@ -17,9 +17,9 @@ public class Comment {
      * 
      * @author Timm Felden
      */
-    public static final class NoComment extends Comment {
+    public static class NoComment extends Comment {
 
-        public static final NoComment instance = new NoComment();
+        public static NoComment instance = new NoComment();
 
         public static NoComment get() {
             return instance;
@@ -44,8 +44,8 @@ public class Comment {
      * 
      * @author Timm Felden
      */
-    public static final class Tag {
-        public final String name;
+    public static class Tag {
+        public String name;
         public List<String> text;
 
         public Tag(String name) {

@@ -5,8 +5,8 @@ package de.ust.skill.ir;
  * 
  * @author Timm Felden
  */
-public final class ParseException extends Exception {
-	public static final long serialVersionUID = -7554775708673716216L;
+public class ParseException extends Exception {
+	public static long serialVersionUID = -7554775708673716216L;
 
     public ParseException(String msg) {
         super(msg);

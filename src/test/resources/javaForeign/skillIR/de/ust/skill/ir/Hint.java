@@ -8,7 +8,7 @@ import java.util.Set;
  * @see SKilL §5.2
  * @author Timm Felden
  */
-final public class Hint {
+public class Hint {
 
     public static enum Type {
         // note: names need to be lowercase, because this enum will be accessed
@@ -18,26 +18,26 @@ final public class Hint {
     }
 
     // unique hints
-    public static final Hint constantMutator = new Hint(Type.constantmutator);
-    public static final Hint distributed = new Hint(Type.distributed);
-    public static final Hint flat = new Hint(Type.flat);
-    public static final Hint hide = new Hint(Type.hide);
-    public static final Hint ignore = new Hint(Type.ignore);
-    public static final Hint mixin = new Hint(Type.mixin);
-    public static final Hint monotone = new Hint(Type.monotone);
-    public static final Hint ondemand = new Hint(Type.ondemand);
-    public static final Hint pure = new Hint(Type.pure);
-    public static final Hint readonly = new Hint(Type.readonly);
-    public static final Hint removeRestrictions = new Hint(Type.removerestrictions);
-    public static final Hint unique = new Hint(Type.unique);
+    public static Hint constantMutator = new Hint(Type.constantmutator);
+    public static Hint distributed = new Hint(Type.distributed);
+    public static Hint flat = new Hint(Type.flat);
+    public static Hint hide = new Hint(Type.hide);
+    public static Hint ignore = new Hint(Type.ignore);
+    public static Hint mixin = new Hint(Type.mixin);
+    public static Hint monotone = new Hint(Type.monotone);
+    public static Hint ondemand = new Hint(Type.ondemand);
+    public static Hint pure = new Hint(Type.pure);
+    public static Hint readonly = new Hint(Type.readonly);
+    public static Hint removeRestrictions = new Hint(Type.removerestrictions);
+    public static Hint unique = new Hint(Type.unique);
 
-    public final Type type;
+    public Type type;
 
     public Type type() {
         return type;
     }
 
-    public final List<Name> arguments;
+    public List<Name> arguments;
 
     public List<Name> arguments() {
         return arguments;
@@ -99,7 +99,7 @@ final public class Hint {
      * @throws ParseException
      *             if there is any illegal usage of a hint
      */
-    static void checkDeclaration(final UserType d, Set<Hint> hints) throws ParseException {
+    static void checkDeclaration(UserType d, Set<Hint> hints) throws ParseException {
         if (hints.contains(distributed))
             throw new ParseException("Illegal hint !distributed on type declaration " + d);
         if (hints.contains(ondemand))

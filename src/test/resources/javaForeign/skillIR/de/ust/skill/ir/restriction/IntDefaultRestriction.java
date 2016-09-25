@@ -3,9 +3,9 @@ package de.ust.skill.ir.restriction;
 /**
  * @author Dennis Przytarski
  */
-final public class IntDefaultRestriction extends DefaultRestriction {
+public class IntDefaultRestriction extends DefaultRestriction {
 
-	public final long value;
+	public long value;
 
 	public IntDefaultRestriction(long value) {
 		this.value = value;

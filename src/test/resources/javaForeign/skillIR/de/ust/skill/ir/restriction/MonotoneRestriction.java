@@ -8,7 +8,7 @@ import de.ust.skill.ir.Restriction;
  * 
  * @author Timm Felden
  */
-final public class MonotoneRestriction extends Restriction {
+public class MonotoneRestriction extends Restriction {
 
 	@Override
 	public String getName() {

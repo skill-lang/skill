@@ -8,7 +8,7 @@ import de.ust.skill.ir.internal.Substitution;
  * @author Timm Felden
  */
 public class VariableLengthArrayType extends ContainerType implements SingleBaseTypeContainer {
-    public final Type baseType;
+    public Type baseType;
 
     public static Type make(TypeContext tc, Type baseType) {
         return tc.unifyType(new VariableLengthArrayType(baseType));

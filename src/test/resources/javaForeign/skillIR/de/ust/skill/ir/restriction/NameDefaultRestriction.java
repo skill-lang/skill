@@ -8,9 +8,9 @@ import de.ust.skill.ir.Name;
 /**
  * @author Dennis Przytarski
  */
-final public class NameDefaultRestriction extends DefaultRestriction {
+public class NameDefaultRestriction extends DefaultRestriction {
 
-	public final List<Name> value;
+	public List<Name> value;
 
 	public NameDefaultRestriction(List<Name> value) {
 		this.value = value;

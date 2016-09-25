@@ -10,11 +10,11 @@ import java.util.Set;
  * 
  * @author Timm Felden
  */
-final public class EnumType extends Declaration implements WithFields {
+public class EnumType extends Declaration implements WithFields {
 
     // fields
     public List<Field> fields = null;
-    public final List<Name> instances;
+    public List<Name> instances;
     public List<View> views;
     public List<LanguageCustomization> customizations;
 

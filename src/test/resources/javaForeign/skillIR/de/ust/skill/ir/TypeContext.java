@@ -20,27 +20,27 @@ import de.ust.skill.ir.internal.TypedefSubstitution;
  * @todo cache remove operations to ease code generation
  * @author Timm Felden
  */
-public final class TypeContext {
+public class TypeContext {
 	/**
 	 * Mark ground types which create reference like fields.
 	 * 
 	 * @author Timm Felden
 	 */
-	public static final class PointerType extends GroundType implements ReferenceType {
+	public static class PointerType extends GroundType implements ReferenceType {
 		PointerType(TypeContext tc, String name) {
 			super(tc, name);
 		}
 	}
 
-	public final Map<String, Type> types = new HashMap<>();
+	public Map<String, Type> types = new HashMap<>();
 	/**
 	 * all user declarations in type order
 	 */
 	public List<Declaration> declarations;
-	public final List<UserType> usertypes = new ArrayList<>();
-	public final List<InterfaceType> interfaces = new ArrayList<>();
-	public final List<EnumType> enums = new ArrayList<>();
-	public final List<Typedef> typedefs = new ArrayList<>();
+	public List<UserType> usertypes = new ArrayList<>();
+	public List<InterfaceType> interfaces = new ArrayList<>();
+	public List<EnumType> enums = new ArrayList<>();
+	public List<Typedef> typedefs = new ArrayList<>();
 
 	public TypeContext() {
 		new PointerType(this, "annotation");
@@ -68,7 +68,7 @@ public final class TypeContext {
 	 *            the type to be unified
 	 * @return t, if t does not yet exist or the existing instance of the type
 	 */
-	public final Type unifyType(Type t) {
+	public Type unifyType(Type t) {
 		if (types.containsKey(t.getSkillName()))
 			return types.get(t.getSkillName());
 
@@ -218,7 +218,7 @@ public final class TypeContext {
 	public static List<Field> substituteFields(Substitution σ, TypeContext tc, List<Field> fs) throws ParseException {
 		List<Field> rval = new ArrayList<>();
 		for (Field f : fs) {
-			final Field sf = σ.substitute(tc, f);
+			Field sf = σ.substitute(tc, f);
 			if (null != sf)
 				rval.add(sf);
 		}

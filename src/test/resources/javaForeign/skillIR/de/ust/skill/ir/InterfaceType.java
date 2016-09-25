@@ -11,7 +11,7 @@ import java.util.Set;
  * 
  * @author Timm Felden
  */
-final public class InterfaceType extends Declaration implements WithFields {
+public class InterfaceType extends Declaration implements WithFields {
 
 	/**
 	 * super type is the type above this type. base type is the base type of the

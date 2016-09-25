@@ -2,12 +2,12 @@ package de.ust.skill.ir;
 
 abstract public class FieldLike {
 
-    public final Name name;
+    public Name name;
     public Declaration declaredIn;
     /**
      * The comment from Specification.
      */
-    public final Comment comment;
+    public Comment comment;
 
     public FieldLike(Name name, Comment comment) {
         
@@ -37,7 +37,7 @@ abstract public class FieldLike {
         this.declaredIn = declaredIn;
     }
 
-	public final Comment getComment() {
+	public Comment getComment() {
 		return comment;
 	}
 

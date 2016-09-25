@@ -12,15 +12,15 @@ import java.util.List;
  * @note Names are immutable.
  * @author Timm Felden
  */
-final public class Name implements Comparable<Name> {
+public class Name implements Comparable<Name> {
 
     /**
      * Names with equal skillNames are equal. Thus all comparison is deferred to
      * skillName.
      */
-    final public String skillName;
-    final public List<String> parts;
-    final public String packagePath;
+    public String skillName;
+    public List<String> parts;
+    public String packagePath;
 
     public Name(List<String> parts, String skillName) {
         this(parts, skillName, "");

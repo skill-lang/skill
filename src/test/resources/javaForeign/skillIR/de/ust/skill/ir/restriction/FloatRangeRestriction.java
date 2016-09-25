@@ -5,10 +5,10 @@ package de.ust.skill.ir.restriction;
  * @note The code relies on the invariant that low and high are actual numbers excluding "-0.0"
  * @author Timm Felden
  */
-final public class FloatRangeRestriction extends RangeRestriction {
+public class FloatRangeRestriction extends RangeRestriction {
 
-    public final double low, high;
-    public final boolean inclusiveLow, inclusiveHigh;
+    public double low, high;
+    public boolean inclusiveLow, inclusiveHigh;
 
     public FloatRangeRestriction(double low, double high, boolean inclusiveLow, boolean inclusiveHigh) {
         this.low = low;

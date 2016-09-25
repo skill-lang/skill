@@ -3,9 +3,9 @@ package de.ust.skill.ir.restriction;
 /**
  * @author Dennis Przytarski
  */
-final public class StringDefaultRestriction extends DefaultRestriction {
+public class StringDefaultRestriction extends DefaultRestriction {
 
-	public final String value;
+	public String value;
 
 	public StringDefaultRestriction(String value) {
 		this.value = value;
