@@ -7,8 +7,8 @@ package de.ust.skill.ir.restriction;
  */
 final public class FloatRangeRestriction extends RangeRestriction {
 
-    private final double low, high;
-    private final boolean inclusiveLow, inclusiveHigh;
+    public final double low, high;
+    public final boolean inclusiveLow, inclusiveHigh;
 
     public FloatRangeRestriction(double low, double high, boolean inclusiveLow, boolean inclusiveHigh) {
         this.low = low;

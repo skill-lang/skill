@@ -14,20 +14,20 @@ import java.util.Set;
  * @author Timm Felden
  */
 final public class Field extends FieldLike {
-    protected final boolean auto;
-    protected final boolean isConstant;
-    protected final long constantValue;
+    public final boolean auto;
+    public final boolean isConstant;
+    public final long constantValue;
 
-    protected final Type type;
+    public final Type type;
 
     /**
      * The restrictions applying to this field.
      */
-    protected final List<Restriction> restrictions;
+    public final List<Restriction> restrictions;
     /**
      * The restrictions applying to this field.
      */
-    protected final Set<Hint> hints;
+    public final Set<Hint> hints;
 
     /**
      * Constructor for constant fields.
@@ -79,7 +79,7 @@ final public class Field extends FieldLike {
         Hint.checkField(this, this.hints);
     }
 
-    private Field(boolean auto, boolean isConstant, long constantValue, Name name, Type type, Declaration declaredIn,
+    public Field(boolean auto, boolean isConstant, long constantValue, Name name, Type type, Declaration declaredIn,
             ArrayList<Restriction> restrictions, HashSet<Hint> hints, Comment comment) {
         super(name, comment);
         this.auto = auto;

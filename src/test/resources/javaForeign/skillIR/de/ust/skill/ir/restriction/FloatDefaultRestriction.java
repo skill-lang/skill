@@ -5,7 +5,7 @@ package de.ust.skill.ir.restriction;
  */
 final public class FloatDefaultRestriction extends DefaultRestriction {
 
-	private final double value;
+	public final double value;
 
 	public FloatDefaultRestriction(double value) {
 		this.value = value;

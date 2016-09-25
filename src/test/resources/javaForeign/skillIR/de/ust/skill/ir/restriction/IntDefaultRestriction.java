@@ -5,7 +5,7 @@ package de.ust.skill.ir.restriction;
  */
 final public class IntDefaultRestriction extends DefaultRestriction {
 
-	private final long value;
+	public final long value;
 
 	public IntDefaultRestriction(long value) {
 		this.value = value;

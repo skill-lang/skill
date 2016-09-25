@@ -19,7 +19,7 @@ public class Comment {
      */
     public static final class NoComment extends Comment {
 
-        private static final NoComment instance = new NoComment();
+        public static final NoComment instance = new NoComment();
 
         public static NoComment get() {
             return instance;
@@ -109,7 +109,7 @@ public class Comment {
     /**
      * format a list of words
      */
-    private static void formatText(List<String> text, String linePrefix, int lineWidth, StringBuilder sb, String tag) {
+    public static void formatText(List<String> text, String linePrefix, int lineWidth, StringBuilder sb, String tag) {
         StringBuilder line = new StringBuilder(linePrefix);
 
         if (null != tag)

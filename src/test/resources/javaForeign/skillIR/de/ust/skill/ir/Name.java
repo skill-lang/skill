@@ -18,9 +18,9 @@ final public class Name implements Comparable<Name> {
      * Names with equal skillNames are equal. Thus all comparison is deferred to
      * skillName.
      */
-    final private String skillName;
-    final private List<String> parts;
-    final private String packagePath;
+    final public String skillName;
+    final public List<String> parts;
+    final public String packagePath;
 
     public Name(List<String> parts, String skillName) {
         this(parts, skillName, "");
@@ -73,7 +73,7 @@ final public class Name implements Comparable<Name> {
 
     // different naming conventions, alphabetical order
 
-    private String ada;
+    public String ada;
 
     /**
      * @return Ada_Style
@@ -89,7 +89,7 @@ final public class Name implements Comparable<Name> {
         return ada;
     }
 
-    private String cStyle;
+    public String cStyle;
     /**
      * @return c_style, i.e. lower_case_with_under_scores
      */
@@ -104,7 +104,7 @@ final public class Name implements Comparable<Name> {
         return cStyle;
     }
 
-    private String camel;
+    public String camel;
 
     /**
      * @return firstPartLowerCaseCamelCase
@@ -120,7 +120,7 @@ final public class Name implements Comparable<Name> {
         return camel;
     }
 
-    private String capital;
+    public String capital;
 
     /**
      * @return CapitalizedCamelCase
@@ -145,7 +145,7 @@ final public class Name implements Comparable<Name> {
     /**
      * Capitalizes a string.
      */
-    private static String capitalize(String arg) {
+    public static String capitalize(String arg) {
         if (Character.isUpperCase(arg.charAt(0)))
             return arg;
 

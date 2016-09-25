@@ -31,8 +31,8 @@ import de.ust.skill.ir.restriction.SingletonRestriction;
  */
 public class EnumSubstitution extends Substitution {
 
-	final private List<EnumType> enums;
-	final private Map<UserType, UserType> tops = new HashMap<>();
+	final public List<EnumType> enums;
+	final public Map<UserType, UserType> tops = new HashMap<>();
 
 	public EnumSubstitution(List<EnumType> enums) {
 		this.enums = enums;

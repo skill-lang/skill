@@ -10,9 +10,9 @@ package de.ust.skill.ir;
  */
 final public class View extends FieldLike {
 
-	final private Name ownerName;
-	final private Type type;
-	private FieldLike target;
+	final public Name ownerName;
+	final public Type type;
+	public FieldLike target;
 
 	public View(Name declaredIn, Type type, Name name, Comment comment) {
 		super(name, comment);

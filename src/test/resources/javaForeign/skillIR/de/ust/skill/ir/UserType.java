@@ -17,14 +17,14 @@ final public class UserType extends Declaration implements WithFields {
 	 * super type is the type above this type. base type is the base type of the
 	 * formed type tree. This can even be <i>this</i>.
 	 */
-	private UserType superType = null, baseType = null;
-	private final List<UserType> children = new ArrayList<>();
+	public UserType superType = null, baseType = null;
+	public final List<UserType> children = new ArrayList<>();
 
 	// fields
-	private List<Field> fields = null;
-	private List<InterfaceType> interfaces;
-	private List<View> views;
-	private List<LanguageCustomization> customizations;
+	public List<Field> fields = null;
+	public List<InterfaceType> interfaces;
+	public List<View> views;
+	public List<LanguageCustomization> customizations;
 
 	/**
 	 * Creates a declaration of type name.
@@ -35,7 +35,7 @@ final public class UserType extends Declaration implements WithFields {
 	 * @note the declaration has to be completed, i.e. it has to be evaluated in
 	 *       pre-order over the type hierarchy.
 	 */
-	private UserType(Name name, Comment comment, Collection<Restriction> restrictions, Collection<Hint> hints)
+	public UserType(Name name, Comment comment, Collection<Restriction> restrictions, Collection<Hint> hints)
 			throws ParseException {
 		super(name, comment, restrictions, hints);
 

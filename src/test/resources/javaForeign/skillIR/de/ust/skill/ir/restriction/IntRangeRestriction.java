@@ -5,7 +5,7 @@ package de.ust.skill.ir.restriction;
  */
 final public class IntRangeRestriction extends RangeRestriction {
 
-	private final long low, high;
+	public final long low, high;
 
 	public IntRangeRestriction(long low, long high, boolean inclusiveLow, boolean inclusiveHigh) {
 		if (inclusiveLow)

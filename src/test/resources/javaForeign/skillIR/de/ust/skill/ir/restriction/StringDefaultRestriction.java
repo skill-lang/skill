@@ -5,7 +5,7 @@ package de.ust.skill.ir.restriction;
  */
 final public class StringDefaultRestriction extends DefaultRestriction {
 
-	private final String value;
+	public final String value;
 
 	public StringDefaultRestriction(String value) {
 		this.value = value;

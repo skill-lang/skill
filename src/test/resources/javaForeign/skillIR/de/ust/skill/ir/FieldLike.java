@@ -2,12 +2,12 @@ package de.ust.skill.ir;
 
 abstract public class FieldLike {
 
-    protected final Name name;
-    protected Declaration declaredIn;
+    public final Name name;
+    public Declaration declaredIn;
     /**
      * The comment from Specification.
      */
-    private final Comment comment;
+    public final Comment comment;
 
     public FieldLike(Name name, Comment comment) {
         assert (null != name);
@@ -33,7 +33,7 @@ abstract public class FieldLike {
     /**
      * Invoked during construction of the enclosing declaration.
      */
-    protected void setDeclaredIn(Declaration declaredIn) {
+    public void setDeclaredIn(Declaration declaredIn) {
         this.declaredIn = declaredIn;
     }
 

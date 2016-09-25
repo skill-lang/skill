@@ -10,7 +10,7 @@ import java.util.List;
  */
 final public class Typedef extends Declaration {
 
-    private Type target = null;
+    public Type target = null;
 
     /**
      * Creates a declaration of type name.
@@ -21,7 +21,7 @@ final public class Typedef extends Declaration {
      * @note the declaration has to be completed, i.e. it has to be evaluated in
      *       pre-order over the type hierarchy.
      */
-    private Typedef(Name name, Comment comment, List<Restriction> restrictions, Collection<Hint> hints)
+    public Typedef(Name name, Comment comment, List<Restriction> restrictions, Collection<Hint> hints)
             throws ParseException {
         super(name, comment, restrictions, hints);
     }

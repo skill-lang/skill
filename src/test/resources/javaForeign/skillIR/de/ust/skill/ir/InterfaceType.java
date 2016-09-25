@@ -17,14 +17,14 @@ final public class InterfaceType extends Declaration implements WithFields {
 	 * super type is the type above this type. base type is the base type of the
 	 * formed type tree. Both are non null and may be annotations.
 	 */
-	private Type superType = null;
-	private Type baseType = null;
+	public Type superType = null;
+	public Type baseType = null;
 
 	// fields
-	private List<Field> fields = null;
-	private List<InterfaceType> superInterfaces;
-	private List<View> views;
-	private List<LanguageCustomization> customizations;
+	public List<Field> fields = null;
+	public List<InterfaceType> superInterfaces;
+	public List<View> views;
+	public List<LanguageCustomization> customizations;
 
 	/**
 	 * Creates a declaration of type name.
@@ -35,7 +35,7 @@ final public class InterfaceType extends Declaration implements WithFields {
 	 * @note the declaration has to be completed, i.e. it has to be evaluated in
 	 *       pre-order over the type hierarchy.
 	 */
-	private InterfaceType(Name name, Comment comment) throws ParseException {
+	public InterfaceType(Name name, Comment comment) throws ParseException {
 		super(name, comment, Collections.<Restriction> emptyList(), Collections.<Hint> emptyList());
 
 		superType = baseType = null;

@@ -18,22 +18,22 @@ import de.ust.skill.ir.restriction.AbstractRestriction;
 public abstract class Declaration extends Type implements ReferenceType {
 
 	// names
-	protected final Name name;
+	public final Name name;
 
 	/**
 	 * The restrictions applying to this declaration.
 	 */
-	protected final List<Restriction> restrictions;
+	public final List<Restriction> restrictions;
 	/**
 	 * The restrictions applying to this declaration.
 	 */
-	protected final Set<Hint> hints;
+	public final Set<Hint> hints;
 	/**
 	 * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
 	 */
-	protected final Comment comment;
+	public final Comment comment;
 
-	protected Declaration(Name name, Comment comment, Collection<Restriction> restrictions, Collection<Hint> hints) {
+	public Declaration(Name name, Comment comment, Collection<Restriction> restrictions, Collection<Hint> hints) {
 		this.name = name;
 		this.comment = comment;
 		this.restrictions = new ArrayList<>(restrictions);

@@ -31,28 +31,28 @@ final public class Hint {
     static final Hint removeRestrictions = new Hint(Type.removerestrictions);
     static final Hint unique = new Hint(Type.unique);
 
-    private final Type type;
+    public final Type type;
 
     public Type type() {
         return type;
     }
 
-    private final List<Name> arguments;
+    public final List<Name> arguments;
 
     public List<Name> arguments() {
         return arguments;
     }
 
     /**
-     * private to ensure unique hints for those that do not take parameters
+     * public to ensure unique hints for those that do not take parameters
      */
-    private Hint(Type type, List<Name> args) {
+    public Hint(Type type, List<Name> args) {
         this.type = type;
         this.arguments = args;
 
     }
 
-    private Hint(Type type) {
+    public Hint(Type type) {
         this(type, Collections.<Name> emptyList());
     }
 

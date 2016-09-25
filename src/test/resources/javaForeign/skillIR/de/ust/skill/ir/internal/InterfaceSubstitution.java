@@ -78,7 +78,7 @@ public class InterfaceSubstitution extends Substitution {
 				t.getCustomizations());
 	}
 
-	private static UserType findSuperType(UserType t) {
+	public static UserType findSuperType(UserType t) {
 		UserType rval = t.getSuperType();
 		// search interfaces
 		if (null == rval)
@@ -89,7 +89,7 @@ public class InterfaceSubstitution extends Substitution {
 		return rval;
 	}
 
-	private static UserType findSuperType(InterfaceType t) {
+	public static UserType findSuperType(InterfaceType t) {
 		UserType rval = null;
 		if (t.getSuperType() instanceof UserType)
 			rval = (UserType) t.getSuperType();
@@ -103,7 +103,7 @@ public class InterfaceSubstitution extends Substitution {
 		return rval;
 	}
 
-	private void addFieldsRecursive(TypeContext tc, List<Field> fields, InterfaceType i) throws ParseException {
+	public void addFieldsRecursive(TypeContext tc, List<Field> fields, InterfaceType i) throws ParseException {
 		fields.addAll(TypeContext.substituteFields(this, tc, i.getFields()));
 		for (InterfaceType sub : i.getSuperInterfaces())
 			addFieldsRecursive(tc, fields, sub);

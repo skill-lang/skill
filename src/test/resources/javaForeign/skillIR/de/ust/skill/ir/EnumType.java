@@ -13,10 +13,10 @@ import java.util.Set;
 final public class EnumType extends Declaration implements WithFields {
 
     // fields
-    private List<Field> fields = null;
-    private final List<Name> instances;
-    private List<View> views;
-    private List<LanguageCustomization> customizations;
+    public List<Field> fields = null;
+    public final List<Name> instances;
+    public List<View> views;
+    public List<LanguageCustomization> customizations;
 
     /**
      * Creates a declaration of type name.
@@ -27,7 +27,7 @@ final public class EnumType extends Declaration implements WithFields {
      * @note the declaration has to be completed, i.e. it has to be evaluated in
      *       pre-order over the type hierarchy.
      */
-    private EnumType(Name name, Comment comment, List<Name> instances) throws ParseException {
+    public EnumType(Name name, Comment comment, List<Name> instances) throws ParseException {
         super(name, comment, Collections.<Restriction>emptyList(), Collections.<Hint>emptyList());
         this.instances = instances;
     }

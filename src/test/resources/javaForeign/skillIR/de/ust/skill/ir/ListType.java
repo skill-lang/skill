@@ -6,13 +6,13 @@ import de.ust.skill.ir.internal.Substitution;
  * @author Timm Felden
  */
 public class ListType extends ContainerType implements SingleBaseTypeContainer {
-	private final Type baseType;
+	public final Type baseType;
 
 	public static Type make(TypeContext tc, Type baseType) {
 		return tc.unifyType(new ListType(baseType));
 	}
 
-	private ListType(Type baseType) {
+	public ListType(Type baseType) {
 		this.baseType = baseType;
 	}
 

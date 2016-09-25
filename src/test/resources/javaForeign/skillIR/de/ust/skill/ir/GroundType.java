@@ -10,7 +10,7 @@ public class GroundType extends Type {
     /**
      * String representation of the type.
      */
-    private final Name name;
+    public final Name name;
 
     GroundType(TypeContext tc, String name) {
         this.name = new Name(name);

@@ -18,7 +18,7 @@ final public class LanguageCustomization extends FieldLike {
     /**
      * options provided to the field using '!'.
      */
-    //private final Map<String, List<String>> options;
+    //public final Map<String, List<String>> options;
 
     /**
      * the type is provided in form of a string, in order to type the field

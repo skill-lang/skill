@@ -26,7 +26,7 @@ public final class TypeContext {
 	 * 
 	 * @author Timm Felden
 	 */
-	private static final class PointerType extends GroundType implements ReferenceType {
+	public static final class PointerType extends GroundType implements ReferenceType {
 		PointerType(TypeContext tc, String name) {
 			super(tc, name);
 		}
@@ -36,11 +36,11 @@ public final class TypeContext {
 	/**
 	 * all user declarations in type order
 	 */
-	private List<Declaration> declarations;
-	private final List<UserType> usertypes = new ArrayList<>();
-	private final List<InterfaceType> interfaces = new ArrayList<>();
-	private final List<EnumType> enums = new ArrayList<>();
-	private final List<Typedef> typedefs = new ArrayList<>();
+	public List<Declaration> declarations;
+	public final List<UserType> usertypes = new ArrayList<>();
+	public final List<InterfaceType> interfaces = new ArrayList<>();
+	public final List<EnumType> enums = new ArrayList<>();
+	public final List<Typedef> typedefs = new ArrayList<>();
 
 	public TypeContext() {
 		new PointerType(this, "annotation");
@@ -68,7 +68,7 @@ public final class TypeContext {
 	 *            the type to be unified
 	 * @return t, if t does not yet exist or the existing instance of the type
 	 */
-	protected final Type unifyType(Type t) {
+	public final Type unifyType(Type t) {
 		if (types.containsKey(t.getSkillName()))
 			return types.get(t.getSkillName());
 
@@ -169,7 +169,7 @@ public final class TypeContext {
 	 *       generalization of the three available substitutions, although they
 	 *       are quite different; saves a lot of code though
 	 */
-	private TypeContext substitute(Substitution σ) throws ParseException {
+	public TypeContext substitute(Substitution σ) throws ParseException {
 		TypeContext tc = new TypeContext();
 		List<Declaration> defs = new ArrayList<>(declarations.size());
 		// copy types
