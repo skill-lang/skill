@@ -1,0 +1,2 @@
+new! inheritAbstract.Parent;
+new! inheritAbstract.Child;
