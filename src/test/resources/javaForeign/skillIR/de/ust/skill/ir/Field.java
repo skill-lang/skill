@@ -167,7 +167,7 @@ public class Field extends FieldLike {
 	 */
 	public List<Name> getPragma(String id) {
 		Optional<Hint> hint = hints.stream().filter(
-				h -> Hint.Type.pragma == h.type() && h.arguments().get(0).getSkillName().equals(id.toLowerCase()))
+				h -> HintType.pragma == h.type() && h.arguments().get(0).getSkillName().equals(id.toLowerCase()))
 				.findFirst();
 		if (hint.isPresent()) {
 			List<Name> args = hint.get().arguments();

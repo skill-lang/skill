@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.ust.skill.ir.Comment;
 import de.ust.skill.ir.ContainerType;
 import de.ust.skill.ir.Declaration;
 import de.ust.skill.ir.EnumType;
@@ -15,6 +14,7 @@ import de.ust.skill.ir.Hint;
 import de.ust.skill.ir.InterfaceType;
 import de.ust.skill.ir.LanguageCustomization;
 import de.ust.skill.ir.Name;
+import de.ust.skill.ir.NoComment;
 import de.ust.skill.ir.ParseException;
 import de.ust.skill.ir.Restriction;
 import de.ust.skill.ir.Type;
@@ -53,7 +53,7 @@ public class EnumSubstitution extends Substitution {
 				String skillname = t.getSkillName() + ":" + inst.getSkillName();
 				Name name = new Name(Arrays.asList(skillname), skillname);
 
-				UserType sub = UserType.newDeclaration(tc, name, Comment.NoComment.get(),
+				UserType sub = UserType.newDeclaration(tc, name, NoComment.get(),
 						Arrays.<Restriction>asList(new SingletonRestriction()), Collections.<Hint>emptySet());
 				defs.add(sub);
 				tops.put(sub, top);

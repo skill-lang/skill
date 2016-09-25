@@ -10,30 +10,23 @@ import java.util.Set;
  */
 public class Hint {
 
-    public static enum Type {
-        // note: names need to be lowercase, because this enum will be accessed
-        // using the valueOf method
-        owner, provider, removerestrictions, constantmutator, mixin, flat, unique, pure, distributed, ondemand,
-        monotone, readonly, ignore, hide, pragma;
-    }
-
     // unique hints
-    public static Hint constantMutator = new Hint(Type.constantmutator);
-    public static Hint distributed = new Hint(Type.distributed);
-    public static Hint flat = new Hint(Type.flat);
-    public static Hint hide = new Hint(Type.hide);
-    public static Hint ignore = new Hint(Type.ignore);
-    public static Hint mixin = new Hint(Type.mixin);
-    public static Hint monotone = new Hint(Type.monotone);
-    public static Hint ondemand = new Hint(Type.ondemand);
-    public static Hint pure = new Hint(Type.pure);
-    public static Hint readonly = new Hint(Type.readonly);
-    public static Hint removeRestrictions = new Hint(Type.removerestrictions);
-    public static Hint unique = new Hint(Type.unique);
+    public static Hint constantMutator = new Hint(HintType.constantmutator);
+    public static Hint distributed = new Hint(HintType.distributed);
+    public static Hint flat = new Hint(HintType.flat);
+    public static Hint hide = new Hint(HintType.hide);
+    public static Hint ignore = new Hint(HintType.ignore);
+    public static Hint mixin = new Hint(HintType.mixin);
+    public static Hint monotone = new Hint(HintType.monotone);
+    public static Hint ondemand = new Hint(HintType.ondemand);
+    public static Hint pure = new Hint(HintType.pure);
+    public static Hint readonly = new Hint(HintType.readonly);
+    public static Hint removeRestrictions = new Hint(HintType.removerestrictions);
+    public static Hint unique = new Hint(HintType.unique);
 
-    public Type type;
+    public HintType type;
 
-    public Type type() {
+    public HintType type() {
         return type;
     }
 
@@ -46,17 +39,17 @@ public class Hint {
     /**
      * public to ensure unique hints for those that do not take parameters
      */
-    public Hint(Type type, List<Name> args) {
+    public Hint(HintType type, List<Name> args) {
         this.type = type;
         this.arguments = args;
 
     }
 
-    public Hint(Type type) {
+    public Hint(HintType type) {
         this(type, Collections.<Name> emptyList());
     }
 
-    public static Hint get(Type type, List<Name> args) throws ParseException {
+    public static Hint get(HintType type, List<Name> args) throws ParseException {
         switch (type) {
         case constantmutator:
             return constantMutator;

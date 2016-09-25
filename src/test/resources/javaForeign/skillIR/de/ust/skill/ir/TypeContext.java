@@ -21,17 +21,6 @@ import de.ust.skill.ir.internal.TypedefSubstitution;
  * @author Timm Felden
  */
 public class TypeContext {
-	/**
-	 * Mark ground types which create reference like fields.
-	 * 
-	 * @author Timm Felden
-	 */
-	public static class PointerType extends GroundType implements ReferenceType {
-		PointerType(TypeContext tc, String name) {
-			super(tc, name);
-		}
-	}
-
 	public Map<String, Type> types = new HashMap<>();
 	/**
 	 * all user declarations in type order

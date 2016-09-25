@@ -11,48 +11,8 @@ import java.util.List;
  */
 public class Comment {
 
-    /**
-     * Null object of comments, i.e. not a comment. Makes code generation a lot
-     * easier. And resulting code visually appealing.
-     * 
-     * @author Timm Felden
-     */
-    public static class NoComment extends Comment {
-
-        public static NoComment instance = new NoComment();
-
-        public static NoComment get() {
-            return instance;
-        }
-
-        @Override
-        public String format(String prefix, String linePrefix, int lineWidth, String postfix) {
-            return "";
-        }
-
-        @Override
-        public String toString() {
-            return "";
-        }
-    }
-
     public List<String> text = null;
     public LinkedList<Tag> tags = new LinkedList<Tag>();
-
-    /**
-     * A tag with text. See language specification for details.
-     * 
-     * @author Timm Felden
-     */
-    public static class Tag {
-        public String name;
-        public List<String> text;
-
-        public Tag(String name) {
-            this.name = name;
-
-        }
-    }
 
     public Comment() {
     }
