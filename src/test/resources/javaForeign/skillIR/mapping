@@ -25,7 +25,6 @@ new! de.ust.skill.ir.InterfaceType;
 new! de.ust.skill.ir.EnumType;
 new! de.ust.skill.ir.Typedef;
 new! de.ust.skill.ir.Field;
-new! de.ust.skill.ir.HintType;
 new! de.ust.skill.ir.Hint;
 new! de.ust.skill.ir.View;
 new! de.ust.skill.ir.LanguageCustomization;
