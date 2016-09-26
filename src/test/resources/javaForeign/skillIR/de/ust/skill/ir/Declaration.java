@@ -102,7 +102,7 @@ public class Declaration extends Type implements ReferenceType {
 		return hints.contains(Hint.ignore);
 	}
 
-	public Collection<Hint> getHints() {
+	public Set<Hint> getHints() {
 		return hints;
 	}
 

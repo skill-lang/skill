@@ -2,6 +2,7 @@ package de.ust.skill.ir;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Definition of a typedef.
@@ -103,7 +104,7 @@ public class Typedef extends Declaration {
         return false;
     }
 
-    public Collection<Hint> getHints() {
+    public Set<Hint> getHints() {
         return hints;
     }
 }

@@ -154,7 +154,7 @@ public class Field extends FieldLike {
         return hints.contains(Hint.ignore) || hasIgnoredType();
     }
 
-    public Collection<Hint> getHints() {
+    public Set<Hint> getHints() {
 		return hints;
 	}
 
