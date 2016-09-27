@@ -6,6 +6,7 @@
 package de.ust.skill.generator.jforeign
 
 import javassist.NotFoundException
+import scala.collection.JavaConversions._
 
 trait AspectMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -36,6 +37,7 @@ public aspect ${name(t)}Aspects {
     public String ${t.getName}.skillName() { return "${t.getName}"; }
 
     ${
+      // add default constructor if missing
         try {
           rc.map(t).getConstructor("()V")
           s"""// Default constructor is available, need not inject one
@@ -45,6 +47,17 @@ public aspect ${name(t)}Aspects {
     public ${t.getName}.new() { super(); }""";
         }
       }
+
+    public ${t.getName}.new(${makeConstructorArguments(t)}${if (!t.getAllFields.isEmpty()) ", " else ""}long skillID, SkillObject ignored) {
+        super();
+${
+  (for (f ← t.getAllFields if !(f.isConstant || f.isIgnored))
+    yield s"        this.${name(f)} = ${name(f)};").mkString("\n")
+}
+        this.skillID = skillID;
+        // this is stupid, but the parameter makes sure that there are no signature conflicts.
+        assert ignored == null;
+    }
 
     // Add SkillObject interface
     declare parents : ${t.getName} implements SkillObject;
