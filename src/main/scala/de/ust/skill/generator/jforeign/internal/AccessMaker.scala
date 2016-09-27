@@ -207,12 +207,9 @@ ${
      * @return a new age instance with the argument field values
      */
     public $typeT make(${makeConstructorArguments(t)}) {
-        $typeT rval = new $typeT();
-${
-  t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map {
-    f ⇒ s"""        rval.${setterOrFieldAccess(t, f)}(${name(f)});"""
-  }.mkString("\n")
-}
+        $typeT rval = new $typeT(${
+  t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map { f ⇒ s"""${name(f)}, """ }.mkString("")
+  }-1, null);
         add(rval);
         return rval;
     }
