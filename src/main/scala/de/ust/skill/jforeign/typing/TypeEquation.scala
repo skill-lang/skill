@@ -8,6 +8,6 @@ class TypeEquation(left: Type, right: Type) extends TypeRule {
 
   def getRight: Type = right
 
-  override def toString(): String = s"${left.getSkillName} == ${right.getSkillName}"
+  override def toString(): String = s"${if (left != null) left.getSkillName else "null"} == ${if (right != null) right.getSkillName else "null"}"
 
 }

@@ -37,6 +37,12 @@ class ExplicitMappingRule(fromSkillType: String, toJavaType: String, fieldMappin
         _.bind(skillFieldMap, javaFieldMap, skilltype, javatype)
       }.toList
     } else List[TypeRule]()
-    new TypeMappedOnce(stype) :: new TypeMappedOnce(jtype) :: new TypeEquation(stype, jtype) :: fieldrules
+
+    val parentEquality = (stype, jtype) match {
+      case (s: UserType, j: UserType) ⇒ Some(new TypeEquation(s.getSuperType, j.getSuperType))
+      case _ ⇒ None
+    }
+
+    new TypeMappedOnce(stype) :: new TypeMappedOnce(jtype) :: new TypeEquation(stype, jtype) :: fieldrules ++ parentEquality
   }
 }
