@@ -17,6 +17,7 @@ trait AspectMaker extends GeneralOutputMaker {
 
       out.write(s"""
 package ${packageName};
+import ${packagePrefix}internal.SkillState;
 import de.ust.skill.common.jforeign.internal.SkillObject;
 import ${t.getName.getPackagePath}.${t.getName};
 
@@ -57,6 +58,10 @@ ${
         this.skillID = skillID;
         // this is stupid, but the parameter makes sure that there are no signature conflicts.
         assert ignored == null;
+    }
+
+    public void ${t.getName}.selfAdd(SkillState state) {
+        state.addAll(this);
     }
 
     // Add SkillObject interface

@@ -27,7 +27,7 @@ import de.ust.skill.ir.SingleBaseTypeContainer
 trait StateMaker extends GeneralOutputMaker {
     def writeAddAllForMaps(baseTypes : List[Type]): String = baseTypes match {
       case head :: Nil ⇒ head match {
-          case ut: UserType ⇒ s"addAll(v1);"
+          case ut: UserType ⇒ s"v1.selfAdd(this);"
           case gt: GroundType ⇒ gt.getSkillName match {
             case "string" ⇒ s"Strings().add(v1);"
             case _ ⇒ "// no need to add ground types"
@@ -36,7 +36,7 @@ trait StateMaker extends GeneralOutputMaker {
 
       case head :: rest ⇒ s""".forEach( (k${rest.size}, v${rest.size}) -> {
         ${head match {
-          case ut: UserType ⇒ s"addAll(k${rest.size});"
+          case ut: UserType ⇒ s"k${rest.size}.selfAdd(this);"
           case gt: GroundType ⇒ gt.getSkillName match {
             case "string" ⇒ s"Strings().add(k${rest.size});"
             case _ ⇒ "// no need to add ground types"
@@ -215,22 +215,31 @@ ${
             return;
         }
         x.setSkillID(-9);
+        ${name(t)}s().add(x);
 ${
       t.getAllFields.map { f ⇒
         f.getType match {
           case ut: UserType ⇒ s"""
-        addAll(x.${getterOrFieldAccess(t, f)});"""
+        if (x.${getterOrFieldAccess(t, f)} != null) {
+            x.${getterOrFieldAccess(t, f)}.selfAdd(this);
+        }"""
           case gt: GroundType ⇒ if (gt.getSkillName.equals("string")) s"""
         Strings().add(x.${getterOrFieldAccess(t, f)});"""
           else ""
           case lt: SingleBaseTypeContainer ⇒ lt.getBaseType match {
             case gt: GroundType ⇒ if (gt.getSkillName.equals("string")) s"""
-        x.${getterOrFieldAccess(t, f)}.forEach(e -> Strings().add(e));"""
+        if (x.${getterOrFieldAccess(t, f)} != null) {
+            x.${getterOrFieldAccess(t, f)}.forEach(e -> Strings().add(e));
+        }"""
             case ut: UserType ⇒ s"""
-        x.${getterOrFieldAccess(t, f)}.forEach(e -> ${name(ut)}s().add(e));"""
+        if (x.${getterOrFieldAccess(t, f)} != null) {
+            x.${getterOrFieldAccess(t, f)}.forEach(e -> e.selfAdd(this));
+        }"""
           }
           case mt: MapType ⇒ s"""
-        x.${getterOrFieldAccess(t, f)}${writeAddAllForMaps(mt.getBaseTypes.toList)}"""
+        if (x.${getterOrFieldAccess(t, f)} != null) {
+            x.${getterOrFieldAccess(t, f)}${writeAddAllForMaps(mt.getBaseTypes.toList)}
+        }"""
           case x: Type ⇒ s"""
         // cannot addAll a ${x} because I don't know this type"""
         }
