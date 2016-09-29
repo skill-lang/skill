@@ -8,6 +8,7 @@ import Data.Bits as B
 import Data.List as L
 import Data.Binary.Get
 import Types
+import Data.Int
 
 select :: Bool -> a -> a -> a
 select True x _  = x
@@ -43,13 +44,12 @@ printStringList = L.foldr ((>>) . putStrLn) (return ())
 printByteStringList :: [S.ByteString] -> IO ()
 printByteStringList list = putStr "[" >> L.foldr ((>>) . C.putStr) (return ()) (intersperse (C.pack ", ") list) >> putStr "]"
 
-
 boolToInt :: Bool -> Int
 boolToInt True  = 1
 boolToInt False = 0
 
-printOrdered :: ([String], [TypeDesc], [String]) -> IO ()
-printOrdered (strings, typeDescs, _) = mapM_ printTypeDesc typeDescs >> eL 2
+printState :: ([String], [String], [TypeDesc]) -> IO ()
+printState (strings, _, tDs) = mapM_ printTypeDesc tDs >> eL 2
 
 printTypeDesc :: TypeDesc -> IO ()
 printTypeDesc (TD (id, name, fieldDescs, subtypes))

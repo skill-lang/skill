@@ -1,14 +1,3 @@
--- TO ASK
--- 1) type of ints
--- 2) eclipse errors...
--- 3) eclipse global variable
--- 4) User types...
--- 5) annotations...
--- 6) list of skill files
--- 7) upper/lower case confusion
--- 8) V64 1 / 9 * 255 intended behavior
-
-
 module ReadFields where
 
 import Control.Monad as V
@@ -17,6 +6,7 @@ import Data.Bits as B
 import Data.List as L
 import Data.ByteString.Lazy.Char8 as C
 import Data.Binary.Get as G
+import Data.Bits.Floating
 import Data.Char
 import Data.Int
 import Data.Word
@@ -35,10 +25,6 @@ readVariableLengthArray f = readV64 >>= readFixedLengthArray f
 
 readString :: [S.ByteString] -> Get String
 readString strings = readV64 >>= \n -> if n == 0 then return "" else return $ C.unpack $ strings !! (n - 1)
-
-maybeReadTypeDescriptor :: Bool -> Get (Maybe (Get Something))
-maybeReadTypeDescriptor False = return Nothing
-maybeReadTypeDescriptor True  = Just `fmap` parseTypeDescription
 
 --mA :: Get (Get Word8)
 --mA = return (id `fmap` getWord8)
@@ -73,36 +59,33 @@ parseTypeDescription = readV64 >>= go
          go 19 = (\g        -> readV64 >>= \i -> GSet    `fmap` repeatGet i g) `fmap` parseTypeDescription
          go 20 = (\(g1, g2) -> readV64 >>= \i -> GMap    `fmap` repeatGet i (remodel' (g1, g2))) `fmap` doubleGetter
                         where doubleGetter = remodel' (parseTypeDescription, parseTypeDescription)
-
-
+         go n  = return (GUserType (n - 32) `fmap` readV64)
 
 readFloat :: Get Float
-readFloat = fromIntegral `fmap` getInt32be
+readFloat = coerceToFloat `fmap` getWord32be
 
 readDouble :: Get Double
-readDouble = fromIntegral `fmap` getInt64be
-
-calc :: S.ByteString -> Int
-calc bytestring = go (S.unpack bytestring) 1
-    where go :: [Word8] -> Int -> Int
-          go [] _ = 0
-          go (word : words) count
-           | L.null words && count == 9 = 2 * fromIntegral word
-           | otherwise                  = B.clearBit (fromIntegral word) 7 + 128 * go words (count+1)
-
-maybeReadV64 :: Bool -> Get (Maybe Int)
-maybeReadV64 False = return Nothing
-maybeReadV64 True  = Just `fmap` readV64
+readDouble = coerceToFloat `fmap` getWord64be
 
 readIndex :: Get Int
 readIndex = subIndex `fmap` readV64
 
-maybeReadIndex :: Bool -> Get (Maybe Int)
-maybeReadIndex False = return Nothing
-maybeReadIndex True  = Just `fmap` readIndex
+readRefString :: [String] -> Get String
+readRefString strings = readIndex >>= \i -> return $ strings !! i
+
+maybeRead :: Bool -> Get a -> Get (Maybe a)
+maybeRead False _     = return Nothing
+maybeRead True getter = Just `fmap` getter
 
 readV64 :: Get Int
 readV64 = calc `fmap` readV64ByteString 1
+ where calc bytestring = go (S.unpack bytestring) 1
+           where go :: [Word8] -> Int -> Int
+                 go [] _ = 0
+                 go (word : words) count
+                  | L.null words && count == 9 = 2 * fromIntegral word -- L.null überflüssig?
+                  | otherwise                  = B.clearBit (fromIntegral word) 7 + 128 * go words (count+1)
+
 
 readV64Pair :: Get (Int, Int)
 readV64Pair = readV64 >>= \a -> readV64 >>= \b -> return (a, b)
