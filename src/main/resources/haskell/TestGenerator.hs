@@ -21,18 +21,26 @@ generate sfPath outputPath = do fileNames <- getDirectoryContents sfPath
 createTestFile :: FilePath -> FilePath -> String -> IO ()
 createTestFile sfPath outputPath sfName
                  | length sfName < 5 = return ()
-                 | otherwise = writeFile (outputPath ++ "ZTest_" ++ cut sfName ++ ".hs") $
-                      "module ZTest_" ++ (init . init . init) sfName ++" where"
+                 | otherwise = writeFile (outputPath ++ "ZTest_" ++ vc sfName ++ ".hs") $
+                      "module ZTest_" ++ vc sfName ++" where"
                  ++   "\nimport Test.HUnit" ++ "\nimport Deserialize" ++ "\nimport Data.IORef" ++ "\nimport Methods"
-                 ++   "\n\nrun = TestCase $ printTestName \"" ++ cut sfName ++ "\""
-                 ++   " >> initialize \"" ++ sfPath ++ sfName ++ "\""
+                 ++   "\n\nrun = TestCase $ printTestName \"" ++ vc sfName ++ "\""
+                 ++   " >> initializeTest \"" ++ sfPath ++ sfName ++ "\""
 
 createHeadProcedure :: FilePath -> FilePath -> [String] -> IO ()
 createHeadProcedure sfPath outputPath names = writeFile (outputPath ++ "RunTests.hs") $
                     "import Test.HUnit\n"
-                  ++ concatMap (\name -> "import ZTest_" ++ cut name ++ "\n") names
+                  ++ concatMap (\name -> "import ZTest_" ++ vc name ++ "\n") names
                   ++ "\nmain = runTestTT $ TestList ["
                   ++ intercalate ",\n" (map createLabel names) ++ "  ]"
-                         where createLabel name = "  TestLabel \"" ++ cut name ++ "\" ZTest_" ++ cut name ++ ".run"
+                         where createLabel name = "  TestLabel \"" ++ vc name ++ "\" ZTest_" ++ vc name ++ ".run"
 
-cut = init . init . init
+vc = validate . init . init . init
+
+validate :: String -> String
+validate = map go
+  where go symbol
+            | 'a' <= symbol && symbol <= 'z' = symbol
+            | 'A' <= symbol && symbol <= 'Z' = symbol
+            | symbol == '_' || symbol == '.' = symbol
+            | otherwise                      = '\''

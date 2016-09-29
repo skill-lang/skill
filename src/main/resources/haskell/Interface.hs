@@ -16,7 +16,7 @@ filePath = "C:\\skill\\src\\test\\resources\\genbinary\\auto\\accept\\date.sf"
 nameAges = "date"
 
 getAges :: [Word64]
-getAges = go $ ((\(a,b,c) -> b) . unsafePerformIO . readIORef) ordered
+getAges = go $ ((\(a,b,c) -> b) . unsafePerformIO . readIORef) state
           where go ((string, count, _, _, fieldDescriptors) : rest)
                   | string == nameAges = readAgesInType fieldDescriptors count
                   | otherwise          = go rest
@@ -31,6 +31,6 @@ ageConvert :: Something -> Word64
 ageConvert (GV64 value) = value
 ageConvert _            = error "Error in Interface: Unexpected Type"
 
-getStrings   = fst $ (unsafePerformIO . readIORef) ordered
-getTypeDescs = snd $ (unsafePerformIO . readIORef) ordered
+getStrings   = fst $ (unsafePerformIO . readIORef) state
+getTypeDescs = snd $ (unsafePerformIO . readIORef) state
 initiate     = initialize filePath
