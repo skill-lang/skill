@@ -3,17 +3,17 @@ i8 a;
 }
 
 B extends A {
-i8 b;
+i16 b;
 }
 
 C extends A {
-i8 c;
+i32 c;
 }
 
 D extends B {
-i8 d;
+i64 d;
 }
 
 E extends D {
-i8 e;
+v64 e;
 }
