@@ -16,7 +16,7 @@ import java.io.File
 @RunWith(classOf[JUnitRunner])
 class GeneratorTest extends FunSuite {
 
-  test("make tests") {
+  ignore("make tests") {
     // ensure testsuite folder
     val testsuite = new File("testsuites/haskell");
     testsuite.mkdirs()

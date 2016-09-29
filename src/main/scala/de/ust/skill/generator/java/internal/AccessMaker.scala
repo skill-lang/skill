@@ -234,6 +234,14 @@ ${
             return this;
         }""").mkString
       }
+
+        @Override
+        public $typeT make() {
+            pool.add(instance);
+            $typeT rval = instance;
+            instance = null;
+            return rval;
+        }
     }
 
     /**
