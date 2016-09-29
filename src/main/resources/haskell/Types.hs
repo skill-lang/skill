@@ -5,8 +5,6 @@ import Data.Int
 import Data.ByteString.Lazy
 import Data.Binary.Get
 
-type Ordered   = ([String], [TypeDesc], [String])
-
 data TypeDesc  = TD (Int, String, [FieldDescTest], [TypeDesc]) -- id, name, fieldDescs, subtypes
 type FieldDesc = (String, [Something]) --name, data
 type FieldDescTest = (String, [Something], ByteString) --name, data, rawData
@@ -35,6 +33,49 @@ data Something = CInt8   Int8                  -- 0
                | GList    [Something]          -- 18
                | GSet     [Something]          -- 19
                | GMap [(Something, Something)] -- 20
+               | GUserType Int Int
                      deriving (Show)
 
-               -- TODO ?              -- 21+
+-- fa :: Int8
+-- fb :: Int16
+-- fc :: Int32
+-- fd :: A
+-- fe :: B
+-- ff :: A
+
+-- A
+-- A <- B
+-- A <- C
+-- A <- D
+-- E <- B
+-- F <- B
+-- G <- E
+-- H <- F
+
+
+data A = A' I_A | B' I_B | C' I_C | D' I_D
+type I_A = Int8
+type I_B = (Int16, Int8)
+type I_C = (Int32, Int8)
+type I_D = (A, Int8)
+
+
+
+
+
+
+
+--class A' a where
+  --g'fA :: a -> Int8
+  --g'fB :: a -> Int16
+--  g'fC :: a -> Int32
+--  g'fD :: a ->
+
+--instance A' A where
+--getA i8 = i8
+
+--class B x where
+--  getB :: x -> B
+
+--instance A B where
+ --getA
