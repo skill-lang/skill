@@ -1,4 +1,4 @@
-map simpletype -> simple.simple {
+map SimpleType -> simple.Simple
 	x -> x;
 	y -> y;
 	b -> b;
