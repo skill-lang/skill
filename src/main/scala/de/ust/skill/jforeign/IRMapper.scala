@@ -60,6 +60,13 @@ class IRMapper(classpaths: List[String]) {
   val Doublet = pool.get("java.lang.Double")
   val stringt = pool.get("java.lang.String")
 
+  val emptyList = List().asJava
+
+  def name(pkg: String, simple: String): Name = {
+    val realName = simple.replaceAll("\\$", ".")
+    new Name(List(realName).asJava, realName, pkg)
+  }
+
   /**
    * Takes a list of class names and returns a TypeContext representing containing the IR of those types.
    */
@@ -86,14 +93,9 @@ class IRMapper(classpaths: List[String]) {
    */
   def collect(clazz: CtClass): UserType = if (knownTypes contains clazz) knownTypes(clazz)
   else {
-    // add declaration
-    val comment = new Comment()
-    comment.init(List().asJava)
-
     // collect parent types first
     if (clazz.getSuperclass != javaObjectType) collect(clazz.getSuperclass)
-    val ntype = UserType.newDeclaration(tc, new Name(List(clazz.getSimpleName).asJava, clazz.getSimpleName, clazz.getPackageName),
-      comment, new java.util.ArrayList, new java.util.ArrayList)
+    val ntype = UserType.newDeclaration(tc, name(clazz.getPackageName, clazz.getSimpleName), Comment.NoComment.get, List().asJava, List().asJava)
     rc.add(ntype, clazz)
     knownTypes += (clazz → ntype)
     orderedTypes += ntype
@@ -129,7 +131,7 @@ class IRMapper(classpaths: List[String]) {
 
       val skilltype = knownTypes(clazz)
       skilltype.initialize(supertype, List().asJava, mapFields(clazz).filter(_.isDefined).map(_.get).asJava,
-          List().asJava, List().asJava)
+        List().asJava, List().asJava)
       mappedTypes += (clazz → skilltype)
       skilltype
     }
@@ -152,10 +154,8 @@ class IRMapper(classpaths: List[String]) {
         None
       }
     }).map { t =>
-      val comment = new Comment()
-      comment.init(List().asJava)
       val f: Field = new Field(t, new Name(List(field.getName).asJava, field.getName),
-        false, comment, new java.util.ArrayList[Restriction], new java.util.ArrayList[Hint])
+        false, Comment.NoComment.get, new java.util.ArrayList[Restriction], new java.util.ArrayList[Hint])
       rc.add(f, field.getType)
       f
     }
