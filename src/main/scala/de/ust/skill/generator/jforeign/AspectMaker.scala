@@ -29,25 +29,28 @@ import ${t.getName.getPackagePath}.${t.getName};
  */
 public aspect ${name(t)}Aspects {
 
-    // add skillID to ${name(t)}
+${
+  if (t.getSuperType() == null) {
+s"""    // add skillID to ${name(t)}
     public long ${t.getName}.skillID;
     // getter and setter for skillID
     public long ${t.getName}.getSkillID() { return this.skillID; }
-    public void ${t.getName}.setSkillID(long skillID) { this.skillID = skillID; }
+    public void ${t.getName}.setSkillID(long skillID) { this.skillID = skillID; }"""
+  } else ""
+}
     // Access to skillName
     public String ${t.getName}.skillName() { return "${t.getName}"; }
 
-    ${
+${
       // add default constructor if missing
         try {
           rc.map(t).getConstructor("()V")
-          s"""// Default constructor is available, need not inject one
-    //public ${t.getName}.new() { super(); }""";
+          ""
         } catch {
           case e: NotFoundException ⇒ s"""// Add default constructor
     public ${t.getName}.new() { super(); }""";
         }
-      }
+}
 
     public ${t.getName}.new(${makeConstructorArguments(t)}${if (!t.getAllFields.isEmpty()) ", " else ""}long skillID, SkillObject ignored) {
         super();
@@ -64,8 +67,12 @@ ${
         state.addAll(this);
     }
 
-    // Add SkillObject interface
-    declare parents : ${t.getName} implements SkillObject;
+${
+  if (t.getSuperType() == null) {
+s"""    // Add SkillObject interface
+    declare parents : ${t.getName} implements SkillObject;"""
+  } else ""
+}
 
     // Initialize skillID no matter which constructor is called
     before(${t.getName} x): target(x) && execution(${t.getName}.new(..)) {
