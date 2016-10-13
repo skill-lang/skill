@@ -82,7 +82,7 @@ ${
       }<${mapType(f, true)}, ${mapType(t)}> implements
                ${
         f.getType match {
-          case ft : GroundType ⇒ ft.getSkillName match {
+          case ft : GroundType ⇒ ft.getSkillName.toLowerCase() match {
             case "bool"                  ⇒ s"""KnownBooleanField<${mapType(t)}>"""
             case "i8"                    ⇒ s"""KnownByteField<${mapType(t)}>"""
             case "i16"                   ⇒ s"""KnownShortField<${mapType(t)}>"""
@@ -109,7 +109,7 @@ ${
         if (f.isAuto()) ""
         else "int index, "
       }${name(t)}Access owner) {
-        super(type, "${f.getSkillName}", ${
+        super(type, "${f.getSkillName.toLowerCase()}", ${
         if (f.isAuto()) "0"
         else "index"
       }, owner);
@@ -135,9 +135,9 @@ ${
 ${
               // preparation code
               f.getType match {
-                case t : GroundType if "string".equals(t.getSkillName) ⇒ s"""
+                case t : GroundType if "string".equals(t.getSkillName.toLowerCase()) ⇒ s"""
         final StringPool sp = (StringPool)owner.owner().Strings();"""
-                case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒ s"""
+                case t : InterfaceType if t.getSuperType.getSkillName.toLowerCase() != "annotation" ⇒ s"""
         final ${name(t.getSuperType)}Access target = (${name(t.getSuperType)}Access)${name(t.getSuperType)}Access
                 .<${mapType(t.getSuperType)},${mapType(t)}>cast(type);"""
                 case t : UserType ⇒ s"""
@@ -150,16 +150,16 @@ ${
             ${
               // read next element
               f.getType match {
-                case ft : InterfaceType if ft.getSuperType.getSkillName != "annotation" ⇒
+                case ft : InterfaceType if ft.getSuperType.getSkillName.toLowerCase() != "annotation" ⇒
                   s"""is.next().${setterOrFieldAccess(t, f)}((${mapType(f.getType)})target.getByID(in.v64()));"""
 
                 case ft : InterfaceType ⇒
                   s"""is.next().set${escaped(f.getName.capital)}((${mapType(f.getType)})type.readSingleField(in));"""
 
-                case ft : GroundType ⇒ ft.getSkillName match {
+                case ft : GroundType ⇒ ft.getSkillName.toLowerCase() match {
                   case "annotation" ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(type.readSingleField(in));"""
                   case "string"     ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(sp.get(in.v64()));"""
-                  case _            ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(in.${ft.getSkillName}());"""
+                  case _            ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(in.${ft.getSkillName.toLowerCase()}());"""
                 }
 
                 case ft : UserType ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(target.getByID(in.v64()));"""
@@ -211,7 +211,7 @@ ${
             def offsetCode(fieldType : Type) : String = fieldType match {
 
               // read next element
-              case fieldType : GroundType ⇒ fieldType.getSkillName match {
+              case fieldType : GroundType ⇒ fieldType.getSkillName.toLowerCase() match {
 
                 case "annotation" ⇒ s"""
         final Annotation t = Annotation.cast(type);
@@ -393,9 +393,9 @@ ${
             ${
               // read next element
               f.getType match {
-                case ft : GroundType ⇒ ft.getSkillName match {
+                case ft : GroundType ⇒ ft.getSkillName.toLowerCase() match {
                   case "annotation" | "string" ⇒ s"""type.writeSingleField($dataAccessI.${getterOrFieldAccess(t, f)}, out);"""
-                  case _                       ⇒ s"""out.${ft.getSkillName}($dataAccessI.${getterOrFieldAccess(t, f)});"""
+                  case _                       ⇒ s"""out.${ft.getSkillName.toLowerCase()}($dataAccessI.${getterOrFieldAccess(t, f)});"""
                 }
 
                 case ft : UserType ⇒ s"""${mapType(ft)} v = $dataAccessI.${getterOrFieldAccess(t, f)};

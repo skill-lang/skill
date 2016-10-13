@@ -68,13 +68,13 @@ ${
         switch (name) {${
       (for (t ← IR)
         yield if (null == t.getSuperType) s"""
-        case "${t.getSkillName}":
+        case "${t.getSkillName.toLowerCase()}":
             p = (StoragePool<T, B>) new ${name(t)}Access(types.size());
             break;
 """
         else  s"""
-        case "${t.getSkillName}": {
-            ${name(t.getSuperType)}Access parent = (${name(t.getSuperType)}Access)(poolByName.get("${t.getSuperType.getSkillName}"));
+        case "${t.getSkillName.toLowerCase()}": {
+            ${name(t.getSuperType)}Access parent = (${name(t.getSuperType)}Access)(poolByName.get("${t.getSuperType.getSkillName.toLowerCase()}"));
             if (null == parent)
                 throw new ParseException(in, blockCounter, null, "file lacks expected super type ${name(t)}");
             p = (StoragePool<T, B>) new ${name(t)}Access(types.size(), parent);
@@ -112,15 +112,15 @@ ${
       (for (t ← IR)
         yield s"""
         ${name(t)}Access ${name(t)};
-        if (poolByName.containsKey("${t.getSkillName}"))
-            ${name(t)} = (${name(t)}Access) poolByName.get("${t.getSkillName}");
+        if (poolByName.containsKey("${t.getSkillName.toLowerCase()}"))
+            ${name(t)} = (${name(t)}Access) poolByName.get("${t.getSkillName.toLowerCase()}");
         else {
             ${name(t)} = new ${name(t)}Access(types.size()${
         if (null == t.getSuperType) ""
         else s", ${name(t.getSuperType)}"
       });
             types.add(${name(t)});
-            poolByName.put("${t.getSkillName}", ${name(t)});
+            poolByName.put("${t.getSkillName.toLowerCase()}", ${name(t)});
         }
 """).mkString
     }

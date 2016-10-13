@@ -74,11 +74,11 @@ ${
         if (isBasePool) ""
         else s", ${name(t.getSuperType)}Access superPool"
       }) {
-        super(poolIndex, "${t.getSkillName}"${
+        super(poolIndex, "${t.getSkillName.toLowerCase()}"${
         if (isBasePool) ""
         else ", superPool"
       }, new HashSet<String>(Arrays.asList(new String[] { ${
-        t.getFields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString(", ")
+        t.getFields.map { f ⇒ s""""${f.getSkillName.toLowerCase()}"""" }.mkString(", ")
       } })), ${
         t.getFields.count(_.isAuto) match {
           case 0 ⇒ "noAutoFields()"
@@ -130,7 +130,7 @@ ${
         switch (name) {${
           (for (f ← t.getFields if !f.isAuto)
             yield s"""
-        case "${f.getSkillName}":
+        case "${f.getSkillName.toLowerCase()}":
             f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f)}, 1 + dataFields.size(), this);
             break;
 """
@@ -139,7 +139,7 @@ ${
           var index = 0;
           (for (f ← t.getFields if f.isAuto)
             yield s"""
-        case "${f.getSkillName}":
+        case "${f.getSkillName.toLowerCase()}":
             f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f)}, this);
             autoFields[${index += 1; index - 1}] = (AutoField<?, $typeT>) f;
             break;
@@ -162,7 +162,7 @@ ${
         switch (name) {${
           (for (f ← t.getFields if !f.isAuto)
             yield s"""
-        case "${f.getSkillName}":
+        case "${f.getSkillName.toLowerCase()}":
             f = (FieldDeclaration<R, $typeT>) new KnownField_${nameT}_${name(f)}((FieldType<${mapType(f, true)}>) type, ID, this);
             break;
 """
@@ -170,7 +170,7 @@ ${
         }${
           (for (f ← t.getFields if f.isAuto)
             yield s"""
-        case "${f.getSkillName}":
+        case "${f.getSkillName.toLowerCase()}":
             throw new SkillException(String.format(
                     "The file contains a field declaration %s.%s, but there is an auto field of similar name!",
                     this.name(), name));
@@ -293,7 +293,7 @@ ${
 
   private def mapToFieldType(f : Field) : String = {
     //@note temporary string & annotation will be replaced later on
-    @inline def mapGroundType(t : Type) : String = t.getSkillName match {
+    @inline def mapGroundType(t : Type) : String = t.getSkillName.toLowerCase() match {
       case "annotation" ⇒ "annotation"
       case "bool"       ⇒ "BoolType.get()"
       case "i8"         ⇒ if (f.isConstant) s"new ConstantI8((byte)${f.constantValue})" else "I8.get()"
@@ -307,7 +307,7 @@ ${
 
       case s ⇒ t match {
         case t : InterfaceType ⇒ s"cast(${mapGroundType(t.getSuperType)})"
-        case _                 ⇒ s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
+        case _                 ⇒ s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName.toLowerCase()}"))"""
       }
     }
 
@@ -330,7 +330,7 @@ ${
 
       case t : InterfaceType ⇒ s"cast(${mapGroundType(t.getSuperType)})"
       case t : Declaration ⇒
-        s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
+        s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName.toLowerCase()}"))"""
 
     }
   }
@@ -343,7 +343,7 @@ ${
           r.getLow
         }L.to${mapType(f.getType)}, ${r.getHigh}L.to${mapType(f.getType)})"
 
-      case r : FloatRangeRestriction ⇒ f.getType.getSkillName match {
+      case r : FloatRangeRestriction ⇒ f.getType.getSkillName.toLowerCase() match {
         case "f32" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowFloat}f, ${r.getHighFloat}f)"
         case "f64" ⇒ s"_root_.${packagePrefix}internal.restrictions.Range(${r.getLowDouble}, ${r.getHighDouble})"
       }
