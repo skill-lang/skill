@@ -15,7 +15,7 @@ import de.ust.skill.ir.restriction.AbstractRestriction;
  * 
  * @author Timm Felden
  */
-public class Declaration extends Type implements ReferenceType {
+public abstract class Declaration extends Type implements ReferenceType {
 
 	// names
 	public Name name;
@@ -46,12 +46,12 @@ public class Declaration extends Type implements ReferenceType {
 	 * 
 	 * @return true, iff initialized
 	 */
-	public boolean isInitialized() {return false;}
+	public abstract boolean isInitialized();
 
 	/**
 	 * @return pretty parsable representation of this type
 	 */
-	public String prettyPrint() {return null;}
+	public abstract String prettyPrint();
 
 	@Override
 	public String getSkillName() {
@@ -94,9 +94,9 @@ public class Declaration extends Type implements ReferenceType {
 		return hints.contains(Hint.pure);
 	}
 
-	public boolean isMonotone() {return false;}
+	public abstract boolean isMonotone();
 
-	public boolean isReadOnly() {return false;}
+	public abstract boolean isReadOnly();
 
 	public boolean isIgnored() {
 		return hints.contains(Hint.ignore);
@@ -132,5 +132,5 @@ public class Declaration extends Type implements ReferenceType {
 	 *            context this is living in
 	 * @return an equivalent copy uninitialized copy of this
 	 */
-	Declaration copy(TypeContext tc) {return null;}
+	abstract Declaration copy(TypeContext tc);
 }
