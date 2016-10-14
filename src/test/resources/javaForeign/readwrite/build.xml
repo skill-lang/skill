@@ -8,5 +8,6 @@
         <ant antfile="genericNonsense/build.xml" />
         <ant antfile="inherit/build.xml" />
         <ant antfile="skillIR/build.xml" />
+        <ant antfile="abstrakt/build.xml" />
     </target>
 </project>

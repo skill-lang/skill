@@ -18,6 +18,8 @@ import de.ust.skill.ir.InterfaceType
 import sun.reflect.generics.parser.SignatureParser
 import javassist.NotFoundException
 import scala.collection.mutable.ListBuffer
+import javassist.Modifier
+import de.ust.skill.ir.restriction.AbstractRestriction
 
 /**
  * Maps classes by name from a given classpath to IR representation.
@@ -81,7 +83,7 @@ class IRMapper(classpaths: List[String]) {
   /**
    * Collect a type and its transitive supertype closure.
    */
-  def collect(name: String): UserType = try {
+  def collect(name: String): Unit = try {
     collect(loadType(name))
   } catch {
     case e: NotFoundException ⇒
@@ -91,15 +93,21 @@ class IRMapper(classpaths: List[String]) {
   /**
    * Collect a type and its transitive supertype closure.
    */
-  def collect(clazz: CtClass): UserType = if (knownTypes contains clazz) knownTypes(clazz)
+  def collect(clazz: CtClass): Unit = if (knownTypes contains clazz) knownTypes(clazz)
   else {
     // collect parent types first
     if (clazz.getSuperclass != javaObjectType) collect(clazz.getSuperclass)
-    val ntype = UserType.newDeclaration(tc, name(clazz.getPackageName, clazz.getSimpleName), Comment.NoComment.get, List().asJava, List().asJava)
+
+    val restrictions: List[Restriction] =
+      if ((clazz.getModifiers & Modifier.ABSTRACT) == Modifier.ABSTRACT) {
+        List(new AbstractRestriction)
+      } else List()
+
+    val ntype = UserType.newDeclaration(tc, name(clazz.getPackageName, clazz.getSimpleName), Comment.NoComment.get,
+        restrictions.asJava, List().asJava)
     rc.add(ntype, clazz)
     knownTypes += (clazz → ntype)
     orderedTypes += ntype
-    ntype
   }
 
   /**

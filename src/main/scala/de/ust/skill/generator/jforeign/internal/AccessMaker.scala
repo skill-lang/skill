@@ -22,6 +22,7 @@ import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.restriction.FloatRangeRestriction
 import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.NonNullRestriction
+import de.ust.skill.ir.restriction.AbstractRestriction
 
 trait AccessMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -31,6 +32,8 @@ trait AccessMaker extends GeneralOutputMaker {
       val isBasePool = (null == t.getSuperType)
       val nameT = name(t)
       val typeT = mapType(t)
+
+      val abstrct : Boolean = t.getRestrictions.filter { p => p.isInstanceOf[AbstractRestriction] }.nonEmpty
 
       val out = open(s"internal/${nameT}Access.java")
       //package & imports
@@ -96,7 +99,13 @@ ${
       }
 
     @Override
-    public void insertInstances() {${
+    public void insertInstances() {
+${
+        if (abstrct)
+s"""        // do nothing for abstract classes
+     }"""
+        else
+          s"""${
         if (isBasePool) ""
         else s"""
         ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access)basePool).data();"""
@@ -115,7 +124,8 @@ ${
 
             i += 1;
         }
-    }
+    }"""
+}
 ${
         if (t.getFields.isEmpty()) ""
         else s"""
@@ -133,8 +143,7 @@ ${
         case "${f.getSkillName.toLowerCase()}":
             f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f)}, 1 + dataFields.size(), this);
             break;
-"""
-          ).mkString
+""").mkString
         }${
           var index = 0;
           (for (f ← t.getFields if f.isAuto)
@@ -143,8 +152,7 @@ ${
             f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f)}, this);
             autoFields[${index += 1; index - 1}] = (AutoField<?, $typeT>) f;
             break;
-"""
-          ).mkString
+""").mkString
         }
         default:
             super.addKnownField(name, string, annotation);
@@ -165,8 +173,7 @@ ${
         case "${f.getSkillName.toLowerCase()}":
             f = (FieldDeclaration<R, $typeT>) new KnownField_${nameT}_${name(f)}((FieldType<${mapType(f, true)}>) type, ID, this);
             break;
-"""
-          ).mkString
+""").mkString
         }${
           (for (f ← t.getFields if f.isAuto)
             yield s"""
@@ -174,8 +181,7 @@ ${
             throw new SkillException(String.format(
                     "The file contains a field declaration %s.%s, but there is an auto field of similar name!",
                     this.name(), name));
-"""
-          ).mkString
+""").mkString
         }
         default:
             return super.addField(ID, type, name, restrictions);
@@ -195,10 +201,15 @@ ${
      * @return a new $nameT instance with default field values
      */
     @Override
-    public $typeT make() {
+    public $typeT make() {${
+       if (abstrct) s"""
+        throw new RuntimeException("Cannot instantiate abstract class $nameT");"""
+       else {s"""
         $typeT rval = new $typeT();
         add(rval);
-        return rval;
+        return rval;"""
+       }
+     }
     }
 ${
         if (t.getAllFields.filterNot { f ⇒ f.isConstant() || f.isIgnored() }.isEmpty) ""
@@ -206,15 +217,22 @@ ${
     /**
      * @return a new age instance with the argument field values
      */
-    public $typeT make(${makeConstructorArguments(t)}) {
+    public $typeT make(${makeConstructorArguments(t)}) {${
+       if (abstrct) s"""
+        throw new RuntimeException("Cannot instantiate abstract class $nameT");"""
+       else {s"""
         $typeT rval = new $typeT(${
-  t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map { f ⇒ s"""${name(f)}, """ }.mkString("")
-  }-1, null);
+          t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map { f ⇒ s"""${name(f)}, """ }.mkString("")
+        }-1, null);
         add(rval);
-        return rval;
+        return rval;"""
+       }
+    }
     }
 """
-      }
+}
+${
+  if (!abstrct) {s"""
     public ${nameT}Builder build() {
         return new ${nameT}Builder(this, new $typeT());
     }
@@ -237,7 +255,9 @@ ${
             return this;
         }""").mkString
       }
-    }
+    }"""
+  } else ""
+}
 
     /**
      * used internally for type forest construction
