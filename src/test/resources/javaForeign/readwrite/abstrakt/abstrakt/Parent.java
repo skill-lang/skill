@@ -1,6 +1,6 @@
 package abstrakt;
 
-public abstract class Parent {
+public abstract class Parent extends Grandpa {
 
     public int p;
 

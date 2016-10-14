@@ -16,6 +16,8 @@ trait SubTypeMaker extends GeneralOutputMaker {
     super.make
     
     for (t ← IR) {
+      val abstrct : Boolean = t.getRestrictions.filter { p => p.isInstanceOf[AbstractRestriction] }.nonEmpty
+      if (!abstrct) {
       val out = open("internal/" + name(t)+ "SubType.java")
       
       out.write(s"""
@@ -59,6 +61,7 @@ public final class ${name(t)}SubType extends ${name(t)} implements NamedType {
       
       out.close();
       
+      }
     }
   }
 }

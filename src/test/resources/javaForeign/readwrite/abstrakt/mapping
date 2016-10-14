@@ -1,2 +1,3 @@
+new! abstrakt.Grandpa;
 new! abstrakt.Parent;
 new! abstrakt.Child;
