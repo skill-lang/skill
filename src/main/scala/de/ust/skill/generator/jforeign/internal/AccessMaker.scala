@@ -255,9 +255,7 @@ ${
             return this;
         }""").mkString
       }
-    }"""
-  } else ""
-}
+    }
 
     /**
      * used internally for type forest construction
@@ -295,7 +293,9 @@ ${
                 i += 1;
             }
         }
-    }
+    }"""
+  } else ""
+}
 
     /**
      * punch a hole into the java type system :)
