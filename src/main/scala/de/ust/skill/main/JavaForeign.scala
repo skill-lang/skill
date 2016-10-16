@@ -13,14 +13,15 @@ import scala.collection.mutable.HashMap
 import de.ust.skill.ir.Type
 import de.ust.skill.jforeign.typing.TypeChecker
 import de.ust.skill.jforeign.ReflectionContext
+import de.ust.skill.generator.jforeign.Main
 
 object JavaForeign {
 
   /** Runner for java-foreign specific stuff. */
-  def run(mappingFile: String, skillTc: TypeContext, foreignSources: List[String]): (TypeContext, ReflectionContext) = {
+  def run(generator: Main, skillTc: TypeContext) : (TypeContext, ReflectionContext) = {
 
     val mappingParser = new MappingParser()
-    val mappingRules = mappingParser.process(new FileReader(mappingFile))
+    val mappingRules = mappingParser.process(new FileReader(generator.getMappingFile()))
     println("****** MAPPING *******")
     println(mappingRules.mkString("\n\n"))
     println("**********************\n\n")
@@ -31,7 +32,7 @@ object JavaForeign {
     println(javaTypeNames.mkString("\n"))
     println("**********************\n\n")
 
-    val mapper = new IRMapper(foreignSources)
+    val mapper = new IRMapper(generator.getForeignSources())
     val (javaTc, rc) = mapper.mapClasses(javaTypeNames)
 
     val typeRules = mappingRules.flatMap { r => r.bind(skillTc, javaTc) }
@@ -40,6 +41,9 @@ object JavaForeign {
     println("***** Type Rules *****")
     println(typeRules.mkString("\n"))
     println("**********************\n\n")
+
+    generator.setForeignTC(javaTc)
+    generator.setReflectionContext(rc)
     (javaTc, rc)
   }
 

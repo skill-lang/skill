@@ -59,10 +59,8 @@ class GenericTests extends FunSuite with BeforeAndAfterAll {
     CommandLine.exit = { s ⇒ throw (new Error(s)) }
 
     val args = languageOptions ++ ArrayBuffer[String]("-L", language, "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", name + "skill")
-    args += "-M"
-    args += mappingFile.getPath
-    args += "-F"
-    args += path.getAbsolutePath
+    args += s"-O@JavaForeign:M=${mappingFile.getPath}"
+    args += s"-O@JavaForeign:F=${path.getAbsolutePath}"
     args += skillFilePath
     args += "testsuites"
     CommandLine.main(args.toArray)

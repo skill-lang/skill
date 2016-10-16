@@ -25,6 +25,7 @@ import scala.collection.mutable.HashMap
 import javassist.NotFoundException
 import de.ust.skill.ir.GroundType
 import de.ust.skill.jforeign.ReflectionContext
+import scala.collection.mutable.ListBuffer
 
 /**
  * The parent class for all output makers.
@@ -34,7 +35,7 @@ import de.ust.skill.jforeign.ReflectionContext
 trait GeneralOutputMaker extends Generator {
 
   // remove special stuff
-  final def setTC(tc : TypeContext) = {
+  final def setForeignTC(tc : TypeContext) = {
     this.types = tc
     val flat = tc.removeTypedefs.removeEnums
     this.IR = flat.getUsertypes.to
@@ -42,6 +43,8 @@ trait GeneralOutputMaker extends Generator {
     // set large specification mode; leave some spare parameters
     largeSpecificationMode = IR.size > 200
   }
+  final def setTC(tc : TypeContext) = {}
+
   var types : TypeContext = _
   var IR : List[UserType] = _
   var interfaces : List[InterfaceType] = _
@@ -135,6 +138,14 @@ trait GeneralOutputMaker extends Generator {
    * the option can be enabled by "-O@java:SuppressWarnings=true"
    */
   protected var suppressWarnings = "";
+
+  protected var mappingFile = "";
+
+  protected val foreignSources : ListBuffer[String] = ListBuffer()
+
+  def getMappingFile(): String = mappingFile
+
+  def getForeignSources(): List[String] = foreignSources.toList
 
   def getterOrFieldAccess(t: Type, f: Field): String = if (t.isInstanceOf[GroundType]) {
     s"get${escaped(f.getName.capital())}"

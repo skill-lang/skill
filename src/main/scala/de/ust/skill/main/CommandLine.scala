@@ -93,7 +93,7 @@ Opitions:
       if (args.contains("--requiresEscaping") || args.contains("--printCFM"))
         parseOptions(args.to, known)
 
-      val (header, packageName, languages, foreignSources, mappingFile, keepSpecificationOrder) = parseOptions(args.view(0, args.length - 2).to, known)
+      val (header, packageName, languages, keepSpecificationOrder) = parseOptions(args.view(0, args.length - 2).to, known)
 
       assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
 
@@ -101,22 +101,17 @@ Opitions:
       // this is either the result of parsing a skill file or an empty type context if "-" is specified
       val tc = if (skillPath != "-") Parser.process(new File(skillPath), keepSpecificationOrder) else new TypeContext
 
-      // process mapping
-      val (jforeignTc, rc) =
-      if (languages contains "javaforeign") {
-        if (mappingFile.isEmpty) error("-M option is missing for javaForeign")
-          JavaForeign.run(mappingFile.get, tc, foreignSources)
-      } else (null, null);
+      // For JavaForeign we run extra stuff
+      val foreignData =
+        languages.get("javaforeign").map { _.asInstanceOf[de.ust.skill.generator.jforeign.Main] }
+          .map { jforeignGen => JavaForeign.run(jforeignGen, tc) }
 
-      // invoke generators
       println(s"Parsed $skillPath -- found ${tc.allTypeNames.size - (new TypeContext().allTypeNames.size)} types.")
       println(s"Generating sources into ${new File(outPath).getAbsolutePath()}")
 
       val failures = HashMap[String, Exception]()
       for ((n, m) ← languages) {
-        if (m.isInstanceOf[de.ust.skill.generator.jforeign.GeneralOutputMaker])
-          m.asInstanceOf[de.ust.skill.generator.jforeign.GeneralOutputMaker].setReflectionContext(rc)
-        m.setTC(if (n == "javaforeign") jforeignTc else tc)
+        m.setTC(tc)
         m.setPackage(packageName)
         m.headerInfo = header
         m.outPath = outPath + "/" + n
@@ -126,16 +121,6 @@ Opitions:
           m.make
           println("-done-")
         } catch { case e : Exception ⇒ println("-FAILED-"); failures(n) = e }
-
-        if (n == "javaforeign") {
-          val f = new File(s"$outPath/$n/${packageName.mkString(".")}.skill")
-          val prettySkillSpec = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
-
-          jforeignTc.removeInterfaces().getUsertypes.foreach { ut => {
-            prettySkillSpec.write(ut.prettyPrint() + "\n")
-            }}
-          prettySkillSpec.close()
-        }
       }
 
       // report failures
@@ -158,8 +143,6 @@ Opitions:
     val header = new HeaderInfo()
     val selectedLanguages = new HashMap[String, Generator]()
     var keepSpecificationOrder = false;
-    val foreignSources = new ListBuffer[String]()
-    var mappingFile: Option[String] = None;
 
     while (args.hasNext) args.next match {
 
@@ -203,9 +186,6 @@ Opitions:
           println(checkEscaping(selectedLanguages.keySet.head, words))
           throw new DoneException;
         }
-      case "-M" ⇒ mappingFile = Some(args.next)
-
-      case "-F" => foreignSources += args.next()
 
       case "--printCFM" ⇒
         if (!args.hasNext)
@@ -226,7 +206,7 @@ Opitions:
     if (selectedLanguages.isEmpty)
       selectedLanguages ++= known
 
-    (header, packageName, selectedLanguages, foreignSources.toList, mappingFile, keepSpecificationOrder)
+    (header, packageName, selectedLanguages, keepSpecificationOrder)
   }
 
   def checkEscaping(language : String, args : Array[String]) : String = {

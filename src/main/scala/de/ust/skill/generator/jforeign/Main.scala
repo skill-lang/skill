@@ -153,6 +153,8 @@ class Main extends FakeMain
     case "revealskillid"          ⇒ revealSkillID = ("true" == value);
     case "srcpath" | "sourcepath" ⇒ sourcePath = if ('"' == value.charAt(0)) value.substring(1, value.length - 1) else value;
     case "suppresswarnings"       ⇒ suppressWarnings = if ("true" == value) "@SuppressWarnings(\"all\")\n" else ""
+    case "m"                      ⇒ mappingFile = value
+    case "f"                      ⇒ foreignSources += value
     case unknown                  ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
