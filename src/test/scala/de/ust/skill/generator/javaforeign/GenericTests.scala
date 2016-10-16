@@ -9,6 +9,7 @@ import java.io.File
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.io.Path.jfile2path
+import scala.sys.process._
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.ConfigMap
@@ -71,6 +72,8 @@ class GenericTests extends FunSuite with BeforeAndAfterAll {
   implicit class Regex(sc: StringContext) {
     def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ ⇒ "x"): _*)
   }
+
+  "ant -f src/test/resources/javaForeign/readwrite/build.xml" !
 
   for (path ← new File("src/test/resources/javaForeign/readwrite").listFiles() if path.isDirectory() && path.getName.endsWith(testOnly)) {
     val baseName: String = path.getName

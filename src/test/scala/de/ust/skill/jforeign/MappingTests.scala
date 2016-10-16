@@ -9,6 +9,7 @@ import java.io.File
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.io.Path.jfile2path
+import scala.sys.process._
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.ConfigMap
@@ -57,6 +58,8 @@ class MappingTests extends FunSuite with BeforeAndAfterAll {
       makeTest(new File("src/test/resources/javaForeign/mapping"), file.getName, file, "src/test/resources/javaForeign/mapping/simple.skill")
     }
   }
+
+  "ant -f src/test/resources/javaForeign/mapping/build.xml" !
 
   for (path ← new File("src/test/resources/javaForeign/mapping/succeed").listFiles()) if (path.isFile()) succeedOn(path)
   for (path ← new File("src/test/resources/javaForeign/mapping/fail").listFiles()) if (path.isFile()) failOn(path)
