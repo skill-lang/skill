@@ -19,29 +19,19 @@ object JavaForeign {
 
   /** Runner for java-foreign specific stuff. */
   def run(generator: Main, skillTc: TypeContext) : (TypeContext, ReflectionContext) = {
-
+    // parse mapping
     val mappingParser = new MappingParser()
     val mappingRules = mappingParser.process(new FileReader(generator.getMappingFile()))
-    println("****** MAPPING *******")
-    println(mappingRules.mkString("\n\n"))
-    println("**********************\n\n")
-
     // get list of java class names that we want to map
     val javaTypeNames = mappingRules.map { _.getJavaTypeName }
-    println("****** Classes *******")
-    println(javaTypeNames.mkString("\n"))
-    println("**********************\n\n")
-
+    // map
     val mapper = new IRMapper(generator.getForeignSources())
     val (javaTc, rc) = mapper.mapClasses(javaTypeNames)
-
+    // bind and typecheck
     val typeRules = mappingRules.flatMap { r => r.bind(skillTc, javaTc) }
     val checker = new TypeChecker
     checker.check(typeRules, skillTc, javaTc, rc)
-    println("***** Type Rules *****")
-    println(typeRules.mkString("\n"))
-    println("**********************\n\n")
-
+    // prepare generator
     generator.setForeignTC(javaTc)
     generator.setReflectionContext(rc)
     (javaTc, rc)
