@@ -143,9 +143,13 @@ trait GeneralOutputMaker extends Generator {
 
   protected val foreignSources : ListBuffer[String] = ListBuffer()
 
+  protected var genSpecPath : Option[String] = None
+
   def getMappingFile(): String = mappingFile
 
   def getForeignSources(): List[String] = foreignSources.toList
+
+  def getGenSpecPath : Option[String] = genSpecPath
 
   def getterOrFieldAccess(t: Type, f: Field): String = if (t.isInstanceOf[GroundType]) {
     s"get${escaped(f.getName.capital())}"

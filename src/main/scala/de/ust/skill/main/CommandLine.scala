@@ -102,9 +102,8 @@ Opitions:
       val tc = if (skillPath != "-") Parser.process(new File(skillPath), keepSpecificationOrder) else new TypeContext
 
       // For JavaForeign we run extra stuff
-      val foreignData =
-        languages.get("javaforeign").map { _.asInstanceOf[de.ust.skill.generator.jforeign.Main] }
-          .map { jforeignGen => JavaForeign.run(jforeignGen, tc) }
+      languages.get("javaforeign").map { _.asInstanceOf[de.ust.skill.generator.jforeign.Main] }
+        .map { jforeignGen => JavaForeign.run(jforeignGen, tc) }
 
       println(s"Parsed $skillPath -- found ${tc.allTypeNames.size - (new TypeContext().allTypeNames.size)} types.")
       println(s"Generating sources into ${new File(outPath).getAbsolutePath()}")

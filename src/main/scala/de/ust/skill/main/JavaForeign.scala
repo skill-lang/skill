@@ -14,11 +14,16 @@ import de.ust.skill.ir.Type
 import de.ust.skill.jforeign.typing.TypeChecker
 import de.ust.skill.jforeign.ReflectionContext
 import de.ust.skill.generator.jforeign.Main
+import java.io.File
+import java.io.PrintWriter
+import java.io.OutputStreamWriter
+import java.io.FileOutputStream
+import scala.collection.JavaConversions._
 
 object JavaForeign {
 
   /** Runner for java-foreign specific stuff. */
-  def run(generator: Main, skillTc: TypeContext) : (TypeContext, ReflectionContext) = {
+  def run(generator: Main, skillTc: TypeContext): Unit = {
     // parse mapping
     val mappingParser = new MappingParser()
     val mappingRules = mappingParser.process(new FileReader(generator.getMappingFile()))
@@ -31,6 +36,15 @@ object JavaForeign {
     val typeRules = mappingRules.flatMap { r => r.bind(skillTc, javaTc) }
     val checker = new TypeChecker
     checker.check(typeRules, skillTc, javaTc, rc)
+    // generate specification file if requested
+    generator.getGenSpecPath.foreach { path =>
+      val f = new File(path)
+      val prettySkillSpec = new PrintWriter(new OutputStreamWriter(new FileOutputStream(f)))
+      javaTc.getUsertypes.foreach { ut =>
+        prettySkillSpec.write(ut.prettyPrint() + "\n")
+      }
+      prettySkillSpec.close()
+    }
     // prepare generator
     generator.setForeignTC(javaTc)
     generator.setReflectionContext(rc)

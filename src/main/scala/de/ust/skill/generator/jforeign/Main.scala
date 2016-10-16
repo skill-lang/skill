@@ -155,6 +155,7 @@ class Main extends FakeMain
     case "suppresswarnings"       ⇒ suppressWarnings = if ("true" == value) "@SuppressWarnings(\"all\")\n" else ""
     case "m"                      ⇒ mappingFile = value
     case "f"                      ⇒ foreignSources += value
+    case "genspec"                ⇒ genSpecPath = Some(value)
     case unknown                  ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
