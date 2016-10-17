@@ -35,7 +35,7 @@ import javassist.NotFoundException
 /**
  * This is a nasty stateful visitor (thanks to the lack of generic arguments to the visit methods).
  */
-class SignatureVisitor(tc: TypeContext, pool: ClassPool, mapInUserContext: CtClass ⇒ Option[Type])
+class SignatureVisitor(tc: TypeContext, classPaths: List[String], mapInUserContext: String ⇒ Option[Type])
     extends sun.reflect.generics.visitor.Visitor[Option[Type]] {
 
   var topLevel: Boolean = true
@@ -43,6 +43,7 @@ class SignatureVisitor(tc: TypeContext, pool: ClassPool, mapInUserContext: CtCla
   var result: Option[Type] = None
 
   val utilPool = new ClassPool(true)
+  classPaths.foreach(utilPool.appendClassPath)
   utilPool.importPackage("java.util.*")
   val listt = utilPool.get("java.util.List")
   val sett = utilPool.get("java.util.Set")
@@ -88,7 +89,7 @@ class SignatureVisitor(tc: TypeContext, pool: ClassPool, mapInUserContext: CtCla
       } catch {
         case e: NotFoundException ⇒ // do nothing!
       }
-      val ta = mapInUserContext(pool.get(sct.getName))
+      val ta = mapInUserContext(sct.getName)
       typeargs += ta.getOrElse(throw new RuntimeException(s"Class not found: ${sct.getName} (used as type argument)"))
     }
   }

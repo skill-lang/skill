@@ -231,6 +231,7 @@ ${
         if (x.${getterOrFieldAccess(t, f)} != null) {
             x.${getterOrFieldAccess(t, f)}.forEach(e -> Strings().add(e));
         }"""
+            else ""
             case ut: UserType ⇒ s"""
         if (x.${getterOrFieldAccess(t, f)} != null) {
             x.${getterOrFieldAccess(t, f)}.forEach(e -> e.selfAdd(this));

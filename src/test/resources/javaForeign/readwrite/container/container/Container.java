@@ -18,10 +18,12 @@ public class Container {
         list = new ArrayList<>();
         map = new TreeMap<>();
         set = new TreeSet<>();
+        userList = new MyStupidList<>();
     }
 
     public ArrayList<Stupid> list;
     public TreeSet<String> set;
     public TreeMap<Integer, Stupid> map;
     public HashMap<Integer, HashMap<Integer, Integer>> maps;
+    public MyStupidList<Long> userList;
 }

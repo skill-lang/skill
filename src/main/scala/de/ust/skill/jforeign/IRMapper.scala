@@ -26,10 +26,10 @@ import de.ust.skill.ir.restriction.AbstractRestriction
  *
  * @author Constantin Weißer
  */
-class IRMapper(classpaths: List[String]) {
+class IRMapper(classPaths: List[String]) {
 
   val pool = new ClassPool(true)
-  classpaths.foreach { pool.appendClassPath }
+  classPaths.foreach(pool.appendClassPath)
 
   val tc = new TypeContext
 
@@ -87,7 +87,7 @@ class IRMapper(classpaths: List[String]) {
     collect(loadType(name))
   } catch {
     case e: NotFoundException ⇒
-      throw new RuntimeException(s"IR-Mapper cannot load class $name: not found in any given class path:\n${classpaths.mkString("\n")}");
+      throw new RuntimeException(s"IR-Mapper cannot load class $name: not found in any given class path:\n${classPaths.mkString("\n")}");
   }
 
   /**
@@ -128,6 +128,8 @@ class IRMapper(classpaths: List[String]) {
     case other: CtClass ⇒ knownTypes.get(other)
   }
 
+  def mapType(s: String): Option[Type] = mapType(pool.get(s))
+
   def translateType(clazz: CtClass): Type = {
     if (mappedTypes contains clazz) mappedTypes(clazz) else {
       // get supertype or null if has only Object as supertype
@@ -155,7 +157,7 @@ class IRMapper(classpaths: List[String]) {
       if (signature != null && javatype != javaObjectType) {
         val sigparser = SignatureParser.make();
         val fieldsig = sigparser.parseClassSig(signature)
-        val sigvisitor = new SignatureVisitor(tc, pool, mapType)
+        val sigvisitor = new SignatureVisitor(tc, classPaths, mapType)
         fieldsig.accept(sigvisitor)
         sigvisitor.getResult()
       } else {
