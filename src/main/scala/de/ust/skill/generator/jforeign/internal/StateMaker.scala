@@ -28,7 +28,7 @@ trait StateMaker extends GeneralOutputMaker {
     def writeAddAllForMaps(baseTypes : List[Type]): String = baseTypes match {
       case head :: Nil ⇒ head match {
           case ut: UserType ⇒ s"v1.selfAdd(this);"
-          case gt: GroundType ⇒ gt.getSkillName.toLowerCase() match {
+          case gt: GroundType ⇒ gt.getSkillName match {
             case "string" ⇒ s"Strings().add(v1);"
             case _ ⇒ "// no need to add ground types"
           }
@@ -37,7 +37,7 @@ trait StateMaker extends GeneralOutputMaker {
       case head :: rest ⇒ s""".forEach( (k${rest.size}, v${rest.size}) -> {
         ${head match {
           case ut: UserType ⇒ s"k${rest.size}.selfAdd(this);"
-          case gt: GroundType ⇒ gt.getSkillName.toLowerCase() match {
+          case gt: GroundType ⇒ gt.getSkillName match {
             case "string" ⇒ s"Strings().add(k${rest.size});"
             case _ ⇒ "// no need to add ground types"
           }
@@ -171,7 +171,7 @@ ${
       var i = -1
       (for (t ← IR)
         yield s"""
-        ${name(t)}s = (${name(t)}Access) poolByName.get("${t.getSkillName.toLowerCase()}");
+        ${name(t)}s = (${name(t)}Access) poolByName.get("${t.getName.getInternalName}");
 """
       ).mkString("")
     }
@@ -188,7 +188,7 @@ ${
       var i = -1
       (for (t ← IR)
         yield s"""
-        ${name(t)}s = (${name(t)}Access) poolByName.get("${t.getSkillName.toLowerCase()}");"""
+        ${name(t)}s = (${name(t)}Access) poolByName.get("${t.getName.getInternalName}");"""
       ).mkString("")
     }
 
@@ -223,11 +223,11 @@ ${
         if (x.${getterOrFieldAccess(t, f)} != null) {
             x.${getterOrFieldAccess(t, f)}.selfAdd(this);
         }"""
-          case gt: GroundType ⇒ if (gt.getSkillName.toLowerCase().equals("string")) s"""
+          case gt: GroundType ⇒ if (gt.getSkillName.equals("string")) s"""
         Strings().add(x.${getterOrFieldAccess(t, f)});"""
           else ""
           case lt: SingleBaseTypeContainer ⇒ lt.getBaseType match {
-            case gt: GroundType ⇒ if (gt.getSkillName.toLowerCase().equals("string")) s"""
+            case gt: GroundType ⇒ if (gt.getSkillName.equals("string")) s"""
         if (x.${getterOrFieldAccess(t, f)} != null) {
             x.${getterOrFieldAccess(t, f)}.forEach(e -> Strings().add(e));
         }"""

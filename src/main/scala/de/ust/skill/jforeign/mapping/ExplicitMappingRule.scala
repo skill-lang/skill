@@ -26,6 +26,8 @@ class ExplicitMappingRule(fromSkillType: String, toJavaType: String, fieldMappin
     if (jtype == null)
       throw new RuntimeException(s"$toJavaType not found, invalid mapping $fromSkillType -> $toJavaType")
 
+    jtype.getName.setInternalName(fromSkillType)
+
     val fieldrules = if (stype.isInstanceOf[UserType] && jtype.isInstanceOf[UserType]) {
       val skilltype = stype.asInstanceOf[UserType];
       val javatype = jtype.asInstanceOf[UserType];

@@ -39,7 +39,7 @@ s"""    // add skillID to ${name(t)}
   } else ""
 }
     // Access to skillName
-    public String ${t.getName}.skillName() { return "${t.getName.getSkillName.toLowerCase()}"; }
+    public String ${t.getName}.skillName() { return "${t.getName.getInternalName()}"; }
 
 ${
       // add default constructor if missing
