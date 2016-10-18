@@ -21,6 +21,7 @@ final public class Name implements Comparable<Name> {
     final private String skillName;
     final private List<String> parts;
     final private String packagePath;
+    private String internalName = "";
 
     public Name(List<String> parts, String skillName) {
         this(parts, skillName, "");
@@ -159,6 +160,15 @@ final public class Name implements Comparable<Name> {
 	public String getFqdn() {
 		if (getPackagePath().length() > 0) return getPackagePath() + "." + skillName;
 		else return skillName;
+	}
+
+	public void setInternalName(String name) {
+		this.internalName = name.toLowerCase();
+	}
+
+	public String getInternalName() {
+		if (this.internalName.length() > 0) return internalName;
+		else return skillName.toLowerCase();
 	}
 
 }
