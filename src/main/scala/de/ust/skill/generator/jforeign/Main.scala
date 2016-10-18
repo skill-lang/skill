@@ -164,6 +164,9 @@ Opitions (Java):
   revealSkillID:    true/false  if set to true, the generated binding will reveal SKilL IDs in the API
   srcPath:          <path>      set a relative path used as source folder in generated code
   suppressWarnings: true/false  add a @SuppressWarnings("all") annotation to generated classes
+  m:                <path>      mapping file which ties SKilL types to Java types
+  f:                <path>      class path from where Java types are looked up. May be specified multiple times.
+  genspec:          <path>      generate SKilL specification from foreign types
 """)
 
   override def customFieldManual = """
