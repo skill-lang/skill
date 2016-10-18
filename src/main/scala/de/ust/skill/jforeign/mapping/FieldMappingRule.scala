@@ -20,6 +20,8 @@ class FieldMappingRule(fromSkillField: String, toJavaField: String) {
     val javaField = javaFieldMap.get(toJavaField).
       getOrElse(throw new RuntimeException(s"Field $toJavaField not found in Java type!"))
 
+    javaField.getName.setInternalName(fromSkillField)
+
     List(new TypeEquation(skillField.getType, javaField.getType),
       new FieldAccessible(javaType, javaField),
       new FieldMappedOnce(skillType, skillField),
