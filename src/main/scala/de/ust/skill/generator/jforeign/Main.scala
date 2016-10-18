@@ -160,7 +160,7 @@ class Main extends FakeMain
   }
 
   override def printHelp : Unit = println("""
-Opitions (Java):
+Opitions (JavaForeign):
   revealSkillID:    true/false  if set to true, the generated binding will reveal SKilL IDs in the API
   srcPath:          <path>      set a relative path used as source folder in generated code
   suppressWarnings: true/false  add a @SuppressWarnings("all") annotation to generated classes
