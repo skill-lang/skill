@@ -320,11 +320,10 @@ package body Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_
        }
      },
            Blocks      => Skill.Internal.Parts.Blocks_P.Empty_Vector,
-           Fixed       => False,
            Cached_Size => 0,
-           Book        => <>,
            Static_Data_Instances => 0,
-           New_Objects => New_Objects_P.Empty_Vector);
+           New_Objects => New_Objects_P.Empty_Vector,
+           others      => <>);
 ${
        if (null == t.getSuperType) """
       This.Base := Convert (This);"""
