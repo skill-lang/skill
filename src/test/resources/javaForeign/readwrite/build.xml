@@ -5,7 +5,6 @@
         <ant antfile="simpleunbound/build.xml" />
         <ant antfile="container/build.xml" />
         <ant antfile="baseContainer/build.xml" />
-        <ant antfile="genericNonsense/build.xml" />
         <ant antfile="inherit/build.xml" />
         <ant antfile="skillIR/build.xml" />
         <ant antfile="abstrakt/build.xml" />
