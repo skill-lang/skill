@@ -1,7 +1,0 @@
-A {
- v64[4] a;
- string[] b;
- map<i8, i16> c;
- set<i32> d;
- list<i64> e;
-}
