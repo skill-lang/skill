@@ -98,13 +98,18 @@ class IRMapper(classPaths: List[String]) {
     // collect parent types first
     if (clazz.getSuperclass != javaObjectType) collect(clazz.getSuperclass)
 
+    if (clazz.isInterface()) {
+      println(s"warning: interfaces are currently not supported, ignoring ${clazz.getName}")
+      return
+    }
+
     val restrictions: List[Restriction] =
       if ((clazz.getModifiers & Modifier.ABSTRACT) == Modifier.ABSTRACT) {
         List(new AbstractRestriction)
       } else List()
 
     val ntype = UserType.newDeclaration(tc, name(clazz.getPackageName, clazz.getSimpleName), Comment.NoComment.get,
-        restrictions.asJava, List().asJava)
+      restrictions.asJava, List().asJava)
     rc.add(ntype, clazz)
     knownTypes += (clazz → ntype)
     orderedTypes += ntype
@@ -150,24 +155,25 @@ class IRMapper(classPaths: List[String]) {
   /**
    * Returns the IR fields for a given class.
    */
-  def mapFields(clazz: CtClass): List[Option[Field]] = clazz.getDeclaredFields.map { field ⇒
-    val javatype = field.getType
-    mapType(javatype).orElse({
-      val signature = field.getGenericSignature
-      if (signature != null && javatype != javaObjectType) {
-        val sigparser = SignatureParser.make();
-        val fieldsig = sigparser.parseClassSig(signature)
-        val sigvisitor = new SignatureVisitor(tc, classPaths, mapType)
-        fieldsig.accept(sigvisitor)
-        sigvisitor.getResult()
-      } else {
-        None
+  def mapFields(clazz: CtClass): List[Option[Field]] =
+    clazz.getDeclaredFields.filterNot { f ⇒ ((f.getModifiers & Modifier.FINAL) == Modifier.FINAL) }.map { field ⇒
+      val javatype = field.getType
+      mapType(javatype).orElse({
+        val signature = field.getGenericSignature
+        if (signature != null && javatype != javaObjectType) {
+          val sigparser = SignatureParser.make();
+          val fieldsig = sigparser.parseClassSig(signature)
+          val sigvisitor = new SignatureVisitor(tc, classPaths, mapType)
+          fieldsig.accept(sigvisitor)
+          sigvisitor.getResult()
+        } else {
+          None
+        }
+      }).map { t =>
+        val f: Field = new Field(t, new Name(List(field.getName).asJava, field.getName),
+          false, Comment.NoComment.get, new java.util.ArrayList[Restriction], new java.util.ArrayList[Hint])
+        rc.add(f, field.getType)
+        f
       }
-    }).map { t =>
-      val f: Field = new Field(t, new Name(List(field.getName).asJava, field.getName),
-        false, Comment.NoComment.get, new java.util.ArrayList[Restriction], new java.util.ArrayList[Hint])
-      rc.add(f, field.getType)
-      f
-    }
-  }.toList
+    }.toList
 }
