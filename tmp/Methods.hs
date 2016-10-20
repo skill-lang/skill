@@ -7,7 +7,7 @@ import Data.Word
 import Data.Bits as B
 import Data.List as L
 import Data.Binary.Get
-import D_Types
+import Types
 import Data.Int
 
 select :: Bool -> a -> a -> a
@@ -50,9 +50,6 @@ boolToInt False = 0
 
 printState :: ([String], [String], [TypeDesc]) -> IO ()
 printState (strings, _, tDs) = mapM_ printTypeDesc tDs >> eL 2
-
-printState' :: ([String], [String], [TypeDesc]) -> IO ()
-printState' (strings, _, tDs) = mapM_ print strings >> putStrLn "%%%%%%%%" >> mapM_ printTypeDesc tDs >> eL 2
 
 printTypeDesc :: TypeDesc -> IO ()
 printTypeDesc (TD (id, name, fieldDescs, subtypes))

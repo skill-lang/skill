@@ -1,5 +1,7 @@
 package de.ust.skill.generator.haskell;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,8 +9,14 @@ import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 import de.ust.skill.ir.Field;
+import de.ust.skill.ir.Name;
+import de.ust.skill.ir.ReferenceType;
 import de.ust.skill.ir.UserType;
+import de.ust.skill.ir.View;
 import static java.nio.file.StandardCopyOption.*;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 
 public class CodeGenerator {
 
@@ -16,6 +24,9 @@ public class CodeGenerator {
 	private final GeneralOutputMaker	main;
 	private String						inputPath;
 	private String						outputPath;
+	private boolean flag;
+	private boolean xx = true;
+	//boolean pointerFlag
 
 	public CodeGenerator(List<UserType> IR, GeneralOutputMaker main) {
 		this.IR = IR;
@@ -27,141 +38,175 @@ public class CodeGenerator {
 		System.out.println("\n\n");
 
 
-		StringBuilder b = new StringBuilder();
 
-		for (UserType userType : IR) {
-			declareType(userType, b);
-		}
-		b.append("\n\n");
+
 		// typeDeclarations.print(b);
 		// typeDeclarations.close();
 
-		System.out.print(b);
+		PrintWriter file = null;
 
-		// for (UserType userType : IR) {
-		// String skillName = userType.getName().capital().toString();
-		//
-		// PrintWriter file = main.open(skillName + "Access.hs");
-		//
-		// StringBuilder s = new StringBuilder()
-		// .append("module ").append(skillName).append("Access where\n")
-		// .append("\nimport Deserialize")
-		// .append("\nimport Types")
-		// .append("\nimport Methods")
-		// .append("\nimport Data.ByteString.Lazy.Char8 as C")
-		// .append("\nimport Data.List as L")
-		// .append("\nimport Data.Binary.Get")
-		// .append("\nimport Data.Int")
-		// .append("\nimport ReadFields")
-		// .append("\nimport Data.IORef")
-		// .append("\nimport System.IO.Unsafe")
-		// .append("\n")
-		// .append("\nfilePath = \"").append(binaryPath).append("\"")
-		// .append("\n");
-		//
-		//
-		// for (Field field : userType.getFields()) {
-		// String n = field.getName().toString();
-		// String nC = field.getName().capital().toString();
-		// String type = toHaskell(field.getType().toString());
-		// String f0 = "get" + nC + 's';
-		// String f1 = "read" + nC + "sInType";
-		// String f2 = n + "Convert";
-		//
-		// s
-		// .append("\n")
-		// .append("\n").append(f0).append(" :: [").append(type).append(']')
-		// .append("\n").append(f0).append(" = go $ ((\\(a,b,c) -> b) . unsafePerformIO . readIORef) ordered")
-		// .append("\n where go ((name, count, _, _, fieldDescriptors) : rest)")
-		// .append("\n | name == \"").append(userType.getName().toString()).append("\" = ").append(f1).append("
-		// fieldDescriptors count")
-		// .append("\n | otherwise = go rest")
-		// .append("\n go _ = error \"Did not find field in the .sf file\"")
-		// .append("\n")
-		// .append("\n")
-		// .append("\n").append(f1).append(" :: [FieldDesc] -> Int -> [").append(type).append(']')
-		// .append("\n").append(f1).append(" ((_, Just name, Just getter, data') : rest) count")
-		// .append("\n | name == \"").append(n).append("\" = L.map ").append(f2).append(" $ runGet (repeatGet getter
-		// count) data'")
-		// .append("\n | otherwise = ").append(f1).append(" rest count")
-		// .append("\n")
-		// .append("\n").append(f2).append(" :: Something -> ").append(type)
-		// .append("\n").append(f2).append(" (").append(somethingDataConstructor(field)).append(" value) = value")
-		// .append("\n").append(f2).append(" _ = error \"Error in Interface: Unexpected Type\"")
-		// .append("\n");
-		// }
+		StringBuilder s = new StringBuilder()
+				.append("module Types where")
+				.append('\n')
+				.append("\nimport Data.Int")
+				.append("\nimport D_Types")
+				.append('\n');
 
-		// file.print(s);
-		// file.close();
-		// }
-		// for (UserType t : IR) {
-		// file.println(t.getName().capital());
-		// // file.println(main.getPath());
-		//
-		// for (Field f : t.getFields()) {
-		// file.printf(" - %s %s\n", f.getType().toString(), f.getName().camel());
-		// file.print(s.toString());
-		// }
-		// }
-		// copyStaticFiles();
-
-		// System.out.println(s);
-	}
-
-	private void declareType(UserType t, StringBuilder s) {
-
-		System.out.println(">>>> -- " + t.getName().capital() + " -- <<<<");
-		List<UserType> allSubTypes = getTransitiveSubTypes("", t);
-
-		allSubTypes.add(0, t);
-
-		s.append("\ndata ").append(t.getName().capital()).append(" = ").append(t.getName().capital()).append("' (");
-
-
-		for (UserType subType : allSubTypes) {
-			s.append("I_").append(subType.getName().capital()).append(" | ");
-		}
-
-		s.delete(s.length() - 2, s.length()).append(")").append("\ntype I_").append(t.getName().capital()).append(" = (");
-
-		for (Field f : t.getFields()) {
-			if (true) { // if it's a pointer @TODO
-				// s.append("Maybe ");
+		for (UserType userType : IR) {
+			if (userType.getSuperType() == null) {
+				declareType(userType, s, new StringBuilder());
 			}
-			s.append(toHaskell(f.getType().toString())).append(", ");
 		}
 
-		s.delete(s.length() - 2, s.length()).append(")");
+		s.append('\n');
 
+		for (UserType userType : IR) {
+			for (Field field : userType.getFields()) {
+				String methodName = "c'" + userType.getName().capital() + '_' + field.getName().capital();
+				String type = getHaskellType(field);
 
-	}
-
-
-
-
-	private List<UserType> getTransitiveSubTypes(String s, UserType t) {
-		List<UserType> subTypes = t.getSubTypes();
-
-
-		try {
-			for (UserType subType : subTypes) {
-				System.out.println(s + subType.getName().capital());
-
-				List<UserType> ts = getTransitiveSubTypes(s + ">", subType);
-
-				for (int i = 0; i < ts.size(); i++) {
-					UserType sst = ts.get(i);
-					if(!subTypes.contains(sst) && t != sst) {
-						subTypes.add(sst);
-					}
+				if (!flag) {
+					s.append("\n").append(methodName).append(" (").append(somethingDataConstructor(field)).append(" value) = value");
 				}
 			}
-
-			return subTypes;
-		} catch (Exception e) {
-			System.out.println("EXCEPTION :" + t.getName().capital() + "-- (" + subTypes.size() + ")");
-			return subTypes;
 		}
+		//		System.out.println(s);
+
+		//		for (UserType userType : IR) {
+		//			try {
+		//				String moduleName = "Access" + escape(userType.getName().capital().toString());
+		//
+		//				String path = "C:/output/" + moduleName + ".hs";
+		//				System.out.println(path);
+		//
+		//				//			PrintWriter file = main.open(path);
+		//				//			file = new PrintWriter(new BufferedWriter(new FileWriter("C:/output/")));
+		//
+		//				s
+		//				.append("module ").append(moduleName).append(" where\n")
+		//				.append("\nimport Types")
+		//				.append("\nimport Deserialize")
+		//				.append("\nimport D_Types")
+		//				.append("\nimport Methods")
+		//				.append("\nimport Data.ByteString.Lazy.Char8 as C")
+		//				.append("\nimport Data.List as L")
+		//				.append("\nimport Data.Binary.Get")
+		//				.append("\nimport Data.Int")
+		//				.append("\nimport ReadFields")
+		//				.append("\nimport Data.IORef")
+		//				.append("\nimport System.IO.Unsafe")
+		//				.append("\n")
+		//				//				.append("\nfilePath = \"INSERT FILEPATH\"")
+		//				.append("\nfilePath = \"C:/input/Sen.sf\"")
+		//				.append("\n");
+		//
+		//
+		//				for (Field field : userType.getFields()) {
+		//					String n = field.getName().toString();
+		//					String nC = field.getName().capital().toString();
+		//					String type = getHaskellType(field);
+		//					String f0 = "get" + nC + 's';
+		//					String f1 = "read" + nC + "sInType";
+		//					String f2 = n + "Convert";
+		//
+		//					//					readAsInType :: [FieldDescTest] -> [String]
+		//					//							readAsInType ((name, data', _) : rest)
+		//					//							 | name == "a" = L.map aConvert data'
+		//					//							 | otherwise = readAsInType rest
+		//
+		//					s
+		//					.append("\n")
+		//					.append("\n").append(f0).append(" :: [").append(type).append(']')
+		//					.append("\n").append(f0).append(" = go $ ((\\(a,b,c) -> c) . unsafePerformIO) (readState filePath)")
+		//					.append("\n where go (TD (id, name, fDs, subTypes) : rest)")
+		//					.append("\n        | name == \"").append(userType.getName().toString()).append("\" = ").append(f1).append(" fDs")
+		//					.append("\n        | not $ L.null (go subTypes) = go subTypes")
+		//					.append("\n        | otherwise = go rest")
+		//					.append("\n       go _ = []")
+		//					.append("\n")
+		//					.append("\n")
+		//					.append("\n").append(f1).append(" :: [FieldDescTest] -> [").append(type).append(']')
+		//					.append("\n").append(f1).append(" ((name, data', _) : rest)")
+		//					.append("\n | name == \"").append(n).append("\" = L.map ").append(f2).append(" data'")
+		//					.append("\n | otherwise = ").append(f1).append(" rest")
+		//					.append("\n");
+		//
+		//					//	file.print(s);
+		//					//	System.out.println(s);
+		//				}
+		//			} catch (Exception e) {
+		//				System.out.println("EXCEPTION!");
+		//				e.printStackTrace();
+		//			} finally {
+		//
+		//				//		file.close();
+		//			}
+		//		for (UserType t : IR) {
+		//			file.println(t.getName().capital());
+		//			// file.println(main.getPath());
+		//
+		//			for (Field f : t.getFields()) {
+		//				file.printf(" - %s %s\n", f.getType().toString(), f.getName().camel());
+		//				file.print(s.toString());
+		//			}
+		//		}
+
+		// System.out.println(s);
+		//		}
+		Clipboard c = Toolkit.getDefaultToolkit().getSystemClipboard();
+		c.setContents(new StringSelection(s.toString()), null);
+		//		copyStaticFiles();
+	}
+
+	private String escape(String string) {
+		return string;
+	}
+
+	private String declareType(UserType t, StringBuilder s, StringBuilder superFields) {
+		String n = t.getName().capital();
+
+		s.append("\ndata I_").append(n).append(" = ").append(n).append('\'').append(n).append(' ').append(n);
+
+		for (UserType subType : getTransitiveSubTypes(t)) {
+			s.append(" | ").append(n).append('\'').append(subType.getName().capital()).append(' ').append(subType.getName().capital());
+		}
+
+		//Result: data I_A = A'A A | A'BA BA | A'CA CA | A'DB DB | A'ED ED
+
+
+		s.append("\ntype ").append(t.getName().capital()).append(" = (");
+
+		StringBuilder newFields = new StringBuilder();
+
+		for (Field f : t.getFields()) {
+			newFields.append(getHaskellType(f)).append(", ");
+		}
+
+		StringBuilder fields = new StringBuilder(superFields).append(newFields);
+
+		s.append(fields.substring(0, fields.length()-2)).append(')');
+
+		for (UserType subType : t.getSubTypes()) {
+			newFields.append(declareType(subType, s, fields));
+		}
+		return newFields.toString();
+	}
+
+
+
+
+	private List<UserType> getTransitiveSubTypes(UserType type) {
+		//requires a copy, not a reference, otherwise it has side effects
+		List<UserType> subTypes = new LinkedList<>();
+		subTypes.addAll(type.getSubTypes());
+
+		List<UserType> justTransitiveSubTypes = new LinkedList<>();
+
+		for (UserType subType : subTypes) {
+			justTransitiveSubTypes.addAll(getTransitiveSubTypes(subType));
+		}
+		subTypes.addAll(justTransitiveSubTypes);
+		return subTypes;
 	}
 
 	private String somethingDataConstructor(Field field) {
@@ -171,13 +216,13 @@ public class CodeGenerator {
 			case "string":
 				return "GString";
 			case "i8":
-				return "GWord8";
+				return "GInt8";
 			case "i16":
-				return "GWord16";
+				return "GInt16";
 			case "i32":
-				return "GWord32";
+				return "GInt32";
 			case "i64":
-				return "GWord64";
+				return "GInt64";
 			case "v64":
 				return "GV64";
 			case "f32":
@@ -185,38 +230,55 @@ public class CodeGenerator {
 			case "f64":
 				return "GDouble";
 			default:
-				return "qwerty-Error";
+				return field.getType().toString();
 		}
 	}
 
-	private String toHaskell(String typeName) {
-		System.out.println(typeName);
+	private String getHaskellType(Field f) {
+		flag = false;
 
-		int l = typeName.length();
 
-		if (typeName.startsWith("list")) {
-			return '[' + baseToHaskell(typeName.substring(5, l - 1)) + ']';
-		} else if (typeName.startsWith("set")) {
-			return '[' + baseToHaskell(typeName.substring(4, l - 1)) + ']';
-		} else if (typeName.startsWith("map")) {
-			return "(M.map " + baseToHaskell(substring(typeName, 4, ',')) + ' '
+		Name n = f.getType().getName();
+
+		String lowercase = n.lower();
+		String typeName = n.capital();
+
+		String prefix = "";
+
+		if (f.getType() instanceof ReferenceType && !f.getType().getName().getSkillName().equals("string")) {
+			prefix = "Maybe ";
+			flag = true;
+		}
+
+		//		System.out.println(lowercase);
+
+		int l = lowercase.length();
+
+		if (lowercase.startsWith("list")) {
+			return '[' + prefix + baseToHaskell(typeName.substring(5, l - 1)) + ']';
+		} else if (lowercase.startsWith("set")) {
+			return '[' + prefix + baseToHaskell(typeName.substring(4, l - 1)) + ']';
+		} else if (lowercase.startsWith("map")) {
+			return "(M.map (" + baseToHaskell(substring(typeName, 4, ',')) + ' '
 					+ baseToHaskell(substring(typeName.substring(0, l - 1), ",")) + ")";
-		} else if (typeName.endsWith("[]")) {
-			return '[' + baseToHaskell(typeName.substring(0, l - 2)) + ']';
-		} else if (typeName.endsWith("]")) {
-			return '[' + baseToHaskell(typeName.substring(0, l - 3)) + ']';
+		} else if (lowercase.endsWith("[]")) {
+			return '[' + prefix + baseToHaskell(typeName.substring(0, l - 2)) + ']';
+		} else if (lowercase.endsWith("]")) {
+			return '[' + prefix + baseToHaskell(typeName.substring(0, l - 3)) + ']';
 		} else {
-			return baseToHaskell(typeName);
+			return prefix + baseToHaskell(typeName);
 		}
 	}
 
 	private String baseToHaskell(String string) {
-		System.out.println("-----\n" + string + "\n-----\n");
-		switch (string) {
+		//		System.out.println("-----\n" + string + "\n-----\n");
+		String lowercase = string.toLowerCase();
+
+		switch (lowercase) {
 			case "bool":
 				return "Bool";
 			case "string":
-				return "Int";
+				return "String";
 			case "i8":
 				return "Int8";
 			case "i16":
@@ -234,14 +296,17 @@ public class CodeGenerator {
 			case "annotation":
 				return "Pointer";
 			default:
-				return "qwerty-Error";
+				return string;
 		}
 	}
 
 	public void copyStaticFiles() {
 		// set filepaths here
-		inputPath = System.getProperty("user.dir") + "/src/main/resources/haskell/";
-		outputPath = System.getProperty("user.dir") + "/tmp/";
+		//		inputPath = System.getProperty("user.dir") + "/src/main/resources/haskell/";
+		//		outputPath = System.getProperty("user.dir") + "/tmp/";
+
+		inputPath = "C:/input/";
+		outputPath = "C:/output/";
 		// I can't make this field global ... ??
 		String[] fileNames = {"Deserialize.hs", "Methods.hs", "ReadFields.hs", "Types.hs"};
 

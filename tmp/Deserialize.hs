@@ -4,14 +4,14 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.List as L
 import System.IO
 import System.IO.Unsafe
-import Data.IORef as IOREF
+import Data.IORef
 import Data.Int
 import Data.Binary.Get
 import Data.Char
 import Data.Word
 import ReadFields
 import Methods
-import D_Types
+import Types
 
 ----------------------------------------------------------------------------------------------------------------------
 -- This class processes an .sf file stores its contents internally. The method call is >> initialize filePath <<    --
@@ -35,12 +35,6 @@ type FD_v1 = (Int, Maybe String, Maybe (Get Something), Int) --fieldID, name, ge
 type FD_v2 = (Int, Maybe String, Maybe (Get Something), FieldData) -- fieldID, maybe name, maybe getter, fieldData
 type PartialState = ([String], [String], [TD_v2]) -- strings, uTs, tDs_v2
 type State        = ([String], [String], [TypeDesc]) -- strings, uTs, tDs
-
-createState :: String -> IO State
-createState filePath = initialize filePath >> readIORef state
-
-readState :: State
-readState = unsafePerformIO $ readIORef state
 
 {-# NOINLINE state #-}
 state :: IORef State
@@ -116,7 +110,7 @@ r'fDsOfType strings latestOffset allFieldIDsOfCurrentType fieldCount
   = do fieldID                    <- readV64
        let q2                     = fieldID `notElem` allFieldIDsOfCurrentType
        name                       <- maybeRead q2 (readRefString strings)
-       getter                     <- maybeRead q2 (parseTypeDescription strings)
+       getter                     <- maybeRead q2 parseTypeDescription
        _                          <- maybeSkipFieldRestrictions q2 getter
        offset                     <- readV64
        (r_fDsOfType, finalOffset) <- r'fDsOfType strings offset allFieldIDsOfCurrentType (fieldCount - 1)
@@ -144,8 +138,8 @@ b'fDs_v2 :: [FD_v1] -> [FieldData] -> [FD_v2]
 b'fDs_v2 [] [] = []
 b'fDs_v2 ((e1,e2,e3, _) : r_fDs_v1) (data' : r_data') = (e1,e2,e3, data') : b'fDs_v2 r_fDs_v1 r_data'
 
-data TD_v5    = TD5 (Int, String, [FieldDescTest], [TD_v5], [(Int, Int)], Int, Int) -- id, name, fieldDescs, subtypes, snips, firstIndex, baseFirstIndex
-type TD_v4    = (Int, String, Int, Int, Maybe Int, [FieldDescTest]) -- id, name, count, superID, maybe lbpo, fieldDescs
+data TD_v5    = TD5 (Int, String, [FieldDescTest], [TD_v5], [(Int, Int)], Int, Int) -- id, name, fieldDescs, maybe subtypes, snips, firstIndex, baseFirstIndex
+type TD_v4    = (Int, String, Int, Int, Maybe Int, [FieldDescTest]) -- id, name, count superID, maybe lbpo, fieldDescs
 type TD_v3    = (Int, String, Int, Int, Maybe Int, [FD_v2]) -- id, name, count, superID, maybe lbpo, fD_v2s
 type TD_v2    = (Maybe Int, String, Int, Maybe Int, Maybe Int, [FD_v2]) -- id, name, count, maybe superID, maybe lbpo, fieldDescs
 
@@ -179,26 +173,22 @@ triggerGetters = handleTypeDescs . filterNonEmpty
         handleTypeDescs = map    (\(e1, e2, count, e4, e5, fDs) -> (e1, e2, count, e4, e5, map (go count) fDs))
              where go count (_, Just name, Just getter, data') = (name, runGet (repeatGet count getter) data', data')
 
--- turns the linear into a hierarchical structure, where subtypes are stored in attributes of super types
 createHierarchy :: [TD_v4] -> [TypeDesc]
 createHierarchy typeDescs = map convertTD_v5 $ go ([], typeDescs)
    where go :: ([TD_v5], [TD_v4]) -> [TD_v5]
-         go (f_tDs, [])                                       = f_tDs
-         go (f_tDs, tD : r_tDs)                               = go (f_tDs `integrate` tD, r_tDs)
-         convertTD_v5 (TD5 (id, name, e3, children, _, _, _)) = TD (id, name, e3, map convertTD_v5 children)
+         go (f_tDs, []) = f_tDs
+         go (f_tDs, tD : r_tDs) = go (f_tDs `integrate` tD, r_tDs)
 
--- takes a list of processed, hierarchically ordered type descs and the to-process next one and integrates it
--- TD_v4 = (id, name, count, superID, maybe lbpo, fieldDescs)
--- TD_v5 = (id, name, fieldDescs, subtypes, snips, firstIndex, baseFirstIndex)
+-- takes a list of processed, hierarchically ordered type descs and the to-process next one and integrates it.
 integrate :: [TD_v5] -> TD_v4 -> [TD_v5]
-integrate f_tDs (id, e2, _, -1, _, e6) = f_tDs ++ [TD5 (id, e2, e6, [], [], 1, 1)] --superID == -1 => add it on top level
-integrate f_tDs tD                     = (\(Just a) -> a) (f_tDs `go` tD) -- superID > -1 => integrate it, no-failure mode
+integrate f_tDs (id, e2, _, -1, _, e6) = f_tDs ++ [TD5 (id, e2, e6, [], [], 1, 1)]
+integrate f_tDs tD                     = (\(Just a) -> a) (f_tDs `go` tD)
  where go :: [TD_v5] -> TD_v4 -> Maybe [TD_v5]
        go [] _        = Nothing -- right master not around -> FAILURE;
        go (TD5 (id, a2, a3, s_tDs, a5, a6, a7) : r_f_tDs) (id', e2, e3, supID, e5, e6)
-        | id == supID = Just ((TD5 (id, a2, a3, s_tDs, a5, a6, a7) `enslave` (id', e2, e3, supID, e5, e6)) : r_f_tDs) -- first tD is master -> enslave
+        | id == supID = Just (TD5 (id, a2, a3, s_tDs, a5, a6, a7) `enslave` (id', e2, e3, supID, e5, e6) : r_f_tDs) -- first tD is master -> enslave
         | otherwise   = case s_tDs `go` (id', e2, e3, supID, e5, e6) -- first is not master -> try to give it to one of first's slaves
-            of Just s_tDs' -> Just (TD5 (id, a2, a3, s_tDs', a5,a6,a7) : r_f_tDs) -- success -> return tD with updated slaves
+            of Just s_tDs' -> Just $ TD5 (id, a2, a3, s_tDs', a5,a6,a7) : r_f_tDs -- success -> return tD with updated slaves
                Nothing     -> Just $ TD5 (id, a2, a3, s_tDs, a5,a6,a7) : (r_f_tDs `integrate` (id,e2,e3, supID, e5,e6)) -- failure -> try next tD
 
 
@@ -217,5 +207,7 @@ adjustOffsets (offset, count) snips = go (offset, count) $ filter (\(offset',_) 
 
 splitFieldDescs :: (Int, Int) -> FieldDescTest -> (FieldDescTest, FieldDescTest)
 splitFieldDescs (a,b) (name, data', rawData) = ((name, inner, rawData), (name, outer, rawData))
-  --where (inner, outer) = (subList a b data', take a data' ++ drop (a+b) data')
-  where (outer, inner) = (subList a b data', take a data' ++ drop (a+b) data')
+  where (inner, outer) = (subList a b data', take a data' ++ drop (a+b) data')
+
+convertTD_v5 :: TD_v5 -> TypeDesc
+convertTD_v5 (TD5 (id, name, e3, children, _, _, _)) = TD (id, name, e3, map convertTD_v5 children)

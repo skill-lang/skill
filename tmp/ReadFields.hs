@@ -11,7 +11,7 @@ import Data.Char
 import Data.Int
 import Data.Word
 import Methods
-import D_Types
+import Types
 
 readBool :: Get Bool
 readBool = (/= 0) `fmap` getWord8
@@ -23,11 +23,8 @@ readFixedLengthArray f i = f >>= \first -> readFixedLengthArray f (i-1) >>= \res
 readVariableLengthArray :: Get a -> Get [a]
 readVariableLengthArray f = readV64 >>= readFixedLengthArray f
 
---readString :: [S.ByteString] -> Get String
---readString strings = readV64 >>= \n -> if n == 0 then return "" else return $ C.unpack $ strings !! (n - 1)
-
-readString :: [String] -> Get String
-readString strings = (\i -> strings !! i) `fmap` readIndex
+readString :: [S.ByteString] -> Get String
+readString strings = readV64 >>= \n -> if n == 0 then return "" else return $ C.unpack $ strings !! (n - 1)
 
 --mA :: Get (Get Word8)
 --mA = return (id `fmap` getWord8)
@@ -35,35 +32,34 @@ readString strings = (\i -> strings !! i) `fmap` readIndex
 --mB :: Get (Get Word8)
 --mB = return `fmap` getWord8
 
--- s == strings
-parseTypeDescription :: [String] -> Get (Get Something)
-parseTypeDescription s = readV64 >>= go s
-   where go _ 0  = (return . CInt8)  `fmap` getInt8
-         go _ 1  = (return . CInt16) `fmap` getInt16be
-         go _ 2  = (return . CInt32) `fmap` getInt32be
-         go _ 3  = (return . CInt64) `fmap` getInt64be
-         go _ 4  = (return . CV64)   `fmap` readV64Signed
-         go _ 5  = return (GPointer `fmap` readV64Pair)  -- Note: the syntax of 0-4 and 5-14 are \not\ interchangeable
-         go _ 6  = return (GBool    `fmap` readBool)     -- 0-4 reads the value directly
-         go _ 7  = return (GInt8    `fmap` getInt8)      -- 5-14 does not until the inner Get is run
-         go _ 8  = return (GInt16   `fmap` getInt16be)   -- see NestedGetExample for an illustration
-         go _ 9  = return (GInt32   `fmap` getInt32be)
-         go _ 10 = return (GInt64   `fmap` getInt64be)
-         go _ 11 = return (GV64     `fmap` readV64Signed)
-         go _ 12 = return (GFloat   `fmap` readFloat)
-         go _ 13 = return (GDouble  `fmap` readDouble)
-         go s 14 = return (GString  `fmap` readString s)
-         go s 15 = do n         <- readV64
-                      action    <- parseTypeDescription s
-                      let getter = remodel $ L.replicate n action
-                      return (GFArray `fmap` getter)
-         go s 17 = (\g        -> readV64 >>= \i -> GVArray `fmap` repeatGet i g) `fmap` parseTypeDescription s
-         go s 18 = (\g        -> readV64 >>= \i -> GList   `fmap` repeatGet i g) `fmap` parseTypeDescription s
-         go s 19 = (\g        -> readV64 >>= \i -> GSet    `fmap` repeatGet i g) `fmap` parseTypeDescription s
-         go s 20 = (\(g1, g2) -> readV64 >>= \i -> GMap    `fmap` repeatGet i (remodel' (g1, g2))) `fmap` doubleGetter
-                        where doubleGetter = remodel' (parseTypeDescription s, parseTypeDescription s)
-         go _ n  = return (GUserType (n - 32) `fmap` readIndex)
 
+parseTypeDescription :: Get (Get Something)
+parseTypeDescription = readV64 >>= go
+   where go 0  = (return . CInt8)  `fmap` getInt8
+         go 1  = (return . CInt16) `fmap` getInt16be
+         go 2  = (return . CInt32) `fmap` getInt32be
+         go 3  = (return . CInt64) `fmap` getInt64be
+         go 4  = (return . CV64)   `fmap` readV64Signed
+         go 5  = return (GPointer `fmap` readV64Pair)  -- Note: the syntax of 0-4 and 5-14 are \not\ interchangeable
+         go 6  = return (GBool    `fmap` readBool)     -- 0-4 reads the value directly
+         go 7  = return (GInt8    `fmap` getInt8)      -- 5-14 does not until the inner Get is run
+         go 8  = return (GInt16   `fmap` getInt16be)   -- see NestedGetExample for an illustration
+         go 9  = return (GInt32   `fmap` getInt32be)
+         go 10 = return (GInt64   `fmap` getInt64be)
+         go 11 = return (GV64     `fmap` readV64Signed)
+         go 12 = return (GFloat   `fmap` readFloat)
+         go 13 = return (GDouble  `fmap` readDouble)
+         go 14 = return (GString  `fmap` readV64)
+         go 15 = do n         <- readV64
+                    action    <- parseTypeDescription
+                    let getter = remodel $ L.replicate n action
+                    return (GFArray `fmap` getter)
+         go 17 = (\g        -> readV64 >>= \i -> GVArray `fmap` repeatGet i g) `fmap` parseTypeDescription
+         go 18 = (\g        -> readV64 >>= \i -> GList   `fmap` repeatGet i g) `fmap` parseTypeDescription
+         go 19 = (\g        -> readV64 >>= \i -> GSet    `fmap` repeatGet i g) `fmap` parseTypeDescription
+         go 20 = (\(g1, g2) -> readV64 >>= \i -> GMap    `fmap` repeatGet i (remodel' (g1, g2))) `fmap` doubleGetter
+                        where doubleGetter = remodel' (parseTypeDescription, parseTypeDescription)
+         go n  = return (GUserType (n - 32) `fmap` readV64)
 
 readFloat :: Get Float
 readFloat = coerceToFloat `fmap` getWord32be
@@ -145,7 +141,7 @@ skipFieldRestriction :: Int -> Get Something -> Get ()
 skipFieldRestriction 1 getter = skipGetSomething getter
 skipFieldRestriction 3 getter = skipGetSomething getter >> skipGetSomething getter
 skipFieldRestriction 5 getter = void readV64
-skipFieldRestriction 9 getter = void $ readVariableLengthArray (parseTypeDescription [])
+skipFieldRestriction 9 getter = void $ readVariableLengthArray parseTypeDescription
 skipFieldRestriction _ _      = return ()
 
 

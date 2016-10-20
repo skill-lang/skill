@@ -13,10 +13,16 @@ import Data.List
 -- Tests will only be generated for files ending on ".sf"                                                       --
 ------------------------------------------------------------------------------------------------------------------
 
-generate sfPath outputPath = do fileNames <- getDirectoryContents sfPath
-                                let fileNames' = filter (\a -> (take 3 . reverse) a == "fs.") fileNames
-                                foldr ((>>) . createTestFile sfPath outputPath) (return ()) fileNames'
-                                createHeadProcedure sfPath outputPath fileNames'
+gg = generate "C:/input/" "C:/output/"
+
+generate p1 p2 = go (ensureSlash p1) (ensureSlash p2)
+  where go sfPath outputPath = do fileNames <- getDirectoryContents sfPath
+                                  let fileNames' = filter (\a -> (take 3 . reverse) a == "fs.") fileNames
+                                  foldr ((>>) . createTestFile sfPath outputPath) (return ()) fileNames'
+                                  createHeadProcedure sfPath outputPath fileNames'
+        ensureSlash string
+                      | last string == '/' || last string == '\\' = string
+                      | otherwise                                 = string ++ ['/']
 
 createTestFile :: FilePath -> FilePath -> String -> IO ()
 createTestFile sfPath outputPath sfName

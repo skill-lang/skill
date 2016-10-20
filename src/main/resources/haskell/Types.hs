@@ -1,81 +1,27 @@
 module Types where
 
-import Data.Word
 import Data.Int
-import Data.ByteString.Lazy
-import Data.Binary.Get
+import D_Types
 
-data TypeDesc  = TD (Int, String, [FieldDescTest], [TypeDesc]) -- id, name, fieldDescs, subtypes
-type FieldDesc = (String, [Something]) --name, data
-type FieldDescTest = (String, [Something], ByteString) --name, data, rawData
+data I_A = A'A A | A'B B | A'C C | A'D D | A'E E
+type A = (String)
+data I_B = B'B B | B'D D | B'E E
+type B = (String, Int16)
+data I_D = D'D D | D'E E
+type D = (String, Int16, Int64)
+data I_E = E'E E
+type E = (String, Int16, Int64, Int64)
+data I_C = C'C C
+type C = (String, Int32)
+data I_F = F'F F
+type F = (Maybe A)
+data I_G = G'G G
+type G = (Maybe B)
+data I_H = H'H H
+type H = (Maybe C)
 
-type FieldData = ByteString
-type Pointer   = (Int, Int) -- skill name 'Annotation'
-type UserType  = String
-
-data Something = CInt8   Int8                  -- 0
-               | CInt16  Int16                 -- 1
-               | CInt32  Int32                 -- 2
-               | CInt64  Int64                 -- 3
-               | CV64     Int64                -- 4
-               | GPointer Pointer              -- 5
-               | GBool    Bool                 -- 6
-               | GInt8    Int8                 -- 7
-               | GInt16   Int16                -- 8
-               | GInt32   Int32                -- 9
-               | GInt64   Int64                -- 10
-               | GV64     Int64                -- 11
-               | GFloat   Float                -- 12
-               | GDouble  Double               -- 13
-               | GString  Int                  -- 14
-               | GFArray  [Something]          -- 15
-               | GVArray  [Something]          -- 17
-               | GList    [Something]          -- 18
-               | GSet     [Something]          -- 19
-               | GMap [(Something, Something)] -- 20
-               | GUserType Int Int
-                     deriving (Show)
-
--- fa :: Int8
--- fb :: Int16
--- fc :: Int32
--- fd :: A
--- fe :: B
--- ff :: A
-
--- A
--- A <- B
--- A <- C
--- A <- D
--- E <- B
--- F <- B
--- G <- E
--- H <- F
-
-
-data A = A' I_A | B' I_B | C' I_C | D' I_D
-type I_A = Int8
-type I_B = (Int16, Int8)
-type I_C = (Int32, Int8)
-type I_D = (A, Int8)
-
-
-
-
-
-
-
---class A' a where
-  --g'fA :: a -> Int8
-  --g'fB :: a -> Int16
---  g'fC :: a -> Int32
---  g'fD :: a ->
-
---instance A' A where
---getA i8 = i8
-
---class B x where
---  getB :: x -> B
-
---instance A B where
- --getA
+c'A_A (GString value) = value
+c'B_B (GInt16 value) = value
+c'D_D (GInt64 value) = value
+c'E_E (GV64 value) = value
+c'C_C (GInt32 value) = value
