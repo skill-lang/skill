@@ -1,0 +1,31 @@
+A {
+string a;
+}
+
+B extends A {
+i16 b;
+}
+
+C extends A {
+i32 c;
+}
+
+D extends B {
+i64 d;
+}
+
+E extends D {
+v64 e;
+}
+
+F {
+A f;
+}
+
+G {
+B g;
+}
+
+H {
+C h;
+}
