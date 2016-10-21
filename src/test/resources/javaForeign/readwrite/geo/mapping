@@ -1,0 +1,14 @@
+
+
+map Point3D -> geo.Point {
+    x -> coord1;
+    y -> coord2;
+    z -> coord3;
+}
+
+
+map Line3D -> geo.Line {
+    start -> a;
+    end -> b;
+}
+

@@ -12,16 +12,15 @@ import java.util.List;
  * @note Names are immutable.
  * @author Timm Felden
  */
-final public class Name implements Comparable<Name> {
+public class Name implements Comparable<Name> {
 
     /**
      * Names with equal skillNames are equal. Thus all comparison is deferred to
      * skillName.
      */
-    final private String skillName;
-    final private List<String> parts;
-    final private String packagePath;
-    private String internalName = "";
+    public String skillName;
+    public List<String> parts;
+    public String packagePath;
 
     public Name(List<String> parts, String skillName) {
         this(parts, skillName, "");
@@ -74,7 +73,7 @@ final public class Name implements Comparable<Name> {
 
     // different naming conventions, alphabetical order
 
-    private String ada;
+    public String ada;
 
     /**
      * @return Ada_Style
@@ -90,7 +89,7 @@ final public class Name implements Comparable<Name> {
         return ada;
     }
 
-    private String cStyle;
+    public String cStyle;
     /**
      * @return c_style, i.e. lower_case_with_under_scores
      */
@@ -105,7 +104,7 @@ final public class Name implements Comparable<Name> {
         return cStyle;
     }
 
-    private String camel;
+    public String camel;
 
     /**
      * @return firstPartLowerCaseCamelCase
@@ -121,7 +120,7 @@ final public class Name implements Comparable<Name> {
         return camel;
     }
 
-    private String capital;
+    public String capital;
 
     /**
      * @return CapitalizedCamelCase
@@ -146,7 +145,7 @@ final public class Name implements Comparable<Name> {
     /**
      * Capitalizes a string.
      */
-    private static String capitalize(String arg) {
+    public static String capitalize(String arg) {
         if (Character.isUpperCase(arg.charAt(0)))
             return arg;
 
@@ -160,15 +159,6 @@ final public class Name implements Comparable<Name> {
 	public String getFqdn() {
 		if (getPackagePath().length() > 0) return getPackagePath() + "." + skillName;
 		else return skillName;
-	}
-
-	public void setInternalName(String name) {
-		this.internalName = name.toLowerCase();
-	}
-
-	public String getInternalName() {
-		if (this.internalName.length() > 0) return internalName;
-		else return skillName.toLowerCase();
 	}
 
 }

@@ -1,0 +1,11 @@
+map SimpleType -> simple.Simple {
+	x -> x;
+	y -> x;
+	b -> b;
+	s -> s;
+	i -> i;
+	l -> l;
+	f -> f;
+	d -> d;
+	str -> str;
+}

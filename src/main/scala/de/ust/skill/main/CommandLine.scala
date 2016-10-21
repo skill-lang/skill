@@ -7,14 +7,20 @@ package de.ust.skill.main
 
 import java.io.File
 
+import scala.collection.JavaConversions._
 import scala.annotation.migration
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.ListBuffer
 
 import de.ust.skill.generator.common.Generator
 import de.ust.skill.generator.common.HeaderInfo
 import de.ust.skill.generator.common.KnownGenerators
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.parser.Parser
+import java.io.PrintWriter
+import java.io.OutputStreamWriter
+import java.io.BufferedWriter
+import java.io.FileOutputStream
 
 /**
  * Command line interface to the skill compilers
@@ -91,8 +97,13 @@ Opitions:
 
       assert(!packageName.isEmpty, "A package name must be specified. Generators rely on it!")
 
-      // invoke generators
-      val tc = Parser.process(new File(skillPath), keepSpecificationOrder)
+      // skill TypeContext
+      // this is either the result of parsing a skill file or an empty type context if "-" is specified
+      val tc = if (skillPath != "-") Parser.process(new File(skillPath), keepSpecificationOrder) else new TypeContext
+
+      // For JavaForeign we run extra stuff
+      languages.get("javaforeign").map { _.asInstanceOf[de.ust.skill.generator.jforeign.Main] }
+        .map { jforeignGen => JavaForeign.run(jforeignGen, tc) }
 
       println(s"Parsed $skillPath -- found ${tc.allTypeNames.size - (new TypeContext().allTypeNames.size)} types.")
       println(s"Generating sources into ${new File(outPath).getAbsolutePath()}")
