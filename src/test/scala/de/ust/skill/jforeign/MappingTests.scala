@@ -10,6 +10,8 @@ import java.io.File
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.io.Path.jfile2path
 import scala.sys.process._
+import scala.language.postfixOps
+
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.ConfigMap

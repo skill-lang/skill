@@ -1,22 +1,18 @@
 package de.ust.skill.generator.haskell;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+
 import de.ust.skill.ir.Field;
 import de.ust.skill.ir.Name;
 import de.ust.skill.ir.ReferenceType;
 import de.ust.skill.ir.UserType;
-import de.ust.skill.ir.View;
-import static java.nio.file.StandardCopyOption.*;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 
 public class CodeGenerator {
 
