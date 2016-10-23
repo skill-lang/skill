@@ -8,5 +8,6 @@
         <ant antfile="inherit/build.xml" />
         <ant antfile="skillIR/build.xml" />
         <ant antfile="abstrakt/build.xml" />
+        <ant antfile="explicitPartial/build.xml" />
     </target>
 </project>
