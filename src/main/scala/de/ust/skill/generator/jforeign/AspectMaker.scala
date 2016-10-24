@@ -17,7 +17,8 @@ trait AspectMaker extends GeneralOutputMaker {
 
       out.write(s"""
 package ${packageName};
-import ${packagePrefix}internal.SkillState;
+import ${packagePrefix}api.SkillFile;
+import ${packagePrefix}api.AddAll;
 import de.ust.skill.common.jforeign.internal.SkillObject;
 import ${t.getName.getPackagePath}.${t.getName};
 
@@ -63,8 +64,8 @@ ${
         assert ignored == null;
     }
 
-    public void ${t.getName}.selfAdd(SkillState state) {
-        state.addAll(this);
+    public void ${t.getName}.selfAdd(SkillFile sf) {
+        AddAll.add(sf, this);
     }
 
 ${

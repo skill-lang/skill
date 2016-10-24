@@ -46,7 +46,8 @@ class Main extends FakeMain
     with InterfacesMaker
     with DependenciesMaker
     with SubTypeMaker
-    with AspectMaker {
+    with AspectMaker
+    with AddAllMaker {
 
   lineLength = 120
   override def comment(d : Declaration) : String = d.getComment.format("/**\n", " * ", lineLength, " */\n")
