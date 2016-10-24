@@ -20,6 +20,7 @@ import javassist.NotFoundException
 import scala.collection.mutable.ListBuffer
 import javassist.Modifier
 import de.ust.skill.ir.restriction.AbstractRestriction
+import java.util.ArrayList
 
 /**
  * Maps classes by name from a given classpath to IR representation.
@@ -145,8 +146,8 @@ class IRMapper(classPaths: List[String]) {
       } else null
 
       val skilltype = knownTypes(clazz)
-      skilltype.initialize(supertype, List().asJava, mapFields(clazz).filter(_.isDefined).map(_.get).asJava,
-        List().asJava, List().asJava)
+      val fieldList : java.util.ArrayList[Field] = new ArrayList(mapFields(clazz).filter(_.isDefined).map(_.get).asJava)
+      skilltype.initialize(supertype, List().asJava, fieldList, List().asJava, List().asJava)
       mappedTypes += (clazz → skilltype)
       skilltype
     }

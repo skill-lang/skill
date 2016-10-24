@@ -19,6 +19,9 @@ import java.io.PrintWriter
 import java.io.OutputStreamWriter
 import java.io.FileOutputStream
 import scala.collection.JavaConversions._
+import scala.collection.mutable.Buffer
+import de.ust.skill.ir.Field
+
 
 object JavaForeign {
 
@@ -35,7 +38,12 @@ object JavaForeign {
     // bind and typecheck
     val typeRules = mappingRules.flatMap { r => r.bind(skillTc, javaTc) }
     val checker = new TypeChecker
-    checker.check(typeRules, skillTc, javaTc, rc)
+    val (_, mappedFields) = checker.check(typeRules, skillTc, javaTc, rc)
+    // remove unmapped fields
+    for (ut ← javaTc.getUsertypes) {
+      val fieldsToDelete : List[Field] = ut.getFields.filterNot { f => mappedFields.contains(f) }.toList
+      ut.getFields.removeAll(fieldsToDelete)
+    }
     // generate specification file if requested
     generator.getGenSpecPath.foreach { path =>
       val f = new File(path)

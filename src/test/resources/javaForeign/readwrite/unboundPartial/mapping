@@ -1,0 +1,6 @@
+new unboundPartial.Simple {
+	x;
+	l;
+	d;
+	str;
+}

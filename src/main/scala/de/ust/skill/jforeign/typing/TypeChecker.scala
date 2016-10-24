@@ -14,7 +14,7 @@ import de.ust.skill.ir.Field
 
 class TypeChecker {
 
-  def check(rules: List[TypeRule], from: TypeContext, to: TypeContext, rc: ReflectionContext) {
+  def check(rules: List[TypeRule], from: TypeContext, to: TypeContext, rc: ReflectionContext): (Set[Type], Set[Field]) = {
     val fromTypes: Set[Type] = collection.mutable.Set() ++ from.getUsertypes.asScala
     val toTypes: Set[Type] = collection.mutable.Set() ++ to.getUsertypes.asScala
     val checked = HashMap.empty[Type, Type]
@@ -93,6 +93,7 @@ class TypeChecker {
     if (failed) {
       throw new RuntimeException(s"There were type errors in the mapping")
     }
+    (mappedTypes, mappedFields)
   }
 
 }
