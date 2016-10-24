@@ -9,5 +9,6 @@
         <ant antfile="skillIR/build.xml" />
         <ant antfile="abstrakt/build.xml" />
         <ant antfile="explicitPartial/build.xml" />
+        <ant antfile="unboundPartial/build.xml" />
     </target>
 </project>
