@@ -74,7 +74,8 @@ class GenericTests extends FunSuite with BeforeAndAfterAll {
     def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ ⇒ "x"): _*)
   }
 
-  "ant -f src/test/resources/javaForeign/readwrite/build.xml" !
+  "ant -f src/test/resources/javaForeign/readwrite/build.xml clean" !;
+  "ant -f src/test/resources/javaForeign/readwrite/build.xml" !;
 
   for (path ← new File("src/test/resources/javaForeign/readwrite").listFiles() if path.isDirectory() && path.getName.endsWith(testOnly)) {
     val baseName: String = path.getName

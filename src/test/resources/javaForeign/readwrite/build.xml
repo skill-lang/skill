@@ -12,4 +12,9 @@
         <ant antfile="unboundPartial/build.xml" />
         <ant antfile="graph/build.xml" />
     </target>
+    <target name="clean">
+        <delete>
+            <fileset dir="." includes="**/*.class"/>
+        </delete>
+    </target>
 </project>
