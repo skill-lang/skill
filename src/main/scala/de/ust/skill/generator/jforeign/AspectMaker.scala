@@ -25,19 +25,18 @@ trait AspectMaker extends GeneralOutputMaker {
     case ut: UserType ⇒ s"$ref.selfAdd(sf);"
     case gt: GroundType ⇒ gt.getSkillName match {
       case "string" ⇒ s"sf.Strings().add($ref);"
-      case _ ⇒ "// no need to add ground types"
+      case _ ⇒ s"// no need to add ground type: ${mapType(gt, false)}"
     }
   }
 
-  private def writeAddMaps(baseTypes : List[Type], depth : Int, mapRef : String, actualMapType: String): String = baseTypes match {
+  private def writeAddMaps(baseTypes : List[Type], depth : Int, mapRef : String, actualMapType: String, indent : String): String = baseTypes match {
     case Nil ⇒ throw new RuntimeException("Empty types list of map type")
-    case head :: Nil ⇒ s"""${makeAddCode(head, s"e${depth - 1}.getValue()")}"""
+    case head :: Nil ⇒ s"""$indent${makeAddCode(head, s"e${depth - 1}.getValue()")}"""
     case head :: rest ⇒
-      s"""
-for (java.util.Map.Entry<${mapType(head, true)}, ${makeMapType(rest, actualMapType)}> e$depth : $mapRef.entrySet()) {
-  ${makeAddCode(head, s"e$depth.getKey()")}
-  ${writeAddMaps(rest, depth + 1, s"e$depth.getValue()", actualMapType)}
-}
+s"""${indent}for (java.util.Map.Entry<${mapType(head, true)}, ${makeMapType(rest, actualMapType)}> e$depth : $mapRef.entrySet()) {
+$indent    ${makeAddCode(head, s"e$depth.getKey()")}
+${writeAddMaps(rest, depth + 1, s"e$depth.getValue()", actualMapType, indent + "    ")}
+$indent}
 """
   }
 
@@ -50,7 +49,6 @@ for (java.util.Map.Entry<${mapType(head, true)}, ${makeMapType(rest, actualMapTy
       out.write(s"""
 package ${packageName};
 import ${packagePrefix}api.SkillFile;
-import ${packagePrefix}api.AddAll;
 import de.ust.skill.common.jforeign.internal.SkillObject;
 import ${t.getName.getPackagePath}.${t.getName};
 
@@ -126,7 +124,7 @@ ${
           }
           case mt: MapType ⇒ s"""
         if (this.${getterOrFieldAccess(t, f)} != null) {
-            ${writeAddMaps(mt.getBaseTypes.toList, 0, s"this.${getterOrFieldAccess(t, f)}", rc.map(f).getName)}
+${writeAddMaps(mt.getBaseTypes.toList, 0, s"this.${getterOrFieldAccess(t, f)}", rc.map(f).getName, "            ")}
         }"""
           case x: Type ⇒ s"""
         // cannot addAll a ${x} because I don't know this type"""

@@ -19,6 +19,7 @@ public class Container {
         map = new TreeMap<>();
         set = new TreeSet<>();
         userList = new MyStupidList<>();
+        moreMaps = new HashMap<>();
     }
 
     public ArrayList<Stupid> list;
@@ -26,4 +27,5 @@ public class Container {
     public TreeMap<Integer, Stupid> map;
     public HashMap<Integer, HashMap<Integer, Integer>> maps;
     public MyStupidList<Long> userList;
+    public HashMap<Stupid, HashMap<Stupid, HashMap<Integer, Stupid>>> moreMaps;
 }
