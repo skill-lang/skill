@@ -2,6 +2,7 @@
 <project basedir="." default="build" name="skillJavaTestsuite" xmlns:jacoco="antlib:org.jacoco.ant">
     <target name="build">
         <ant antfile="simple/build.xml" />
+        <ant antfile="simpleEmpty/build.xml" />
         <ant antfile="simpleunbound/build.xml" />
         <ant antfile="container/build.xml" />
         <ant antfile="baseContainer/build.xml" />
