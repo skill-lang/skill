@@ -52,7 +52,7 @@ trait GeneralOutputMaker extends Generator {
    */
   protected def escaped(target : Name) : String = escaped(target.ada)
 
-  private lazy val packagePath = if (packagePrefix.length > 0) {
+  protected def packagePath = if (packagePrefix.length > 0) {
     packagePrefix.replace(".", "_")
   } else {
     ""
