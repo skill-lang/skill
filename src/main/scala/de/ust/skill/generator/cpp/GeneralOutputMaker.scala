@@ -57,7 +57,7 @@ trait GeneralOutputMaker extends Generator {
    * @note the used path uses maven/sbt source placement convention
    */
   override protected def open(path : String) = {
-    val f = new File(s"$outPath/src/$packagePath$path")
+    val f = new File(outPath, path)
     f.getParentFile.mkdirs
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
@@ -96,8 +96,8 @@ trait GeneralOutputMaker extends Generator {
    * Translation of a type to its representation in the source code
    */
   protected def name(t : Type) : String = escaped(t.getName.capital)
-  protected def storagePool(t : Type) : String = escaped(t.getName.capital+"Pool")
-  protected def subPool(t : Type) : String = escaped(t.getName.capital+"SubPool")
+  protected def storagePool(t : Type) : String = escaped(t.getName.capital + "Pool")
+  protected def subPool(t : Type) : String = escaped(t.getName.capital + "SubPool")
 
   protected def name(f : Field) : String = escaped(f.getName.camel)
   protected def internalName(f : Field) : String = escaped("_" + f.getName.camel())
@@ -131,7 +131,7 @@ trait GeneralOutputMaker extends Generator {
    */
   final protected def beginGuard(t : Type) : String = beginGuard(escaped(name(t)))
   final protected def beginGuard(word : String) : String = {
-    val guard = "SKILL_CPP_GENERATED_"+packageParts.map(_.toUpperCase).mkString("", "_", "_") + word.toUpperCase
+    val guard = "SKILL_CPP_GENERATED_" + packageParts.map(_.toUpperCase).mkString("", "_", "_") + word.toUpperCase
     s"""#ifndef $guard
 #define $guard
 """

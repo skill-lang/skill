@@ -39,6 +39,7 @@ class GenericTests extends common.GenericTests {
 
   override def callMainFor(name : String, source : String) {
     CommandLine.main(Array[String](source,
+      "--debug-header",
       "-L", "cpp",
       "-p", name,
       "-Ocpp:revealSkillID=true",
