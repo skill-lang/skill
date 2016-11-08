@@ -25,11 +25,61 @@ import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.View
 import scala.collection.mutable.HashMap
 import de.ust.skill.ir.FieldLike
+import java.io.PrintWriter
+import java.io.OutputStreamWriter
+import de.ust.skill.ir.TypeContext
+import de.ust.skill.jforeign.mapping.MappingParser
+import de.ust.skill.jforeign.IRMapper
+import java.io.FileOutputStream
+import java.io.File
+import de.ust.skill.jforeign.typing.TypeChecker
+import java.io.FileReader
 
 /**
  * Fake Main implementation required to make trait stacking work.
  */
-abstract class FakeMain extends GeneralOutputMaker { def make {} }
+abstract class FakeMain extends GeneralOutputMaker {
+  def make {
+    initialize(this.asInstanceOf[Main], types)
+  }
+
+  /** Runner for java-foreign specific stuff. */
+  def initialize(generator : Main, skillTc : TypeContext) : Unit = {
+    if (null == mappingFile) {
+      throw new IllegalStateException("a mapping file must be provided to java foreign via -Ojavaforeign:m=<path>")
+    }
+
+    // parse mapping
+    val mappingParser = new MappingParser()
+    val mappingRules = mappingParser.process(new FileReader(generator.getMappingFile()))
+    // get list of java class names that we want to map
+    val javaTypeNames = mappingRules.map { _.getJavaTypeName }
+    // map
+    val mapper = new IRMapper(generator.getForeignSources())
+    val (javaTc, rc) = mapper.mapClasses(javaTypeNames)
+    // bind and typecheck
+    val typeRules = mappingRules.flatMap { r ⇒ r.bind(skillTc, javaTc) }
+    val checker = new TypeChecker
+    val (_, mappedFields) = checker.check(typeRules, skillTc, javaTc, rc)
+    // remove unmapped fields
+    for (ut ← javaTc.getUsertypes) {
+      val fieldsToDelete : List[Field] = ut.getFields.filterNot { f ⇒ mappedFields.contains(f) }.toList
+      ut.getFields.removeAll(fieldsToDelete)
+    }
+    // generate specification file if requested
+    generator.getGenSpecPath.foreach { path ⇒
+      val f = new File(path)
+      val prettySkillSpec = new PrintWriter(new OutputStreamWriter(new FileOutputStream(f)))
+      javaTc.getUsertypes.foreach { ut ⇒
+        prettySkillSpec.write(ut.prettyPrint() + "\n")
+      }
+      prettySkillSpec.close()
+    }
+    // prepare generator
+    generator.setForeignTC(javaTc)
+    generator.setReflectionContext(rc)
+  }
+}
 
 /**
  * A generator turns a set of skill declarations into a Java interface providing means of manipulating skill files

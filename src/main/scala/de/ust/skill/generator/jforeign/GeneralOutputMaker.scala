@@ -139,19 +139,19 @@ trait GeneralOutputMaker extends Generator {
    */
   protected var suppressWarnings = "";
 
-  protected var mappingFile = "";
+  protected var mappingFile : String = null;
 
   protected val foreignSources : ListBuffer[String] = ListBuffer()
 
   protected var genSpecPath : Option[String] = None
 
-  def getMappingFile(): String = mappingFile
+  def getMappingFile() : String = mappingFile
 
-  def getForeignSources(): List[String] = foreignSources.toList
+  def getForeignSources() : List[String] = foreignSources.toList
 
   def getGenSpecPath : Option[String] = genSpecPath
 
-  def getterOrFieldAccess(t: Type, f: Field): String = if (t.isInstanceOf[GroundType]) {
+  def getterOrFieldAccess(t : Type, f : Field) : String = if (t.isInstanceOf[GroundType]) {
     s"get${escaped(f.getName.capital())}"
   } else {
     val javaType = rc.map(t);
@@ -159,11 +159,11 @@ trait GeneralOutputMaker extends Generator {
       javaType.getDeclaredMethod(s"get${f.getName.capital}")
       s"get${f.getName.capital()}()"
     } catch {
-      case e: NotFoundException ⇒ s"${f.getName}"
+      case e : NotFoundException ⇒ s"${f.getName}"
     }
   }
 
-  def setterOrFieldAccess(t: Type, f: Field): String = if (t.isInstanceOf[GroundType]) {
+  def setterOrFieldAccess(t : Type, f : Field) : String = if (t.isInstanceOf[GroundType]) {
     s"set${escaped(f.getName.capital())}"
   } else {
     val javaType = rc.map(t);
@@ -171,7 +171,7 @@ trait GeneralOutputMaker extends Generator {
       javaType.getDeclaredMethod(s"set${f.getName.capital}") // TODO: fix this
       s"set${f.getName.capital()}"
     } catch {
-      case e: NotFoundException ⇒ s"${f.getName} = "
+      case e : NotFoundException ⇒ s"${f.getName} = "
     }
   }
 }
