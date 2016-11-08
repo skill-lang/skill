@@ -59,8 +59,9 @@ object CommandLine {
 
   case class SourceConfig(target : String,
                           outdir : File = new File("."),
+                          var depsdir : File = null,
                           header : HeaderInfo = new HeaderInfo(),
-                          languages : Set[String] = Set(),
+                          var languages : Set[String] = Set(),
                           languageOptions : HashMap[String, HashMap[String, String]] = new HashMap(),
                           packageName : Seq[String] = Seq[String](),
                           keepSpecificationOrder : Boolean = false,
@@ -68,6 +69,14 @@ object CommandLine {
     def process {
       // get known generator for languages
       val known = KnownGenerators.all.map(_.newInstance).map { g ⇒ g.getLanguageName -> g }.toMap
+
+      // depsdir defaults to outdir
+      if (null == depsdir) depsdir = outdir
+
+      // select all languages, if none was selected
+      if (languages.isEmpty) {
+        languages ++= allGeneratorNames
+      }
 
       // skill TypeContext
       // this is either the result of parsing a skill file or an empty type context if "-" is specified
@@ -80,52 +89,47 @@ object CommandLine {
         println(s"Generating sources into ${outdir.getAbsolutePath()}")
       }
 
-      // if we process a single language only, the outdir is the target for the language. Otherwise, languages get their
-      // own dirs in a subdirectory 
-      if (languages.size == 1) {
-        val lang = languages.head
-        val gen = known(lang)
+      val failures = HashMap[String, Exception]()
+      for (
+        lang ← languages;
+        gen = known(lang)
+      ) {
+        val pathPostfix =
+          // if we process a single language only, the outdir is the target for the language. Otherwise, languages get
+          // their own dirs in a subdirectory 
+          if (1 == languages.size) ""
+          else "/generated/" + lang
+
+        // set options
+        for ((k, v) ← languageOptions.getOrElse(lang, new HashMap())) {
+          gen.setOption(k, v)
+        }
+
         gen.setTC(tc)
         gen.setPackage(packageName.toList)
         gen.headerInfo = header
-        gen.outPath = outdir.getAbsolutePath
+        gen.outPath = outdir.getAbsolutePath + pathPostfix
+        gen.depsPath = depsdir.getAbsolutePath + pathPostfix
 
         if (verbose) print(s"run $lang: ")
 
-        gen.make
-        println("-done-")
-
-      } else {
-        val failures = HashMap[String, Exception]()
-        for (
-          lang ← if (languages.isEmpty) allGeneratorNames else languages.toArray;
-          gen = known(lang)
-        ) {
-          gen.setTC(tc)
-          gen.setPackage(packageName.toList)
-          gen.headerInfo = header
-          gen.outPath = outdir.getAbsolutePath + "/generated/" + lang
-
-          if (verbose) print(s"run $lang: ")
-
-          try {
-            gen.make
-            println("-done-")
-          } catch {
-            case e : IllegalStateException ⇒ println(s"-[FAILED: ${e.getMessage}]-");
-            case e : Exception             ⇒ println("-FAILED-"); failures(lang) = e
-          }
+        try {
+          gen.make
+          println("-done-")
+        } catch {
+          case e : IllegalStateException ⇒ println(s"-[FAILED: ${e.getMessage}]-");
+          case e : Exception             ⇒ println("-FAILED-"); failures(lang) = e
         }
-
-        // report failures
-        if (!failures.isEmpty)
-          error((
-            for ((lang, err) ← failures) yield {
-              err.printStackTrace();
-              s"$lang failed with message: ${err.getMessage}}"
-            }
-          ).mkString("\n"))
       }
+
+      // report failures
+      if (!failures.isEmpty)
+        error((
+          for ((lang, err) ← failures) yield {
+            err.printStackTrace();
+            s"$lang failed with message: ${err.getMessage}}"
+          }
+        ).mkString("\n"))
     }
   }
   val sourceParser = new scopt.OptionParser[SourceConfig]("skillc <file.skill>") {
@@ -134,6 +138,10 @@ object CommandLine {
     opt[File]('o', "outdir").optional().action(
       (p, c) ⇒ c.copy(outdir = p)
     ).text("set the output directory")
+
+    opt[File]('d', "depsdir").optional().action(
+      (p, c) ⇒ c.copy(depsdir = p)
+    ).text("set the dependency directory (libs, common sources)")
 
     opt[String]('p', "package").required().action(
       (s, c) ⇒ c.copy(packageName = s.split('.'))

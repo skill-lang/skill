@@ -46,6 +46,11 @@ trait Generator {
   var outPath : String = _;
 
   /**
+   * Base path of dependencies copied by this generator.
+   */
+  var depsPath : String = _;
+
+  /**
    * Set the type context. This is a function to make clear that generators may in fact project a type context prior to
    * using it.
    */
