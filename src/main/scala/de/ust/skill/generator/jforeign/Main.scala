@@ -164,7 +164,7 @@ class Main extends FakeMain
     val headerLineLength = 51
     val headerLine1 = Some((headerInfo.line1 match {
       case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: " + _).getOrElse("Your SKilL Java 8 Binding")
+      case None    ⇒ headerInfo.license.map("LICENSE: " + _).getOrElse("Your SKilL foreign Java 8 Binding")
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
     val headerLine2 = Some((headerInfo.line2 match {
       case Some(s) ⇒ s
@@ -199,19 +199,17 @@ class Main extends FakeMain
     _packagePrefix = names.foldRight("")(_ + "." + _)
   }
 
-  override def setOption(option : String, value : String) : Unit = option match {
-    case "revealskillid"          ⇒ revealSkillID = ("true" == value);
-    case "srcpath" | "sourcepath" ⇒ sourcePath = if ('"' == value.charAt(0)) value.substring(1, value.length - 1) else value;
-    case "suppresswarnings"       ⇒ suppressWarnings = if ("true" == value) "@SuppressWarnings(\"all\")\n" else ""
-    case "m"                      ⇒ mappingFile = value
-    case "f"                      ⇒ foreignSources += value
-    case "genspec"                ⇒ genSpecPath = Some(value)
-    case unknown                  ⇒ sys.error(s"unkown Argument: $unknown")
+  override def setOption(option : String, value : String) : Unit = option.toLowerCase match {
+    case "revealskillid"    ⇒ revealSkillID = ("true" == value);
+    case "suppresswarnings" ⇒ suppressWarnings = if ("true" == value) "@SuppressWarnings(\"all\")\n" else ""
+    case "m"                ⇒ mappingFile = value
+    case "f"                ⇒ foreignSources += value
+    case "genspec"          ⇒ genSpecPath = Some(value)
+    case unknown            ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
   override def helpText = """
   revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
-  srcPath           <path>      set a relative path used as source folder in generated code
   suppressWarnings  true/false  add a @SuppressWarnings("all") annotation to generated classes
   m                 <path>      mapping file which ties SKilL types to Java types
   f                 <path>      class path from where Java types are looked up. May be specified multiple times.

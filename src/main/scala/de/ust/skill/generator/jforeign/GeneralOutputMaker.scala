@@ -79,7 +79,7 @@ trait GeneralOutputMaker extends Generator {
    * @note the used path uses maven/sbt source placement convention
    */
   override protected def open(path : String) = {
-    val f = simpleOpenDirtyPathString(s"$outPath/$sourcePath/$packagePath$path")
+    val f = simpleOpenDirtyPathString(s"$outPath/$packagePath$path")
 
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
       new FileOutputStream(f), "UTF-8")))
@@ -127,11 +127,6 @@ trait GeneralOutputMaker extends Generator {
   } else {
     ""
   }
-
-  /**
-   * Sourcepath can be configured to change output directory of source files.
-   */
-  protected var sourcePath = "src/main/java"
 
   /**
    * this string may contain a "@SuppressWarnings("all")\n", in order to suppress warnings in generated code;
