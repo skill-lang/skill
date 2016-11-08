@@ -230,8 +230,6 @@ class Main extends FakeMain
       case _                                    ⇒ "null"
     }
 
-    // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
-
     case _ ⇒ "null"
   }
 
