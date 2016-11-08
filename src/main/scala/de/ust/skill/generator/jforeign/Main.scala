@@ -199,7 +199,7 @@ class Main extends FakeMain
     _packagePrefix = names.foldRight("")(_ + "." + _)
   }
 
-  override def setOption(option : String, value : String) : Unit = option.toLowerCase match {
+  override def setOption(option : String, value : String) : Unit = option match {
     case "revealskillid"    ⇒ revealSkillID = ("true" == value);
     case "suppresswarnings" ⇒ suppressWarnings = if ("true" == value) "@SuppressWarnings(\"all\")\n" else ""
     case "m"                ⇒ mappingFile = value

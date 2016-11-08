@@ -103,7 +103,7 @@ object CommandLine {
 
         // set options
         for ((k, v) ← languageOptions.getOrElse(lang, new HashMap())) {
-          gen.setOption(k, v)
+          gen.setOption(k.toLowerCase, v.toLowerCase)
         }
 
         gen.setTC(tc)
