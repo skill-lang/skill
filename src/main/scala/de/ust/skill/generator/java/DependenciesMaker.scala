@@ -23,7 +23,7 @@ trait DependenciesMaker extends GeneralOutputMaker {
     for (jar ← jars) {
       this.getClass.synchronized({
 
-        val out = new File(s"$outPath/lib/$jar");
+        val out = new File(depsPath, jar);
         out.getParentFile.mkdirs();
 
         try {

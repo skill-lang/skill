@@ -141,15 +141,13 @@ class Main extends FakeMain
   }
 
   override def setOption(option : String, value : String) : Unit = option match {
-    case "revealskillid"          ⇒ revealSkillID = ("true" == value);
-    case "srcpath" | "sourcepath" ⇒ sourcePath = if ('"' == value.charAt(0)) value.substring(1, value.length - 1) else value;
-    case "suppresswarnings"       ⇒ suppressWarnings = if ("true" == value) "@SuppressWarnings(\"all\")\n" else ""
-    case unknown                  ⇒ sys.error(s"unkown Argument: $unknown")
+    case "revealskillid"    ⇒ revealSkillID = ("true" == value);
+    case "suppresswarnings" ⇒ suppressWarnings = if ("true" == value) "@SuppressWarnings(\"all\")\n" else ""
+    case unknown            ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
   override def helpText = """
   revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
-  srcPath           <path>      set a relative path used as source folder in generated code
   suppressWarnings  true/false  add a @SuppressWarnings("all") annotation to generated classes
 """
 
