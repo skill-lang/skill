@@ -32,7 +32,11 @@ class GeneratorTest extends FunSuite {
     // delete seems to cause sporadic test failure
     //    deleteFiles(new File(s"testsuites/c/src/generated/$target"))
     CommandLine.exit = { s ⇒ fail(s) }
-    CommandLine.main(Array[String]("-L", "C", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", prefix, s"-O@C:GenDir=/src/generated/$target/", "src/test/resources/c/"+src, "testsuites"))
+    CommandLine.main(Array[String]("src/test/resources/c/" + src,
+      "--debug-header",
+      "-L", "C",
+      "-p", prefix,
+      "-o", "testsuites/c/src/generated/" + target))
   }
 
   test("annotation")(check("", "annotation.skill", "annotation"))

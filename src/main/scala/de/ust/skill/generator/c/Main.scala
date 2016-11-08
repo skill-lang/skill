@@ -206,7 +206,7 @@ final class Main extends FakeMain
    * Creates the correct PrintWriter for the argument file.
    */
   override protected def open(path : String) = {
-    val f = new File(outPath + outPostfix + path)
+    val f = new File(outPath + path)
     f.getParentFile.mkdirs
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
@@ -219,7 +219,7 @@ final class Main extends FakeMain
    * Open file, but do not write a header (required by make files)
    */
   override protected def openRaw(path : String) = {
-    val f = new File(outPath + outPostfix + path)
+    val f = new File(outPath + path)
     f.getParentFile.mkdirs
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
@@ -228,19 +228,12 @@ final class Main extends FakeMain
   }
 
   override def setOption(option : String, value : String) : Unit = option.toLowerCase match {
-    case "gendir" ⇒
-      outPostfix = value
-      if (!outPostfix.startsWith("/"))
-        outPostfix = "/" + outPostfix
-      if (!outPostfix.endsWith("/"))
-        outPostfix = outPostfix + "/"
     case "unsafe" ⇒ unsafe = value == "true"
     case unknown  ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
   override def helpText = """
-  genDir                 replace default sub-directory for generated sources
-  unsafe                 remove all generated runtime type checks, if set to "true"
+unsafe                 remove all generated runtime type checks, if set to "true"
 """
 
   override def customFieldManual : String = "not supported"
