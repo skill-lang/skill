@@ -21,6 +21,8 @@ import de.ust.skill.main.CommandLine
 
 @RunWith(classOf[JUnitRunner])
 class IMLTest extends FunSuite {
+  CommandLine.exit = s ⇒ fail(s)
+  
   val specPath = "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill"
   val filename = new File(specPath)
 
@@ -29,67 +31,51 @@ class IMLTest extends FunSuite {
       assert(100 < Parser.process(filename).allTypeNames.size)
   }
 
-  test("create statistics") {
+  test("create iml packages") {
     if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "iml", "-L", "statistics", specPath,
-        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
+      CommandLine.main(Array(
+        specPath,
+        "-p", "iml",
+        "-L", "statistics",
+        "-L", "doxygen",
+        "-L", "java",
+        "-Ojava:suppressWarnings=true",
+        "-L", "scala",
+        "-L", "skill",
+        "-L", "ecore",
+        "-o", System.getProperty("user.home") + "/Desktop/iml.sf"))
   }
 
-  test("create doxygen") {
+  test("create siml packages") {
     if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "iml", "-L", "doxygen", specPath,
-        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
-  }
-
-  test("create ada") {
-    if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "siml", "-L", "ada", specPath,
-        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
-  }
-
-  test("create c++") {
-    if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "siml", "-L", "cpp", "-O@cpp:revealSkillID=true", specPath,
-        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
+      CommandLine.main(Array(
+        specPath,
+        "-p", "siml",
+        "-L", "ada",
+        "-L", "cpp",
+        "-Ocpp:revealSkillID=true",
+        "-o", System.getProperty("user.home") + "/Desktop/iml.sf"))
   }
 
   test("create lazy specs") {
     val outDir = System.getProperty("user.home") + "/projekte/bauhausSF/functionNames++Lazy"
     if (Files.exists(filename.toPath)) {
-      CommandLine.main(Array("-p", "siml", "-L", "cpp", "-O@cpp:revealSkillID=true", outDir + "/iml.spec",
-        outDir))
-      CommandLine.main(Array("-p", "iml", "-L", "scala", outDir + "/iml.spec",
-        outDir))
-      CommandLine.main(Array("-p", "iml", "-L", "java", "-O@java:suppressWarnings=true", outDir + "/iml.spec",
-        outDir))
-      CommandLine.main(Array("-p", "siml", "-L", "ada", outDir + "/iml.spec", outDir))
+      CommandLine.main(Array(
+        outDir + "/iml.skill",
+        "-p", "iml",
+        "-L", "java",
+        "-L", "scala",
+        "-Ojava:suppressWarnings=true",
+        "-o", outDir))
+
+      CommandLine.main(Array(
+        outDir + "/iml.skill",
+        "-p", "siml",
+        "-L", "cpp",
+        "-Ocpp:revealSkillID=true",
+        "-L", "ada",
+        "-o", outDir
+      ))
     }
-  }
-
-  test("create java") {
-    if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "iml", "-L", "java", "-O@java:suppressWarnings=true", specPath,
-        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
-  }
-
-  test("create scala") {
-    if (Files.exists(filename.toPath)) {
-      "rm -rf /home/feldentm/Desktop/iml.sf/generated/scala/src/main/scala/iml".!!
-
-      CommandLine.main(Array("-p", "iml", "-L", "scala", specPath,
-        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
-    }
-  }
-
-  test("create skill") {
-    if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "iml", "-L", "skill", specPath,
-        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
-  }
-
-  test("create ecore") {
-    if (Files.exists(filename.toPath))
-      CommandLine.main(Array("-p", "iml", "-L", "ecore", specPath,
-        System.getProperty("user.home") + "/Desktop/iml.sf/generated"))
   }
 }
