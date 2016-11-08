@@ -16,6 +16,7 @@ class GeneratorTest extends FunSuite {
   def check(src : String, out : String) {
     CommandLine.exit = { s ⇒ fail(s) }
     CommandLine.main(Array[String]("src/test/resources/ada/" + src,
+      "--debug-header",
       "-L", "ada",
       "-p", out,
       "-o", "testsuites/ada/src/" + out))

@@ -35,6 +35,7 @@ class GenericTests extends common.GenericTests {
 
   override def callMainFor(name : String, source : String) {
     CommandLine.main(Array[String](source,
+      "--debug-header",
       "-L", "ada",
       "-p", name,
       "-o", "testsuites/ada/src/" + name))
