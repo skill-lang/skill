@@ -37,7 +37,7 @@ class GenericTests extends common.GenericTests {
     CommandLine.main(Array[String](source,
       "--debug-header",
       "-L", "ada",
-      "-p", name,
+      "-p", name, 
       "-o", "testsuites/ada/src/" + name))
   }
 

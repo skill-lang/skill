@@ -36,19 +36,21 @@ class GenericTests extends common.GenericTests {
     import scala.reflect.io.Directory
     Directory(new File("testsuites/java/src/main/java", out)).deleteRecursively
   }
-  
+
   override def callMainFor(name : String, source : String) {
     CommandLine.main(Array[String](source,
+      "--debug-header",
       "-L", "java",
       "-p", name,
       "-Ojava:SuppressWarnings=true",
+      "-d", "testsuites/java/lib",
       "-o", "testsuites/java/src/main/java/"))
   }
 
   def newTestFile(packagePath : String, name : String) = {
     val f = new File(s"testsuites/java/src/test/java/$packagePath/Generic${name}Test.java")
     f.getParentFile.mkdirs
-    if(f.exists)
+    if (f.exists)
       f.delete
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
