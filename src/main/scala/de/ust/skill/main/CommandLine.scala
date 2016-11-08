@@ -103,7 +103,7 @@ object CommandLine {
 
         // set options
         for ((k, v) ← languageOptions.getOrElse(lang, new HashMap())) {
-          gen.setOption(k.toLowerCase, v.toLowerCase)
+          gen.setOption(k.toLowerCase, v)
         }
 
         gen.setTC(tc)
@@ -124,13 +124,20 @@ object CommandLine {
       }
 
       // report failures
-      if (!failures.isEmpty)
-        error((
-          for ((lang, err) ← failures) yield {
-            err.printStackTrace();
-            s"$lang failed with message: ${err.getMessage}}"
-          }
-        ).mkString("\n"))
+      if (!failures.isEmpty) {
+        if (1 == failures.size) {
+          //rethrow
+          throw failures.head._2
+        } else {
+          error((
+            for ((lang, err) ← failures) yield {
+              err.printStackTrace();
+              s"$lang failed with message: ${err.getMessage}}"
+            }
+          ).mkString("\n"))
+        }
+      }
+
     }
   }
   val sourceParser = new scopt.OptionParser[SourceConfig]("skillc <file.skill>") {

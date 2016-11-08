@@ -38,6 +38,7 @@ class GenericTests extends common.GenericTests {
   }
 
   override def callMainFor(name : String, source : String) {
+    CommandLine.exit = s ⇒ throw new RuntimeException(s)
     CommandLine.main(Array[String](source,
       "--debug-header",
       "-L", "scala",
