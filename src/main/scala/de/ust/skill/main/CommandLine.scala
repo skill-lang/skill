@@ -7,13 +7,14 @@ package de.ust.skill.main
 
 import java.io.File
 
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+
 import de.ust.skill.BuildInfo
 import de.ust.skill.generator.common.HeaderInfo
 import de.ust.skill.generator.common.KnownGenerators
-import scala.collection.mutable.HashMap
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.parser.Parser
-import de.ust.skill.generator.jforeign.Main
 
 /**
  * command line parsing is split into three basic modes, depending on the extension of the first argument:
@@ -62,7 +63,7 @@ object CommandLine {
                           var depsdir : File = null,
                           header : HeaderInfo = new HeaderInfo(),
                           var languages : Set[String] = Set(),
-                          languageOptions : HashMap[String, HashMap[String, String]] = new HashMap(),
+                          languageOptions : HashMap[String, ArrayBuffer[(String, String)]] = new HashMap(),
                           packageName : Seq[String] = Seq[String](),
                           keepSpecificationOrder : Boolean = false,
                           verbose : Boolean = false) extends WithProcess {
@@ -206,7 +207,7 @@ object CommandLine {
       if (!helpText.isEmpty()) {
 
         opt[(String, String)](s"set-$lang-option").abbr(s"O$lang").optional().unbounded().action {
-          (p, c) ⇒ c.languageOptions.getOrElseUpdate(lang, new HashMap()).put(p._1, p._2); c
+          (p, c) ⇒ c.languageOptions.getOrElseUpdate(lang, new ArrayBuffer()).append(p); c
         }.text("key-value pairs are: " + helpText)
       }
     }
