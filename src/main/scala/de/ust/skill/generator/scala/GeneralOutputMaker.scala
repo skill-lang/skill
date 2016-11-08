@@ -67,7 +67,7 @@ trait GeneralOutputMaker extends Generator {
    * @note the used path uses maven/sbt source placement convention
    */
   override protected def open(path : String) = {
-    val f = new File(s"$outPath/src/main/scala/$packagePath${
+    val f = new File(s"$outPath/$packagePath${
       path.map { c ⇒
         c match {
           case '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|' ⇒ '_'

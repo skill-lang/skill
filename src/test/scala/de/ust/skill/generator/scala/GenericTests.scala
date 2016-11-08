@@ -23,7 +23,7 @@ import de.ust.skill.generator.common
 /**
  * Generic tests built for scala.
  * Generic tests have an implementation for each programming language, because otherwise deleting the generated code
- * upfront would be upgly.
+ * upfront would be ugly.
  *
  * @author Timm Felden
  */
@@ -39,8 +39,10 @@ class GenericTests extends common.GenericTests {
 
   override def callMainFor(name : String, source : String) {
     CommandLine.main(Array[String](source,
+      "--debug-header",
       "-L", "scala",
       "-p", name,
+      "-d", "testsuites/scala/lib",
       "-o", "testsuites/scala/src/main/scala"))
   }
 

@@ -22,7 +22,7 @@ trait DependenciesMaker extends GeneralOutputMaker {
     for (jar ← jars) {
       this.getClass.synchronized({
 
-        val out = new File(s"$outPath/lib/$jar");
+        val out = new File(depsPath, jar);
         out.getParentFile.mkdirs();
 
         try {
@@ -33,15 +33,15 @@ trait DependenciesMaker extends GeneralOutputMaker {
         }
 
         Files.deleteIfExists(out.toPath)
-        Files.copy(new File("deps/"+jar).toPath, out.toPath)
+        Files.copy(new File("deps/" + jar).toPath, out.toPath)
       })
     }
   }
 
   val jars = Seq("skill.jvm.common.jar", "skill.scala.common.jar")
-  lazy val commonJarSum = jars.map { s ⇒ (s -> sha256("deps/"+s)) }.toMap
+  lazy val commonJarSum = jars.map { s ⇒ (s -> sha256("deps/" + s)) }.toMap
 
-  final def sha256(name : String) : String = sha256(new File("src/test/resources/"+name).toPath)
+  final def sha256(name : String) : String = sha256(new File("src/test/resources/" + name).toPath)
   @inline final def sha256(path : Path) : String = {
     val bytes = Files.readAllBytes(path)
     MessageDigest.getInstance("SHA-256").digest(bytes).map("%02X".format(_)).mkString
