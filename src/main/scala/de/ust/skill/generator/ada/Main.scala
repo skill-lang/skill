@@ -180,9 +180,9 @@ class Main extends FakeMain
    * Provides the package prefix.
    */
   override protected def packagePrefix() : String = _packagePrefix
-  private var _packagePrefix = "root"
+  private var _packagePrefix : String = null
   override protected def PackagePrefix() : String = _PackagePrefix
-  private var _PackagePrefix = "Root"
+  private var _PackagePrefix : String = null
 
   override def setPackage(names : List[String]) {
     if (!names.isEmpty) {
