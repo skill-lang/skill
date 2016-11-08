@@ -15,7 +15,10 @@ class GeneratorTest extends FunSuite {
 
   def check(src : String, out : String) {
     CommandLine.exit = { s ⇒ fail(s) }
-    CommandLine.main(Array[String]("-L", "ada", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", out, "src/test/resources/ada/" + src, "testsuites/"))
+    CommandLine.main(Array[String]("src/test/resources/ada/" + src,
+      "-L", "ada",
+      "-p", out,
+      "-o", "testsuites/ada/src/" + out))
   }
 
   test("aircraft")(check("aircraft.skill", "aircraft"))

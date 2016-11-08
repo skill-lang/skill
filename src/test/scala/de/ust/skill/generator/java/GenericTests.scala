@@ -31,11 +31,18 @@ import de.ust.skill.generator.common
 class GenericTests extends common.GenericTests {
 
   override val language = "java"
-  override val languageOptions = ArrayBuffer[String]("-O@java:SuppressWarnings=true")
 
   override def deleteOutDir(out : String) {
     import scala.reflect.io.Directory
-    Directory(new File("testsuites/java/src/main/java/", out)).deleteRecursively
+    Directory(new File("testsuites/java/src/main/java", out)).deleteRecursively
+  }
+  
+  override def callMainFor(name : String, source : String) {
+    CommandLine.main(Array[String](source,
+      "-L", "java",
+      "-p", name,
+      "-Ojava:SuppressWarnings=true",
+      "-o", "testsuites/java/src/main/java/"))
   }
 
   def newTestFile(packagePath : String, name : String) = {

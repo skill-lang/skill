@@ -31,11 +31,17 @@ import de.ust.skill.generator.common
 class GenericTests extends common.GenericTests {
 
   override def language = "scala"
-  override val languageOptions = ArrayBuffer[String]()
 
   override def deleteOutDir(out : String) {
     import scala.reflect.io.Directory
     Directory(new File("testsuites/scala/src/main/scala/", out)).deleteRecursively
+  }
+
+  override def callMainFor(name : String, source : String) {
+    CommandLine.main(Array[String](source,
+      "-L", "scala",
+      "-p", name,
+      "-o", "testsuites/scala/src/main/scala"))
   }
 
   def newTestFile(packagePath : String, name : String) = {

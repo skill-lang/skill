@@ -31,11 +31,18 @@ import de.ust.skill.generator.common
 class GenericTests extends common.GenericTests {
 
   override def language = "cpp"
-  override val languageOptions = ArrayBuffer[String]("-O@cpp:revealSkillID=true")
 
   override def deleteOutDir(out : String) {
     import scala.reflect.io.Directory
     Directory(new File("testsuites/cpp/src/", out)).deleteRecursively
+  }
+
+  override def callMainFor(name : String, source : String) {
+    CommandLine.main(Array[String](source,
+      "-L", "cpp",
+      "-p", name,
+      "-Ocpp:revealSkillID=true",
+      "-o", "testsuites/cpp/src/" + name))
   }
 
   def newTestFile(packagePath : String, name : String) = {
