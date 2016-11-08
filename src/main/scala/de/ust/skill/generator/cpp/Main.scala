@@ -157,11 +157,9 @@ class Main extends FakeMain
     case "revealskillid" ⇒ revealSkillID = ("true" == value)
     case unknown         ⇒ sys.error(s"unkown Argument: $unknown")
   }
-
-  override def printHelp : Unit = println("""
-Opitions (cpp):
-  revealSkillID: true/false  if set to true, the generated binding will reveal SKilL IDs in the API
-""")
+  override def helpText = """
+revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
+"""
 
   override def customFieldManual = """
 !include string+    Argument strings are added to the head of the generated file and included using

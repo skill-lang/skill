@@ -110,14 +110,9 @@ class Main extends FakeMain
 """
   }
 
-  override def setOption(option : String, value : String) : Unit = option match {
-    case unknown ⇒ sys.error(s"unkown Argument: $unknown")
-  }
-
-  override def printHelp : Unit = println("""
-Opitions (doxygen):
-  (none)
-""")
+  
+  override def setOption(option : String, value : String) = ???
+  override def helpText = ""
 
   override def customFieldManual = """(unsupported)"""
 

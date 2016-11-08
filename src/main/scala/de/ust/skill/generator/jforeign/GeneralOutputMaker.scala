@@ -43,14 +43,14 @@ trait GeneralOutputMaker extends Generator {
     // set large specification mode; leave some spare parameters
     largeSpecificationMode = IR.size > 200
   }
-  final def setTC(tc : TypeContext) = {}
+  final def setTC(tc : TypeContext) = { types = tc }
 
   var types : TypeContext = _
   var IR : List[UserType] = _
   var interfaces : List[InterfaceType] = _
-  var rc: ReflectionContext = _
+  var rc : ReflectionContext = _
 
-  def setReflectionContext(rc: ReflectionContext): Unit = { this.rc = rc }
+  def setReflectionContext(rc : ReflectionContext) : Unit = { this.rc = rc }
 
   /**
    * This flag is set iff the specification is too large to be passed as parameter list
@@ -114,7 +114,7 @@ trait GeneralOutputMaker extends Generator {
   /**
    * Translates a possible non-empty package name into a package prefix.
    */
-  protected def userPackagePrefix(t: Type) : String = if (t.getName.getPackagePath.size > 0)
+  protected def userPackagePrefix(t : Type) : String = if (t.getName.getPackagePath.size > 0)
     t.getName.getPackagePath + "." else ""
   /**
    * Assume a package prefix provider.

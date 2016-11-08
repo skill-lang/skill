@@ -67,9 +67,12 @@ trait Generator {
   def setOption(option : String, value : String) : Unit;
 
   /**
-   * Prints help for language specific options.
+   * The help text for language specific options.
+   *
+   * If the text is the empty string, no options are provided by this generator.
+   * Hence, it is omitted in option parsing.
    */
-  def printHelp : Unit;
+  def helpText : String;
 
   /**
    * Returns the custom field manual for this generator.

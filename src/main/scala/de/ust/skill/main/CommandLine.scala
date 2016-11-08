@@ -65,7 +65,10 @@ Opitions:
 
   --printCFM language    print custom field manual for the argument language
 """)
-    gens.foreach(_.printHelp)
+    for (g ← gens if !g.helpText.isEmpty()) {
+      println(s"""Options (${g.getLanguageName}):
+${g.helpText}""")
+    }
   }
 
   /**
@@ -102,8 +105,8 @@ Opitions:
       val tc = if (skillPath != "-") Parser.process(new File(skillPath), keepSpecificationOrder) else new TypeContext
 
       // For JavaForeign we run extra stuff
-      languages.get("javaforeign").map { _.asInstanceOf[de.ust.skill.generator.jforeign.Main] }
-        .map { jforeignGen => JavaForeign.run(jforeignGen, tc) }
+//      languages.get("javaforeign").map { _.asInstanceOf[de.ust.skill.generator.jforeign.Main] }
+//        .map { jforeignGen ⇒ JavaForeign.run(jforeignGen, tc) }
 
       println(s"Parsed $skillPath -- found ${tc.allTypeNames.size - (new TypeContext().allTypeNames.size)} types.")
       println(s"Generating sources into ${new File(outPath).getAbsolutePath()}")

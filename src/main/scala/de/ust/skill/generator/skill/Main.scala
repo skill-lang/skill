@@ -54,7 +54,7 @@ class Main extends FakeMain
   private var _packagePrefix = ""
 
   override def setPackage(names : List[String]) {
-    _packagePrefix = names.foldRight("")(_+"."+_)
+    _packagePrefix = names.foldRight("")(_ + "." + _)
   }
 
   override def setOption(option : String, value : String) = option match {
@@ -69,10 +69,10 @@ class Main extends FakeMain
    */
   override def escaped(target : String) : String = target;
 
-  override def printHelp : Unit = println("""
-Opitions (skill):
-  drop: (interfaces|enums|typedefs|views|all)  drops the argument kind from the specification, defaults is none
-""")
+  override def helpText = """
+drop = (interfaces|enums|typedefs|views|all)
+          drops the argument kind from the specification, defaults is none
+"""
 
   override def customFieldManual = "will keep all custom fields as-is"
 

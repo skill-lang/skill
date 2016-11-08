@@ -48,19 +48,13 @@ class Main extends FakeMain
     _packagePrefix = names.foldRight("")(_ + "." + _)
   }
 
-  override def setOption(option : String, value : String) = option match {
-    case unknown ⇒ sys.error(s"unkown Argument: $unknown")
-  }
+  override def setOption(option : String, value : String) = ???
+  override def helpText = ""
 
   /**
    * stats do not require any escaping
    */
   override def escaped(target : String) : String = target;
-
-  override def printHelp : Unit = println("""
-Opitions (statistics):
-  (none)
-""")
 
   override def customFieldManual = "Custom fields will be ignored."
 

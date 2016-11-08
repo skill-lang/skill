@@ -2,7 +2,7 @@ name := "skill"
 
 version := "0.3"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 javacOptions ++= Seq("-encoding", "UTF-8")
 
@@ -20,3 +20,14 @@ mainClass := Some("de.ust.skill.main.CommandLine")
 libraryDependencies += "commons-lang" % "commons-lang" % "2.6"
 
 libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4"
+
+libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.0"
+
+
+buildInfoSettings
+
+sourceGenerators in Compile <+= buildInfo
+
+buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
+
+buildInfoPackage := "de.ust.skill"

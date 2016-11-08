@@ -16,9 +16,9 @@ object KnownGenerators {
     classOf[ecore.Main],
     classOf[haskell.Main],
     classOf[java.Main],
+    classOf[jforeign.Main],
     classOf[scala.Main],
     classOf[skill.Main],
-    classOf[statistics.Main],
-    classOf[jforeign.Main]
+    classOf[statistics.Main]
   )
 }

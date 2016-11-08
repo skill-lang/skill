@@ -147,12 +147,11 @@ class Main extends FakeMain
     case unknown                  ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
-  override def printHelp : Unit = println("""
-Opitions (Java):
-  revealSkillID:    true/false  if set to true, the generated binding will reveal SKilL IDs in the API
-  srcPath:          <path>      set a relative path used as source folder in generated code
-  suppressWarnings: true/false  add a @SuppressWarnings("all") annotation to generated classes
-""")
+  override def helpText = """
+  revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
+  srcPath           <path>      set a relative path used as source folder in generated code
+  suppressWarnings  true/false  add a @SuppressWarnings("all") annotation to generated classes
+"""
 
   override def customFieldManual = """
 !import string+    A list of imports that will be added where required.

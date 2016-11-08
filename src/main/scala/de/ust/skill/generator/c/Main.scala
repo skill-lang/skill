@@ -238,11 +238,10 @@ final class Main extends FakeMain
     case unknown  ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
-  override def printHelp : Unit = println("""
-Opitions (C):
+  override def helpText = """
   genDir                 replace default sub-directory for generated sources
   unsafe                 remove all generated runtime type checks, if set to "true"
-""")
+"""
 
   override def customFieldManual : String = "not supported"
 

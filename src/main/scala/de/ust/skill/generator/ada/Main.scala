@@ -227,14 +227,8 @@ pragma Ada_2012;
 """
   }
 
-  override def setOption(option : String, value : String) : Unit = option match {
-    case unknown ⇒ sys.error(s"unkown Argument: $unknown")
-  }
-
-  override def printHelp : Unit = println("""
-Opitions (ada):
-  (none)
-""")
+  override def setOption(option : String, value : String) : Unit = ???
+  override def helpText = ""
 
   override def customFieldManual = """
 !with string+    Argument strings are added to the head of the generated file and each included with a with."""

@@ -134,11 +134,11 @@ class Main extends FakeMain
     case _                           ⇒ throw new IllegalStateException(s"Unknown type $t")
   }
 
-  override protected def mapType(f: Field, boxed : Boolean): String = f.getType match {
-    case t : ListType                ⇒ s"${rc.map(f).getName}<${mapType(t.getBaseType(), true)}>"
-    case t : SetType                 ⇒ s"${rc.map(f).getName}<${mapType(t.getBaseType(), true)}>"
-    case t : MapType                 ⇒ t.getBaseTypes().map(mapType(_, true)).reduceRight((k, v) ⇒ s"${rc.map(f).getName}<$k, $v>")
-    case _ ⇒ mapType(f.getType, boxed)
+  override protected def mapType(f : Field, boxed : Boolean) : String = f.getType match {
+    case t : ListType ⇒ s"${rc.map(f).getName}<${mapType(t.getBaseType(), true)}>"
+    case t : SetType  ⇒ s"${rc.map(f).getName}<${mapType(t.getBaseType(), true)}>"
+    case t : MapType  ⇒ t.getBaseTypes().map(mapType(_, true)).reduceRight((k, v) ⇒ s"${rc.map(f).getName}<$k, $v>")
+    case _            ⇒ mapType(f.getType, boxed)
   }
 
   /**
@@ -209,15 +209,14 @@ class Main extends FakeMain
     case unknown                  ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
-  override def printHelp : Unit = println("""
-Opitions (JavaForeign):
-  revealSkillID:    true/false  if set to true, the generated binding will reveal SKilL IDs in the API
-  srcPath:          <path>      set a relative path used as source folder in generated code
-  suppressWarnings: true/false  add a @SuppressWarnings("all") annotation to generated classes
-  m:                <path>      mapping file which ties SKilL types to Java types
-  f:                <path>      class path from where Java types are looked up. May be specified multiple times.
-  genspec:          <path>      generate SKilL specification from foreign types
-""")
+  override def helpText = """
+  revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
+  srcPath           <path>      set a relative path used as source folder in generated code
+  suppressWarnings  true/false  add a @SuppressWarnings("all") annotation to generated classes
+  m                 <path>      mapping file which ties SKilL types to Java types
+  f                 <path>      class path from where Java types are looked up. May be specified multiple times.
+  genspec           <path>      generate SKilL specification from foreign types
+"""
 
   override def customFieldManual = """
 !import string+    A list of imports that will be added where required.
