@@ -19,8 +19,11 @@ trait IROptions extends AbstractOptions {
 
     def process {
       // create ir from spec, if requested, otherwise try to load it from target
-      if (null != fromSpec) {
-
+      val sir = if (null != fromSpec) {
+        val tc = Parser.process(fromSpec)
+        new SIRHandler(tc, target)
+      } else {
+        new SIRHandler(target)
       }
     }
   }
