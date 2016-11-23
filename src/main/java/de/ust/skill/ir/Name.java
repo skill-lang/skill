@@ -114,7 +114,7 @@ final public class Name implements Comparable<Name> {
     public String camel() {
         if (null == camel) {
             Iterator<String> it = parts.iterator();
-            StringBuilder sb = new StringBuilder(it.next().toLowerCase());
+            StringBuilder sb = new StringBuilder(it.next());
             while (it.hasNext())
                 sb.append(capitalize(it.next()));
             camel = sb.toString();
