@@ -33,6 +33,10 @@ trait PoolsMaker extends GeneralOutputMaker {
       val typeName = "_root_." + packagePrefix + name(t)
       val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
 
+      // reference to state if required
+      val stateRef = if (t.hasDistributedField()) s", basePool.owner.asInstanceOf[${packagePrefix}api.SkillFile]"
+      else ""
+
       // find all fields that belong to the projected version, but use the unprojected variant
       val flatIRFieldNames = flatIR.find(_.getName == t.getName).get.getFields.map(_.getSkillName).toSet
       val fields = t.getAllFields.filter(f ⇒ flatIRFieldNames.contains(f.getSkillName))
@@ -98,7 +102,10 @@ final class ${storagePool(t)}(poolIndex : Int${
           if (f.getType.isInstanceOf[ReferenceType] || f.getType.isInstanceOf[ContainerType])
             s""", t.asInstanceOf[FieldType[${mapType(f.getType)}]]"""
           else ""
-        })"""
+        })${
+          if (f.isDistributed) s".ensuring { f ⇒ ${knownField(f)} = f; true }"
+          else ""
+        }"""
         ).mkString("")
       }
       case _      ⇒ return super.addField(ID, t, name, restrictions)
@@ -135,7 +142,10 @@ final class ${storagePool(t)}(poolIndex : Int${
 ${
           (for (f ← dfs)
             yield s"""    if(fields.contains(${clsName(f)}))
-        dataFields += new ${knownField(projectedField(f))}(dataFields.size + 1, this, ${mapFieldDefinition(f.getType)})"""
+        dataFields += new ${knownField(projectedField(f))}(dataFields.size + 1, this, ${mapFieldDefinition(f.getType)})${
+            if (f.isDistributed) s".ensuring { f ⇒ ${knownField(f)} = f; true }"
+            else ""
+          }"""
           ).mkString("\n")
         }
 """) + (
@@ -144,7 +154,10 @@ ${
     autoFields.sizeHint(${afs.size})${
             afs.map { f ⇒
               s"""
-    autoFields += new ${knownField(projectedField(f))}(this, ${mapFieldDefinition(f.getType)})"""
+    autoFields += new ${knownField(projectedField(f))}(this, ${mapFieldDefinition(f.getType)})${
+                if (f.isDistributed) s".ensuring { f ⇒ ${knownField(f)} = f; true }"
+                else ""
+              }"""
             }.mkString
           }
   """)
@@ -153,7 +166,11 @@ ${
     for(f <- dataFields ++ autoFields)
       f.createKnownRestrictions
   }
-
+${
+        // access to distributed fields
+        (for (f ← t.getFields if f.isDistributed())
+          yield s"\n  var ${knownField(f)} : ${knownField(f)} = _\n").mkString
+      }
   override def makeSubPool(name : String, poolIndex : Int) = ${
         if (isSingleton) s"""throw new NoSuchMethodError("${t.getName.capital} is a Singleton and can therefore not have any subtypes.")"""
         else s"new ${subPool(t)}(poolIndex, name, this)"
@@ -169,11 +186,11 @@ ${
     if (null != this.data && 0 != this.staticDataInstances) {
       val r = staticInstances.next
       if (null != r) r
-      else new $typeName(-1)
+      else new $typeName(-1$stateRef)
     } else if (!newObjects.isEmpty) {
       newObjects.head
     } else {
-      val r = new $typeName(-1)
+      val r = new $typeName(-1$stateRef)
       this.newObjects.append(r)
       r
     }
@@ -181,7 +198,7 @@ ${
 """
         else s"""
   override def reflectiveAllocateInstance: $typeName = {
-    val r = new $typeName(-1)
+    val r = new $typeName(-1$stateRef)
     this.newObjects.append(r)
     r
   }
@@ -191,14 +208,14 @@ ${
       var i : SkillID = b.bpo
       val last = i + b.staticCount
       while (i < last) {
-        data(i) = new $typeName(i + 1)
+        data(i) = new $typeName(i + 1$stateRef)
         i += 1
       }
     }
   }
 
   def make(${makeConstructorArguments(t)}) = {
-    val r = new $typeName(-1 - newObjects.size${appendConstructorArguments(t)})
+    val r = new $typeName(-1 - newObjects.size$stateRef${appendConstructorArguments(t)})
     newObjects.append(r)
     r
   }"""
