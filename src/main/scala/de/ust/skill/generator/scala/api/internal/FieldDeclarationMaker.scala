@@ -69,8 +69,11 @@ import de.ust.skill.common.scala.api.SkillObject
 import de.ust.skill.common.scala.internal.AutoField
 import de.ust.skill.common.scala.internal.BulkChunk
 import de.ust.skill.common.scala.internal.Chunk
+import de.ust.skill.common.scala.internal.DistributedField
 import de.ust.skill.common.scala.internal.IgnoredField
+import de.ust.skill.common.scala.internal.FieldDeclaration
 import de.ust.skill.common.scala.internal.KnownField
+import de.ust.skill.common.scala.internal.LazyField
 import de.ust.skill.common.scala.internal.SimpleChunk
 import de.ust.skill.common.scala.internal.SingletonStoragePool
 import de.ust.skill.common.scala.internal.fieldTypes._
@@ -90,27 +93,29 @@ final class ${knownField(f)}(${
         else s" = ${mapToFieldType(f.getType)}"
       })
     extends ${
-        if (f.isAuto()) "Auto"
-        else "Known"
-      }Field[$fieldActualType,${mapType(t)}](_type,
+        if (f.isAuto()) "AutoField"
+        else if (f.isOnDemand()) "LazyField"
+        else if (f.isDistributed()) "DistributedField"
+        else "FieldDeclaration"
+      }[$fieldActualType,${mapType(t)}](_type,
       "${f.getSkillName}",${
         if (f.isAuto()) """
       0,"""
         else """
       _index,"""
       }
-      _owner)${
+      _owner)
+    with KnownField[$fieldActualType,${mapType(t)}]${
         // mark ignored fields as ignored
         if (f.isIgnored()) s"""
     with IgnoredField[${mapType(f.getType)},${mapType(t)}]"""
         else ""
-      }${
-        // has no serialization
-        if (f.isAuto()) " {"
-        // generate a read function
-        else s""" {
-"""
-      }${
+      } {
+${
+        if (f.isDistributed()) s"\n  _owner.${knownField(f)} = this"
+        else ""
+      }
+      ${
         // TODO re-enable default restrictions 
         (for (r ← f.getRestrictions if !r.isInstanceOf[DefaultRestriction])
           yield s"""restrictions += ${mkFieldRestriction(f.getType, r)}${
@@ -174,7 +179,9 @@ ${mapKnownReadType(f.getType)}
         this, in.position())"""
         }
   }
-
+${
+          if (f.isDistributed) ""
+          else s"""
   def offset: Unit = {
     val data = owner.data
     var result = 0L
@@ -232,19 +239,23 @@ ${mapKnownReadType(f.getType)}
         }
     }
   }"""
-      }
+        }"""
+      }${
+        if (f.isDistributed) "" // inherited
+        else s"""
 
   //override def get(i : ${mapType(t)}) = i.${escaped(f.getName.camel)}
   //override def set(i : ${mapType(t)}, v : ${mapType(f.getType)}) = ${
-        if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
-        else s"i.${escaped(f.getName.camel)} = v.asInstanceOf[$fieldActualType]"
-      }
+          if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
+          else s"i.${escaped(f.getName.camel)} = v.asInstanceOf[$fieldActualType]"
+        }
 
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : $fieldActualType = i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)}
   override def setR(i : SkillObject, v : $fieldActualType) : Unit = ${
-        if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
-        else s"i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = v.asInstanceOf[$fieldActualType]"
+          if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
+          else s"i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = v.asInstanceOf[$fieldActualType]"
+        }"""
       }
 }
 """)

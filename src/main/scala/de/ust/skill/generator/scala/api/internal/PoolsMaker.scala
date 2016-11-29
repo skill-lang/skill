@@ -102,10 +102,7 @@ final class ${storagePool(t)}(poolIndex : Int${
           if (f.getType.isInstanceOf[ReferenceType] || f.getType.isInstanceOf[ContainerType])
             s""", t.asInstanceOf[FieldType[${mapType(f.getType)}]]"""
           else ""
-        })${
-          if (f.isDistributed) s".ensuring { f ⇒ ${knownField(f)} = f; true }"
-          else ""
-        }"""
+        })"""
         ).mkString("")
       }
       case _      ⇒ return super.addField(ID, t, name, restrictions)
@@ -142,10 +139,7 @@ final class ${storagePool(t)}(poolIndex : Int${
 ${
           (for (f ← dfs)
             yield s"""    if(fields.contains(${clsName(f)}))
-        dataFields += new ${knownField(projectedField(f))}(dataFields.size + 1, this, ${mapFieldDefinition(f.getType)})${
-            if (f.isDistributed) s".ensuring { f ⇒ ${knownField(f)} = f; true }"
-            else ""
-          }"""
+        dataFields += new ${knownField(projectedField(f))}(dataFields.size + 1, this, ${mapFieldDefinition(f.getType)})"""
           ).mkString("\n")
         }
 """) + (
