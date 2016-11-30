@@ -92,6 +92,9 @@ object FileParser extends SkillFileParser[SkillFile] {
     }"""
       ).mkString
     }
+    
+    // create state to allow distributed fields to access the state structure for instance allocation
+    val r = new SkillFile(path, mode, String, Annotation, types, typesByName)
 
     // trigger allocation and instance creation
     locally {
@@ -110,7 +113,6 @@ object FileParser extends SkillFileParser[SkillFile] {
     // read eager fields
     triggerFieldDeserialization(types, dataList)
 
-    val r = new SkillFile(path, mode, String, Annotation, types, typesByName)
     types.par.foreach(_.ensureKnownFields(r))
     r
   }

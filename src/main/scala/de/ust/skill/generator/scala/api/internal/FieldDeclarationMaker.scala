@@ -131,7 +131,7 @@ ${
     """, """
   }""")
       }${
-        if (f.isAuto()) ""
+        if (f.isAuto() || f.isDistributed()) ""
         else s"""
 
   override def read(part : MappedInStream, target : Chunk) {${
@@ -179,9 +179,7 @@ ${mapKnownReadType(f.getType)}
         this, in.position())"""
         }
   }
-${
-          if (f.isDistributed) ""
-          else s"""
+
   def offset: Unit = {
     val data = owner.data
     var result = 0L
@@ -239,7 +237,7 @@ ${
         }
     }
   }"""
-        }"""
+
       }${
         if (f.isDistributed) "" // inherited
         else s"""
