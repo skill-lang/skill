@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 09.11.2016                               *
+ * \__ \ ' <| | | |__     generated: 01.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -39,8 +39,7 @@ final class FieldLikePool(poolIndex : Int)
                            restrictions : HashSet[FieldRestriction]) : FieldDeclaration[T, _root_.de.ust.skill.sir.FieldLike] = {
     val f = (name match {
       case "comment" ⇒ new KnownField_FieldLike_comment(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Comment]])
-      case "name" ⇒ new KnownField_FieldLike_name(ID, this, t.asInstanceOf[FieldType[java.lang.String]])
-      case "nameparts" ⇒ new KnownField_FieldLike_nameParts(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[java.lang.String]]])
+      case "name" ⇒ new KnownField_FieldLike_name(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Identifier]])
       case "type" ⇒ new KnownField_FieldLike_type(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Type]])
       case "hints" ⇒ new KnownField_FieldLike_hints(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint]]])
       case "restrictions" ⇒ new KnownField_FieldLike_restrictions(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]]])
@@ -60,12 +59,11 @@ final class FieldLikePool(poolIndex : Int)
     // data fields
     val Clscomment = classOf[KnownField_FieldLike_comment]
     val Clsname = classOf[KnownField_FieldLike_name]
-    val ClsnameParts = classOf[KnownField_FieldLike_nameParts]
     val Clstype = classOf[KnownField_FieldLike_type]
     val Clshints = classOf[KnownField_FieldLike_hints]
     val Clsrestrictions = classOf[KnownField_FieldLike_restrictions]
 
-    val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.FieldLike]]](Clscomment,Clsname,ClsnameParts,Clstype,Clshints,Clsrestrictions)
+    val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.FieldLike]]](Clscomment,Clsname,Clstype,Clshints,Clsrestrictions)
     var dfi = dataFields.size
     while (dfi != 0) {
       dfi -= 1
@@ -74,9 +72,7 @@ final class FieldLikePool(poolIndex : Int)
     if(fields.contains(Clscomment))
         dataFields += new KnownField_FieldLike_comment(dataFields.size + 1, this, state.Comment)
     if(fields.contains(Clsname))
-        dataFields += new KnownField_FieldLike_name(dataFields.size + 1, this, state.String)
-    if(fields.contains(ClsnameParts))
-        dataFields += new KnownField_FieldLike_nameParts(dataFields.size + 1, this, VariableLengthArray(state.String))
+        dataFields += new KnownField_FieldLike_name(dataFields.size + 1, this, state.Identifier)
     if(fields.contains(Clstype))
         dataFields += new KnownField_FieldLike_type(dataFields.size + 1, this, state.Type)
     if(fields.contains(Clshints))
@@ -110,8 +106,8 @@ final class FieldLikePool(poolIndex : Int)
     }
   }
 
-  def make(comment : _root_.de.ust.skill.sir.Comment = null, name : java.lang.String = null, nameParts : scala.collection.mutable.ArrayBuffer[java.lang.String] = scala.collection.mutable.ArrayBuffer[java.lang.String](), `type` : _root_.de.ust.skill.sir.Type = null, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint](), restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]()) = {
-    val r = new _root_.de.ust.skill.sir.FieldLike(-1 - newObjects.size, comment : _root_.de.ust.skill.sir.Comment, name : java.lang.String, nameParts : scala.collection.mutable.ArrayBuffer[java.lang.String], `type` : _root_.de.ust.skill.sir.Type, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction])
+  def make(comment : _root_.de.ust.skill.sir.Comment = null, name : _root_.de.ust.skill.sir.Identifier = null, `type` : _root_.de.ust.skill.sir.Type = null, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint](), restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]()) = {
+    val r = new _root_.de.ust.skill.sir.FieldLike(-1 - newObjects.size, comment : _root_.de.ust.skill.sir.Comment, name : _root_.de.ust.skill.sir.Identifier, `type` : _root_.de.ust.skill.sir.Type, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction])
     newObjects.append(r)
     r
   }

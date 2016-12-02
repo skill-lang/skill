@@ -72,6 +72,10 @@ final public class Name implements Comparable<Name> {
         return skillName;
     }
 
+    public String[] parts() {
+        return parts.toArray(new String[parts.size()]);
+    }
+
     // different naming conventions, alphabetical order
 
     private String ada;

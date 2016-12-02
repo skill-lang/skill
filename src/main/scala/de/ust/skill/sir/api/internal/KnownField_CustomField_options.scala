@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 09.11.2016                               *
+ * \__ \ ' <| | | |__     generated: 01.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -22,8 +22,11 @@ import de.ust.skill.common.scala.api.SkillObject
 import de.ust.skill.common.scala.internal.AutoField
 import de.ust.skill.common.scala.internal.BulkChunk
 import de.ust.skill.common.scala.internal.Chunk
+import de.ust.skill.common.scala.internal.DistributedField
 import de.ust.skill.common.scala.internal.IgnoredField
+import de.ust.skill.common.scala.internal.FieldDeclaration
 import de.ust.skill.common.scala.internal.KnownField
+import de.ust.skill.common.scala.internal.LazyField
 import de.ust.skill.common.scala.internal.SimpleChunk
 import de.ust.skill.common.scala.internal.SingletonStoragePool
 import de.ust.skill.common.scala.internal.fieldTypes._
@@ -36,11 +39,13 @@ final class KnownField_CustomField_options(
   _index : Int,
   _owner : CustomFieldPool,
   _type : FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.CustomFieldOption]])
-    extends KnownField[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.CustomFieldOption],_root_.de.ust.skill.sir.CustomField](_type,
+    extends FieldDeclaration[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.CustomFieldOption],_root_.de.ust.skill.sir.CustomField](_type,
       "options",
       _index,
-      _owner) {
+      _owner)
+    with KnownField[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.CustomFieldOption],_root_.de.ust.skill.sir.CustomField] {
 
+      
   override def createKnownRestrictions : Unit = {
     
   }

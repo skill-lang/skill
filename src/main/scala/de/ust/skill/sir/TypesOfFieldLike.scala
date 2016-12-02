@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 09.11.2016                               *
+ * \__ \ ' <| | | |__     generated: 01.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir
@@ -15,11 +15,10 @@ sealed class FieldLike (_skillID : SkillID) extends SkillObject(_skillID) with A
   //reveal skill id
   protected[sir] final def getSkillID = skillID
 
-  private[sir] def this(_skillID : SkillID, comment : _root_.de.ust.skill.sir.Comment, name : java.lang.String, nameParts : scala.collection.mutable.ArrayBuffer[java.lang.String], `type` : _root_.de.ust.skill.sir.Type, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) {
+  private[sir] def this(_skillID : SkillID, comment : _root_.de.ust.skill.sir.Comment, name : _root_.de.ust.skill.sir.Identifier, `type` : _root_.de.ust.skill.sir.Type, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) {
     this(_skillID)
     _comment = comment
     _name = name
-    _nameParts = nameParts
     _type = `type`
     _hints = hints
     _restrictions = restrictions
@@ -37,29 +36,17 @@ sealed class FieldLike (_skillID : SkillID) extends SkillObject(_skillID) with A
   def `comment_=`(comment : _root_.de.ust.skill.sir.Comment) : scala.Unit = { _comment = comment }
   final private[sir] def `Internal_comment_=`(v : _root_.de.ust.skill.sir.Comment) = _comment = v
 
-  final protected var _name : java.lang.String = null
+  final protected var _name : _root_.de.ust.skill.sir.Identifier = null
   /**
    *  the skill name
    */
-  def name : java.lang.String = _name
+  def name : _root_.de.ust.skill.sir.Identifier = _name
   final private[sir] def Internal_name = _name
   /**
    *  the skill name
    */
-  def `name_=`(name : java.lang.String) : scala.Unit = { _name = name }
-  final private[sir] def `Internal_name_=`(v : java.lang.String) = _name = v
-
-  final protected var _nameParts : scala.collection.mutable.ArrayBuffer[java.lang.String] = scala.collection.mutable.ArrayBuffer[java.lang.String]()
-  /**
-   *  parts of the name used for pretty identifiers
-   */
-  def nameParts : scala.collection.mutable.ArrayBuffer[java.lang.String] = _nameParts
-  final private[sir] def Internal_nameParts = _nameParts
-  /**
-   *  parts of the name used for pretty identifiers
-   */
-  def `nameParts_=`(nameParts : scala.collection.mutable.ArrayBuffer[java.lang.String]) : scala.Unit = { _nameParts = nameParts }
-  final private[sir] def `Internal_nameParts_=`(v : scala.collection.mutable.ArrayBuffer[java.lang.String]) = _nameParts = v
+  def `name_=`(name : _root_.de.ust.skill.sir.Identifier) : scala.Unit = { _name = name }
+  final private[sir] def `Internal_name_=`(v : _root_.de.ust.skill.sir.Identifier) = _name = v
 
   final protected var _type : _root_.de.ust.skill.sir.Type = null
   /**
@@ -73,7 +60,7 @@ sealed class FieldLike (_skillID : SkillID) extends SkillObject(_skillID) with A
   def `type_=`(`type` : _root_.de.ust.skill.sir.Type) : scala.Unit = { _type = `type` }
   final private[sir] def `Internal_type_=`(v : _root_.de.ust.skill.sir.Type) = _type = v
 
-  override def prettyString : String = s"FieldLike(#$skillID, comment: ${comment}, name: ${name}, nameparts: ${nameParts}, type: ${`type`}, hints: ${hints}, restrictions: ${restrictions})"
+  override def prettyString : String = s"FieldLike(#$skillID, comment: ${comment}, name: ${name}, type: ${`type`}, hints: ${hints}, restrictions: ${restrictions})"
 
   override def getTypeName : String = "fieldlike"
 
@@ -81,7 +68,7 @@ sealed class FieldLike (_skillID : SkillID) extends SkillObject(_skillID) with A
 }
 
 object FieldLike {
-  def unapply(self : FieldLike) = Some(self.comment, self.name, self.nameParts, self.`type`, self.hints, self.restrictions)
+  def unapply(self : FieldLike) = Some(self.comment, self.name, self.`type`, self.hints, self.restrictions)
 
   final class UnknownSubType(
     _skillID : SkillID,
@@ -98,14 +85,13 @@ object FieldLike {
  *  a language custom field
  */
 sealed class CustomField (_skillID : SkillID) extends FieldLike(_skillID) {
-  private[sir] def this(_skillID : SkillID, language : java.lang.String, options : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.CustomFieldOption], typename : java.lang.String, comment : _root_.de.ust.skill.sir.Comment, name : java.lang.String, nameParts : scala.collection.mutable.ArrayBuffer[java.lang.String], `type` : _root_.de.ust.skill.sir.Type, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) {
+  private[sir] def this(_skillID : SkillID, language : java.lang.String, options : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.CustomFieldOption], typename : java.lang.String, comment : _root_.de.ust.skill.sir.Comment, name : _root_.de.ust.skill.sir.Identifier, `type` : _root_.de.ust.skill.sir.Type, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) {
     this(_skillID)
     _language = language
     _options = options
     _typename = typename
     _comment = comment
     _name = name
-    _nameParts = nameParts
     _type = `type`
     _hints = hints
     _restrictions = restrictions
@@ -141,7 +127,7 @@ sealed class CustomField (_skillID : SkillID) extends FieldLike(_skillID) {
   def `typename_=`(typename : java.lang.String) : scala.Unit = { _typename = typename }
   final private[sir] def `Internal_typename_=`(v : java.lang.String) = _typename = v
 
-  override def prettyString : String = s"CustomField(#$skillID, language: ${language}, options: ${options}, typename: ${typename}, comment: ${comment}, name: ${name}, nameparts: ${nameParts}, type: ${`type`}, hints: ${hints}, restrictions: ${restrictions})"
+  override def prettyString : String = s"CustomField(#$skillID, language: ${language}, options: ${options}, typename: ${typename}, comment: ${comment}, name: ${name}, type: ${`type`}, hints: ${hints}, restrictions: ${restrictions})"
 
   override def getTypeName : String = "customfield"
 
@@ -149,7 +135,7 @@ sealed class CustomField (_skillID : SkillID) extends FieldLike(_skillID) {
 }
 
 object CustomField {
-  def unapply(self : CustomField) = Some(self.language, self.options, self.typename, self.comment, self.name, self.nameParts, self.`type`, self.hints, self.restrictions)
+  def unapply(self : CustomField) = Some(self.language, self.options, self.typename, self.comment, self.name, self.`type`, self.hints, self.restrictions)
 
   final class UnknownSubType(
     _skillID : SkillID,
@@ -163,12 +149,11 @@ object CustomField {
 }
 
 sealed class Field (_skillID : SkillID) extends FieldLike(_skillID) {
-  private[sir] def this(_skillID : SkillID, isAuto : scala.Boolean, comment : _root_.de.ust.skill.sir.Comment, name : java.lang.String, nameParts : scala.collection.mutable.ArrayBuffer[java.lang.String], `type` : _root_.de.ust.skill.sir.Type, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) {
+  private[sir] def this(_skillID : SkillID, isAuto : scala.Boolean, comment : _root_.de.ust.skill.sir.Comment, name : _root_.de.ust.skill.sir.Identifier, `type` : _root_.de.ust.skill.sir.Type, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) {
     this(_skillID)
     _isAuto = isAuto
     _comment = comment
     _name = name
-    _nameParts = nameParts
     _type = `type`
     _hints = hints
     _restrictions = restrictions
@@ -186,7 +171,7 @@ sealed class Field (_skillID : SkillID) extends FieldLike(_skillID) {
   def `isAuto_=`(isAuto : scala.Boolean) : scala.Unit = { _isAuto = isAuto }
   final private[sir] def `Internal_isAuto_=`(v : scala.Boolean) = _isAuto = v
 
-  override def prettyString : String = s"Field(#$skillID, isauto: ${isAuto}, comment: ${comment}, name: ${name}, nameparts: ${nameParts}, type: ${`type`}, hints: ${hints}, restrictions: ${restrictions})"
+  override def prettyString : String = s"Field(#$skillID, isauto: ${isAuto}, comment: ${comment}, name: ${name}, type: ${`type`}, hints: ${hints}, restrictions: ${restrictions})"
 
   override def getTypeName : String = "field"
 
@@ -194,7 +179,7 @@ sealed class Field (_skillID : SkillID) extends FieldLike(_skillID) {
 }
 
 object Field {
-  def unapply(self : Field) = Some(self.isAuto, self.comment, self.name, self.nameParts, self.`type`, self.hints, self.restrictions)
+  def unapply(self : Field) = Some(self.isAuto, self.comment, self.name, self.`type`, self.hints, self.restrictions)
 
   final class UnknownSubType(
     _skillID : SkillID,
@@ -212,12 +197,11 @@ object Field {
  *  @note  some components such as annotations must not be set by views
  */
 sealed class FieldView (_skillID : SkillID) extends FieldLike(_skillID) {
-  private[sir] def this(_skillID : SkillID, target : _root_.de.ust.skill.sir.FieldLike, comment : _root_.de.ust.skill.sir.Comment, name : java.lang.String, nameParts : scala.collection.mutable.ArrayBuffer[java.lang.String], `type` : _root_.de.ust.skill.sir.Type, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) {
+  private[sir] def this(_skillID : SkillID, target : _root_.de.ust.skill.sir.FieldLike, comment : _root_.de.ust.skill.sir.Comment, name : _root_.de.ust.skill.sir.Identifier, `type` : _root_.de.ust.skill.sir.Type, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) {
     this(_skillID)
     _target = target
     _comment = comment
     _name = name
-    _nameParts = nameParts
     _type = `type`
     _hints = hints
     _restrictions = restrictions
@@ -235,7 +219,7 @@ sealed class FieldView (_skillID : SkillID) extends FieldLike(_skillID) {
   def `target_=`(target : _root_.de.ust.skill.sir.FieldLike) : scala.Unit = { _target = target }
   final private[sir] def `Internal_target_=`(v : _root_.de.ust.skill.sir.FieldLike) = _target = v
 
-  override def prettyString : String = s"FieldView(#$skillID, target: ${target}, comment: ${comment}, name: ${name}, nameparts: ${nameParts}, type: ${`type`}, hints: ${hints}, restrictions: ${restrictions})"
+  override def prettyString : String = s"FieldView(#$skillID, target: ${target}, comment: ${comment}, name: ${name}, type: ${`type`}, hints: ${hints}, restrictions: ${restrictions})"
 
   override def getTypeName : String = "fieldview"
 
@@ -243,7 +227,7 @@ sealed class FieldView (_skillID : SkillID) extends FieldLike(_skillID) {
 }
 
 object FieldView {
-  def unapply(self : FieldView) = Some(self.target, self.comment, self.name, self.nameParts, self.`type`, self.hints, self.restrictions)
+  def unapply(self : FieldView) = Some(self.target, self.comment, self.name, self.`type`, self.hints, self.restrictions)
 
   final class UnknownSubType(
     _skillID : SkillID,

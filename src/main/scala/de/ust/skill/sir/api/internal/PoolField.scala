@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 09.11.2016                               *
+ * \__ \ ' <| | | |__     generated: 01.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -90,8 +90,8 @@ superPool
     }
   }
 
-  def make(isAuto : scala.Boolean = false, comment : _root_.de.ust.skill.sir.Comment = null, name : java.lang.String = null, nameParts : scala.collection.mutable.ArrayBuffer[java.lang.String] = scala.collection.mutable.ArrayBuffer[java.lang.String](), `type` : _root_.de.ust.skill.sir.Type = null, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint](), restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]()) = {
-    val r = new _root_.de.ust.skill.sir.Field(-1 - newObjects.size, isAuto : scala.Boolean, comment : _root_.de.ust.skill.sir.Comment, name : java.lang.String, nameParts : scala.collection.mutable.ArrayBuffer[java.lang.String], `type` : _root_.de.ust.skill.sir.Type, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction])
+  def make(isAuto : scala.Boolean = false, comment : _root_.de.ust.skill.sir.Comment = null, name : _root_.de.ust.skill.sir.Identifier = null, `type` : _root_.de.ust.skill.sir.Type = null, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint](), restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]()) = {
+    val r = new _root_.de.ust.skill.sir.Field(-1 - newObjects.size, isAuto : scala.Boolean, comment : _root_.de.ust.skill.sir.Comment, name : _root_.de.ust.skill.sir.Identifier, `type` : _root_.de.ust.skill.sir.Type, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction])
     newObjects.append(r)
     r
   }

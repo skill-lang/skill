@@ -16,12 +16,7 @@ FieldLike with Annotations {
   /**
    * the skill name
    */
-  string name;
-
-  /**
-   * parts of the name used for pretty identifiers
-   */
-  string[] nameParts;
+  Identifier name;
 }
 
 Field extends FieldLike {

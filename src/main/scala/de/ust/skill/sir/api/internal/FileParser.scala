@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 09.11.2016                               *
+ * \__ \ ' <| | | |__     generated: 01.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -341,6 +341,9 @@ object FileParser extends SkillFileParser[SkillFile] {
       types.append(p)
       typesByName.put("typedefinition", p)
     }
+    
+    // create state to allow distributed fields to access the state structure for instance allocation
+    val r = new SkillFile(path, mode, String, Annotation, types, typesByName)
 
     // trigger allocation and instance creation
     locally {
@@ -359,7 +362,6 @@ object FileParser extends SkillFileParser[SkillFile] {
     // read eager fields
     triggerFieldDeserialization(types, dataList)
 
-    val r = new SkillFile(path, mode, String, Annotation, types, typesByName)
     types.par.foreach(_.ensureKnownFields(r))
     r
   }

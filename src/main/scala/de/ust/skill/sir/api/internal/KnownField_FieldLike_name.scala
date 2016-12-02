@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 09.11.2016                               *
+ * \__ \ ' <| | | |__     generated: 01.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -22,25 +22,30 @@ import de.ust.skill.common.scala.api.SkillObject
 import de.ust.skill.common.scala.internal.AutoField
 import de.ust.skill.common.scala.internal.BulkChunk
 import de.ust.skill.common.scala.internal.Chunk
+import de.ust.skill.common.scala.internal.DistributedField
 import de.ust.skill.common.scala.internal.IgnoredField
+import de.ust.skill.common.scala.internal.FieldDeclaration
 import de.ust.skill.common.scala.internal.KnownField
+import de.ust.skill.common.scala.internal.LazyField
 import de.ust.skill.common.scala.internal.SimpleChunk
 import de.ust.skill.common.scala.internal.SingletonStoragePool
 import de.ust.skill.common.scala.internal.fieldTypes._
 import de.ust.skill.common.scala.internal.restrictions._
 
 /**
- * string FieldLike.name
+ * identifier FieldLike.name
  */
 final class KnownField_FieldLike_name(
   _index : Int,
   _owner : FieldLikePool,
-  _type : FieldType[java.lang.String])
-    extends KnownField[java.lang.String,_root_.de.ust.skill.sir.FieldLike](_type,
+  _type : FieldType[_root_.de.ust.skill.sir.Identifier])
+    extends FieldDeclaration[_root_.de.ust.skill.sir.Identifier,_root_.de.ust.skill.sir.FieldLike](_type,
       "name",
       _index,
-      _owner) {
+      _owner)
+    with KnownField[_root_.de.ust.skill.sir.Identifier,_root_.de.ust.skill.sir.FieldLike] {
 
+      
   override def createKnownRestrictions : Unit = {
     
   }
@@ -48,14 +53,14 @@ final class KnownField_FieldLike_name(
   override def read(part : MappedInStream, target : Chunk) {
     val d = owner.data
     val in = part.view(target.begin.toInt, target.end.toInt)
-
+    val t = this.t.asInstanceOf[IdentifierPool]
     try {
         target match {
           case c : SimpleChunk ⇒
             var i = c.bpo.toInt
             val high = i + c.count
             while (i != high) {
-              d(i).asInstanceOf[_root_.de.ust.skill.sir.FieldLike].Internal_name = t.read(in).asInstanceOf[java.lang.String]
+              d(i).asInstanceOf[_root_.de.ust.skill.sir.FieldLike].Internal_name = t.read(in).asInstanceOf[_root_.de.ust.skill.sir.Identifier]
               i += 1
             }
           case bci : BulkChunk ⇒
@@ -67,7 +72,7 @@ final class KnownField_FieldLike_name(
               var i = b.bpo
               val end = i + b.dynamicCount
               while (i != end) {
-                d(i).asInstanceOf[_root_.de.ust.skill.sir.FieldLike].Internal_name = t.read(in).asInstanceOf[java.lang.String]
+                d(i).asInstanceOf[_root_.de.ust.skill.sir.FieldLike].Internal_name = t.read(in).asInstanceOf[_root_.de.ust.skill.sir.Identifier]
                 i += 1
               }
             }
@@ -96,7 +101,7 @@ final class KnownField_FieldLike_name(
         val high = i + c.count
         while (i != high) {
           val v = data(i).asInstanceOf[_root_.de.ust.skill.sir.FieldLike].Internal_name
-          result += t.offset(v)
+          result += (if (null == v) 1 else V64.offset(v.getSkillID))
           i += 1
         }
       case bci : BulkChunk ⇒
@@ -109,7 +114,7 @@ final class KnownField_FieldLike_name(
           val end = i + b.dynamicCount
           while (i != end) {
           val v = data(i).asInstanceOf[_root_.de.ust.skill.sir.FieldLike].Internal_name
-          result += t.offset(v)
+          result += (if (null == v) 1 else V64.offset(v.getSkillID))
           i += 1
           }
         }
@@ -125,7 +130,7 @@ final class KnownField_FieldLike_name(
         val high = i + c.count
         while (i != high) {
           val v = data(i).asInstanceOf[_root_.de.ust.skill.sir.FieldLike].Internal_name
-          t.write(v, out)
+          if (null == v) out.i8(0) else out.v64(v.getSkillID)
           i += 1
         }
       case bci : BulkChunk ⇒
@@ -138,7 +143,7 @@ final class KnownField_FieldLike_name(
           val end = i + b.dynamicCount
           while (i != end) {
             val v = data(i).asInstanceOf[_root_.de.ust.skill.sir.FieldLike].Internal_name
-            t.write(v, out)
+            if (null == v) out.i8(0) else out.v64(v.getSkillID)
             i += 1
           }
         }
@@ -146,9 +151,9 @@ final class KnownField_FieldLike_name(
   }
 
   //override def get(i : _root_.de.ust.skill.sir.FieldLike) = i.name
-  //override def set(i : _root_.de.ust.skill.sir.FieldLike, v : java.lang.String) = i.name = v.asInstanceOf[java.lang.String]
+  //override def set(i : _root_.de.ust.skill.sir.FieldLike, v : _root_.de.ust.skill.sir.Identifier) = i.name = v.asInstanceOf[_root_.de.ust.skill.sir.Identifier]
 
   // note: reflective field access will raise exception for ignored fields
-  override def getR(i : SkillObject) : java.lang.String = i.asInstanceOf[_root_.de.ust.skill.sir.FieldLike].name
-  override def setR(i : SkillObject, v : java.lang.String) : Unit = i.asInstanceOf[_root_.de.ust.skill.sir.FieldLike].name = v.asInstanceOf[java.lang.String]
+  override def getR(i : SkillObject) : _root_.de.ust.skill.sir.Identifier = i.asInstanceOf[_root_.de.ust.skill.sir.FieldLike].name
+  override def setR(i : SkillObject, v : _root_.de.ust.skill.sir.Identifier) : Unit = i.asInstanceOf[_root_.de.ust.skill.sir.FieldLike].name = v.asInstanceOf[_root_.de.ust.skill.sir.Identifier]
 }
