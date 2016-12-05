@@ -221,9 +221,12 @@ interface ${name(x)}${extensions(x)} {${fields(x)}}""")
         case e : IOException ⇒ throw new Exception("failed to create temporary specification", e)
       }
 
+      println("running targts...")
+
       // invoke generator for targets
       for (target ← tool.buildTargets) {
         val args = Array[String](spec.getAbsolutePath, "-o", mkPath(target.output), "-L", target.language) ++ target.options
+        println(args.mkString("...", " ", ""))
         CommandLine.main(args)
       }
     }
