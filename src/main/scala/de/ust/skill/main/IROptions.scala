@@ -10,6 +10,7 @@ import de.ust.skill.generator.common.HeaderInfo
 import de.ust.skill.generator.common.KnownGenerators
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.parser.Parser
+import de.ust.skill.common.scala.api.ThrowException
 
 trait IROptions extends AbstractOptions {
   case class IRConfig(
@@ -93,9 +94,10 @@ trait IROptions extends AbstractOptions {
           sir.build(tool)
         }
 
-        // flush changes to tool
-        sir.sf.flush()
       }
+
+      // flush changes after everything could be performed successfully
+      sir.sf.flush(ThrowException)
     }
   }
   val irParser = new scopt.OptionParser[IRConfig]("skillc <file.sir>") {
