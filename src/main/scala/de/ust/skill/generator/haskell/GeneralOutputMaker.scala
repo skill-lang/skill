@@ -25,6 +25,8 @@ trait GeneralOutputMaker extends Generator {
 
   override def getLanguageName = "haskell";
 
+  override def clean = println("clean not supported by haskell")
+
   private[haskell] def header : String
 
   // remove special stuff for now

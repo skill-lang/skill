@@ -15,6 +15,9 @@ import scala.collection.mutable.MutableList
 import de.ust.skill.generator.common.Generator
 
 import scala.collection.JavaConversions._
+import java.nio.file.Files
+import java.nio.file.Path
+import scala.util.Try
 
 /**
  * The parent class for all output makers.
@@ -24,6 +27,10 @@ import scala.collection.JavaConversions._
 trait GeneralOutputMaker extends Generator {
 
   override def getLanguageName = "doxygen";
+
+  override def clean {
+    deleteRecursively(new File(outPath + packagePath))
+  }
 
   private[doxygen] def header : String
 
@@ -60,7 +67,7 @@ trait GeneralOutputMaker extends Generator {
   protected def escaped(target : Name) : String = escaped(target.ada)
 
   private lazy val packagePath = if (packagePrefix.length > 0) {
-    "/"+packagePrefix.replace(".", "/")
+    "/" + packagePrefix.replace(".", "/")
   } else {
     ""
   }

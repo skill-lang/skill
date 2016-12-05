@@ -24,6 +24,11 @@ import scala.collection.JavaConversions._
 trait GeneralOutputMaker extends Generator {
 
   override def getLanguageName = "statistics";
+  
+  /**
+   * the result is a single file, hence there is no point to clean anything
+   */
+  override def clean {}
 
   // remove special stuff for now
   final def setTC(tc : TypeContext) = this.tc = tc;
@@ -58,7 +63,7 @@ trait GeneralOutputMaker extends Generator {
   protected def escaped(target : Name) : String = target.camel
 
   private lazy val packagePath = if (packagePrefix.length > 0) {
-    "/"+packagePrefix.replace(".", "/")
+    "/" + packagePrefix.replace(".", "/")
   } else {
     ""
   }

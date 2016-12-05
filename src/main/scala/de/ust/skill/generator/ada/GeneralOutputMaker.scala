@@ -24,6 +24,8 @@ import scala.collection.mutable.HashMap
 trait GeneralOutputMaker extends Generator {
 
   override def getLanguageName = "ada";
+  
+  override def clean = println("clean not supported by ada")
 
   /**
    * configurable build mode; either "release" or "debug"

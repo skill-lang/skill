@@ -16,6 +16,7 @@ trait SourceOptions extends AbstractOptions {
   case class SourceConfig(target : String,
                           outdir : File = new File("."),
                           var depsdir : File = null,
+                          clean : Boolean = false,
                           header : HeaderInfo = new HeaderInfo(),
                           var languages : Set[String] = Set(),
                           languageOptions : HashMap[String, ArrayBuffer[(String, String)]] = new HashMap(),
@@ -68,6 +69,8 @@ trait SourceOptions extends AbstractOptions {
         gen.depsPath = depsdir.getAbsolutePath + pathPostfix
 
         if (verbose) print(s"run $lang: ")
+        
+        if (clean) gen.clean
 
         try {
           gen.make
@@ -101,10 +104,15 @@ trait SourceOptions extends AbstractOptions {
     opt[File]('o', "outdir").optional().action(
       (p, c) ⇒ c.copy(outdir = p)
     ).text("set the output directory")
+    
+    opt[Unit]('c', "clean").optional().action(
+      (p, c) ⇒ c.copy(clean = true)
+    ).text("clean output directory before creating source files")
 
     opt[File]('d', "depsdir").optional().action(
       (p, c) ⇒ c.copy(depsdir = p)
     ).text("set the dependency directory (libs, common sources)")
+    
 
     opt[String]('p', "package").required().action(
       (s, c) ⇒ c.copy(packageName = s.split('.'))

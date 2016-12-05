@@ -33,6 +33,11 @@ trait GeneralOutputMaker extends Generator {
   var droppedKinds = HashSet[Droppable]();
 
   override def getLanguageName = "skill";
+  
+  /**
+   * the result is a single file, hence there is no point to clean anything
+   */
+  override def clean {}
 
   // remove special stuff for now
   final def setTC(tc : TypeContext) = this.tc = tc;

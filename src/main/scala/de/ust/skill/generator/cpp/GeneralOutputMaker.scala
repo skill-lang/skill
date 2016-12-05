@@ -42,6 +42,8 @@ trait GeneralOutputMaker extends Generator {
   var largeSpecificationMode = false
 
   override def getLanguageName = "cpp";
+  
+  override def clean = println("clean not supported by c++")
 
   // options
   /**

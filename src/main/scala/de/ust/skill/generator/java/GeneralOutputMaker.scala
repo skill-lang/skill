@@ -49,6 +49,10 @@ trait GeneralOutputMaker extends Generator {
 
   override def getLanguageName = "java";
 
+  override def clean {
+    deleteRecursively(new File(outPath + "/" + packagePath))
+  }
+
   // options
   /**
    * if set to true, the generated binding will reveal the values of skill IDs.

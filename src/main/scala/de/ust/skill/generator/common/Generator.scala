@@ -67,6 +67,22 @@ trait Generator {
   def setPackage(names : List[String]) : Unit;
 
   /**
+   * invoked, iff the output folder should be cleaned before creating sources.
+   * The intention is to remove old generated sources that may no longer be
+   * necessary, because the specification changed.
+   *
+   * @note This method is invoked after setting up outpath and package.
+   */
+  def clean : Unit;
+
+  protected def deleteRecursively(file : File) : Unit = {
+    if (file.isDirectory)
+      file.listFiles.foreach(deleteRecursively)
+    if (file.exists && !file.delete)
+      throw new Exception(s"Unable to delete ${file.getAbsolutePath}")
+  }
+
+  /**
    * Sets an option to a new value.
    */
   def setOption(option : String, value : String) : Unit;

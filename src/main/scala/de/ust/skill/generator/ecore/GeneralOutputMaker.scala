@@ -33,6 +33,8 @@ trait GeneralOutputMaker extends Generator {
   var droppedKinds = HashSet[Droppable]();
 
   override def getLanguageName = "ecore";
+  
+  override def clean = println("ecore cannot clean")
 
   // remove special stuff for now
   final def setTC(tc : TypeContext) = this.tc = tc;
