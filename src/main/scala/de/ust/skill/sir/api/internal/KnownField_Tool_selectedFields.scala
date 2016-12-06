@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -45,9 +45,9 @@ final class KnownField_Tool_selectedFields(
       _owner)
     with KnownField[scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, scala.collection.mutable.HashMap[java.lang.String, _root_.de.ust.skill.sir.FieldLike]],_root_.de.ust.skill.sir.Tool] {
 
-      
+
   override def createKnownRestrictions : Unit = {
-    
+
   }
 
   override def read(part : MappedInStream, target : Chunk) {
@@ -149,11 +149,9 @@ final class KnownField_Tool_selectedFields(
         }
     }
   }
-
-  //override def get(i : _root_.de.ust.skill.sir.Tool) = i.selectedFields
-  //override def set(i : _root_.de.ust.skill.sir.Tool, v : scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, scala.collection.mutable.HashMap[java.lang.String, _root_.de.ust.skill.sir.FieldLike]]) = i.selectedFields = v.asInstanceOf[scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, scala.collection.mutable.HashMap[java.lang.String, _root_.de.ust.skill.sir.FieldLike]]]
-
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, scala.collection.mutable.HashMap[java.lang.String, _root_.de.ust.skill.sir.FieldLike]] = i.asInstanceOf[_root_.de.ust.skill.sir.Tool].selectedFields
-  override def setR(i : SkillObject, v : scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, scala.collection.mutable.HashMap[java.lang.String, _root_.de.ust.skill.sir.FieldLike]]) : Unit = i.asInstanceOf[_root_.de.ust.skill.sir.Tool].selectedFields = v.asInstanceOf[scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, scala.collection.mutable.HashMap[java.lang.String, _root_.de.ust.skill.sir.FieldLike]]]
+  override def setR(i : SkillObject, v : scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, scala.collection.mutable.HashMap[java.lang.String, _root_.de.ust.skill.sir.FieldLike]]) {
+    i.asInstanceOf[_root_.de.ust.skill.sir.Tool].selectedFields = v.asInstanceOf[scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, scala.collection.mutable.HashMap[java.lang.String, _root_.de.ust.skill.sir.FieldLike]]]
+  }
 }

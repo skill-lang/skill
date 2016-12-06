@@ -274,7 +274,7 @@ ${
       makeGetterAndSetter(out, t)
 
       out.write("""
-}        
+}
 """)
     }
   }
@@ -311,7 +311,7 @@ ${
       makeGetterAndSetter(out, t)
 
       out.write("""
-}        
+}
 """)
     }
       

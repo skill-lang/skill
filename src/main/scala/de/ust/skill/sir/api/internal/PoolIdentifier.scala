@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -68,7 +68,7 @@ final class IdentifierPool(poolIndex : Int)
     if(fields.contains(Clsskillname))
         dataFields += new KnownField_Identifier_skillname(dataFields.size + 1, this, state.String)
     // no auto fields
-  
+
 
     for(f <- dataFields ++ autoFields)
       f.createKnownRestrictions

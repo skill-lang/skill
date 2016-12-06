@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -45,9 +45,9 @@ final class KnownField_Tool_description(
       _owner)
     with KnownField[java.lang.String,_root_.de.ust.skill.sir.Tool] {
 
-      
+
   override def createKnownRestrictions : Unit = {
-    
+
   }
 
   override def read(part : MappedInStream, target : Chunk) {
@@ -149,11 +149,9 @@ final class KnownField_Tool_description(
         }
     }
   }
-
-  //override def get(i : _root_.de.ust.skill.sir.Tool) = i.description
-  //override def set(i : _root_.de.ust.skill.sir.Tool, v : java.lang.String) = i.description = v.asInstanceOf[java.lang.String]
-
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : java.lang.String = i.asInstanceOf[_root_.de.ust.skill.sir.Tool].description
-  override def setR(i : SkillObject, v : java.lang.String) : Unit = i.asInstanceOf[_root_.de.ust.skill.sir.Tool].description = v.asInstanceOf[java.lang.String]
+  override def setR(i : SkillObject, v : java.lang.String) {
+    i.asInstanceOf[_root_.de.ust.skill.sir.Tool].description = v.asInstanceOf[java.lang.String]
+  }
 }

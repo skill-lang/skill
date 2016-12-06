@@ -109,10 +109,10 @@ ${
         if (f.isDistributed()) s"\n  _owner.${knownField(f)} = this"
         else ""
       }
-      ${
+${
         // TODO re-enable default restrictions
         (for (r ← f.getRestrictions if !r.isInstanceOf[DefaultRestriction])
-          yield s"""restrictions += ${mkFieldRestriction(f.getType, r)}${
+          yield s"""    restrictions += ${mkFieldRestriction(f.getType, r)}${
           // add key to strings
           r match {
             case r : StringDefaultRestriction ⇒ s"""
@@ -121,8 +121,8 @@ ${
           }
         }""").mkString("""
   override def createKnownRestrictions : Unit = {
-    """, """
-    """, """
+""", """
+""", """
   }""")
       }${
         if (f.isAuto() || f.isDistributed()) ""
@@ -235,19 +235,14 @@ ${mapKnownReadType(f.getType)}
       }${
         if (f.isDistributed) "" // inherited
         else s"""
-
-  //override def get(i : ${mapType(t)}) = i.${escaped(f.getName.camel)}
-  //override def set(i : ${mapType(t)}, v : ${mapType(f.getType)}) = ${
-          if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
-          else s"i.${escaped(f.getName.camel)} = v.asInstanceOf[$fieldActualType]"
-        }
-
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : $fieldActualType = i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)}
-  override def setR(i : SkillObject, v : $fieldActualType) : Unit = ${
+  override def setR(i : SkillObject, v : $fieldActualType) {
+    ${
           if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!")"""
           else s"i.asInstanceOf[${mapType(t)}].${escaped(f.getName.camel)} = v.asInstanceOf[$fieldActualType]"
-        }"""
+        }
+  }"""
       }
 }
 """)
@@ -384,9 +379,9 @@ ${mapKnownReadType(f.getType)}
     case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${offsetCode(t.getBaseType)} }"
 
     case t : SingleBaseTypeContainer ⇒ s"""result += (if(null == v) 1 else V64.offset(v.size))
-      ${
+${
       t.getBaseType.getSkillName match {
-        case "string" | "annotation" ⇒ s"val t = this.t.asInstanceOf[SingleBaseTypeContainer[_,${
+        case "string" | "annotation" ⇒ s"      val t = this.t.asInstanceOf[SingleBaseTypeContainer[_,${
           mapType(t.getBaseType)
         }]].groundType.asInstanceOf[${
           exactFieldType(t.getBaseType)
@@ -418,9 +413,9 @@ ${mapKnownReadType(f.getType)}
     case t : ConstantLengthArrayType ⇒ s"v.foreach { v => ${writeCode(t.getBaseType)} }"
 
     case t : SingleBaseTypeContainer ⇒ s"""if(null == v) out.i8(0) else { out.v64(v.size)
-      ${
+${
       t.getBaseType.getSkillName match {
-        case "string" | "annotation" ⇒ s"val t = this.t.asInstanceOf[SingleBaseTypeContainer[_,${
+        case "string" | "annotation" ⇒ s"      val t = this.t.asInstanceOf[SingleBaseTypeContainer[_,${
           mapType(t.getBaseType)
         }]].groundType.asInstanceOf[${
           exactFieldType(t.getBaseType)

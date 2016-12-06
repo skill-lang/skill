@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -45,9 +45,9 @@ final class KnownField_FieldLike_comment(
       _owner)
     with KnownField[_root_.de.ust.skill.sir.Comment,_root_.de.ust.skill.sir.FieldLike] {
 
-      
+
   override def createKnownRestrictions : Unit = {
-    
+
   }
 
   override def read(part : MappedInStream, target : Chunk) {
@@ -149,11 +149,9 @@ final class KnownField_FieldLike_comment(
         }
     }
   }
-
-  //override def get(i : _root_.de.ust.skill.sir.FieldLike) = i.comment
-  //override def set(i : _root_.de.ust.skill.sir.FieldLike, v : _root_.de.ust.skill.sir.Comment) = i.comment = v.asInstanceOf[_root_.de.ust.skill.sir.Comment]
-
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : _root_.de.ust.skill.sir.Comment = i.asInstanceOf[_root_.de.ust.skill.sir.FieldLike].comment
-  override def setR(i : SkillObject, v : _root_.de.ust.skill.sir.Comment) : Unit = i.asInstanceOf[_root_.de.ust.skill.sir.FieldLike].comment = v.asInstanceOf[_root_.de.ust.skill.sir.Comment]
+  override def setR(i : SkillObject, v : _root_.de.ust.skill.sir.Comment) {
+    i.asInstanceOf[_root_.de.ust.skill.sir.FieldLike].comment = v.asInstanceOf[_root_.de.ust.skill.sir.Comment]
+  }
 }

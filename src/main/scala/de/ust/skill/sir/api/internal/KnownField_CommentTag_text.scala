@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -45,9 +45,9 @@ final class KnownField_CommentTag_text(
       _owner)
     with KnownField[scala.collection.mutable.ArrayBuffer[java.lang.String],_root_.de.ust.skill.sir.CommentTag] {
 
-      
+
   override def createKnownRestrictions : Unit = {
-    
+
   }
 
   override def read(part : MappedInStream, target : Chunk) {
@@ -157,11 +157,9 @@ final class KnownField_CommentTag_text(
         }
     }
   }
-
-  //override def get(i : _root_.de.ust.skill.sir.CommentTag) = i.text
-  //override def set(i : _root_.de.ust.skill.sir.CommentTag, v : scala.collection.mutable.ArrayBuffer[java.lang.String]) = i.text = v.asInstanceOf[scala.collection.mutable.ArrayBuffer[java.lang.String]]
-
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : scala.collection.mutable.ArrayBuffer[java.lang.String] = i.asInstanceOf[_root_.de.ust.skill.sir.CommentTag].text
-  override def setR(i : SkillObject, v : scala.collection.mutable.ArrayBuffer[java.lang.String]) : Unit = i.asInstanceOf[_root_.de.ust.skill.sir.CommentTag].text = v.asInstanceOf[scala.collection.mutable.ArrayBuffer[java.lang.String]]
+  override def setR(i : SkillObject, v : scala.collection.mutable.ArrayBuffer[java.lang.String]) {
+    i.asInstanceOf[_root_.de.ust.skill.sir.CommentTag].text = v.asInstanceOf[scala.collection.mutable.ArrayBuffer[java.lang.String]]
+  }
 }

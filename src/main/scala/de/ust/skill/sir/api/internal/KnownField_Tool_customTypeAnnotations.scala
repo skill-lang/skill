@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -45,9 +45,9 @@ final class KnownField_Tool_customTypeAnnotations(
       _owner)
     with KnownField[scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, _root_.de.ust.skill.sir.ToolTypeCustomization],_root_.de.ust.skill.sir.Tool] {
 
-      
+
   override def createKnownRestrictions : Unit = {
-    
+
   }
 
   override def read(part : MappedInStream, target : Chunk) {
@@ -149,11 +149,9 @@ final class KnownField_Tool_customTypeAnnotations(
         }
     }
   }
-
-  //override def get(i : _root_.de.ust.skill.sir.Tool) = i.customTypeAnnotations
-  //override def set(i : _root_.de.ust.skill.sir.Tool, v : scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, _root_.de.ust.skill.sir.ToolTypeCustomization]) = i.customTypeAnnotations = v.asInstanceOf[scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, _root_.de.ust.skill.sir.ToolTypeCustomization]]
-
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, _root_.de.ust.skill.sir.ToolTypeCustomization] = i.asInstanceOf[_root_.de.ust.skill.sir.Tool].customTypeAnnotations
-  override def setR(i : SkillObject, v : scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, _root_.de.ust.skill.sir.ToolTypeCustomization]) : Unit = i.asInstanceOf[_root_.de.ust.skill.sir.Tool].customTypeAnnotations = v.asInstanceOf[scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, _root_.de.ust.skill.sir.ToolTypeCustomization]]
+  override def setR(i : SkillObject, v : scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, _root_.de.ust.skill.sir.ToolTypeCustomization]) {
+    i.asInstanceOf[_root_.de.ust.skill.sir.Tool].customTypeAnnotations = v.asInstanceOf[scala.collection.mutable.HashMap[_root_.de.ust.skill.sir.UserdefinedType, _root_.de.ust.skill.sir.ToolTypeCustomization]]
+  }
 }

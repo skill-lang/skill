@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -66,7 +66,7 @@ superPool
     if(fields.contains(Clslength))
         dataFields += new KnownField_ConstantLengthArrayType_length(dataFields.size + 1, this, V64)
     // no auto fields
-  
+
 
     for(f <- dataFields ++ autoFields)
       f.createKnownRestrictions

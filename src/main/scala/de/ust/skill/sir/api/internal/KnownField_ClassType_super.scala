@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -45,9 +45,9 @@ final class KnownField_ClassType_super(
       _owner)
     with KnownField[_root_.de.ust.skill.sir.ClassType,_root_.de.ust.skill.sir.ClassType] {
 
-      
+
   override def createKnownRestrictions : Unit = {
-    
+
   }
 
   override def read(part : MappedInStream, target : Chunk) {
@@ -149,11 +149,9 @@ final class KnownField_ClassType_super(
         }
     }
   }
-
-  //override def get(i : _root_.de.ust.skill.sir.ClassType) = i.`super`
-  //override def set(i : _root_.de.ust.skill.sir.ClassType, v : _root_.de.ust.skill.sir.ClassType) = i.`super` = v.asInstanceOf[_root_.de.ust.skill.sir.ClassType]
-
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : _root_.de.ust.skill.sir.ClassType = i.asInstanceOf[_root_.de.ust.skill.sir.ClassType].`super`
-  override def setR(i : SkillObject, v : _root_.de.ust.skill.sir.ClassType) : Unit = i.asInstanceOf[_root_.de.ust.skill.sir.ClassType].`super` = v.asInstanceOf[_root_.de.ust.skill.sir.ClassType]
+  override def setR(i : SkillObject, v : _root_.de.ust.skill.sir.ClassType) {
+    i.asInstanceOf[_root_.de.ust.skill.sir.ClassType].`super` = v.asInstanceOf[_root_.de.ust.skill.sir.ClassType]
+  }
 }

@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -45,9 +45,9 @@ final class KnownField_BuildInformation_output(
       _owner)
     with KnownField[_root_.de.ust.skill.sir.FilePath,_root_.de.ust.skill.sir.BuildInformation] {
 
-      
+
   override def createKnownRestrictions : Unit = {
-    
+
   }
 
   override def read(part : MappedInStream, target : Chunk) {
@@ -149,11 +149,9 @@ final class KnownField_BuildInformation_output(
         }
     }
   }
-
-  //override def get(i : _root_.de.ust.skill.sir.BuildInformation) = i.output
-  //override def set(i : _root_.de.ust.skill.sir.BuildInformation, v : _root_.de.ust.skill.sir.FilePath) = i.output = v.asInstanceOf[_root_.de.ust.skill.sir.FilePath]
-
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : _root_.de.ust.skill.sir.FilePath = i.asInstanceOf[_root_.de.ust.skill.sir.BuildInformation].output
-  override def setR(i : SkillObject, v : _root_.de.ust.skill.sir.FilePath) : Unit = i.asInstanceOf[_root_.de.ust.skill.sir.BuildInformation].output = v.asInstanceOf[_root_.de.ust.skill.sir.FilePath]
+  override def setR(i : SkillObject, v : _root_.de.ust.skill.sir.FilePath) {
+    i.asInstanceOf[_root_.de.ust.skill.sir.BuildInformation].output = v.asInstanceOf[_root_.de.ust.skill.sir.FilePath]
+  }
 }

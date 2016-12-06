@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -54,7 +54,7 @@ superPool
   override def ensureKnownFields(st : SkillState) {
     // no data fields
     // no auto fields
-  
+
 
     for(f <- dataFields ++ autoFields)
       f.createKnownRestrictions

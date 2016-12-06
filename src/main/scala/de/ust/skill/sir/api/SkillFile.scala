@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api
@@ -44,7 +44,7 @@ final class SkillFile(
   _typesByName : HashMap[String, StoragePool[_ <: SkillObject, _ <: SkillObject]])
     extends SkillState(_path, _mode, _String, _annotationType, _types, _typesByName) {
 
-  private[api] def AnnotationType = annotationType
+  private[api] def AnnotationType : AnnotationType = annotationType
 
   val BuildInformation : internal.BuildInformationPool = typesByName("buildinformation").asInstanceOf[internal.BuildInformationPool]
   val Comment : internal.CommentPool = typesByName("comment").asInstanceOf[internal.CommentPool]
@@ -73,11 +73,11 @@ final class SkillFile(
   val InterfaceType : internal.InterfaceTypePool = typesByName("interfacetype").asInstanceOf[internal.InterfaceTypePool]
   val TypeDefinition : internal.TypeDefinitionPool = typesByName("typedefinition").asInstanceOf[internal.TypeDefinitionPool]
 
-  val Annotations : UnrootedInterfacePool[_root_.de.ust.skill.sir.Annotations] = 
+  val Annotations : UnrootedInterfacePool[_root_.de.ust.skill.sir.Annotations] =
     new UnrootedInterfacePool[_root_.de.ust.skill.sir.Annotations]("Annotations", AnnotationType,
       Array[StoragePool[_ <: _root_.de.ust.skill.sir.Annotations, _ <: SkillObject]](FieldLike, ToolTypeCustomization, UserdefinedType));
 
-  val GroundType : InterfacePool[_root_.de.ust.skill.sir.GroundType, _root_.de.ust.skill.sir.Type] = 
+  val GroundType : InterfacePool[_root_.de.ust.skill.sir.GroundType, _root_.de.ust.skill.sir.Type] =
     new InterfacePool[_root_.de.ust.skill.sir.GroundType, _root_.de.ust.skill.sir.Type]("GroundType", Type,
       Array[StoragePool[_ <: _root_.de.ust.skill.sir.GroundType, _ <: _root_.de.ust.skill.sir.Type]](SimpleType, UserdefinedType));
 }

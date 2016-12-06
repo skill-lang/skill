@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir
@@ -545,4 +545,4 @@ sealed trait GroundType extends Type {
   def `name_=`(name : _root_.de.ust.skill.sir.Identifier) : scala.Unit = { _name = name }
   final private[sir] def `Internal_name_=`(v : _root_.de.ust.skill.sir.Identifier) = _name = v
 
-}        
+}

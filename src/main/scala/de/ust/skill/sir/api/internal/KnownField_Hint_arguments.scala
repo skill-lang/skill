@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -45,9 +45,9 @@ final class KnownField_Hint_arguments(
       _owner)
     with KnownField[scala.collection.mutable.ArrayBuffer[java.lang.String],_root_.de.ust.skill.sir.Hint] {
 
-      
+
   override def createKnownRestrictions : Unit = {
-    
+
   }
 
   override def read(part : MappedInStream, target : Chunk) {
@@ -157,11 +157,9 @@ final class KnownField_Hint_arguments(
         }
     }
   }
-
-  //override def get(i : _root_.de.ust.skill.sir.Hint) = i.arguments
-  //override def set(i : _root_.de.ust.skill.sir.Hint, v : scala.collection.mutable.ArrayBuffer[java.lang.String]) = i.arguments = v.asInstanceOf[scala.collection.mutable.ArrayBuffer[java.lang.String]]
-
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : scala.collection.mutable.ArrayBuffer[java.lang.String] = i.asInstanceOf[_root_.de.ust.skill.sir.Hint].arguments
-  override def setR(i : SkillObject, v : scala.collection.mutable.ArrayBuffer[java.lang.String]) : Unit = i.asInstanceOf[_root_.de.ust.skill.sir.Hint].arguments = v.asInstanceOf[scala.collection.mutable.ArrayBuffer[java.lang.String]]
+  override def setR(i : SkillObject, v : scala.collection.mutable.ArrayBuffer[java.lang.String]) {
+    i.asInstanceOf[_root_.de.ust.skill.sir.Hint].arguments = v.asInstanceOf[scala.collection.mutable.ArrayBuffer[java.lang.String]]
+  }
 }

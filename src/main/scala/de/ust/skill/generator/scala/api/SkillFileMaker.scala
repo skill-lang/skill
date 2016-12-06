@@ -60,7 +60,7 @@ final class SkillFile(
   _typesByName : HashMap[String, StoragePool[_ <: SkillObject, _ <: SkillObject]])
     extends SkillState(_path, _mode, _String, _annotationType, _types, _typesByName) {
 
-  private[api] def AnnotationType = annotationType
+  private[api] def AnnotationType : AnnotationType = annotationType
 ${
       (for (t ← IR) yield s"""
   val ${name(t)} : internal.${storagePool(t)} = typesByName("${t.getSkillName}").asInstanceOf[internal.${storagePool(t)}]"""

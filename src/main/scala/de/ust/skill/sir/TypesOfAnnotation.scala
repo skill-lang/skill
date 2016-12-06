@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir
@@ -26,4 +26,4 @@ trait Annotations extends SkillObject {
   def `restrictions_=`(restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) : scala.Unit = { _restrictions = restrictions }
   final private[sir] def `Internal_restrictions_=`(v : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) = _restrictions = v
 
-}        
+}

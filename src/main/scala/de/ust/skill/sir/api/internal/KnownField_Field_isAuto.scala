@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -45,9 +45,9 @@ final class KnownField_Field_isAuto(
       _owner)
     with KnownField[scala.Boolean,_root_.de.ust.skill.sir.Field] {
 
-      
+
   override def createKnownRestrictions : Unit = {
-    
+
   }
 
   override def read(part : MappedInStream, target : Chunk) {
@@ -149,11 +149,9 @@ final class KnownField_Field_isAuto(
         }
     }
   }
-
-  //override def get(i : _root_.de.ust.skill.sir.Field) = i.isAuto
-  //override def set(i : _root_.de.ust.skill.sir.Field, v : scala.Boolean) = i.isAuto = v.asInstanceOf[scala.Boolean]
-
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : scala.Boolean = i.asInstanceOf[_root_.de.ust.skill.sir.Field].isAuto
-  override def setR(i : SkillObject, v : scala.Boolean) : Unit = i.asInstanceOf[_root_.de.ust.skill.sir.Field].isAuto = v.asInstanceOf[scala.Boolean]
+  override def setR(i : SkillObject, v : scala.Boolean) {
+    i.asInstanceOf[_root_.de.ust.skill.sir.Field].isAuto = v.asInstanceOf[scala.Boolean]
+  }
 }

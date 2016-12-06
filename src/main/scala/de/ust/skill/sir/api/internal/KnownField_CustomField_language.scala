@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -45,9 +45,9 @@ final class KnownField_CustomField_language(
       _owner)
     with KnownField[java.lang.String,_root_.de.ust.skill.sir.CustomField] {
 
-      
+
   override def createKnownRestrictions : Unit = {
-    
+
   }
 
   override def read(part : MappedInStream, target : Chunk) {
@@ -149,11 +149,9 @@ final class KnownField_CustomField_language(
         }
     }
   }
-
-  //override def get(i : _root_.de.ust.skill.sir.CustomField) = i.language
-  //override def set(i : _root_.de.ust.skill.sir.CustomField, v : java.lang.String) = i.language = v.asInstanceOf[java.lang.String]
-
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : java.lang.String = i.asInstanceOf[_root_.de.ust.skill.sir.CustomField].language
-  override def setR(i : SkillObject, v : java.lang.String) : Unit = i.asInstanceOf[_root_.de.ust.skill.sir.CustomField].language = v.asInstanceOf[java.lang.String]
+  override def setR(i : SkillObject, v : java.lang.String) {
+    i.asInstanceOf[_root_.de.ust.skill.sir.CustomField].language = v.asInstanceOf[java.lang.String]
+  }
 }

@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -45,9 +45,9 @@ final class KnownField_ConstantLengthArrayType_length(
       _owner)
     with KnownField[Long,_root_.de.ust.skill.sir.ConstantLengthArrayType] {
 
-      
+
   override def createKnownRestrictions : Unit = {
-    
+
   }
 
   override def read(part : MappedInStream, target : Chunk) {
@@ -185,11 +185,9 @@ final class KnownField_ConstantLengthArrayType_length(
         }
     }
   }
-
-  //override def get(i : _root_.de.ust.skill.sir.ConstantLengthArrayType) = i.length
-  //override def set(i : _root_.de.ust.skill.sir.ConstantLengthArrayType, v : Long) = i.length = v.asInstanceOf[Long]
-
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : Long = i.asInstanceOf[_root_.de.ust.skill.sir.ConstantLengthArrayType].length
-  override def setR(i : SkillObject, v : Long) : Unit = i.asInstanceOf[_root_.de.ust.skill.sir.ConstantLengthArrayType].length = v.asInstanceOf[Long]
+  override def setR(i : SkillObject, v : Long) {
+    i.asInstanceOf[_root_.de.ust.skill.sir.ConstantLengthArrayType].length = v.asInstanceOf[Long]
+  }
 }

@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -45,9 +45,9 @@ final class KnownField_InterfaceType_interfaces(
       _owner)
     with KnownField[scala.collection.mutable.HashSet[_root_.de.ust.skill.sir.InterfaceType],_root_.de.ust.skill.sir.InterfaceType] {
 
-      
+
   override def createKnownRestrictions : Unit = {
-    
+
   }
 
   override def read(part : MappedInStream, target : Chunk) {
@@ -102,7 +102,7 @@ final class KnownField_InterfaceType_interfaces(
         while (i != high) {
           val v = data(i).asInstanceOf[_root_.de.ust.skill.sir.InterfaceType].Internal_interfaces
           result += (if(null == v) 1 else V64.offset(v.size))
-      
+
           if(null != v) v.foreach { v => result += (if (null == v) 1 else V64.offset(v.getSkillID)) }
           i += 1
         }
@@ -117,7 +117,7 @@ final class KnownField_InterfaceType_interfaces(
           while (i != end) {
           val v = data(i).asInstanceOf[_root_.de.ust.skill.sir.InterfaceType].Internal_interfaces
           result += (if(null == v) 1 else V64.offset(v.size))
-      
+
           if(null != v) v.foreach { v => result += (if (null == v) 1 else V64.offset(v.getSkillID)) }
           i += 1
           }
@@ -135,7 +135,7 @@ final class KnownField_InterfaceType_interfaces(
         while (i != high) {
           val v = data(i).asInstanceOf[_root_.de.ust.skill.sir.InterfaceType].Internal_interfaces
           if(null == v) out.i8(0) else { out.v64(v.size)
-      
+
             v.foreach { v => if (null == v) out.i8(0) else out.v64(v.getSkillID) }}
           i += 1
         }
@@ -150,18 +150,16 @@ final class KnownField_InterfaceType_interfaces(
           while (i != end) {
             val v = data(i).asInstanceOf[_root_.de.ust.skill.sir.InterfaceType].Internal_interfaces
             if(null == v) out.i8(0) else { out.v64(v.size)
-      
+
             v.foreach { v => if (null == v) out.i8(0) else out.v64(v.getSkillID) }}
             i += 1
           }
         }
     }
   }
-
-  //override def get(i : _root_.de.ust.skill.sir.InterfaceType) = i.interfaces
-  //override def set(i : _root_.de.ust.skill.sir.InterfaceType, v : scala.collection.mutable.HashSet[_root_.de.ust.skill.sir.InterfaceType]) = i.interfaces = v.asInstanceOf[scala.collection.mutable.HashSet[_root_.de.ust.skill.sir.InterfaceType]]
-
   // note: reflective field access will raise exception for ignored fields
   override def getR(i : SkillObject) : scala.collection.mutable.HashSet[_root_.de.ust.skill.sir.InterfaceType] = i.asInstanceOf[_root_.de.ust.skill.sir.InterfaceType].interfaces
-  override def setR(i : SkillObject, v : scala.collection.mutable.HashSet[_root_.de.ust.skill.sir.InterfaceType]) : Unit = i.asInstanceOf[_root_.de.ust.skill.sir.InterfaceType].interfaces = v.asInstanceOf[scala.collection.mutable.HashSet[_root_.de.ust.skill.sir.InterfaceType]]
+  override def setR(i : SkillObject, v : scala.collection.mutable.HashSet[_root_.de.ust.skill.sir.InterfaceType]) {
+    i.asInstanceOf[_root_.de.ust.skill.sir.InterfaceType].interfaces = v.asInstanceOf[scala.collection.mutable.HashSet[_root_.de.ust.skill.sir.InterfaceType]]
+  }
 }

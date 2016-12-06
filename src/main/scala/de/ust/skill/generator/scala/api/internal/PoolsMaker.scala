@@ -143,7 +143,7 @@ ${
           ).mkString("\n")
         }
 """) + (
-          if (afs.isEmpty) "    // no auto fields\n  "
+          if (afs.isEmpty) "    // no auto fields\n"
           else s"""    // auto fields
     autoFields.sizeHint(${afs.size})${
             afs.map { f ⇒

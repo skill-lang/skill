@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
  * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 05.12.2016                               *
+ * \__ \ ' <| | | |__     generated: 06.12.2016                               *
  * |___/_|\_\_|_|____|    by: feldentm                                        *
 \*                                                                            */
 package de.ust.skill.sir.api.internal
@@ -88,7 +88,7 @@ final class ToolPool(poolIndex : Int)
     if(fields.contains(ClsselectedUserTypes))
         dataFields += new KnownField_Tool_selectedUserTypes(dataFields.size + 1, this, SetType(state.UserdefinedType))
     // no auto fields
-  
+
 
     for(f <- dataFields ++ autoFields)
       f.createKnownRestrictions

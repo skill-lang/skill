@@ -143,6 +143,8 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
             else if (null == r && t != null)
               r = t
           }
+
+        case _ ⇒ throw new Error("will not happen")
       }
       r
     }
