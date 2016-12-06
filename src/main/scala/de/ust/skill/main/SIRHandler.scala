@@ -52,7 +52,7 @@ class SIRHandler private (val sf : SkillFile) {
   //@note assume sf to be empty
   private val identifiers = new HashMap[String, sir.Identifier]
   private def convert(t : ir.Type) : sir.Identifier = {
-    identifiers.getOrElseUpdate(t.getSkillName, sf.Identifier.make(
+    identifiers.getOrElseUpdate(t.getName.camel, sf.Identifier.make(
       parts = (t match {
         case t : ir.Declaration ⇒ t.getName
         case t : ir.GroundType  ⇒ t.getName
@@ -61,7 +61,7 @@ class SIRHandler private (val sf : SkillFile) {
     ))
   }
   private def convert(f : ir.FieldLike) : sir.Identifier = {
-    identifiers.getOrElseUpdate(f.getSkillName, sf.Identifier.make(
+    identifiers.getOrElseUpdate(f.getName.camel, sf.Identifier.make(
       parts = f.getName.parts.to,
       skillname = f.getSkillName
     ))
@@ -147,6 +147,20 @@ class SIRHandler private (val sf : SkillFile) {
 
         target.fields = t.getFields.map(mapField).to
       }
+
+      case (name, t : ir.InterfaceType) ⇒ locally {
+        val target = typeMap(name).asInstanceOf[sir.InterfaceType]
+
+        target.`super` = typeMap(t.getSuperType.getSkillName) match {
+          case t : sir.ClassType ⇒ t
+          case _                 ⇒ null
+        }
+
+        target.interfaces = t.getSuperInterfaces.map(i ⇒ typeMap(i.getSkillName).asInstanceOf[sir.InterfaceType]).to
+
+        target.fields = t.getFields.map(mapField).to
+      }
+
       case _ ⇒ // done
     }
   }
@@ -165,8 +179,8 @@ class SIRHandler private (val sf : SkillFile) {
                          def interfaces : HashSet[sir.InterfaceType]
                        }) : String = {
           (if (null == t.`super`) ""
-          else s" extends ${name(t.`super`)}"
-          ) + t.interfaces.map { x ⇒ s" with ${name(x)}" }.mkString("")
+          else s" extends ${name(t.`super`.name)}"
+          ) + t.interfaces.map { t ⇒ s" with ${name(t.name)}" }.toSeq.sorted.mkString("")
         }
 
         @inline
@@ -190,11 +204,11 @@ class SIRHandler private (val sf : SkillFile) {
 
         def fields(t : { def fields : ArrayBuffer[sir.FieldLike] }) : String = {
           t.fields.map {
-            case x : sir.Field ⇒ s"""
-  ${comment(x.comment)}
-  ${hints(x.hints)}
-  ${restrictions(x.restrictions)}
-  ${mapType(x.`type`)} ${name(x)};
+            case f : sir.Field ⇒ s"""
+  ${comment(f.comment)}
+  ${hints(f.hints)}
+  ${restrictions(f.restrictions)}
+  ${mapType(f.`type`)} ${name(f.name)};
 """
             case x ⇒ """
   ???
@@ -204,17 +218,17 @@ class SIRHandler private (val sf : SkillFile) {
 
         val out = new PrintStream(spec)
         tool.selectedUserTypes.foreach {
-          case x : sir.ClassType ⇒ out.println(s"""
-${comment(x.comment)}
-${hints(x.hints)}
-${restrictions(x.restrictions)}
-${name(x)}${extensions(x)} {${fields(x)}}""")
+          case t : sir.ClassType ⇒ out.println(s"""
+${comment(t.comment)}
+${hints(t.hints)}
+${restrictions(t.restrictions)}
+${name(t.name)}${extensions(t)} {${fields(t)}}""")
 
-          case x : sir.InterfaceType ⇒ out.println(s"""
-${comment(x.comment)}
-${hints(x.hints)}
-${restrictions(x.restrictions)}
-interface ${name(x)}${extensions(x)} {${fields(x)}}""")
+          case t : sir.InterfaceType ⇒ out.println(s"""
+${comment(t.comment)}
+${hints(t.hints)}
+${restrictions(t.restrictions)}
+interface ${name(t.name)}${extensions(t)} {${fields(t)}}""")
 
           case x ⇒ out.println(s"""
 ☢☢☢""")
@@ -242,14 +256,11 @@ interface ${name(x)}${extensions(x)} {${fields(x)}}""")
         ).getAbsolutePath
     }
 
-    private def name(named : { def name : sir.Identifier }) : String = {
-      val name = named.name
-      return name.parts.mkString("_")
-    }
+    private def name(name : sir.Identifier) : String = name.parts.mkString("_")
 
     private def mapType(t : sir.Type) : String = t match {
       case null ⇒ "<<null in IR!>>"
-      case t : sir.GroundType ⇒ name(t)
+      case t : sir.GroundType ⇒ name(t.name)
       case t : sir.ConstantLengthArrayType ⇒ s"${mapType(t.base)}[${t.length}]"
       case t : sir.SingleBaseTypeContainer if t.kind.equals("array") ⇒ s"${mapType(t.base)}[]"
       case t : sir.SingleBaseTypeContainer ⇒ s"${t.kind}<${mapType(t.base)}>"

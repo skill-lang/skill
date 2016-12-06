@@ -90,8 +90,8 @@ superPool
     }
   }
 
-  def make(target : _root_.de.ust.skill.sir.Type = null, comment : _root_.de.ust.skill.sir.Comment = null, name : _root_.de.ust.skill.sir.Identifier = null, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint](), restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]()) = {
-    val r = new _root_.de.ust.skill.sir.TypeDefinition(-1 - newObjects.size, target : _root_.de.ust.skill.sir.Type, comment : _root_.de.ust.skill.sir.Comment, name : _root_.de.ust.skill.sir.Identifier, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction])
+  def make(target : _root_.de.ust.skill.sir.Type = null, comment : _root_.de.ust.skill.sir.Comment = null, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint](), restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction](), name : _root_.de.ust.skill.sir.Identifier = null) = {
+    val r = new _root_.de.ust.skill.sir.TypeDefinition(-1 - newObjects.size, target : _root_.de.ust.skill.sir.Type, comment : _root_.de.ust.skill.sir.Comment, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction], name : _root_.de.ust.skill.sir.Identifier)
     newObjects.append(r)
     r
   }

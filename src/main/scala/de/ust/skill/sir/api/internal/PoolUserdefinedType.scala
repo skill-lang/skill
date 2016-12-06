@@ -41,9 +41,9 @@ superPool
                            restrictions : HashSet[FieldRestriction]) : FieldDeclaration[T, _root_.de.ust.skill.sir.UserdefinedType] = {
     val f = (name match {
       case "comment" ⇒ new KnownField_UserdefinedType_comment(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Comment]])
-      case "name" ⇒ new KnownField_UserdefinedType_name(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Identifier]])
       case "hints" ⇒ new KnownField_UserdefinedType_hints(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint]]])
       case "restrictions" ⇒ new KnownField_UserdefinedType_restrictions(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]]])
+      case "name" ⇒ new KnownField_UserdefinedType_name(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Identifier]])
       case _      ⇒ return super.addField(ID, t, name, restrictions)
     }).asInstanceOf[FieldDeclaration[T, _root_.de.ust.skill.sir.UserdefinedType]]
 
@@ -59,11 +59,11 @@ superPool
     val state = st.asInstanceOf[SkillFile]
     // data fields
     val Clscomment = classOf[KnownField_UserdefinedType_comment]
-    val Clsname = classOf[KnownField_UserdefinedType_name]
     val Clshints = classOf[KnownField_UserdefinedType_hints]
     val Clsrestrictions = classOf[KnownField_UserdefinedType_restrictions]
+    val Clsname = classOf[KnownField_UserdefinedType_name]
 
-    val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.UserdefinedType]]](Clscomment,Clsname,Clshints,Clsrestrictions)
+    val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.UserdefinedType]]](Clscomment,Clshints,Clsrestrictions,Clsname)
     var dfi = dataFields.size
     while (dfi != 0) {
       dfi -= 1
@@ -71,12 +71,12 @@ superPool
     }
     if(fields.contains(Clscomment))
         dataFields += new KnownField_UserdefinedType_comment(dataFields.size + 1, this, state.Comment)
-    if(fields.contains(Clsname))
-        dataFields += new KnownField_UserdefinedType_name(dataFields.size + 1, this, state.Identifier)
     if(fields.contains(Clshints))
         dataFields += new KnownField_UserdefinedType_hints(dataFields.size + 1, this, VariableLengthArray(state.Hint))
     if(fields.contains(Clsrestrictions))
         dataFields += new KnownField_UserdefinedType_restrictions(dataFields.size + 1, this, VariableLengthArray(state.Restriction))
+    if(fields.contains(Clsname))
+        dataFields += new KnownField_UserdefinedType_name(dataFields.size + 1, this, state.Identifier)
     // no auto fields
 
 
@@ -102,8 +102,8 @@ superPool
     }
   }
 
-  def make(comment : _root_.de.ust.skill.sir.Comment = null, name : _root_.de.ust.skill.sir.Identifier = null, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint](), restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]()) = {
-    val r = new _root_.de.ust.skill.sir.UserdefinedType(-1 - newObjects.size, comment : _root_.de.ust.skill.sir.Comment, name : _root_.de.ust.skill.sir.Identifier, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction])
+  def make(comment : _root_.de.ust.skill.sir.Comment = null, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint](), restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction](), name : _root_.de.ust.skill.sir.Identifier = null) = {
+    val r = new _root_.de.ust.skill.sir.UserdefinedType(-1 - newObjects.size, comment : _root_.de.ust.skill.sir.Comment, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction], name : _root_.de.ust.skill.sir.Identifier)
     newObjects.append(r)
     r
   }

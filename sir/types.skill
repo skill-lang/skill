@@ -111,8 +111,10 @@ UserdefinedType extends Type with GroundType with Annotations {
 ClassType extends UserdefinedType {
 
   /**
-   * there might be multiple fields under the same name in this type, as the class can be 
+   * there might be multiple fields under the same name in this type, as the class can be
+   *  
    * a) part of configuration
+   * 
    * b) contain custom fields
    */
   FieldLike[] fields;

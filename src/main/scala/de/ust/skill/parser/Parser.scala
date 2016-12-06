@@ -131,7 +131,7 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      */
     private def userType = typeDescription ~ id ~ rep((":" | "with" | "extends") ~> id) ~!
       ("{" ~> rep(field) <~ "}") ^^ {
-        case d ~ n ~ s ~ b ⇒ new UserType(currentFile, d, n, s, b)
+        case d ~ n ~ s ~ b ⇒ new UserType(currentFile, d, n, s.sortBy(_.source), b)
       }
 
     /**
@@ -150,7 +150,8 @@ final class Parser(delimitWithUnderscore : Boolean = true, delimitWithCamelCase 
      */
     private def interfaceType = opt(comment) ~ ("interface" ~> id) ~ rep((":" | "with" | "extends") ~> id) ~ (
       "{" ~> rep(field) <~ "}") ^^ {
-        case c ~ n ~ i ~ f ⇒ new InterfaceDefinition(currentFile, c.getOrElse(Comment.NoComment.get), n, i, f)
+        case c ~ n ~ i ~ f ⇒
+          new InterfaceDefinition(currentFile, c.getOrElse(Comment.NoComment.get), n, i.sortBy(_.source), f)
       }
 
     /**

@@ -271,13 +271,13 @@ object ConstantInteger {
   }
 }
 
-sealed class UserdefinedType (_skillID : SkillID) extends Type(_skillID) with GroundType with Annotations {
-  private[sir] def this(_skillID : SkillID, comment : _root_.de.ust.skill.sir.Comment, name : _root_.de.ust.skill.sir.Identifier, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) {
+sealed class UserdefinedType (_skillID : SkillID) extends Type(_skillID) with Annotations with GroundType {
+  private[sir] def this(_skillID : SkillID, comment : _root_.de.ust.skill.sir.Comment, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction], name : _root_.de.ust.skill.sir.Identifier) {
     this(_skillID)
     _comment = comment
-    _name = name
     _hints = hints
     _restrictions = restrictions
+    _name = name
   }
 
   final protected var _comment : _root_.de.ust.skill.sir.Comment = null
@@ -292,7 +292,7 @@ sealed class UserdefinedType (_skillID : SkillID) extends Type(_skillID) with Gr
   def `comment_=`(comment : _root_.de.ust.skill.sir.Comment) : scala.Unit = { _comment = comment }
   final private[sir] def `Internal_comment_=`(v : _root_.de.ust.skill.sir.Comment) = _comment = v
 
-  override def prettyString : String = s"UserdefinedType(#$skillID, comment: ${comment}, name: ${name}, hints: ${hints}, restrictions: ${restrictions})"
+  override def prettyString : String = s"UserdefinedType(#$skillID, comment: ${comment}, hints: ${hints}, restrictions: ${restrictions}, name: ${name})"
 
   override def getTypeName : String = "userdefinedtype"
 
@@ -300,7 +300,7 @@ sealed class UserdefinedType (_skillID : SkillID) extends Type(_skillID) with Gr
 }
 
 object UserdefinedType {
-  def unapply(self : UserdefinedType) = Some(self.comment, self.name, self.hints, self.restrictions)
+  def unapply(self : UserdefinedType) = Some(self.comment, self.hints, self.restrictions, self.name)
 
   final class UnknownSubType(
     _skillID : SkillID,
@@ -317,15 +317,15 @@ object UserdefinedType {
  *  A regular type definition
  */
 sealed class ClassType (_skillID : SkillID) extends UserdefinedType(_skillID) {
-  private[sir] def this(_skillID : SkillID, fields : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike], interfaces : scala.collection.mutable.HashSet[_root_.de.ust.skill.sir.InterfaceType], `super` : _root_.de.ust.skill.sir.ClassType, comment : _root_.de.ust.skill.sir.Comment, name : _root_.de.ust.skill.sir.Identifier, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) {
+  private[sir] def this(_skillID : SkillID, fields : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike], interfaces : scala.collection.mutable.HashSet[_root_.de.ust.skill.sir.InterfaceType], `super` : _root_.de.ust.skill.sir.ClassType, comment : _root_.de.ust.skill.sir.Comment, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction], name : _root_.de.ust.skill.sir.Identifier) {
     this(_skillID)
     _fields = fields
     _interfaces = interfaces
     _super = `super`
     _comment = comment
-    _name = name
     _hints = hints
     _restrictions = restrictions
+    _name = name
   }
 
   final protected var _fields : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike]()
@@ -354,7 +354,7 @@ sealed class ClassType (_skillID : SkillID) extends UserdefinedType(_skillID) {
   def `super_=`(`super` : _root_.de.ust.skill.sir.ClassType) : scala.Unit = { _super = `super` }
   final private[sir] def `Internal_super_=`(v : _root_.de.ust.skill.sir.ClassType) = _super = v
 
-  override def prettyString : String = s"ClassType(#$skillID, fields: ${fields}, interfaces: ${interfaces}, super: ${`super`}, comment: ${comment}, name: ${name}, hints: ${hints}, restrictions: ${restrictions})"
+  override def prettyString : String = s"ClassType(#$skillID, fields: ${fields}, interfaces: ${interfaces}, super: ${`super`}, comment: ${comment}, hints: ${hints}, restrictions: ${restrictions}, name: ${name})"
 
   override def getTypeName : String = "classtype"
 
@@ -362,7 +362,7 @@ sealed class ClassType (_skillID : SkillID) extends UserdefinedType(_skillID) {
 }
 
 object ClassType {
-  def unapply(self : ClassType) = Some(self.fields, self.interfaces, self.`super`, self.comment, self.name, self.hints, self.restrictions)
+  def unapply(self : ClassType) = Some(self.fields, self.interfaces, self.`super`, self.comment, self.hints, self.restrictions, self.name)
 
   final class UnknownSubType(
     _skillID : SkillID,
@@ -376,14 +376,14 @@ object ClassType {
 }
 
 sealed class EnumType (_skillID : SkillID) extends UserdefinedType(_skillID) {
-  private[sir] def this(_skillID : SkillID, fields : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike], instances : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Identifier], comment : _root_.de.ust.skill.sir.Comment, name : _root_.de.ust.skill.sir.Identifier, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) {
+  private[sir] def this(_skillID : SkillID, fields : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike], instances : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Identifier], comment : _root_.de.ust.skill.sir.Comment, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction], name : _root_.de.ust.skill.sir.Identifier) {
     this(_skillID)
     _fields = fields
     _instances = instances
     _comment = comment
-    _name = name
     _hints = hints
     _restrictions = restrictions
+    _name = name
   }
 
   final protected var _fields : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike]()
@@ -406,7 +406,7 @@ sealed class EnumType (_skillID : SkillID) extends UserdefinedType(_skillID) {
   def `instances_=`(instances : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Identifier]) : scala.Unit = { _instances = instances }
   final private[sir] def `Internal_instances_=`(v : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Identifier]) = _instances = v
 
-  override def prettyString : String = s"EnumType(#$skillID, fields: ${fields}, instances: ${instances}, comment: ${comment}, name: ${name}, hints: ${hints}, restrictions: ${restrictions})"
+  override def prettyString : String = s"EnumType(#$skillID, fields: ${fields}, instances: ${instances}, comment: ${comment}, hints: ${hints}, restrictions: ${restrictions}, name: ${name})"
 
   override def getTypeName : String = "enumtype"
 
@@ -414,7 +414,7 @@ sealed class EnumType (_skillID : SkillID) extends UserdefinedType(_skillID) {
 }
 
 object EnumType {
-  def unapply(self : EnumType) = Some(self.fields, self.instances, self.comment, self.name, self.hints, self.restrictions)
+  def unapply(self : EnumType) = Some(self.fields, self.instances, self.comment, self.hints, self.restrictions, self.name)
 
   final class UnknownSubType(
     _skillID : SkillID,
@@ -428,15 +428,15 @@ object EnumType {
 }
 
 sealed class InterfaceType (_skillID : SkillID) extends UserdefinedType(_skillID) {
-  private[sir] def this(_skillID : SkillID, fields : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike], interfaces : scala.collection.mutable.HashSet[_root_.de.ust.skill.sir.InterfaceType], `super` : _root_.de.ust.skill.sir.ClassType, comment : _root_.de.ust.skill.sir.Comment, name : _root_.de.ust.skill.sir.Identifier, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) {
+  private[sir] def this(_skillID : SkillID, fields : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike], interfaces : scala.collection.mutable.HashSet[_root_.de.ust.skill.sir.InterfaceType], `super` : _root_.de.ust.skill.sir.ClassType, comment : _root_.de.ust.skill.sir.Comment, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction], name : _root_.de.ust.skill.sir.Identifier) {
     this(_skillID)
     _fields = fields
     _interfaces = interfaces
     _super = `super`
     _comment = comment
-    _name = name
     _hints = hints
     _restrictions = restrictions
+    _name = name
   }
 
   final protected var _fields : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike] = scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike]()
@@ -465,7 +465,7 @@ sealed class InterfaceType (_skillID : SkillID) extends UserdefinedType(_skillID
   def `super_=`(`super` : _root_.de.ust.skill.sir.ClassType) : scala.Unit = { _super = `super` }
   final private[sir] def `Internal_super_=`(v : _root_.de.ust.skill.sir.ClassType) = _super = v
 
-  override def prettyString : String = s"InterfaceType(#$skillID, fields: ${fields}, interfaces: ${interfaces}, super: ${`super`}, comment: ${comment}, name: ${name}, hints: ${hints}, restrictions: ${restrictions})"
+  override def prettyString : String = s"InterfaceType(#$skillID, fields: ${fields}, interfaces: ${interfaces}, super: ${`super`}, comment: ${comment}, hints: ${hints}, restrictions: ${restrictions}, name: ${name})"
 
   override def getTypeName : String = "interfacetype"
 
@@ -473,7 +473,7 @@ sealed class InterfaceType (_skillID : SkillID) extends UserdefinedType(_skillID
 }
 
 object InterfaceType {
-  def unapply(self : InterfaceType) = Some(self.fields, self.interfaces, self.`super`, self.comment, self.name, self.hints, self.restrictions)
+  def unapply(self : InterfaceType) = Some(self.fields, self.interfaces, self.`super`, self.comment, self.hints, self.restrictions, self.name)
 
   final class UnknownSubType(
     _skillID : SkillID,
@@ -487,13 +487,13 @@ object InterfaceType {
 }
 
 sealed class TypeDefinition (_skillID : SkillID) extends UserdefinedType(_skillID) {
-  private[sir] def this(_skillID : SkillID, target : _root_.de.ust.skill.sir.Type, comment : _root_.de.ust.skill.sir.Comment, name : _root_.de.ust.skill.sir.Identifier, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]) {
+  private[sir] def this(_skillID : SkillID, target : _root_.de.ust.skill.sir.Type, comment : _root_.de.ust.skill.sir.Comment, hints : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint], restrictions : scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction], name : _root_.de.ust.skill.sir.Identifier) {
     this(_skillID)
     _target = target
     _comment = comment
-    _name = name
     _hints = hints
     _restrictions = restrictions
+    _name = name
   }
 
   final protected var _target : _root_.de.ust.skill.sir.Type = null
@@ -508,7 +508,7 @@ sealed class TypeDefinition (_skillID : SkillID) extends UserdefinedType(_skillI
   def `target_=`(target : _root_.de.ust.skill.sir.Type) : scala.Unit = { _target = target }
   final private[sir] def `Internal_target_=`(v : _root_.de.ust.skill.sir.Type) = _target = v
 
-  override def prettyString : String = s"TypeDefinition(#$skillID, target: ${target}, comment: ${comment}, name: ${name}, hints: ${hints}, restrictions: ${restrictions})"
+  override def prettyString : String = s"TypeDefinition(#$skillID, target: ${target}, comment: ${comment}, hints: ${hints}, restrictions: ${restrictions}, name: ${name})"
 
   override def getTypeName : String = "typedefinition"
 
@@ -516,7 +516,7 @@ sealed class TypeDefinition (_skillID : SkillID) extends UserdefinedType(_skillI
 }
 
 object TypeDefinition {
-  def unapply(self : TypeDefinition) = Some(self.target, self.comment, self.name, self.hints, self.restrictions)
+  def unapply(self : TypeDefinition) = Some(self.target, self.comment, self.hints, self.restrictions, self.name)
 
   final class UnknownSubType(
     _skillID : SkillID,
