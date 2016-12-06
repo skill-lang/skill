@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.haskell
@@ -12,11 +12,21 @@ import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.util.Date
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.seqAsJavaList
 import scala.collection.mutable.MutableList
 
-import de.ust.skill.generator.common.Generator
-import de.ust.skill.ir._
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.FieldLike
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.UserType
+import de.ust.skill.ir.VariableLengthArrayType
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -139,11 +149,11 @@ final class Main extends FakeMain {
       })
     }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
 
-    s"""--  ___ _  ___ _ _                                                            
+    s"""--  ___ _  ___ _ _
 -- / __| |/ (_) | |       ${headerLine1.get}
 -- \\__ \\ ' <| | | |__     ${headerLine2.get}
 -- |___/_|\\_\\_|_|____|    ${headerLine3.get}
---                                                                            
+--
 """
   }
 
@@ -176,7 +186,7 @@ final class Main extends FakeMain {
     case unknown  ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
-  override def helpText = """
+  override def helpText : String = """
   genDir                 replace default sub-directory for generated sources
   unsafe                 remove all generated runtime type checks, if set to "true"
 """

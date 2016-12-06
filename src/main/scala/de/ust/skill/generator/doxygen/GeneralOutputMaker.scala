@@ -1,23 +1,20 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.doxygen
 
-import de.ust.skill.ir._
-import java.io.File
-import java.io.PrintWriter
 import java.io.BufferedWriter
-import java.io.OutputStreamWriter
+import java.io.File
 import java.io.FileOutputStream
-import scala.collection.mutable.MutableList
-import de.ust.skill.generator.common.Generator
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
 
-import scala.collection.JavaConversions._
-import java.nio.file.Files
-import java.nio.file.Path
-import scala.util.Try
+import de.ust.skill.generator.common.Generator
+import de.ust.skill.ir.Name
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.TypeContext
 
 /**
  * The parent class for all output makers.
@@ -26,7 +23,7 @@ import scala.util.Try
  */
 trait GeneralOutputMaker extends Generator {
 
-  override def getLanguageName = "doxygen";
+  override def getLanguageName : String = "doxygen";
 
   override def clean {
     deleteRecursively(new File(outPath + packagePath))
@@ -35,7 +32,7 @@ trait GeneralOutputMaker extends Generator {
   private[doxygen] def header : String
 
   // remove special stuff for now
-  final def setTC(tc : TypeContext) = this.tc = tc;
+  final def setTC(tc : TypeContext) { this.tc = tc }
   var tc : TypeContext = _
 
   /**

@@ -1,38 +1,32 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.scala.api.internal
 
-import java.io.PrintWriter
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.scala.GeneralOutputMaker
-import scala.collection.JavaConversions._
-import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.SetType
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.Field
-import de.ust.skill.ir.ListType
 import de.ust.skill.ir.ConstantLengthArrayType
-import de.ust.skill.ir.Type
-import de.ust.skill.ir.MapType
-import de.ust.skill.ir.restriction.IntRangeRestriction
-import de.ust.skill.ir.restriction.FloatRangeRestriction
-import de.ust.skill.ir.restriction.NonNullRestriction
-import de.ust.skill.ir.View
-import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
-import de.ust.skill.ir.ReferenceType
 import de.ust.skill.ir.ContainerType
-import de.ust.skill.ir.UserType
-import de.ust.skill.ir.SingleBaseTypeContainer
-import de.ust.skill.ir.Restriction
-import de.ust.skill.ir.restriction.DefaultRestriction
-import de.ust.skill.ir.restriction.IntDefaultRestriction
-import de.ust.skill.ir.restriction.StringDefaultRestriction
-import de.ust.skill.ir.restriction.FloatDefaultRestriction
-import de.ust.skill.ir.restriction.NameDefaultRestriction
+import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.ReferenceType
+import de.ust.skill.ir.Restriction
+import de.ust.skill.ir.SingleBaseTypeContainer
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.UserType
+import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
+import de.ust.skill.ir.restriction.DefaultRestriction
+import de.ust.skill.ir.restriction.FloatDefaultRestriction
+import de.ust.skill.ir.restriction.FloatRangeRestriction
+import de.ust.skill.ir.restriction.IntDefaultRestriction
+import de.ust.skill.ir.restriction.IntRangeRestriction
+import de.ust.skill.ir.restriction.NameDefaultRestriction
+import de.ust.skill.ir.restriction.NonNullRestriction
+import de.ust.skill.ir.restriction.StringDefaultRestriction
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -116,7 +110,7 @@ ${
         else ""
       }
       ${
-        // TODO re-enable default restrictions 
+        // TODO re-enable default restrictions
         (for (r ← f.getRestrictions if !r.isInstanceOf[DefaultRestriction])
           yield s"""restrictions += ${mkFieldRestriction(f.getType, r)}${
           // add key to strings
@@ -332,15 +326,18 @@ ${mapKnownReadType(f.getType)}
       case "f64" ⇒ s"Range(${r.getLowDouble}, ${r.getHighDouble})"
       case t     ⇒ throw new IllegalStateException(s"parser should have rejected a float restriction on a field of type $t")
     }
-    case r : ConstantLengthPointerRestriction ⇒ "ConstantLengthPointer"
+    case r : ConstantLengthPointerRestriction                        ⇒ "ConstantLengthPointer"
 
-    case r : IntDefaultRestriction ⇒ s"DefaultRestriction(${r.getValue}L.to${mapType(t)})"
-    case r : FloatDefaultRestriction ⇒ s"DefaultRestriction(${r.getValue}.to${mapType(t)})"
+    case r : IntDefaultRestriction                                   ⇒ s"DefaultRestriction(${r.getValue}L.to${mapType(t)})"
+    case r : FloatDefaultRestriction                                 ⇒ s"DefaultRestriction(${r.getValue}.to${mapType(t)})"
     case r : NameDefaultRestriction if t.getSkillName.equals("bool") ⇒ s"DefaultRestriction(${r.getValue.head})"
-    case r : NameDefaultRestriction ⇒ s"DefaultRestriction(_owner.basePool.owner(${r.getValue.mkString("\"", ":", "\"")}).asInstanceOf[SingletonStoragePool[_ <: de.ust.skill.common.scala.api.SkillObject, _ <: de.ust.skill.common.scala.api.SkillObject]].get)"
+    case r : NameDefaultRestriction ⇒
+      s"DefaultRestriction(_owner.basePool.owner(${
+        r.getValue.mkString("\"", ":", "\"")
+      }).asInstanceOf[SingletonStoragePool[_ <: de.ust.skill.common.scala.api.SkillObject, _ <: de.ust.skill.common.scala.api.SkillObject]].get)"
     case r : StringDefaultRestriction ⇒ s"""DefaultRestriction("${r.getValue}")"""
 
-    case r ⇒ println("[scala] unhandled restriction: " + r.getName); ""
+    case r                            ⇒ println("[scala] unhandled restriction: " + r.getName); ""
   }
 
   /**

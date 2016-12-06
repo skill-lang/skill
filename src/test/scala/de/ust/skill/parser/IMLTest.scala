@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.parser
@@ -8,12 +8,9 @@ package de.ust.skill.parser
 import java.io.File
 import java.nio.file.Files
 
-import scala.collection.JavaConversions._
 import scala.language.implicitConversions
-import scala.sys.process._
 
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
@@ -22,7 +19,7 @@ import de.ust.skill.main.CommandLine
 @RunWith(classOf[JUnitRunner])
 class IMLTest extends FunSuite {
   CommandLine.exit = s ⇒ fail(s)
-  
+
   val specPath = "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill"
   val filename = new File(specPath)
 

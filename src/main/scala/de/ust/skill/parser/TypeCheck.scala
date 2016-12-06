@@ -1,12 +1,12 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.parser
 
-import scala.collection.mutable.ArrayBuffer
 import scala.annotation.tailrec
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
@@ -18,10 +18,6 @@ object TypeCheck {
     val enums = defs.collect { case t : EnumDefinition ⇒ t }
     val interfaces = defs.collect { case t : InterfaceDefinition ⇒ t }
     val typedefs = defs.collect { case t : Typedef ⇒ t }
-
-    // TODO what about typedefs???
-    // TODO typedefs have to be eliminated here, at least for the purpose of checking the hierarchy
-    // TODO the implementation assumes that there is no typedef in the middle of a type hierarchy!
 
     // create declarations
     // skillname ⇀ subtypes
@@ -92,7 +88,7 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
     def moreSpecific(l : UserType, r : UserType) : UserType = {
       // find the more specific type
 
-      // is l a super type of r? 
+      // is l a super type of r?
       var t = parent(r)
       while (null != t) {
         if (t == l)
@@ -100,7 +96,7 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
         t = parent.get(t).getOrElse(null)
       }
 
-      // is r a super type of l? 
+      // is r a super type of l?
       t = parent(l)
       while (null != t) {
         if (t == r)
@@ -147,8 +143,6 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
             else if (null == r && t != null)
               r = t
           }
-
-        case _ ⇒ ??? // can not happen?
       }
       r
     }

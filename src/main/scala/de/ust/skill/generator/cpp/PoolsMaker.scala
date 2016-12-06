@@ -1,11 +1,11 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.cpp
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
 
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Field
@@ -16,7 +16,6 @@ import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.View
 import de.ust.skill.ir.restriction.SingletonRestriction
 
 trait PoolsMaker extends GeneralOutputMaker {

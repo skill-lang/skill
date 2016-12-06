@@ -1,18 +1,18 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.skill
 
-import de.ust.skill.ir.UserType
-import scala.collection.JavaConversions._
-import de.ust.skill.ir.Typedef
-import de.ust.skill.ir.ContainerType
-import de.ust.skill.ir.InterfaceType
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.asScalaSet
+
 import de.ust.skill.ir.EnumType
-import scala.annotation.tailrec
 import de.ust.skill.ir.Field
+import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.Typedef
+import de.ust.skill.ir.UserType
 /**
  * Creates user type equivalents.
  *
@@ -64,7 +64,7 @@ ${mkFields(t.getFields.to)}
 }
 
 """
-          case t : Typedef ⇒ s"""${comment(t)}typedef ${t.getName.capital} 
+          case t : Typedef ⇒ s"""${comment(t)}typedef ${t.getName.capital}
   ${
             t.getRestrictions.map(s ⇒ s"$s\n  ").mkString
           }${

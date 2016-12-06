@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.jforeign
@@ -9,7 +9,6 @@ import java.io.File
 
 import scala.sys.process.stringToProcess
 
-import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FunSuite
 import org.scalatest.exceptions.TestFailedException
 
@@ -45,15 +44,19 @@ class MappingTests extends FunSuite {
     case e : Throwable ⇒ e.printStackTrace(); assert(e.getClass() === manifest.runtimeClass); null.asInstanceOf[E]
   }
 
-  def succeedOn(file : File) = test("succeedOn: " + file.getPath()) {
-    makeTest(new File("src/test/resources/javaForeign/mapping"), file.getName,
-      file, "src/test/resources/javaForeign/mapping/simple.skill")
-  }
-
-  def failOn(file : File) = test("failOn: " + file.getPath()) {
-    fail[RuntimeException] {
+  def succeedOn(file : File) {
+    test("succeedOn: " + file.getPath()) {
       makeTest(new File("src/test/resources/javaForeign/mapping"), file.getName,
         file, "src/test/resources/javaForeign/mapping/simple.skill")
+    }
+  }
+
+  def failOn(file : File) {
+    test("failOn: " + file.getPath()) {
+      fail[RuntimeException] {
+        makeTest(new File("src/test/resources/javaForeign/mapping"), file.getName,
+          file, "src/test/resources/javaForeign/mapping/simple.skill")
+      }
     }
   }
 

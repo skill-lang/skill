@@ -1,36 +1,41 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.jforeign
 
-import scala.collection.JavaConversions._
-import de.ust.skill.ir.Type
-import sun.reflect.generics.tree.LongSignature
-import sun.reflect.generics.tree.FloatSignature
-import sun.reflect.generics.tree.VoidDescriptor
-import sun.reflect.generics.tree.BooleanSignature
-import sun.reflect.generics.tree.DoubleSignature
-import sun.reflect.generics.tree.ShortSignature
-import sun.reflect.generics.tree.ClassTypeSignature
-import sun.reflect.generics.tree.BottomSignature
-import sun.reflect.generics.tree.IntSignature
-import sun.reflect.generics.tree.TypeVariableSignature
-import sun.reflect.generics.tree.ArrayTypeSignature
-import sun.reflect.generics.tree.SimpleClassTypeSignature
-import sun.reflect.generics.tree.FormalTypeParameter
-import sun.reflect.generics.tree.CharSignature
-import sun.reflect.generics.tree.ByteSignature
-import sun.reflect.generics.tree.Wildcard
-import javassist.CtClass
-import sun.reflect.generics.tree.MethodTypeSignature
-import sun.reflect.generics.tree.ClassSignature
-import de.ust.skill.ir.TypeContext
-import de.ust.skill.ir.ListType
-import scala.collection.mutable.ArrayLike
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.bufferAsJavaList
 import scala.collection.mutable.ListBuffer
-import javassist.ClassPool
-import scala.collection.mutable.HashMap
-import de.ust.skill.ir.UserType
-import de.ust.skill.ir.SetType
+
+import de.ust.skill.ir.ListType
 import de.ust.skill.ir.MapType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.TypeContext
+import javassist.ClassPool
 import javassist.NotFoundException
+import sun.reflect.generics.tree.ArrayTypeSignature
+import sun.reflect.generics.tree.BooleanSignature
+import sun.reflect.generics.tree.BottomSignature
+import sun.reflect.generics.tree.ByteSignature
+import sun.reflect.generics.tree.CharSignature
+import sun.reflect.generics.tree.ClassSignature
+import sun.reflect.generics.tree.ClassTypeSignature
+import sun.reflect.generics.tree.DoubleSignature
+import sun.reflect.generics.tree.FloatSignature
+import sun.reflect.generics.tree.FormalTypeParameter
+import sun.reflect.generics.tree.IntSignature
+import sun.reflect.generics.tree.LongSignature
+import sun.reflect.generics.tree.MethodTypeSignature
+import sun.reflect.generics.tree.ShortSignature
+import sun.reflect.generics.tree.SimpleClassTypeSignature
+import sun.reflect.generics.tree.TypeVariableSignature
+import sun.reflect.generics.tree.VoidDescriptor
+import sun.reflect.generics.tree.Wildcard
 
 /**
  * This is a nasty stateful visitor (thanks to the lack of generic arguments to the visit methods).

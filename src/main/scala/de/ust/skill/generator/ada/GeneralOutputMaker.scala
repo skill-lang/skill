@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.ada
@@ -23,9 +23,9 @@ import scala.collection.mutable.HashMap
  */
 trait GeneralOutputMaker extends Generator {
 
-  override def getLanguageName = "ada";
-  
-  override def clean = println("clean not supported by ada")
+  override def getLanguageName : String = "ada";
+
+  override def clean : Unit = println("clean not supported by ada")
 
   /**
    * configurable build mode; either "release" or "debug"
@@ -37,7 +37,9 @@ trait GeneralOutputMaker extends Generator {
   private[ada] def header : String
 
   // remove special stuff for now
-  final def setTC(tc : TypeContext) = this.IR = tc.removeSpecialDeclarations.getUsertypes.to
+  final def setTC(tc : TypeContext) {
+    this.IR = tc.removeSpecialDeclarations.getUsertypes.to
+  }
   var IR : List[UserType] = _
 
   /**
@@ -150,7 +152,6 @@ trait GeneralOutputMaker extends Generator {
     case t : SetType                 ⇒ s"Skill_Set_${escaped(t.getBaseType.getSkillName)}"
     case t : SingleBaseTypeContainer ⇒ s"Skill_Array_${escaped(t.getBaseType.getSkillName)}"
     case t : MapType                 ⇒ t.getBaseTypes.map { x ⇒ escaped(x.getSkillName) }.mkString("Skill_Map_", "_", "");
-    case _                           ⇒ ???
   }
 
   /**

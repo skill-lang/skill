@@ -1,30 +1,22 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.jforeign.internal
 
-import java.io.PrintWriter
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.jforeign.GeneralOutputMaker
-import scala.collection.JavaConversions._
-import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.SetType
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.Field
-import de.ust.skill.ir.ListType
 import de.ust.skill.ir.ConstantLengthArrayType
-import de.ust.skill.ir.Type
-import de.ust.skill.ir.MapType
-import de.ust.skill.ir.restriction.IntRangeRestriction
-import de.ust.skill.ir.restriction.FloatRangeRestriction
-import de.ust.skill.ir.restriction.NonNullRestriction
-import de.ust.skill.ir.View
-import de.ust.skill.ir.UserType
-import de.ust.skill.ir.SingleBaseTypeContainer
+import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.InterfaceType
-import javassist.NotFoundException
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.SingleBaseTypeContainer
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.UserType
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
 
@@ -36,11 +28,6 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
 
       val nameT = mapType(t)
       val nameF = s"KnownField_${name(t)}_${name(f)}"
-
-      //      val fieldTypeBoxed = if (f.getType.isInstanceOf[InterfaceType])
-      //        mapType(f.getType.asInstanceOf[InterfaceType].getSuperType, true)
-      //      else
-      //        mapType(f.getType, true)
 
       // casting access to data array using index i
       val dataAccessI = if (null == t.getSuperType) "data[i]" else s"((${mapType(t)})data[i])"
@@ -91,7 +78,7 @@ ${
             case "f32"                   ⇒ s"""KnownFloatField<${mapType(t)}>"""
             case "f64"                   ⇒ s"""KnownDoubleField<${mapType(t)}>"""
             case "annotation" | "string" ⇒ s"""KnownField<${mapType(f.getType)}, ${mapType(t)}>"""
-            case ft                      ⇒ "???missing specialization for type "+ft
+            case ft                      ⇒ "???missing specialization for type " + ft
           }
           case _ ⇒ s"""KnownField<${mapType(f, false)}, ${mapType(t)}>"""
         }
@@ -166,13 +153,13 @@ ${
                 case ft : ListType ⇒ s"""${rc.map(f).getName}<${mapType(ft.getBaseType, true)}> l = new ${
                   val actual = rc.map(f).getName
                   if (actual == "java.util.List") s"java.util.LinkedList" else actual
-                  }<>();
+                }<>();
             ((ListType)type).readSingleField(in, l);
             is.next().${setterOrFieldAccess(t, f)}(l);"""
                 case ft : SetType ⇒ s"""${rc.map(f).getName}<${mapType(ft.getBaseType, true)}> s = new ${
                   val actual = rc.map(f).getName
                   if (actual == "java.util.Set") s"java.util.HashSet" else actual
-                  }<>();
+                }<>();
             ((SetType)type).readSingleField(in, s);
             is.next().${setterOrFieldAccess(t, f)}(s);"""
                 case ft : MapType ⇒ {
@@ -182,11 +169,11 @@ ${
                   s"""$actualType m = new ${
                     val actual = rc.map(f).getName
                     if (actual == "java.util.Map") s"java.util.HashMap" else actual
-                    }<>();
+                  }<>();
             ((MapType)type).readSingleField(in, m);
             is.next().${setterOrFieldAccess(t, f)}(m);"""
                 }
-                case _            ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(type.readSingleField(in));"""
+                case _ ⇒ s"""is.next().${setterOrFieldAccess(t, f)}(type.readSingleField(in));"""
               }
             }
         }"""
@@ -199,7 +186,7 @@ ${
             """
         return 0; // this field is constant"""
           else """
-        final Block range = owner.lastBlock();"""+{
+        final Block range = owner.lastBlock();""" + {
             // this prelude is common to most cases
             def preludeData : String =
               s"""final ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
@@ -277,7 +264,9 @@ ${
               }
 
               case fieldType : ConstantLengthArrayType ⇒ s"""
-        final SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}> t = (SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}>) type;
+        final SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}> t =
+            (SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}>) type;
+
         final FieldType<${mapType(fieldType.getBaseType, true)}> baseType = t.groundType;
         $preludeData
             final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
@@ -287,7 +276,9 @@ ${
         return result;"""
 
               case fieldType : SingleBaseTypeContainer ⇒ s"""
-        final SingleArgumentType<${mapType(f, true)}, ${mapType(fieldType.getBaseType, true)}> t = (SingleArgumentType<${mapType(f, true)}, ${mapType(fieldType.getBaseType, true)}>) type;
+        final SingleArgumentType<${mapType(f, true)}, ${mapType(fieldType.getBaseType, true)}> t =
+            (SingleArgumentType<${mapType(f, true)}, ${mapType(fieldType.getBaseType, true)}>) type;
+
         final FieldType<${mapType(fieldType.getBaseType, true)}> baseType = t.groundType;
         $preludeData
             final ${mapType(f, false)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).${getterOrFieldAccess(t, f)};

@@ -1,16 +1,15 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.javaforeign
 
 import java.io.File
 
-import scala.collection.mutable.ArrayBuffer
-import scala.reflect.io.Path.jfile2path
-import scala.sys.process._
 import scala.language.postfixOps
+import scala.reflect.io.Path.jfile2path
+import scala.sys.process.stringToProcess
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.ConfigMap
@@ -51,20 +50,22 @@ class GenericTests extends FunSuite with BeforeAndAfterAll {
 
   def finalizeTests() : Unit = {}
 
-  final def makeTest(path : File, name : String, mappingFile : File, skillFilePath : String) = test("generic: " + name) {
-    deleteOutDir(name + "skill")
+  final def makeTest(path : File, name : String, mappingFile : File, skillFilePath : String) {
+    test("generic: " + name) {
+      deleteOutDir(name + "skill")
 
-    CommandLine.exit = { s ⇒ throw (new Error(s)) }
-    CommandLine.main(Array[String](skillFilePath,
-      "--debug-header",
-      "-L", "javaforeign",
-      "-p", name + "skill",
-      s"-Ojavaforeign:M=${mappingFile.getPath}",
-      s"-Ojavaforeign:F=${path.getAbsolutePath}",
-      "-d", "testsuites/javaforeign/lib",
-      "-o", "testsuites/javaforeign/src/main/java/"))
+      CommandLine.exit = { s ⇒ throw (new Error(s)) }
+      CommandLine.main(Array[String](skillFilePath,
+        "--debug-header",
+        "-L", "javaforeign",
+        "-p", name + "skill",
+        s"-Ojavaforeign:M=${mappingFile.getPath}",
+        s"-Ojavaforeign:F=${path.getAbsolutePath}",
+        "-d", "testsuites/javaforeign/lib",
+        "-o", "testsuites/javaforeign/src/main/java/"))
 
-    makeGenBinaryTests(name)
+      makeGenBinaryTests(name)
+    }
   }
 
   implicit class Regex(sc : StringContext) {

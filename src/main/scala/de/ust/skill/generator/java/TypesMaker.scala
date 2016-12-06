@@ -1,28 +1,26 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java
 
-import java.io.PrintWriter
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.mapAsScalaMap
 
-import scala.collection.JavaConversions._
-
-import de.ust.skill.ir._
-import de.ust.skill.ir.restriction._
+import de.ust.skill.ir.InterfaceType
 
 trait TypesMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    for(t <- IR){
+    for(t <- IR) {
       val out = open(name(t)+".java")
       
       val customizations = t.getCustomizations.filter(_.language.equals("java")).toArray
 
-    //package
-    out.write(s"""package ${this.packageName};
+      // package
+      out.write(s"""package ${this.packageName};
 
 import de.ust.skill.common.java.api.FieldDeclaration;
 import de.ust.skill.common.java.internal.NamedType;
@@ -33,7 +31,9 @@ ${customizations.flatMap(_.getOptions.get("import")).map(i⇒s"import $i;\n").mk
     
     
 
-    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
+      val packageName = 
+        if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) 
+        else this.packageName;
 
       val fields = t.getAllFields.filter(!_.isConstant)
       val relevantFields = fields.filter(!_.isIgnored)
@@ -170,20 +170,20 @@ ${
 """)
     }
   
-    // custom fields
-    for(c <- customizations){
-      val mod = c.getOptions.toMap.get("modifier").map(_.head).getOrElse("public")
+      // custom fields
+      for(c <- customizations) {
+        val mod = c.getOptions.toMap.get("modifier").map(_.head).getOrElse("public")
       
-      out.write(s"""
+        out.write(s"""
     ${comment(c)}$mod ${c.`type`} ${name(c)}; 
 """)
-    }
+      }
 
-    // generic get
-    locally{
-      val fields = implementedFields.filterNot(_.isIgnored)
-      if(!fields.isEmpty)
-        out.write(s"""
+      // generic get
+      locally{
+        val fields = implementedFields.filterNot(_.isIgnored)
+        if(!fields.isEmpty)
+          out.write(s"""
     /**
      * unchecked conversions are required, because the Java type system known
      * nothing of our invariants
@@ -253,7 +253,7 @@ ${
     }
 """)
 
-      out.write(s"""
+        out.write(s"""
     /**
      * Generic sub types of this type.
      * 
@@ -285,7 +285,7 @@ ${
     }
 }
 """);
-    out.close()
+      out.close()
     }
   }
 }

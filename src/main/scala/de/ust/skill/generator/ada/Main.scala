@@ -1,32 +1,34 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.ada
 
 import java.util.Date
-import scala.collection.JavaConversions._
+
+import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.MutableList
+
 import de.ust.skill.generator.ada.api.APIBodyMaker
 import de.ust.skill.generator.ada.api.APISpecMaker
 import de.ust.skill.generator.ada.api.internal.InternalStringsMaker
 import de.ust.skill.generator.ada.api.internal.PoolsMaker
-import de.ust.skill.generator.ada.internal.KnownFieldsMaker
 import de.ust.skill.generator.ada.internal.InternalMaker
+import de.ust.skill.generator.ada.internal.KnownFieldsMaker
 import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.ContainerType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
+import de.ust.skill.ir.FieldLike
 import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.ListType
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.SetType
+import de.ust.skill.ir.SingleBaseTypeContainer
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.SingleBaseTypeContainer
-import de.ust.skill.ir.ContainerType
-import de.ust.skill.ir.FieldLike
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -42,7 +44,6 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
 class Main extends FakeMain
     with APIBodyMaker
     with APISpecMaker
-    with DependenciesMaker
     with InternalStringsMaker
     with InternalMaker
     with KnownFieldsMaker

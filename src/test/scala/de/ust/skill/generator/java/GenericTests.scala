@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java
@@ -10,15 +10,14 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
-import java.nio.file.Files
-import scala.reflect.io.Directory
+
 import scala.reflect.io.Path.jfile2path
+
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import de.ust.skill.main.CommandLine
 import org.scalatest.junit.JUnitRunner
-import scala.collection.mutable.ArrayBuffer
+
 import de.ust.skill.generator.common
+import de.ust.skill.main.CommandLine
 
 /**
  * Generic tests built for Java.
@@ -47,7 +46,7 @@ class GenericTests extends common.GenericTests {
       "-o", "testsuites/java/src/main/java/"))
   }
 
-  def newTestFile(packagePath : String, name : String) = {
+  def newTestFile(packagePath : String, name : String) : PrintWriter = {
     val f = new File(s"testsuites/java/src/test/java/$packagePath/Generic${name}Test.java")
     f.getParentFile.mkdirs
     if (f.exists)

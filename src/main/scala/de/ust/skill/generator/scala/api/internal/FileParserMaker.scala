@@ -1,9 +1,10 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.scala.api.internal
+
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
 trait FileParserMaker extends GeneralOutputMaker {
@@ -92,7 +93,7 @@ object FileParser extends SkillFileParser[SkillFile] {
     }"""
       ).mkString
     }
-    
+
     // create state to allow distributed fields to access the state structure for instance allocation
     val r = new SkillFile(path, mode, String, Annotation, types, typesByName)
 
@@ -107,7 +108,7 @@ object FileParser extends SkillFileParser[SkillFile] {
       }
     }
     types.par.foreach(_.allocateInstances)
-    
+
     // create restrictions (may contain references to instances)
 
     // read eager fields

@@ -1,3 +1,8 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.main
 
 import java.io.File
@@ -53,7 +58,7 @@ trait SourceOptions extends AbstractOptions {
       ) {
         val pathPostfix =
           // if we process a single language only, the outdir is the target for the language. Otherwise, languages get
-          // their own dirs in a subdirectory 
+          // their own dirs in a subdirectory
           if (1 == languages.size) ""
           else "/generated/" + lang
 
@@ -69,7 +74,7 @@ trait SourceOptions extends AbstractOptions {
         gen.depsPath = depsdir.getAbsolutePath + pathPostfix
 
         if (verbose) print(s"run $lang: ")
-        
+
         if (clean) gen.clean
 
         try {
@@ -104,7 +109,7 @@ trait SourceOptions extends AbstractOptions {
     opt[File]('o', "outdir").optional().action(
       (p, c) ⇒ c.copy(outdir = p)
     ).text("set the output directory")
-    
+
     opt[Unit]('c', "clean").optional().action(
       (p, c) ⇒ c.copy(clean = true)
     ).text("clean output directory before creating source files")
@@ -112,7 +117,6 @@ trait SourceOptions extends AbstractOptions {
     opt[File]('d', "depsdir").optional().action(
       (p, c) ⇒ c.copy(depsdir = p)
     ).text("set the dependency directory (libs, common sources)")
-    
 
     opt[String]('p', "package").required().action(
       (s, c) ⇒ c.copy(packageName = s.split('.'))

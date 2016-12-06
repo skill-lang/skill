@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.parser
@@ -9,32 +9,33 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.lang.Long
 import java.nio.file.FileSystems
-import scala.collection.JavaConversions._
+
+import scala.annotation.migration
+import scala.annotation.tailrec
+import scala.collection.JavaConversions.bufferAsJavaList
+import scala.collection.JavaConversions.seqAsJavaList
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
+import scala.collection.mutable.ListBuffer
 import scala.util.parsing.combinator.RegexParsers
+
 import de.ust.skill.ir
+import de.ust.skill.ir.Comment
 import de.ust.skill.ir.Hint
 import de.ust.skill.ir.Restriction
+import de.ust.skill.ir.TypeContext
+import de.ust.skill.ir.restriction.AbstractRestriction
 import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
 import de.ust.skill.ir.restriction.FloatDefaultRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
-import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.IntDefaultRestriction
+import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.MonotoneRestriction
 import de.ust.skill.ir.restriction.NameDefaultRestriction
 import de.ust.skill.ir.restriction.NonNullRestriction
 import de.ust.skill.ir.restriction.SingletonRestriction
 import de.ust.skill.ir.restriction.StringDefaultRestriction
 import de.ust.skill.ir.restriction.UniqueRestriction
-import scala.annotation.tailrec
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.Stack
-import de.ust.skill.ir.Comment
-import de.ust.skill.ir.TypeContext
-import scala.collection.JavaConversions._
-import de.ust.skill.ir.restriction.AbstractRestriction
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -464,7 +465,12 @@ object Parser {
   /**
    * @return a type context containing all type information obtained from the argument file
    */
-  def process(input : File, keepSpecificationOrder : Boolean = false, delimitWithUnderscore : Boolean = true, delimitWithCamelCase : Boolean = true, verboseOutput : Boolean = false) : TypeContext = {
+  def process(input : File,
+              keepSpecificationOrder : Boolean = false,
+              delimitWithUnderscore : Boolean = true,
+              delimitWithCamelCase : Boolean = true,
+              verboseOutput : Boolean = false) : TypeContext = {
+
     val p = new Parser(delimitWithUnderscore, delimitWithCamelCase, verboseOutput)
     IRBuilder.buildIR(p.parseAll(input).to, verboseOutput, keepSpecificationOrder)
   }

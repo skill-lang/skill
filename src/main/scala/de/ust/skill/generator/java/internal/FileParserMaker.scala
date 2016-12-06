@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java.internal
@@ -27,8 +27,8 @@ import de.ust.skill.common.java.restrictions.TypeRestriction;
 import de.ust.skill.common.jvm.streams.FileInputStream;
 
 ${
-  suppressWarnings
-}final public class FileParser extends de.ust.skill.common.java.internal.FileParser<SkillState> {
+      suppressWarnings
+    }final public class FileParser extends de.ust.skill.common.java.internal.FileParser<SkillState> {
 
     public final SkillState state;
 
@@ -72,7 +72,7 @@ ${
             p = (StoragePool<T, B>) new ${name(t)}Access(types.size());
             break;
 """
-        else  s"""
+      else s"""
         case "${t.getSkillName}": {
             ${name(t.getSuperType)}Access parent = (${name(t.getSuperType)}Access)(poolByName.get("${t.getSuperType.getSkillName}"));
             if (null == parent)

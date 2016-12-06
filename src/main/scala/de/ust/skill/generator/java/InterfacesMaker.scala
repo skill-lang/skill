@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java
@@ -16,7 +16,7 @@ trait InterfacesMaker extends GeneralOutputMaker {
     super.make
 
     for (t ← interfaces) {
-      val out = open(name(t)+".java")
+      val out = open(name(t) + ".java")
 
       //package
       out.write(s"""package ${this.packageName};
@@ -27,7 +27,9 @@ import de.ust.skill.common.java.internal.SkillObject;
 import de.ust.skill.common.java.internal.StoragePool;
 """)
 
-      val packageName = if (this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.') + 1) else this.packageName;
+      val packageName =
+        if (this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.') + 1)
+        else this.packageName;
 
       val fields = t.getAllFields.filter(!_.isConstant)
       val relevantFields = fields.filter(!_.isIgnored)

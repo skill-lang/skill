@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.scala
@@ -25,15 +25,14 @@ trait DependenciesMaker extends GeneralOutputMaker {
         val out = new File(depsPath, jar);
         out.getParentFile.mkdirs();
 
-        try {
-          if (out.exists() && sha256(out.getAbsolutePath) == commonJarSum(jar))
-            return
+        if (try {
+          !out.exists() || sha256(out.getAbsolutePath) != commonJarSum(jar)
         } catch {
-          case e : IOException ⇒ // just continue
+          case e : IOException ⇒ false // just continue
+        }) {
+          Files.deleteIfExists(out.toPath)
+          Files.copy(new File("deps/" + jar).toPath, out.toPath)
         }
-
-        Files.deleteIfExists(out.toPath)
-        Files.copy(new File("deps/" + jar).toPath, out.toPath)
       })
     }
   }

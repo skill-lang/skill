@@ -1,19 +1,19 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.common
 
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.Type
-import java.io.PrintWriter
-import de.ust.skill.ir.Field
-import de.ust.skill.ir.TypeContext
-import java.nio.file.Paths
 import java.io.File
+import java.io.PrintWriter
+
 import scala.collection.mutable.ListBuffer
+
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.Field
 import de.ust.skill.ir.FieldLike
+import de.ust.skill.ir.TypeContext
 
 /**
  * Use this to create a 5 lines header that looks similar in all languages.

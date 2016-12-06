@@ -1,26 +1,25 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c.model
 
-import scala.collection.JavaConversions._
-import java.io.PrintWriter
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.c.GeneralOutputMaker
-import de.ust.skill.ir.UserType
-import de.ust.skill.ir.MapType
-import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.Field
 import de.ust.skill.ir.ConstantLengthArrayType
-import de.ust.skill.ir.ReferenceType
-import de.ust.skill.ir.SingleBaseTypeContainer
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.ListType
-import de.ust.skill.ir.SetType
 import de.ust.skill.ir.ContainerType
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.ReferenceType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.SingleBaseTypeContainer
 import de.ust.skill.ir.Type
+import de.ust.skill.ir.UserType
+import de.ust.skill.ir.VariableLengthArrayType
 
 /**
  * @author Fabian Harth, Timm Felden

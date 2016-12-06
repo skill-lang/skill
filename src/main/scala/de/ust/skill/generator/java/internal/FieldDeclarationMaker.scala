@@ -1,29 +1,20 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java.internal
 
-import java.io.PrintWriter
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.java.GeneralOutputMaker
-import scala.collection.JavaConversions._
-import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.SetType
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.Field
-import de.ust.skill.ir.ListType
 import de.ust.skill.ir.ConstantLengthArrayType
-import de.ust.skill.ir.Type
-import de.ust.skill.ir.MapType
-import de.ust.skill.ir.restriction.IntRangeRestriction
-import de.ust.skill.ir.restriction.FloatRangeRestriction
-import de.ust.skill.ir.restriction.NonNullRestriction
-import de.ust.skill.ir.View
-import de.ust.skill.ir.UserType
-import de.ust.skill.ir.SingleBaseTypeContainer
+import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.SingleBaseTypeContainer
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.UserType
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -34,11 +25,6 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
 
       val nameT = mapType(t)
       val nameF = s"KnownField_${name(t)}_${name(f)}"
-
-      //      val fieldTypeBoxed = if (f.getType.isInstanceOf[InterfaceType])
-      //        mapType(f.getType.asInstanceOf[InterfaceType].getSuperType, true)
-      //      else
-      //        mapType(f.getType, true)
 
       // casting access to data array using index i
       val dataAccessI = if (null == t.getSuperType) "data[i]" else s"((${mapType(t)})data[i])"
@@ -87,7 +73,7 @@ ${
             case "f32"                   ⇒ s"""KnownFloatField<${mapType(t)}>"""
             case "f64"                   ⇒ s"""KnownDoubleField<${mapType(t)}>"""
             case "annotation" | "string" ⇒ s"""KnownField<${mapType(f.getType)}, ${mapType(t)}>"""
-            case ft                      ⇒ "???missing specialization for type "+ft
+            case ft                      ⇒ "???missing specialization for type " + ft
           }
           case _ ⇒ s"""KnownField<${mapType(f.getType)}, ${mapType(t)}>"""
         }
@@ -159,7 +145,7 @@ ${
                 }
 
                 case t : UserType ⇒ s"""is.next().set${escaped(f.getName.capital)}(target.getByID(in.v64()));"""
-                
+
                 case _            ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
               }
             }
@@ -173,7 +159,7 @@ ${
             """
         return 0; // this field is constant"""
           else """
-        final Block range = owner.lastBlock();"""+{
+        final Block range = owner.lastBlock();""" + {
             // this prelude is common to most cases
             def preludeData : String =
               s"""final ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
@@ -251,17 +237,31 @@ ${
               }
 
               case fieldType : ConstantLengthArrayType ⇒ s"""
-        final SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}> t = (SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}>) type;
+        final SingleArgumentType<${
+                mapType(fieldType)
+              }, ${
+                mapType(fieldType.getBaseType, true)
+              }> t = (SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}>) type;
+
         final FieldType<${mapType(fieldType.getBaseType, true)}> baseType = t.groundType;
         $preludeData
-            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
+            final ${mapType(f.getType)} v = (${
+                if (tIsBaseType) ""
+                else s"(${mapType(t)})"
+              }data[i]).get${escaped(f.getName.capital)}();
+
             assert null==v;
             result += baseType.calculateOffset(v);
         }
         return result;"""
 
               case fieldType : SingleBaseTypeContainer ⇒ s"""
-        final SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}> t = (SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}>) type;
+        final SingleArgumentType<${
+                mapType(fieldType)
+              }, ${
+                mapType(fieldType.getBaseType, true)
+              }> t = (SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}>) type;
+
         final FieldType<${mapType(fieldType.getBaseType, true)}> baseType = t.groundType;
         $preludeData
             final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();

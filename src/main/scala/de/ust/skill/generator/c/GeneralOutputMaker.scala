@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c
@@ -23,14 +23,14 @@ import scala.collection.JavaConversions._
  */
 trait GeneralOutputMaker extends Generator {
 
-  override def getLanguageName = "c";
+  override def getLanguageName : String = "c";
 
-  override def clean = println("clean not supported by ada")
+  override def clean { println("clean not supported by ada") }
 
   private[c] def header : String
 
   // remove special stuff for now
-  final def setTC(tc : TypeContext) = this.IR = tc.removeSpecialDeclarations.getUsertypes.to
+  final def setTC(tc : TypeContext) { this.IR = tc.removeSpecialDeclarations.getUsertypes.to }
   var IR : List[UserType] = _
 
   /**

@@ -1,26 +1,24 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java
 
-import java.io.File
-import java.io.PrintWriter
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.Type
-import de.ust.skill.ir.Field
-import java.util.Date
 import java.io.BufferedWriter
-import java.io.OutputStreamWriter
+import java.io.File
 import java.io.FileOutputStream
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
+
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.common.Generator
-import scala.collection.JavaConversions._
+import de.ust.skill.ir.FieldLike
+import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.Type
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
-import java.nio.file.Paths
-import de.ust.skill.ir.InterfaceType
-import de.ust.skill.ir.FieldLike
 
 /**
  * The parent class for all output makers.
@@ -30,7 +28,7 @@ import de.ust.skill.ir.FieldLike
 trait GeneralOutputMaker extends Generator {
 
   // remove special stuff
-  final def setTC(tc : TypeContext) = {
+  final def setTC(tc : TypeContext) {
     this.types = tc
     val flat = tc.removeTypedefs.removeEnums
     this.IR = flat.getUsertypes.to
@@ -47,7 +45,7 @@ trait GeneralOutputMaker extends Generator {
    */
   var largeSpecificationMode = false
 
-  override def getLanguageName = "java";
+  override def getLanguageName : String = "java";
 
   override def clean {
     deleteRecursively(new File(outPath + "/" + packagePath))

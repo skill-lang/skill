@@ -1,31 +1,31 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.cpp
 
 import scala.collection.JavaConversions.asScalaBuffer
-import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.Restriction
-import de.ust.skill.ir.Type
-import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
-import de.ust.skill.ir.restriction.FloatRangeRestriction
-import de.ust.skill.ir.restriction.IntRangeRestriction
-import de.ust.skill.ir.restriction.NonNullRestriction
-import de.ust.skill.ir.InterfaceType
-import de.ust.skill.ir.SingleBaseTypeContainer
-import de.ust.skill.ir.UserType
+
 import de.ust.skill.ir.ConstantLengthArrayType
-import de.ust.skill.ir.MapType
 import de.ust.skill.ir.Field
-import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.InterfaceType
 import de.ust.skill.ir.ListType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.Restriction
 import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.UserType
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
 import de.ust.skill.ir.restriction.DefaultRestriction
-import de.ust.skill.ir.restriction.IntDefaultRestriction
 import de.ust.skill.ir.restriction.FloatDefaultRestriction
+import de.ust.skill.ir.restriction.FloatRangeRestriction
+import de.ust.skill.ir.restriction.IntDefaultRestriction
+import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.NameDefaultRestriction
+import de.ust.skill.ir.restriction.NonNullRestriction
 
 trait FieldDeclarationsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -465,7 +465,7 @@ $checks
     case _ ⇒ "" // unchecked restriction
   }
 
-  def writeCode(accessI : String, f : Field) = f.getType match {
+  private def writeCode(accessI : String, f : Field) : String = f.getType match {
     case t : GroundType ⇒ t.getSkillName match {
       case "annotation" ⇒ s"""auto b = ::skill::box($accessI);
             type->write(out, b);"""

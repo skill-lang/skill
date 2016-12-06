@@ -1,12 +1,15 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java
 
 import java.util.Date
-import scala.collection.JavaConversions._
+
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.mutable.HashMap
+
 import de.ust.skill.generator.java.api.SkillFileMaker
 import de.ust.skill.generator.java.internal.AccessMaker
 import de.ust.skill.generator.java.internal.FieldDeclarationMaker
@@ -15,6 +18,7 @@ import de.ust.skill.generator.java.internal.StateMaker
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
+import de.ust.skill.ir.FieldLike
 import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.ListType
 import de.ust.skill.ir.MapType
@@ -22,9 +26,6 @@ import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.View
-import scala.collection.mutable.HashMap
-import de.ust.skill.ir.FieldLike
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -146,12 +147,12 @@ class Main extends FakeMain
     case unknown            ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
-  override def helpText = """
-  revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
-  suppressWarnings  true/false  add a @SuppressWarnings("all") annotation to generated classes
+  override def helpText : String = """
+revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
+suppressWarnings  true/false  add a @SuppressWarnings("all") annotation to generated classes
 """
 
-  override def customFieldManual = """
+  override def customFieldManual : String = """
 !import string+    A list of imports that will be added where required.
 !modifier string   A modifier, that will be put in front of the variable declaration."""
 

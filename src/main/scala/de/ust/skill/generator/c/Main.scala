@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c
@@ -232,7 +232,7 @@ final class Main extends FakeMain
     case unknown  ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
-  override def helpText = """
+  override def helpText : String = """
 unsafe                 remove all generated runtime type checks, if set to "true"
 """
 

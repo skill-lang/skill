@@ -1,31 +1,28 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.jforeign
 
-import java.io.File
-import java.io.PrintWriter
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.Type
-import de.ust.skill.ir.Field
-import java.util.Date
 import java.io.BufferedWriter
-import java.io.OutputStreamWriter
+import java.io.File
 import java.io.FileOutputStream
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
+
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.mutable.ListBuffer
+
 import de.ust.skill.generator.common.Generator
-import scala.collection.JavaConversions._
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.Type
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
-import java.nio.file.Paths
-import de.ust.skill.ir.InterfaceType
-import javassist.CtClass
-import scala.collection.mutable.HashMap
-import javassist.NotFoundException
-import de.ust.skill.ir.GroundType
 import de.ust.skill.jforeign.ReflectionContext
-import scala.collection.mutable.ListBuffer
+import javassist.NotFoundException
 
 /**
  * The parent class for all output makers.
@@ -35,7 +32,7 @@ import scala.collection.mutable.ListBuffer
 trait GeneralOutputMaker extends Generator {
 
   // remove special stuff
-  final def setForeignTC(tc : TypeContext) = {
+  final def setForeignTC(tc : TypeContext) {
     this.types = tc
     val flat = tc.removeTypedefs.removeEnums
     this.IR = flat.getUsertypes.to
@@ -43,7 +40,7 @@ trait GeneralOutputMaker extends Generator {
     // set large specification mode; leave some spare parameters
     largeSpecificationMode = IR.size > 200
   }
-  final def setTC(tc : TypeContext) = { types = tc }
+  final def setTC(tc : TypeContext) { types = tc }
 
   var types : TypeContext = _
   var IR : List[UserType] = _
@@ -57,7 +54,7 @@ trait GeneralOutputMaker extends Generator {
    */
   var largeSpecificationMode = false
 
-  override def getLanguageName = "javaforeign";
+  override def getLanguageName : String = "javaforeign";
 
   override def clean {
     deleteRecursively(new File(outPath + "/" + packagePath))

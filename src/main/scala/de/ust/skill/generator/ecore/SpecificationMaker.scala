@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.ecore
@@ -107,7 +107,6 @@ ${mkField(vt, "value", "")}
       case "f32"         ⇒ "EFloat"
       case "f64"         ⇒ "EDouble"
       case "string"      ⇒ "EString"
-      case base          ⇒ println(base); ???
     })
     case t : UserType ⇒ s"#//${mapType(t)}"
   }

@@ -5,17 +5,6 @@
 \*                                                                            */
 package de.ust.skill.main
 
-import java.io.File
-
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-
-import de.ust.skill.BuildInfo
-import de.ust.skill.generator.common.HeaderInfo
-import de.ust.skill.generator.common.KnownGenerators
-import de.ust.skill.ir.TypeContext
-import de.ust.skill.parser.Parser
-
 /**
  * command line parsing is split into three basic modes, depending on the extension of the first argument:
  * - for a .sir-file, the command line parser operates in IRConfig mode

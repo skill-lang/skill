@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.scala
@@ -146,15 +146,17 @@ class Main extends FakeMain
     _packagePrefix = names.foldRight("")(_ + "." + _)
   }
 
-  override def setOption(option : String, value : String) = option match {
-    case "revealskillid" ⇒ revealSkillID = ("true" == value)
-    case unknown         ⇒ sys.error(s"unkown Argument: $unknown")
+  override def setOption(option : String, value : String) {
+    option match {
+      case "revealskillid" ⇒ revealSkillID = ("true" == value)
+      case unknown         ⇒ sys.error(s"unkown Argument: $unknown")
+    }
   }
-  override def helpText = """
+  override def helpText : String = """
 revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
 """
 
-  override def customFieldManual = """
+  override def customFieldManual : String = """
 !import string+    A list of imports that will be added where required.
 !modifier string   A modifier, that will be put in front of the variable declaration."""
 
@@ -238,52 +240,54 @@ revealSkillID     true/false  if set to true, the generated binding will reveal 
 
   protected def writeField(d : UserType, f : Field) : String = {
     val fName = escaped(f.getName.camel)
-    if (f.isConstant())
-      return "// constants do not write individual field data"
+    if (f.isConstant()) {
+      "// constants do not write individual field data"
+    } else {
 
-    f.getType match {
-      case t : GroundType ⇒ t.getSkillName match {
-        case "annotation" | "string" ⇒ s"for(i ← outData) ${f.getType.getSkillName}(i.$fName, dataChunk)"
-        case _                       ⇒ s"for(i ← outData) dataChunk.${f.getType.getSkillName}(i.$fName)"
+      f.getType match {
+        case t : GroundType ⇒ t.getSkillName match {
+          case "annotation" | "string" ⇒ s"for(i ← outData) ${f.getType.getSkillName}(i.$fName, dataChunk)"
+          case _                       ⇒ s"for(i ← outData) dataChunk.${f.getType.getSkillName}(i.$fName)"
 
-      }
-
-      case t : Declaration ⇒ s"""for(i ← outData) userRef(i.$fName, dataChunk)"""
-
-      case t : ConstantLengthArrayType ⇒ s"for(i ← outData) writeConstArray(${
-        t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
-          case b               ⇒ b.getSkillName()
         }
-      })(i.$fName, dataChunk)"
-      case t : VariableLengthArrayType ⇒ s"for(i ← outData) writeVarArray(${
-        t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
-          case b               ⇒ b.getSkillName()
-        }
-      })(i.$fName, dataChunk)"
-      case t : SetType ⇒ s"for(i ← outData) writeSet(${
-        t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
-          case b               ⇒ b.getSkillName()
-        }
-      })(i.$fName, dataChunk)"
-      case t : ListType ⇒ s"for(i ← outData) writeList(${
-        t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
-          case b               ⇒ b.getSkillName()
-        }
-      })(i.$fName, dataChunk)"
 
-      case t : MapType ⇒ locally {
-        s"for(i ← outData) ${
-          t.getBaseTypes().map {
+        case t : Declaration ⇒ s"""for(i ← outData) userRef(i.$fName, dataChunk)"""
+
+        case t : ConstantLengthArrayType ⇒ s"for(i ← outData) writeConstArray(${
+          t.getBaseType() match {
             case t : Declaration ⇒ s"userRef[${mapType(t)}]"
             case b               ⇒ b.getSkillName()
-          }.reduceRight { (t, v) ⇒
-            s"writeMap($t, $v)"
           }
-        }(i.$fName, dataChunk)"
+        })(i.$fName, dataChunk)"
+        case t : VariableLengthArrayType ⇒ s"for(i ← outData) writeVarArray(${
+          t.getBaseType() match {
+            case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+            case b               ⇒ b.getSkillName()
+          }
+        })(i.$fName, dataChunk)"
+        case t : SetType ⇒ s"for(i ← outData) writeSet(${
+          t.getBaseType() match {
+            case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+            case b               ⇒ b.getSkillName()
+          }
+        })(i.$fName, dataChunk)"
+        case t : ListType ⇒ s"for(i ← outData) writeList(${
+          t.getBaseType() match {
+            case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+            case b               ⇒ b.getSkillName()
+          }
+        })(i.$fName, dataChunk)"
+
+        case t : MapType ⇒ locally {
+          s"for(i ← outData) ${
+            t.getBaseTypes().map {
+              case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+              case b               ⇒ b.getSkillName()
+            }.reduceRight { (t, v) ⇒
+              s"writeMap($t, $v)"
+            }
+          }(i.$fName, dataChunk)"
+        }
       }
     }
   }

@@ -1,16 +1,16 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.main
 
 import java.io.File
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-
 import de.ust.skill.BuildInfo
-import de.ust.skill.generator.common.HeaderInfo
-import de.ust.skill.generator.common.KnownGenerators
-import de.ust.skill.ir.TypeContext
-import de.ust.skill.parser.Parser
 import de.ust.skill.common.scala.api.ThrowException
+import de.ust.skill.generator.common.HeaderInfo
+import de.ust.skill.parser.Parser
 
 trait IROptions extends AbstractOptions {
   case class IRConfig(

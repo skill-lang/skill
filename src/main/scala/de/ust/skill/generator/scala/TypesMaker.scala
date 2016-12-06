@@ -1,13 +1,15 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.scala
 
 import java.io.PrintWriter
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.bufferAsJavaList
+import scala.collection.JavaConversions.mapAsScalaMap
 
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field

@@ -1,20 +1,22 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.ecore
 
-import de.ust.skill.ir._
-import java.io.File
-import java.io.PrintWriter
 import java.io.BufferedWriter
-import java.io.OutputStreamWriter
+import java.io.File
 import java.io.FileOutputStream
-import scala.collection.mutable.MutableList
-import de.ust.skill.generator.common.Generator
-import scala.collection.JavaConversions._
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
+
 import scala.collection.mutable.HashSet
+
+import de.ust.skill.generator.common.Generator
+import de.ust.skill.ir.Name
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.TypeContext
 
 /**
  * The parent class for all output makers.
@@ -32,12 +34,14 @@ trait GeneralOutputMaker extends Generator {
   // by default, nothing is dropped
   var droppedKinds = HashSet[Droppable]();
 
-  override def getLanguageName = "ecore";
-  
-  override def clean = println("ecore cannot clean")
+  override def getLanguageName : String = "ecore";
+
+  override def clean {
+    // pointless only one result
+  }
 
   // remove special stuff for now
-  final def setTC(tc : TypeContext) = this.tc = tc;
+  final def setTC(tc : TypeContext) { this.tc = tc }
   var tc : TypeContext = _
 
   /**
@@ -69,7 +73,7 @@ trait GeneralOutputMaker extends Generator {
   protected def escaped(target : Name) : String = target.camel
 
   private lazy val packagePath = if (packagePrefix.length > 0) {
-    "/"+packagePrefix.replace(".", "/")
+    "/" + packagePrefix.replace(".", "/")
   } else {
     ""
   }

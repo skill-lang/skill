@@ -1,28 +1,11 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.jforeign.internal
 
-import scala.collection.JavaConversions._
 import de.ust.skill.generator.jforeign.GeneralOutputMaker
-import de.ust.skill.ir.Type
-import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.ConstantLengthArrayType
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.SetType
-import de.ust.skill.ir.MapType
-import de.ust.skill.ir.ListType
-import de.ust.skill.ir.restriction.MonotoneRestriction
-import de.ust.skill.ir.restriction.SingletonRestriction
-import de.ust.skill.ir.TypeContext.PointerType
-import de.ust.skill.ir.UserType
-import de.ust.skill.ir.TypeContext.PointerType
-import de.ust.skill.ir.TypeContext
-import scala.collection.mutable.HashSet
-import de.ust.skill.ir.SingleBaseTypeContainer
 
 trait StateMaker extends GeneralOutputMaker {
   abstract override def make {

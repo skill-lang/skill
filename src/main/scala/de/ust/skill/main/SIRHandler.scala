@@ -1,24 +1,28 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.main
 
 import java.io.File
 import java.io.IOException
+import java.io.PrintStream
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.mapAsScalaMap
+import scala.collection.mutable.HashMap
 import scala.language.reflectiveCalls
 
 import de.ust.skill.common.scala.api.Create
 import de.ust.skill.common.scala.api.Read
 import de.ust.skill.common.scala.api.Write
 import de.ust.skill.ir
-import de.ust.skill.sir
 import de.ust.skill.ir.TypeContext
+import de.ust.skill.sir
 import de.ust.skill.sir.api.SkillFile
-import scala.collection.mutable.HashMap
-import de.ust.skill.ir.GroundType
-import java.io.PrintStream
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.ArrayBuffer
-import de.ust.skill.common.scala.api.ThrowException
 
 /**
  * Handler for a skill intermediate representation state.

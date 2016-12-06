@@ -1,22 +1,11 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java.internal
 
-import scala.collection.JavaConversions._
 import de.ust.skill.generator.java.GeneralOutputMaker
-import de.ust.skill.ir.Type
-import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.ConstantLengthArrayType
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.SetType
-import de.ust.skill.ir.MapType
-import de.ust.skill.ir.ListType
-import de.ust.skill.ir.restriction.MonotoneRestriction
-import de.ust.skill.ir.restriction.SingletonRestriction
 
 trait StateMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -52,8 +41,8 @@ import ${packagePrefix}api.SkillFile;
  * @note type access fields start with a capital letter to avoid collisions
  */
 ${
-  suppressWarnings
-}public final class SkillState extends de.ust.skill.common.java.internal.SkillState implements SkillFile {
+      suppressWarnings
+    }public final class SkillState extends de.ust.skill.common.java.internal.SkillState implements SkillFile {
 
     // types by skill name
     private final HashMap<String, StoragePool<?, ?>> poolByName;
@@ -121,7 +110,7 @@ ${
         yield s"""
             ${name(t)}Access ${name(t)} = new ${name(t)}Access(${i += 1; i}${
         if (null == t.getSuperType) ""
-        else { ", "+name(t.getSuperType) }
+        else { ", " + name(t.getSuperType) }
       });
             types.add(${name(t)});"""
       ).mkString("")

@@ -1,7 +1,12 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.main
 
-import de.ust.skill.generator.common.KnownGenerators
 import de.ust.skill.BuildInfo
+import de.ust.skill.generator.common.KnownGenerators
 
 trait OtherOptions extends AbstractOptions {
   /**
@@ -11,7 +16,7 @@ trait OtherOptions extends AbstractOptions {
                          printCFM : Seq[String] = Seq(),
                          escapedIDs : Seq[String] = Seq()) extends WithProcess {
     def process {
-      // do either of id escaping and 
+      // do either of id escaping or ...
       if (!escapedIDs.isEmpty) {
         val langs = if (languages.isEmpty) allGeneratorNames else languages.toArray
         val ids = escapedIDs.toArray
@@ -22,7 +27,7 @@ trait OtherOptions extends AbstractOptions {
       } else {
         val cfms = printCFM.map(_.toLowerCase).toSet
 
-        // get known generator for languages
+        // ... get known generator for languages
         for (
           g ← KnownGenerators.all.map(_.newInstance);
           if cfms.contains(g.getLanguageName)
@@ -47,7 +52,8 @@ ${g.customFieldManual}
         case lang  ⇒ c.copy(languages = c.languages + lang.toLowerCase)
       })
 
-    opt[Seq[String]]("requiresEscaping").action((s, c) ⇒ c.copy(escapedIDs = c.escapedIDs ++ s)).text("""requires option "-L name"
+    opt[Seq[String]]("requiresEscaping").action((s, c) ⇒ c.copy(escapedIDs = c.escapedIDs ++ s)).text(
+      """requires option "-L name"
                            checks the argument identifier list for necessity of
                            escaping. Will return a space separated list of
                            true/false. True, iff the identifier will be escaped
