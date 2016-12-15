@@ -98,7 +98,15 @@ ${
       function Convert is new Ada.Unchecked_Conversion (Skill.Types.Annotation, ${name(t)}_Dyn);
    begin
       return Convert (This.To_Annotation);
-   end Dynamic_${name(t)};
+   end Dynamic_${name(t)};${
+          if (createVisitors) s"""
+   procedure Acc(This : access ${name(t)}_T; V : access Abstract_${name(t.getBaseType)}_Visitor'Class) is
+   begin
+      V.Visit (${name(t)} (This));
+   end Acc;
+"""
+          else ""
+        }
 
    -- reflective getter
    function Reflective_Get

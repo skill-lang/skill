@@ -1,4 +1,4 @@
-#! age -Ojava:visitors=true
+#! age -Ojava:visitors=true -Oada:visitors=true
 # Specification for TR15§8.6
 
 /**

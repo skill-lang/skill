@@ -228,8 +228,13 @@ pragma Ada_2012;
 """
   }
 
-  override def setOption(option : String, value : String) : Unit = ???
-  override def helpText = ""
+  override def setOption(option : String, value : String) : Unit = option match {
+    case "visitors"         ⇒ createVisitors = ("true".equals(value));
+    case unknown            ⇒ sys.error(s"unkown Argument: $unknown")
+  }
+  override def helpText = """
+visitors          true/false  if set to true, the a visitor for each base type will be generated
+"""
 
   override def customFieldManual = """
 !with string+    Argument strings are added to the head of the generated file and each included with a with."""

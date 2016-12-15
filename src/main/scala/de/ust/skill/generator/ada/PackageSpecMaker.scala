@@ -168,7 +168,26 @@ ${comment(v)}function View_${name(v)} (This : not null access ${name(t)}_T'Class
 ${comment(v)}procedure Set_${name(v)} (This : not null access ${name(t)}_T'Class; V : ${mapType(v.getType)});
    pragma Inline (Set_${name(v)});"""
       }).mkString
-    }
+    }${
+        if (createVisitors) """
+   -- visitors
+""" + (
+          for (b ← IR if b.getSuperType == null) yield s"""
+   type Abstract_${name(b)}_Visitor is abstract tagged null record;${
+            (for (t ← IR if b.getBaseType == b) yield s"""
+   procedure Visit (This : access Abstract_${name(b)}_Visitor; Node : ${name(t)}) is abstract;
+   procedure Acc (This : access ${name(t)}_T; V : access Abstract_${name(b)}_Visitor'Class);
+""").mkString
+          }
+   type ${name(b)}_Visitor is new Abstract_${name(b)}_Visitor with null record;${
+            (for (t ← IR if b.getBaseType == b) yield s"""
+   procedure Visit (This : access ${name(b)}_Visitor; Node : ${name(t)}) is null;
+""").mkString
+          }
+"""
+        ).mkString
+        else ""
+      }
 private
 ${
       (for (t ← IR)
