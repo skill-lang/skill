@@ -36,14 +36,14 @@ class GenericTests extends common.GenericTests {
     Directory(new File("testsuites/java/src/main/java", out)).deleteRecursively
   }
 
-  override def callMainFor(name : String, source : String) {
+  override def callMainFor(name : String, source : String, options : Seq[String]) {
     CommandLine.main(Array[String](source,
       "--debug-header",
       "-L", "java",
       "-p", name,
       "-Ojava:SuppressWarnings=true",
       "-d", "testsuites/java/lib",
-      "-o", "testsuites/java/src/main/java/"))
+      "-o", "testsuites/java/src/main/java/") ++ options)
   }
 
   def newTestFile(packagePath : String, name : String) : PrintWriter = {

@@ -41,7 +41,7 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
   /**
    * hook called to call the generator
    */
-  def callMainFor(name : String, source : String)
+  def callMainFor(name : String, source : String, options : Seq[String])
 
   /**
    *  creates unit tests in the target language
@@ -72,12 +72,12 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
    */
   def finalizeTests() : Unit
 
-  final def makeTest(path : File, name : String, options : String) : Unit = test("generic: " + name) {
+  final def makeTest(path : File, name : String, options : Seq[String]) : Unit = test("generic: " + name) {
     deleteOutDir(name)
 
     CommandLine.exit = { s ⇒ throw (new Error(s)) }
 
-    callMainFor(name, path.getPath)
+    callMainFor(name, path.getPath, options)
 
     makeGenBinaryTests(name)
   }
@@ -91,7 +91,7 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
       val r"""#!\s(\w+)${ name }(.*)${ options }""" =
         io.Source.fromFile(path)(Codec.UTF8).getLines.toSeq.headOption.getOrElse("")
 
-      makeTest(path, name, options.trim)
+      makeTest(path, name, options.split("\\s+").filter(_.length() != 0))
     } catch {
       case e : MatchError ⇒
         println(s"failed processing of $path:")

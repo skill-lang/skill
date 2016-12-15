@@ -36,13 +36,13 @@ class GenericTests extends common.GenericTests {
     Directory(new File("testsuites/cpp/src/", out)).deleteRecursively
   }
 
-  override def callMainFor(name : String, source : String) {
+  override def callMainFor(name : String, source : String, options : Seq[String]) {
     CommandLine.main(Array[String](source,
       "--debug-header",
       "-L", "cpp",
       "-p", name,
       "-Ocpp:revealSkillID=true",
-      "-o", "testsuites/cpp/src/" + name))
+      "-o", "testsuites/cpp/src/" + name) ++ options)
   }
 
   def newTestFile(packagePath : String, name : String) : PrintWriter = {

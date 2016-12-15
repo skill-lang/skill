@@ -32,12 +32,12 @@ import de.ust.skill.parser.Name
 class GenericTests extends common.GenericTests {
   override def language : String = "ada"
 
-  override def callMainFor(name : String, source : String) {
+  override def callMainFor(name : String, source : String, options : Seq[String]) {
     CommandLine.main(Array[String](source,
       "--debug-header",
       "-L", "ada",
       "-p", name,
-      "-o", "testsuites/ada/src/" + name))
+      "-o", "testsuites/ada/src/" + name) ++ options)
   }
 
   val tests = new ArrayBuffer[Name]()

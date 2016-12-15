@@ -1,4 +1,4 @@
-#! unknown -O@Scala:revealSkillID=true
+#! unknown -Oscala:revealSkillID=true
 #
 # Checks correct treatment of missing sub type information
 
