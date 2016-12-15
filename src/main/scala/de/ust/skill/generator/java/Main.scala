@@ -11,6 +11,7 @@ import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.HashMap
 
 import de.ust.skill.generator.java.api.SkillFileMaker
+import de.ust.skill.generator.java.api.VisitorsMaker
 import de.ust.skill.generator.java.internal.AccessMaker
 import de.ust.skill.generator.java.internal.FieldDeclarationMaker
 import de.ust.skill.generator.java.internal.FileParserMaker
@@ -40,13 +41,14 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  */
 class Main extends FakeMain
     with AccessMaker
+    with DependenciesMaker
+    with InterfacesMaker
     with FieldDeclarationMaker
     with FileParserMaker
     with StateMaker
     with SkillFileMaker
     with TypesMaker
-    with InterfacesMaker
-    with DependenciesMaker {
+    with VisitorsMaker {
 
   lineLength = 120
   override def comment(d : Declaration) : String = d.getComment.format("/**\n", " * ", lineLength, " */\n")
@@ -142,13 +144,15 @@ class Main extends FakeMain
   }
 
   override def setOption(option : String, value : String) : Unit = option match {
-    case "revealskillid"    ⇒ revealSkillID = ("true" == value);
-    case "suppresswarnings" ⇒ suppressWarnings = if ("true" == value) "@SuppressWarnings(\"all\")\n" else ""
+    case "revealskillid"    ⇒ revealSkillID = ("true".equals(value));
+    case "visitors"         ⇒ createVisitors = ("true".equals(value));
+    case "suppresswarnings" ⇒ suppressWarnings = if ("true".equals(value)) "@SuppressWarnings(\"all\")\n" else ""
     case unknown            ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
   override def helpText : String = """
 revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
+visitors          true/false  if set to true, the a visitor for each base type will be generated
 suppressWarnings  true/false  add a @SuppressWarnings("all") annotation to generated classes
 """
 

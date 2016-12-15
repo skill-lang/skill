@@ -57,6 +57,12 @@ trait GeneralOutputMaker extends Generator {
    */
   protected var revealSkillID = false;
 
+  /**
+   * if set to true, the generated binding will also contain visitors for each
+   * base type
+   */
+  protected var createVisitors = false;
+
   val ArrayTypeName = "java.util.ArrayList"
   val VarArrayTypeName = "java.util.ArrayList"
   val ListTypeName = "java.util.LinkedList"

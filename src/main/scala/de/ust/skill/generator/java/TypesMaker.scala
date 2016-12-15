@@ -22,7 +22,11 @@ trait TypesMaker extends GeneralOutputMaker {
       // package
       out.write(s"""package ${this.packageName};
 
-import de.ust.skill.common.java.api.FieldDeclaration;
+${
+  if(createVisitors) s"""import ${this.packageName}.api.${name(t.getBaseType)}Visitor;
+"""
+  else ""
+}import de.ust.skill.common.java.api.FieldDeclaration;
 import de.ust.skill.common.java.internal.NamedType;
 import de.ust.skill.common.java.internal.SkillObject;
 import de.ust.skill.common.java.internal.StoragePool;
@@ -40,15 +44,15 @@ ${customizations.flatMap(_.getOptions.get("import")).map(i⇒s"import $i;\n").mk
 
       out.write(s"""
 ${
-        comment(t)
+      comment(t)
 }${
-  suppressWarnings
+      suppressWarnings
 }public class ${name(t)} extends ${
-        if (null != t.getSuperType()) { name(t.getSuperType) }
-        else { "SkillObject" }
+      if (null != t.getSuperType()) { name(t.getSuperType) }
+      else { "SkillObject" }
       }${
-  if(t.getSuperInterfaces.isEmpty) ""
-  else
+      if(t.getSuperInterfaces.isEmpty) ""
+      else
     t.getSuperInterfaces.map(name(_)).mkString(" implements ", ", ", "")
       } {
     private static final long serialVersionUID = 0x5c11L + ((long) "${t.getSkillName}".hashCode()) << 32;
@@ -76,9 +80,9 @@ ${
     }
 """)
 
-	if(!relevantFields.isEmpty){
-    // TODO subtyping!
-    	out.write(s"""
+	    if(!relevantFields.isEmpty){
+        // TODO subtyping!
+    	  out.write(s"""
     /**
      * Used for internal construction, full allocation.
      */
@@ -88,14 +92,22 @@ ${
     }
 """)
 	}
+      
+      if(createVisitors){
+        out.write(s"""
+    public <_R, _A, _E extends Exception> _R accept(${name(t.getBaseType)}Visitor<_R, _A, _E> v, _A arg) throws _E {
+        return v.visit(this, arg);
+    }
+""")
+      }
 
-  var implementedFields = t.getFields.toSeq
-  def addFields(i : InterfaceType) {
-    implementedFields ++= i.getFields.toSeq
-    for(t <- i.getSuperInterfaces)
-      addFields(t)
-  }
-  t.getSuperInterfaces.foreach(addFields)
+      var implementedFields = t.getFields.toSeq
+      def addFields(i : InterfaceType) {
+        implementedFields ++= i.getFields.toSeq
+        for(t <- i.getSuperInterfaces)
+          addFields(t)
+      }
+      t.getSuperInterfaces.foreach(addFields)
 
 	///////////////////////
 	// getters & setters //
