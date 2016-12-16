@@ -41,6 +41,12 @@ trait GeneralOutputMaker extends Generator {
    */
   var largeSpecificationMode = false
 
+  /**
+   * if set to true, the generated binding will also contain visitors for each
+   * base type
+   */
+  protected var createVisitors = false;
+
   override def getLanguageName : String = "cpp";
 
   override def clean { println("clean not supported by c++") }

@@ -55,7 +55,15 @@ namespace skill{
 }
 
 ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
-
+${
+  if(createVisitors) s"""
+    // predef visitor
+    namespace api {
+        class ${name(base)}Visitor;
+    }
+"""
+  else ""
+}
     // type predef for cyclic dependencies${
   (for (t ← IR) yield s"""
     class ${name(t)};""").mkString
@@ -112,7 +120,14 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
     public:
 """)
 
-	  // reveal skill id
+      // accept visitor
+      if(createVisitors){
+        out.write(s"""
+        virtual void accept(api::${name(base)}Visitor *v);
+""")
+      }
+
+	    // reveal skill id
       if(revealSkillID && null==t.getSuperType)
         out.write("""
         inline ::skill::SKilLID skillID() const { return this->id; }
@@ -221,12 +236,25 @@ ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
     };
 """);
     }
+      
+      // create visitor implementation
+      if(createVisitors)
+        out.write(s"""
+    // visitor implementation
+    namespace api {
+        struct ${name(base)}Visitor {${
+          (for(t <- IR if t.getBaseType == base) yield s"""
+            virtual void visit(${name(t)} *node) {};""").mkString
+        }
+        };
+    }
+""")
 
-    // close name spaces
-    out.write(s"""${packageParts.map(_ ⇒ "}").mkString}
+      // close name spaces
+      out.write(s"""${packageParts.map(_ ⇒ "}").mkString}
 $endGuard""")
 
-    out.close()
+      out.close()
     }
   }
 
@@ -238,11 +266,17 @@ $endGuard""")
       out.write(s"""#include "TypesOf${name(base)}.h"
 #include <skill/internal/AbstractStoragePool.h>${
       (for(t <- IR if base == t.getBaseType) yield s"""
+
 const char *const $packageName::${name(t)}::typeName = "${t.getSkillName}";
 const char *$packageName::${name(t)}_UnknownSubType::skillName() const {
     return owner->name->c_str();
-}
-""").mkString
+}${
+  if(createVisitors) s"""
+void $packageName::${name(t)}::accept($packageName::api::${name(t.getBaseType)}Visitor *v) {
+    v->visit(this);
+}"""
+  else ""
+}""").mkString
     }
 """)
       out.close()
