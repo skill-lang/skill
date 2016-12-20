@@ -1,10 +1,6 @@
 package de.ust.skill.generator.haskell;
 
-import java.io.File;
 import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -17,8 +13,6 @@ public class CodeGenerator {
 
 	private static List<UserType> IR;
 	private static GeneralOutputMaker main;
-	public static final String[] fileNames = { "Controls.hs", "Deserialize.hs", "Methods.hs", "ReadFields.hs",
-			"Serialize.hs", "ImpossibleImports.hs", "Memory.hs", "Serialize.hs", "WriteFields.hs" };
 	public static final boolean FOLLOW_REFERENCES = true;
 	public static final boolean LEAVE_REFERENCES = false;
 
@@ -32,7 +26,6 @@ public class CodeGenerator {
 		Writer_Follow.go(IR);
 		Writer_Access.go(IR);
 		Writer_Interface.go(IR);
-		copyStaticFiles();
 	}
 
 	public static void writeInFile(StringBuilder s, String fileName) {
@@ -175,22 +168,6 @@ public class CodeGenerator {
 				return "Pointer";
 			default:
 				return string;
-		}
-	}
-
-	private static void copyStaticFiles() {
-		final String inputPath = "deps/haskell/";
-		final String outputPath = main.outPath() + "/generated" + ("/" + main.packagePath() + "/");
-
-		new File(outputPath).mkdirs();
-
-		try {
-			for (String fileName : fileNames) {
-				Files.copy(Paths.get(inputPath + fileName), Paths.get(outputPath + fileName),
-						StandardCopyOption.REPLACE_EXISTING);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 }

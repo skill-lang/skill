@@ -34,13 +34,15 @@ import de.ust.skill.ir.VariableLengthArrayType
 abstract class FakeMain extends GeneralOutputMaker { def make {} }
 
 /**
- * ...
+ * Port of the original Java implementation of Rafaels Haskell back-end.
  *
- * @author ...
+ * @author Timm Felden
  */
-final class Main extends FakeMain {
+final class Main extends FakeMain
+    with DependenciesMaker {
 
   override def make {
+    super.make
     (new CodeGenerator(IR.to, this)).make()
   }
 
