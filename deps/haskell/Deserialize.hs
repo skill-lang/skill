@@ -42,11 +42,11 @@ type FieldRecords' = (RawData, M'TypeInfo, M'Restr)
 
 deserialize :: FilePath -> IO ()
 deserialize filePath = do state <- runGet process `fmap` C.readFile filePath
-                          modifyIORef' states ((:) state)
+                          ImpossibleImports.modifyIORef' states ((:) state)
 
 deserialize_ :: FilePath -> IO State
 deserialize_ filePath = do state <- runGet process `fmap` C.readFile filePath
-                           modifyIORef' states ((:) state)
+                           ImpossibleImports.modifyIORef' states ((:) state)
                            return state
 
 initializeTest :: FilePath -> IO ()

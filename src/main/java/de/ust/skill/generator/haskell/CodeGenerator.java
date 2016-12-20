@@ -1,9 +1,5 @@
 package de.ust.skill.generator.haskell;
 
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -14,7 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import de.ust.skill.ir.Field;
-import de.ust.skill.ir.Name;
 import de.ust.skill.ir.ReferenceType;
 import de.ust.skill.ir.UserType;
 
@@ -28,8 +23,8 @@ public class CodeGenerator {
 	public static final boolean LEAVE_REFERENCES = false;
 
 	public CodeGenerator(List<UserType> IR, GeneralOutputMaker main) {
-		this.IR = IR;
-		this.main = main; 
+		CodeGenerator.IR = IR;
+		CodeGenerator.main = main; 
 	}
 
 	public void make() {
