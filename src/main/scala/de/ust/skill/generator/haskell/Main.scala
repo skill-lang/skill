@@ -39,7 +39,8 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * @author Timm Felden
  */
 final class Main extends FakeMain
-    with DependenciesMaker {
+    with DependenciesMaker
+    with InterfaceMaker {
 
   override def make {
     super.make
@@ -159,7 +160,7 @@ final class Main extends FakeMain
 """
   }
 
-  var outPostfix = s"/generated/${
+  var outPostfix = s"/${
     if (packagePrefix.isEmpty()) ""
     else packagePrefix.replace('.', '/') + "/"
   }"

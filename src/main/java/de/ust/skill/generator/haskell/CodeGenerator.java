@@ -25,7 +25,6 @@ public class CodeGenerator {
 		Writer_Types.go(IR);
 		Writer_Follow.go(IR);
 		Writer_Access.go(IR);
-		Writer_Interface.go(IR);
 	}
 
 	public static void writeInFile(StringBuilder s, String fileName) {
