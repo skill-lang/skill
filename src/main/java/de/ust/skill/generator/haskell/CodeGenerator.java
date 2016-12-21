@@ -22,7 +22,6 @@ public class CodeGenerator {
 	}
 
 	public void make() {
-		Writer_Types.go(IR);
 		Writer_Follow.go(IR);
 		Writer_Access.go(IR);
 	}

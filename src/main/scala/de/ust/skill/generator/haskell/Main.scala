@@ -40,7 +40,8 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  */
 final class Main extends FakeMain
     with DependenciesMaker
-    with InterfaceMaker {
+    with InterfaceMaker
+    with TypesMaker {
 
   override def make {
     super.make
@@ -52,33 +53,39 @@ final class Main extends FakeMain
   override def comment(f : FieldLike) : String = f.getComment.format("", "-- ", lineLength, "")
 
   /**
-   * Translates the types into C99 types.
+   * Translates the types to Haskell types.
    */
-  override protected def mapType(t : Type) : String = t match {
+  override protected def mapType(t : Type, followReferences : Boolean) : String = t match {
     case t : GroundType ⇒ t.getName.lower match {
-      case "annotation" ⇒ "skill_type"
+      case "annotation" ⇒
+        if (followReferences) "Maybe Pointer"
+        else "Ref"
 
-      case "bool"       ⇒ "bool"
+      case "bool"   ⇒ "Bool"
 
-      case "i8"         ⇒ "int8_t"
-      case "i16"        ⇒ "int16_t"
-      case "i32"        ⇒ "int32_t"
-      case "i64"        ⇒ "int64_t"
-      case "v64"        ⇒ "int64_t"
+      case "i8"     ⇒ "Int8"
+      case "i16"    ⇒ "Int16"
+      case "i32"    ⇒ "Int32"
+      case "i64"    ⇒ "Int64"
+      case "v64"    ⇒ "Int64"
 
-      case "f32"        ⇒ "float"
-      case "f64"        ⇒ "double"
+      case "f32"    ⇒ "Float"
+      case "f64"    ⇒ "Double"
 
-      case "string"     ⇒ "char*"
+      case "string" ⇒ "String"
     }
 
-    case t : ConstantLengthArrayType ⇒ "GArray*"
-    case t : VariableLengthArrayType ⇒ "GArray*"
-    case t : ListType                ⇒ "GList*"
-    case t : SetType                 ⇒ "GHashTable*"
-    case t : MapType                 ⇒ "GHashTable*"
+    case t : ConstantLengthArrayType ⇒ s"[${mapType(t.getBaseType, followReferences)}]"
+    case t : VariableLengthArrayType ⇒ s"[${mapType(t.getBaseType, followReferences)}]"
+    case t : ListType                ⇒ s"[${mapType(t.getBaseType, followReferences)}]"
+    case t : SetType                 ⇒ s"[${mapType(t.getBaseType, followReferences)}]"
+    case t : MapType ⇒ t.getBaseTypes.map(t ⇒ mapType(t, followReferences)).reduceRight[String] {
+      case (k, v) ⇒ s"M.Map $k ($v)"
+    }
 
-    case t : Declaration             ⇒ s"${prefix}${t.getName.cStyle}"
+    case t : Declaration ⇒
+      if (followReferences) "Maybe " + name(t)
+      else "Ref"
   }
 
   /**
@@ -113,7 +120,7 @@ final class Main extends FakeMain
     var hasFields = false;
     output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f ⇒
       hasFields = true;
-      s"${f.getSkillName()} : ${mapType(f.getType)}"
+      s"${f.getSkillName()} : ${mapType(f.getType, ???)}"
     }).mkString("; ", "; ", "")
     if (hasFields) output else ""
   }
@@ -210,7 +217,7 @@ final class Main extends FakeMain
   }
 
   override protected def makeConstructorArguments(t : UserType) : String = (for (f ← t.getAllFields; if !f.isConstant())
-    yield s""", ${mapType(f.getType)} _${name(f)}""").mkString
+    yield s""", ${mapType(f.getType, ???)} _${name(f)}""").mkString
 
   override protected def defaultValue(f : Field) = f.getType match {
     case t : GroundType ⇒ t.getSkillName() match {

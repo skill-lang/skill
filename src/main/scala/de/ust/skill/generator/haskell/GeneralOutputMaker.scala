@@ -34,8 +34,10 @@ trait GeneralOutputMaker extends Generator {
 
   /**
    * Assume the existence of a translation function for types.
+   * Comes in two flavors depending on whether references can
+   * be followed at the target location.
    */
-  protected def mapType(t : Type) : String
+  protected def mapType(t : Type, followReferences : Boolean) : String
 
   /**
    * Assume a package prefix provider.
@@ -74,11 +76,11 @@ trait GeneralOutputMaker extends Generator {
    */
   protected def name(t : Type) : String = if (null == t) "skill_type"
   else if (t.isInstanceOf[ContainerType]) "???"
-  else escaped(t.getName.cStyle)
+  else escaped(t.getName.capital)
   /**
    * provides a default name for the argument field
    */
-  protected def name(f : Field) : String = "if_" + escaped(f.getName.cStyle)
+  protected def name(f : Field) : String = escaped(f.getName.capital)
 
   /**
    * provides field access implementation

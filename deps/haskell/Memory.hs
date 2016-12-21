@@ -1,5 +1,6 @@
 module Memory where
 
+import qualified Data.Map as M
 import Data.ByteString.Lazy
 import Data.Int
 import Data.Binary.Get
@@ -74,38 +75,12 @@ data Something = CInt8   Int8                     -- 0
                | GInt    Int                      -- selfmade for serialization
                      deriving Show
 
+-- create a boxed version of a map
+box_map t1 t2 = \values -> GMap $ Prelude.map (\(v1,v2) -> (t1 v1, t2 v2)) (M.assocs values)
+
+-- create an unboxed version of a map
+unbox_map t1 t2 = \(GMap values) -> M.fromList $ Prelude.map (\(v1,v2) -> (t1 v1, t2 v2)) values
 
 instance Show (Get a) where
   show a = "some getter"
 
---instance NFData TypeDesc where
---        rnf (TD x1) = rnf x1 `seq` ()
---
---instance NFData Something where
---        rnf (CInt8 x1) = rnf x1 `seq` ()
---        rnf (CInt16 x1) = rnf x1 `seq` ()
---        rnf (CInt32 x1) = rnf x1 `seq` ()
---        rnf (CInt64 x1) = rnf x1 `seq` ()
---        rnf (CV64 x1) = rnf x1 `seq` ()
---        rnf (GRef x1) = rnf x1 `seq` ()
---        rnf (GBool x1) = rnf x1 `seq` ()
---        rnf (GInt8 x1) = rnf x1 `seq` ()
---        rnf (GInt16 x1) = rnf x1 `seq` ()
---        rnf (GInt32 x1) = rnf x1 `seq` ()
---        rnf (GInt64 x1) = rnf x1 `seq` ()
---        rnf (GV64 x1) = rnf x1 `seq` ()
---        rnf (GFloat x1) = rnf x1 `seq` ()
---        rnf (GDouble x1) = rnf x1 `seq` ()
---        rnf (GString x1) = rnf x1 `seq` ()
---        rnf (GFArray x1) = rnf x1 `seq` ()
---        rnf (GVArray x1) = rnf x1 `seq` ()
---        rnf (GList x1) = rnf x1 `seq` ()
---        rnf (GSet x1) = rnf x1 `seq` ()
---        rnf (GMap x1) = rnf x1 `seq` ()
---        rnf (GInt x1) = rnf x1 `seq` ()
---
---instance NFData ByteString where
---   rnf b = rnf b `seq` ()
---
---instance NFData (IO a) where
---   rnf a = rnf a `seq` ()
