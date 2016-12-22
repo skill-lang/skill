@@ -13,7 +13,6 @@ import java.io.PrintWriter
 import java.util.Date
 
 import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.JavaConversions.seqAsJavaList
 import scala.collection.mutable.MutableList
 
 import de.ust.skill.ir.ConstantLengthArrayType
@@ -34,19 +33,19 @@ import de.ust.skill.ir.VariableLengthArrayType
 abstract class FakeMain extends GeneralOutputMaker { def make {} }
 
 /**
- * Port of the original Java implementation of Rafaels Haskell back-end.
+ * Port of the original Java implementation of Rafael Harths Haskell back-end.
  *
  * @author Timm Felden
  */
 final class Main extends FakeMain
     with AccessMaker
     with DependenciesMaker
+    with FollowMaker
     with InterfaceMaker
     with TypesMaker {
 
   override def make {
     super.make
-    (new CodeGenerator(IR.to, this)).make()
   }
 
   lineLength = 80
@@ -88,7 +87,7 @@ final class Main extends FakeMain
       if (followReferences) "Maybe " + name(t)
       else "Ref"
   }
-  
+
   override protected def BoxedDataConstructor(t : Type) : String = t.getSkillName match {
     case "bool"   ⇒ "GBool"
     case "string" ⇒ "GString"
