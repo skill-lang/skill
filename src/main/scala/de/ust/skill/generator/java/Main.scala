@@ -175,22 +175,22 @@ suppressWarnings  true/false  add a @SuppressWarnings("all") annotation to gener
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
+   * Will add Z's if escaping is required.
    */
   private val escapeCache = new HashMap[String, String]();
   final def escaped(target : String) : String = escapeCache.getOrElse(target, {
     val result = target match {
-      //keywords get a suffix "_", because that way at least auto-completion will work as expected
       case "abstract" | "continue" | "for" | "new" | "switch" | "assert" | "default" | "if" | "package" | "synchronized"
         | "boolean" | "do" | "goto" | "private" | "this" | "break" | "double" | "implements" | "protected" | "throw"
         | "byte" | "else" | "import" | "public" | "throws" | "case" | "enum" | "instanceof" | "return" | "transient"
         | "catch" | "extends" | "int" | "short" | "try" | "char" | "final" | "interface" | "static" | "void" | "class"
-        | "finally" | "long" | "strictfp" | "volatile" | "const" | "float" | "native" | "super" | "while" ⇒ target + "_"
+        | "finally" | "long" | "strictfp" | "volatile" | "const" | "float" | "native" | "super" | "while" ⇒ "Z" + target
 
-      //the string is fine anyway
       case _ ⇒ target.map {
         case ':'                                    ⇒ "$"
+        case 'Z'                                    ⇒ "ZZ"
         case c if Character.isJavaIdentifierPart(c) ⇒ c.toString
-        case c                                      ⇒ "ZZ" + c.toHexString
+        case c                                      ⇒ "Z" + c.toHexString
       }.reduce(_ + _)
     }
     escapeCache(target) = result
