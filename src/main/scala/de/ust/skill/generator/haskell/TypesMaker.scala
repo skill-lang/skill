@@ -87,18 +87,4 @@ $d_name value (${BoxedDataConstructor(t)} value) = value
       }
     }).mkString
   }
-
-  private def BoxedDataConstructor(t : Type) : String = t.getSkillName match {
-    case "bool"   ⇒ "GBool"
-    case "string" ⇒ "GString"
-    case "i8"     ⇒ "GInt8"
-    case "i16"    ⇒ "GInt16"
-    case "i32"    ⇒ "GInt32"
-    case "i64"    ⇒ "GInt64"
-    case "v64"    ⇒ "GV64"
-    case "f32"    ⇒ "GFloat"
-    case "f64"    ⇒ "GDouble"
-    case _        ⇒ "GRef"
-  }
-
 }

@@ -1,7 +1,7 @@
 package de.ust.skill.generator.haskell;
 
-public class Methods {
-	public static String substring(String string, String start, String ending) {
+class Methods {
+	static String substring(String string, String start, String ending) {
 		string = substring(string, start);
 
 		if (string == null) { return null; }
@@ -14,7 +14,7 @@ public class Methods {
 		return null;
 	}	
 	
-	public static String substring(String string, String start) {
+	static String substring(String string, String start) {
 		if (start.isEmpty()) { return string; }
 
 		for (int i = 0; i < string.length(); i++) {
@@ -25,7 +25,7 @@ public class Methods {
 		return null;
 	}
 
-	public static String substring(String string, int start, char end) {
+	static String substring(String string, int start, char end) {
 		for (int i = start; i < string.length(); i++) {
 			if (string.charAt(i) == end) { return string.substring(start, i); }
 		}

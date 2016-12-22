@@ -5,8 +5,8 @@ import de.ust.skill.ir.Field;
 import de.ust.skill.ir.UserType;
 import de.ust.skill.generator.haskell.CodeGenerator;
 
-public class Writer_Follow {
-	public static void go(List<UserType> IR) {
+class Writer_Follow {
+	static void go(List<UserType> IR) {
 		StringBuilder s = new StringBuilder()
 				.append("module Follow where")
 				.append("\n")

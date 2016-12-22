@@ -39,6 +39,7 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * @author Timm Felden
  */
 final class Main extends FakeMain
+    with AccessMaker
     with DependenciesMaker
     with InterfaceMaker
     with TypesMaker {
@@ -86,6 +87,19 @@ final class Main extends FakeMain
     case t : Declaration ⇒
       if (followReferences) "Maybe " + name(t)
       else "Ref"
+  }
+  
+  override protected def BoxedDataConstructor(t : Type) : String = t.getSkillName match {
+    case "bool"   ⇒ "GBool"
+    case "string" ⇒ "GString"
+    case "i8"     ⇒ "GInt8"
+    case "i16"    ⇒ "GInt16"
+    case "i32"    ⇒ "GInt32"
+    case "i64"    ⇒ "GInt64"
+    case "v64"    ⇒ "GV64"
+    case "f32"    ⇒ "GFloat"
+    case "f64"    ⇒ "GDouble"
+    case _        ⇒ "GRef"
   }
 
   /**

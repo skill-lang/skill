@@ -38,6 +38,11 @@ trait GeneralOutputMaker extends Generator {
    * be followed at the target location.
    */
   protected def mapType(t : Type, followReferences : Boolean) : String
+  
+  /**
+   * create a data constructor for the boxed form of a value
+   */
+  protected def BoxedDataConstructor(t : Type) : String
 
   /**
    * Assume a package prefix provider.
