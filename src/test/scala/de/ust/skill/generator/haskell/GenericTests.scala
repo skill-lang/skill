@@ -50,19 +50,20 @@ class GenericTests extends common.GenericTests {
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
 
-    rval.write(s"""
-import Test.HUnit
+    rval.write(s"""import Test.HUnit
+import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.Framework.Runners.Console
 import Deserialize
 import Data.IORef
 import Methods
 
-main = defaultMain $$ hUnitTestToTests $$ TestList """)
+main = defaultMain $$ [(testGroup "$packagePath.$name") $$ hUnitTestToTests $$ TestList """)
     rval
   }
 
   def closeTestFile(out : java.io.PrintWriter) {
+    out.write("]")
     out.close
   }
 
