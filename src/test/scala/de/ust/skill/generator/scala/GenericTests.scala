@@ -96,11 +96,11 @@ class Generic${name}ReadTest extends CommonTest {
       val out = newTestFile(name, "Read")
 
       for (f ← accept) out.write(s"""
-  test("$name - read (accept): ${f.getName}") { read("${f.getPath}").check }
+  test("$name - read (accept): ${f.getName}") { read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}").check }
 """)
 
       for (f ← reject) out.write(s"""
-  test("$name - read (reject): ${f.getName}") { intercept[SkillException] { read("${f.getPath}").check } }
+  test("$name - read (reject): ${f.getName}") { intercept[SkillException] { read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}").check } }
 """)
       closeTestFile(out)
     }

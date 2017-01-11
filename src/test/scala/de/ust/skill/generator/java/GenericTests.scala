@@ -134,13 +134,13 @@ public class Generic${name}Test extends common.CommonTest {
       for (f ← accept) out.write(s"""
     @Test
     public void test_${name}_read_accept_${f.getName.replaceAll("\\W", "_")}() throws Exception {
-        Assert.assertNotNull(read("${f.getPath}"));
+        Assert.assertNotNull(read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}"));
     }
 """)
       for (f ← reject) out.write(s"""
     @Test(expected = ParseException.class)
     public void test_${name}_read_reject_${f.getName.replaceAll("\\W", "_")}() throws Exception {
-        Assert.assertNotNull(read("${f.getPath}"));
+        Assert.assertNotNull(read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}"));
     }
 """)
       closeTestFile(out)

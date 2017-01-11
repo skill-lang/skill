@@ -79,7 +79,7 @@ using ::$packageName::api::SkillFile;
       for (f ← accept) out.write(s"""
 TEST(${name.capitalize}Parser, Accept_${f.getName.replaceAll("\\W", "_")}) {
     try {
-        auto s = std::unique_ptr<SkillFile>(SkillFile::open("../../${f.getPath}"));
+        auto s = std::unique_ptr<SkillFile>(SkillFile::open("../../${f.getPath.replaceAll("\\\\", "\\\\\\\\")}"));
         s->check();
     } catch (skill::SkillException e) {
         GTEST_FAIL() << "an exception was thrown:" << std::endl << e.message;
@@ -90,7 +90,7 @@ TEST(${name.capitalize}Parser, Accept_${f.getName.replaceAll("\\W", "_")}) {
       for (f ← reject) out.write(s"""
 TEST(${name.capitalize}Parser, Reject_${f.getName.replaceAll("\\W", "_")}) {
     try {
-        auto s = std::unique_ptr<SkillFile>(SkillFile::open("../../${f.getPath}"));
+        auto s = std::unique_ptr<SkillFile>(SkillFile::open("../../${f.getPath.replaceAll("\\\\", "\\\\\\\\")}"));
         s->check();
     } catch (skill::SkillException e) {
         GTEST_SUCCEED();
