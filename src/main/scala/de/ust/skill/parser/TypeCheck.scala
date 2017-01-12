@@ -11,6 +11,73 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
 object TypeCheck {
+  private def moreSpecific(l : UserType, r : UserType, parent : HashMap[Declaration, UserType]) : UserType = {
+    // find the more specific type
+
+    // is l a super type of r?
+    var t = parent(r)
+    while (null != t) {
+      if (t == l)
+        return r
+      t = parent.get(t).getOrElse(null)
+    }
+
+    // is r a super type of l?
+    t = parent(l)
+    while (null != t) {
+      if (t == r)
+        return l
+      t = parent.get(t).getOrElse(null)
+    }
+
+    throw new Exception();
+  }
+
+  private def recursiveSuperType(d : Declaration,
+                                 definitionNames : HashMap[Name, Declaration],
+                                 parent : HashMap[Declaration, UserType],
+                                 typesVisited : HashSet[Declaration]) : UserType = {
+    typesVisited += d
+    var r = parent.get(d).getOrElse(null)
+    d match {
+      case i : UserType ⇒
+        for (
+          s ← i.superTypes if s != "annotation"
+            && definitionNames(s).isInstanceOf[InterfaceDefinition]
+            && !typesVisited(definitionNames(s)
+            )
+        ) {
+          var t = recursiveSuperType(definitionNames(s), definitionNames, parent, typesVisited)
+          if (null != r && null != t && t != r) try {
+            r = moreSpecific(t, r, parent)
+          } catch {
+            case e : Exception ⇒
+              throw ParseException(s"Type ${d.name} has at least two regular super types: ${r.name} and ${t.name}")
+          }
+          else if (null == r && t != null)
+            r = t
+        }
+      case i : InterfaceDefinition ⇒
+        for (
+          s ← i.superTypes if s != "annotation"
+            && definitionNames(s).isInstanceOf[InterfaceDefinition]
+            && !typesVisited(definitionNames(s))
+        ) {
+          var t = recursiveSuperType(definitionNames(s), definitionNames, parent, typesVisited)
+          if (null != r && null != t && t != r) try {
+            r = moreSpecific(t, r, parent)
+          } catch {
+            case e : Exception ⇒
+              throw ParseException(s"Type ${d.name} has at least two regular super types: ${r.name} and ${t.name}")
+          }
+          else if (null == r && t != null)
+            r = t
+        }
+
+      case _ ⇒ throw new Error("will not happen")
+    }
+    r
+  }
 
   def apply(defs : ArrayBuffer[Declaration]) = {
     // split types by kind
@@ -84,76 +151,14 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
       parent(s) = p.asInstanceOf[UserType]
     }
     // step 2: closure over super-interface relation
-    var typesVisited = Set[Declaration]()
-    def moreSpecific(l : UserType, r : UserType) : UserType = {
-      // find the more specific type
+    val typesVisited = HashSet[Declaration]()
 
-      // is l a super type of r?
-      var t = parent(r)
-      while (null != t) {
-        if (t == l)
-          return r
-        t = parent.get(t).getOrElse(null)
-      }
-
-      // is r a super type of l?
-      t = parent(l)
-      while (null != t) {
-        if (t == r)
-          return l
-        t = parent.get(t).getOrElse(null)
-      }
-
-      throw new Exception();
-    }
-    def recursiveSuperType(d : Declaration) : UserType = {
-      typesVisited += d
-      var r = parent.get(d).getOrElse(null)
-      d match {
-        case i : UserType ⇒
-          for (
-            s ← i.superTypes if s != "annotation"
-              && definitionNames(s).isInstanceOf[InterfaceDefinition]
-              && !typesVisited(definitionNames(s)
-              )
-          ) {
-            var t = recursiveSuperType(definitionNames(s))
-            if (null != r && null != t && t != r) try {
-              r = moreSpecific(t, r)
-            } catch {
-              case e : Exception ⇒
-                throw ParseException(s"Type ${d.name} has at least two regular super types: ${r.name} and ${t.name}")
-            }
-            else if (null == r && t != null)
-              r = t
-          }
-        case i : InterfaceDefinition ⇒
-          for (
-            s ← i.superTypes if s != "annotation"
-              && definitionNames(s).isInstanceOf[InterfaceDefinition]
-              && !typesVisited(definitionNames(s))
-          ) {
-            var t = recursiveSuperType(definitionNames(s))
-            if (null != r && null != t && t != r) try {
-              r = moreSpecific(t, r)
-            } catch {
-              case e : Exception ⇒
-                throw ParseException(s"Type ${d.name} has at least two regular super types: ${r.name} and ${t.name}")
-            }
-            else if (null == r && t != null)
-              r = t
-          }
-
-        case _ ⇒ throw new Error("will not happen")
-      }
-      r
-    }
     for (t ← userTypes) {
       // reset visited types
-      typesVisited = Set[Declaration]()
+      typesVisited.clear()
 
       // visit types
-      val r = recursiveSuperType(t)
+      val r = recursiveSuperType(t, definitionNames, parent, typesVisited)
 
       if (parent.contains(t) && r != parent(t))
         throw new Error(s"$r!=${parent(t)}");
@@ -224,14 +229,18 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
                   s ← d.superTypes; r = find(definitionNames(s))
                 ) if (null != r) return r;
                 return null;
+
               case d : InterfaceDefinition ⇒
                 if (d.body.exists(f ⇒ f != v && f.name == v.targetField)) return d.name
                 else for (
                   s ← d.superTypes; r = find(definitionNames(s))
                 ) if (null != r) return r;
                 return null;
+
               case d : EnumDefinition if (d.body.exists(_.name == v.targetField)) ⇒ return d.name
+
               case d : Typedef ⇒ return find(definitionNames(d.target.asInstanceOf[BaseType].name))
+
               case _ ⇒ return null
             }
             val r = find(t)
