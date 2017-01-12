@@ -82,7 +82,7 @@ $d_name = ${ls.init.foldRight[String](ls.last) { case (k, v) ⇒ s"unbox_map $k 
 
         case t ⇒ s"""
 $c_name = ${BoxedDataConstructor(t)}
-$d_name value (${BoxedDataConstructor(t)} value) = value
+$d_name (${BoxedDataConstructor(t)} value) = value
 """
       }
     }).mkString

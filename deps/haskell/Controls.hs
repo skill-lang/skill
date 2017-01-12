@@ -25,7 +25,7 @@ readState'' :: FilePath -> IO State
 readState'' = deserialize_
 
 writeState :: Int -> State -> IO ()
-writeState index newState = modifyIORef' states (replace' index newState)
+writeState index newState = ImpossibleImports.modifyIORef' states (replace' index newState)
 
 writeState' :: State -> IO ()
 writeState' = writeState 0
