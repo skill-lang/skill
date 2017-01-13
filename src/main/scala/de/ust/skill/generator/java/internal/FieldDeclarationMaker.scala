@@ -250,7 +250,6 @@ ${
                 else s"(${mapType(t)})"
               }data[i]).get${escaped(f.getName.capital)}();
 
-            assert null==v;
             result += baseType.calculateOffset(v);
         }
         return result;"""
