@@ -27,7 +27,7 @@ trait DependenciesMaker extends GeneralOutputMaker {
         out.getParentFile.mkdirs();
 
         if (try {
-          !out.exists() || sha256(out.getAbsolutePath) != commonJarSum(jar)
+          !out.exists() || sha256(out.toPath()) != commonJarSum(jar)
         } catch {
           case e : IOException ⇒ false // just continue
         }) {
