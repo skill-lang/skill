@@ -58,7 +58,7 @@ class ParserTest extends FunSuite {
     assert("""The type "MessSage" parent of DatedMessage is unknown!
 Declaration in src/test/resources/frontend/ParseException/missingTypeCausedBySpelling.skill.
 Did you forget to include MessSage.skill?
-Known types are: Message, DatedMessage""" === e.getMessage())
+Known types are: Message, DatedMessage""" === e.getMessage().replaceAll("\\\\", "/"))
   }
 
   test("regression: comments - declaration") {
