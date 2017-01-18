@@ -36,7 +36,7 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
     val IR = this.types.removeSpecialDeclarations.getUsertypes
 
     for (t ← IR; f ← t.getFields) {
-      // the type without the interface projection
+      // the type before the interface projection
       val fieldActualType = this.types.removeTypedefs.removeEnums.get(t.getSkillName).asInstanceOf[UserType]
         .getAllFields.find(_.getName == f.getName).map(_.getType).map(mapType).get
 

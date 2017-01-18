@@ -21,15 +21,26 @@ import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.restriction.FloatRangeRestriction
 import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.NonNullRestriction
+import de.ust.skill.ir.UserType
 
 trait AccessMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
+    // reflection has to know projected definitions
+    val flatIR = this.types.removeSpecialDeclarations.getUsertypes
+
     for (t ← IR) {
       val isBasePool = (null == t.getSuperType)
       val nameT = name(t)
       val typeT = mapType(t)
+
+      // find all fields that belong to the projected version, but use the unprojected variant
+      val flatIRFieldNames = flatIR.find(_.getName == t.getName).get.getFields.map(_.getSkillName).toSet
+      val fields = t.getAllFields.filter(f ⇒ flatIRFieldNames.contains(f.getSkillName))
+      val projectedField = flatIR.find(_.getName == t.getName).get.getFields.map {
+        case f ⇒ fields.find(_.getSkillName.equals(f.getSkillName)).get -> f
+      }.toMap
 
       val out = open(s"internal/${nameT}Access.java")
       //package & imports
@@ -77,9 +88,9 @@ ${
         if (isBasePool) ""
         else ", superPool"
       }, new HashSet<String>(Arrays.asList(new String[] { ${
-        t.getFields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString(", ")
+        fields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString(", ")
       } })), ${
-        t.getFields.count(_.isAuto) match {
+        fields.count(_.isAuto) match {
           case 0 ⇒ "noAutoFields()"
           case c ⇒ s"(AutoField<?, ${mapType(t)}>[]) java.lang.reflect.Array.newInstance(AutoField.class, $c)"
         }
@@ -115,7 +126,7 @@ ${
         }
     }
 ${
-        if (t.getFields.isEmpty()) ""
+        if (fields.isEmpty) ""
         else s"""
     @SuppressWarnings("unchecked")
     @Override
@@ -126,7 +137,7 @@ ${
 
         final FieldDeclaration<?, $typeT> f;
         switch (name) {${
-          (for (f ← t.getFields if !f.isAuto)
+          (for (f ← fields if !f.isAuto)
             yield s"""
         case "${f.getSkillName}":
             f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f)}, 1 + dataFields.size(), this);
@@ -135,7 +146,7 @@ ${
           ).mkString
         }${
           var index = 0;
-          (for (f ← t.getFields if f.isAuto)
+          (for (f ← fields if f.isAuto)
             yield s"""
         case "${f.getSkillName}":
             f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f)}, this);
@@ -158,7 +169,7 @@ ${
             HashSet<FieldRestriction<?>> restrictions) {
         final FieldDeclaration<R, $typeT> f;
         switch (name) {${
-          (for (f ← t.getFields if !f.isAuto)
+          (for (f ← fields if !f.isAuto)
             yield s"""
         case "${f.getSkillName}":
             f = (FieldDeclaration<R, $typeT>) new KnownField_${nameT}_${name(f)}((FieldType<${mapType(f.getType, true)}>) type, ID, this);
@@ -166,7 +177,7 @@ ${
 """
           ).mkString
         }${
-          (for (f ← t.getFields if f.isAuto)
+          (for (f ← fields if f.isAuto)
             yield s"""
         case "${f.getSkillName}":
             throw new SkillException(String.format(
@@ -178,7 +189,7 @@ ${
         default:
             return super.addField(ID, type, name, restrictions);
         }${
-          if (t.getFields.forall(_.isAuto())) ""
+          if (fields.forall(_.isAuto())) ""
           else """
 
         for (FieldRestriction<?> r : restrictions)
@@ -199,7 +210,7 @@ ${
         return rval;
     }
 ${
-        if (t.getAllFields.filterNot { f ⇒ f.isConstant() || f.isIgnored() }.isEmpty) ""
+        if (fields.filterNot { f ⇒ f.isConstant() || f.isIgnored() }.isEmpty) ""
         else s"""
     /**
      * @return a new age instance with the argument field values
@@ -225,7 +236,7 @@ ${
         protected ${nameT}Builder(StoragePool<$typeT, ? super $typeT> pool, $typeT instance) {
             super(pool, instance);
         }${
-        (for (f ← t.getAllFields if !f.isIgnored() && !f.isConstant())
+        (for (f ← fields if !f.isIgnored() && !f.isConstant())
           yield s"""
 
         public ${nameT}Builder ${name(f)}(${mapType(f.getType)} ${name(f)}) {

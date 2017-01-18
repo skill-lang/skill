@@ -20,7 +20,18 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
+    // project IR, so that reflection implements the binary file format correctly
+    val IR = this.types.removeSpecialDeclarations.getUsertypes
+
     for (t ← IR; f ← t.getFields) {
+      // the field before interface projection
+      val originalF = this.types.removeTypedefs.removeEnums.get(t.getSkillName).asInstanceOf[UserType]
+        .getAllFields.find(_.getName == f.getName).get
+
+      // the type before the interface projection
+      val fieldActualType = mapType(originalF.getType, true)
+      val fieldActualTypeUnboxed = mapType(originalF.getType, false)
+
       val tIsBaseType = t.getSuperType == null
 
       val nameT = mapType(t)
@@ -61,7 +72,7 @@ ${
       }final class $nameF extends ${
         if (f.isAuto) "AutoField"
         else "FieldDeclaration"
-      }<${mapType(f.getType, true)}, ${mapType(t)}> implements
+      }<$fieldActualType, ${mapType(t)}> implements
                ${
         f.getType match {
           case ft : GroundType ⇒ ft.getSkillName match {
@@ -72,10 +83,10 @@ ${
             case "i64" | "v64"           ⇒ s"""KnownLongField<${mapType(t)}>"""
             case "f32"                   ⇒ s"""KnownFloatField<${mapType(t)}>"""
             case "f64"                   ⇒ s"""KnownDoubleField<${mapType(t)}>"""
-            case "annotation" | "string" ⇒ s"""KnownField<${mapType(f.getType)}, ${mapType(t)}>"""
+            case "annotation" | "string" ⇒ s"""KnownField<$fieldActualType, ${mapType(t)}>"""
             case ft                      ⇒ "???missing specialization for type " + ft
           }
-          case _ ⇒ s"""KnownField<${mapType(f.getType)}, ${mapType(t)}>"""
+          case _ ⇒ s"""KnownField<$fieldActualType, ${mapType(t)}>"""
         }
       }${
         // mark ignored fields as ignored; read function is inherited
@@ -87,7 +98,7 @@ ${
         else ""
       } {
 
-    public $nameF(FieldType<${mapType(f.getType, true)}> type, ${
+    public $nameF(FieldType<$fieldActualType> type, ${
         if (f.isAuto()) ""
         else "int index, "
       }${name(t)}Access owner) {
@@ -116,12 +127,14 @@ ${
             is = owner.iterator();
 ${
               // preparation code
-              f.getType match {
+              originalF.getType match {
                 case t : GroundType if "string".equals(t.getSkillName) ⇒ s"""
         final StringPool sp = (StringPool)owner.owner().Strings();"""
+
                 case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒ s"""
         final ${name(t.getSuperType)}Access target = (${name(t.getSuperType)}Access)${name(t.getSuperType)}Access
                 .<${mapType(t.getSuperType)},${mapType(t)}>cast(type);"""
+
                 case t : UserType ⇒ s"""
         final ${name(t)}Access target = (${name(t)}Access)type;"""
                 case _ ⇒ ""
@@ -131,12 +144,12 @@ ${
         while (0 != count--) {
             ${
               // read next element
-              f.getType match {
+              originalF.getType match {
                 case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒
-                  s"""is.next().set${escaped(f.getName.capital)}((${mapType(f.getType)})target.getByID(in.v64()));"""
+                  s"""is.next().set${escaped(f.getName.capital)}(($fieldActualType)target.getByID(in.v64()));"""
 
                 case t : InterfaceType ⇒
-                  s"""is.next().set${escaped(f.getName.capital)}((${mapType(f.getType)})type.readSingleField(in));"""
+                  s"""is.next().set${escaped(f.getName.capital)}(($fieldActualType)type.readSingleField(in));"""
 
                 case t : GroundType ⇒ t.getSkillName match {
                   case "annotation" ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
@@ -176,11 +189,11 @@ ${
                 case "annotation" ⇒ s"""
         final Annotation t = Annotation.cast(type);
         $preludeData
-            ${mapType(f.getType)} v = $dataAccessI.get${escaped(f.getName.capital)}();
+            ${mapType(f.getType)} v = $dataAccessI.get${escaped(f.getName.capital)}()${if (originalF.getType.isInstanceOf[InterfaceType]) ".self()" else ""};
             if(null==v)
                 result += 2;
             else
-                result += t.singleOffset(v${if (f.getType.isInstanceOf[InterfaceType]) ".self()" else ""});
+                result += t.singleOffset(v);
         }
         return result;"""
 
@@ -323,13 +336,44 @@ ${
         }
         return result;"""
 
+              case fieldType : InterfaceType if fieldType.getSuperType.getSkillName != "annotation" ⇒ s"""
+        $preludeData
+            final ${mapType(f.getType)} instance = $dataAccessI.get${escaped(f.getName.capital)}().self();
+            if (null == instance) {
+                result += 1;
+                continue;
+            }
+            long v = instance${if (f.getType.isInstanceOf[InterfaceType]) ".self()" else ""}.getSkillID();
+
+            if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
+                result += 1;
+            } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
+                result += 2;
+            } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
+                result += 3;
+            } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
+                result += 4;
+            } else if (0L == (v & 0xFFFFFFF800000000L)) {
+                result += 5;
+            } else if (0L == (v & 0xFFFFFC0000000000L)) {
+                result += 6;
+            } else if (0L == (v & 0xFFFE000000000000L)) {
+                result += 7;
+            } else if (0L == (v & 0xFF00000000000000L)) {
+                result += 8;
+            } else {
+                result += 9;
+            }
+        }
+        return result;"""
+
               case fieldType : InterfaceType ⇒ offsetCode(fieldType.getSuperType)
 
               case _ ⇒ s"""
         throw new NoSuchMethodError();"""
             }
 
-            offsetCode(f.getType)
+            offsetCode(originalF.getType)
           }
         }
     }
@@ -365,7 +409,7 @@ ${
         for (; i < high; i++) {
             ${
               // read next element
-              f.getType match {
+              originalF.getType match {
                 case t : GroundType ⇒ t.getSkillName match {
                   case "annotation" | "string" ⇒ s"""type.writeSingleField($dataAccessI.get${escaped(f.getName.capital)}(), out);"""
                   case _                       ⇒ s"""out.${t.getSkillName}($dataAccessI.get${escaped(f.getName.capital)}());"""
@@ -385,7 +429,7 @@ ${
 """
       }
     @Override
-    public ${mapType(f.getType, true)} getR(SkillObject ref) {
+    public $fieldActualType getR(SkillObject ref) {
         ${
         if (f.isConstant()) s"return ${mapType(t)}.get${escaped(f.getName.capital)}();"
         else s"return ((${mapType(t)}) ref).get${escaped(f.getName.capital)}();"
@@ -393,7 +437,7 @@ ${
     }
 
     @Override
-    public void setR(SkillObject ref, ${mapType(f.getType, true)} value) {
+    public void setR(SkillObject ref, $fieldActualType value) {
         ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
         else s"((${mapType(t)}) ref).set${escaped(f.getName.capital)}(value);"
@@ -401,7 +445,7 @@ ${
     }
 
     @Override
-    public ${mapType(f.getType)} get(${mapType(t)} ref) {
+    public $fieldActualTypeUnboxed get(${mapType(t)} ref) {
         ${
         if (f.isConstant()) s"return ${mapType(t)}.get${escaped(f.getName.capital)}();"
         else s"return ref.get${escaped(f.getName.capital)}();"
@@ -409,7 +453,7 @@ ${
     }
 
     @Override
-    public void set(${mapType(t)} ref, ${mapType(f.getType)} value) {
+    public void set(${mapType(t)} ref, $fieldActualTypeUnboxed value) {
         ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
         else s"ref.set${escaped(f.getName.capital)}(value);"
