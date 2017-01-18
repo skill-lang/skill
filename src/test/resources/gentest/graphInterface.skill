@@ -5,7 +5,8 @@
 
 @abstract
 AbstractNode {
-  set<Node> edges;
+  set<ColoredNode> edges;
+  map<Node, ColoredNode, Marker> map;
 }
 
 /** The property of being a colored Node */

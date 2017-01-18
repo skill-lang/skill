@@ -15,6 +15,7 @@ import de.ust.skill.ir.MapType
 import de.ust.skill.ir.SingleBaseTypeContainer
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
+import jdk.nashorn.internal.codegen.CompilerConstants.FieldAccess
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -39,6 +40,10 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
 
       // casting access to data array using index i
       val dataAccessI = if (null == t.getSuperType) "data[i]" else s"((${mapType(t)})data[i])"
+      val fieldAccess = s"""get${escaped(f.getName.capital)}()${
+        if (originalF.getType.isInstanceOf[InterfaceType]) ".self()"
+        else ""
+      }"""
 
       val out = open(s"internal/$nameF.java")
       //package
@@ -189,7 +194,7 @@ ${
                 case "annotation" ⇒ s"""
         final Annotation t = Annotation.cast(type);
         $preludeData
-            ${mapType(f.getType)} v = $dataAccessI.get${escaped(f.getName.capital)}()${if (originalF.getType.isInstanceOf[InterfaceType]) ".self()" else ""};
+            ${mapType(f.getType)} v = $dataAccessI.$fieldAccess;
             if(null==v)
                 result += 2;
             else
@@ -200,7 +205,7 @@ ${
                 case "string" ⇒ s"""
         final StringType t = (StringType) type;
         $preludeData
-            String v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
+            String v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).$fieldAccess;
             if(null==v)
                 result++;
             else
@@ -222,7 +227,7 @@ ${
 
                 case "v64" ⇒ s"""
         $preludeData
-            long v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
+            long v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).$fieldAccess;
 
             if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
                 result += 1;
@@ -258,12 +263,12 @@ ${
 
         final FieldType<${mapType(fieldType.getBaseType, true)}> baseType = t.groundType;
         $preludeData
-            final ${mapType(f.getType)} v = (${
+            final ${mapVariantType(f.getType)} v = (${mapVariantType(f.getType)})(${
                 if (tIsBaseType) ""
                 else s"(${mapType(t)})"
-              }data[i]).get${escaped(f.getName.capital)}();
+              }data[i]).$fieldAccess;
 
-            result += baseType.calculateOffset(v);
+            result += baseType.calculateOffset(($fieldActualType)v);
         }
         return result;"""
 
@@ -276,12 +281,12 @@ ${
 
         final FieldType<${mapType(fieldType.getBaseType, true)}> baseType = t.groundType;
         $preludeData
-            final ${mapType(f.getType)} v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).get${escaped(f.getName.capital)}();
-            if(null==v)
+            final ${mapVariantType(f.getType)} v = (${mapVariantType(f.getType)})(${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).$fieldAccess;
+            if(null==v || v.isEmpty())
                 result++;
             else {
                 result += V64.singleV64Offset(v.size());
-                result += baseType.calculateOffset(v);
+                result += baseType.calculateOffset(($fieldActualType)v);
             }
         }
         return result;"""
@@ -291,11 +296,11 @@ ${
         final FieldType keyType = t.keyType;
         final FieldType valueType = t.valueType;
         $preludeData
-            final ${mapType(f.getType)} v = (${
+            final ${mapVariantType(f.getType)} v = castMap((${
                 if (tIsBaseType) ""
                 else s"(${mapType(t)})"
-              }data[i]).get${escaped(f.getName.capital)}();
-            if(null==v)
+              }data[i]).get${escaped(f.getName.capital)}());
+            if(null==v || v.isEmpty())
                 result++;
             else {
                 result += V64.singleV64Offset(v.size());
@@ -307,7 +312,7 @@ ${
 
               case fieldType : UserType ⇒ s"""
         $preludeData
-            final ${mapType(f.getType)} instance = $dataAccessI.get${escaped(f.getName.capital)}();
+            final ${mapType(f.getType)} instance = $dataAccessI.$fieldAccess;
             if (null == instance) {
                 result += 1;
                 continue;
@@ -338,7 +343,7 @@ ${
 
               case fieldType : InterfaceType if fieldType.getSuperType.getSkillName != "annotation" ⇒ s"""
         $preludeData
-            final ${mapType(f.getType)} instance = $dataAccessI.get${escaped(f.getName.capital)}().self();
+            final ${mapType(f.getType)} instance = $dataAccessI.$fieldAccess;
             if (null == instance) {
                 result += 1;
                 continue;

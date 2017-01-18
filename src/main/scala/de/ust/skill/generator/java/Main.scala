@@ -86,6 +86,17 @@ class Main extends FakeMain
     case _                           ⇒ throw new IllegalStateException(s"Unknown type $t")
   }
 
+  override protected def mapVariantType(t : Type) : String = t match {
+
+    case t : ConstantLengthArrayType ⇒ s"$ArrayTypeName<? extends ${mapType(t.getBaseType(), true)}>"
+    case t : VariableLengthArrayType ⇒ s"$VarArrayTypeName<? extends ${mapType(t.getBaseType(), true)}>"
+    case t : ListType                ⇒ s"$ListTypeName<? extends ${mapType(t.getBaseType(), true)}>"
+    case t : SetType                 ⇒ s"$SetTypeName<? extends ${mapType(t.getBaseType(), true)}>"
+    case t : MapType                 ⇒ t.getBaseTypes().map("? extends " + mapType(_, true)).reduceRight((k, v) ⇒ s"$MapTypeName<$k, $v>")
+
+    case _                           ⇒ mapType(t, true)
+  }
+
   /**
    * creates argument list of a constructor call, not including potential skillID or braces
    */

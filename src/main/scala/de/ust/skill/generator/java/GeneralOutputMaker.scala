@@ -89,6 +89,12 @@ trait GeneralOutputMaker extends Generator {
    * Assume the existence of a translation function for types.
    */
   protected def mapType(t : Type, boxed : Boolean = false) : String
+  
+  /**
+   * Assume the existence of a translation function for types that creates
+   * variant container types.
+   */
+  protected def mapVariantType(t : Type) : String
 
   /**
    * creates argument list of a constructor call, not including potential skillID or braces
