@@ -58,7 +58,7 @@ class Main extends FakeMain
    * Translates types into scala type names.
    */
   override protected def mapType(t : Type, boxed : Boolean) : String = t match {
-    case t : GroundType ⇒ t.getName.lower match {
+    case t : GroundType ⇒ t.getSkillName match {
       case "annotation" ⇒ "de.ust.skill.common.java.internal.SkillObject"
 
       case "bool"       ⇒ if (boxed) "java.lang.Boolean" else "boolean"
@@ -86,13 +86,17 @@ class Main extends FakeMain
     case _                           ⇒ throw new IllegalStateException(s"Unknown type $t")
   }
 
+  private def mapTypeWildcard(t : Type) : String =
+    if ("annotation".equals(t.getSkillName)) "?"
+    else "? extends " + mapType(t, true)
+
   override protected def mapVariantType(t : Type) : String = t match {
 
-    case t : ConstantLengthArrayType ⇒ s"$ArrayTypeName<? extends ${mapType(t.getBaseType(), true)}>"
-    case t : VariableLengthArrayType ⇒ s"$VarArrayTypeName<? extends ${mapType(t.getBaseType(), true)}>"
-    case t : ListType                ⇒ s"$ListTypeName<? extends ${mapType(t.getBaseType(), true)}>"
-    case t : SetType                 ⇒ s"$SetTypeName<? extends ${mapType(t.getBaseType(), true)}>"
-    case t : MapType                 ⇒ t.getBaseTypes().map("? extends " + mapType(_, true)).reduceRight((k, v) ⇒ s"$MapTypeName<$k, $v>")
+    case t : ConstantLengthArrayType ⇒ s"$ArrayTypeName<${mapTypeWildcard(t.getBaseType())}>"
+    case t : VariableLengthArrayType ⇒ s"$VarArrayTypeName<${mapTypeWildcard(t.getBaseType())}>"
+    case t : ListType                ⇒ s"$ListTypeName<${mapTypeWildcard(t.getBaseType())}>"
+    case t : SetType                 ⇒ s"$SetTypeName<${mapTypeWildcard(t.getBaseType())}>"
+    case t : MapType                 ⇒ t.getBaseTypes().map(mapTypeWildcard).reduceRight((k, v) ⇒ s"$MapTypeName<$k, $v>")
 
     case _                           ⇒ mapType(t, true)
   }
