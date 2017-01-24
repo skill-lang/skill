@@ -27,6 +27,7 @@ import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.InterfaceType
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -86,17 +87,13 @@ class Main extends FakeMain
     case _                           ⇒ throw new IllegalStateException(s"Unknown type $t")
   }
 
-  private def mapTypeWildcard(t : Type) : String =
-    if ("annotation".equals(t.getSkillName)) "?"
-    else "? extends " + mapType(t, true)
-
   override protected def mapVariantType(t : Type) : String = t match {
 
-    case t : ConstantLengthArrayType ⇒ s"$ArrayTypeName<${mapTypeWildcard(t.getBaseType())}>"
-    case t : VariableLengthArrayType ⇒ s"$VarArrayTypeName<${mapTypeWildcard(t.getBaseType())}>"
-    case t : ListType                ⇒ s"$ListTypeName<${mapTypeWildcard(t.getBaseType())}>"
-    case t : SetType                 ⇒ s"$SetTypeName<${mapTypeWildcard(t.getBaseType())}>"
-    case t : MapType                 ⇒ t.getBaseTypes().map(mapTypeWildcard).reduceRight((k, v) ⇒ s"$MapTypeName<$k, $v>")
+    case t : ConstantLengthArrayType ⇒ s"$ArrayTypeName<?>"
+    case t : VariableLengthArrayType ⇒ s"$VarArrayTypeName<?>"
+    case t : ListType                ⇒ s"$ListTypeName<?>"
+    case t : SetType                 ⇒ s"$SetTypeName<?>"
+    case t : MapType                 ⇒ t.getBaseTypes().map(_ ⇒ "?").reduceRight((k, v) ⇒ s"$MapTypeName<$k, $v>")
 
     case _                           ⇒ mapType(t, true)
   }
