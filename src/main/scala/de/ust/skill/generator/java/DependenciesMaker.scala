@@ -10,6 +10,7 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.MessageDigest
+import java.nio.file.NoSuchFileException
 
 /**
  * creates copies of required jars in $outPath
@@ -32,7 +33,12 @@ trait DependenciesMaker extends GeneralOutputMaker {
           case e : IOException ⇒ false // just continue
         }) {
           Files.deleteIfExists(out.toPath)
-          Files.copy(new File("deps/" + jar).toPath, out.toPath)
+          try {
+            Files.copy(new File("deps/" + jar).toPath, out.toPath)
+          } catch {
+            case e : NoSuchFileException ⇒
+              throw new IllegalStateException("deps directory apparently inexistent.\nWas looking for " + new File("deps/" + jar).getAbsolutePath, e)
+          }
         }
       })
     }
