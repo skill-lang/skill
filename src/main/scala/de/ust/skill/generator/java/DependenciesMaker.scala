@@ -28,9 +28,10 @@ trait DependenciesMaker extends GeneralOutputMaker {
         out.getParentFile.mkdirs();
 
         if (try {
-          !out.exists() || sha256(out.toPath()) != commonJarSum(jar)
+          !out.exists() || !commonJarSum(jar).equals(sha256(out.toPath()))
         } catch {
-          case e : IOException ⇒ false // just continue
+          case e : IOException ⇒
+            false // just continue
         }) {
           Files.deleteIfExists(out.toPath)
           try {
@@ -47,7 +48,7 @@ trait DependenciesMaker extends GeneralOutputMaker {
   val jars = Seq("skill.jvm.common.jar", "skill.java.common.jar")
   lazy val commonJarSum = jars.map { s ⇒ (s -> sha256("deps/" + s)) }.toMap
 
-  final def sha256(name : String) : String = sha256(new File("src/test/resources/" + name).toPath)
+  final def sha256(name : String) : String = sha256(new File(name).toPath)
   @inline final def sha256(path : Path) : String = {
     val bytes = Files.readAllBytes(path)
     MessageDigest.getInstance("SHA-256").digest(bytes).map("%02X".format(_)).mkString
