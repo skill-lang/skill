@@ -5,6 +5,8 @@
 \*                                                                            */
 package de.ust.skill.generator.java.api
 
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.java.GeneralOutputMaker
 
 trait SkillFileMaker extends GeneralOutputMaker {
@@ -73,6 +75,13 @@ ${
      * @return an access for all ${name(t)}s in this state
      */
     public ${packagePrefix}internal.${name(t)}Access ${name(t)}s();""").mkString("")
+    }${
+      (for (t ← this.types.getInterfaces) yield s"""
+
+    /**
+     * @return an access for all ${name(t)}s in this state
+     */
+    public ${interfacePool(t)} ${name(t)}s();""").mkString("")
     }
 }
 """)

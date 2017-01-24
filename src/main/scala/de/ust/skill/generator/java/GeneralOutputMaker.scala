@@ -95,6 +95,15 @@ trait GeneralOutputMaker extends Generator {
    * variant container types.
    */
   protected def mapVariantType(t : Type) : String
+  
+  /**
+   * the name of an interface field type that acts as its pool
+   */
+  protected final def interfacePool(t : InterfaceType) : String =
+    if (t.getSuperType.getSkillName.equals("annotation"))
+      s"de.ust.skill.common.java.internal.UnrootedInterfacePool<${mapType(t)}>"
+    else
+      s"de.ust.skill.common.java.internal.InterfacePool<${mapType(t)}, ${mapType(t.getBaseType)}>"
 
   /**
    * creates argument list of a constructor call, not including potential skillID or braces

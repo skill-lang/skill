@@ -320,10 +320,7 @@ ${
       case "f64"        ⇒ "F64.get()"
       case "string"     ⇒ "string"
 
-      case s ⇒ t match {
-        case t : InterfaceType ⇒ s"cast(${mapGroundType(t.getSuperType)})"
-        case _                 ⇒ s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
-      }
+      case _            ⇒ s"""((SkillState)owner()).${name(t)}s()"""
     }
 
     f.getType match {
@@ -343,9 +340,7 @@ ${
       case t : MapType ⇒
         t.getBaseTypes().map(mapGroundType).reduceRight((k, v) ⇒ s"new MapType<>($k, $v)")
 
-      case t : InterfaceType ⇒ s"cast(${mapGroundType(t.getSuperType)})"
-      case t : Declaration ⇒
-        s"""(FieldType<${mapType(t)}>)(owner().poolByName().get("${t.getSkillName}"))"""
+      case t ⇒ s"""((SkillState)owner()).${name(t)}s()"""
 
     }
   }

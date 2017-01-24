@@ -5,7 +5,13 @@
 \*                                                                            */
 package de.ust.skill.generator.java.internal
 
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.java.GeneralOutputMaker
+import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.Typedef
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.UserType
 
 trait StateMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -132,11 +138,19 @@ ${
         for (StoragePool<?, ?> p : types)
             poolByName.put(p.name(), p);
 ${
-      var i = -1
       (for (t ← IR)
         yield s"""
-        ${name(t)}s = (${name(t)}Access) poolByName.get("${t.getSkillName}");
-"""
+        ${name(t)}s = (${name(t)}Access) poolByName.get("${t.getSkillName}");"""
+      ).mkString("")
+    }${
+      (for (t ← types.getInterfaces)
+        yield s"""
+        ${name(t)}s = new ${interfacePool(t)}("${t.getSkillName}", ${
+        if (t.getSuperType.getSkillName.equals("annotation")) "annotationType"
+        else name(t.getSuperType) + "s";
+      }${
+        collectRealizationNames(t).map(name(_) + "s").mkString(",", ",", "")
+      });"""
       ).mkString("")
     }
 
@@ -149,17 +163,25 @@ ${
         super(strings, path, mode, types, stringType, annotationType);
         this.poolByName = poolByName;
 ${
-      var i = -1
       (for (t ← IR)
         yield s"""
         ${name(t)}s = (${name(t)}Access) poolByName.get("${t.getSkillName}");"""
+      ).mkString("")
+    }${
+      (for (t ← types.getInterfaces)
+        yield s"""
+        ${name(t)}s = new ${interfacePool(t)}("${t.getSkillName}", ${
+        if (t.getSuperType.getSkillName.equals("annotation")) "annotationType"
+        else name(t.getSuperType) + "s";
+      }${
+        collectRealizationNames(t).map(name(_) + "s").mkString(",", ",", "")
+      });"""
       ).mkString("")
     }
 
         finalizePools();
     }
 ${
-      var i = -1
       (for (t ← IR)
         yield s"""
     private final ${name(t)}Access ${name(t)}s;
@@ -170,10 +192,31 @@ ${
     }
 """
       ).mkString("")
+    }${
+      (for (t ← types.getInterfaces)
+        yield s"""
+    private final ${interfacePool(t)} ${name(t)}s;
+
+    @Override
+    public ${interfacePool(t)} ${name(t)}s() {
+        return ${name(t)}s;
     }
-}
+"""
+      ).mkString("")
+    }}
 """)
 
     out.close()
+  }
+
+  private def collectRealizationNames(target : InterfaceType) : Seq[UserType] = {
+    def reaches(t : Type) : Boolean = t match {
+      case t : UserType      ⇒ t.getSuperInterfaces.contains(target) || t.getSuperInterfaces.exists(reaches)
+      case t : InterfaceType ⇒ t.getSuperInterfaces.contains(target) || t.getSuperInterfaces.exists(reaches)
+      case t : Typedef       ⇒ reaches(t.getTarget)
+      case _                 ⇒ false
+    }
+
+    IR.filter(reaches).toSeq
   }
 }

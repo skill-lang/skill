@@ -372,7 +372,8 @@ ${
         }
         return result;"""
 
-              case fieldType : InterfaceType ⇒ offsetCode(fieldType.getSuperType)
+              case fieldType : InterfaceType ⇒ s"""
+        final Annotation type = ((de.ust.skill.common.java.internal.UnrootedInterfacePool<?>)this.type).getType();${offsetCode(fieldType.getSuperType)}"""
 
               case _ ⇒ s"""
         throw new NoSuchMethodError();"""
