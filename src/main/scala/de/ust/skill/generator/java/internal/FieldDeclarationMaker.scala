@@ -292,7 +292,7 @@ ${
         return result;"""
 
               case fieldType : MapType ⇒ s"""
-        final MapType t = (MapType) type;
+        final MapType<?, ?> t = (MapType<?, ?>)(FieldType<?>) type;
         final FieldType keyType = t.keyType;
         final FieldType valueType = t.valueType;
         $preludeData
