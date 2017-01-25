@@ -31,6 +31,7 @@ package ${PackagePrefix} is
    pragma Warnings (Off);
    use Skill.Equals;
    use Skill.Hashes;
+   use type Skill.Types.Annotation;
    use type Skill.Types.V64;
    use type Skill.Types.String_Access;
 ${
