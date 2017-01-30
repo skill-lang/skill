@@ -21,6 +21,7 @@ trait SourceOptions extends AbstractOptions {
   case class SourceConfig(target : String,
                           outdir : File = new File("."),
                           var depsdir : File = null,
+                          var skipDeps : Boolean = false,
                           clean : Boolean = false,
                           header : HeaderInfo = new HeaderInfo(),
                           var languages : Set[String] = Set(),
@@ -72,6 +73,7 @@ trait SourceOptions extends AbstractOptions {
         gen.headerInfo = header
         gen.outPath = outdir.getAbsolutePath + pathPostfix
         gen.depsPath = depsdir.getAbsolutePath + pathPostfix
+        gen.skipDependencies = skipDeps
 
         if (verbose) print(s"run $lang: ")
 
@@ -117,6 +119,10 @@ trait SourceOptions extends AbstractOptions {
     opt[File]('d', "depsdir").optional().action(
       (p, c) ⇒ c.copy(depsdir = p)
     ).text("set the dependency directory (libs, common sources)")
+
+    opt[Unit]("skip-dependencies").optional().action(
+      (p, c) ⇒ c.copy(skipDeps = true)
+    ).text("do not copy dependencies")
 
     opt[String]('p', "package").required().action(
       (s, c) ⇒ c.copy(packageName = s.split('.'))

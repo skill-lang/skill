@@ -14,15 +14,16 @@ trait DependenciesMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    for (f ← deps) {
-      this.getClass.synchronized({
+    if (!skipDependencies)
+      for (f ← deps) {
+        this.getClass.synchronized({
 
-        val out = new File(depsPath, f);
-        out.getParentFile.mkdirs();
+          val out = new File(depsPath, f);
+          out.getParentFile.mkdirs();
 
-        Files.copy(new File("deps/haskell/" + f).toPath, out.toPath, StandardCopyOption.REPLACE_EXISTING)
-      })
-    }
+          Files.copy(new File("deps/haskell/" + f).toPath, out.toPath, StandardCopyOption.REPLACE_EXISTING)
+        })
+      }
   }
 
   private val deps = Seq("Controls.hs", "Deserialize.hs", "Methods.hs", "ReadFields.hs",

@@ -20,22 +20,23 @@ trait DependenciesMaker extends GeneralOutputMaker {
     super.make
 
     // safe unnecessary overwrites that cause race conditions on parallel builds anyway
-    for (jar ← jars) {
-      this.getClass.synchronized({
+    if (!skipDependencies)
+      for (jar ← jars) {
+        this.getClass.synchronized({
 
-        val out = new File(depsPath, jar);
-        out.getParentFile.mkdirs();
+          val out = new File(depsPath, jar);
+          out.getParentFile.mkdirs();
 
-        if (try {
-          !out.exists() || sha256(out.getAbsolutePath) != commonJarSum(jar)
-        } catch {
-          case e : IOException ⇒ false // just continue
-        }) {
-          Files.deleteIfExists(out.toPath)
-          Files.copy(new File("deps/" + jar).toPath, out.toPath)
-        }
-      })
-    }
+          if (try {
+            !out.exists() || sha256(out.getAbsolutePath) != commonJarSum(jar)
+          } catch {
+            case e : IOException ⇒ false // just continue
+          }) {
+            Files.deleteIfExists(out.toPath)
+            Files.copy(new File("deps/" + jar).toPath, out.toPath)
+          }
+        })
+      }
   }
 
   val jars = Seq("skill.jvm.common.jar", "skill.jforeign.common.jar")

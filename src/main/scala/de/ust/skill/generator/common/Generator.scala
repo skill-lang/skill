@@ -49,6 +49,12 @@ trait Generator {
    * Base path of dependencies copied by this generator.
    */
   var depsPath : String = _;
+  /**
+   * request the code generator to skip copying of dependencies
+   * @note this is useful, for instance, as part of code regeneration in a build
+   * system where dependencies and specification are managed by the version control system
+   */
+  var skipDependencies = false;
 
   /**
    * Set the type context. This is a function to make clear that generators may in fact project a type context prior to

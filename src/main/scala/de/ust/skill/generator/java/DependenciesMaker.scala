@@ -21,28 +21,29 @@ trait DependenciesMaker extends GeneralOutputMaker {
     super.make
 
     // safe unnecessary overwrites that cause race conditions on parallel builds anyway
-    for (jar ← jars) {
-      this.getClass.synchronized({
+    if (!skipDependencies)
+      for (jar ← jars) {
+        this.getClass.synchronized({
 
-        val out = new File(depsPath, jar);
-        out.getParentFile.mkdirs();
+          val out = new File(depsPath, jar);
+          out.getParentFile.mkdirs();
 
-        if (try {
-          !out.exists() || !commonJarSum(jar).equals(sha256(out.toPath()))
-        } catch {
-          case e : IOException ⇒
-            false // just continue
-        }) {
-          Files.deleteIfExists(out.toPath)
-          try {
-            Files.copy(new File("deps/" + jar).toPath, out.toPath)
+          if (try {
+            !out.exists() || !commonJarSum(jar).equals(sha256(out.toPath()))
           } catch {
-            case e : NoSuchFileException ⇒
-              throw new IllegalStateException("deps directory apparently inexistent.\nWas looking for " + new File("deps/" + jar).getAbsolutePath, e)
+            case e : IOException ⇒
+              false // just continue
+          }) {
+            Files.deleteIfExists(out.toPath)
+            try {
+              Files.copy(new File("deps/" + jar).toPath, out.toPath)
+            } catch {
+              case e : NoSuchFileException ⇒
+                throw new IllegalStateException("deps directory apparently inexistent.\nWas looking for " + new File("deps/" + jar).getAbsolutePath, e)
+            }
           }
-        }
-      })
-    }
+        })
+      }
   }
 
   val jars = Seq("skill.jvm.common.jar", "skill.java.common.jar")

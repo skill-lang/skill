@@ -22,6 +22,7 @@ trait DependenciesMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
+    if(!skipDependencies)
     println("ada dependency creation is postponed; clone ada_common yourself!")
   }
 }
