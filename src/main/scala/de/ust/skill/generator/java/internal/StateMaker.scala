@@ -152,7 +152,7 @@ ${
         if (t.getSuperType.getSkillName.equals("annotation")) "annotationType"
         else name(t.getSuperType) + "s";
       }${
-        collectRealizationNames(t).map(name(_) + "s").mkString(",", ",", "")
+        collectRealizationNames(t).mkString(",", ",", "")
       });"""
       ).mkString("")
     }
@@ -187,7 +187,7 @@ ${
     out.close()
   }
 
-  private def collectRealizationNames(target : InterfaceType) : Seq[UserType] = {
+  private def collectRealizationNames(target : InterfaceType) : Seq[String] = {
     def reaches(t : Type) : Boolean = t match {
       case t : UserType      ⇒ t.getSuperInterfaces.contains(target) || t.getSuperInterfaces.exists(reaches)
       case t : InterfaceType ⇒ t.getSuperInterfaces.contains(target) || t.getSuperInterfaces.exists(reaches)
@@ -195,6 +195,6 @@ ${
       case _                 ⇒ false
     }
 
-    IR.filter(reaches).toSeq
+    types.getUsertypes.filter(reaches).map(name(_) + "s").toSeq
   }
 }
