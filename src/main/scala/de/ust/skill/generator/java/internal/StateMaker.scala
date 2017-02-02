@@ -121,7 +121,11 @@ ${
             types.add(${name(t)});"""
       ).mkString("")
     }
-            return new SkillState(strings, types, stringType, annotation, path, actualMode.close);
+            HashMap<String, StoragePool<?, ?>> poolByName = new HashMap<>();
+            for (StoragePool<?, ?> p : types)
+                poolByName.put(p.name(), p);
+
+            return new SkillState(poolByName, strings, stringType, annotation, types, path, actualMode.close);
 
         case Read:
             return FileParser.read(FileInputStream.open(path, actualMode.close == Mode.ReadOnly), actualMode.close);
@@ -129,32 +133,6 @@ ${
         default:
             throw new IllegalStateException("should never happen");
         }
-    }
-
-    public SkillState(StringPool strings, ArrayList<StoragePool<?, ?>> types, StringType stringType,
-            Annotation annotationType, Path path, Mode mode) {
-        super(strings, path, mode, types, stringType, annotationType);
-        poolByName = new HashMap<>();
-        for (StoragePool<?, ?> p : types)
-            poolByName.put(p.name(), p);
-${
-      (for (t ← IR)
-        yield s"""
-        ${name(t)}s = (${name(t)}Access) poolByName.get("${t.getSkillName}");"""
-      ).mkString("")
-    }${
-      (for (t ← types.getInterfaces)
-        yield s"""
-        ${name(t)}s = new ${interfacePool(t)}("${t.getSkillName}", ${
-        if (t.getSuperType.getSkillName.equals("annotation")) "annotationType"
-        else name(t.getSuperType) + "s";
-      }${
-        collectRealizationNames(t).map(name(_) + "s").mkString(",", ",", "")
-      });"""
-      ).mkString("")
-    }
-
-        finalizePools();
     }
 
     public SkillState(HashMap<String, StoragePool<?, ?>> poolByName, StringPool strings, StringType stringType,
