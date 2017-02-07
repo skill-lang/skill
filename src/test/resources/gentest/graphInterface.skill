@@ -11,6 +11,8 @@ AbstractNode {
 
 /** The property of being a colored Node */
 interface ColoredNode : AbstractNode with Colored with Marker {
+  !ondemand
+  Marker next;
 }
 
 /** a graph of colored nodes */
@@ -39,4 +41,6 @@ ColorHolder {
  * translation
  */
 interface Marker {
+  !distributed
+  string mark;
 }

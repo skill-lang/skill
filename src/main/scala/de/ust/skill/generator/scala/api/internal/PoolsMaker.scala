@@ -30,17 +30,19 @@ trait PoolsMaker extends GeneralOutputMaker {
     val flatIR = this.types.removeSpecialDeclarations.getUsertypes
 
     for (t ← IR) {
+      val flatType = flatIR.find(_.getName == t.getName).get
       val typeName = "_root_." + packagePrefix + name(t)
       val isSingleton = !t.getRestrictions.collect { case r : SingletonRestriction ⇒ r }.isEmpty
 
       // reference to state if required
-      val stateRef = if (t.hasDistributedField()) s", basePool.owner.asInstanceOf[${packagePrefix}api.SkillFile]"
-      else ""
+      val stateRef =
+        if (flatType.hasDistributedField()) s", basePool.owner.asInstanceOf[${packagePrefix}api.SkillFile]"
+        else ""
 
       // find all fields that belong to the projected version, but use the unprojected variant
-      val flatIRFieldNames = flatIR.find(_.getName == t.getName).get.getFields.map(_.getSkillName).toSet
+      val flatIRFieldNames = flatType.getFields.map(_.getSkillName).toSet
       val fields = t.getAllFields.filter(f ⇒ flatIRFieldNames.contains(f.getSkillName))
-      val projectedField = flatIR.find(_.getName == t.getName).get.getFields.map {
+      val projectedField = flatType.getFields.map {
         case f ⇒ fields.find(_.getSkillName.equals(f.getSkillName)).get -> f
       }.toMap
 
@@ -162,7 +164,7 @@ ${
   }
 ${
         // access to distributed fields
-        (for (f ← t.getFields if f.isDistributed())
+        (for (f ← flatType.getFields if f.isDistributed())
           yield s"\n  var ${knownField(f)} : ${knownField(f)} = _\n").mkString
       }
   override def makeSubPool(name : String, poolIndex : Int) = ${
