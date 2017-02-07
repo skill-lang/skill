@@ -114,7 +114,10 @@ final class ${storagePool(t)}(poolIndex : Int${
     if (t != f.t)
       throw new TypeMissmatchError(t, f.t.toString, f.name, name)
 
-    restrictions.foreach(f.addRestriction(_))
+    val rs = restrictions.iterator
+    while(rs.hasNext)
+      f.addRestriction(rs.next())
+
     dataFields += f
     return f
   }
@@ -159,8 +162,9 @@ ${
   """)
       }
 
-    for(f <- dataFields ++ autoFields)
-      f.createKnownRestrictions
+    val fs = (dataFields ++ autoFields).iterator
+    while (fs.hasNext)
+      fs.next().createKnownRestrictions
   }
 ${
         // access to distributed fields

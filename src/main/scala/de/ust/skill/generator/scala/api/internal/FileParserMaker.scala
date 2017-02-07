@@ -114,7 +114,11 @@ object FileParser extends SkillFileParser[SkillFile] {
     // read eager fields
     triggerFieldDeserialization(types, dataList)
 
-    types.par.foreach(_.ensureKnownFields(r))
+    locally {
+      val ts = types.iterator
+      while(ts.hasNext)
+        ts.next().ensureKnownFields(r)
+    }
     r
   }
 }
