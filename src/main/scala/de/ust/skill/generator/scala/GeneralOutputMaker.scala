@@ -117,7 +117,7 @@ trait GeneralOutputMaker extends Generator {
 
   protected def name(f : FieldLike) : String = escaped(f.getName.camel)
   protected def knownField(f : Field) : String =
-    escaped(s"KnownField_${f.getDeclaredIn.getName.capital()}_${f.getName.camel()}")
+    escaped(s"KF_${f.getDeclaredIn.getName.capital()}_${f.getName.camel()}")
 
   /**
    * Assume a package prefix provider.
