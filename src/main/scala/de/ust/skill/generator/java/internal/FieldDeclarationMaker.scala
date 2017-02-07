@@ -40,10 +40,7 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
 
       // casting access to data array using index i
       val dataAccessI = if (null == t.getSuperType) "data[i]" else s"((${mapType(t)})data[i])"
-      val fieldAccess = s"""get${escaped(f.getName.capital)}()${
-        if (originalF.getType.isInstanceOf[InterfaceType]) ".self()"
-        else ""
-      }"""
+      val fieldAccess = s"""get${escaped(f.getName.capital)}()"""
 
       val out = open(s"internal/$nameF.java")
       //package
@@ -343,12 +340,12 @@ ${
 
               case fieldType : InterfaceType if fieldType.getSuperType.getSkillName != "annotation" ⇒ s"""
         $preludeData
-            final ${mapType(f.getType)} instance = $dataAccessI.$fieldAccess;
+            final ${mapType(fieldType)} instance = $dataAccessI.$fieldAccess;
             if (null == instance) {
                 result += 1;
                 continue;
             }
-            long v = instance${if (f.getType.isInstanceOf[InterfaceType]) ".self()" else ""}.getSkillID();
+            long v = instance.self().getSkillID();
 
             if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
                 result += 1;
@@ -373,7 +370,16 @@ ${
         return result;"""
 
               case fieldType : InterfaceType ⇒ s"""
-        final Annotation type = ((de.ust.skill.common.java.internal.UnrootedInterfacePool<?>)this.type).getType();${offsetCode(fieldType.getSuperType)}"""
+        final Annotation t = ((de.ust.skill.common.java.internal.UnrootedInterfacePool<?>)this.type).getType();
+        $preludeData
+            ${mapType(fieldType)} v = $dataAccessI.$fieldAccess;
+
+            if(null==v)
+                result += 2;
+            else
+                result += t.singleOffset(v.self());
+        }
+        return result;"""
 
               case _ ⇒ s"""
         throw new NoSuchMethodError();"""
