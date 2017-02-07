@@ -89,13 +89,13 @@ trait GeneralOutputMaker extends Generator {
    * Assume the existence of a translation function for types.
    */
   protected def mapType(t : Type, boxed : Boolean = false) : String
-  
+
   /**
    * Assume the existence of a translation function for types that creates
    * variant container types.
    */
   protected def mapVariantType(t : Type) : String
-  
+
   /**
    * the name of an interface field type that acts as its pool
    */
@@ -122,6 +122,11 @@ trait GeneralOutputMaker extends Generator {
    * Translation of a field to its representation in the source code
    */
   protected def name(f : FieldLike) : String = escaped(f.getName.camel)
+
+  /**
+   * Class name of the representation of a known field
+   */
+  protected def knownField(f : FieldLike) : String = s"F_${name(f.getDeclaredIn)}_${name(f)}"
 
   /**
    * Assume a package prefix provider.

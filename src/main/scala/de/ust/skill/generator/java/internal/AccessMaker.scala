@@ -140,7 +140,7 @@ ${
           (for (f ← fields if !f.isAuto)
             yield s"""
         case "${f.getSkillName}":
-            f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f)}, 1 + dataFields.size(), this);
+            f = new ${knownField(projectedField(f))}(${mapToFieldType(f)}, 1 + dataFields.size(), this);
             break;
 """
           ).mkString
@@ -149,7 +149,7 @@ ${
           (for (f ← fields if f.isAuto)
             yield s"""
         case "${f.getSkillName}":
-            f = new KnownField_${nameT}_${name(f)}(${mapToFieldType(f)}, this);
+            f = new ${knownField(projectedField(f))}(${mapToFieldType(f)}, this);
             autoFields[${index += 1; index - 1}] = (AutoField<?, $typeT>) f;
             break;
 """
@@ -172,7 +172,7 @@ ${
           (for (f ← fields if !f.isAuto)
             yield s"""
         case "${f.getSkillName}":
-            f = (FieldDeclaration<R, $typeT>) new KnownField_${nameT}_${name(f)}((FieldType<${mapType(f.getType, true)}>) type, ID, this);
+            f = (FieldDeclaration<R, $typeT>) new ${knownField(projectedField(f))}((FieldType<${mapType(f.getType, true)}>) type, ID, this);
             break;
 """
           ).mkString

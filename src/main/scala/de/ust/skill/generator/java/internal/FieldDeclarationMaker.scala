@@ -36,7 +36,7 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
       val tIsBaseType = t.getSuperType == null
 
       val nameT = mapType(t)
-      val nameF = s"KnownField_${name(t)}_${name(f)}"
+      val nameF = knownField(f)
 
       // casting access to data array using index i
       val dataAccessI = if (null == t.getSuperType) "data[i]" else s"((${mapType(t)})data[i])"
