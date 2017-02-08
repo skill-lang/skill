@@ -9,7 +9,7 @@ http://www2.informatik.uni-stuttgart.de/cgi-bin/NCSTRL/NCSTRL_view.pl?id=TR-2013
 
 This repository contains implementations for (alphatical order):
 
-Languag|Supported Features|Testsuite|Libs|Notes
+Language|Supported Features|Testsuite|Libs|Notes
 -------|------------------|---------|----|-----
 Ada 2012 |auto,append,documented,escaped,lazy(only reflection)| yes |commonAda| incomplete resource management
 C 99 |mainly core features| does not compile | - | SKilL TR13, not maintained
