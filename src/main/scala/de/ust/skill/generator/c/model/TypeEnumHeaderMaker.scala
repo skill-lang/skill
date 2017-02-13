@@ -15,7 +15,7 @@ import de.ust.skill.generator.c.GeneralOutputMaker
 trait TypeEnumHeaderMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"model/${prefix}type_enum.h")
+    val out = files.open(s"model/${prefix}type_enum.h")
 
     val prefixCapital = packagePrefix.toUpperCase
 

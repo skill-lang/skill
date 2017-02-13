@@ -15,7 +15,7 @@ import de.ust.skill.generator.c.GeneralOutputMaker
 trait TypeDeclarationHeaderMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"model/${prefix}type_declaration.h")
+    val out = files.open(s"model/${prefix}type_declaration.h")
 
     val prefixCapital = packagePrefix.toUpperCase
 

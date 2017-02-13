@@ -18,7 +18,7 @@ import de.ust.skill.ir.UserType
 trait FieldInformationSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"model/${prefix}field_information.c")
+    val out = files.open(s"model/${prefix}field_information.c")
 
     val prefixCapital = packagePrefix.toUpperCase
 

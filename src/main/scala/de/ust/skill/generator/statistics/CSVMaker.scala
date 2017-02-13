@@ -25,7 +25,7 @@ trait CSVMaker extends GeneralOutputMaker {
 
       // types
       locally {
-        val out = open(s"""types.csv""")
+        val out = files.open(s"""types.csv""")
         out.write("type;count\n")
         tc.removeSpecialDeclarations().getUsertypes.flatMap(_.getFields).map(_.getType).groupBy(_.getSkillName).map {
           case (s, ts) ⇒ (s, ts.size)
@@ -37,7 +37,7 @@ trait CSVMaker extends GeneralOutputMaker {
 
       // type categories
       locally {
-        val out = open(s"""types category.csv""")
+        val out = files.open(s"""types category.csv""")
         out.write("type category;count\n")
         tc.removeSpecialDeclarations().getUsertypes.flatMap(_.getFields).map(_.getType).groupBy {
           case t : UserType      ⇒ "ref"
@@ -53,7 +53,7 @@ trait CSVMaker extends GeneralOutputMaker {
 
       // field counts
       locally {
-        val out = open(s"""field counts.csv""")
+        val out = files.open(s"""field counts.csv""")
         out.write("type;fields;total\n")
         tc.removeSpecialDeclarations().getUsertypes.foreach {
           case t ⇒ out.write(s"$t;${t.getFields.size};${t.getAllFields.size}\n")
@@ -63,7 +63,7 @@ trait CSVMaker extends GeneralOutputMaker {
 
       // type fancyness
       locally {
-        val out = open(s"""fancy types.csv""")
+        val out = files.open(s"""fancy types.csv""")
         out.write("type category;count\n")
         out.write(s"interface;${tc.getInterfaces.size()}\n")
         out.write(s"enum;${tc.getEnums.size()}\n")
@@ -80,7 +80,7 @@ trait CSVMaker extends GeneralOutputMaker {
           case s    ⇒ depth(s, d + 1)
         }
 
-        val out = open(s"""types hierarchy.csv""")
+        val out = files.open(s"""types hierarchy.csv""")
         out.write("super type count;count\n")
         tc.removeSpecialDeclarations().getUsertypes.map(depth(_)).groupBy { x ⇒ x }.map {
           case (s, ts) ⇒ (s, ts.size)

@@ -17,7 +17,8 @@ import java.io.PrintWriter
 trait MakefileMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = openRaw("makefile")
+
+    val out = files.openRaw("makefile")
 
     val prefix_capital = prefix.toUpperCase
 
@@ -62,6 +63,4 @@ ${tab}rm -rf lib${prefix}api.a
 
     out.close()
   }
-
-  protected def openRaw(path : String) : PrintWriter;
 }

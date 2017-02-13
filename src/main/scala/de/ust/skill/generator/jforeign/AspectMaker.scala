@@ -44,7 +44,7 @@ $indent}
     super.make
 
     for (t ← IR) {
-      val out = open(name(t) + "Aspects.java")
+      val out = files.open(name(t) + "Aspects.java")
 
       out.write(s"""
 package ${packageName};

@@ -33,7 +33,7 @@ trait TypesMaker extends GeneralOutputMaker {
 
     // one header per base type
     for(base <- IR.par if null == base.getSuperType) {
-      val out = open(s"TypesOf${name(base)}.h")
+      val out = files.open(s"TypesOf${name(base)}.h")
 
       //includes package
       out.write(s"""${beginGuard(s"types_of_${name(base)}")}
@@ -262,7 +262,7 @@ $endGuard""")
 
     // one file per base type
     for(base <- IR if null == base.getSuperType) {
-      val out = open(s"TypesOf${name(base)}.cpp")
+      val out = files.open(s"TypesOf${name(base)}.cpp")
       out.write(s"""#include "TypesOf${name(base)}.h"
 #include <skill/internal/AbstractStoragePool.h>${
       (for(t <- IR if base == t.getBaseType) yield s"""

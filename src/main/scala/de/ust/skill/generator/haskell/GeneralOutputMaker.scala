@@ -23,11 +23,7 @@ import de.ust.skill.ir.UserType
 trait GeneralOutputMaker extends Generator {
 
   override def getLanguageName : String = "haskell";
-
-  override def clean { println("clean not supported by haskell") }
-
-  private[haskell] def header : String
-
+  
   // remove special stuff for now
   final def setTC(tc : TypeContext) { this.IR = tc.removeSpecialDeclarations.getUsertypes.to }
   var IR : List[UserType] = _
@@ -59,12 +55,6 @@ trait GeneralOutputMaker extends Generator {
    * @note currently unused, because emitted names can not alias predefined types or keywords anyway
    */
   protected def escaped(target : Name) : String = escaped(target.ada)
-
-  protected def packagePath = if (packagePrefix.length > 0) {
-    packagePrefix.replace(".", "_")
-  } else {
-    ""
-  }
 
   /**
    * Creates instance constructor arguments excluding the state

@@ -12,7 +12,7 @@ import scala.collection.JavaConversions._
 trait APISpecMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-api.ads""")
+    val out = files.open(s"""${packagePrefix}-api.ads""")
 
     out.write(s"""
 with Skill.Files;

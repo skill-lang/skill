@@ -15,7 +15,7 @@ trait StringKeeperMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    val out = open(s"StringKeeper.h")
+    val out = files.open(s"StringKeeper.h")
 
     //includes package
     out.write(s"""#include <skill/api/String.h>

@@ -31,7 +31,7 @@ trait SpecificationMaker extends GeneralOutputMaker {
     }
 
     // write specification
-    val out = open("specification.skill")
+    val out = files.open("specification.skill")
 
     out.write(s"""${
       (

@@ -11,7 +11,7 @@ import scala.collection.JavaConversions._
 trait InternalStringsMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-internal_skill_names.ads""")
+    val out = files.open(s"""${packagePrefix}-internal_skill_names.ads""")
 
     out.write(s"""
 with Skill.Types;

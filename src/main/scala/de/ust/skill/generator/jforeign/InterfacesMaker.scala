@@ -12,7 +12,7 @@ trait InterfacesMaker extends GeneralOutputMaker {
     super.make
 
     for (t ← interfaces) {
-      val out = open(name(t) + ".java")
+      val out = files.open(name(t) + ".java")
 
       //package
       out.write(s"""package ${this.packageName};

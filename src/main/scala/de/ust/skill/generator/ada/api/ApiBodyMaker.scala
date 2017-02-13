@@ -13,7 +13,7 @@ import de.ust.skill.ir.UserType
 trait APIBodyMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}-api.adb""")
+    val out = files.open(s"""${packagePrefix}-api.adb""")
 
     out.write(s"""
 with Ada.Unchecked_Conversion;

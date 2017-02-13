@@ -16,7 +16,7 @@ trait UserTypeMaker extends GeneralOutputMaker {
     super.make
 
     for (t ← tc.getUsertypes) {
-      val out = open(s"""src/${t.getName.capital}.h""")
+      val out = files.open(s"""src/${t.getName.capital}.h""")
 
       out.write(s"""
 // user type doxygen documentation

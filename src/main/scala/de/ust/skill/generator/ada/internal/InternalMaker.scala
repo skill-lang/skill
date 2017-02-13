@@ -17,7 +17,7 @@ trait InternalMaker extends GeneralOutputMaker {
 
   private final def makeSpec {
 
-    val out = open(s"""${packagePrefix}-internal.ads""")
+    val out = files.open(s"""${packagePrefix}-internal.ads""")
 
     out.write(s"""
 with Skill.Files;

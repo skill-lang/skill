@@ -16,7 +16,7 @@ trait InterfaceTypeMaker extends GeneralOutputMaker {
     super.make
 
     for (t ← tc.getInterfaces) {
-      val out = open(s"""src/${t.getName.capital}.h""")
+      val out = files.open(s"""src/${t.getName.capital}.h""")
 
       out.write(s"""
 // interface type doxygen documentation

@@ -20,7 +20,7 @@ trait PackageBodyMaker extends GeneralOutputMaker {
     // only create an adb, if it would contain any code
     if (IR.size > 0) {
 
-      val out = open(s"""${packagePrefix}.adb""")
+      val out = files.open(s"""${packagePrefix}.adb""")
 
       out.write(s"""
 with Ada.Unchecked_Conversion;

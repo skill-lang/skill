@@ -15,7 +15,7 @@ trait TypesMaker extends GeneralOutputMaker {
     super.make
 
     for(t <- IR) {
-      val out = open(name(t)+".java")
+      val out = files.open(s"${name(t)}.java")
       
       val customizations = t.getCustomizations.filter(_.language.equals("java")).toArray
 

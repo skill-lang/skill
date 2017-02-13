@@ -42,7 +42,7 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
       val dataAccessI = if (null == t.getSuperType) "data[i]" else s"((${mapType(t)})data[i])"
       val fieldAccess = s"""get${escaped(f.getName.capital)}()"""
 
-      val out = open(s"internal/$nameF.java")
+      val out = files.open(s"internal/$nameF.java")
       //package
       out.write(s"""package ${packagePrefix}internal;
 

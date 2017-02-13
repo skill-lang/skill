@@ -18,7 +18,7 @@ import de.ust.skill.ir.UserType
 trait ReaderSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"io/${prefix}reader.c")
+    val out = files.open(s"io/${prefix}reader.c")
 
     val prefixCapital = packagePrefix.toUpperCase
 

@@ -20,7 +20,7 @@ trait TypesMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    val out = open("Types.hs")
+    val out = files.open("Types.hs")
 
     out.write(s"""
 module Types where

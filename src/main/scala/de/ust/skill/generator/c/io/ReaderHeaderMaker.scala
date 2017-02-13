@@ -18,7 +18,7 @@ import de.ust.skill.ir.UserType
 trait ReaderHeaderMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"io/${prefix}reader.h")
+    val out = files.open(s"io/${prefix}reader.h")
 
     val prefixCapital = packagePrefix.toUpperCase
 

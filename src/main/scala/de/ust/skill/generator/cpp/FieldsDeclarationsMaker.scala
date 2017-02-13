@@ -38,7 +38,7 @@ trait FieldDeclarationsMaker extends GeneralOutputMaker {
 
     // one file per base type
     for (base ← IR if null == base.getSuperType) {
-      val out = open(s"${name(base)}FieldDeclarations.h")
+      val out = files.open(s"${name(base)}FieldDeclarations.h")
 
       out.write(s"""${beginGuard(s"${name(base)}_field_declarations")}
 #include <skill/fieldTypes/AnnotationType.h>
@@ -95,7 +95,7 @@ $endGuard""")
 
     // one file per base type
     for (base ← IR if null == base.getSuperType) {
-      val out = open(s"${name(base)}FieldDeclarations.cpp")
+      val out = files.open(s"${name(base)}FieldDeclarations.cpp")
 
       out.write(s"""
 #include "${name(base)}FieldDeclarations.h"${

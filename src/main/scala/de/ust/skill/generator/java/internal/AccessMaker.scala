@@ -42,7 +42,7 @@ trait AccessMaker extends GeneralOutputMaker {
         case f ⇒ fields.find(_.getSkillName.equals(f.getSkillName)).get -> f
       }.toMap
 
-      val out = open(s"internal/${nameT}Access.java")
+      val out = files.open(s"internal/${nameT}Access.java")
       //package & imports
       out.write(s"""package ${packagePrefix}internal;
 

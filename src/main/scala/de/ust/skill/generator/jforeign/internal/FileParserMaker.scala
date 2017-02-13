@@ -10,7 +10,7 @@ import de.ust.skill.generator.jforeign.GeneralOutputMaker
 trait FileParserMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("internal/FileParser.java")
+    val out = files.open("internal/FileParser.java")
     //package & imports
     out.write(s"""package ${packagePrefix}internal;
 

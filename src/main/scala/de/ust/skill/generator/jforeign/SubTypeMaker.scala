@@ -16,7 +16,7 @@ trait SubTypeMaker extends GeneralOutputMaker {
     for (t ← IR) {
       val abstrct : Boolean = t.getRestrictions.filter { p ⇒ p.isInstanceOf[AbstractRestriction] }.nonEmpty
       if (!abstrct) {
-        val out = open("internal/" + name(t) + "SubType.java")
+        val out = files.open("internal/" + name(t) + "SubType.java")
 
         out.write(s"""
 package ${packagePrefix}internal;

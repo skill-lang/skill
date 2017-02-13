@@ -12,7 +12,7 @@ trait FollowMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    val out = open("Follow.hs")
+    val out = files.open("Follow.hs")
 
     out.write(s"""module Follow where
 

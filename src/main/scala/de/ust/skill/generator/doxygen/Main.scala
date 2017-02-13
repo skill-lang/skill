@@ -19,6 +19,7 @@ import de.ust.skill.ir.MapType
 import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.generator.common.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -45,6 +46,8 @@ class Main extends FakeMain
     d.getComment.format("/*!\n", " * ", lineLength, " */\n").replace('<', '⟨').replace('>', '⟩')
   override def comment(f : FieldLike) : String =
     f.getComment.format("    /*!\n", "     * ", lineLength, "     */\n").replace('<', '⟨').replace('>', '⟩')
+
+  override def packageDependentPathPostfix = ""
 
   /**
    * Translates the types into Ada types.
@@ -86,8 +89,7 @@ class Main extends FakeMain
     _packagePrefix = names.foldRight("")(_ + "." + _)
   }
 
-  override private[doxygen] def header : String = _header
-  private lazy val _header = {
+  override def makeHeader(headerInfo : HeaderInfo) : String = {
     // create header from options
     val headerLineLength = 51
     val headerLine1 = Some((headerInfo.line1 match {

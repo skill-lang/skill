@@ -15,6 +15,7 @@ import de.ust.skill.generator.common.HeaderInfo
 import de.ust.skill.generator.common.KnownGenerators
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.parser.Parser
+import de.ust.skill.io.PrintingService
 
 trait SourceOptions extends AbstractOptions {
 
@@ -70,14 +71,16 @@ trait SourceOptions extends AbstractOptions {
 
         gen.setTC(tc)
         gen.setPackage(packageName.toList)
-        gen.headerInfo = header
-        gen.outPath = outdir.getAbsolutePath + pathPostfix
+        gen.files = new PrintingService(
+          new File(new File(outdir, pathPostfix), gen.packageDependentPathPostfix),
+          gen.makeHeader(header)
+        )
         gen.depsPath = depsdir.getAbsolutePath + pathPostfix
         gen.skipDependencies = skipDeps
 
         if (verbose) print(s"run $lang: ")
 
-        if (clean) gen.clean
+        if (clean) ??? //gen.clean
 
         try {
           gen.make

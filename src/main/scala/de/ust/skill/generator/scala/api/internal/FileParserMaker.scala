@@ -10,7 +10,7 @@ import de.ust.skill.generator.scala.GeneralOutputMaker
 trait FileParserMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("api/internal/FileParser.scala")
+    val out = files.open("api/internal/FileParser.scala")
     //package & imports
     out.write(s"""package ${packagePrefix}api.internal
 

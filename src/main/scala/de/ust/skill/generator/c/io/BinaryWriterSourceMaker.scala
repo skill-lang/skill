@@ -18,7 +18,7 @@ import de.ust.skill.ir.UserType
 trait BinaryWriterSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"io/${prefix}binary_writer.c")
+    val out = files.open(s"io/${prefix}binary_writer.c")
 
     val prefixCapital = packagePrefix.toUpperCase
 

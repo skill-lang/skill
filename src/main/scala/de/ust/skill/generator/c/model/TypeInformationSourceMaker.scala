@@ -15,7 +15,7 @@ import de.ust.skill.generator.c.GeneralOutputMaker
 trait TypeInformationSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"model/${prefix}type_information.c")
+    val out = files.open(s"model/${prefix}type_information.c")
 
     out.write(s"""
 #include <stdlib.h>

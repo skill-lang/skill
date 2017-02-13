@@ -34,6 +34,7 @@ import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.NameDefaultRestriction
 import de.ust.skill.ir.restriction.RangeRestriction
 import de.ust.skill.ir.restriction.StringDefaultRestriction
+import de.ust.skill.generator.common.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -102,11 +103,7 @@ class Main extends FakeMain
     else r.map({ f ⇒ s"${escaped(f.getName.camel)} : ${mapType(f.getType())}" }).mkString(", ", ", ", "")
   }
 
-  /**
-   * Provide a nice file header:)
-   */
-  override private[scala] def header : String = _header
-  private lazy val _header = {
+  override def makeHeader(headerInfo : HeaderInfo) : String = {
     // create header from options
     val headerLineLength = 51
     val headerLine1 = Some((headerInfo.line1 match {
@@ -144,6 +141,12 @@ class Main extends FakeMain
 
   override def setPackage(names : List[String]) {
     _packagePrefix = names.foldRight("")(_ + "." + _)
+  }
+  
+  override def packageDependentPathPostfix = if (packagePrefix.length > 0) {
+    packagePrefix.replace(".", "/")
+  } else {
+    ""
   }
 
   override def setOption(option : String, value : String) {

@@ -35,6 +35,8 @@ class Main extends FakeMain
   override def comment(d : Declaration) : String = d.getComment.format("/**\n", " * ", lineLength, " */\n")
   override def comment(f : FieldLike) : String = f.getComment.format("/**\n", "   * ", lineLength, "   */\n  ")
 
+  override def packageDependentPathPostfix = ""
+  
   /**
    * Translates the types into Ada types.
    */

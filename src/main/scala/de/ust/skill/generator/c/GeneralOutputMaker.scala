@@ -25,10 +25,6 @@ trait GeneralOutputMaker extends Generator {
 
   override def getLanguageName : String = "c";
 
-  override def clean { println("clean not supported by ada") }
-
-  private[c] def header : String
-
   // remove special stuff for now
   final def setTC(tc : TypeContext) { this.IR = tc.removeSpecialDeclarations.getUsertypes.to }
   var IR : List[UserType] = _
@@ -54,11 +50,7 @@ trait GeneralOutputMaker extends Generator {
    */
   protected def escaped(target : Name) : String = escaped(target.ada)
 
-  private lazy val packagePath = if (packagePrefix.length > 0) {
-    packagePrefix.replace(".", "_")
-  } else {
-    ""
-  }
+  override def packageDependentPathPostfix = packagePrefix
 
   /**
    * Creates instance constructor arguments excluding the state

@@ -32,7 +32,7 @@ trait SpecificationMaker extends GeneralOutputMaker {
     super.make
 
     // write specification
-    val out = open("specification.ecore")
+    val out = files.open("specification.ecore")
 
     out.write(s"""<?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

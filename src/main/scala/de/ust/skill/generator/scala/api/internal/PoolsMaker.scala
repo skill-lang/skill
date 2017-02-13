@@ -46,7 +46,7 @@ trait PoolsMaker extends GeneralOutputMaker {
         case f ⇒ fields.find(_.getSkillName.equals(f.getSkillName)).get -> f
       }.toMap
 
-      val out = open(s"api/internal/Pool${t.getName.capital}.scala")
+      val out = files.open(s"api/internal/Pool${t.getName.capital}.scala")
       //package
       out.write(s"""package ${packagePrefix}api.internal
 

@@ -16,7 +16,7 @@ import de.ust.skill.ir.UserType
 trait StateMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("internal/SkillState.java")
+    val out = files.open(s"internal/SkillState.java")
 
     out.write(s"""package ${packagePrefix}internal;
 

@@ -10,7 +10,7 @@ import de.ust.skill.generator.jforeign.GeneralOutputMaker
 trait StateMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("internal/SkillState.java")
+    val out = files.open("internal/SkillState.java")
 
     out.write(s"""package ${packagePrefix}internal;
 

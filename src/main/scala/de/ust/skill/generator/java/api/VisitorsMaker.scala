@@ -13,7 +13,7 @@ trait VisitorsMaker extends GeneralOutputMaker {
 
     if (createVisitors) {
       for (b ← IR if b.getSuperType == null) {
-        val out = open(s"api/${name(b)}Visitor.java")
+        val out = files.open(s"api/${name(b)}Visitor.java")
         //package & imports
         out.write(s"""package ${packagePrefix}api;
 

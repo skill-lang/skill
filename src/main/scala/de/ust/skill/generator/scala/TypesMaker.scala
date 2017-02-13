@@ -5,8 +5,6 @@
 \*                                                                            */
 package de.ust.skill.generator.scala
 
-import java.io.PrintWriter
-
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.JavaConversions.bufferAsJavaList
 import scala.collection.JavaConversions.mapAsScalaMap
@@ -21,6 +19,7 @@ import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.MonotoneRestriction
 import de.ust.skill.ir.InterfaceType
 import de.ust.skill.ir.FieldLike
+import de.ust.skill.io.PrintWriter
 
 trait TypesMaker extends GeneralOutputMaker {
 
@@ -46,7 +45,7 @@ trait TypesMaker extends GeneralOutputMaker {
     // create one file for each type hierarchy to help parallel builds
     for(base <- IR if null==base.getSuperType){
 
-      val out = open(s"TypesOf${base.getName.capital}.scala")
+      val out = files.open(s"TypesOf${base.getName.capital}.scala")
 
       //package
       out.write(s"""package ${this.packageName}
@@ -226,7 +225,7 @@ ${
     if(IRInterfaces.forall(_.getBaseType.isInstanceOf[UserType]))
       return;
 
-    val out = open(s"TypesOfAnnotation.scala")
+    val out = files.open(s"TypesOfAnnotation.scala")
 
     //package
     out.write(s"""package ${this.packageName}

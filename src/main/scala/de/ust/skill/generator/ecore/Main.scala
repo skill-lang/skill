@@ -7,6 +7,7 @@ package de.ust.skill.generator.ecore
 
 import scala.collection.JavaConversions.asScalaBuffer
 
+import de.ust.skill.generator.common.HeaderInfo
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
@@ -63,6 +64,8 @@ class Main extends FakeMain
   }
   override def helpText : String = ""
 
+  override def makeHeader(headerInfo : HeaderInfo) : String = ""
+
   /**
    * stats do not require any escaping
    */
@@ -72,4 +75,10 @@ class Main extends FakeMain
 
   // unused
   override protected def defaultValue(f : Field) = throw new NoSuchMethodError
+
+  override def packageDependentPathPostfix = if (packagePrefix.length > 0) {
+    "/" + packagePrefix.replace(".", "/")
+  } else {
+    ""
+  }
 }

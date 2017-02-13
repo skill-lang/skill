@@ -15,7 +15,7 @@ import de.ust.skill.generator.c.GeneralOutputMaker
 trait StringAccessHeaderMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"model/${prefix}string_access.h")
+    val out = files.open(s"model/${prefix}string_access.h")
 
     val prefixCapital = packagePrefix.toUpperCase
 

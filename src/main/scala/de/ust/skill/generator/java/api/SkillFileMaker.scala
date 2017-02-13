@@ -12,7 +12,7 @@ import de.ust.skill.generator.java.GeneralOutputMaker
 trait SkillFileMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("api/SkillFile.java")
+    val out = files.open(s"api/SkillFile.java")
 
     //package & imports
     out.write(s"""package ${packagePrefix}api;

@@ -18,7 +18,7 @@ import de.ust.skill.ir.UserType
 trait BinaryReaderSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"io/${prefix}binary_reader.c")
+    val out = files.open(s"io/${prefix}binary_reader.c")
 
     out.write(s"""
 #include <stdio.h>

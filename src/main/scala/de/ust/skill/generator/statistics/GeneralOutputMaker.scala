@@ -15,6 +15,7 @@ import de.ust.skill.generator.common.Generator
 import de.ust.skill.ir.Name
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.TypeContext
+import de.ust.skill.generator.common.HeaderInfo
 
 /**
  * The parent class for all output makers.
@@ -25,27 +26,12 @@ trait GeneralOutputMaker extends Generator {
 
   override def getLanguageName : String = "statistics"
 
-  /**
-   * the result is a single file, hence there is no point to clean anything
-   */
-  override def clean {}
-
   // remove special stuff for now
   final def setTC(tc : TypeContext) { this.tc = tc }
   var tc : TypeContext = _
 
-  /**
-   * Creates the correct PrintWriter for the argument file.
-   */
-  override protected def open(path : String) = {
-    val f = new File(s"$outPath$packagePath/$path")
-    f.getParentFile.mkdirs
-    f.createNewFile
-    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream(f), "UTF-8")))
-    // no header required here -> rval.write(header)
-    rval
-  }
+  // no header required here
+  override def makeHeader(headerInfo : HeaderInfo) : String = ""
 
   /**
    * Assume the existence of a translation function for types.

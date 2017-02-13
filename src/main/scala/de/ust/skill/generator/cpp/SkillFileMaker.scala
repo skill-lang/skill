@@ -13,7 +13,7 @@ trait SkillFileMaker extends GeneralOutputMaker {
     makeSource
   }
   private def makeHeader {
-    val out = open("File.h")
+    val out = files.open("File.h")
 
     out.write(s"""${beginGuard("file")}
 #include <skill/fieldTypes/AnnotationType.h>
@@ -83,7 +83,7 @@ $endGuard""")
   }
 
   private def makeSource {
-    val out = open("File.cpp")
+    val out = files.open("File.cpp")
 
     out.write(s"""
 #include <skill/internal/UnknownBasePool.h>

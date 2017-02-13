@@ -26,6 +26,7 @@ import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.generator.common.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -52,6 +53,8 @@ final class Main extends FakeMain
   override def comment(d : Declaration) : String = d.getComment.format("", "-- ", lineLength, "")
   override def comment(f : FieldLike) : String = f.getComment.format("", "-- ", lineLength, "")
 
+  override def packageDependentPathPostfix = ""
+  
   /**
    * Translates the types to Haskell types.
    */
@@ -146,11 +149,10 @@ final class Main extends FakeMain
 
   override def setPackage(names : List[String]) {
     if (!names.isEmpty)
-      _packagePrefix = names.map(_.toLowerCase).mkString("_");
+      _packagePrefix = names.map(_.toLowerCase).mkString(".");
   }
 
-  override private[haskell] def header : String = _header
-  private lazy val _header = {
+  override def makeHeader(headerInfo : HeaderInfo) : String = {
     // create header from options
     val headerLineLength = 51
     val headerLine1 = Some((headerInfo.line1 match {
@@ -180,37 +182,12 @@ final class Main extends FakeMain
 """
   }
 
-  var outPostfix = s"/${
-    if (packagePrefix.isEmpty()) ""
-    else packagePrefix.replace('.', '/') + "/"
-  }"
-
-  /**
-   * Creates the correct PrintWriter for the argument file.
-   */
-  override protected def open(path : String) = {
-    val f = new File(outPath + outPostfix + path)
-    f.getParentFile.mkdirs
-    f.createNewFile
-    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream(f), "UTF-8")))
-    rval.write(header)
-    rval
-  }
-
   override def setOption(option : String, value : String) : Unit = option.toLowerCase match {
-    case "gendir" ⇒
-      outPostfix = value
-      if (!outPostfix.startsWith("/"))
-        outPostfix = "/" + outPostfix
-      if (!outPostfix.endsWith("/"))
-        outPostfix = outPostfix + "/"
     case "unsafe" ⇒ unsafe = value == "true"
     case unknown  ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
   override def helpText : String = """
-  genDir                 replace default sub-directory for generated sources
   unsafe                 remove all generated runtime type checks, if set to "true"
 """
 

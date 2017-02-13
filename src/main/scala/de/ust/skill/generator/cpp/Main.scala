@@ -22,6 +22,7 @@ import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.ir.View
 import de.ust.skill.ir.FieldLike
+import de.ust.skill.generator.common.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -45,6 +46,8 @@ class Main extends FakeMain
   override def comment(d : Declaration) : String = d.getComment.format("/**\n", "     * ", lineLength, "     */\n    ")
   override def comment(f : FieldLike) : String = f.getComment.format("/**\n", "         * ", lineLength, "         */\n        ")
 
+  override def packageDependentPathPostfix = ""
+  
   /**
    * Translates types into scala type names.
    */
@@ -109,11 +112,7 @@ class Main extends FakeMain
     else r.map({ f ⇒ s"${escaped(f.getName.camel)} : ${mapType(f.getType())}" }).mkString(", ", ", ", "")
   }
 
-  /**
-   * Provide a nice file header:)
-   */
-  override private[cpp] def header : String = _header
-  private lazy val _header = {
+  override def makeHeader(headerInfo : HeaderInfo) : String = {
     // create header from options
     val headerLineLength = 51
     val headerLine1 = Some((headerInfo.line1 match {

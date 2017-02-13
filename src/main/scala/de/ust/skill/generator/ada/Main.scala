@@ -29,6 +29,7 @@ import de.ust.skill.ir.SingleBaseTypeContainer
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.generator.common.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -55,6 +56,8 @@ class Main extends FakeMain
   lineLength = 79
   override def comment(d : Declaration) : String = d.getComment.format("", "   -- ", lineLength, "   ")
   override def comment(f : FieldLike) : String = f.getComment.format("", "   -- ", lineLength, "   ")
+  
+  override def packageDependentPathPostfix = ""
 
   /**
    * Translates the types into the skill type id's.
@@ -196,8 +199,7 @@ class Main extends FakeMain
   private var _poolsPackage = "Skill.Types.Pools.SF_Pools"
   override protected def poolsPackage : String = _poolsPackage
 
-  override private[ada] def header : String = _header
-  private lazy val _header = {
+  override def makeHeader(headerInfo : HeaderInfo) : String = {
     // create header from options
     val headerLineLength = 51
     val headerLine1 = Some((headerInfo.line1 match {
@@ -229,8 +231,8 @@ pragma Ada_2012;
   }
 
   override def setOption(option : String, value : String) : Unit = option match {
-    case "visitors"         ⇒ createVisitors = ("true".equals(value));
-    case unknown            ⇒ sys.error(s"unkown Argument: $unknown")
+    case "visitors" ⇒ createVisitors = ("true".equals(value));
+    case unknown    ⇒ sys.error(s"unkown Argument: $unknown")
   }
   override def helpText = """
 visitors          true/false  if set to true, the a visitor for each base type will be generated

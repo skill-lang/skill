@@ -32,7 +32,7 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
       // casting access to data array using index i
       val dataAccessI = if (null == t.getSuperType) "data[i]" else s"((${mapType(t)})data[i])"
 
-      val out = open(s"internal/$nameF.java")
+      val out = files.open(s"internal/$nameF.java")
       //package
       out.write(s"""package ${packagePrefix}internal;
 

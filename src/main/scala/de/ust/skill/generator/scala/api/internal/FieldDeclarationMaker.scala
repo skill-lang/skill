@@ -42,7 +42,7 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
 
       val accessField = s".asInstanceOf[${mapType(t)}].${escaped("Internal_" + f.getName.camel)}"
 
-      val out = open(s"api/internal/${knownField(f)}.scala")
+      val out = files.open(s"api/internal/${knownField(f)}.scala")
       //package
       out.write(s"""package ${packagePrefix}api.internal
 

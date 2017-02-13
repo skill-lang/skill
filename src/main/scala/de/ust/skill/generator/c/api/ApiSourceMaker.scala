@@ -19,7 +19,7 @@ import de.ust.skill.ir.Field
 trait ApiSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"api/${prefix}api.c")
+    val out = files.open(s"api/${prefix}api.c")
 
     val prefixCapital = packagePrefix.toUpperCase
 

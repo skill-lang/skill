@@ -15,7 +15,7 @@ import de.ust.skill.generator.c.GeneralOutputMaker
 trait StringAccessSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"model/${prefix}string_access.c")
+    val out = files.open(s"model/${prefix}string_access.c")
 
     out.write(s"""
 #include <stdio.h>

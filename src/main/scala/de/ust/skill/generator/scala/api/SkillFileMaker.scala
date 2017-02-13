@@ -16,7 +16,7 @@ import de.ust.skill.ir.UserType
 trait SkillFileMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("api/SkillFile.scala")
+    val out = files.open("api/SkillFile.scala")
 
     //package & imports
     out.write(s"""package ${packagePrefix}api

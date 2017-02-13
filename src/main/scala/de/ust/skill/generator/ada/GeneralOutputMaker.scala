@@ -25,16 +25,12 @@ trait GeneralOutputMaker extends Generator {
 
   override def getLanguageName : String = "ada";
 
-  override def clean : Unit = println("clean not supported by ada")
-
   /**
    * configurable build mode; either "release" or "debug"
    */
   var buildMode = "release"
   var buildOS = System.getProperty("os.name").toLowerCase
   var buildARCH = "amd64"
-
-  private[ada] def header : String
 
   // remove special stuff for now
   final def setTC(tc : TypeContext) {
@@ -47,19 +43,6 @@ trait GeneralOutputMaker extends Generator {
    * base type
    */
   protected var createVisitors = false;
-
-  /**
-   * Creates the correct PrintWriter for the argument file.
-   */
-  override protected def open(path : String) = {
-    val f = new File(outPath, path)
-    f.getParentFile.mkdirs
-    f.createNewFile
-    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream(f), "UTF-8")))
-    rval.write(header)
-    rval
-  }
 
   /**
    * Assume the existence of a translation function for the types.
@@ -132,12 +115,6 @@ trait GeneralOutputMaker extends Generator {
   })
 
   protected final def fieldName(t : Type, f : Field) = s"${escaped(t.getName.ada)}_${escaped(f.getName.ada)}"
-
-  private lazy val packagePath = if (packagePrefix.length > 0) {
-    packagePrefix.replace(".", "/")
-  } else {
-    ""
-  }
 
   /**
    * create an appropriate image for a constant string

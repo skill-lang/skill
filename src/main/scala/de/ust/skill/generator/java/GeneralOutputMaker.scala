@@ -47,10 +47,6 @@ trait GeneralOutputMaker extends Generator {
 
   override def getLanguageName : String = "java";
 
-  override def clean {
-    deleteRecursively(new File(outPath + "/" + packagePath))
-  }
-
   // options
   /**
    * if set to true, the generated binding will reveal the values of skill IDs.
@@ -68,22 +64,6 @@ trait GeneralOutputMaker extends Generator {
   val ListTypeName = "java.util.LinkedList"
   val SetTypeName = "java.util.HashSet"
   val MapTypeName = "java.util.HashMap"
-
-  private[java] def header : String
-
-  /**
-   * Creates the correct PrintWriter for the argument file.
-   *
-   * @note the used path uses maven/sbt source placement convention
-   */
-  override protected def open(path : String) = {
-    val f = simpleOpenDirtyPathString(s"$outPath/$packagePath$path")
-
-    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream(f), "UTF-8")))
-    rval.write(header)
-    rval
-  }
 
   /**
    * Assume the existence of a translation function for types.
@@ -133,12 +113,6 @@ trait GeneralOutputMaker extends Generator {
    */
   protected def packagePrefix() : String
   protected def packageName = packagePrefix.substring(0, packagePrefix.length - 1)
-
-  private lazy val packagePath = if (packagePrefix.length > 0) {
-    packagePrefix.replace(".", "/")
-  } else {
-    ""
-  }
 
   /**
    * this string may contain a "@SuppressWarnings("all")\n", in order to suppress warnings in generated code;

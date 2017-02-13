@@ -42,6 +42,7 @@ import de.ust.skill.generator.c.io.ReaderHeaderMaker
 import de.ust.skill.generator.c.io.ReaderSourceMaker
 import de.ust.skill.generator.c.io.WriterSourceMaker
 import de.ust.skill.generator.c.io.WriterHeaderMaker
+import de.ust.skill.generator.common.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -166,8 +167,7 @@ final class Main extends FakeMain
       _packagePrefix = names.map(_.toLowerCase).mkString("_");
   }
 
-  override private[c] def header : String = _header
-  private lazy val _header = {
+  override def makeHeader(headerInfo : HeaderInfo) : String = {
     // create header from options
     val headerLineLength = 51
     val headerLine1 = Some((headerInfo.line1 match {
@@ -195,36 +195,6 @@ final class Main extends FakeMain
  * |___/_|\\_\\_|_|____|    ${headerLine3.get} *
 \\*                                                                            */
 """
-  }
-
-  var outPostfix = s"/genereted/${
-    if (packagePrefix.isEmpty()) ""
-    else packagePrefix.replace('.', '/') + "/"
-  }"
-
-  /**
-   * Creates the correct PrintWriter for the argument file.
-   */
-  override protected def open(path : String) = {
-    val f = new File(outPath + path)
-    f.getParentFile.mkdirs
-    f.createNewFile
-    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream(f), "UTF-8")))
-    rval.write(header)
-    rval
-  }
-
-  /**
-   * Open file, but do not write a header (required by make files)
-   */
-  override protected def openRaw(path : String) = {
-    val f = new File(outPath + path)
-    f.getParentFile.mkdirs
-    f.createNewFile
-    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream(f), "UTF-8")))
-    rval
   }
 
   override def setOption(option : String, value : String) : Unit = option.toLowerCase match {

@@ -17,7 +17,7 @@ trait TypedefMaker extends GeneralOutputMaker {
     val ts = tc.getTypedefs
 
     if (!ts.isEmpty) {
-      val out = open(s"""src/_typedefs.h""")
+      val out = files.open(s"""src/_typedefs.h""")
 
       out.write(s"""
 // typedefs inside of the project

@@ -30,7 +30,7 @@ trait PoolsMaker extends GeneralOutputMaker {
 
     // one header file per base type
     for (base ← IR if null == base.getSuperType) {
-      val out = open(s"${storagePool(base)}s.h")
+      val out = files.open(s"${storagePool(base)}s.h")
 
       //prefix
       out.write(s"""${beginGuard(storagePool(base))}
@@ -98,7 +98,7 @@ $endGuard""")
 
     // one file per base type
     for (base ← IR if null == base.getSuperType) {
-      val out = open(s"${storagePool(base)}s.cpp")
+      val out = files.open(s"${storagePool(base)}s.cpp")
 
       // common includes
       out.write(s"""#include "${storagePool(base)}s.h"

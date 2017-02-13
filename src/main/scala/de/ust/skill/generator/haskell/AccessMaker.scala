@@ -16,7 +16,7 @@ trait AccessMaker extends GeneralOutputMaker {
     for (t ← IR) {
       val n = name(t);
 
-      val out = open(s"Access$n.hs")
+      val out = files.open(s"Access$n.hs")
 
       out.write(s"""module Access$n where
 

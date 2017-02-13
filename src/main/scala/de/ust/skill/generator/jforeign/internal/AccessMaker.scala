@@ -34,7 +34,7 @@ trait AccessMaker extends GeneralOutputMaker {
 
       val abstrct : Boolean = t.getRestrictions.filter { p ⇒ p.isInstanceOf[AbstractRestriction] }.nonEmpty
 
-      val out = open(s"internal/${nameT}Access.java")
+      val out = files.open(s"internal/${nameT}Access.java")
       //package & imports
       out.write(s"""package ${packagePrefix}internal;
 

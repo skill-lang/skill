@@ -14,6 +14,7 @@ import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
 import de.ust.skill.ir.FieldLike
 import de.ust.skill.ir.TypeContext
+import de.ust.skill.io.PrintingService
 
 /**
  * Use this to create a 5 lines header that looks similar in all languages.
@@ -41,9 +42,21 @@ trait Generator {
   def getLanguageName : String;
 
   /**
-   * Base path of the output for this generator.
+   * Improved source printing to be used by a generator.
+   * Instantiation is performed before invocation of the generator.
    */
-  var outPath : String = _;
+  var files : PrintingService = _;
+
+  /**
+   * This string will be prepended to the output directory of files.
+   * It is evaluated after setting the package and before creating files.
+   */
+  def packageDependentPathPostfix : String;
+
+  /**
+   * Create the header submitted to the PrintingService
+   */
+  def makeHeader(headerInfo : HeaderInfo) : String;
 
   /**
    * Base path of dependencies copied by this generator.
@@ -62,8 +75,6 @@ trait Generator {
    */
   def setTC(tc : TypeContext) : Unit;
 
-  var headerInfo : HeaderInfo = HeaderInfo();
-
   /**
    * Set output package/namespace/...
    * This is a list of Strings, each denoting a package.
@@ -71,22 +82,6 @@ trait Generator {
    * This correpsonds to the -p option.
    */
   def setPackage(names : List[String]) : Unit;
-
-  /**
-   * invoked, iff the output folder should be cleaned before creating sources.
-   * The intention is to remove old generated sources that may no longer be
-   * necessary, because the specification changed.
-   *
-   * @note This method is invoked after setting up outpath and package.
-   */
-  def clean : Unit;
-
-  protected def deleteRecursively(file : File) : Unit = {
-    if (file.isDirectory)
-      file.listFiles.foreach(deleteRecursively)
-    if (file.exists && !file.delete)
-      throw new Exception(s"Unable to delete ${file.getAbsolutePath}")
-  }
 
   /**
    * Sets an option to a new value.
@@ -120,36 +115,6 @@ trait Generator {
    * Escapes words, that appear without prefix or suffix.
    */
   def escapedLonely(target : String) : String = escaped(target)
-
-  /**
-   * Create a new file with a default header.
-   */
-  protected def open(path : String) : PrintWriter;
-
-  /**
-   * Util to fix Javas fucked up file handling that constantly fails for no reason.
-   *
-   * @param path a string
-   * @returns an existing new file
-   */
-  protected def simpleOpenDirtyPathString(path : String) : File = {
-    val ps = path.split('/').reverse.iterator;
-
-    val rps = new ListBuffer[String];
-    while (ps.hasNext) ps.next match {
-      case ".." ⇒
-        ps.next; rps.prepend(ps.next)
-      case "." ⇒ rps.prepend(ps.next)
-      case p   ⇒ rps.prepend(p)
-    }
-
-    val f = new File(rps.mkString("/"));
-
-    f.getParentFile.mkdirs
-    f.createNewFile
-
-    f
-  }
 
   /**
    * maximum line length in emitted output

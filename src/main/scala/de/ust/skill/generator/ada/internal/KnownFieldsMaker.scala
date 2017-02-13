@@ -21,7 +21,7 @@ trait KnownFieldsMaker extends GeneralOutputMaker {
 
   private final def makeSpec(t : UserType) {
 
-    val out = open(s"""${packagePrefix}-known_field_${name(t).toLowerCase}.ads""")
+    val out = files.open(s"""${packagePrefix}-known_field_${name(t).toLowerCase}.ads""")
     
     val thisPackage = s"${PackagePrefix}.Known_Field_${name(t)}"
 
@@ -91,7 +91,7 @@ end $thisPackage;
     val tIsBaseType = t.getSuperType == null
     val thisPackage = s"${PackagePrefix}.Known_Field_${name(t)}"
 
-    val out = open(s"""${packagePrefix}-known_field_${name(t).toLowerCase}.adb""")
+    val out = files.open(s"""${packagePrefix}-known_field_${name(t).toLowerCase}.adb""")
 
 
     out.write(s"""

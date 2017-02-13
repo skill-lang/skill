@@ -7,7 +7,7 @@ trait InterfaceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    val out = open("Interfaces.hs")
+    val out = files.open("Interfaces.hs")
 
     out.write(s"""
 -----------------------------------------------

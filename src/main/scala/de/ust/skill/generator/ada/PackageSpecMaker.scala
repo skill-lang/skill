@@ -11,7 +11,7 @@ import scala.collection.JavaConversions._
 trait PackageSpecMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}.ads""")
+    val out = files.open(s"""${packagePrefix}.ads""")
 
     out.write(s"""
 with Ada.Containers;
