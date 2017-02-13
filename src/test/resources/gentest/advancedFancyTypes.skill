@@ -23,10 +23,15 @@ D : C {
 
 interface E : C {}
 
-interface F : C {}
+interface F : C {
+  m aMap;
+}
 
 G : C with E with F {
 
   view Value as
   G Value;
 }
+
+typedef m
+map <E, F>;
