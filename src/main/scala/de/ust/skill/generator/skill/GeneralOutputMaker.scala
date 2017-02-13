@@ -17,7 +17,7 @@ import de.ust.skill.generator.common.Generator
 import de.ust.skill.ir.Name
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.TypeContext
-import de.ust.skill.generator.common.HeaderInfo
+import de.ust.skill.main.HeaderInfo
 
 /**
  * The parent class for all output makers.

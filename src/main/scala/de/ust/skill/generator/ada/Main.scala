@@ -5,8 +5,6 @@
 \*                                                                            */
 package de.ust.skill.generator.ada
 
-import java.util.Date
-
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.MutableList
 
@@ -29,7 +27,7 @@ import de.ust.skill.ir.SingleBaseTypeContainer
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.generator.common.HeaderInfo
+import de.ust.skill.main.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -56,7 +54,7 @@ class Main extends FakeMain
   lineLength = 79
   override def comment(d : Declaration) : String = d.getComment.format("", "   -- ", lineLength, "   ")
   override def comment(f : FieldLike) : String = f.getComment.format("", "   -- ", lineLength, "   ")
-  
+
   override def packageDependentPathPostfix = ""
 
   /**
@@ -199,36 +197,7 @@ class Main extends FakeMain
   private var _poolsPackage = "Skill.Types.Pools.SF_Pools"
   override protected def poolsPackage : String = _poolsPackage
 
-  override def makeHeader(headerInfo : HeaderInfo) : String = {
-    // create header from options
-    val headerLineLength = 51
-    val headerLine1 = Some((headerInfo.line1 match {
-      case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: " + _).getOrElse("Your SKilL Scala Binding")
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    val headerLine2 = Some((headerInfo.line2 match {
-      case Some(s) ⇒ s
-      case None ⇒ "generated: " + (headerInfo.date match {
-        case Some(s) ⇒ s
-        case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    val headerLine3 = Some((headerInfo.line3 match {
-      case Some(s) ⇒ s
-      case None ⇒ "by: " + (headerInfo.userName match {
-        case Some(s) ⇒ s
-        case None    ⇒ System.getProperty("user.name")
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-
-    s"""--  ___ _  ___ _ _                                                            --
--- / __| |/ (_) | |       ${headerLine1.get} --
--- \\__ \\ ' <| | | |__     ${headerLine2.get} --
--- |___/_|\\_\\_|_|____|    ${headerLine3.get} --
---                                                                            --
-pragma Ada_2012;
-"""
-  }
+  override def makeHeader(headerInfo : HeaderInfo) : String = headerInfo.format(this, "--", "--", "--", "--", "--", "--")
 
   override def setOption(option : String, value : String) : Unit = option match {
     case "visitors" ⇒ createVisitors = ("true".equals(value));

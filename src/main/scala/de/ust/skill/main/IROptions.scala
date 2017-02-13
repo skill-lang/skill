@@ -9,7 +9,6 @@ import java.io.File
 
 import de.ust.skill.BuildInfo
 import de.ust.skill.common.scala.api.ThrowException
-import de.ust.skill.generator.common.HeaderInfo
 import de.ust.skill.parser.Parser
 
 trait IROptions extends AbstractOptions {

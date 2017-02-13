@@ -5,31 +5,12 @@
 \*                                                                            */
 package de.ust.skill.generator.common
 
-import java.io.File
-import java.io.PrintWriter
-
-import scala.collection.mutable.ListBuffer
-
+import de.ust.skill.io.PrintingService
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
 import de.ust.skill.ir.FieldLike
 import de.ust.skill.ir.TypeContext
-import de.ust.skill.io.PrintingService
-
-/**
- * Use this to create a 5 lines header that looks similar in all languages.
- *
- * This corresponds to the -hN, -u, -license, -date options.
- *
- * @author Timm Felden
- */
-case class HeaderInfo(
-  var line1 : Option[String] = None,
-  var line2 : Option[String] = None,
-  var line3 : Option[String] = None,
-  var license : Option[String] = None,
-  var userName : Option[String] = None,
-  var date : Option[String] = None)
+import de.ust.skill.main.HeaderInfo
 
 /**
  * every code generator shares these properties.

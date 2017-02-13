@@ -5,8 +5,6 @@
 \*                                                                            */
 package de.ust.skill.generator.java
 
-import java.util.Date
-
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.HashMap
 
@@ -27,8 +25,7 @@ import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.InterfaceType
-import de.ust.skill.generator.common.HeaderInfo
+import de.ust.skill.main.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -112,35 +109,7 @@ class Main extends FakeMain
     else r.map({ f ⇒ s", ${name(f)}" }).mkString("")
   }
 
-  override def makeHeader(headerInfo : HeaderInfo) : String = {
-    // create header from options
-    val headerLineLength = 51
-    val headerLine1 = Some((headerInfo.line1 match {
-      case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: " + _).getOrElse("Your SKilL Java 8 Binding")
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    val headerLine2 = Some((headerInfo.line2 match {
-      case Some(s) ⇒ s
-      case None ⇒ "generated: " + (headerInfo.date match {
-        case Some(s) ⇒ s
-        case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    val headerLine3 = Some((headerInfo.line3 match {
-      case Some(s) ⇒ s
-      case None ⇒ "by: " + (headerInfo.userName match {
-        case Some(s) ⇒ s
-        case None    ⇒ System.getProperty("user.name")
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-
-    s"""/*  ___ _  ___ _ _                                                            *\\
- * / __| |/ (_) | |       ${headerLine1.get} *
- * \\__ \\ ' <| | | |__     ${headerLine2.get} *
- * |___/_|\\_\\_|_|____|    ${headerLine3.get} *
-\\*                                                                            */
-"""
-  }
+  override def makeHeader(headerInfo : HeaderInfo) : String = headerInfo.format(this, "/*", "*\\", " *", "* ", "\\*", "*/")
 
   /**
    * provides the package prefix
@@ -157,7 +126,7 @@ class Main extends FakeMain
   } else {
     ""
   }
-  
+
   override def setOption(option : String, value : String) : Unit = option match {
     case "revealskillid"    ⇒ revealSkillID = ("true".equals(value));
     case "visitors"         ⇒ createVisitors = ("true".equals(value));

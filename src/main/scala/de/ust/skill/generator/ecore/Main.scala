@@ -7,7 +7,6 @@ package de.ust.skill.generator.ecore
 
 import scala.collection.JavaConversions.asScalaBuffer
 
-import de.ust.skill.generator.common.HeaderInfo
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
@@ -18,6 +17,7 @@ import de.ust.skill.ir.MapType
 import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.main.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.

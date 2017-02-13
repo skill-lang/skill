@@ -11,7 +11,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import de.ust.skill.BuildInfo
-import de.ust.skill.generator.common.HeaderInfo
 import de.ust.skill.generator.common.KnownGenerators
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.parser.Parser
