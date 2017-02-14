@@ -1,7 +1,0 @@
-#! basicTypes
-
-/** Just a basic Int64  with v64	*/
-
-Int64V{
-v64 basicInt;
-}

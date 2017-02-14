@@ -1,7 +1,0 @@
-#! basicTypes
-
-/** Just a basic Float64*/
-
-Float64{
-f64 basicFloat;
-}

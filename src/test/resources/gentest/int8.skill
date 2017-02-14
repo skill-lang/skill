@@ -1,7 +1,0 @@
-#! basicTypes
-
-/** Just a basic Int8*/
-
-Int8{
-i8 basicInt;
-}

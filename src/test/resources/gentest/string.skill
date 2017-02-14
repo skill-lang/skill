@@ -1,7 +1,0 @@
-#! basicTypes
-
-/** Just a basic String*/
-
-String{
-string basicString;
-}

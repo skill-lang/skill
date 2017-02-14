@@ -1,7 +1,0 @@
-#! basicTypes
-
-/** Just a basic Int16*/
-
-Int16{
-i16 basicInt;
-}

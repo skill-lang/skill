@@ -1,7 +1,0 @@
-#! basicTypes
-
-/** Just a basic Int32*/
-
-Int32{
-i32 basicInt;
-}
