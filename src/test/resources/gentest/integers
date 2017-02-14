@@ -1,0 +1,20 @@
+#! basicTypes
+
+with "int8.skill"
+with "int16.skill"
+with "int32.skill"
+with "int64I.skill"
+with "int64V.skill"
+
+
+/** Contains all basic int types */
+
+Integers{
+
+Int8 int8;
+Int16 int16;
+Int32 int32;
+Int64I int64I;
+Int64V int64V;
+
+}

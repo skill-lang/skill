@@ -1,0 +1,7 @@
+#! basicTypes
+
+/** Just a basic Float32*/
+
+Float32{
+f32 basicFloat;
+}

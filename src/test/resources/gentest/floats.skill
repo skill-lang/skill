@@ -1,0 +1,13 @@
+#! basicTypes
+
+with "float32.skill"
+with "float64.skill"
+
+/** Contains all basic float types */
+
+Floats{
+
+Float32 float32;
+Float64 float32;
+
+}

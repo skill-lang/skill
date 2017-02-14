@@ -1,0 +1,7 @@
+#! basicTypes
+
+/** Just a basic bool*/
+
+Bool{
+bool basicBool;
+}
