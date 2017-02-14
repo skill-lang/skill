@@ -2,7 +2,7 @@
 
 /** Contains a basic Int8*/
 
-Int8{
+BasicInt8{
 
   i8 basicInt;
 
@@ -10,7 +10,7 @@ Int8{
 
 /** Contains a basic Int16*/
 
-Int16{
+BasicInt16{
 
   i16 basicInt;
 
@@ -18,7 +18,7 @@ Int16{
 
 /** Contains a basic Int32*/
 
-Int32{
+BasicInt32{
 
   i32 basicInt;
 
@@ -26,7 +26,7 @@ Int32{
 
 /** Contains a basic Int64 with i64*/
 
-Int64I{
+BasicInt64I{
 
   i64 basicInt;
 
@@ -34,7 +34,7 @@ Int64I{
 
 /** Contains a basic Int64  with v64*/
 
-Int64V{
+BasicInt64V{
 
   v64 basicInt;
 
@@ -42,19 +42,19 @@ Int64V{
 
 /** Contains all basic int types */
 
-Integers{
+BasicIntegers{
 
-  Int8 int8;
-  Int16 int16;
-  Int32 int32;
-  Int64I int64I;
-  Int64V int64V;
+  BasicInt8 int8;
+  BasicInt16 int16;
+  BasicInt32 int32;
+  BasicInt64I int64I;
+  BasicInt64V int64V;
 
 }
 
 /** Contains a basic Float32*/
 
-Float32{
+BasicFloat32{
 
   f32 basicFloat;
 
@@ -63,7 +63,7 @@ Float32{
 
 /** Contains a basic Float64*/
 
-Float64{
+BasicFloat64{
 
   f64 basicFloat;
 
@@ -71,16 +71,16 @@ Float64{
 
 /** Contains all basic float types */
 
-Floats{
+BasicFloats{
 
-  Float32 float32;
-  Float64 float32;
+  BasicFloat32 float32;
+  BasicFloat64 float64;
 
 }
 
 /** Contains a basic bool*/
 
-Bool{
+BasicBool{
 
   bool basicBool;
 
@@ -88,7 +88,7 @@ Bool{
 
 /** Contains a basic String*/
 
-String{
+BasicString{
 
   string basicString;
 
@@ -98,14 +98,14 @@ String{
 
 BasicTypes{
 
-  Bool aBool;
-  String aString;
-  Integers aUserType;
-  Floats anotherUserType;
-  annotation anAnnotation;;
+  annotation anAnnotation;
+  BasicBool aBool;
+  BasicString aString;
+  BasicIntegers aUserType;
+  BasicFloats anotherUserType;
+  BasicIntegers[] anArray;
   set<i8>  aSet;
   list<f32> aList;
-  array<Integers> anArray;
   map<i16,i8> aMap;  
 
 }
