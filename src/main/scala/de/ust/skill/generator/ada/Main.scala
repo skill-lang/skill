@@ -197,7 +197,7 @@ class Main extends FakeMain
   private var _poolsPackage = "Skill.Types.Pools.SF_Pools"
   override protected def poolsPackage : String = _poolsPackage
 
-  override def makeHeader(headerInfo : HeaderInfo) : String = headerInfo.format(this, "--", "--", "--", "--", "--", """--                                                          --
+  override def makeHeader(headerInfo : HeaderInfo) : String = headerInfo.format(this, "--", "--", "--", "--", "--", """--
 pragma Ada_2012;""")
 
   override def setOption(option : String, value : String) : Unit = option match {
