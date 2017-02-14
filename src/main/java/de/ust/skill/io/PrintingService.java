@@ -64,15 +64,32 @@ public class PrintingService {
     }
 
     /**
-     * deletes all foreign files. A file is foreign, iff it resides in a folder
-     * that received
+     * Deletes all foreign files. A file is foreign, iff it resides in a folder
+     * that received.
+     * 
+     * @note should be called after all files have been created to prevent
+     *       unnecessary recreation of identical files
      * 
      * @param deleteDirectories
      *            also delete foreign directories if true
      */
     public void deleteForeignFiles(boolean deleteDirectories) {
-        // TODO implementation
-        throw null;
+        HashSet<File> parents = new HashSet<>();
+        // collect parents to clean
+        for (File f : files) {
+            parents.add(f.getParentFile());
+        }
+
+        for (File p : parents) {
+            for (File f : p.listFiles()) {
+                if (!files.contains(f)) {
+                    if (deleteDirectories)
+                        deleteRecursively(f);
+                    else if (f.isFile())
+                        f.delete();
+                }
+            }
+        }
     }
 
     private static void deleteRecursively(File file) {
@@ -84,4 +101,38 @@ public class PrintingService {
             throw new RuntimeException("Unable to delete " + file.getAbsolutePath());
     }
 
+    /**
+     * More aggressive variant of {@link #deleteForeignFiles(boolean)}. In this
+     * versions all foreign files residing below the output directory will be
+     * deleted. This is fine for some back-ends and inherently dangerous for
+     * others.
+     * 
+     * @note should be called after all files have been created to prevent
+     *       unnecessary recreation of identical files
+     */
+    public void wipeOutPath() {
+        wipeRecursively(outPath);
+    }
+
+    /**
+     * Wipe directory from unknown files.
+     * 
+     * @return true, if a known file was encountered
+     */
+    private boolean wipeRecursively(File file) {
+        boolean rval = false;
+
+        if (file.isDirectory())
+            for (File f : file.listFiles())
+                rval |= wipeRecursively(f);
+
+        // leave known files and directories containing a known file
+        if ((rval && file.isDirectory()) || files.contains(file))
+            return true;
+
+        if (file.exists() && !file.delete())
+            throw new RuntimeException("Unable to delete " + file.getAbsolutePath());
+
+        return false;
+    }
 }

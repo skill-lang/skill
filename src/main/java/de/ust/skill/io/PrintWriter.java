@@ -41,9 +41,11 @@ public class PrintWriter implements Closeable {
 
     /**
      * @return new content, if it has to be written or null if it is up-to-date
+     * @note protected for testing
+     * 
      * @throws IOException
      */
-    private String checkPreexistingFile() throws IOException {
+    String checkPreexistingFile() throws IOException {
         String rval = buffer.toString();
         if (target.exists()) {
             byte[] bytes = rval.getBytes();
