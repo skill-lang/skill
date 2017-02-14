@@ -61,7 +61,7 @@ case class HeaderInfo(
     })
 
     // create content
-    val content = Seq[String](
+    val content = Array[String](
       topLeft + logo(0),
       left + logo(1) + headerLine1,
       left + logo(2) + headerLine2,
@@ -70,12 +70,12 @@ case class HeaderInfo(
     )
 
     // create right bar, so that we can trim
-    val rightSide = Seq[String](topRight, right, right, right, bottomRight)
-    // .padTo(headerLineLength, " ").mkString.substring(0, headerLineLength)
+    val rightSide = Array[String](topRight, right, right, right, bottomRight)
 
     (for ((l, r) ← content.zip(rightSide)) yield {
-      val length = gen.lineLength - r.length
+      val length = gen.lineLength - (if (-1 != r.indexOf('\n')) r.indexOf('\n') else r.length)
+
       l.padTo(length, " ").mkString.substring(0, length) + r
-    }).mkString("\n")
+    }).mkString("", "\n", "\n")
   }
 }
