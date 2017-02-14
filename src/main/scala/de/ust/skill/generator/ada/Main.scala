@@ -56,6 +56,7 @@ class Main extends FakeMain
   override def comment(f : FieldLike) : String = f.getComment.format("", "   -- ", lineLength, "   ")
 
   override def packageDependentPathPostfix = ""
+  override def defaultCleanMode = "file";
 
   /**
    * Translates the types into the skill type id's.

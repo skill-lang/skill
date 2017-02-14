@@ -46,6 +46,7 @@ class Main extends FakeMain
   override def comment(f : FieldLike) : String = f.getComment.format("/**\n", "         * ", lineLength, "         */\n        ")
 
   override def packageDependentPathPostfix = ""
+  override def defaultCleanMode = "file";
 
   /**
    * Translates types into scala type names.

@@ -27,6 +27,7 @@ class Main extends FakeMain
   override def comment(f : FieldLike) : String = throw new NoSuchMethodError
 
   override def packageDependentPathPostfix = ""
+  override def defaultCleanMode = "none";
   
   /**
    * Translates the types into Ada types.

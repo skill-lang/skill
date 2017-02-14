@@ -46,6 +46,7 @@ class Main extends FakeMain
     f.getComment.format("    /*!\n", "     * ", lineLength, "     */\n").replace('<', '⟨').replace('>', '⟩')
 
   override def packageDependentPathPostfix = ""
+  override def defaultCleanMode = "wipe";
 
   /**
    * Translates the types into Ada types.

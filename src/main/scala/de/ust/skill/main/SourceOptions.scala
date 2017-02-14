@@ -23,6 +23,7 @@ trait SourceOptions extends AbstractOptions {
                           var depsdir : File = null,
                           var skipDeps : Boolean = false,
                           clean : Boolean = false,
+                          cleanMode : String = null,
                           header : HeaderInfo = new HeaderInfo(),
                           var languages : Set[String] = Set(),
                           languageOptions : HashMap[String, ArrayBuffer[(String, String)]] = new HashMap(),
@@ -70,16 +71,26 @@ trait SourceOptions extends AbstractOptions {
 
         gen.setTC(tc)
         gen.setPackage(packageName.toList)
-        gen.files = new PrintingService(
+        val printService = new PrintingService(
           new File(new File(outdir, pathPostfix), gen.packageDependentPathPostfix),
           gen.makeHeader(header)
         )
+        gen.files = printService
         gen.depsPath = depsdir.getAbsolutePath + pathPostfix
         gen.skipDependencies = skipDeps
 
         if (verbose) print(s"run $lang: ")
 
-        if (clean) ??? //gen.clean
+        if (clean) {
+          (if (null == cleanMode) gen.defaultCleanMode
+          else cleanMode) match {
+            case "none" ⇒ // done
+            case "file" ⇒ printService.deleteForeignFiles(false)
+            case "dir"  ⇒ printService.deleteForeignFiles(true)
+            case "wipe" ⇒ printService.wipeOutPath()
+            case s      ⇒ throw new IllegalStateException("unknown clean mode: " + s)
+          }
+        }
 
         try {
           gen.make
@@ -116,7 +127,17 @@ trait SourceOptions extends AbstractOptions {
 
     opt[Unit]('c', "clean").optional().action(
       (p, c) ⇒ c.copy(clean = true)
-    ).text("clean output directory before creating source files")
+    ).text("clean output directory after creating source files")
+
+    opt[String]("clean-mode").optional().action(
+      (p, c) ⇒ c.copy(cleanMode = p)
+    ).text("""possible modes are:
+     (unspecified)   the back-end use their defaults
+              none   no cleaning at all (pointless on cli)
+              file   files are deleted in every folder that contains files directly
+              dir    everything is deleted in every folder containing files directly
+              wipe   the output directory is wiped from foreign files recursively
+""")
 
     opt[File]('d', "depsdir").optional().action(
       (p, c) ⇒ c.copy(depsdir = p)

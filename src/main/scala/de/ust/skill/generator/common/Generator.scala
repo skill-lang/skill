@@ -118,4 +118,9 @@ trait Generator {
    * This function is called after options have been set.
    */
   def make : Unit;
+
+  /**
+   * The clean mode preferred by this back-end.
+   */
+  def defaultCleanMode : String;
 }

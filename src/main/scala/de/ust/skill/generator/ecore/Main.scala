@@ -81,4 +81,5 @@ class Main extends FakeMain
   } else {
     ""
   }
+  override def defaultCleanMode = "file";
 }

@@ -126,6 +126,7 @@ class Main extends FakeMain
   } else {
     ""
   }
+  override def defaultCleanMode = "file";
 
   override def setOption(option : String, value : String) : Unit = option match {
     case "revealskillid"    ⇒ revealSkillID = ("true".equals(value));

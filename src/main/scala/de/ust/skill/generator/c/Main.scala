@@ -81,6 +81,8 @@ final class Main extends FakeMain
   lineLength = 80
   override def comment(d : Declaration) : String = d.getComment.format("", "//! ", lineLength, "")
   override def comment(f : FieldLike) : String = f.getComment.format("", "//! ", lineLength, "")
+  
+  override def defaultCleanMode = "file";
 
   /**
    * Translates the types into C99 types.

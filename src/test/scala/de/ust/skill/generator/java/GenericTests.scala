@@ -32,13 +32,12 @@ class GenericTests extends common.GenericTests {
   override val language = "java"
 
   override def deleteOutDir(out : String) {
-    import scala.reflect.io.Directory
-    Directory(new File("testsuites/java/src/main/java", out)).deleteRecursively
   }
 
   override def callMainFor(name : String, source : String, options : Seq[String]) {
     CommandLine.main(Array[String](source,
       "--debug-header",
+      "-c",
       "-L", "java",
       "-p", name,
       "-Ojava:SuppressWarnings=true",
