@@ -1,13 +1,11 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.doxygen
 
-import de.ust.skill.ir.UserType
-import scala.collection.JavaConversions._
-import de.ust.skill.ir.EnumType
+import scala.collection.JavaConversions.asScalaBuffer
 /**
  * Creates user type equivalents.
  *
@@ -18,7 +16,7 @@ trait EnumTypeMaker extends GeneralOutputMaker {
     super.make
 
     for (t ← tc.getEnums) {
-      val out = open(s"""src/${t.getName.capital}.h""")
+      val out = files.open(s"""src/${t.getName.capital}.h""")
 
       out.write(s"""
 // user type doxygen documentation

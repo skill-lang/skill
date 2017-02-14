@@ -72,6 +72,10 @@ final public class Name implements Comparable<Name> {
         return skillName;
     }
 
+    public String[] parts() {
+        return parts.toArray(new String[parts.size()]);
+    }
+
     // different naming conventions, alphabetical order
 
     private String ada;
@@ -91,6 +95,7 @@ final public class Name implements Comparable<Name> {
     }
 
     private String cStyle;
+
     /**
      * @return c_style, i.e. lower_case_with_under_scores
      */
@@ -153,22 +158,26 @@ final public class Name implements Comparable<Name> {
         return Character.toUpperCase(arg.charAt(0)) + arg.substring(1);
     }
 
-	public String getPackagePath() {
-		return packagePath;
-	}
-	
-	public String getFqdn() {
-		if (getPackagePath().length() > 0) return getPackagePath() + "." + skillName;
-		else return skillName;
-	}
+    public String getPackagePath() {
+        return packagePath;
+    }
 
-	public void setInternalName(String name) {
-		this.internalName = name.toLowerCase();
-	}
+    public String getFqdn() {
+        if (getPackagePath().length() > 0)
+            return getPackagePath() + "." + skillName;
+        else
+            return skillName;
+    }
 
-	public String getInternalName() {
-		if (this.internalName.length() > 0) return internalName;
-		else return skillName.toLowerCase();
-	}
+    public void setInternalName(String name) {
+        this.internalName = name.toLowerCase();
+    }
+
+    public String getInternalName() {
+        if (this.internalName.length() > 0)
+            return internalName;
+        else
+            return skillName.toLowerCase();
+    }
 
 }

@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.ada
@@ -11,7 +11,7 @@ import scala.collection.JavaConversions._
 trait PackageSpecMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"""${packagePrefix}.ads""")
+    val out = files.open(s"""${packagePrefix}.ads""")
 
     out.write(s"""
 with Ada.Containers;
@@ -31,6 +31,7 @@ package ${PackagePrefix} is
    pragma Warnings (Off);
    use Skill.Equals;
    use Skill.Hashes;
+   use type Skill.Types.Annotation;
    use type Skill.Types.V64;
    use type Skill.Types.String_Access;
 ${
@@ -168,7 +169,26 @@ ${comment(v)}function View_${name(v)} (This : not null access ${name(t)}_T'Class
 ${comment(v)}procedure Set_${name(v)} (This : not null access ${name(t)}_T'Class; V : ${mapType(v.getType)});
    pragma Inline (Set_${name(v)});"""
       }).mkString
-    }
+    }${
+        if (createVisitors) """
+   -- visitors
+""" + (
+          for (b ← IR if b.getSuperType == null) yield s"""
+   type Abstract_${name(b)}_Visitor is abstract tagged null record;${
+            (for (t ← IR if b.getBaseType == b) yield s"""
+   procedure Visit (This : access Abstract_${name(b)}_Visitor; Node : ${name(t)}) is abstract;
+   procedure Acc (This : access ${name(t)}_T; V : access Abstract_${name(b)}_Visitor'Class);
+""").mkString
+          }
+   type ${name(b)}_Visitor is new Abstract_${name(b)}_Visitor with null record;${
+            (for (t ← IR if b.getBaseType == b) yield s"""
+   procedure Visit (This : access ${name(b)}_Visitor; Node : ${name(t)}) is null;
+""").mkString
+          }
+"""
+        ).mkString
+        else ""
+      }
 private
 ${
       (for (t ← IR)

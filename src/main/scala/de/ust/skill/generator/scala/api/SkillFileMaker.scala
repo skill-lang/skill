@@ -1,23 +1,22 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.scala.api
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.scala.GeneralOutputMaker
-import de.ust.skill.ir.restriction.MonotoneRestriction
-import de.ust.skill.ir.restriction.SingletonRestriction
-import de.ust.skill.ir.UserType
 import de.ust.skill.ir.InterfaceType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.Typedef
+import de.ust.skill.ir.UserType
 
 trait SkillFileMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("api/SkillFile.scala")
+    val out = files.open("api/SkillFile.scala")
 
     //package & imports
     out.write(s"""package ${packagePrefix}api
@@ -61,14 +60,15 @@ final class SkillFile(
   _typesByName : HashMap[String, StoragePool[_ <: SkillObject, _ <: SkillObject]])
     extends SkillState(_path, _mode, _String, _annotationType, _types, _typesByName) {
 
-  private[api] def AnnotationType = annotationType
+  private[api] def AnnotationType : AnnotationType = annotationType
 ${
       (for (t ← IR) yield s"""
-  val ${name(t)} : internal.${storagePool(t)} = typesByName("${t.getSkillName}").asInstanceOf[internal.${storagePool(t)}]""").mkString
+  val ${name(t)} : internal.${storagePool(t)} = typesByName("${t.getSkillName}").asInstanceOf[internal.${storagePool(t)}]"""
+      ).mkString
     }
 ${
       (for (t ← IRInterfaces if !t.getSuperType.isInstanceOf[UserType]) yield s"""
-  val ${name(t)} : UnrootedInterfacePool[${mapType(t)}] = 
+  val ${name(t)} : UnrootedInterfacePool[${mapType(t)}] =
     new UnrootedInterfacePool[${mapType(t)}]("${name(t)}", AnnotationType,
       Array[StoragePool[_ <: ${mapType(t)}, _ <: SkillObject]](${
         collectRealizationNames(t).map(name).mkString(", ")
@@ -76,7 +76,7 @@ ${
     }
 ${
       (for (t ← IRInterfaces if t.getSuperType.isInstanceOf[UserType]) yield s"""
-  val ${name(t)} : InterfacePool[${mapType(t)}, ${mapType(t.getBaseType)}] = 
+  val ${name(t)} : InterfacePool[${mapType(t)}, ${mapType(t.getBaseType)}] =
     new InterfacePool[${mapType(t)}, ${mapType(t.getBaseType)}]("${name(t)}", ${name(t.getSuperType)},
       Array[StoragePool[_ <: ${mapType(t)}, _ <: ${mapType(t.getBaseType)}]](${
         collectRealizationNames(t).map(name).mkString(", ")

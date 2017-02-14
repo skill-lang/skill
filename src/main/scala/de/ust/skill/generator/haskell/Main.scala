@@ -1,22 +1,27 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.haskell
 
-import java.io.BufferedWriter
-import java.io.File
-import java.io.FileOutputStream
-import java.io.OutputStreamWriter
-import java.io.PrintWriter
-import java.util.Date
 
-import scala.collection.JavaConversions._
+
+import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.MutableList
 
-import de.ust.skill.generator.common.Generator
-import de.ust.skill.ir._
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.FieldLike
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.UserType
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.main.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -24,48 +29,75 @@ import de.ust.skill.ir._
 abstract class FakeMain extends GeneralOutputMaker { def make {} }
 
 /**
- * ...
+ * Port of the original Java implementation of Rafael Harths Haskell back-end.
  *
- * @author ...
+ * @author Timm Felden
  */
-final class Main extends FakeMain {
+final class Main extends FakeMain
+    with AccessMaker
+    with DependenciesMaker
+    with FollowMaker
+    with InterfaceMaker
+    with TypesMaker {
 
   override def make {
-    (new CodeGenerator(IR.to, this)).make()
+    super.make
   }
 
   lineLength = 80
   override def comment(d : Declaration) : String = d.getComment.format("", "-- ", lineLength, "")
   override def comment(f : FieldLike) : String = f.getComment.format("", "-- ", lineLength, "")
 
+  override def packageDependentPathPostfix = ""
+  override def defaultCleanMode = "file";
+
   /**
-   * Translates the types into C99 types.
+   * Translates the types to Haskell types.
    */
-  override protected def mapType(t : Type) : String = t match {
+  override protected def mapType(t : Type, followReferences : Boolean) : String = t match {
     case t : GroundType ⇒ t.getName.lower match {
-      case "annotation" ⇒ "skill_type"
+      case "annotation" ⇒
+        if (followReferences) "Maybe Pointer"
+        else "Ref"
 
-      case "bool"       ⇒ "bool"
+      case "bool"   ⇒ "Bool"
 
-      case "i8"         ⇒ "int8_t"
-      case "i16"        ⇒ "int16_t"
-      case "i32"        ⇒ "int32_t"
-      case "i64"        ⇒ "int64_t"
-      case "v64"        ⇒ "int64_t"
+      case "i8"     ⇒ "Int8"
+      case "i16"    ⇒ "Int16"
+      case "i32"    ⇒ "Int32"
+      case "i64"    ⇒ "Int64"
+      case "v64"    ⇒ "Int64"
 
-      case "f32"        ⇒ "float"
-      case "f64"        ⇒ "double"
+      case "f32"    ⇒ "Float"
+      case "f64"    ⇒ "Double"
 
-      case "string"     ⇒ "char*"
+      case "string" ⇒ "String"
     }
 
-    case t : ConstantLengthArrayType ⇒ "GArray*"
-    case t : VariableLengthArrayType ⇒ "GArray*"
-    case t : ListType                ⇒ "GList*"
-    case t : SetType                 ⇒ "GHashTable*"
-    case t : MapType                 ⇒ "GHashTable*"
+    case t : ConstantLengthArrayType ⇒ s"[${mapType(t.getBaseType, followReferences)}]"
+    case t : VariableLengthArrayType ⇒ s"[${mapType(t.getBaseType, followReferences)}]"
+    case t : ListType                ⇒ s"[${mapType(t.getBaseType, followReferences)}]"
+    case t : SetType                 ⇒ s"[${mapType(t.getBaseType, followReferences)}]"
+    case t : MapType ⇒ t.getBaseTypes.map(t ⇒ mapType(t, followReferences)).reduceRight[String] {
+      case (k, v) ⇒ s"M.Map $k ($v)"
+    }
 
-    case t : Declaration             ⇒ s"${prefix}${t.getName.cStyle}"
+    case t : Declaration ⇒
+      if (followReferences) "Maybe " + name(t)
+      else "Ref"
+  }
+
+  override protected def BoxedDataConstructor(t : Type) : String = t.getSkillName match {
+    case "bool"   ⇒ "GBool"
+    case "string" ⇒ "GString"
+    case "i8"     ⇒ "GInt8"
+    case "i16"    ⇒ "GInt16"
+    case "i32"    ⇒ "GInt32"
+    case "i64"    ⇒ "GInt64"
+    case "v64"    ⇒ "GV64"
+    case "f32"    ⇒ "GFloat"
+    case "f64"    ⇒ "GDouble"
+    case _        ⇒ "GRef"
   }
 
   /**
@@ -100,7 +132,7 @@ final class Main extends FakeMain {
     var hasFields = false;
     output += d.getAllFields.filter({ f ⇒ !f.isConstant && !f.isIgnored }).map({ f ⇒
       hasFields = true;
-      s"${f.getSkillName()} : ${mapType(f.getType)}"
+      s"${f.getSkillName()} : ${mapType(f.getType, ???)}"
     }).mkString("; ", "; ", "")
     if (hasFields) output else ""
   }
@@ -113,72 +145,19 @@ final class Main extends FakeMain {
 
   override def setPackage(names : List[String]) {
     if (!names.isEmpty)
-      _packagePrefix = names.map(_.toLowerCase).mkString("_");
+      _packagePrefix = names.map(_.toLowerCase).mkString(".");
   }
 
-  override private[haskell] def header : String = _header
-  private lazy val _header = {
-    // create header from options
-    val headerLineLength = 51
-    val headerLine1 = Some((headerInfo.line1 match {
-      case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: " + _).getOrElse("Your SKilL Haskell Binding")
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    val headerLine2 = Some((headerInfo.line2 match {
-      case Some(s) ⇒ s
-      case None ⇒ "generated: " + (headerInfo.date match {
-        case Some(s) ⇒ s
-        case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    val headerLine3 = Some((headerInfo.line3 match {
-      case Some(s) ⇒ s
-      case None ⇒ "by: " + (headerInfo.userName match {
-        case Some(s) ⇒ s
-        case None    ⇒ System.getProperty("user.name")
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-
-    s"""--  ___ _  ___ _ _                                                            
--- / __| |/ (_) | |       ${headerLine1.get}
--- \\__ \\ ' <| | | |__     ${headerLine2.get}
--- |___/_|\\_\\_|_|____|    ${headerLine3.get}
---                                                                            
-"""
-  }
-
-  var outPostfix = s"/generated/${
-    if (packagePrefix.isEmpty()) ""
-    else packagePrefix.replace('.', '/') + "/"
-  }"
-
-  /**
-   * Creates the correct PrintWriter for the argument file.
-   */
-  override protected def open(path : String) = {
-    val f = new File(outPath + outPostfix + path)
-    f.getParentFile.mkdirs
-    f.createNewFile
-    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream(f), "UTF-8")))
-    rval.write(header)
-    rval
-  }
+  override def makeHeader(headerInfo : HeaderInfo) : String = headerInfo.format(this, "--", "", "--", "", "--", "")
 
   override def setOption(option : String, value : String) : Unit = option.toLowerCase match {
-    case "gendir" ⇒
-      outPostfix = value
-      if (!outPostfix.startsWith("/"))
-        outPostfix = "/" + outPostfix
-      if (!outPostfix.endsWith("/"))
-        outPostfix = outPostfix + "/"
     case "unsafe" ⇒ unsafe = value == "true"
     case unknown  ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
-  override def printHelp : Unit = println("""
-Opitions (haskell):
-""")
+  override def helpText : String = """
+  unsafe                 remove all generated runtime type checks, if set to "true"
+"""
 
   override def customFieldManual : String = "not supported"
 
@@ -196,7 +175,7 @@ Opitions (haskell):
   }
 
   override protected def makeConstructorArguments(t : UserType) : String = (for (f ← t.getAllFields; if !f.isConstant())
-    yield s""", ${mapType(f.getType)} _${name(f)}""").mkString
+    yield s""", ${mapType(f.getType, ???)} _${name(f)}""").mkString
 
   override protected def defaultValue(f : Field) = f.getType match {
     case t : GroundType ⇒ t.getSkillName() match {

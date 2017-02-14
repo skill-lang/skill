@@ -1,19 +1,18 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java.api
 
-import scala.collection.JavaConversions._
-import de.ust.skill.ir.restriction.MonotoneRestriction
-import de.ust.skill.ir.restriction.SingletonRestriction
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.java.GeneralOutputMaker
 
 trait SkillFileMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("api/SkillFile.java")
+    val out = files.open(s"api/SkillFile.java")
 
     //package & imports
     out.write(s"""package ${packagePrefix}api;
@@ -76,6 +75,13 @@ ${
      * @return an access for all ${name(t)}s in this state
      */
     public ${packagePrefix}internal.${name(t)}Access ${name(t)}s();""").mkString("")
+    }${
+      (for (t ← this.types.getInterfaces) yield s"""
+
+    /**
+     * @return an access for all ${name(t)}s in this state
+     */
+    public ${interfacePool(t)} ${name(t)}s();""").mkString("")
     }
 }
 """)

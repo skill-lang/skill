@@ -1,17 +1,23 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.doxygen
 
-import de.ust.skill.ir._
-import de.ust.skill.parser.Parser
-import java.io.File
-import scala.collection.JavaConversions._
-import scala.collection.mutable.MutableList
-import de.ust.skill.generator.common.Generator
-import java.util.Date
+import scala.collection.JavaConversions.asScalaBuffer
+
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.FieldLike
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.main.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -38,6 +44,9 @@ class Main extends FakeMain
     d.getComment.format("/*!\n", " * ", lineLength, " */\n").replace('<', '⟨').replace('>', '⟩')
   override def comment(f : FieldLike) : String =
     f.getComment.format("    /*!\n", "     * ", lineLength, "     */\n").replace('<', '⟨').replace('>', '⟩')
+
+  override def packageDependentPathPostfix = ""
+  override def defaultCleanMode = "wipe";
 
   /**
    * Translates the types into Ada types.
@@ -76,73 +85,28 @@ class Main extends FakeMain
   private var _packagePrefix = ""
 
   override def setPackage(names : List[String]) {
-    _packagePrefix = names.foldRight("")(_+"."+_)
+    _packagePrefix = names.foldRight("")(_ + "." + _)
   }
 
-  override private[doxygen] def header : String = _header
-  private lazy val _header = {
-    // create header from options
-    val headerLineLength = 51
-    val headerLine1 = Some((headerInfo.line1 match {
-      case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: "+_).getOrElse("Your SKilL Scala Binding")
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    val headerLine2 = Some((headerInfo.line2 match {
-      case Some(s) ⇒ s
-      case None ⇒ "generated: "+(headerInfo.date match {
-        case Some(s) ⇒ s
-        case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    val headerLine3 = Some((headerInfo.line3 match {
-      case Some(s) ⇒ s
-      case None ⇒ "by: "+(headerInfo.userName match {
-        case Some(s) ⇒ s
-        case None    ⇒ System.getProperty("user.name")
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
+  override def makeHeader(headerInfo : HeaderInfo) : String = headerInfo.format(this, "/*", "*\\", " *", "* ", "\\*", "*/")
 
-    s"""/*  ___ _  ___ _ _                                                            *\\
- * / __| |/ (_) | |       ${headerLine1.get} *
- * \\__ \\ ' <| | | |__     ${headerLine2.get} *
- * |___/_|\\_\\_|_|____|    ${headerLine3.get} *
-\\*                                                                            */
-"""
+  override def setOption(option : String, value : String) {
+    // no options
   }
+  override def helpText : String = ""
 
-  override def setOption(option : String, value : String) : Unit = option match {
-    case unknown ⇒ sys.error(s"unkown Argument: $unknown")
-  }
-
-  override def printHelp : Unit = println("""
-Opitions (doxygen):
-  (none)
-""")
-
-  override def customFieldManual = """(unsupported)"""
+  override def customFieldManual : String = """(unsupported)"""
 
   // unused
   override protected def defaultValue(f : Field) = throw new NoSuchMethodError
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
-   * TODO not correct
+   *
+   * Delegates to c++ escaping, because the generated code is parsed as c++.
    */
+  val escaper = new de.ust.skill.generator.cpp.Main
   final def escaped(target : String) : String = {
-
-    target match {
-      // keywords get a suffix "_2"
-      case "abort" | "else" | "new" | "return" | "abs" | "elsif" | "not" | "reverse" | "abstract" | "end" | "null" |
-        "accept" | "entry" | "select" | "access" | "exception" | "of" | "separate" | "aliased" | "exit" | "or" |
-        "some" | "all" | "others" | "subtype" | "and" | "for" | "out" | "synchronized" | "array" | "function" |
-        "overriding" | "at" | "tagged" | "generic" | "package" | "task" | "begin" | "goto" | "pragma" | "terminate" |
-        "body" | "private" | "then" | "if" | "procedure" | "type" | "case" | "in" | "protected" | "constant" |
-        "interface" | "until" | "is" | "raise" | "use" | "declare" | "range" | "delay" | "limited" | "record" |
-        "when" | "delta" | "loop" | "rem" | "while" | "digits" | "renames" | "with" | "do" | "mod" | "requeue" |
-        "xor" ⇒ return target+"_2"
-
-      // the string is fine anyway
-      case _ ⇒ return target
-    }
+    escaper.escaped(target)
   }
 }

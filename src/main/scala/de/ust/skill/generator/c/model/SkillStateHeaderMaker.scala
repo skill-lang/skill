@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c.model
@@ -30,7 +30,7 @@ import de.ust.skill.ir.Type
 trait SkillStateHeaderMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"model/${prefix}skill_state.h")
+    val out = files.open(s"model/${prefix}skill_state.h")
 
     val prefixCapital = packagePrefix.toUpperCase
 

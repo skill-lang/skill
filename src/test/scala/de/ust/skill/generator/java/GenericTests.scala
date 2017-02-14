@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java
@@ -10,15 +10,14 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
-import java.nio.file.Files
-import scala.reflect.io.Directory
+
 import scala.reflect.io.Path.jfile2path
+
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import de.ust.skill.main.CommandLine
 import org.scalatest.junit.JUnitRunner
-import scala.collection.mutable.ArrayBuffer
+
 import de.ust.skill.generator.common
+import de.ust.skill.main.CommandLine
 
 /**
  * Generic tests built for Java.
@@ -31,17 +30,25 @@ import de.ust.skill.generator.common
 class GenericTests extends common.GenericTests {
 
   override val language = "java"
-  override val languageOptions = ArrayBuffer[String]("-O@java:SuppressWarnings=true")
 
   override def deleteOutDir(out : String) {
-    import scala.reflect.io.Directory
-    Directory(new File("testsuites/java/src/main/java/", out)).deleteRecursively
   }
 
-  def newTestFile(packagePath : String, name : String) = {
+  override def callMainFor(name : String, source : String, options : Seq[String]) {
+    CommandLine.main(Array[String](source,
+      "--debug-header",
+      "-c",
+      "-L", "java",
+      "-p", name,
+      "-Ojava:SuppressWarnings=true",
+      "-d", "testsuites/java/lib",
+      "-o", "testsuites/java/src/main/java/") ++ options)
+  }
+
+  def newTestFile(packagePath : String, name : String) : PrintWriter = {
     val f = new File(s"testsuites/java/src/test/java/$packagePath/Generic${name}Test.java")
     f.getParentFile.mkdirs
-    if(f.exists)
+    if (f.exists)
       f.delete
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
@@ -126,13 +133,13 @@ public class Generic${name}Test extends common.CommonTest {
       for (f ← accept) out.write(s"""
     @Test
     public void test_${name}_read_accept_${f.getName.replaceAll("\\W", "_")}() throws Exception {
-        Assert.assertNotNull(read("${f.getPath}"));
+        Assert.assertNotNull(read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}"));
     }
 """)
       for (f ← reject) out.write(s"""
     @Test(expected = ParseException.class)
     public void test_${name}_read_reject_${f.getName.replaceAll("\\W", "_")}() throws Exception {
-        Assert.assertNotNull(read("${f.getPath}"));
+        Assert.assertNotNull(read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}"));
     }
 """)
       closeTestFile(out)

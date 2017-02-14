@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.common
@@ -16,9 +16,9 @@ object KnownGenerators {
     classOf[ecore.Main],
     classOf[haskell.Main],
     classOf[java.Main],
+    classOf[jforeign.Main],
     classOf[scala.Main],
     classOf[skill.Main],
-    classOf[statistics.Main],
-    classOf[jforeign.Main]
+    classOf[statistics.Main]
   )
 }

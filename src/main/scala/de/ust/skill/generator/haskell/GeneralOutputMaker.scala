@@ -1,20 +1,19 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.haskell
 
-import de.ust.skill.ir._
-import java.io.File
-import java.io.PrintWriter
-import java.io.BufferedWriter
-import java.io.OutputStreamWriter
-import java.io.FileOutputStream
-import scala.collection.mutable.MutableList
-import de.ust.skill.generator.common.Generator
+import scala.collection.JavaConversions.asScalaBuffer
 
-import scala.collection.JavaConversions._
+import de.ust.skill.generator.common.Generator
+import de.ust.skill.ir.ContainerType
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.Name
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.TypeContext
+import de.ust.skill.ir.UserType
 
 /**
  * The parent class for all output makers.
@@ -23,18 +22,23 @@ import scala.collection.JavaConversions._
  */
 trait GeneralOutputMaker extends Generator {
 
-  override def getLanguageName = "haskell";
-
-  private[haskell] def header : String
-
+  override def getLanguageName : String = "haskell";
+  
   // remove special stuff for now
-  final def setTC(tc : TypeContext) = this.IR = tc.removeSpecialDeclarations.getUsertypes.to
+  final def setTC(tc : TypeContext) { this.IR = tc.removeSpecialDeclarations.getUsertypes.to }
   var IR : List[UserType] = _
 
   /**
    * Assume the existence of a translation function for types.
+   * Comes in two flavors depending on whether references can
+   * be followed at the target location.
    */
-  protected def mapType(t : Type) : String
+  protected def mapType(t : Type, followReferences : Boolean) : String
+  
+  /**
+   * create a data constructor for the boxed form of a value
+   */
+  protected def BoxedDataConstructor(t : Type) : String
 
   /**
    * Assume a package prefix provider.
@@ -44,19 +48,13 @@ trait GeneralOutputMaker extends Generator {
   /**
    * Rename package prefix; we may change the implementation in the future.
    */
-  protected def prefix = if (packagePrefix.isEmpty()) "" else packagePrefix+"_"
+  protected def prefix = if (packagePrefix.isEmpty()) "" else packagePrefix + "_"
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
    * @note currently unused, because emitted names can not alias predefined types or keywords anyway
    */
   protected def escaped(target : Name) : String = escaped(target.ada)
-
-  private lazy val packagePath = if (packagePrefix.length > 0) {
-    packagePrefix.replace(".", "_")
-  } else {
-    ""
-  }
 
   /**
    * Creates instance constructor arguments excluding the state
@@ -73,11 +71,11 @@ trait GeneralOutputMaker extends Generator {
    */
   protected def name(t : Type) : String = if (null == t) "skill_type"
   else if (t.isInstanceOf[ContainerType]) "???"
-  else escaped(t.getName.cStyle)
+  else escaped(t.getName.capital)
   /**
    * provides a default name for the argument field
    */
-  protected def name(f : Field) : String = "if_"+escaped(f.getName.cStyle)
+  protected def name(f : Field) : String = escaped(f.getName.capital)
 
   /**
    * provides field access implementation

@@ -1,14 +1,16 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c
 
 import java.io.File
+
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+
 import de.ust.skill.main.CommandLine
 
 /**
@@ -32,7 +34,11 @@ class GeneratorTest extends FunSuite {
     // delete seems to cause sporadic test failure
     //    deleteFiles(new File(s"testsuites/c/src/generated/$target"))
     CommandLine.exit = { s ⇒ fail(s) }
-    CommandLine.main(Array[String]("-L", "C", "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", prefix, s"-O@C:GenDir=/src/generated/$target/", "src/test/resources/c/"+src, "testsuites"))
+    CommandLine.main(Array[String]("src/test/resources/c/" + src,
+      "--debug-header",
+      "-L", "C",
+      "-p", prefix,
+      "-o", "testsuites/c/src/generated/" + target))
   }
 
   test("annotation")(check("", "annotation.skill", "annotation"))

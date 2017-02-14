@@ -1,20 +1,22 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.ecore
 
-import de.ust.skill.ir._
-import java.io.File
-import java.io.PrintWriter
 import java.io.BufferedWriter
-import java.io.OutputStreamWriter
+import java.io.File
 import java.io.FileOutputStream
-import scala.collection.mutable.MutableList
-import de.ust.skill.generator.common.Generator
-import scala.collection.JavaConversions._
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
+
 import scala.collection.mutable.HashSet
+
+import de.ust.skill.generator.common.Generator
+import de.ust.skill.ir.Name
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.TypeContext
 
 /**
  * The parent class for all output makers.
@@ -32,24 +34,11 @@ trait GeneralOutputMaker extends Generator {
   // by default, nothing is dropped
   var droppedKinds = HashSet[Droppable]();
 
-  override def getLanguageName = "ecore";
+  override def getLanguageName : String = "ecore";
 
   // remove special stuff for now
-  final def setTC(tc : TypeContext) = this.tc = tc;
+  final def setTC(tc : TypeContext) { this.tc = tc }
   var tc : TypeContext = _
-
-  /**
-   * Creates the correct PrintWriter for the argument file.
-   */
-  override protected def open(path : String) = {
-    val f = new File(s"$outPath$packagePath/$path")
-    f.getParentFile.mkdirs
-    f.createNewFile
-    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream(f), "UTF-8")))
-    // no header required here -> rval.write(header)
-    rval
-  }
 
   /**
    * Assume the existence of a translation function for types.
@@ -65,10 +54,4 @@ trait GeneralOutputMaker extends Generator {
    * Tries to escape a string without decreasing the usability of the generated identifier.
    */
   protected def escaped(target : Name) : String = target.camel
-
-  private lazy val packagePath = if (packagePrefix.length > 0) {
-    "/"+packagePrefix.replace(".", "/")
-  } else {
-    ""
-  }
 }

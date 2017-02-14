@@ -1,13 +1,11 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.doxygen
 
-import de.ust.skill.ir.UserType
-import scala.collection.JavaConversions._
-import de.ust.skill.ir.Typedef
+import scala.collection.JavaConversions.asScalaBuffer
 /**
  * Creates user type equivalents.
  *
@@ -17,11 +15,11 @@ trait TypedefMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
     val ts = tc.getTypedefs
-    if (ts.isEmpty) return
 
-    val out = open(s"""src/_typedefs.h""")
+    if (!ts.isEmpty) {
+      val out = files.open(s"""src/_typedefs.h""")
 
-    out.write(s"""
+      out.write(s"""
 // typedefs inside of the project
 #include <string>
 #include <list>
@@ -30,15 +28,16 @@ trait TypedefMaker extends GeneralOutputMaker {
 #include <stdint.h>
 
 ${
-      (for (t ← ts)
-        yield s"""
+        (for (t ← ts)
+          yield s"""
 ${
-        comment(t)
-      }typedef ${mapType(t.getTarget)} ${t.getName.capital};
+          comment(t)
+        }typedef ${mapType(t.getTarget)} ${t.getName.capital};
 """).mkString
-    }
+      }
 """)
 
-    out.close()
+      out.close()
+    }
   }
 }

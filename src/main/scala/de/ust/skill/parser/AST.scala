@@ -1,18 +1,19 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.parser
 
-import de.ust.skill.ir.Restriction
-import de.ust.skill.ir.Hint
-import scala.collection.JavaConversions._
+import java.io.File
+
+import scala.collection.JavaConversions.seqAsJavaList
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.input.Positional
-import java.io.File
-import scala.collection.mutable.ListBuffer
+
 import de.ust.skill.ir.Comment
+import de.ust.skill.ir.Hint
+import de.ust.skill.ir.Restriction
 
 /**
  * The AST is used to turn skill definitions into Java IR.
@@ -91,7 +92,7 @@ final class View(val comment : Comment, var targetType : Option[Name], val targe
    */
   var target : AbstractField = _;
 
-  override def toString() = s"""
+  override def toString : String = s"""
   view ${targetType.map(_.CapitalCase + ".").getOrElse("")}$targetField as
   $t $name;
 """

@@ -1,34 +1,16 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.common
 
+import de.ust.skill.io.PrintingService
 import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.Type
-import java.io.PrintWriter
 import de.ust.skill.ir.Field
-import de.ust.skill.ir.TypeContext
-import java.nio.file.Paths
-import java.io.File
-import scala.collection.mutable.ListBuffer
 import de.ust.skill.ir.FieldLike
-
-/**
- * Use this to create a 5 lines header that looks similar in all languages.
- *
- * This corresponds to the -hN, -u, -license, -date options.
- *
- * @author Timm Felden
- */
-case class HeaderInfo(
-  var line1 : Option[String] = None,
-  var line2 : Option[String] = None,
-  var line3 : Option[String] = None,
-  var license : Option[String] = None,
-  var userName : Option[String] = None,
-  var date : Option[String] = None)
+import de.ust.skill.ir.TypeContext
+import de.ust.skill.main.HeaderInfo
 
 /**
  * every code generator shares these properties.
@@ -41,17 +23,38 @@ trait Generator {
   def getLanguageName : String;
 
   /**
-   * Base path of the output for this generator.
+   * Improved source printing to be used by a generator.
+   * Instantiation is performed before invocation of the generator.
    */
-  var outPath : String = _;
+  var files : PrintingService = _;
+
+  /**
+   * This string will be prepended to the output directory of files.
+   * It is evaluated after setting the package and before creating files.
+   */
+  def packageDependentPathPostfix : String;
+
+  /**
+   * Create the header submitted to the PrintingService
+   */
+  def makeHeader(headerInfo : HeaderInfo) : String;
+
+  /**
+   * Base path of dependencies copied by this generator.
+   */
+  var depsPath : String = _;
+  /**
+   * request the code generator to skip copying of dependencies
+   * @note this is useful, for instance, as part of code regeneration in a build
+   * system where dependencies and specification are managed by the version control system
+   */
+  var skipDependencies = false;
 
   /**
    * Set the type context. This is a function to make clear that generators may in fact project a type context prior to
    * using it.
    */
   def setTC(tc : TypeContext) : Unit;
-
-  var headerInfo : HeaderInfo = HeaderInfo();
 
   /**
    * Set output package/namespace/...
@@ -67,9 +70,12 @@ trait Generator {
   def setOption(option : String, value : String) : Unit;
 
   /**
-   * Prints help for language specific options.
+   * The help text for language specific options.
+   *
+   * If the text is the empty string, no options are provided by this generator.
+   * Hence, it is omitted in option parsing.
    */
-  def printHelp : Unit;
+  def helpText : String;
 
   /**
    * Returns the custom field manual for this generator.
@@ -92,36 +98,6 @@ trait Generator {
   def escapedLonely(target : String) : String = escaped(target)
 
   /**
-   * Create a new file with a default header.
-   */
-  protected def open(path : String) : PrintWriter;
-
-  /**
-   * Util to fix Javas fucked up file handling that constantly fails for no reason.
-   *
-   * @param path a string
-   * @returns an existing new file
-   */
-  protected def simpleOpenDirtyPathString(path : String) : File = {
-    val ps = path.split('/').reverse.iterator;
-
-    val rps = new ListBuffer[String];
-    while (ps.hasNext) ps.next match {
-      case ".." ⇒
-        ps.next; rps.prepend(ps.next)
-      case "." ⇒ rps.prepend(ps.next)
-      case p   ⇒ rps.prepend(p)
-    }
-
-    val f = new File(rps.mkString("/"));
-
-    f.getParentFile.mkdirs
-    f.createNewFile
-
-    f
-  }
-
-  /**
    * maximum line length in emitted output
    */
   var lineLength = 80
@@ -142,4 +118,9 @@ trait Generator {
    * This function is called after options have been set.
    */
   def make : Unit;
+
+  /**
+   * The clean mode preferred by this back-end.
+   */
+  def defaultCleanMode : String;
 }

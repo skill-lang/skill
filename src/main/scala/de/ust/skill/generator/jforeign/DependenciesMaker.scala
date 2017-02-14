@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.jforeign
@@ -20,29 +20,29 @@ trait DependenciesMaker extends GeneralOutputMaker {
     super.make
 
     // safe unnecessary overwrites that cause race conditions on parallel builds anyway
-    for (jar ← jars) {
-      this.getClass.synchronized({
+    if (!skipDependencies)
+      for (jar ← jars) {
+        this.getClass.synchronized({
 
-        val out = new File(s"$outPath/lib/$jar");
-        out.getParentFile.mkdirs();
+          val out = new File(depsPath, jar);
+          out.getParentFile.mkdirs();
 
-        try {
-          if (out.exists() && sha256(out.getAbsolutePath) == commonJarSum(jar))
-            return
-        } catch {
-          case e : IOException ⇒ // just continue
-        }
-
-        Files.deleteIfExists(out.toPath)
-        Files.copy(new File("deps/" + jar).toPath, out.toPath)
-      })
-    }
+          if (try {
+            !out.exists() || sha256(out.getAbsolutePath) != commonJarSum(jar)
+          } catch {
+            case e : IOException ⇒ false // just continue
+          }) {
+            Files.deleteIfExists(out.toPath)
+            Files.copy(new File("deps/" + jar).toPath, out.toPath)
+          }
+        })
+      }
   }
 
   val jars = Seq("skill.jvm.common.jar", "skill.jforeign.common.jar")
   lazy val commonJarSum = jars.map { s ⇒ (s -> sha256("deps/" + s)) }.toMap
 
-  final def sha256(name : String) : String = sha256(new File("src/test/resources/"+name).toPath)
+  final def sha256(name : String) : String = sha256(new File("src/test/resources/" + name).toPath)
   @inline final def sha256(path : Path) : String = {
     val bytes = Files.readAllBytes(path)
     MessageDigest.getInstance("SHA-256").digest(bytes).map("%02X".format(_)).mkString

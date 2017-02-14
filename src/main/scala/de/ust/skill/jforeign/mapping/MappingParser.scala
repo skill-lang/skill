@@ -1,8 +1,13 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.jforeign.mapping
 
-import scala.io.Source
-import scala.util.parsing.combinator._
 import java.io.Reader
+
+import scala.util.parsing.combinator.RegexParsers
 
 class MappingParser extends RegexParsers {
 

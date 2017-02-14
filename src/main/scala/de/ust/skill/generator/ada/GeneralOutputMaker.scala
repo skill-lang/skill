@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.ada
@@ -23,7 +23,7 @@ import scala.collection.mutable.HashMap
  */
 trait GeneralOutputMaker extends Generator {
 
-  override def getLanguageName = "ada";
+  override def getLanguageName : String = "ada";
 
   /**
    * configurable build mode; either "release" or "debug"
@@ -32,24 +32,17 @@ trait GeneralOutputMaker extends Generator {
   var buildOS = System.getProperty("os.name").toLowerCase
   var buildARCH = "amd64"
 
-  private[ada] def header : String
-
   // remove special stuff for now
-  final def setTC(tc : TypeContext) = this.IR = tc.removeSpecialDeclarations.getUsertypes.to
+  final def setTC(tc : TypeContext) {
+    this.IR = tc.removeSpecialDeclarations.getUsertypes.to
+  }
   var IR : List[UserType] = _
 
   /**
-   * Creates the correct PrintWriter for the argument file.
+   * if set to true, the generated binding will also contain visitors for each
+   * base type
    */
-  override protected def open(path : String) = {
-    val f = new File(s"$outPath/src/$packagePath/$path")
-    f.getParentFile.mkdirs
-    f.createNewFile
-    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream(f), "UTF-8")))
-    rval.write(header)
-    rval
-  }
+  protected var createVisitors = false;
 
   /**
    * Assume the existence of a translation function for the types.
@@ -123,12 +116,6 @@ trait GeneralOutputMaker extends Generator {
 
   protected final def fieldName(t : Type, f : Field) = s"${escaped(t.getName.ada)}_${escaped(f.getName.ada)}"
 
-  private lazy val packagePath = if (packagePrefix.length > 0) {
-    packagePrefix.replace(".", "/")
-  } else {
-    ""
-  }
-
   /**
    * create an appropriate image for a constant string
    *
@@ -148,7 +135,6 @@ trait GeneralOutputMaker extends Generator {
     case t : SetType                 ⇒ s"Skill_Set_${escaped(t.getBaseType.getSkillName)}"
     case t : SingleBaseTypeContainer ⇒ s"Skill_Array_${escaped(t.getBaseType.getSkillName)}"
     case t : MapType                 ⇒ t.getBaseTypes.map { x ⇒ escaped(x.getSkillName) }.mkString("Skill_Map_", "_", "");
-    case _                           ⇒ ???
   }
 
   /**

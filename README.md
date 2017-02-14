@@ -9,10 +9,11 @@ http://www2.informatik.uni-stuttgart.de/cgi-bin/NCSTRL/NCSTRL_view.pl?id=TR-2013
 
 This repository contains implementations for (alphatical order):
 
-Languag|Supported Features|Testsuite|Libs|Notes
+Language|Supported Features|Testsuite|Libs|Notes
 -------|------------------|---------|----|-----
-Ada 2012 |auto,append,documented,escaped,lazy| yes |commonAda| incomplete resource management
+Ada 2012 |auto,append,documented,escaped,lazy(only reflection)| yes |commonAda| incomplete resource management
 C 99 |mainly core features| does not compile | - | SKilL TR13, not maintained
-C++ 11 |documented,escaped,lazy| yes | commonC++ | 
-Java 8 |auto,append,customs,documented,escaped,interfaces,lazy| yes | commonJVM, commonJava | some multi-state support, last Arch.8 implementation
+C++ 11 |documented,escaped,lazy(only reflection)| yes | commonC++ | 
+Haskell | only basic features | yes | - | some basic tests fail
+Java 8 |auto,append,customs,documented,escaped,interfaces,lazy(only reflection)| yes | commonJVM, commonJava | some multi-state support, last Arch.8 implementation
 Scala 2.11 |auto,append,customs,documented,escaped,interfaces,lazy| yes | commonJVM, commonScala | most complete implementation

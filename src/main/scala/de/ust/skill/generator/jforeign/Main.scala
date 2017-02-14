@@ -1,12 +1,20 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.jforeign
 
-import java.util.Date
-import scala.collection.JavaConversions._
+import java.io.File
+import java.io.FileOutputStream
+import java.io.FileReader
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
+
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.seqAsJavaList
+import scala.collection.mutable.HashMap
+
 import de.ust.skill.generator.jforeign.api.SkillFileMaker
 import de.ust.skill.generator.jforeign.internal.AccessMaker
 import de.ust.skill.generator.jforeign.internal.FieldDeclarationMaker
@@ -15,21 +23,65 @@ import de.ust.skill.generator.jforeign.internal.StateMaker
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
+import de.ust.skill.ir.FieldLike
 import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.ListType
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
+import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.View
-import scala.collection.mutable.HashMap
-import de.ust.skill.ir.FieldLike
+import de.ust.skill.jforeign.IRMapper
+import de.ust.skill.jforeign.mapping.MappingParser
+import de.ust.skill.jforeign.typing.TypeChecker
+import de.ust.skill.main.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.
  */
-abstract class FakeMain extends GeneralOutputMaker { def make {} }
+abstract class FakeMain extends GeneralOutputMaker {
+  def make {
+    initialize(this.asInstanceOf[Main], types)
+  }
+
+  /** Runner for java-foreign specific stuff. */
+  def initialize(generator : Main, skillTc : TypeContext) {
+    if (null == mappingFile) {
+      throw new IllegalStateException("a mapping file must be provided to java foreign via -Ojavaforeign:m=<path>")
+    }
+
+    // parse mapping
+    val mappingParser = new MappingParser()
+    val mappingRules = mappingParser.process(new FileReader(generator.getMappingFile()))
+    // get list of java class names that we want to map
+    val javaTypeNames = mappingRules.map { _.getJavaTypeName }
+    // map
+    val mapper = new IRMapper(generator.getForeignSources())
+    val (javaTc, rc) = mapper.mapClasses(javaTypeNames)
+    // bind and typecheck
+    val typeRules = mappingRules.flatMap { r ⇒ r.bind(skillTc, javaTc) }
+    val checker = new TypeChecker
+    val (_, mappedFields) = checker.check(typeRules, skillTc, javaTc, rc)
+    // remove unmapped fields
+    for (ut ← javaTc.getUsertypes) {
+      val fieldsToDelete : List[Field] = ut.getFields.filterNot { f ⇒ mappedFields.contains(f) }.toList
+      ut.getFields.removeAll(fieldsToDelete)
+    }
+    // generate specification file if requested
+    generator.getGenSpecPath.foreach { path ⇒
+      val f = new File(path)
+      val prettySkillSpec = new PrintWriter(new OutputStreamWriter(new FileOutputStream(f)))
+      javaTc.getUsertypes.foreach { ut ⇒
+        prettySkillSpec.write(ut.prettyPrint() + "\n")
+      }
+      prettySkillSpec.close()
+    }
+    // prepare generator
+    generator.setForeignTC(javaTc)
+    generator.setReflectionContext(rc)
+  }
+}
 
 /**
  * A generator turns a set of skill declarations into a Java interface providing means of manipulating skill files
@@ -84,11 +136,11 @@ class Main extends FakeMain
     case _                           ⇒ throw new IllegalStateException(s"Unknown type $t")
   }
 
-  override protected def mapType(f: Field, boxed : Boolean): String = f.getType match {
-    case t : ListType                ⇒ s"${rc.map(f).getName}<${mapType(t.getBaseType(), true)}>"
-    case t : SetType                 ⇒ s"${rc.map(f).getName}<${mapType(t.getBaseType(), true)}>"
-    case t : MapType                 ⇒ t.getBaseTypes().map(mapType(_, true)).reduceRight((k, v) ⇒ s"${rc.map(f).getName}<$k, $v>")
-    case _ ⇒ mapType(f.getType, boxed)
+  override protected def mapType(f : Field, boxed : Boolean) : String = f.getType match {
+    case t : ListType ⇒ s"${rc.map(f).getName}<${mapType(t.getBaseType(), true)}>"
+    case t : SetType  ⇒ s"${rc.map(f).getName}<${mapType(t.getBaseType(), true)}>"
+    case t : MapType  ⇒ t.getBaseTypes().map(mapType(_, true)).reduceRight((k, v) ⇒ s"${rc.map(f).getName}<$k, $v>")
+    case _            ⇒ mapType(f.getType, boxed)
   }
 
   /**
@@ -105,39 +157,7 @@ class Main extends FakeMain
     else r.map({ f ⇒ s", ${name(f)}" }).mkString("")
   }
 
-  /**
-   * Provide a nice file header:)
-   */
-  override private[jforeign] def header : String = _header
-  private lazy val _header = {
-    // create header from options
-    val headerLineLength = 51
-    val headerLine1 = Some((headerInfo.line1 match {
-      case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: " + _).getOrElse("Your SKilL Java 8 Binding")
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    val headerLine2 = Some((headerInfo.line2 match {
-      case Some(s) ⇒ s
-      case None ⇒ "generated: " + (headerInfo.date match {
-        case Some(s) ⇒ s
-        case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    val headerLine3 = Some((headerInfo.line3 match {
-      case Some(s) ⇒ s
-      case None ⇒ "by: " + (headerInfo.userName match {
-        case Some(s) ⇒ s
-        case None    ⇒ System.getProperty("user.name")
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-
-    s"""/*  ___ _  ___ _ _                                                            *\\
- * / __| |/ (_) | |       ${headerLine1.get} *
- * \\__ \\ ' <| | | |__     ${headerLine2.get} *
- * |___/_|\\_\\_|_|____|    ${headerLine3.get} *
-\\*                                                                            */
-"""
-  }
+  override def makeHeader(headerInfo : HeaderInfo) : String = headerInfo.format(this, "/*", "*\\", " *", "* ", "\\*", "*/")
 
   /**
    * provides the package prefix
@@ -149,27 +169,31 @@ class Main extends FakeMain
     _packagePrefix = names.foldRight("")(_ + "." + _)
   }
 
+  override def packageDependentPathPostfix = if (packagePrefix.length > 0) {
+    packagePrefix.replace(".", "/")
+  } else {
+    ""
+  }
+  override def defaultCleanMode = "file";
+
   override def setOption(option : String, value : String) : Unit = option match {
-    case "revealskillid"          ⇒ revealSkillID = ("true" == value);
-    case "srcpath" | "sourcepath" ⇒ sourcePath = if ('"' == value.charAt(0)) value.substring(1, value.length - 1) else value;
-    case "suppresswarnings"       ⇒ suppressWarnings = if ("true" == value) "@SuppressWarnings(\"all\")\n" else ""
-    case "m"                      ⇒ mappingFile = value
-    case "f"                      ⇒ foreignSources += value
-    case "genspec"                ⇒ genSpecPath = Some(value)
-    case unknown                  ⇒ sys.error(s"unkown Argument: $unknown")
+    case "revealskillid"    ⇒ revealSkillID = ("true" == value);
+    case "suppresswarnings" ⇒ suppressWarnings = if ("true" == value) "@SuppressWarnings(\"all\")\n" else ""
+    case "m"                ⇒ mappingFile = value
+    case "f"                ⇒ foreignSources += value
+    case "genspec"          ⇒ genSpecPath = Some(value)
+    case unknown            ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
-  override def printHelp : Unit = println("""
-Opitions (JavaForeign):
-  revealSkillID:    true/false  if set to true, the generated binding will reveal SKilL IDs in the API
-  srcPath:          <path>      set a relative path used as source folder in generated code
-  suppressWarnings: true/false  add a @SuppressWarnings("all") annotation to generated classes
-  m:                <path>      mapping file which ties SKilL types to Java types
-  f:                <path>      class path from where Java types are looked up. May be specified multiple times.
-  genspec:          <path>      generate SKilL specification from foreign types
-""")
+  override def helpText : String = """
+revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
+suppressWarnings  true/false  add a @SuppressWarnings("all") annotation to generated classes
+m                 <path>      mapping file which ties SKilL types to Java types
+f                 <path>      class path from where Java types are looked up. May be specified multiple times.
+genspec           <path>      generate SKilL specification from foreign types
+"""
 
-  override def customFieldManual = """
+  override def customFieldManual : String = """
 !import string+    A list of imports that will be added where required.
 !modifier string   A modifier, that will be put in front of the variable declaration."""
 
@@ -180,8 +204,6 @@ Opitions (JavaForeign):
       case "bool"                               ⇒ "false"
       case _                                    ⇒ "null"
     }
-
-    // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
 
     case _ ⇒ "null"
   }
@@ -209,5 +231,4 @@ Opitions (JavaForeign):
     escapeCache(target) = result
     result
   })
-
 }

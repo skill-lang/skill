@@ -1,0 +1,19 @@
+# comment handling
+
+/**
+ * A comment that explains types or fields.
+ * 
+ * @author Timm Felden
+ */
+Comment {
+  string[] text;
+  CommentTag[] tags;
+}
+
+/**
+ * The tag part of a comment. Can be used for easy inspection of comments.
+ */
+CommentTag {
+  string name;
+  string[] text;
+}

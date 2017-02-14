@@ -1,27 +1,22 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java.internal
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.java.GeneralOutputMaker
+import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.Typedef
 import de.ust.skill.ir.Type
-import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.ConstantLengthArrayType
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.SetType
-import de.ust.skill.ir.MapType
-import de.ust.skill.ir.ListType
-import de.ust.skill.ir.restriction.MonotoneRestriction
-import de.ust.skill.ir.restriction.SingletonRestriction
+import de.ust.skill.ir.UserType
 
 trait StateMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("internal/SkillState.java")
+    val out = files.open(s"internal/SkillState.java")
 
     out.write(s"""package ${packagePrefix}internal;
 
@@ -52,8 +47,8 @@ import ${packagePrefix}api.SkillFile;
  * @note type access fields start with a capital letter to avoid collisions
  */
 ${
-  suppressWarnings
-}public final class SkillState extends de.ust.skill.common.java.internal.SkillState implements SkillFile {
+      suppressWarnings
+    }public final class SkillState extends de.ust.skill.common.java.internal.SkillState implements SkillFile {
 
     // types by skill name
     private final HashMap<String, StoragePool<?, ?>> poolByName;
@@ -121,12 +116,16 @@ ${
         yield s"""
             ${name(t)}Access ${name(t)} = new ${name(t)}Access(${i += 1; i}${
         if (null == t.getSuperType) ""
-        else { ", "+name(t.getSuperType) }
+        else { ", " + name(t.getSuperType) }
       });
             types.add(${name(t)});"""
       ).mkString("")
     }
-            return new SkillState(strings, types, stringType, annotation, path, actualMode.close);
+            HashMap<String, StoragePool<?, ?>> poolByName = new HashMap<>();
+            for (StoragePool<?, ?> p : types)
+                poolByName.put(p.name(), p);
+
+            return new SkillState(poolByName, strings, stringType, annotation, types, path, actualMode.close);
 
         case Read:
             return FileParser.read(FileInputStream.open(path, actualMode.close == Mode.ReadOnly), actualMode.close);
@@ -136,41 +135,31 @@ ${
         }
     }
 
-    public SkillState(StringPool strings, ArrayList<StoragePool<?, ?>> types, StringType stringType,
-            Annotation annotationType, Path path, Mode mode) {
-        super(strings, path, mode, types, stringType, annotationType);
-        poolByName = new HashMap<>();
-        for (StoragePool<?, ?> p : types)
-            poolByName.put(p.name(), p);
-${
-      var i = -1
-      (for (t ← IR)
-        yield s"""
-        ${name(t)}s = (${name(t)}Access) poolByName.get("${t.getSkillName}");
-"""
-      ).mkString("")
-    }
-
-        finalizePools();
-    }
-
     public SkillState(HashMap<String, StoragePool<?, ?>> poolByName, StringPool strings, StringType stringType,
             Annotation annotationType,
             ArrayList<StoragePool<?, ?>> types, Path path, Mode mode) {
         super(strings, path, mode, types, stringType, annotationType);
         this.poolByName = poolByName;
 ${
-      var i = -1
       (for (t ← IR)
         yield s"""
         ${name(t)}s = (${name(t)}Access) poolByName.get("${t.getSkillName}");"""
+      ).mkString("")
+    }${
+      (for (t ← types.getInterfaces)
+        yield s"""
+        ${name(t)}s = new ${interfacePool(t)}("${t.getSkillName}", ${
+        if (t.getSuperType.getSkillName.equals("annotation")) "annotationType"
+        else name(t.getSuperType) + "s";
+      }${
+        collectRealizationNames(t).mkString(",", ",", "")
+      });"""
       ).mkString("")
     }
 
         finalizePools();
     }
 ${
-      var i = -1
       (for (t ← IR)
         yield s"""
     private final ${name(t)}Access ${name(t)}s;
@@ -181,10 +170,31 @@ ${
     }
 """
       ).mkString("")
+    }${
+      (for (t ← types.getInterfaces)
+        yield s"""
+    private final ${interfacePool(t)} ${name(t)}s;
+
+    @Override
+    public ${interfacePool(t)} ${name(t)}s() {
+        return ${name(t)}s;
     }
-}
+"""
+      ).mkString("")
+    }}
 """)
 
     out.close()
+  }
+
+  private def collectRealizationNames(target : InterfaceType) : Seq[String] = {
+    def reaches(t : Type) : Boolean = t match {
+      case t : UserType      ⇒ t.getSuperInterfaces.contains(target) || t.getSuperInterfaces.exists(reaches)
+      case t : InterfaceType ⇒ t.getSuperInterfaces.contains(target) || t.getSuperInterfaces.exists(reaches)
+      case t : Typedef       ⇒ reaches(t.getTarget)
+      case _                 ⇒ false
+    }
+
+    types.getUsertypes.filter(reaches).map(name(_) + "s").toSeq
   }
 }

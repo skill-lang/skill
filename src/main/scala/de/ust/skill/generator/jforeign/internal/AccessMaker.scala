@@ -1,11 +1,11 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.jforeign.internal
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
 
 import de.ust.skill.generator.jforeign.GeneralOutputMaker
 import de.ust.skill.ir.ConstantLengthArrayType
@@ -17,12 +17,11 @@ import de.ust.skill.ir.ListType
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.SetType
 import de.ust.skill.ir.Type
-import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.restriction.AbstractRestriction
 import de.ust.skill.ir.restriction.FloatRangeRestriction
 import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.NonNullRestriction
-import de.ust.skill.ir.restriction.AbstractRestriction
 
 trait AccessMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -33,9 +32,9 @@ trait AccessMaker extends GeneralOutputMaker {
       val nameT = name(t)
       val typeT = mapType(t)
 
-      val abstrct : Boolean = t.getRestrictions.filter { p => p.isInstanceOf[AbstractRestriction] }.nonEmpty
+      val abstrct : Boolean = t.getRestrictions.filter { p ⇒ p.isInstanceOf[AbstractRestriction] }.nonEmpty
 
-      val out = open(s"internal/${nameT}Access.java")
+      val out = files.open(s"internal/${nameT}Access.java")
       //package & imports
       out.write(s"""package ${packagePrefix}internal;
 
@@ -102,14 +101,14 @@ ${
     public void insertInstances() {
 ${
         if (abstrct)
-s"""        // do nothing for abstract classes
+          s"""        // do nothing for abstract classes
      }"""
         else
           s"""${
-        if (isBasePool) ""
-        else s"""
+            if (isBasePool) ""
+            else s"""
         ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access)basePool).data();"""
-      }
+          }
         final Block last = blocks().getLast();
         int i = (int) last.bpo;
         int high = (int) (last.bpo + last.count);
@@ -125,7 +124,7 @@ s"""        // do nothing for abstract classes
             i += 1;
         }
     }"""
-}
+      }
 ${
         if (t.getFields.isEmpty()) ""
         else s"""
@@ -202,14 +201,15 @@ ${
      */
     @Override
     public $typeT make() {${
-       if (abstrct) s"""
+        if (abstrct) s"""
         throw new RuntimeException("Cannot instantiate abstract class $nameT");"""
-       else {s"""
+        else {
+          s"""
         $typeT rval = new $typeT();
         add(rval);
         return rval;"""
-       }
-     }
+        }
+      }
     }
 ${
         if (t.getAllFields.filterNot { f ⇒ f.isConstant() || f.isIgnored() }.isEmpty) ""
@@ -218,21 +218,23 @@ ${
      * @return a new age instance with the argument field values
      */
     public $typeT make(${makeConstructorArguments(t)}) {${
-       if (abstrct) s"""
+          if (abstrct) s"""
         throw new RuntimeException("Cannot instantiate abstract class $nameT");"""
-       else {s"""
+          else {
+            s"""
         $typeT rval = new $typeT(${
-          t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map { f ⇒ s"""${name(f)}, """ }.mkString("")
-        }-1, null);
+              t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }.map { f ⇒ s"""${name(f)}, """ }.mkString("")
+            }-1, null);
         add(rval);
         return rval;"""
-       }
-    }
+          }
+        }
     }
 """
-}
+      }
 ${
-  if (!abstrct) {s"""
+        if (!abstrct) {
+          s"""
     public ${nameT}Builder build() {
         return new ${nameT}Builder(this, new $typeT());
     }
@@ -247,14 +249,14 @@ ${
         protected ${nameT}Builder(StoragePool<$typeT, ? super $typeT> pool, $typeT instance) {
             super(pool, instance);
         }${
-        (for (f ← t.getAllFields if !f.isIgnored() && !f.isConstant())
-          yield s"""
+            (for (f ← t.getAllFields if !f.isIgnored() && !f.isConstant())
+              yield s"""
 
         public ${nameT}Builder ${name(f)}(${mapType(f, false)} ${name(f)}) {
             instance.${setterOrFieldAccess(t, f)}(${name(f)});
             return this;
         }""").mkString
-      }
+          }
     }
 
     /**
@@ -265,8 +267,9 @@ ${
         return new UnknownSubPool(index, name, this);
     }
 
-    private static final class UnknownSubPool extends SubPool<${packagePrefix() +"internal." + name(t)}SubType, ${mapType(t.getBaseType)}> {
-        UnknownSubPool(int poolIndex, String name, StoragePool<? super ${packagePrefix() + "internal." + name(t)}SubType, ${mapType(t.getBaseType)}> superPool) {
+    private static final class UnknownSubPool extends SubPool<${packagePrefix() + "internal." + name(t)}SubType, ${mapType(t.getBaseType)}> {
+        UnknownSubPool(int poolIndex, String name, StoragePool<? super ${packagePrefix()}internal.${name(t)}SubType,
+                       ${mapType(t.getBaseType)}> superPool) {
             super(poolIndex, name, superPool, Collections.emptySet(), noAutoFields());
         }
 
@@ -294,8 +297,8 @@ ${
             }
         }
     }"""
-  } else ""
-}
+        } else ""
+      }
 
     /**
      * punch a hole into the java type system :)

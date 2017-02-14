@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.ada.internal
@@ -17,7 +17,7 @@ trait InternalMaker extends GeneralOutputMaker {
 
   private final def makeSpec {
 
-    val out = open(s"""${packagePrefix}-internal.ads""")
+    val out = files.open(s"""${packagePrefix}-internal.ads""")
 
     out.write(s"""
 with Skill.Files;

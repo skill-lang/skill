@@ -1,13 +1,15 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.parser
 
 import java.io.File
-import scala.collection.JavaConversions._
+
+import scala.collection.JavaConversions.asScalaBuffer
 import scala.language.implicitConversions
+
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -19,7 +21,7 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class ParserTest extends FunSuite {
 
-  implicit private def basePath(path : String) : File = new File("src/test/resources/frontend"+path);
+  implicit private def basePath(path : String) : File = new File("src/test/resources/frontend" + path);
 
   private def check(filename : String) = {
     assert(0 != Parser.process(filename).allTypeNames.size)
@@ -38,7 +40,7 @@ class ParserTest extends FunSuite {
   test("strict type ordered IR") {
     val IR = Parser.process("/typeOrderIR.skill").getUsertypes()
     val order = IR.map(_.getSkillName).mkString("")
-    assert(order == "abdc", order+" is not in type order!")
+    assert(order == "abdc", order + " is not in type order!")
   }
 
   test("regression: casing of user types") {
@@ -50,11 +52,13 @@ class ParserTest extends FunSuite {
   }
 
   test("regression: report missing types") {
-    val e = intercept[de.ust.skill.ir.ParseException] { Parser.process("/ParseException/missingTypeCausedBySpelling.skill", false, false).allTypeNames.size }
+    val e = intercept[de.ust.skill.ir.ParseException] {
+      Parser.process("/ParseException/missingTypeCausedBySpelling.skill", false, false).allTypeNames.size
+    }
     assert("""The type "MessSage" parent of DatedMessage is unknown!
 Declaration in src/test/resources/frontend/ParseException/missingTypeCausedBySpelling.skill.
 Did you forget to include MessSage.skill?
-Known types are: Message, DatedMessage""" === e.getMessage())
+Known types are: Message, DatedMessage""" === e.getMessage().replaceAll("\\\\", "/"))
   }
 
   test("regression: comments - declaration") {

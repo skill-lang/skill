@@ -1,26 +1,24 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.java
 
-import java.io.File
-import java.io.PrintWriter
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.Type
-import de.ust.skill.ir.Field
-import java.util.Date
 import java.io.BufferedWriter
-import java.io.OutputStreamWriter
+import java.io.File
 import java.io.FileOutputStream
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
+
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.common.Generator
-import scala.collection.JavaConversions._
+import de.ust.skill.ir.FieldLike
+import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.Type
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
-import java.nio.file.Paths
-import de.ust.skill.ir.InterfaceType
-import de.ust.skill.ir.FieldLike
 
 /**
  * The parent class for all output makers.
@@ -30,7 +28,7 @@ import de.ust.skill.ir.FieldLike
 trait GeneralOutputMaker extends Generator {
 
   // remove special stuff
-  final def setTC(tc : TypeContext) = {
+  final def setTC(tc : TypeContext) {
     this.types = tc
     val flat = tc.removeTypedefs.removeEnums
     this.IR = flat.getUsertypes.to
@@ -47,7 +45,7 @@ trait GeneralOutputMaker extends Generator {
    */
   var largeSpecificationMode = false
 
-  override def getLanguageName = "java";
+  override def getLanguageName : String = "java";
 
   // options
   /**
@@ -55,32 +53,37 @@ trait GeneralOutputMaker extends Generator {
    */
   protected var revealSkillID = false;
 
+  /**
+   * if set to true, the generated binding will also contain visitors for each
+   * base type
+   */
+  protected var createVisitors = false;
+
   val ArrayTypeName = "java.util.ArrayList"
   val VarArrayTypeName = "java.util.ArrayList"
   val ListTypeName = "java.util.LinkedList"
   val SetTypeName = "java.util.HashSet"
   val MapTypeName = "java.util.HashMap"
 
-  private[java] def header : String
-
-  /**
-   * Creates the correct PrintWriter for the argument file.
-   *
-   * @note the used path uses maven/sbt source placement convention
-   */
-  override protected def open(path : String) = {
-    val f = simpleOpenDirtyPathString(s"$outPath/$sourcePath/$packagePath$path")
-
-    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream(f), "UTF-8")))
-    rval.write(header)
-    rval
-  }
-
   /**
    * Assume the existence of a translation function for types.
    */
   protected def mapType(t : Type, boxed : Boolean = false) : String
+
+  /**
+   * Assume the existence of a translation function for types that creates
+   * variant container types.
+   */
+  protected def mapVariantType(t : Type) : String
+
+  /**
+   * the name of an interface field type that acts as its pool
+   */
+  protected final def interfacePool(t : InterfaceType) : String =
+    if (t.getSuperType.getSkillName.equals("annotation"))
+      s"de.ust.skill.common.java.internal.UnrootedInterfacePool<${mapType(t)}>"
+    else
+      s"de.ust.skill.common.java.internal.InterfacePool<${mapType(t)}, ${mapType(t.getBaseType)}>"
 
   /**
    * creates argument list of a constructor call, not including potential skillID or braces
@@ -101,21 +104,15 @@ trait GeneralOutputMaker extends Generator {
   protected def name(f : FieldLike) : String = escaped(f.getName.camel)
 
   /**
+   * Class name of the representation of a known field
+   */
+  protected def knownField(f : FieldLike) : String = s"F_${name(f.getDeclaredIn)}_${name(f)}"
+
+  /**
    * Assume a package prefix provider.
    */
   protected def packagePrefix() : String
   protected def packageName = packagePrefix.substring(0, packagePrefix.length - 1)
-
-  private lazy val packagePath = if (packagePrefix.length > 0) {
-    packagePrefix.replace(".", "/")
-  } else {
-    ""
-  }
-
-  /**
-   * Sourcepath can be configured to change output directory of source files.
-   */
-  protected var sourcePath = "src/main/java"
 
   /**
    * this string may contain a "@SuppressWarnings("all")\n", in order to suppress warnings in generated code;

@@ -1,4 +1,4 @@
-#! subtypes -O@Scala:revealSkillID=true
+#! subtypes -Oscala:revealSkillID=true -Oada:visitors=true -Ocpp:visitors=true
 
 A { A a; }
 B : A { B b; }

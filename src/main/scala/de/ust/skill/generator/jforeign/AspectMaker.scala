@@ -1,18 +1,18 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.jforeign
 
-import javassist.NotFoundException
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.SingleBaseTypeContainer
-import de.ust.skill.ir.UserType
-import de.ust.skill.ir.Type
 import de.ust.skill.ir.MapType
-import de.ust.skill.ir.Field
+import de.ust.skill.ir.SingleBaseTypeContainer
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.UserType
+import javassist.NotFoundException
 
 trait AspectMaker extends GeneralOutputMaker {
 
@@ -44,7 +44,7 @@ $indent}
     super.make
 
     for (t ← IR) {
-      val out = open(name(t) + "Aspects.java")
+      val out = files.open(name(t) + "Aspects.java")
 
       out.write(s"""
 package ${packageName};

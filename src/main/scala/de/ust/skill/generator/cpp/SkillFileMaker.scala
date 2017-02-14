@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.cpp
@@ -13,7 +13,7 @@ trait SkillFileMaker extends GeneralOutputMaker {
     makeSource
   }
   private def makeHeader {
-    val out = open("File.h")
+    val out = files.open("File.h")
 
     out.write(s"""${beginGuard("file")}
 #include <skill/fieldTypes/AnnotationType.h>
@@ -83,7 +83,7 @@ $endGuard""")
   }
 
   private def makeSource {
-    val out = open("File.cpp")
+    val out = files.open("File.cpp")
 
     out.write(s"""
 #include <skill/internal/UnknownBasePool.h>

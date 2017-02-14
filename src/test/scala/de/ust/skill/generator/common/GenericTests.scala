@@ -1,19 +1,19 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.common
 
-import org.scalatest.FunSuite
 import java.io.File
-import de.ust.skill.main.CommandLine
-import scala.collection.mutable.ArrayBuffer
-import java.nio.file.Files
-import org.scalatest.Assertions
+
+import scala.io.Codec
+
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.ConfigMap
-import scala.io.Codec
+import org.scalatest.FunSuite
+
+import de.ust.skill.main.CommandLine
 
 /**
  * Common implementation of generic tests
@@ -33,15 +33,15 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
   def language : String
 
   /**
-   * options used for generated tests. Can be used to improve generated tests.
-   */
-  def languageOptions : ArrayBuffer[String]
-
-  /**
    * This method should delete output directories, if they exist.
    * It is invoked once before invocation of CommandLine.main
    */
   def deleteOutDir(out : String) : Unit
+
+  /**
+   * hook called to call the generator
+   */
+  def callMainFor(name : String, source : String, options : Seq[String])
 
   /**
    *  creates unit tests in the target language
@@ -72,17 +72,12 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
    */
   def finalizeTests() : Unit
 
-  final def makeTest(path : File, name : String, options : String) = test("generic: "+name) {
+  final def makeTest(path : File, name : String, options : Seq[String]) : Unit = test("generic: " + name) {
     deleteOutDir(name)
 
     CommandLine.exit = { s ⇒ throw (new Error(s)) }
 
-    val args = languageOptions ++ ArrayBuffer[String]("-L", language, "-u", "<<some developer>>", "-h2", "<<debug>>", "-p", name)
-    if (options.size > 0)
-      args ++= options.split("\\s+").to
-    args += path.getPath
-    args += "testsuites"
-    CommandLine.main(args.toArray)
+    callMainFor(name, path.getPath, options)
 
     makeGenBinaryTests(name)
   }
@@ -91,10 +86,12 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
     def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ ⇒ "x") : _*)
   }
 
-  for (path ← new File("src/test/resources/gentest").listFiles if path.getName.endsWith(testOnly+".skill")) {
+  for (path ← new File("src/test/resources/gentest").listFiles if path.getName.endsWith(testOnly + ".skill")) {
     try {
-      val r"""#!\s(\w+)${ name }(.*)${ options }""" = io.Source.fromFile(path)(Codec.UTF8).getLines.toSeq.headOption.getOrElse("")
-      makeTest(path, name, options.trim)
+      val r"""#!\s(\w+)${ name }(.*)${ options }""" =
+        io.Source.fromFile(path)(Codec.UTF8).getLines.toSeq.headOption.getOrElse("")
+
+      makeTest(path, name, options.split("\\s+").filter(_.length() != 0))
     } catch {
       case e : MatchError ⇒
         println(s"failed processing of $path:")

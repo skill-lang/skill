@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c
@@ -23,12 +23,10 @@ import scala.collection.JavaConversions._
  */
 trait GeneralOutputMaker extends Generator {
 
-  override def getLanguageName = "c";
-
-  private[c] def header : String
+  override def getLanguageName : String = "c";
 
   // remove special stuff for now
-  final def setTC(tc : TypeContext) = this.IR = tc.removeSpecialDeclarations.getUsertypes.to
+  final def setTC(tc : TypeContext) { this.IR = tc.removeSpecialDeclarations.getUsertypes.to }
   var IR : List[UserType] = _
 
   /**
@@ -44,7 +42,7 @@ trait GeneralOutputMaker extends Generator {
   /**
    * Rename package prefix; we may change the implementation in the future.
    */
-  protected def prefix = if (packagePrefix.isEmpty()) "" else packagePrefix+"_"
+  protected def prefix = if (packagePrefix.isEmpty()) "" else packagePrefix + "_"
 
   /**
    * Tries to escape a string without decreasing the usability of the generated identifier.
@@ -52,11 +50,7 @@ trait GeneralOutputMaker extends Generator {
    */
   protected def escaped(target : Name) : String = escaped(target.ada)
 
-  private lazy val packagePath = if (packagePrefix.length > 0) {
-    packagePrefix.replace(".", "_")
-  } else {
-    ""
-  }
+  override def packageDependentPathPostfix = packagePrefix
 
   /**
    * Creates instance constructor arguments excluding the state
@@ -77,7 +71,7 @@ trait GeneralOutputMaker extends Generator {
   /**
    * provides a default name for the argument field
    */
-  protected def name(f : Field) : String = "if_"+escaped(f.getName.cStyle)
+  protected def name(f : Field) : String = "if_" + escaped(f.getName.cStyle)
 
   /**
    * provides field access implementation

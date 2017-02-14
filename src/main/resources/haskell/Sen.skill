@@ -1,31 +1,27 @@
 A {
-string a;
+ B b;
 }
 
-B extends A {
-i16 b;
+B {
+ A a;
 }
 
-C extends A {
-i32 c;
+C {
+ A a;
 }
 
-D extends B {
-i64 d;
+D {
+ D d;
 }
 
-E extends D {
-v64 e;
+E {
 }
 
-F {
-A f;
+F extends E {
+f32 f;
 }
 
-G {
-B g;
-}
-
-H {
-C h;
+G extends F {
+f64 g;
+E e;
 }

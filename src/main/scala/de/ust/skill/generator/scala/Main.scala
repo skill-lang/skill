@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.scala
@@ -34,6 +34,7 @@ import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.NameDefaultRestriction
 import de.ust.skill.ir.restriction.RangeRestriction
 import de.ust.skill.ir.restriction.StringDefaultRestriction
+import de.ust.skill.main.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -102,39 +103,7 @@ class Main extends FakeMain
     else r.map({ f ⇒ s"${escaped(f.getName.camel)} : ${mapType(f.getType())}" }).mkString(", ", ", ", "")
   }
 
-  /**
-   * Provide a nice file header:)
-   */
-  override private[scala] def header : String = _header
-  private lazy val _header = {
-    // create header from options
-    val headerLineLength = 51
-    val headerLine1 = Some((headerInfo.line1 match {
-      case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: " + _).getOrElse("Your SKilL Scala Binding")
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    val headerLine2 = Some((headerInfo.line2 match {
-      case Some(s) ⇒ s
-      case None ⇒ "generated: " + (headerInfo.date match {
-        case Some(s) ⇒ s
-        case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    val headerLine3 = Some((headerInfo.line3 match {
-      case Some(s) ⇒ s
-      case None ⇒ "by: " + (headerInfo.userName match {
-        case Some(s) ⇒ s
-        case None    ⇒ System.getProperty("user.name")
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-
-    s"""/*  ___ _  ___ _ _                                                            *\\
- * / __| |/ (_) | |       ${headerLine1.get} *
- * \\__ \\ ' <| | | |__     ${headerLine2.get} *
- * |___/_|\\_\\_|_|____|    ${headerLine3.get} *
-\\*                                                                            */
-"""
-  }
+  override def makeHeader(headerInfo : HeaderInfo) : String = headerInfo.format(this, "/*", "*\\", "**", "**", "\\*", "*/")
 
   /**
    * provides the package prefix
@@ -146,17 +115,24 @@ class Main extends FakeMain
     _packagePrefix = names.foldRight("")(_ + "." + _)
   }
 
-  override def setOption(option : String, value : String) = option match {
-    case "revealskillid" ⇒ revealSkillID = ("true" == value)
-    case unknown         ⇒ sys.error(s"unkown Argument: $unknown")
+  override def packageDependentPathPostfix = if (packagePrefix.length > 0) {
+    packagePrefix.replace(".", "/")
+  } else {
+    ""
   }
+  override def defaultCleanMode = "file";
 
-  override def printHelp : Unit = println("""
-Opitions (scala):
-  revealSkillID: true/false  if set to true, the generated binding will reveal SKilL IDs in the API
-""")
+  override def setOption(option : String, value : String) {
+    option match {
+      case "revealskillid" ⇒ revealSkillID = ("true" == value)
+      case unknown         ⇒ sys.error(s"unkown Argument: $unknown")
+    }
+  }
+  override def helpText : String = """
+revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
+"""
 
-  override def customFieldManual = """
+  override def customFieldManual : String = """
 !import string+    A list of imports that will be added where required.
 !modifier string   A modifier, that will be put in front of the variable declaration."""
 
@@ -240,52 +216,54 @@ Opitions (scala):
 
   protected def writeField(d : UserType, f : Field) : String = {
     val fName = escaped(f.getName.camel)
-    if (f.isConstant())
-      return "// constants do not write individual field data"
+    if (f.isConstant()) {
+      "// constants do not write individual field data"
+    } else {
 
-    f.getType match {
-      case t : GroundType ⇒ t.getSkillName match {
-        case "annotation" | "string" ⇒ s"for(i ← outData) ${f.getType.getSkillName}(i.$fName, dataChunk)"
-        case _                       ⇒ s"for(i ← outData) dataChunk.${f.getType.getSkillName}(i.$fName)"
+      f.getType match {
+        case t : GroundType ⇒ t.getSkillName match {
+          case "annotation" | "string" ⇒ s"for(i ← outData) ${f.getType.getSkillName}(i.$fName, dataChunk)"
+          case _                       ⇒ s"for(i ← outData) dataChunk.${f.getType.getSkillName}(i.$fName)"
 
-      }
-
-      case t : Declaration ⇒ s"""for(i ← outData) userRef(i.$fName, dataChunk)"""
-
-      case t : ConstantLengthArrayType ⇒ s"for(i ← outData) writeConstArray(${
-        t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
-          case b               ⇒ b.getSkillName()
         }
-      })(i.$fName, dataChunk)"
-      case t : VariableLengthArrayType ⇒ s"for(i ← outData) writeVarArray(${
-        t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
-          case b               ⇒ b.getSkillName()
-        }
-      })(i.$fName, dataChunk)"
-      case t : SetType ⇒ s"for(i ← outData) writeSet(${
-        t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
-          case b               ⇒ b.getSkillName()
-        }
-      })(i.$fName, dataChunk)"
-      case t : ListType ⇒ s"for(i ← outData) writeList(${
-        t.getBaseType() match {
-          case t : Declaration ⇒ s"userRef[${mapType(t)}]"
-          case b               ⇒ b.getSkillName()
-        }
-      })(i.$fName, dataChunk)"
 
-      case t : MapType ⇒ locally {
-        s"for(i ← outData) ${
-          t.getBaseTypes().map {
+        case t : Declaration ⇒ s"""for(i ← outData) userRef(i.$fName, dataChunk)"""
+
+        case t : ConstantLengthArrayType ⇒ s"for(i ← outData) writeConstArray(${
+          t.getBaseType() match {
             case t : Declaration ⇒ s"userRef[${mapType(t)}]"
             case b               ⇒ b.getSkillName()
-          }.reduceRight { (t, v) ⇒
-            s"writeMap($t, $v)"
           }
-        }(i.$fName, dataChunk)"
+        })(i.$fName, dataChunk)"
+        case t : VariableLengthArrayType ⇒ s"for(i ← outData) writeVarArray(${
+          t.getBaseType() match {
+            case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+            case b               ⇒ b.getSkillName()
+          }
+        })(i.$fName, dataChunk)"
+        case t : SetType ⇒ s"for(i ← outData) writeSet(${
+          t.getBaseType() match {
+            case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+            case b               ⇒ b.getSkillName()
+          }
+        })(i.$fName, dataChunk)"
+        case t : ListType ⇒ s"for(i ← outData) writeList(${
+          t.getBaseType() match {
+            case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+            case b               ⇒ b.getSkillName()
+          }
+        })(i.$fName, dataChunk)"
+
+        case t : MapType ⇒ locally {
+          s"for(i ← outData) ${
+            t.getBaseTypes().map {
+              case t : Declaration ⇒ s"userRef[${mapType(t)}]"
+              case b               ⇒ b.getSkillName()
+            }.reduceRight { (t, v) ⇒
+              s"writeMap($t, $v)"
+            }
+          }(i.$fName, dataChunk)"
+        }
       }
     }
   }

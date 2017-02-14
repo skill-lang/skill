@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.ada
@@ -20,7 +20,7 @@ trait PackageBodyMaker extends GeneralOutputMaker {
     // only create an adb, if it would contain any code
     if (IR.size > 0) {
 
-      val out = open(s"""${packagePrefix}.adb""")
+      val out = files.open(s"""${packagePrefix}.adb""")
 
       out.write(s"""
 with Ada.Unchecked_Conversion;
@@ -86,7 +86,7 @@ ${
 """
             sub.getSubTypes.foreach(asSub)
           }
-          
+
           // only base types get unsafe conversions, as they are inherited to subtypes and completely identical
           if (null == t.getSuperType)
             t.getSubTypes.foreach(asSub)
@@ -98,7 +98,15 @@ ${
       function Convert is new Ada.Unchecked_Conversion (Skill.Types.Annotation, ${name(t)}_Dyn);
    begin
       return Convert (This.To_Annotation);
-   end Dynamic_${name(t)};
+   end Dynamic_${name(t)};${
+          if (createVisitors) s"""
+   procedure Acc(This : access ${name(t)}_T; V : access Abstract_${name(t.getBaseType)}_Visitor'Class) is
+   begin
+      V.Visit (${name(t)} (This));
+   end Acc;
+"""
+          else ""
+        }
 
    -- reflective getter
    function Reflective_Get
@@ -176,7 +184,7 @@ ${
 """
               case ft : MapType ⇒
 
-                map_boxing(t, f, "", ft.getBaseTypes.toList).mkString
+                mapBoxing(t, f, "", ft.getBaseTypes.toList).mkString
 
               case _ ⇒ ""
             }
@@ -210,7 +218,7 @@ end ${PackagePrefix};
     }
   }
 
-  private final def map_boxing(t : Type, f : Field, Vs : String, ts : List[Type]) : Seq[String] = {
+  private final def mapBoxing(t : Type, f : Field, Vs : String, ts : List[Type]) : Seq[String] = {
     val k : Type = ts.head
 
     Seq(s"""
@@ -258,7 +266,7 @@ end ${PackagePrefix};
    begin
       return Convert (V);
    end Unbox_${name(f)}_${Vs}V;
-""") ++ map_boxing(t, f, Vs + "V", vs)
+""") ++ mapBoxing(t, f, Vs + "V", vs)
 
       })
   }

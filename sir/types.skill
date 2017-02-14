@@ -1,0 +1,157 @@
+# all sorts of types in skill
+
+include "annotations.skill"
+include "comments.skill"
+include "fields.skill"
+
+/**
+ * A nicer version of a skill name that can be used to adapt to a target language naming convention.
+ */
+Identifier {
+
+  /**
+   * the plain skill name
+   */
+  string skillname;
+
+  /**
+   * parts used to create the skill name
+   */
+  string[] parts;
+}
+
+/**
+ * The root of the type hierarchy.
+ */
+@abstract
+Type {}
+
+/**
+ * Types without type arguments.
+ */
+interface GroundType extends Type {
+
+  /**
+   * the skill name used to identify this type, e.g. i32.
+   */
+  Identifier name;
+}
+
+/**
+ * All types defined by skill.
+ */
+@abstract
+BuiltinType extends Type {}
+
+/**
+ * simple predefined types, such as i32 
+ */
+SimpleType extends BuiltinType with GroundType {}
+
+/**
+ * representation of constant integers
+ */
+ConstantInteger extends SimpleType {
+
+  v64 value;
+}
+
+/**
+ * containers with a single base type
+ */
+SingleBaseTypeContainer extends BuiltinType {
+
+  /**
+   * the base type of this container
+   */
+  GroundType base;
+
+  /**
+   * can be one of:
+   * 
+   * "set", "array", "list"
+   */
+  string kind;
+}
+
+/**
+ * @note kind is always "array"
+ */
+ConstantLengthArrayType extends SingleBaseTypeContainer {
+
+  /**
+   * the constant length of this array
+   */
+  v64 length;
+}
+
+/**
+ * a map type
+ */
+MapType extends BuiltinType {
+
+  /**
+   * base types of the map in order of appearance
+   */
+  GroundType[] base;
+}
+
+@abstract
+UserdefinedType extends Type with GroundType with Annotations {
+
+  /**
+   * the comment provided by the user or null
+   */
+  Comment comment;
+}
+
+/**
+ * A regular type definition
+ */
+ClassType extends UserdefinedType {
+
+  /**
+   * there might be multiple fields under the same name in this type, as the class can be
+   *  
+   * a) part of configuration
+   * 
+   * b) contain custom fields
+   */
+  FieldLike[] fields;
+
+  ClassType super;
+  set<InterfaceType> interfaces;
+}
+
+InterfaceType extends UserdefinedType {
+
+  /**
+   * there might be multiple fields under the same name in this type, as the class can be 
+   * a) part of configuration
+   * b) contain custom fields
+   */
+  FieldLike[] fields;
+
+  ClassType super;
+  set<InterfaceType> interfaces;
+}
+
+EnumType extends UserdefinedType {
+
+  /**
+   * there might be multiple fields under the same name in this type, as the class can be 
+   * a) part of configuration
+   * b) contain custom fields
+   */
+  FieldLike[] fields;
+
+  Identifier[] instances;
+}
+
+TypeDefinition extends UserdefinedType {
+
+  /**
+   * the target of this definition
+   */
+  Type target;
+}

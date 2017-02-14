@@ -1,15 +1,16 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.scala.api.internal
+
 import de.ust.skill.generator.scala.GeneralOutputMaker
 
 trait FileParserMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("api/internal/FileParser.scala")
+    val out = files.open("api/internal/FileParser.scala")
     //package & imports
     out.write(s"""package ${packagePrefix}api.internal
 
@@ -93,6 +94,9 @@ object FileParser extends SkillFileParser[SkillFile] {
       ).mkString
     }
 
+    // create state to allow distributed fields to access the state structure for instance allocation
+    val r = new SkillFile(path, mode, String, Annotation, types, typesByName)
+
     // trigger allocation and instance creation
     locally {
       val ts = types.iterator
@@ -104,14 +108,17 @@ object FileParser extends SkillFileParser[SkillFile] {
       }
     }
     types.par.foreach(_.allocateInstances)
-    
+
     // create restrictions (may contain references to instances)
 
     // read eager fields
     triggerFieldDeserialization(types, dataList)
 
-    val r = new SkillFile(path, mode, String, Annotation, types, typesByName)
-    types.par.foreach(_.ensureKnownFields(r))
+    locally {
+      val ts = types.iterator
+      while(ts.hasNext)
+        ts.next().ensureKnownFields(r)
+    }
     r
   }
 }

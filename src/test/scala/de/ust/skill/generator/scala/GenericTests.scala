@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.scala
@@ -10,35 +10,43 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
-import java.nio.file.Files
-import scala.reflect.io.Directory
+
 import scala.reflect.io.Path.jfile2path
+
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import de.ust.skill.main.CommandLine
 import org.scalatest.junit.JUnitRunner
-import scala.collection.mutable.ArrayBuffer
+
 import de.ust.skill.generator.common
+import de.ust.skill.main.CommandLine
 
 /**
  * Generic tests built for scala.
  * Generic tests have an implementation for each programming language, because otherwise deleting the generated code
- * upfront would be upgly.
+ * upfront would be ugly.
  *
  * @author Timm Felden
  */
 @RunWith(classOf[JUnitRunner])
 class GenericTests extends common.GenericTests {
 
-  override def language = "scala"
-  override val languageOptions = ArrayBuffer[String]()
+  override def language : String = "scala"
 
   override def deleteOutDir(out : String) {
     import scala.reflect.io.Directory
     Directory(new File("testsuites/scala/src/main/scala/", out)).deleteRecursively
   }
 
-  def newTestFile(packagePath : String, name : String) = {
+  override def callMainFor(name : String, source : String, options : Seq[String]) {
+    CommandLine.exit = s ⇒ throw new RuntimeException(s)
+    CommandLine.main(Array[String](source,
+      "--debug-header",
+      "-L", "scala",
+      "-p", name,
+      "-d", "testsuites/scala/lib",
+      "-o", "testsuites/scala/src/main/scala") ++ options)
+  }
+
+  def newTestFile(packagePath : String, name : String) : PrintWriter = {
     val f = new File(s"testsuites/scala/src/test/scala/$packagePath/$name.generated.scala")
     f.getParentFile.mkdirs
     f.createNewFile
@@ -88,11 +96,11 @@ class Generic${name}ReadTest extends CommonTest {
       val out = newTestFile(name, "Read")
 
       for (f ← accept) out.write(s"""
-  test("$name - read (accept): ${f.getName}") { read("${f.getPath}").check }
+  test("$name - read (accept): ${f.getName}") { read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}").check }
 """)
 
       for (f ← reject) out.write(s"""
-  test("$name - read (reject): ${f.getName}") { intercept[SkillException] { read("${f.getPath}").check } }
+  test("$name - read (reject): ${f.getName}") { intercept[SkillException] { read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}").check } }
 """)
       closeTestFile(out)
     }

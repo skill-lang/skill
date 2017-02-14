@@ -1,17 +1,23 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.ecore
 
-import de.ust.skill.ir._
-import de.ust.skill.parser.Parser
-import java.io.File
-import scala.collection.JavaConversions._
-import scala.collection.mutable.MutableList
-import de.ust.skill.generator.common.Generator
-import java.util.Date
+import scala.collection.JavaConversions.asScalaBuffer
+
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.FieldLike
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.main.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -19,11 +25,7 @@ import java.util.Date
 abstract class FakeMain extends GeneralOutputMaker { def make {} }
 
 /**
- * The used language is C++ (or rather something that doxygen recoginezes as C++).
- *
- * @note Using C++ has the effect, that neither interfaces nor enums with fields can be represented correctly.
- * @note None of the languages supported by doxygen seems to provide all required features. We may fix this by
- * switching to scaladoc or by hoping that doxygen will support scala or swift eventually.
+ * Generates an ecore model that can be fed into EMF.
  *
  * @author Timm Felden
  */
@@ -31,8 +33,8 @@ class Main extends FakeMain
     with SpecificationMaker {
 
   lineLength = 80
-  override def comment(d : Declaration) : String = "" //d.getComment.format("/**\n", " * ", lineLength, " */\n")
-  override def comment(f : FieldLike) : String = "" //f.getComment.format("/**\n", "   * ", lineLength, "   */\n  ")
+  override def comment(d : Declaration) : String = ""
+  override def comment(f : FieldLike) : String = ""
 
   /**
    * Translates the types into Ada types.
@@ -57,21 +59,27 @@ class Main extends FakeMain
     _packagePrefix = names.reduce(_ + "." + _)
   }
 
-  override def setOption(option : String, value : String) = option match {
-    case unknown ⇒ sys.error(s"unkown Argument: $unknown")
+  override def setOption(option : String, value : String) {
+    // no options
   }
+  override def helpText : String = ""
+
+  override def makeHeader(headerInfo : HeaderInfo) : String = ""
 
   /**
    * stats do not require any escaping
    */
   override def escaped(target : String) : String = target.replace(':', '_');
 
-  override def printHelp : Unit = println("""
-Opitions (ecore):
-""")
-
-  override def customFieldManual = "(unsupported)"
+  override def customFieldManual : String = "(unsupported)"
 
   // unused
   override protected def defaultValue(f : Field) = throw new NoSuchMethodError
+
+  override def packageDependentPathPostfix = if (packagePrefix.length > 0) {
+    "/" + packagePrefix.replace(".", "/")
+  } else {
+    ""
+  }
+  override def defaultCleanMode = "file";
 }

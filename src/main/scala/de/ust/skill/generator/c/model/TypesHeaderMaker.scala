@@ -1,14 +1,13 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c.model
 
-import scala.collection.JavaConversions._
-import java.io.PrintWriter
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.c.GeneralOutputMaker
-import de.ust.skill.ir.UserType
 
 /**
  * @author Fabian Harth, Timm Felden
@@ -18,7 +17,7 @@ import de.ust.skill.ir.UserType
 trait TypesHeaderMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"model/${prefix}types.h")
+    val out = files.open(s"model/${prefix}types.h")
 
     val prefixCapital = packagePrefix.toUpperCase
 

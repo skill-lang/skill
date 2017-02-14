@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.jforeign.internal
@@ -10,7 +10,7 @@ import de.ust.skill.generator.jforeign.GeneralOutputMaker
 trait FileParserMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("internal/FileParser.java")
+    val out = files.open("internal/FileParser.java")
     //package & imports
     out.write(s"""package ${packagePrefix}internal;
 

@@ -1,6 +1,14 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.parser;
 
-import scala.collection.JavaConversions._
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.seqAsJavaList
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
@@ -12,9 +20,6 @@ import de.ust.skill.ir.TypeContext
 object IRBuilder {
   /**
    * Turns the AST into IR.
-   *
-   * TODO the type checking should be separated and IR building should start over with the original AST and the
-   * knowledge, that it is in fact correct
    */
   def buildIR(defs : ArrayBuffer[Declaration], verboseOutput : Boolean, keepSpecificationOrder : Boolean) : TypeContext = {
     val tc = new ir.TypeContext
@@ -93,24 +98,22 @@ object IRBuilder {
         if (temporary.contains(n))
           throw ParseException(s"The type hierarchy contains a cicle involving type ${n.name}.\n See ${n.declaredIn}")
 
-        //    if n is not marked (i.e. has not been visited yet) then
-        if (marked(n)) {
-          return
+        // if n is not marked (i.e. has not been visited yet) then
+        if (!marked(n)) {
+          // mark n temporarily
+          temporary += n
+
+          edges(n).foreach(visit)
+          // for each node m with an edge from n to m do
+          //   visit(m)
+
+          // mark n permanently
+          marked += n
+          // unmark n temporarily
+          temporary -= n
+          // add n to head of L
+          L.prepend(n)
         }
-
-        //        mark n temporarily
-        temporary += n
-
-        edges(n).foreach(visit)
-        //        for each node m with an edge from n to m do
-        //            visit(m)
-
-        //        mark n permanently
-        marked += n
-        //        unmark n temporarily
-        temporary -= n
-        //        add n to head of L
-        L.prepend(n)
       }
 
       //  while there are unmarked nodes do

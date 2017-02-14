@@ -1,26 +1,25 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c.model
 
-import scala.collection.JavaConversions._
-import java.io.PrintWriter
+import scala.collection.JavaConversions.asScalaBuffer
+
 import de.ust.skill.generator.c.GeneralOutputMaker
-import de.ust.skill.ir.UserType
-import de.ust.skill.ir.MapType
-import de.ust.skill.ir.GroundType
-import de.ust.skill.ir.Field
 import de.ust.skill.ir.ConstantLengthArrayType
-import de.ust.skill.ir.ReferenceType
-import de.ust.skill.ir.SingleBaseTypeContainer
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.VariableLengthArrayType
-import de.ust.skill.ir.ListType
-import de.ust.skill.ir.SetType
 import de.ust.skill.ir.ContainerType
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.MapType
+import de.ust.skill.ir.ReferenceType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.SingleBaseTypeContainer
 import de.ust.skill.ir.Type
+import de.ust.skill.ir.UserType
+import de.ust.skill.ir.VariableLengthArrayType
 
 /**
  * @author Fabian Harth, Timm Felden
@@ -30,7 +29,7 @@ import de.ust.skill.ir.Type
 trait SkillStateSourceMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open(s"model/${prefix}skill_state.c")
+    val out = files.open(s"model/${prefix}skill_state.c")
 
     val prefixCapital = packagePrefix.toUpperCase
 
@@ -279,7 +278,7 @@ void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {${
       case "string" ⇒
         s"""$target = ${prefix}string_access_get_string_by_id ( strings, ${prefix}read_v64 ( buffer ) );"""
       case "annotation" ⇒
-        // TODO change this implementation to TR15
+        // TODO change this implementation to TR17
         s"""int64_t type_name_id = ${prefix}read_v64 ( buffer );
     if ( type_name_id == 0 ) {
         ${prefix}read_v64 ( buffer );
@@ -302,7 +301,7 @@ void ${prefix}skill_state_delete_internal(${prefix}skill_state this) {${
       case "string" ⇒
         s"""${prefix}write_v64(out, ${prefix}string_access_get_id_by_string(strings, ${access(f)}));"""
       case "annotation" ⇒
-        // TODO change this implementation to TR15
+        // TODO change this implementation to TR17
         s"""${prefix}skill_type annotation = $target;
     if(0 == annotation) {
         write_i8(out, 0);

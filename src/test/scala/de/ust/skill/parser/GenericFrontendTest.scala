@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.parser
@@ -35,14 +35,22 @@ class GenericFrontendTest extends FunSuite {
     case e : Throwable ⇒ e.printStackTrace(); assert(e.getClass() === manifest.runtimeClass); null.asInstanceOf[E]
   }
 
-  def succeedOn(file : File) = test("succeedOn: "+file.getName()) { check(file) }
+  def succeedOn(file : File) {
+    test("succeedOn: " + file.getName()) { check(file) }
+  }
 
-  def failOn(file : File) = test("failOn: "+file.getName()) {
-    fail[ir.ParseException] {
-      check(file)
+  def failOn(file : File) {
+    test("failOn: " + file.getName()) {
+      fail[ir.ParseException] {
+        check(file)
+      }
     }
   }
 
-  for (f ← new File("src/test/resources/frontend").listFiles() if f.isFile() && f.getName.endsWith(".skill")) succeedOn(f)
-  for (f ← new File("src/test/resources/frontend/ParseException").listFiles() if f.isFile() && f.getName.endsWith(".skill")) failOn(f)
+  for (
+    f ← new File("src/test/resources/frontend").listFiles() if f.isFile() && f.getName.endsWith(".skill")
+  ) succeedOn(f)
+  for (
+    f ← new File("src/test/resources/frontend/ParseException").listFiles() if f.isFile() && f.getName.endsWith(".skill")
+  ) failOn(f)
 }

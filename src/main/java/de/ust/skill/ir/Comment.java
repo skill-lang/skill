@@ -45,12 +45,15 @@ public class Comment {
      * @author Timm Felden
      */
     public static final class Tag {
-        final String name;
+        public final String name;
         List<String> text;
 
         public Tag(String name) {
             this.name = name;
+        }
 
+        public String[] getText() {
+            return text.toArray(new String[text.size()]);
         }
     }
 
@@ -79,18 +82,32 @@ public class Comment {
     }
 
     /**
+     * @return the ordinary text of this comment
+     */
+    public String[] getText() {
+        return text.toArray(new String[text.size()]);
+    }
+
+    /**
+     * @return tags of this comment
+     */
+    public Tag[] getTags() {
+        return tags.toArray(new Tag[tags.size()]);
+    }
+
+    /**
      * Creates a nicely formatted String with line breaks and a prefix for a
      * code generators output.
      * 
      * @note examples use ° instead of *
      * @param prefix
-     *            Prefix of the comment, e.g. "  /°°"
+     *            Prefix of the comment, e.g. " /°°"
      * @param linePrefix
-     *            Prefix of a line, e.g. "   ° "
+     *            Prefix of a line, e.g. " ° "
      * @param lineWidth
      *            Maximum characters in a line, e.g. 80 or 120
      * @param postfix
-     *            Postfix of a comment, e.g. "   °/"
+     *            Postfix of a comment, e.g. " °/"
      * @return a nicely formatted string, very similar to scala's mkString,
      *         except that it tries to fill lines
      */

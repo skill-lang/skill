@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.ada
@@ -12,13 +12,13 @@ import java.io.OutputStreamWriter
 import java.io.PrintWriter
 
 import scala.collection.mutable.ArrayBuffer
-import scala.reflect.io.Directory
 import scala.reflect.io.Path.jfile2path
 
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 import de.ust.skill.generator.common
+import de.ust.skill.main.CommandLine
 import de.ust.skill.parser.Name
 
 /**
@@ -30,8 +30,15 @@ import de.ust.skill.parser.Name
  */
 @RunWith(classOf[JUnitRunner])
 class GenericTests extends common.GenericTests {
-  override def language = "ada"
-  override val languageOptions = ArrayBuffer[String]()
+  override def language : String = "ada"
+
+  override def callMainFor(name : String, source : String, options : Seq[String]) {
+    CommandLine.main(Array[String](source,
+      "--debug-header",
+      "-L", "ada",
+      "-p", name,
+      "-o", "testsuites/ada/src/" + name) ++ options)
+  }
 
   val tests = new ArrayBuffer[Name]()
 
@@ -141,7 +148,8 @@ package body Test is
    procedure Add_Generic_Testes (Suite : in out Ahven.Framework.Test_Suite) is
    begin
 ${
-      (for (t ← tests.sortWith(_.lowercase < _.lowercase)) yield s"      Ahven.Framework.Add_Test (Suite, new Test_${t.lowercase.capitalize}.Gen_Test.Test);").mkString("\n")
+      (for (t ← tests.sortWith(_.lowercase < _.lowercase))
+        yield s"      Ahven.Framework.Add_Test (Suite, new Test_${t.lowercase.capitalize}.Gen_Test.Test);").mkString("\n")
     }
    end Add_Generic_Testes;
 end Test;""")
@@ -157,7 +165,7 @@ end Test;""")
   /**
    * create a file for a test
    */
-  def newFile(testName : String, fileName : String) = {
+  def newFile(testName : String, fileName : String) : PrintWriter = {
     val f = new File(s"testsuites/ada/test/$testName/$fileName")
     f.getParentFile.mkdirs
     f.createNewFile

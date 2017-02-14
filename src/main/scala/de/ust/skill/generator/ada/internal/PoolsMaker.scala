@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.ada.api.internal
@@ -35,7 +35,7 @@ trait PoolsMaker extends GeneralOutputMaker {
   }
 
   private final def makePackage {
-    val out = open(s"""skill-types-pools-${packagePrefix.replace('-', '_')}_pools.ads""")
+    val out = files.open(s"""skill-types-pools-${packagePrefix.replace('-', '_')}_pools.ads""")
 
     out.write(s"""
 package Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools is
@@ -50,7 +50,7 @@ end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools;
         val Name = name(t)
         val Type = s"Standard.$PackagePrefix.$Name"
 
-    val out = open(s"""skill-types-pools-${packagePrefix.replace('-', '_')}_pools-${Name.toLowerCase}_p.ads""")
+    val out = files.open(s"""skill-types-pools-${packagePrefix.replace('-', '_')}_pools-${Name.toLowerCase}_p.ads""")
 
     out.write(s"""
 with Ada.Unchecked_Conversion;
@@ -193,7 +193,7 @@ end Skill.Types.Pools.${PackagePrefix.replace('.', '_')}_Pools.${Name}_P;
         val Name = name(t)
         val Type = s"Standard.$PackagePrefix.$Name"
 
-    val out = open(s"""skill-types-pools-${packagePrefix.replace('-', '_')}_pools-${Name.toLowerCase}_p.adb""")
+    val out = files.open(s"""skill-types-pools-${packagePrefix.replace('-', '_')}_pools-${Name.toLowerCase}_p.adb""")
 
     out.write(s"""
 with Ada.Unchecked_Conversion;

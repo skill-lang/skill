@@ -1,19 +1,16 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.jforeign.api
 
-import scala.collection.JavaConversions._
-import de.ust.skill.ir.restriction.MonotoneRestriction
-import de.ust.skill.ir.restriction.SingletonRestriction
 import de.ust.skill.generator.jforeign.GeneralOutputMaker
 
 trait SkillFileMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = open("api/SkillFile.java")
+    val out = files.open("api/SkillFile.java")
 
     //package & imports
     out.write(s"""package ${packagePrefix}api;

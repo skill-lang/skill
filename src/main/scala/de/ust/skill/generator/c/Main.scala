@@ -1,47 +1,41 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c
 
-import de.ust.skill.ir._
-import de.ust.skill.parser.Parser
-import java.io.File
-import java.util.Date
 import scala.collection.JavaConversions._
 import scala.collection.mutable.MutableList
-import de.ust.skill.generator.common.Generator
-import java.io.PrintWriter
-import java.io.OutputStreamWriter
-import java.io.BufferedWriter
-import java.io.FileOutputStream
+
 import de.ust.skill.generator.c.api.ApiHeaderMaker
 import de.ust.skill.generator.c.api.ApiSourceMaker
-import de.ust.skill.generator.c.model.FieldInformationHeaderMaker
-import de.ust.skill.generator.c.model.FieldInformationSourceMaker
-import de.ust.skill.generator.c.model.SkillStateSourceMaker
-import de.ust.skill.generator.c.model.SkillStateHeaderMaker
-import de.ust.skill.generator.c.model.StringAccessHeaderMaker
-import de.ust.skill.generator.c.model.StringAccessSourceMaker
-import de.ust.skill.generator.c.model.TypeDeclarationHeaderMaker
-import de.ust.skill.generator.c.model.TypeDeclarationSourceMaker
-import de.ust.skill.generator.c.model.TypeEnumHeaderMaker
-import de.ust.skill.generator.c.model.TypeEnumSourceMaker
-import de.ust.skill.generator.c.model.StoragePoolHeaderMaker
-import de.ust.skill.generator.c.model.StoragePoolSourceMaker
-import de.ust.skill.generator.c.model.TypeInformationHeaderMaker
-import de.ust.skill.generator.c.model.TypeInformationSourceMaker
-import de.ust.skill.generator.c.model.TypesHeaderMaker
-import de.ust.skill.generator.c.model.TypesSourceMaker
 import de.ust.skill.generator.c.io.BinaryReaderHeaderMaker
 import de.ust.skill.generator.c.io.BinaryReaderSourceMaker
 import de.ust.skill.generator.c.io.BinaryWriterHeaderMaker
 import de.ust.skill.generator.c.io.BinaryWriterSourceMaker
 import de.ust.skill.generator.c.io.ReaderHeaderMaker
 import de.ust.skill.generator.c.io.ReaderSourceMaker
-import de.ust.skill.generator.c.io.WriterSourceMaker
 import de.ust.skill.generator.c.io.WriterHeaderMaker
+import de.ust.skill.generator.c.io.WriterSourceMaker
+import de.ust.skill.generator.c.model.FieldInformationHeaderMaker
+import de.ust.skill.generator.c.model.FieldInformationSourceMaker
+import de.ust.skill.generator.c.model.SkillStateHeaderMaker
+import de.ust.skill.generator.c.model.SkillStateSourceMaker
+import de.ust.skill.generator.c.model.StoragePoolHeaderMaker
+import de.ust.skill.generator.c.model.StoragePoolSourceMaker
+import de.ust.skill.generator.c.model.StringAccessHeaderMaker
+import de.ust.skill.generator.c.model.StringAccessSourceMaker
+import de.ust.skill.generator.c.model.TypeDeclarationHeaderMaker
+import de.ust.skill.generator.c.model.TypeDeclarationSourceMaker
+import de.ust.skill.generator.c.model.TypeEnumHeaderMaker
+import de.ust.skill.generator.c.model.TypeEnumSourceMaker
+import de.ust.skill.generator.c.model.TypeInformationHeaderMaker
+import de.ust.skill.generator.c.model.TypeInformationSourceMaker
+import de.ust.skill.generator.c.model.TypesHeaderMaker
+import de.ust.skill.generator.c.model.TypesSourceMaker
+import de.ust.skill.ir._
+import de.ust.skill.main.HeaderInfo
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -87,6 +81,8 @@ final class Main extends FakeMain
   lineLength = 80
   override def comment(d : Declaration) : String = d.getComment.format("", "//! ", lineLength, "")
   override def comment(f : FieldLike) : String = f.getComment.format("", "//! ", lineLength, "")
+  
+  override def defaultCleanMode = "file";
 
   /**
    * Translates the types into C99 types.
@@ -166,83 +162,16 @@ final class Main extends FakeMain
       _packagePrefix = names.map(_.toLowerCase).mkString("_");
   }
 
-  override private[c] def header : String = _header
-  private lazy val _header = {
-    // create header from options
-    val headerLineLength = 51
-    val headerLine1 = Some((headerInfo.line1 match {
-      case Some(s) ⇒ s
-      case None    ⇒ headerInfo.license.map("LICENSE: " + _).getOrElse("Your SKilL C Binding")
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    val headerLine2 = Some((headerInfo.line2 match {
-      case Some(s) ⇒ s
-      case None ⇒ "generated: " + (headerInfo.date match {
-        case Some(s) ⇒ s
-        case None    ⇒ (new java.text.SimpleDateFormat("dd.MM.yyyy")).format(new Date)
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-    val headerLine3 = Some((headerInfo.line3 match {
-      case Some(s) ⇒ s
-      case None ⇒ "by: " + (headerInfo.userName match {
-        case Some(s) ⇒ s
-        case None    ⇒ System.getProperty("user.name")
-      })
-    }).padTo(headerLineLength, " ").mkString.substring(0, headerLineLength))
-
-    s"""/*  ___ _  ___ _ _                                                            *\\
- * / __| |/ (_) | |       ${headerLine1.get} *
- * \\__ \\ ' <| | | |__     ${headerLine2.get} *
- * |___/_|\\_\\_|_|____|    ${headerLine3.get} *
-\\*                                                                            */
-"""
-  }
-
-  var outPostfix = s"/genereted/${
-    if (packagePrefix.isEmpty()) ""
-    else packagePrefix.replace('.', '/') + "/"
-  }"
-
-  /**
-   * Creates the correct PrintWriter for the argument file.
-   */
-  override protected def open(path : String) = {
-    val f = new File(outPath + outPostfix + path)
-    f.getParentFile.mkdirs
-    f.createNewFile
-    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream(f), "UTF-8")))
-    rval.write(header)
-    rval
-  }
-
-  /**
-   * Open file, but do not write a header (required by make files)
-   */
-  override protected def openRaw(path : String) = {
-    val f = new File(outPath + outPostfix + path)
-    f.getParentFile.mkdirs
-    f.createNewFile
-    val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream(f), "UTF-8")))
-    rval
-  }
+  override def makeHeader(headerInfo : HeaderInfo) : String = headerInfo.format(this, "/*", "*\\", " *", "* ", "\\*", "*/")
 
   override def setOption(option : String, value : String) : Unit = option.toLowerCase match {
-    case "gendir" ⇒
-      outPostfix = value
-      if (!outPostfix.startsWith("/"))
-        outPostfix = "/" + outPostfix
-      if (!outPostfix.endsWith("/"))
-        outPostfix = outPostfix + "/"
     case "unsafe" ⇒ unsafe = value == "true"
     case unknown  ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
-  override def printHelp : Unit = println("""
-Opitions (C):
-  genDir                 replace default sub-directory for generated sources
-  unsafe                 remove all generated runtime type checks, if set to "true"
-""")
+  override def helpText : String = """
+unsafe                 remove all generated runtime type checks, if set to "true"
+"""
 
   override def customFieldManual : String = "not supported"
 

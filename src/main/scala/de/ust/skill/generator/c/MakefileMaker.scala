@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-15 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.c
@@ -17,7 +17,8 @@ import java.io.PrintWriter
 trait MakefileMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
-    val out = openRaw("makefile")
+
+    val out = files.openRaw("makefile")
 
     val prefix_capital = prefix.toUpperCase
 
@@ -62,6 +63,4 @@ ${tab}rm -rf lib${prefix}api.a
 
     out.close()
   }
-
-  protected def openRaw(path : String) : PrintWriter;
 }
