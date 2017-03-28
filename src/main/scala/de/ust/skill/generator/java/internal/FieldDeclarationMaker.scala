@@ -314,7 +314,7 @@ ${
                 result += 1;
                 continue;
             }
-            long v = instance${if (f.getType.isInstanceOf[InterfaceType]) ".self()" else ""}.getSkillID();
+            long v = instance.getSkillID();
 
             if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
                 result += 1;
