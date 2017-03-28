@@ -159,7 +159,9 @@ object IRBuilder {
 
       for (f ← fs)
         yield mkField(f)
-    } catch { case e : ir.ParseException ⇒ ParseException(s"In ${d.name}.${e.getMessage}", e) }
+    } catch {
+      case e : ir.ParseException ⇒ ParseException(s"In ${d.name} declared in ${d.declaredIn}.\n ${e.getMessage}", e)
+    }
 
     // turns AST language customizations to IR
     def mkCustomFields(fields : List[Customization]) : List[ir.LanguageCustomization] = for (f ← fields) yield {
