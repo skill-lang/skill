@@ -20,7 +20,7 @@ import de.ust.skill.main.CommandLine
 class IMLTest extends FunSuite {
   CommandLine.exit = s ⇒ fail(s)
 
-  val specPath = "/home/feldentm/Desktop/iml.sf/specification/iml-all.skill"
+  val specPath = "/home/feldentm/Desktop/iml.sf/specification/iml1.skill"
   val filename = new File(specPath)
 
   test("parse iml.sf") {
