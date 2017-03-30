@@ -119,7 +119,7 @@ ${
 		  } else {
 	      s"""
     protected ${
-		  if(f.isAuto()) "transient"
+		  if(f.isAuto()) "transient "
 		  else ""
         }${mapType(f.getType())} ${name(f)} = ${defaultValue(f)};
 """
