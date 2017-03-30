@@ -112,15 +112,19 @@ ${
 	///////////////////////
 	// getters & setters //
 	///////////////////////
-	for(f <- implementedFields){
-      def makeField:String = {
-		if(f.isIgnored)
-		  ""
-		else
+	for(f <- implementedFields) {
+    def makeField:String = {
+		  if(f.isIgnored){
+		    ""
+		  } else {
 	      s"""
-    protected ${mapType(f.getType())} ${name(f)} = ${defaultValue(f)};
+    protected ${
+		  if(f.isAuto()) "transient"
+		  else ""
+        }${mapType(f.getType())} ${name(f)} = ${defaultValue(f)};
 """
-	  }
+	    }
+    }
 
       def makeGetterImplementation:String = {
         if(f.isIgnored)
