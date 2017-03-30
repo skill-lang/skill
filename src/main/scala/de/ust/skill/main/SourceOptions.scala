@@ -53,6 +53,11 @@ trait SourceOptions extends AbstractOptions {
         println(s"Generating sources into ${outdir.getAbsolutePath()}")
       }
 
+      // warn if target did not contain any user types
+      if (tc.getUsertypes.isEmpty) {
+        println("Warning: The specification contains no user type!")
+      }
+
       val failures = HashMap[String, Exception]()
       for (
         lang ← languages;
