@@ -11,10 +11,7 @@ import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
 
-import scala.reflect.io.Path.jfile2path
-
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
 import de.ust.skill.generator.common
 import de.ust.skill.main.CommandLine
@@ -56,74 +53,68 @@ class JsonTests extends common.GenericTests {
     rval.write(s"""
 package $packagePath;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-import $packagePath.api.SkillFile;
-
-import de.ust.skill.common.java.api.Access;
-import de.ust.skill.common.java.api.SkillFile.Mode;
 import de.ust.skill.common.java.internal.SkillObject;
-import de.ust.skill.common.java.internal.ParseException;
 
-public class GenericJSONReaderTest${name} {
+public class GenericJSONReaderTest {
+
+	@Rule //http://stackoverflow.com/a/2935935
+	public final ExpectedException exception = ExpectedException.none();
+
+	private static Path path;
+	private JSONObject currentJSON;
 
 	/**
 	 * Tests the object generation capabilities.
 	 */
-	@Test
-	public void test() {
-		Path path = Paths.get(System.getProperty("user.dir"), "src", "test", "resources");
-		path = path.resolve("values.json");
-		
-		try {
-			JSONArray currentJSON = JSONReader.readJSON(path.toFile());
-			for (int i = 0; i < currentJSON.length(); i++) {
-				JSONObject currentTest = currentJSON.getJSONObject(i);
-				SkillObject obj = JSONReader.createSkillObjectFromJSON(currentTest);
-				System.out.println(obj.prettyString());
-				assertTrue(true);
-			}
-		} catch (JSONException e) {
-			e.printStackTrace();
-			assertTrue(false);
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-			assertTrue(false);
-		} catch (IOException e) {
-			e.printStackTrace();
-			assertTrue(false);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-			assertTrue(false);
-		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
-			assertTrue(false);
-		} catch (SecurityException e) {
-			e.printStackTrace();
-			assertTrue(false);
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-			assertTrue(false);
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-			assertTrue(false);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			assertTrue(false);
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-			assertTrue(false);
-		}
+	@BeforeClass
+	public static void init() throws JSONException, MalformedURLException, IOException {
+		path = Paths.get(System.getProperty("user.dir"), 
+        "src", 
+        "test", 
+        "resources", 
+        "${packagePath}");
 	}
+
+""")
+    
+    for(path ← new File("src/test/resources/gentest/" + packagePath).listFiles if path.getName.endsWith(".json")){
+      makeTestForJson(rval, path.getName());
+    }
+    rval
+  }
+  
+  def makeTestForJson(rval: PrintWriter, testfile: String): PrintWriter = {
+    rval.write(s"""
+	@Test
+	public void jsonTest() throws ClassNotFoundException, NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, JSONException, MalformedURLException, IOException {
+		Path testFilePath = path.resolve("${testfile}");
+    this.currentJSON = JSONReader.readJSON(testFilePath.toFile());
+		JSONObject currentTest = currentJSON;
+		if(JSONReader.shouldExpectException(currentTest)){
+			System.out.println("There should be an exception coming up!");
+			exception.expect(Exception.class);
+		}
+		SkillObject obj = JSONReader.createSkillObjectFromJSON(currentTest);
+		System.out.println(obj.prettyString());
+		assertTrue(true);
+	}
+
 """)
     rval
   }
