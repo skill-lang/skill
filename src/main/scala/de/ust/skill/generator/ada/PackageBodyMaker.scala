@@ -99,13 +99,12 @@ ${
    begin
       return Convert (This.To_Annotation);
    end Dynamic_${name(t)};${
-          if (createVisitors) s"""
-   procedure Acc(This : access ${name(t)}_T; V : access Abstract_${name(t.getBaseType)}_Visitor'Class) is
+          for (v <- visitors) yield s"""
+   procedure Acc (This : access ${name(t)}_T; V : access Abstract_${name(IR.filter(_.getSkillName == v).get(0))}_Visitor'Class) is
    begin
       V.Visit (${name(t)} (This));
    end Acc;
 """
-          else ""
         }
 
    -- reflective getter

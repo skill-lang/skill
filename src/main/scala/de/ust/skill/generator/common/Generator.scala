@@ -123,4 +123,9 @@ trait Generator {
    * The clean mode preferred by this back-end.
    */
   def defaultCleanMode : String;
+
+  /**
+   * The generated binding will also contain visitors for given types
+   */
+  var visitors : Seq[String] = _;
 }
