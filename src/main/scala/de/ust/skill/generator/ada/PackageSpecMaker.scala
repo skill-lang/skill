@@ -170,24 +170,23 @@ ${comment(v)}procedure Set_${name(v)} (This : not null access ${name(t)}_T'Class
    pragma Inline (Set_${name(v)});"""
       }).mkString
     }${
-        if (createVisitors) """
-   -- visitors
+        for (v <- visitors) yield s"""
+   -- visitors for ${v}
 """ + (
-          for (b ← IR if b.getSuperType == null) yield s"""
+          for (b ← IR if b.getSkillName == v || getSuperTypes(b).map(_.getSkillName).contains(v)) yield s"""
    type Abstract_${name(b)}_Visitor is abstract tagged null record;${
-            (for (t ← IR if b.getBaseType == b) yield s"""
+            (for (t ← IR if b.getSkillName == v && getSuperTypes(t).map(_.getSkillName).contains(v)) yield s"""
    procedure Visit (This : access Abstract_${name(b)}_Visitor; Node : ${name(t)}) is abstract;
    procedure Acc (This : access ${name(t)}_T; V : access Abstract_${name(b)}_Visitor'Class);
 """).mkString
           }
    type ${name(b)}_Visitor is new Abstract_${name(b)}_Visitor with null record;${
-            (for (t ← IR if b.getBaseType == b) yield s"""
+            (for (t ← IR if b.getSkillName == v && getSuperTypes(t).map(_.getSkillName).contains(v)) yield s"""
    procedure Visit (This : access ${name(b)}_Visitor; Node : ${name(t)}) is null;
 """).mkString
           }
 """
         ).mkString
-        else ""
       }
 private
 ${

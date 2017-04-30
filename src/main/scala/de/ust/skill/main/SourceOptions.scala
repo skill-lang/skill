@@ -29,7 +29,8 @@ trait SourceOptions extends AbstractOptions {
                           languageOptions : HashMap[String, ArrayBuffer[(String, String)]] = new HashMap(),
                           packageName : Seq[String] = Seq[String](),
                           keepSpecificationOrder : Boolean = false,
-                          verbose : Boolean = false) extends WithProcess {
+                          verbose : Boolean = false,
+                          visitors : Seq[String] = Seq[String]()) extends WithProcess {
     def process {
       // get known generator for languages
       val known = KnownGenerators.all.map(_.newInstance).map { g ⇒ g.getLanguageName -> g }.toMap
@@ -49,6 +50,9 @@ trait SourceOptions extends AbstractOptions {
         else Parser.process(new File(target), keepSpecificationOrder)
 
       if (verbose) {
+        if (!visitors.isEmpty)
+          println(s"Visitors for types ${visitors.mkString(",")} will be generated.")
+
         println(s"Parsed $target -- found ${tc.allTypeNames.size - (new TypeContext().allTypeNames.size)} types.")
         println(s"Generating sources into ${outdir.getAbsolutePath()}")
       }
@@ -83,6 +87,7 @@ trait SourceOptions extends AbstractOptions {
         gen.files = printService
         gen.depsPath = depsdir.getAbsolutePath + pathPostfix
         gen.skipDependencies = skipDeps
+        gen.visitors = visitors
 
         if (verbose) print(s"run $lang: ")
 
@@ -172,6 +177,10 @@ trait SourceOptions extends AbstractOptions {
         case "all" ⇒ c.copy(languages = c.languages ++ allGeneratorNames)
         case lang  ⇒ c.copy(languages = c.languages + lang.toLowerCase)
       })
+
+    opt[Seq[String]]('v', "visitors").optional().action(
+      (v, c) => c.copy(visitors = v)
+    ).text("types to generate visitors for")
 
     help("help").text("prints this usage text")
     override def terminate(s : Either[String, Unit]) {
