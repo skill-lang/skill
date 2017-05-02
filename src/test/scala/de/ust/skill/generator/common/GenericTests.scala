@@ -18,6 +18,7 @@ import java.nio.file.Paths
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
+import scala.io.Source
 
 /**
  * Common implementation of generic tests
@@ -52,6 +53,11 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
    */
   def makeGenBinaryTests(name : String) : Unit
 
+  def collect(f : File) : Seq[File] = {
+      (for (path ← f.listFiles if path.isDirectory) yield collect(path)).flatten ++
+        f.listFiles.filterNot(_.isDirectory)
+  }
+  
   /**
    * helper function that collects binaries for a given test name.
    *
@@ -59,9 +65,6 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
    */
   final def collectBinaries(name : String) : (Seq[File], Seq[File]) = {
     val base = new File("src/test/resources/genbinary")
-    def collect(f : File) : Seq[File] =
-      (for (path ← f.listFiles if path.isDirectory) yield collect(path)).flatten ++
-        f.listFiles.filterNot(_.isDirectory)
 
     val targets = (
       collect(new File(base, "[[all]]"))
@@ -69,6 +72,19 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
     ).filter(_.getName.endsWith(".sf")).sortBy(_.getName)
 
     targets.partition(_.getPath.contains("accept"))
+  }
+  
+  /**
+   * Helper function that collects a specification for a given package name.
+   */
+  final def collectSkillSpecification(packageName: String) : File = {
+    val base = new File("src/test/resources/gentest");
+            
+    val skillSpecification = collect(base)
+                              .filter( file => {
+                                  Source.fromFile(file).getLines().next().startsWith("#! " + packageName);
+                              })
+                              .head;
   }
 
   /**
