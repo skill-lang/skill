@@ -1,0 +1,15 @@
+{
+	"shouldFail" : false,
+	"data" : [
+	        {
+	            "sys" : {
+	                "type" : "restrictionsCore.System",
+	                "attr" : {
+	                    "name" : "System.name",
+	                    "version" : 1.1
+	                }
+	            }
+	        }
+	]
+}
+

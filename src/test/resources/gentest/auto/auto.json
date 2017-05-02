@@ -1,0 +1,38 @@
+{
+	"shouldFail" : false,
+	"data" : [
+	        {
+	            "a" : {
+	                "type" : "auto.A",
+	                "attr" : {
+	                    "a" : "a"
+	                }
+	            }
+	        },
+	        {
+	            "b" : {
+	                "type" : "auto.B",
+	                "attr" : {
+	                    "b" : "b"
+	                }
+	            }
+	        },
+	        {
+	            "c" : {
+	                "type" : "auto.C",
+	                "attr" : {
+	                    "c" : "c"
+	                }
+	            }
+	        },
+	        {
+	            "d" : {
+	                "type" : "auto.D",
+	                "attr" : {
+	                    "d" : null
+	                }
+	            }
+	        }
+	]
+}
+

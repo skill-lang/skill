@@ -1,0 +1,30 @@
+{
+	"shouldFail" : false,
+	"data" : [
+	        {
+	            "flts" : {
+	                "type" : "floats.FloatTest",
+	                "attr" : {
+	                    "zero" : 0,
+	                    "minusZero" : -0,
+	                    "two" : 2,
+	                    "pi":   3.1415926535897932384626433832795028841971693993751058209749445923,
+	                    "NaN" : null
+	                }
+	            }
+	        },
+	        {
+	            "dbls" : {
+	                "type" : "floats.DoubleTest",
+	                "attr" : {
+	                    "zero" : 0,
+	                    "minusZero" : -0,
+	                    "two" : 2,
+	                    "pi":   3.1415926535897932384626433832795028841971693993751058209749445923,
+	                    "NaN" : null
+	                }
+	            }
+	        }
+	]
+}
+

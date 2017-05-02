@@ -1,0 +1,14 @@
+{
+	"shouldFail" : false,
+	"data" : [
+	        {
+	            "age" : {
+	                "type" : "age.Age",
+	                "attr" : {
+	                    "age" : 42
+	                }
+	            }
+	        }
+	]
+}
+

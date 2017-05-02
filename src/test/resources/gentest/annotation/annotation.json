@@ -1,0 +1,14 @@
+{
+	"shouldFail" : false,
+	"data" : [
+	        {
+	            "tst" : {
+	                "type" : "annotation.Test",
+	                "attr" : {
+	                    "f" : null
+	                }
+	            }
+	        }
+	]
+}
+

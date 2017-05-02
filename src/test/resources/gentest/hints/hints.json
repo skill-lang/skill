@@ -1,0 +1,63 @@
+{
+	"shouldFail" : false,
+	"data" : [
+	        {
+	            "u" : {
+	                "type" : "hintsAll.User",
+	                "attr" : {
+	                    "name" : "User.name",
+	                    "age" : 43,
+	                    "reflectivelyVisible" : "User.reflectivelyVisible"
+	                }
+	            }
+	        },
+	        {
+	            "a" : {
+	                "type" : "hintsAll.Abuser",
+	                "attr" : {
+	                    "abuseDescription" : "Abuser.abuseDescription"
+	                }
+	            }
+	        },
+	        {
+	            "nas" : {
+	                "type" : "hintsAll.NowASingleton",
+	                "attr" : {
+	                    "guard" : 43981
+	                }
+	            }
+	        },
+	        {
+	            "em" : {
+	                "type" : "hintsAll.ExternMixin",
+	                "attr" : {
+	                    "unknownStuff" : null
+	                }
+	            }
+	        },
+	        {
+	            "bt" : {
+	                "type" : "hintsAll.BadType",
+	                "attr" : {
+	                    "ignoredData" : "BadType.ignoredData",
+	                    "reflectivelyInVisible" : "BadType.reflectivelyInVisible"
+	                }
+	            }
+	        },
+	        {
+	            "uid" : {
+	                "type" : "hintsAll.UID",
+	                "attr" : {
+	                    "identifier" : 7
+	                }
+	            }
+	        },
+	        {
+	            "expr" : {
+	                "type" : "hintsAll.Expression",
+	                "attr" : { }
+	            }
+	        }
+	]
+}
+

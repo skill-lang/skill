@@ -1,0 +1,18 @@
+{
+	"shouldFail" : false,
+	"data" : [
+	        {
+	            "consts" : {
+	                "type" : "constants.Constant",
+	                "attr" : {
+	                    "a" : 8,
+	                    "b" : 16,
+	                    "c" : 32,
+	                    "d" : 64,
+	                    "e" : 46
+	                }
+	            }
+	        }
+	]
+}
+

@@ -1,0 +1,16 @@
+{
+	"shouldFail" : false,
+	"data" : [
+	        {
+	            "uc" : {
+	                "type" : "unicode.Unicode",
+	                "attr" : {
+	                    "one" : "1",
+	                    "two" : "ö",
+	                    "three" : "☢"
+	                }
+	            }
+	        }
+	]
+}
+
