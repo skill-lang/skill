@@ -11,10 +11,14 @@ import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
 
+import org.json.JSONTokener
 import org.junit.runner.RunWith
 
 import de.ust.skill.generator.common
 import de.ust.skill.main.CommandLine
+import org.scalatest.junit.JUnitRunner
+import org.json.JSONObject
+import org.json.JSONArray
 
 /**
  * Generic tests built for Java.
@@ -103,20 +107,39 @@ public class GenericJSONReaderTest {
     rval.write(s"""
 	@Test
 	public void jsonTest() throws ClassNotFoundException, NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, JSONException, MalformedURLException, IOException {
-		Path testFilePath = path.resolve("${testfile}");
-    this.currentJSON = JSONReader.readJSON(testFilePath.toFile());
-		JSONObject currentTest = currentJSON;
-		if(JSONReader.shouldExpectException(currentTest)){
-			System.out.println("There should be an exception coming up!");
-			exception.expect(Exception.class);
-		}
-		SkillObject obj = JSONReader.createSkillObjectFromJSON(currentTest);
-		System.out.println(obj.prettyString());
-		assertTrue(true);
+    Map<String, Access<?>> types = new HashMap<>();
+		Map<String, HashMap<String, FieldDeclaration<?, ?>>> typeFieldMapping = new HashMap<>();
+		
+		Path tempBinaryFile = tmpFile("write.generic.checked");
+		SkillFile sf = SkillFile.open(tempBinaryFile);
+        reflectiveInit(sf);
+        
+		creator.SkillObjectCreator.generateSkillFileMappings(sf, types, typeFieldMapping);
+"""
+        +
+        generateObjectInstantiation(testfile)
+        +    
+    
+"""
 	}
 
 """)
     rval
+  }
+  
+  def generateObjectInstantiation(jsonFile: String) : String = {
+    val fileTokens = new JSONTokener(new java.io.FileInputStream(jsonFile));
+		val content = new JSONObject(fileTokens);
+    val jsonObjects = content.getJSONObject("data");
+    val instantiations = "";
+		
+		for( currentObjKey <- jsonObjects.keySet()){
+		  val currentObj = jsonObjects.getJSONObject(currentObjKey);
+		  val currentType = currentObj.getString("type");
+		  instantiations.concat("SkillObject " + currentObjKey + " = types.get(\"" + currentType + "\").make()\n");
+		}
+		
+		return instantiations;
   }
 
   def closeTestFile(out : java.io.PrintWriter) {
