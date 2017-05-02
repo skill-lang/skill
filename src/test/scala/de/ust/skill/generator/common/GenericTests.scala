@@ -74,18 +74,7 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
     targets.partition(_.getPath.contains("accept"))
   }
   
-  /**
-   * Helper function that collects a specification for a given package name.
-   */
-  final def collectSkillSpecification(packageName: String) : File = {
-    val base = new File("src/test/resources/gentest");
-            
-    val skillSpecification = collect(base)
-                              .filter( file => {
-                                  Source.fromFile(file).getLines().next().startsWith("#! " + packageName);
-                              })
-                              .head;
-  }
+  
 
   /**
    * hook called once after all tests have been generated
