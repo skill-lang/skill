@@ -19,6 +19,7 @@ import de.ust.skill.main.CommandLine
 import org.scalatest.junit.JUnitRunner
 import org.json.JSONObject
 import org.json.JSONArray
+import scala.collection.JavaConverters._
 
 /**
  * Generic tests built for Java.
@@ -32,10 +33,10 @@ class JsonTests extends common.GenericTests {
 
   override val language = "java"
 
-  override def deleteOutDir(out : String) {
+  override def deleteOutDir(out: String) {
   }
 
-  override def callMainFor(name : String, source : String, options : Seq[String]) {
+  override def callMainFor(name: String, source: String, options: Seq[String]) {
     CommandLine.main(Array[String](source,
       "--debug-header",
       "-c",
@@ -46,7 +47,7 @@ class JsonTests extends common.GenericTests {
       "-o", "testsuites/java/src/main/java/") ++ options)
   }
 
-  def newTestFile(packagePath : String, name : String) : PrintWriter = {
+  def newTestFile(packagePath: String, name: String): PrintWriter = {
     val f = new File(s"testsuites/java/src/test/java/$packagePath/Generic${name}Test.java")
     f.getParentFile.mkdirs
     if (f.exists)
@@ -96,13 +97,13 @@ public class GenericJSONReaderTest {
 	}
 
 """)
-    
-    for(path ← new File("src/test/resources/gentest/" + packagePath).listFiles if path.getName.endsWith(".json")){
+
+    for (path ← new File("src/test/resources/gentest/" + packagePath).listFiles if path.getName.endsWith(".json")) {
       makeTestForJson(rval, path.getName());
     }
     rval
   }
-  
+
   def makeTestForJson(rval: PrintWriter, testfile: String): PrintWriter = {
     rval.write(s"""
 	@Test
@@ -116,47 +117,81 @@ public class GenericJSONReaderTest {
         
 		creator.SkillObjectCreator.generateSkillFileMappings(sf, types, typeFieldMapping);
 """
-        +
-        generateObjectInstantiation(testfile)
-        +    
-    
-"""
+      +
+      generateObjectInstantiation(testfile)
+      +
+
+      """
 	}
 
 """)
     rval
   }
-  
-  def generateObjectInstantiation(jsonFile: String) : String = {
+
+  def generateObjectInstantiation(jsonFile: String): String = {
     val fileTokens = new JSONTokener(new java.io.FileInputStream(jsonFile));
-		val content = new JSONObject(fileTokens);
+    val content = new JSONObject(fileTokens);
     val jsonObjects = content.getJSONObject("data");
     val instantiations = "";
-		
-		for( currentObjKey <- jsonObjects.keySet()){
-		  val currentObj = jsonObjects.getJSONObject(currentObjKey);
-		  val currentType = currentObj.getString("type");
-		  instantiations.concat("SkillObject " + currentObjKey + " = types.get(\"" + currentType + "\").make()\n");
-		}
-		
-		return instantiations;
+
+    for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) {
+      val currentObj = jsonObjects.getJSONObject(currentObjKey);
+      val currentType = currentObj.getString("type");
+      instantiations.concat("SkillObject " + currentObjKey + " = types.get(\"" + currentType + "\").make()\n");
+      
+      val objAttrClass = currentObj.get("attr").getClass;
+      val currentValue = objAttrClass.toString() match{
+      case null => "null"
+      case "String" => currentObj.get("attr");
+      case "JSONArray" => instantiateArray(instantiations, currentObj.getJSONArray("attr"), currentObjKey + "Array", currentType); currentObjKey + "Array"
+      case "JSONObject" => instatiateMap(instantiations, currentObj.getJSONObject("attr"), currentObjKey + "Array", currentType); currentObjKey + "Map"
+      case _ =>     
+        throw new NotImplementedError;
+      }  
+      instantiations.concat(currentObjKey + ".set((de.ust.skill.common.java.api.FieldDeclaration<String>) typeFieldMapping.get(" + currentType + ").get(" + currentObjKey + "), " + currentValue + ");\n\n");
+    }
+
+    instantiations.concat("sf.close();\n");
+
+    return instantiations;
   }
 
-  def closeTestFile(out : java.io.PrintWriter) {
+  def closeTestFile(out: java.io.PrintWriter) {
     out.write("""
 }
 """)
     out.close
   }
 
-  override def makeGenBinaryTests(name : String) {
+  override def makeGenBinaryTests(name: String) {
     locally {
       val out = newTestFile(name, "Read")
       closeTestFile(out)
     }
   }
-  
+
   override def finalizeTests {
     // nothing yet
+  }
+
+
+  def instatiateMap(instantiations: String, map: JSONObject, valueName: String, valueType: String) = {
+    instantiations.concat("\n");
+    //TODO get right value type
+    instantiations.concat(valueType + " " + valueName + " = new " + valueType + ";\n");
+    for (currentObjKey <- asScalaSetConverter(map.keySet()).asScala) {
+      instantiations.concat(valueName+".put("+ currentObjKey +", " + map.get(currentObjKey) +");\n");
+    }
+    instantiations.concat("\n");
+  }
+
+  def instantiateArray(instantiations: String, array: JSONArray, valueName: String, valueType: String) = {
+    instantiations.concat("\n");
+    //TODO get right value type
+    instantiations.concat(valueType + " " + valueName + " = new " + valueType + ";\n");
+    for(x <- intWrapper(0) until array.length()) {
+      instantiations.concat(valueName+".add(" + array.get(x) +");\n");
+    }
+    instantiations.concat("\n");
   }
 }
