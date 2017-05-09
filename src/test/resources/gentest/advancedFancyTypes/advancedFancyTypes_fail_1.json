@@ -1,0 +1,44 @@
+{
+	"shouldFail" : true,
+	"data" : [
+	        {
+	            "d" : {
+	                "type" : "fancy.D",
+	                "attr" : {
+	                    "Parent" : "d",
+	                    "Value" : "e"
+	                }
+	            }
+	        },
+	        {
+	            "e" : {
+	                "type" : "fancy.E",
+	                "attr" : {
+	                    "Parent" : "d",
+	                    "Value" : "e"
+	                }
+	            }
+	        },
+	        {
+	            "f" : {
+	                "type" : "fancy.F",
+	                "attr" : {
+	                    "Parent" : "e",
+	                    "Value" : "d",
+	                    "m" : { "e" : "f" }
+	                }
+	            }
+	        },
+	        {
+	            "g" : {
+	                "type" : "fancy.G",
+	                "attr" : {
+	                    "Parent" : "d",
+	                    "Value" : "g",
+	                    "m" : { "e" : "f" }
+	                }
+	            }
+	        }
+	]
+}
+

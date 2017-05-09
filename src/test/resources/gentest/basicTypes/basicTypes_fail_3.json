@@ -1,0 +1,37 @@
+{
+	"shouldFail" : true,
+	"data" : [
+	        {
+	            "all" : {
+	                "type" : "basicTypes.BasicTypes",
+	                "attr" : {
+	                    "anAnnotation" : null,
+	                    "aBool" : { "basicBool" : true },
+	                    "aString" : { "basicString" : "Hello World" },
+	                    "aUserType" : {
+	                        "int8"   : { "basicInt" : -3 },
+	                        "int16"  : { "basicInt" : -2 },
+	                        "int32"  : { "basicInt" : -1 },
+	                        "int64I" : { "basicInt" :  0 },
+	                        "int64V" : { "basicInt" :  1 }
+	                    },
+	                    "anotherUserType" : {
+	                        "float32" : { "basicFloat" : 1 },
+	                        "float64" : { "basicFloat" : 2 }
+	                    },
+	                    "anArray" :  [{
+	                        "int8"   : { "basicInt" : -333 },
+	                        "int16"  : { "basicInt" : -2 },
+	                        "int32"  : { "basicInt" : -1 },
+	                        "int64I" : { "basicInt" :  0 },
+	                        "int64V" : { "basicInt" :  1 }
+	                    }],
+	                    "aSet"  : [ 2 ],
+	                    "aList" : [ 3, 4 ],
+	                    "aMap"  : { "5" : 6 }
+	                }
+	            }
+	        }
+	]
+}
+

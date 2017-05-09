@@ -1,0 +1,61 @@
+{
+	"shouldFail" : true,
+	"data" : [
+	        {
+	            "ch" : {
+	                 "type" : "graphInterface.ColorHolder",
+	                 "attr" : {
+	                     "anAnnotation" : null,
+	                     "anAbstractNode" : "cn"
+	                 }
+	            }
+	        },
+	        {
+	            "mrk" : {
+	                 "type" : "graphInterface.Marker",
+	                 "attr" : {
+	                     "mark" : "mark_object"
+	                 }
+	            }
+	        },
+	        {
+	            "sn" : {
+	                "type" : "graphInterface.SubNode",
+	                "attr" : {
+	                    "edges" : [ "cn" ],
+	                    "map" : { "n" : { "cn" : "mrk" } },
+	                    "color" : "red",
+	                    "mark" : "mark_sn",
+	                    "next" : "mrk",
+	                    "f" : "mrk",
+	                    "n" : "n"
+	                }
+	            }
+	        },
+	        {
+	            "cn" : {
+	                "type" : "graphInterface.ColoredNode",
+	                "attr" : {
+	                    "edges" : [ "cn" ],
+	                    "map" : { "n" : { "cn" : "mrk" } },
+	                    "color" : "green",
+	                    "mark" : "mark_cn",
+	                    "next" : "ch"
+	                }
+	            }
+	        },
+	        {
+	            "n" : {
+	                "type" : "graphInterface.Node",
+	                "attr" : {
+	                    "edges" : [ ],
+	                    "map" : { "n" : { "cn" : "mrk" } },
+	                    "color" : "blue",
+	                    "mark" : "mark_n",
+	                    "next" : "mrk"
+	                }
+	            }
+	        }
+	]
+}
+

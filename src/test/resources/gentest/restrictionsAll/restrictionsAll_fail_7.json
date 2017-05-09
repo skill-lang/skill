@@ -1,0 +1,80 @@
+{
+	"shouldFail" : true,
+	"data" : [
+	        {
+	            "op" : {
+	                "type" : "restrictionsAll.Operator",
+	                "attr" : {
+	                    "name" : "Operator.name"
+	                }
+	            }
+	        },
+	        {
+	            "trm" : {
+	                "type" : "restrictionsAll.Term",
+	                "attr" : {
+	                    "operator" : "op",
+	                    "arguments" : [ "trm", null ]
+	                }
+	            }
+	        },
+	        {
+	            "rp" : {
+	                "type" : "restrictionsAll.RegularProperty",
+	                "attr" : { }
+	            }
+	        },
+
+	        {
+	            "sys_obj" : {
+	                "type" : "restrictionsAll.System",
+	                "attr" : {
+	                    "name" : "System.name",
+	                    "version" : 1.1
+	                }
+	            }
+	        },
+	        {
+	            "none_obj" : {
+	                "type" : "restrictionsAll.None",
+	                "attr" : { }
+	            }
+	        },
+	        {
+	            "dbc" : {
+	                "type" : "restrictionsAll.DefaultBorderCases",
+	                "attr" : {
+	                    "system" : "sys_obj",
+	                    "nopDefault" : 0,
+	                    "float" : -1,
+	                    "message" : "Hello World!",
+	                    "none" : "none_obj"
+	                }
+	            }
+	        },
+	        {
+	            "rbc" : {
+	                "type" : "restrictionsAll.RangeBorderCases",
+	                "attr" : {
+	                    "positive" : 0,
+	                    "positive2" : 0,
+	                    "negative" : -1,
+	                    "negative2" : 0,
+	                    "degrees" : 0,
+	                    "degrees2" : 360
+	                }
+	            }
+	        },
+	        {
+	            "cmnt" : {
+	                "type" : "restrictionsAll.Comment",
+	                "attr" : {
+	                    "text" : "Comment.text",
+	                    "target" : "op",
+	                    "property" : "sys_obj"
+	                }
+	            }
+	        }
+	]
+}
+

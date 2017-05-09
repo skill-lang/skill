@@ -1,0 +1,50 @@
+{
+	"shouldFail" : true,
+	"data" : [
+	        {
+	            "enm_default" : {
+	                "type" : "enums.TestEnum",
+	                "attr" : {
+	                    "name" : "default",
+	                    "next" : "enm_second"
+	                }
+	            }
+	        },
+	        {
+	            "enm_second" : {
+	                "type" : "enums.TestEnum",
+	                "attr" : {
+	                    "name" : "second",
+	                    "next" : "enm_third"
+	                }
+	            }
+	        },
+	        {
+	            "enm_third" : {
+	                "type" : "enums.TestEnum",
+	                "attr" : {
+	                    "name" : "third",
+	                    "next" : "enm_last"
+	                }
+	            }
+	        },
+	        {
+	            "enm_last" : {
+	                "type" : "enums.TestEnum",
+	                "attr" : {
+	                    "name" : "last",
+	                    "next" : "enm_default"
+	                }
+	            }
+	        },
+	        {
+	            "enm" : {
+	                "type" : "enums.TestEnum",
+	                "attr" : {
+	                    "enuminstance" : "enm_default"
+	                }
+	            }
+	        }
+	]
+}
+

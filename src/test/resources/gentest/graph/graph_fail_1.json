@@ -1,0 +1,24 @@
+{
+	"shouldFail" : true,
+	"data" : [
+	        {
+	            "nd_1" : {
+	                "type" : "graph.Node",
+	                "attr" : {
+	                    "color" : "red",
+	                    "edges" : "nd_2"
+	                }
+	            }
+	        },
+	        {
+	            "nd_2" : {
+	                "type" : "graph.Node",
+	                "attr" : {
+	                    "color" : "blue",
+	                    "edges" : [ ]
+	                }
+	            }
+	        }
+	]
+}
+

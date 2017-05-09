@@ -1,0 +1,89 @@
+{
+	"shouldFail" : true,
+	"data" : [
+	        {
+	            "op_1" : {
+	                "type" : "restrictionsAll.Operator",
+	                "attr" : {
+	                    "name" : "Operator.name"
+	                }
+	            }
+	        },
+	        {
+	            "op_2" : {
+	                "type" : "restrictionsAll.Operator",
+	                "attr" : {
+	                    "name" : "Operator.name"
+	                }
+	            }
+	        },
+
+	        {
+	            "trm" : {
+	                "type" : "restrictionsAll.Term",
+	                "attr" : {
+	                    "operator" : "op_1",
+	                    "arguments" : [ "trm", null ]
+	                }
+	            }
+	        },
+	        {
+	            "rp" : {
+	                "type" : "restrictionsAll.RegularProperty",
+	                "attr" : { }
+	            }
+	        },
+
+	        {
+	            "sys_obj" : {
+	                "type" : "restrictionsAll.System",
+	                "attr" : {
+	                    "name" : "System.name",
+	                    "version" : 1.1
+	                }
+	            }
+	        },
+	        {
+	            "none_obj" : {
+	                "type" : "restrictionsAll.None",
+	                "attr" : { }
+	            }
+	        },
+	        {
+	            "dbc" : {
+	                "type" : "restrictionsAll.DefaultBorderCases",
+	                "attr" : {
+	                    "system" : "sys_obj",
+	                    "nopDefault" : 0,
+	                    "float" : -1,
+	                    "message" : "Hello World!",
+	                    "none" : "none_obj"
+	                }
+	            }
+	        },
+	        {
+	            "rbc" : {
+	                "type" : "restrictionsAll.RangeBorderCases",
+	                "attr" : {
+	                    "positive" : 0,
+	                    "positive2" : 0,
+	                    "negative" : 0,
+	                    "negative2" : 0,
+	                    "degrees" : 0,
+	                    "degrees2" : 360
+	                }
+	            }
+	        },
+	        {
+	            "cmnt" : {
+	                "type" : "restrictionsAll.Comment",
+	                "attr" : {
+	                    "text" : "Comment.text",
+	                    "target" : "op_1",
+	                    "property" : "sys_obj"
+	                }
+	            }
+	        }
+	]
+}
+

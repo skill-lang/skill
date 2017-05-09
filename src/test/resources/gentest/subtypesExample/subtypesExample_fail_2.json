@@ -1,0 +1,42 @@
+{
+	"shouldFail" : true,
+	"data" : [
+	        {
+	            "a" : {
+	                "type" : "subtypes.A",
+	                "attr" : {
+	                    "a" : "a"
+	                }
+	            }
+	        },
+	        {
+	            "b" : {
+	                "type" : "subtypes.B",
+	                "attr" : {
+	                    "a" : "a",
+	                    "b" : "b"
+	                }
+	            }
+	        },
+	        {
+	            "c" : {
+	                "type" : "subtypes.C",
+	                "attr" : {
+	                    "a" : "a",
+	                    "c" : "a"
+	                }
+	            }
+	        },
+	        {
+	            "d" : {
+	                "type" : "subtypes.D",
+	                "attr" : {
+	                    "a" : "a",
+	                    "b" : "b",
+	                    "d" : "d"
+	                }
+	            }
+	        }
+	]
+}
+

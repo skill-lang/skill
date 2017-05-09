@@ -1,0 +1,39 @@
+{
+	"shouldFail" : true,
+	"data" : [
+	        {
+	            "esc_1" : {
+	                "type" : "escaping.Int",
+	                "attr" : {
+	                    "if" : "esc_1",
+	                    "for" : "esc_2"
+	                }
+	            }
+	        },
+	        {
+	            "esc_2" : {
+	                "type" : "escaping.if",
+	                "attr" : { }
+	            }
+	        },
+	        {
+	            "esc_3" : {
+	                "type" : "escaping.Boolean",
+	                "attr" : {
+	                    "bool" : "esc_3",
+	                    "boolean" : "esc_3"
+	                }
+	            }
+	        },
+	        {
+	            "esc_4" : {
+	                "type" : "escaping.∀",
+	                "attr" : {
+	                    "€" : "esc_4",
+	                    "☢" : "Hello, World!"
+	                }
+	            }
+	        }
+	]
+}
+
