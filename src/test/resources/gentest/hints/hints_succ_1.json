@@ -2,46 +2,46 @@
 	"shouldFail" : false,
 	"data" : {
         "u" : {
-            "type" : "hintsAll.User",
+            "type" : "user",
             "attr" : {
-                "name" : "Fritz Walter",
+                "name" : "\"Fritz Walter\"",
                 "age" : 43,
-                "reflectivelyVisible" : "I can only be seen by reflection"
+                "reflectivelyvisible" : "\"I can only be seen by reflection\""
             }
         },	        
         "a" : {
-            "type" : "hintsAll.Abuser",
+            "type" : "abuser",
             "attr" : {
-                "abuseDescription" : "Im only provided by debug"
+                "abusedescription" : "\"Im only provided by debug\""
             }
         },
         "nas" : {
-            "type" : "hintsAll.NowASingleton",
+            "type" : "nowasingleton",
             "attr" : {
-                "guard" : 43981
+                "guard" : 1337
             }
         },
         "em" : {
-            "type" : "hintsAll.ExternMixin",
+            "type" : "externmixin",
             "attr" : {
-                "unknownStuff" : null
+                "unknownstuff" : null
             }
         },
         "bt" : {
-            "type" : "hintsAll.BadType",
+            "type" : "badtype",
             "attr" : {
-                "ignoredData" : "ignore ignore",
-                "reflectivelyInVisible" : "I should not be accessible"
+                "ignoreddata" : "\"ignore ignore\"",
+                "reflectivelyinvisible" : "\"I should not be accessible\""
             }
         },
         "uid" : {
-            "type" : "hintsAll.UID",
+            "type" : "uid",
             "attr" : {
                 "identifier" : 7
             }
         },
         "expr" : {
-            "type" : "hintsAll.Expression",
+            "type" : "expression",
             "attr" : { }
         }	        
 	}
