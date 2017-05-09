@@ -6,7 +6,7 @@
 	                "type" : "enums.TestEnum_enuminstance",
 	                "attr" : {
 	                    "name" : "default",
-	                    "next" : "second"
+	                    "next" : "enm_second"
 	                }
 	            }
 	        },
@@ -15,7 +15,7 @@
 	                "type" : "enums.TestEnum_enuminstance",
 	                "attr" : {
 	                    "name" : "second",
-	                    "next" : "third"
+	                    "next" : "enm_third"
 	                }
 	            }
 	        },
@@ -24,7 +24,7 @@
 	                "type" : "enums.TestEnum_enuminstance",
 	                "attr" : {
 	                    "name" : "third",
-	                    "next" : "last"
+	                    "next" : "enm_last"
 	                }
 	            }
 	        },
@@ -33,7 +33,7 @@
 	                "type" : "enums.TestEnum_enuminstance",
 	                "attr" : {
 	                    "name" : "last",
-	                    "next" : "default"
+	                    "next" : "enm_default"
 	                }
 	            }
 	        },
@@ -41,7 +41,7 @@
 	            "enm" : {
 	                "type" : "enums.TestEnum",
 	                "attr" : {
-	                    "enuminstance" : "default"
+	                    "enuminstance" : "enm_default"
 	                }
 	            }
 	        }

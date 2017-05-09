@@ -2,27 +2,10 @@
 	"shouldFail" : false,
 	"data" : [
 	        {
-	            "a" : {
-	                "type" : "fancy.A",
-	                "attr" : {
-	                    "Parent" : "a"
-	                }
-	            }
-	        },
-	        {
-	            "c" : {
-	                "type" : "fancy.C",
-	                "attr" : {
-	                    "Parent" : "a",
-	                    "Value" : "c"
-	                }
-	            }
-	        },
-	        {
 	            "d" : {
 	                "type" : "fancy.D",
 	                "attr" : {
-	                    "Parent" : "a",
+	                    "Parent" : "d",
 	                    "Value" : "d"
 	                }
 	            }
@@ -31,8 +14,8 @@
 	            "e" : {
 	                "type" : "fancy.E",
 	                "attr" : {
-	                    "Parent" : "a",
-	                    "Value" : "c"
+	                    "Parent" : "d",
+	                    "Value" : "e"
 	                }
 	            }
 	        },
@@ -40,8 +23,8 @@
 	            "f" : {
 	                "type" : "fancy.F",
 	                "attr" : {
-	                    "Parent" : "a",
-	                    "Value" : "c",
+	                    "Parent" : "e",
+	                    "Value" : "d",
 	                    "m" : { "e" : "f" }
 	                }
 	            }
@@ -50,7 +33,7 @@
 	            "g" : {
 	                "type" : "fancy.G",
 	                "attr" : {
-	                    "Parent" : "a",
+	                    "Parent" : "d",
 	                    "Value" : "g",
 	                    "m" : { "e" : "f" }
 	                }
