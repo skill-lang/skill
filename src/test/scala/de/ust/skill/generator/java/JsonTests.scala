@@ -112,7 +112,7 @@ public class GenericJSONReaderTest extends common.CommonTest {
   def makeTestForJson(rval: PrintWriter, testfile: String): PrintWriter = {
     rval.write(s"""
 	@Test
-	public void jsonTest() throws ClassNotFoundException, NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, JSONException, MalformedURLException, IOException {
+	public void jsonTest() throws Exception  {
     Map<String, Access<?>> types = new HashMap<>();
 		Map<String, HashMap<String, FieldDeclaration<?, ?>>> typeFieldMapping = new HashMap<>();
 		
@@ -121,6 +121,8 @@ public class GenericJSONReaderTest extends common.CommonTest {
         reflectiveInit(sf);
         
 		creator.SkillObjectCreator.generateSkillFileMappings(sf, types, typeFieldMapping);
+    
+    //begin auto-generated instansiation
 """
       +
       generateObjectInstantiation(testfile)
@@ -143,31 +145,25 @@ public class GenericJSONReaderTest extends common.CommonTest {
       val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
       val currentType = currentObj.getString("type"); //The type of the skillObject
 
-      instantiations =instantiations.concat("SkillObject " + currentObjKey + " = types.get(\"" + currentType + "\").make();\n");
+      instantiations = instantiations.concat("SkillObject " + currentObjKey + " = types.get(\"" + currentType + "\").make();\n");
 
       val attributes = currentObj.getJSONObject("attr"); //The attributes of the skillObject 
 
       for (currentAttrKey <- asScalaSetConverter(attributes.keySet()).asScala) {
-        var currentAttrValue = "";
-        if (attributes.optJSONArray(currentAttrKey) != null) {
-          
-          instantiations = instantiateArray(instantiations, attributes.getJSONArray(currentAttrKey), currentObjKey + "Array", currentType, currentAttrKey);
-          currentAttrValue =  currentObjKey + "Array";
-       
-        } else if (attributes.optJSONObject(currentAttrKey) != null) {
-          
-          instantiations = instatiateMap(instantiations, attributes.getJSONObject(currentAttrKey), currentObjKey + "Map", currentType, currentAttrKey);
-          currentAttrValue =  currentObjKey + "Map";
-          
-        } else if (attributes.opt(currentAttrKey) != null) {
-          
-          currentAttrValue = "\"" + attributes.get(currentAttrKey) + "\"";
-          
-        } else {
 
-          currentAttrValue = "null";
+        val currentAttrValue = getcurrentAttrValue(attributes, currentAttrKey, currentObjKey);
+
+        if (attributes.optJSONArray(currentAttrKey) != null) {
+
+          instantiations = instantiateArray(instantiations, attributes.getJSONArray(currentAttrKey), currentObjKey + "Array", currentType, currentAttrKey);
+
+        } else if (attributes.optJSONObject(currentAttrKey) != null) {
+
+          instantiations = instatiateMap(instantiations, attributes.getJSONObject(currentAttrKey), currentObjKey + "Map", currentType, currentAttrKey);
+
         }
-        instantiations = instantiations.concat(currentObjKey + ".set(cast(typeFieldMapping.get(" + currentType + ").get(" + currentAttrKey + ")), " + currentAttrValue + ");\n\n");
+
+        instantiations = instantiations.concat(currentObjKey + ".set(cast(typeFieldMapping.get(\"" + currentType + "\").get(\"" + currentAttrKey + "\")), " + currentAttrValue + ");\n\n");
 
       }
     }
@@ -195,7 +191,7 @@ public class GenericJSONReaderTest extends common.CommonTest {
 
   def instatiateMap(instantiations: String, map: JSONObject, valueName: String, valueType: String, attrKey: String): String = {
     var ins = instantiations.concat("\n");
-    val attrType = "cast(typeFieldMapping.get(" + valueType + ").get(" + attrKey + "))";
+    val attrType = "cast(typeFieldMapping.get(\"" + valueType + "\").get(\"" + attrKey + "\"))";
     ins = ins.concat(attrType + " " + valueName + " = new " + attrType + ";\n");
     for (currentObjKey <- asScalaSetConverter(map.keySet()).asScala) {
       ins = ins.concat(valueName + ".put(" + currentObjKey + ", " + map.get(currentObjKey) + ");\n");
@@ -206,12 +202,44 @@ public class GenericJSONReaderTest extends common.CommonTest {
 
   def instantiateArray(instantiations: String, array: JSONArray, valueName: String, valueType: String, attrKey: String): String = {
     var ins = instantiations.concat("\n");
-     val attrType = "cast(typeFieldMapping.get(" + valueType + ").get(" + attrKey + "))";
+    val attrType = "cast(typeFieldMapping.get(\"" + valueType + "\").get(\"" + attrKey + "\"))";
     ins = ins.concat(attrType + " " + valueName + " = new " + attrType + ";\n");
     for (x <- intWrapper(0) until array.length()) {
       ins = ins.concat(valueName + ".add(" + array.get(x) + ");\n");
     }
     ins = ins.concat("\n");
     return ins;
+  }
+
+  def getcurrentAttrValue(attributes: JSONObject, currentAttrKey: String, currentObjKey: String): String = {
+
+    if (attributes.optJSONArray(currentAttrKey) != null) {
+
+      return currentObjKey + "Array";
+
+    } else if (attributes.optJSONObject(currentAttrKey) != null) {
+
+      return currentObjKey + "Map";
+
+    } else if (attributes.optBoolean(currentAttrKey) ||
+        (!attributes.optBoolean(currentAttrKey) && !attributes.optBoolean(currentAttrKey, true))) {
+
+      return attributes.getBoolean(currentAttrKey).toString();
+
+    } else if (attributes.optLong(currentAttrKey, 2009) != 2009) {
+
+      return attributes.getLong(currentAttrKey).toString();
+
+    } else if (attributes.optDouble(currentAttrKey, 2009) != 2009) {
+
+      return attributes.getDouble(currentAttrKey).toString();
+
+    } else if (!attributes.optString(currentAttrKey).isEmpty()) {
+      return attributes.getString(currentAttrKey);
+
+    } else {
+
+      return "null";
+    }
   }
 }
