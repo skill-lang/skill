@@ -81,7 +81,7 @@ import de.ust.skill.common.java.internal.FieldDeclaration;
 import de.ust.skill.common.java.internal.SkillObject;
 import $packagePath.api.SkillFile;
 
-public class GenericJSONReaderTest extends common.CommonTest {
+public class GenericReadTest extends common.CommonTest {
 
 	@Rule //http://stackoverflow.com/a/2935935
 	public final ExpectedException exception = ExpectedException.none();
