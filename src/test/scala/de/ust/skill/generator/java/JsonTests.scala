@@ -110,7 +110,7 @@ public class GenericReadTest extends common.CommonTest {
   }
 
   def makeTestForJson(rval: PrintWriter, testfile: String): PrintWriter = {
-    def testname = new File(testfile).getName.replace(".json","");
+    def testname = new File(testfile).getName.replace(".json", "");
     rval.write(s"""
 	@Test
 	public void ${testname}Test() throws Exception  {
@@ -142,12 +142,18 @@ public class GenericReadTest extends common.CommonTest {
     val jsonObjects = content.getJSONObject("data");
     var instantiations = "";
 
+    //First create skillobjects
     for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is our own name for the obj to create
       val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
       val currentType = currentObj.getString("type"); //The type of the skillObject
 
       instantiations = instantiations.concat("SkillObject " + currentObjKey + " = types.get(\"" + currentType + "\").make();\n");
-
+    }
+    instantiations = instantiations.concat("\n")
+    //Set skillobject values
+    for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is our own name for the obj to create
+      val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
+      val currentType = currentObj.getString("type"); //The type of the skillObject
       val attributes = currentObj.getJSONObject("attr"); //The attributes of the skillObject 
 
       for (currentAttrKey <- asScalaSetConverter(attributes.keySet()).asScala) {
@@ -223,7 +229,7 @@ public class GenericReadTest extends common.CommonTest {
       return currentObjKey + "Map";
 
     } else if (attributes.optBoolean(currentAttrKey) ||
-        (!attributes.optBoolean(currentAttrKey) && !attributes.optBoolean(currentAttrKey, true))) {
+      (!attributes.optBoolean(currentAttrKey) && !attributes.optBoolean(currentAttrKey, true))) {
 
       return attributes.getBoolean(currentAttrKey).toString();
 
