@@ -110,9 +110,10 @@ public class GenericReadTest extends common.CommonTest {
   }
 
   def makeTestForJson(rval: PrintWriter, testfile: String): PrintWriter = {
+    def testname = new File(testfile).getName.replace(".json","");
     rval.write(s"""
 	@Test
-	public void jsonTest() throws Exception  {
+	public void ${testname}Test() throws Exception  {
     Map<String, Access<?>> types = new HashMap<>();
 		Map<String, HashMap<String, FieldDeclaration<?, ?>>> typeFieldMapping = new HashMap<>();
 		
@@ -122,7 +123,7 @@ public class GenericReadTest extends common.CommonTest {
         
 		creator.SkillObjectCreator.generateSkillFileMappings(sf, types, typeFieldMapping);
     
-    //begin auto-generated instansiation
+    //auto-generated instansiation from json
 """
       +
       generateObjectInstantiation(testfile)
