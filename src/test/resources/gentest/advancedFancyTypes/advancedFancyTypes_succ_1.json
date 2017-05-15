@@ -1,44 +1,36 @@
 {
 	"shouldFail" : false,
-	"data" : [
-	        {
+	"data" : {
 	            "d" : {
-	                "type" : "fancy.D",
+	                "type" : "d",
 	                "attr" : {
-	                    "Parent" : "d",
-	                    "Value" : "d"
-	                }
-	            }
-	        },
-	        {
+	                    "parent" : "d",
+	                    "value" : "d"
+	        			    }
+	        	},
 	            "e" : {
-	                "type" : "fancy.E",
+	                "type" : "e",
 	                "attr" : {
-	                    "Parent" : "d",
-	                    "Value" : "e"
-	                }
-	            }
-	        },
-	        {
+	                    "parent" : "d",
+	                    "value" : "e"
+	        			    }
+	        	},
 	            "f" : {
-	                "type" : "fancy.F",
+	                "type" : "f",
 	                "attr" : {
-	                    "Parent" : "e",
-	                    "Value" : "d",
+	                    "parent" : "e",
+	                    "value" : "d",
 	                    "m" : { "e" : "f" }
-	                }
-	            }
-	        },
-	        {
+	        			    }
+	        	},
 	            "g" : {
-	                "type" : "fancy.G",
+	                "type" : "g",
 	                "attr" : {
-	                    "Parent" : "d",
-	                    "Value" : "g",
+	                    "parent" : "d",
+	                    "value" : "g",
 	                    "m" : { "e" : "f" }
-	                }
-	            }
-	        }
-	]
+	        			    }
+	        	}
+		}
 }
 
