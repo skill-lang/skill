@@ -141,6 +141,13 @@ public class GenericReadTest extends common.CommonTest {
     val content = new JSONObject(fileTokens);
     val jsonObjects = content.getJSONObject("data");
     var instantiations = "";
+    
+    if(content.getBoolean("shouldFail")){
+      instantiations = instantiations.concat(
+      """			System.out.println("There should be an exception coming up!");
+			exception.expect(Exception.class);
+      """);
+    }
 
     //First create skillobjects
     for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is our own name for the obj to create
@@ -198,8 +205,7 @@ public class GenericReadTest extends common.CommonTest {
 
   def instatiateMap(instantiations: String, map: JSONObject, valueName: String, valueType: String, attrKey: String): String = {
     var ins = instantiations.concat("\n");
-    val attrType = "cast(typeFieldMapping.get(\"" + valueType + "\").get(\"" + attrKey + "\"))";
-    ins = ins.concat(attrType + " " + valueName + " = new " + attrType + ";\n");
+    ins = ins.concat("HashMap " + valueName + " = new HashMap<>();\n");
     for (currentObjKey <- asScalaSetConverter(map.keySet()).asScala) {
       ins = ins.concat(valueName + ".put(" + currentObjKey + ", " + map.get(currentObjKey) + ");\n");
     }
@@ -209,8 +215,7 @@ public class GenericReadTest extends common.CommonTest {
 
   def instantiateArray(instantiations: String, array: JSONArray, valueName: String, valueType: String, attrKey: String): String = {
     var ins = instantiations.concat("\n");
-    val attrType = "cast(typeFieldMapping.get(\"" + valueType + "\").get(\"" + attrKey + "\"))";
-    ins = ins.concat(attrType + " " + valueName + " = new " + attrType + ";\n");
+    ins = ins.concat("Collection " + valueName + " = new   ;\n");
     for (x <- intWrapper(0) until array.length()) {
       ins = ins.concat(valueName + ".add(" + array.get(x) + ");\n");
     }
