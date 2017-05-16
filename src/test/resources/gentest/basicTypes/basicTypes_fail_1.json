@@ -2,17 +2,17 @@
 	"shouldFail" : true,
 	"data" : {
 		"all" : {
-			"type" : "basicTypes",
+			"type" : "basictypes",
 			"attr" : {
-				"anAnnotation" : null,
+				"anannotation" : null,
 				"abool" : "bool",
 				"astring" : "string",
-				"aUserType" : "userintegertypes",
-				"anotherUserType" : "userfloattypes",
-				"anArray" :  ["userintegertypes"],
-				"aSet"  : [ 2 ],
-				"aList" : [ 3, 4 ],
-				"aMap"  : { "\"5\"" : 6 }
+				"ausertype" : "userintegertypes",
+				"anotherusertype" : "userfloattypes",
+				"anarray" :  ["userintegertypes"],
+				"aset"  : [ 2 ],
+				"alist" : [ 3, 4 ],
+				"amap"  : { "\"5\"" : 6 }
 			}
 		},
 				
