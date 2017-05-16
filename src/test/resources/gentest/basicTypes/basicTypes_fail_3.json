@@ -18,7 +18,7 @@
 		
 		"bool" : {
 			"type" : "basicbool",
-			"attr" : {"abool" : true}
+			"attr" : {"basicbool" : true}
 	    },
 		
 		"string" : {
