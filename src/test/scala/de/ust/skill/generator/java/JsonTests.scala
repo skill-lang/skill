@@ -169,7 +169,7 @@ public class GenericReadTest extends common.CommonTest {
 
       for (currentAttrKey <- asScalaSetConverter(attributes.keySet()).asScala) {
 
-        val currentAttrValue = getcurrentAttrValue(attributes, currentAttrKey, currentObjKey);
+        val currentAttrValue = getcurrentAttrValue(attributes, currentAttrKey, currentObjKey, currentType);
 
         if (attributes.optJSONArray(currentAttrKey) != null) {
 
@@ -230,7 +230,7 @@ Collection ${attrKey}Collection = (Collection) refConstructor.newInstance();
     return ins;
   }
 
-  def getcurrentAttrValue(attributes: JSONObject, currentAttrKey: String, currentObjKey: String): String = {
+  def getcurrentAttrValue(attributes: JSONObject, currentAttrKey: String, currentObjKey: String, currentType: String): String = {
 
     if (attributes.optJSONArray(currentAttrKey) != null) {
 
@@ -245,13 +245,13 @@ Collection ${attrKey}Collection = (Collection) refConstructor.newInstance();
 
       return attributes.getBoolean(currentAttrKey).toString();
 
+    }  else if (attributes.optDouble(currentAttrKey, 2009) != 2009) {
+
+      return "wrapPrimitveTypes(" + attributes.getDouble(currentAttrKey).toString()+ ", typeFieldMapping.get(\""+ currentType +"\").get(\""+ currentAttrKey.toLowerCase() +"\"))";
+
     } else if (attributes.optLong(currentAttrKey, 2009) != 2009) {
 
-      return attributes.getLong(currentAttrKey).toString();
-
-    } else if (attributes.optDouble(currentAttrKey, 2009) != 2009) {
-
-      return attributes.getDouble(currentAttrKey).toString();
+      return "wrapPrimitveTypes(" + attributes.getLong(currentAttrKey).toString() + ", typeFieldMapping.get(\"" + currentType +"\").get(\""+ currentAttrKey.toLowerCase() +"\"))";
 
     } else if (!attributes.optString(currentAttrKey).isEmpty()) {
       return attributes.getString(currentAttrKey);
