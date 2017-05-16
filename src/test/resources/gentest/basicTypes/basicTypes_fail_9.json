@@ -1,37 +1,84 @@
 {
 	"shouldFail" : true,
-	"data" : [
-	        {
-	            "all" : {
-	                "type" : "basicTypes.BasicTypes",
-	                "attr" : {
-	                    "anAnnotation" : null,
-	                    "aBool" : { "basicBool" : true },
-	                    "aString" : { "basicString" : "Hello World" },
-	                    "aUserType" : {
-	                        "int8"   : { "basicInt" : -3 },
-	                        "int16"  : { "basicInt" : -2 },
-	                        "int32"  : { "basicInt" : -1 },
-	                        "int64I" : { "basicInt" :  0 },
-	                        "int64V" : { "basicInt" :  1 }
-	                    },
-	                    "anotherUserType" : {
-	                        "float32" : { "basicFloat" : 1 },
-	                        "float64" : { "basicFloat" : 2 }
-	                    },
-	                    "anArray" :  [{
-	                        "int8"   : { "basicInt" : -3 },
-	                        "int16"  : { "basicInt" : -2 },
-	                        "int32"  : { "basicInt" : -1 },
-	                        "int64I" : { "basicInt" :  0 },
-	                        "int64V" : { "basicInt" :  1 }
-	                    }],
-	                    "aSet"  : [ 2 ],
-	                    "aList" : [ 3, 4 ],
-	                    "aMap"  : { "5" : 333 }
-	                }
-	            }
-	        }
-	]
+	"data" : {
+	    "all" : {
+			"type" : "basicTypes",
+			"attr" : {
+				"anAnnotation" : null,
+				"abool" : "bool",
+				"astring" : "string",
+				"aUserType" : "userintegertypes",
+				"anotherUserType" : "userfloattypes",
+				"anArray" :  ["userintegertypes"],
+				"aSet"  : [ 333 ],
+				"aList" : [ 3, 1e+40],
+				"aMap"  : { "\"5\"" : 333 }
+			}
+		},
+		
+		"bool" : {
+			"type" : "basicbool",
+			"attr" : {"abool" : true}
+	    },
+		
+		"string" : {
+			"type" : "basicstring",
+			"attr" : {"astring" : "\" I am a String \""}
+	    },
+		
+		"userintegertypes" : {
+			"type" : "basicintegers",
+			"attr" : {
+				"int8"   : "integer8",
+				"int16"  : "integer16",
+				"int32"  : "integer32",
+				"int64I" : "integer64i",
+				"int64V" : "integer64v"
+			}
+	    },
+		
+		"userfloattypes" : {
+			"type" : "basicfloats",
+			"attr" : {
+				"float32" : "userfloat32",
+				"float64" : "userfloat64"
+			}
+	    },
+		
+		"integer8" : {
+			"type" : "basicint8",
+			"attr" : {"basicInt" : -3}
+		},
+		
+		"integer16" : {
+			"type" : "basicint16",
+			"attr" : {"basicInt" : -2}
+		},
+		
+		"integer32" : {
+			"type" : "basicint32",
+			"attr" : {"basicInt" : -1}
+		},
+		
+		"integer64i" : {
+			"type" : "basicint64i",
+			"attr" : {"basicInt" : 0}
+		},
+		
+		"integer64v" : {
+			"type" : "basicint64v",
+			"attr" : {"basicInt" : 1}
+		},
+		
+		"userfloat32" : {
+			"type" : "basicfloat32",
+			"attr" : {"basicfloat" : -1e+40}
+		},
+		
+		"userfloat64" : {
+			"type" : "basicfloat64",
+			"attr" : {"basicfloat" : 2}
+		},
+	}
 }
 
