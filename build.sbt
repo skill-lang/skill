@@ -25,6 +25,8 @@ libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % 
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.0"
 
+libraryDependencies += "org.json" %% "json" % "20160810"
+
 
 buildInfoSettings
 
