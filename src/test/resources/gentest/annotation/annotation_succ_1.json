@@ -1,14 +1,13 @@
 {
 	"shouldFail" : false,
-	"data" : [
-	        {
-	            "tst" : {
-	                "type" : "annotation.Test",
-	                "attr" : {
-	                    "f" : null
-	                }
-	            }
-	        }
-	]
+	"data" :{
+					"tst" : {
+						"type" : "test",
+						"attr" : {
+							"f" : null
+						}
+					}
+				}
+	
 }
 

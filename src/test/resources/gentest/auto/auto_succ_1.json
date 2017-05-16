@@ -1,38 +1,30 @@
 {
 	"shouldFail" : false,
-	"data" : [
-	        {
-	            "a" : {
-	                "type" : "auto.A",
+	"data" : {
+	         "a" : {
+	                "type" : "a",
 	                "attr" : {
 	                    "a" : "a"
-	                }
-	            }
-	        },
-	        {
-	            "b" : {
-	                "type" : "auto.B",
+							}
+					},
+	        "b" : {
+	                "type" : "b",
 	                "attr" : {
 	                    "b" : "b"
-	                }
-	            }
-	        },
-	        {
-	            "c" : {
-	                "type" : "auto.C",
+							}
+					},
+	        "c" : {
+	                "type" : "c",
 	                "attr" : {
 	                    "c" : "c"
-	                }
-	            }
-	        },
-	        {
-	            "d" : {
-	                "type" : "auto.D",
+								}
+					},
+	        "d" : {
+	                "type" : "d",
 	                "attr" : {
 	                    "d" : null
-	                }
-	            }
-	        }
-	]
+							}
+					}
+				}
 }
 
