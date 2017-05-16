@@ -10,9 +10,9 @@
 									"aUserType" : "userintegertypes",
 									"anotherUserType" : "userfloattypes",
 									"anArray" :  ["userintegertypes"],
-									"aSet"  : [ 333 ],
-									"aList" : [ 3, 1e+40],
-									"aMap"  : { "\"5\"" : 1 }
+									"aSet"  : [ 1 ],
+									"aList" : [ 3.0, 1.0],
+									"aMap"  : { 5 : 1 }
 						}
 					},
 			
