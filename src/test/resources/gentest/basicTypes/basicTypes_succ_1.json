@@ -24,7 +24,7 @@
 			
 			"string" : {
 					"type" : "basicstring",
-					"attr" : {"astring" : "\" I am a String \""}
+					"attr" : {"basicstring" : "\" I am a String \""}
 					
 	        },
 			
