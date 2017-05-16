@@ -61,10 +61,12 @@ package $packagePath;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -114,7 +116,8 @@ public class GenericReadTest extends common.CommonTest {
     rval.write(s"""
 	@Test
 	public void ${testname}Test() throws Exception  {
-    Map<String, Access<?>> types = new HashMap<>();
+    Class<?> refClass;
+    Constructor<?> refConstructor;Map<String, Access<?>> types = new HashMap<>();
 		Map<String, HashMap<String, FieldDeclaration<?, ?>>> typeFieldMapping = new HashMap<>();
 		
 		Path tempBinaryFile = tmpFile("write.generic.checked");
@@ -124,6 +127,7 @@ public class GenericReadTest extends common.CommonTest {
 		creator.SkillObjectCreator.generateSkillFileMappings(sf, types, typeFieldMapping);
     
     //auto-generated instansiation from json
+
 """
       +
       generateObjectInstantiation(testfile)
@@ -154,13 +158,13 @@ public class GenericReadTest extends common.CommonTest {
       val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
       val currentType = currentObj.getString("type"); //The type of the skillObject
 
-      instantiations = instantiations.concat("SkillObject " + currentObjKey + " = types.get(\"" + currentType + "\").make();\n");
+      instantiations = instantiations.concat("SkillObject " + currentObjKey.toLowerCase() + " = types.get(\"" + currentType.toLowerCase() + "\").make();\n");
     }
     instantiations = instantiations.concat("\n")
     //Set skillobject values
     for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is our own name for the obj to create
       val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
-      val currentType = currentObj.getString("type"); //The type of the skillObject
+      val currentType = currentObj.getString("type").toLowerCase(); //The type of the skillObject
       val attributes = currentObj.getJSONObject("attr"); //The attributes of the skillObject 
 
       for (currentAttrKey <- asScalaSetConverter(attributes.keySet()).asScala) {
@@ -169,15 +173,15 @@ public class GenericReadTest extends common.CommonTest {
 
         if (attributes.optJSONArray(currentAttrKey) != null) {
 
-          instantiations = instantiateArray(instantiations, attributes.getJSONArray(currentAttrKey), currentObjKey + "Array", currentType, currentAttrKey);
+          instantiations = instantiateArray(instantiations, attributes.getJSONArray(currentAttrKey), currentType, currentAttrKey.toLowerCase());
 
         } else if (attributes.optJSONObject(currentAttrKey) != null) {
 
-          instantiations = instatiateMap(instantiations, attributes.getJSONObject(currentAttrKey), currentObjKey + "Map", currentType, currentAttrKey);
+          instantiations = instatiateMap(instantiations, attributes.getJSONObject(currentAttrKey), currentType, currentAttrKey.toLowerCase());
 
         }
 
-        instantiations = instantiations.concat(currentObjKey + ".set(cast(typeFieldMapping.get(\"" + currentType + "\").get(\"" + currentAttrKey + "\")), " + currentAttrValue + ");\n\n");
+        instantiations = instantiations.concat(currentObjKey + ".set(cast(typeFieldMapping.get(\"" + currentType + "\").get(\"" + currentAttrKey.toLowerCase() + "\")), " + currentAttrValue + ");\n\n");
 
       }
     }
@@ -203,21 +207,24 @@ public class GenericReadTest extends common.CommonTest {
     // nothing yet
   }
 
-  def instatiateMap(instantiations: String, map: JSONObject, valueName: String, valueType: String, attrKey: String): String = {
+  def instatiateMap(instantiations: String, map: JSONObject, valueType: String, attrKey: String): String = {
     var ins = instantiations.concat("\n");
-    ins = ins.concat("HashMap " + valueName + " = new HashMap<>();\n");
+    ins = ins.concat("HashMap " + attrKey + "Map = new HashMap<>();\n");
     for (currentObjKey <- asScalaSetConverter(map.keySet()).asScala) {
-      ins = ins.concat(valueName + ".put(" + currentObjKey + ", " + map.get(currentObjKey) + ");\n");
+      ins = ins.concat(attrKey + "Map.put(" + currentObjKey + ", " + map.get(currentObjKey) + ");\n");
     }
     ins = ins.concat("\n");
     return ins;
   }
 
-  def instantiateArray(instantiations: String, array: JSONArray, valueName: String, valueType: String, attrKey: String): String = {
-    var ins = instantiations.concat("\n");
-    ins = ins.concat("Collection " + valueName + " = new   ;\n");
+  def instantiateArray(instantiations: String, array: JSONArray, valueType: String, attrKey: String): String = {
+  var ins = instantiations.concat(s"""
+refClass = Class.forName(getProperCollectionType(typeFieldMapping.get("${valueType}").get("${attrKey}").toString()));
+refConstructor = refClass.getConstructor();
+Collection ${attrKey}Collection = (Collection) refConstructor.newInstance();
+""");
     for (x <- intWrapper(0) until array.length()) {
-      ins = ins.concat(valueName + ".add(" + array.get(x) + ");\n");
+      ins = ins.concat(attrKey + "Collection.add(" + array.get(x) + ");\n");
     }
     ins = ins.concat("\n");
     return ins;
@@ -227,11 +234,11 @@ public class GenericReadTest extends common.CommonTest {
 
     if (attributes.optJSONArray(currentAttrKey) != null) {
 
-      return currentObjKey + "Array";
+      return currentAttrKey.toLowerCase() + "Collection";
 
     } else if (attributes.optJSONObject(currentAttrKey) != null) {
 
-      return currentObjKey + "Map";
+      return currentAttrKey.toLowerCase() + "Map";
 
     } else if (attributes.optBoolean(currentAttrKey) ||
       (!attributes.optBoolean(currentAttrKey) && !attributes.optBoolean(currentAttrKey, true))) {
