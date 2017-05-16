@@ -72,12 +72,12 @@
 		
 		"userfloat32" : {
 			"type" : "basicfloat32",
-			"attr" : {"basicfloat" : -1e+40}
+			"attr" : {"basicfloat" : -1.0e+40}
 		},
 		
 		"userfloat64" : {
 			"type" : "basicfloat64",
-			"attr" : {"basicfloat" : 2}
+			"attr" : {"basicfloat" : 2.1}
 		},
 	}
 }
