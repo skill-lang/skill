@@ -145,10 +145,10 @@ public class GenericReadTest extends common.CommonTest {
     val content = new JSONObject(fileTokens);
     val jsonObjects = content.getJSONObject("data");
     var instantiations = "";
-    
-    if(content.getBoolean("shouldFail")){
+
+    if (content.getBoolean("shouldFail")) {
       instantiations = instantiations.concat(
-      """			System.out.println("There should be an exception coming up!");
+        """			System.out.println("There should be an exception coming up!");
 			exception.expect(Exception.class);
       """);
     }
@@ -173,11 +173,11 @@ public class GenericReadTest extends common.CommonTest {
 
         if (objAttributes.optJSONArray(currentAttrKey) != null) {
 
-          instantiations = instantiateArray(instantiations, objAttributes.getJSONArray(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(),currentAttrValue);
+          instantiations = instantiateArray(instantiations, objAttributes.getJSONArray(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
 
         } else if (objAttributes.optJSONObject(currentAttrKey) != null) {
 
-          instantiations = instatiateMap(instantiations, objAttributes.getJSONObject(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(),currentAttrValue);
+          instantiations = instatiateMap(instantiations, objAttributes.getJSONObject(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
 
         }
 
@@ -207,7 +207,7 @@ public class GenericReadTest extends common.CommonTest {
     // nothing yet
   }
 
-  def instatiateMap(instantiations: String, map: JSONObject, valueType: String, attrKey: String, mapName : String): String = {
+  def instatiateMap(instantiations: String, map: JSONObject, valueType: String, attrKey: String, mapName: String): String = {
     var ins = instantiations.concat("\n");
     ins = ins.concat("HashMap " + mapName + " = new HashMap<>();\n");
     for (currentObjKey <- asScalaSetConverter(map.keySet()).asScala) {
@@ -217,14 +217,14 @@ public class GenericReadTest extends common.CommonTest {
     return ins;
   }
 
-  def instantiateArray(instantiations: String, array: JSONArray, objValueType: String, attrKey: String, collectionName : String): String = {
-  var ins = instantiations.concat(s"""
-refClass = Class.forName(getProperCollectionType(typeFieldMapping.get("${objValueType}").get("${attrKey}").toString()));
-refConstructor = refClass.getConstructor();
-Collection ${collectionName} = (Collection) refConstructor.newInstance();
-""");
+  def instantiateArray(instantiations: String, array: JSONArray, objValueType: String, attrKey: String, collectionName: String): String = {
+    var ins = instantiations.concat(s"""
+    refClass = Class.forName(getProperCollectionType(typeFieldMapping.get("${objValueType}").get("${attrKey}").toString()));
+    refConstructor = refClass.getConstructor();
+    Collection ${collectionName} = (Collection) refConstructor.newInstance();
+    """);
     for (x <- intWrapper(0) until array.length()) {
-      ins = ins.concat(collectionName +".add(" + array.get(x) + ");\n");
+      ins = ins.concat(collectionName + ".add(" + getcurrentArrayValue(array, x, attrKey, objValueType) + ");\n");
     }
     ins = ins.concat("\n");
     return ins;
@@ -245,16 +245,40 @@ Collection ${collectionName} = (Collection) refConstructor.newInstance();
 
       return attributes.getBoolean(currentAttrKey).toString();
 
-    }  else if (attributes.optDouble(currentAttrKey, 2009) != 2009) {
+    } else if (attributes.optDouble(currentAttrKey, 2009) != 2009) {
 
-      return "wrapPrimitveTypes(" + attributes.getDouble(currentAttrKey).toString()+ ", typeFieldMapping.get(\""+ currentObjType +"\").get(\""+ currentAttrKey.toLowerCase() +"\"))";
+      return "wrapPrimitveTypes(" + attributes.getDouble(currentAttrKey).toString() + ", typeFieldMapping.get(\"" + currentObjType + "\").get(\"" + currentAttrKey.toLowerCase() + "\"))";
 
     } else if (attributes.optLong(currentAttrKey, 2009) != 2009) {
 
-      return "wrapPrimitveTypes(" + attributes.getLong(currentAttrKey).toString() + ", typeFieldMapping.get(\"" + currentObjType +"\").get(\""+ currentAttrKey.toLowerCase() +"\"))";
+      return "wrapPrimitveTypes(" + attributes.getLong(currentAttrKey).toString() + ", typeFieldMapping.get(\"" + currentObjType + "\").get(\"" + currentAttrKey.toLowerCase() + "\"))";
 
     } else if (!attributes.optString(currentAttrKey).isEmpty()) {
       return attributes.getString(currentAttrKey);
+
+    } else {
+
+      return "null";
+    }
+  }
+  
+    def getcurrentArrayValue(array: JSONArray, currentObj: Integer,currentAttrKey : String, currentObjType: String): String = {
+
+    if (array.optBoolean(currentObj) ||
+      (!array.optBoolean(currentObj) && !array.optBoolean(currentObj, true))) {
+
+      return array.getBoolean(currentObj).toString();
+
+    } else if (array.optDouble(currentObj, 2009) != 2009) {
+
+      return "wrapPrimitveTypes(" + array.getDouble(currentObj).toString() + ", typeFieldMapping.get(\"" + currentObjType + "\").get(\"" + currentAttrKey.toLowerCase() + "\"))";
+
+    } else if (array.optLong(currentObj, 2009) != 2009) {
+
+      return "wrapPrimitveTypes(" + array.getLong(currentObj).toString() + ", typeFieldMapping.get(\"" + currentObjType + "\").get(\"" + currentAttrKey.toLowerCase() + "\"))";
+
+    } else if (!array.optString(currentObj).isEmpty()) {
+      return array.getString(currentObj);
 
     } else {
 
