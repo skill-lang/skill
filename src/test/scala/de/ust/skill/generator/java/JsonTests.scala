@@ -154,34 +154,34 @@ public class GenericReadTest extends common.CommonTest {
     }
 
     //First create skillobjects
-    for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is our own name for the obj to create
+    for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is the name of the skillobj to create
       val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
-      val currentType = currentObj.getString("type"); //The type of the skillObject
+      val currentObjType = currentObj.getString("type"); //The type of the skillObject
 
-      instantiations = instantiations.concat("SkillObject " + currentObjKey.toLowerCase() + " = types.get(\"" + currentType.toLowerCase() + "\").make();\n");
+      instantiations = instantiations.concat("SkillObject " + currentObjKey.toLowerCase() + " = types.get(\"" + currentObjType.toLowerCase() + "\").make();\n");
     }
     instantiations = instantiations.concat("\n")
     //Set skillobject values
-    for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is our own name for the obj to create
+    for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is the name of the skillobj to create
       val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
-      val currentType = currentObj.getString("type").toLowerCase(); //The type of the skillObject
-      val attributes = currentObj.getJSONObject("attr"); //The attributes of the skillObject 
+      val currentObjType = currentObj.getString("type").toLowerCase(); //The type of the skillObject
+      val objAttributes = currentObj.getJSONObject("attr"); //The attributes/Fields of the skillObject 
 
-      for (currentAttrKey <- asScalaSetConverter(attributes.keySet()).asScala) {
+      for (currentAttrKey <- asScalaSetConverter(objAttributes.keySet()).asScala) {
 
-        val currentAttrValue = getcurrentAttrValue(attributes, currentAttrKey, currentObjKey, currentType);
+        val currentAttrValue = getcurrentAttrValue(objAttributes, currentAttrKey, currentObjKey, currentObjType);
 
-        if (attributes.optJSONArray(currentAttrKey) != null) {
+        if (objAttributes.optJSONArray(currentAttrKey) != null) {
 
-          instantiations = instantiateArray(instantiations, attributes.getJSONArray(currentAttrKey), currentType, currentAttrKey.toLowerCase());
+          instantiations = instantiateArray(instantiations, objAttributes.getJSONArray(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(),currentAttrValue);
 
-        } else if (attributes.optJSONObject(currentAttrKey) != null) {
+        } else if (objAttributes.optJSONObject(currentAttrKey) != null) {
 
-          instantiations = instatiateMap(instantiations, attributes.getJSONObject(currentAttrKey), currentType, currentAttrKey.toLowerCase());
+          instantiations = instatiateMap(instantiations, objAttributes.getJSONObject(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(),currentAttrValue);
 
         }
 
-        instantiations = instantiations.concat(currentObjKey + ".set(cast(typeFieldMapping.get(\"" + currentType + "\").get(\"" + currentAttrKey.toLowerCase() + "\")), " + currentAttrValue + ");\n\n");
+        instantiations = instantiations.concat(currentObjKey + ".set(cast(typeFieldMapping.get(\"" + currentObjType + "\").get(\"" + currentAttrKey.toLowerCase() + "\")), " + currentAttrValue + ");\n\n");
 
       }
     }
@@ -207,38 +207,38 @@ public class GenericReadTest extends common.CommonTest {
     // nothing yet
   }
 
-  def instatiateMap(instantiations: String, map: JSONObject, valueType: String, attrKey: String): String = {
+  def instatiateMap(instantiations: String, map: JSONObject, valueType: String, attrKey: String, mapName : String): String = {
     var ins = instantiations.concat("\n");
-    ins = ins.concat("HashMap " + attrKey + "Map = new HashMap<>();\n");
+    ins = ins.concat("HashMap " + mapName + " = new HashMap<>();\n");
     for (currentObjKey <- asScalaSetConverter(map.keySet()).asScala) {
-      ins = ins.concat(attrKey + "Map.put(" + currentObjKey + ", " + map.get(currentObjKey) + ");\n");
+      ins = ins.concat(mapName + ".put(" + currentObjKey + ", " + map.get(currentObjKey) + ");\n");
     }
     ins = ins.concat("\n");
     return ins;
   }
 
-  def instantiateArray(instantiations: String, array: JSONArray, valueType: String, attrKey: String): String = {
+  def instantiateArray(instantiations: String, array: JSONArray, objValueType: String, attrKey: String, collectionName : String): String = {
   var ins = instantiations.concat(s"""
-refClass = Class.forName(getProperCollectionType(typeFieldMapping.get("${valueType}").get("${attrKey}").toString()));
+refClass = Class.forName(getProperCollectionType(typeFieldMapping.get("${objValueType}").get("${attrKey}").toString()));
 refConstructor = refClass.getConstructor();
-Collection ${attrKey}Collection = (Collection) refConstructor.newInstance();
+Collection ${collectionName} = (Collection) refConstructor.newInstance();
 """);
     for (x <- intWrapper(0) until array.length()) {
-      ins = ins.concat(attrKey + "Collection.add(" + array.get(x) + ");\n");
+      ins = ins.concat(collectionName +".add(" + array.get(x) + ");\n");
     }
     ins = ins.concat("\n");
     return ins;
   }
 
-  def getcurrentAttrValue(attributes: JSONObject, currentAttrKey: String, currentObjKey: String, currentType: String): String = {
+  def getcurrentAttrValue(attributes: JSONObject, currentAttrKey: String, currentObjKey: String, currentObjType: String): String = {
 
     if (attributes.optJSONArray(currentAttrKey) != null) {
 
-      return currentAttrKey.toLowerCase() + "Collection";
+      return currentObjKey.toLowerCase() + currentAttrKey + "Collection";
 
     } else if (attributes.optJSONObject(currentAttrKey) != null) {
 
-      return currentAttrKey.toLowerCase() + "Map";
+      return currentObjKey.toLowerCase() + currentAttrKey.toLowerCase() + "Map";
 
     } else if (attributes.optBoolean(currentAttrKey) ||
       (!attributes.optBoolean(currentAttrKey) && !attributes.optBoolean(currentAttrKey, true))) {
@@ -247,11 +247,11 @@ Collection ${attrKey}Collection = (Collection) refConstructor.newInstance();
 
     }  else if (attributes.optDouble(currentAttrKey, 2009) != 2009) {
 
-      return "wrapPrimitveTypes(" + attributes.getDouble(currentAttrKey).toString()+ ", typeFieldMapping.get(\""+ currentType +"\").get(\""+ currentAttrKey.toLowerCase() +"\"))";
+      return "wrapPrimitveTypes(" + attributes.getDouble(currentAttrKey).toString()+ ", typeFieldMapping.get(\""+ currentObjType +"\").get(\""+ currentAttrKey.toLowerCase() +"\"))";
 
     } else if (attributes.optLong(currentAttrKey, 2009) != 2009) {
 
-      return "wrapPrimitveTypes(" + attributes.getLong(currentAttrKey).toString() + ", typeFieldMapping.get(\"" + currentType +"\").get(\""+ currentAttrKey.toLowerCase() +"\"))";
+      return "wrapPrimitveTypes(" + attributes.getLong(currentAttrKey).toString() + ", typeFieldMapping.get(\"" + currentObjType +"\").get(\""+ currentAttrKey.toLowerCase() +"\"))";
 
     } else if (!attributes.optString(currentAttrKey).isEmpty()) {
       return attributes.getString(currentAttrKey);
