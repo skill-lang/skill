@@ -262,7 +262,7 @@ public class GenericReadTest extends common.CommonTest {
     }
   }
   
-    def getcurrentArrayValue(array: JSONArray, currentObj: Integer,currentAttrKey : String, currentObjType: String): String = {
+    def getcurrentArrayValue(array: JSONArray, currentObj: Int,currentAttrKey : String, currentObjType: String): String = {
 
     if (array.optBoolean(currentObj) ||
       (!array.optBoolean(currentObj) && !array.optBoolean(currentObj, true))) {
