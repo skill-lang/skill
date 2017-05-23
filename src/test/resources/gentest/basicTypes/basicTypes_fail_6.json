@@ -12,7 +12,7 @@
 				"anArray" :  ["userintegertypesarray"],
 				"aSet"  : [ 2 ],
 				"aList" : [ 3, 4 ],
-				"aMap"  : { 5 : 6 }
+				"aMap"  : {  "\"5\"" : "\"6\""  }
 			}
 		},
 		

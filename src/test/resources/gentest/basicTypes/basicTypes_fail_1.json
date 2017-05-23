@@ -12,7 +12,7 @@
 				"anarray" :  ["userintegertypes"],
 				"aset"  : [ 2 ],
 				"alist" : [ 3, 4 ],
-				"amap"  : { 5 : 6 }
+				"amap"  : {  "\"5\"" : "\"6\""  }
 			}
 		},
 				
