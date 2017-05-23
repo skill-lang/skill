@@ -207,11 +207,19 @@ public class GenericReadTest extends common.CommonTest {
     // nothing yet
   }
 
-  def instatiateMap(instantiations: String, map: JSONObject, valueType: String, attrKey: String, mapName: String): String = {
+  def instatiateMap(instantiations: String, map: JSONObject, objValueType: String, attrKey: String, mapName: String): String = {
     var ins = instantiations.concat("\n");
     ins = ins.concat("HashMap " + mapName + " = new HashMap<>();\n");
     for (currentObjKey <- asScalaSetConverter(map.keySet()).asScala) {
-      ins = ins.concat(mapName + ".put(" + currentObjKey + ", " + map.get(currentObjKey) + ");\n");
+      var key = currentObjKey;
+      if(currentObjKey.contains("\"")){
+        key = "wrapPrimitveMapTypes(" + currentObjKey + ", typeFieldMapping.get(\"" + objValueType.toLowerCase() + "\").get(\"" + attrKey.toLowerCase() + "\"),true)";
+      }
+      var value = map.get(currentObjKey).toString();
+      if(map.get(currentObjKey).toString().contains("\"")){
+        value = "wrapPrimitveMapTypes(" + map.get(currentObjKey).toString() + ", typeFieldMapping.get(\"" + objValueType.toLowerCase() + "\").get(\"" + attrKey.toLowerCase() + "\"),false)";
+      }
+      ins = ins.concat(mapName + ".put(" + key + ", " + value + ");\n");
     }
     ins = ins.concat("\n");
     return ins;
