@@ -76,7 +76,7 @@
 			
 			"userfloat32" : {
 				"type" : "basicfloat32",
-				"attr" : {"basicfloat" : -1.0e+40}
+				"attr" : {"basicfloat" : 3.145}
 			},
 			
 			"userfloat64" : {
