@@ -1,7 +1,6 @@
 {
 	"shouldFail" : true,
-	"data" : [
-	        {
+	"data" :{
 	            "consts" : {
 	                "type" : "constants.Constant",
 	                "attr" : {
@@ -12,7 +11,6 @@
 	                    "e" : 466
 	                }
 	            }
-	        }
-	]
+	 }
 }
 
