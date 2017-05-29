@@ -166,7 +166,7 @@ public class GenericReadTest extends common.CommonTest {
       val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
       val currentObjType = currentObj.getString("type").toLowerCase(); //The type of the skillObject
       val objAttributes = currentObj.getJSONObject("attr"); //The attributes/Fields of the skillObject 
-
+      
       for (currentAttrKey <- asScalaSetConverter(objAttributes.keySet()).asScala) {
 
         val currentAttrValue = getcurrentAttrValue(objAttributes, currentAttrKey, currentObjKey, currentObjType);
@@ -177,11 +177,11 @@ public class GenericReadTest extends common.CommonTest {
 
         } else if (objAttributes.optJSONObject(currentAttrKey) != null) {
 
-          instantiations = instatiateMap(instantiations, objAttributes.getJSONObject(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
+          instantiations = instantiateMap(instantiations, objAttributes.getJSONObject(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
 
         }
 
-        instantiations = instantiations.concat(currentObjKey + ".set(cast(typeFieldMapping.get(\"" + currentObjType + "\").get(\"" + currentAttrKey.toLowerCase() + "\")), " + currentAttrValue + ");\n\n");
+        instantiations = instantiations.concat(currentObjKey.toLowerCase() + ".set(cast(typeFieldMapping.get(\"" + currentObjType.toLowerCase() + "\").get(\"" + currentAttrKey.toLowerCase() + "\")), " + currentAttrValue + ");\n\n");
 
       }
     }
@@ -206,8 +206,8 @@ public class GenericReadTest extends common.CommonTest {
   override def finalizeTests {
     // nothing yet
   }
-
-  def instatiateMap(instantiations: String, map: JSONObject, objValueType: String, attrKey: String, mapName: String): String = {
+  
+  def instantiateMap(instantiations: String, map: JSONObject, objValueType: String, attrKey: String, mapName: String): String = {
     var ins = instantiations.concat("\n");
     ins = ins.concat("HashMap " + mapName + " = new HashMap<>();\n");
     for (currentObjKey <- asScalaSetConverter(map.keySet()).asScala) {
@@ -262,7 +262,7 @@ public class GenericReadTest extends common.CommonTest {
       return "wrapPrimitveTypes(" + attributes.getLong(currentAttrKey).toString() + ", typeFieldMapping.get(\"" + currentObjType + "\").get(\"" + currentAttrKey.toLowerCase() + "\"))";
 
     } else if (!attributes.optString(currentAttrKey).isEmpty()) {
-      return attributes.getString(currentAttrKey);
+      return attributes.getString(currentAttrKey).toLowerCase();
 
     } else {
 
@@ -286,7 +286,7 @@ public class GenericReadTest extends common.CommonTest {
       return "wrapPrimitveTypes(" + array.getLong(currentObj).toString() + ", typeFieldMapping.get(\"" + currentObjType + "\").get(\"" + currentAttrKey.toLowerCase() + "\"))";
 
     } else if (!array.optString(currentObj).isEmpty()) {
-      return array.getString(currentObj);
+      return array.getString(currentObj).toLowerCase();
 
     } else {
 
