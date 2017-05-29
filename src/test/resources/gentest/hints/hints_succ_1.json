@@ -1,49 +1,47 @@
 {
 	"shouldFail" : false,
 	"data" : {
-        "u" : {
-            "type" : "user",
-            "attr" : {
-                "name" : "\"Fritz Walter\"",
-                "age" : 43,
-                "reflectivelyvisible" : "\"I can only be seen by reflection\""
-            }
-        },	        
-        "a" : {
-            "type" : "abuser",
-            "attr" : {
-                "abusedescription" : "\"Im only provided by debug\""
-            }
-        },
-        "nas" : {
-            "type" : "nowasingleton",
-            "attr" : {
-                "guard" : 1337
-            }
-        },
-        "em" : {
-            "type" : "externmixin",
-            "attr" : {
-                "unknownstuff" : null
-            }
-        },
-        "bt" : {
-            "type" : "badtype",
-            "attr" : {
-                "ignoreddata" : "\"ignore ignore\"",
-                "reflectivelyinvisible" : "\"I should not be accessible\""
-            }
-        },
-        "uid" : {
-            "type" : "uid",
-            "attr" : {
-                "identifier" : 7
-            }
-        },
-        "expr" : {
-            "type" : "expression",
-            "attr" : { }
-        }	        
+	    "u" : {
+	        "type" : "User",
+	        "attr" : {
+	            "name" : "User.name",
+	            "age" : 43,
+	            "reflectivelyVisible" : "User.reflectivelyVisible"
+	        }
+	    },
+	    "a" : {
+	        "type" : "Abuser",
+	        "attr" : {
+	            "abuseDescription" : "Abuser.abuseDescription"
+	        }
+	    },
+	    "nas" : {
+	        "type" : "NowASingleton",
+	        "attr" : { }
+	    },
+	    "em" : {
+	        "type" : "ExternMixin",
+	        "attr" : {
+	            "unknownStuff" : null
+	        }
+	    },
+	    "bt" : {
+	        "type" : "BadType",
+	        "attr" : {
+	            "ignoredData" : "BadType.ignoredData",
+	            "reflectivelyInVisible" : "BadType.reflectivelyInVisible"
+	        }
+	    },
+	    "uid" : {
+	        "type" : "UID",
+	        "attr" : {
+	            "identifier" : 7
+	        }
+	    },
+	    "expr" : {
+	        "type" : "Expression",
+	        "attr" : { }
+	    }
 	}
 }
 

@@ -1,20 +1,16 @@
 {
 	"shouldFail" : false,
-	"data" : [
-	        {
-	            "a" : {
-	                "type" : "unknown.A",
-	                "attr" : {
-	                    "a" : "a"
-	                }
-	            }
-	        },
-	        {
-	            "c" : {
-	                "type" : "unknown.C",
-	                "attr" : { }
-	            }
+	"data" : {
+	    "a" : {
+	        "type" : "A",
+	        "attr" : {
+	            "a" : "a"
 	        }
-	]
+	    },
+	    "c" : {
+	        "type" : "C",
+	        "attr" : { }
+	    }
+	}
 }
 

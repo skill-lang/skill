@@ -1,50 +1,40 @@
 {
 	"shouldFail" : true,
-	"data" : [
-	        {
-	            "enm_default" : {
-	                "type" : "enums.TestEnum_enuminstance",
-	                "attr" : {
-	                    "name" : "default",
-	                    "next" : "second"
-	                }
-	            }
-	        },
-	        {
-	            "enm_second" : {
-	                "type" : "enums.TestEnum_enuminstance",
-	                "attr" : {
-	                    "name" : "second",
-	                    "next" : "third"
-	                }
-	            }
-	        },
-	        {
-	            "enm_third" : {
-	                "type" : "enums.TestEnum_enuminstance",
-	                "attr" : {
-	                    "name" : "third",
-	                    "next" : "last"
-	                }
-	            }
-	        },
-	        {
-	            "enm_last" : {
-	                "type" : "enums.TestEnum_enuminstance",
-	                "attr" : {
-	                    "name" : "last",
-	                    "next" : "default"
-	                }
-	            }
-	        },
-	        {
-	            "enm" : {
-	                "type" : "enums.TestEnum",
-	                "attr" : {
-	                    "enuminstance" : "enm_default"
-	                }
-	            }
+	"data" : {
+	    "enm_default" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "default",
+	            "next" : "second"
 	        }
-	]
+	    },
+	    "enm_second" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "second",
+	            "next" : "third"
+	        }
+	    },
+	    "enm_third" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "third",
+	            "next" : "last"
+	        }
+	    },
+	    "enm_last" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "last",
+	            "next" : "default"
+	        }
+	    },
+	    "enm" : {
+	        "type" : "TestEnum",
+	        "attr" : {
+	            "enuminstance" : "enm_default"
+	        }
+	    }
+	}
 }
 

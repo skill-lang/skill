@@ -1,15 +1,13 @@
 {
 	"shouldFail" : true,
-	"data" : [
-	        {
-	            "usr" : {
-	                "type" : "user.User",
-	                "attr" : {
-	                    "name" : "User.name",
-	                    "age" : "44"
-	                }
-	            }
+	"data" : {
+	    "usr" : {
+	        "type" : "User",
+	        "attr" : {
+	            "name" : "User.name",
+	            "age" : "44"
 	        }
-	]
+	    }
+	}
 }
 

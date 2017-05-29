@@ -1,30 +1,30 @@
 {
 	"shouldFail" : false,
 	"data" : {
-	         "a" : {
-	                "type" : "a",
-	                "attr" : {
-	                    "a" : "a"
-							}
-					},
-	        "b" : {
-	                "type" : "b",
-	                "attr" : {
-	                    "b" : "b"
-							}
-					},
-	        "c" : {
-	                "type" : "c",
-	                "attr" : {
-	                    "c" : "c"
-								}
-					},
-	        "d" : {
-	                "type" : "d",
-	                "attr" : {
-	                    "d" : null
-							}
-					}
-				}
+	    "a" : {
+	        "type" : "A",
+	        "attr" : {
+	            "a" : "a"
+	        }
+	    },
+	    "b" : {
+	        "type" : "B",
+	        "attr" : {
+	            "b" : "b"
+	        }
+	    },
+	    "c" : {
+	        "type" : "C",
+	        "attr" : {
+	            "c" : "c"
+	        }
+	    },
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "d" : null
+	        }
+	    }
+	}
 }
 

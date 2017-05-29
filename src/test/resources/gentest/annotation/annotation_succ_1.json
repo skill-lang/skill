@@ -1,13 +1,12 @@
 {
 	"shouldFail" : false,
-	"data" :{
-					"tst" : {
-						"type" : "test",
-						"attr" : {
-							"f" : null
-						}
-					}
-				}
-	
+	"data" : {
+	    "tst" : {
+	        "type" : "Test",
+	        "attr" : {
+	            "f" : null
+	        }
+	    }
+	}
 }
 

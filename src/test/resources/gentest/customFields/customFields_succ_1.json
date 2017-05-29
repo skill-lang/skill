@@ -1,14 +1,12 @@
 {
 	"shouldFail" : false,
-	"data" : [
-	        {
-	            "c" : {
-	                "type" : "custom.Custom",
-	                "attr" : {
-	                    "any" : null
-	                }
-	            }
+	"data" : {
+	    "c" : {
+	        "type" : "Custom",
+	        "attr" : {
+	            "any" : null
 	        }
-	]
+	    }
+	}
 }
 

@@ -1,13 +1,12 @@
 {
 	"shouldFail" : false,
 	"data" : {
-					"age" : {
-						"type" : "age",
-						"attr" : {
-							"age" : 42
-						}
-					}
-				}
-	
+	    "age" : {
+	        "type" : "Age",
+	        "attr" : {
+	            "age" : 42
+	        }
+	    }
+	}
 }
 

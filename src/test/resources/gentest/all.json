@@ -1,0 +1,3145 @@
+{ "asdf": [
+{
+	"shouldFail" : true,
+	"data" : {
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "Parent" : "d",
+	            "Value" : "g"
+	        }
+	    },
+	    "g" : {
+	        "type" : "G",
+	        "attr" : {
+	            "Parent" : "d",
+	            "Value" : "g",
+	            "aMap" : { "g" : "g" }
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "Parent" : "d",
+	            "Value" : "d"
+	        }
+	    },
+	    "g" : {
+	        "type" : "G",
+	        "attr" : {
+	            "Parent" : "d",
+	            "Value" : "d",
+	            "aMap" : { "g" : "g" }
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "Parent" : "d",
+	            "Value" : "d"
+	        }
+	    },
+	    "g" : {
+	        "type" : "G",
+	        "attr" : {
+	            "Parent" : "d",
+	            "Value" : "g",
+	            "aMap" : { "g" : "d" }
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "Parent" : "d",
+	            "Value" : "d"
+	        }
+	    },
+	    "g" : {
+	        "type" : "G",
+	        "attr" : {
+	            "Parent" : "d",
+	            "Value" : "g",
+	            "aMap" : { "g" : "g" }
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "age" : {
+	        "type" : "Age",
+	        "attr" : {
+	            "age" : 42
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "tst" : {
+	        "type" : "Test",
+	        "attr" : {
+	            "f" : null
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "a" : {
+	        "type" : "A",
+	        "attr" : {
+	            "a" : "a"
+	        }
+	    },
+	    "b" : {
+	        "type" : "B",
+	        "attr" : {
+	            "b" : "b"
+	        }
+	    },
+	    "c" : {
+	        "type" : "C",
+	        "attr" : {
+	            "c" : "c"
+	        }
+	    },
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "d" : null
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "all" : {
+	        "type" : "BasicTypes",
+	        "attr" : {
+	            "anAnnotation" : null,
+	            "aBool" : "all_aBool_obj",
+	            "aString" : "all_aString_obj",
+	            "aUserType" : "all_aUserType_obj",
+	            "anotherUserType" : "all_anotherUserType_obj",
+	            "anArray" : [ "all_aUserType_obj" ],
+	            "aSet"  : [ 2 ],
+	            "aList" : [ 3, 4 ],
+	            "aMap"  : { "5" : 6 }
+	        }
+	    },
+	    "all_aBool_obj" : {
+	        "type" : "BasicBool",
+	        "attr" : {
+	            "basicBool" : true
+	        }
+	    },
+	    "all_aString_obj" : {
+	        "type" : "BasicString",
+	        "attr" : {
+	            "basicString" : "Hello World"
+	        }
+	    },
+	    "all_aUserType_obj" : {
+	        "type" : "BasicIntegers",
+	        "attr" : {
+	            "int8"   : "all_aUserType_obj_int8_obj",
+	            "int16"  : "all_aUserType_obj_int16_obj",
+	            "int32"  : "all_aUserType_obj_int32_obj",
+	            "int64I" : "all_aUserType_obj_int64I_obj",
+	            "int64V" : "all_aUserType_obj_int64V_obj"
+	        }
+	    },
+	    "all_aUserType_obj_int8_obj" : {
+	        "type" : "BasicInt8",
+	        "attr" : {
+	            "basicInt" : -3
+	        }
+	    },
+	    "all_aUserType_obj_int16_obj" : {
+	        "type" : "BasicInt16",
+	        "attr" : {
+	            "basicInt" : -2
+	        }
+	    },
+	    "all_aUserType_obj_int32_obj" : {
+	        "type" : "BasicInt32",
+	        "attr" : {
+	            "basicInt" : -1
+	        }
+	    },
+	    "all_aUserType_obj_int64I_obj" : {
+	        "type" : "BasicInt64I",
+	        "attr" : {
+	            "basicInt" :  0
+	        }
+	    },
+	    "all_aUserType_obj_int64V_obj" : {
+	        "type" : "BasicInt64V",
+	        "attr" : {
+	            "basicInt" :  1
+	        }
+	    },
+	    "all_anotherUserType_obj" : {
+	        "type" : "BasicFloats",
+	        "attr" : {
+	            "float32" : "all_anotherUserType_obj_float32_obj",
+	            "float64" : "all_anotherUserType_obj_float64_obj"
+	        }
+	    },
+	    "all_anotherUserType_obj_float32_obj" : {
+	        "type" : "BasicFloat32",
+	        "attr" : {
+	            "basicFloat" : -1e+40
+	        }
+	    },
+	    "all_anotherUserType_obj_float64_obj" : {
+	        "type" : "BasicFloat64",
+	        "attr" : {
+	            "basicFloat" : 2
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "all" : {
+	        "type" : "BasicTypes",
+	        "attr" : {
+	            "anAnnotation" : null,
+	            "aBool" : "all_aBool_obj",
+	            "aString" : "all_aString_obj",
+	            "aUserType" : "all_aUserType_obj",
+	            "anotherUserType" : "all_anotherUserType_obj",
+	            "anArray" : [ "all_aUserType_obj" ],
+	            "aSet"  : [ 2 ],
+	            "aList" : [ 3, 4 ],
+	            "aMap"  : { "5" : 6 }
+	        }
+	    },
+	    "all_aBool_obj" : {
+	        "type" : "BasicBool",
+	        "attr" : {
+	            "basicBool" : true
+	        }
+	    },
+	    "all_aString_obj" : {
+	        "type" : "BasicString",
+	        "attr" : {
+	            "basicString" : "Hello World"
+	        }
+	    },
+	    "all_aUserType_obj" : {
+	        "type" : "BasicIntegers",
+	        "attr" : {
+	            "int8"   : "all_aUserType_obj_int8_obj",
+	            "int16"  : "all_aUserType_obj_int16_obj",
+	            "int32"  : "all_aUserType_obj_int32_obj",
+	            "int64I" : "all_aUserType_obj_int64I_obj",
+	            "int64V" : "all_aUserType_obj_int64V_obj"
+	        }
+	    },
+	    "all_aUserType_obj_int8_obj" : {
+	        "type" : "BasicInt8",
+	        "attr" : {
+	            "basicInt" : -3
+	        }
+	    },
+	    "all_aUserType_obj_int16_obj" : {
+	        "type" : "BasicInt16",
+	        "attr" : {
+	            "basicInt" : -2
+	        }
+	    },
+	    "all_aUserType_obj_int32_obj" : {
+	        "type" : "BasicInt32",
+	        "attr" : {
+	            "basicInt" : -1
+	        }
+	    },
+	    "all_aUserType_obj_int64I_obj" : {
+	        "type" : "BasicInt64I",
+	        "attr" : {
+	            "basicInt" :  0
+	        }
+	    },
+	    "all_aUserType_obj_int64V_obj" : {
+	        "type" : "BasicInt64V",
+	        "attr" : {
+	            "basicInt" :  1
+	        }
+	    },
+	    "all_anotherUserType_obj" : {
+	        "type" : "BasicFloats",
+	        "attr" : {
+	            "float32" : "all_anotherUserType_obj_float32_obj",
+	            "float64" : "all_anotherUserType_obj_float64_obj"
+	        }
+	    },
+	    "all_anotherUserType_obj_float32_obj" : {
+	        "type" : "BasicFloat32",
+	        "attr" : {
+	            "basicFloat" : 1e+40
+	        }
+	    },
+	    "all_anotherUserType_obj_float64_obj" : {
+	        "type" : "BasicFloat64",
+	        "attr" : {
+	            "basicFloat" : 2
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "all" : {
+	        "type" : "BasicTypes",
+	        "attr" : {
+	            "anAnnotation" : null,
+	            "aBool" : "all_aBool_obj",
+	            "aString" : "all_aString_obj",
+	            "aUserType" : "all_aUserType_obj",
+	            "anotherUserType" : "all_anotherUserType_obj",
+	            "anArray" : [ "all_aUserType_obj" ],
+	            "aSet"  : [ 2 ],
+	            "aList" : [ 3, 4 ],
+	            "aMap"  : { "5" : 6 }
+	        }
+	    },
+	    "all_aBool_obj" : {
+	        "type" : "BasicBool",
+	        "attr" : {
+	            "basicBool" : true
+	        }
+	    },
+	    "all_aString_obj" : {
+	        "type" : "BasicString",
+	        "attr" : {
+	            "basicString" : "Hello World"
+	        }
+	    },
+	    "all_aUserType_obj" : {
+	        "type" : "BasicIntegers",
+	        "attr" : {
+	            "int8"   : "all_aUserType_obj_int8_obj",
+	            "int16"  : "all_aUserType_obj_int16_obj",
+	            "int32"  : "all_aUserType_obj_int32_obj",
+	            "int64I" : "all_aUserType_obj_int64I_obj",
+	            "int64V" : "all_aUserType_obj_int64V_obj"
+	        }
+	    },
+	    "all_aUserType_obj_int8_obj" : {
+	        "type" : "BasicInt8",
+	        "attr" : {
+	            "basicInt" : -3
+	        }
+	    },
+	    "all_aUserType_obj_int16_obj" : {
+	        "type" : "BasicInt16",
+	        "attr" : {
+	            "basicInt" : -2
+	        }
+	    },
+	    "all_aUserType_obj_int32_obj" : {
+	        "type" : "BasicInt32",
+	        "attr" : {
+	            "basicInt" : -1
+	        }
+	    },
+	    "all_aUserType_obj_int64I_obj" : {
+	        "type" : "BasicInt64I",
+	        "attr" : {
+	            "basicInt" :  0
+	        }
+	    },
+	    "all_aUserType_obj_int64V_obj" : {
+	        "type" : "BasicInt64V",
+	        "attr" : {
+	            "basicInt" :  1
+	        }
+	    },
+	    "all_anotherUserType_obj" : {
+	        "type" : "BasicFloats",
+	        "attr" : {
+	            "float32" : "all_anotherUserType_obj_float32_obj",
+	            "float64" : "all_anotherUserType_obj_float64_obj"
+	        }
+	    },
+	    "all_anotherUserType_obj_float32_obj" : {
+	        "type" : "BasicFloat32",
+	        "attr" : {
+	            "basicFloat" : 1
+	        }
+	    },
+	    "all_anotherUserType_obj_float64_obj" : {
+	        "type" : "BasicFloat64",
+	        "attr" : {
+	            "basicFloat" : 2
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "all" : {
+	        "type" : "BasicTypes",
+	        "attr" : {
+	            "anAnnotation" : null,
+	            "aBool" : "all_aBool_obj",
+	            "aString" : "all_aString_obj",
+	            "aUserType" : "all_aUserType_obj",
+	            "anotherUserType" : "all_anotherUserType_obj",
+	            "anArray" : [ "all_aUserType_obj" ],
+	            "aSet"  : [ 2 ],
+	            "aList" : [ 3, 4 ],
+	            "aMap"  : { "5" : 6 }
+	        }
+	    },
+	    "all_aBool_obj" : {
+	        "type" : "BasicBool",
+	        "attr" : {
+	            "basicBool" : true
+	        }
+	    },
+	    "all_aString_obj" : {
+	        "type" : "BasicString",
+	        "attr" : {
+	            "basicString" : "Hello World"
+	        }
+	    },
+	    "all_aUserType_obj" : {
+	        "type" : "BasicIntegers",
+	        "attr" : {
+	            "int8"   : "all_aUserType_obj_int8_obj",
+	            "int16"  : "all_aUserType_obj_int16_obj",
+	            "int32"  : "all_aUserType_obj_int32_obj",
+	            "int64I" : "all_aUserType_obj_int64I_obj",
+	            "int64V" : "all_aUserType_obj_int64V_obj"
+	        }
+	    },
+	    "all_aUserType_obj_int8_obj" : {
+	        "type" : "BasicInt8",
+	        "attr" : {
+	            "basicInt" : -3
+	        }
+	    },
+	    "all_aUserType_obj_int16_obj" : {
+	        "type" : "BasicInt16",
+	        "attr" : {
+	            "basicInt" : -2
+	        }
+	    },
+	    "all_aUserType_obj_int32_obj" : {
+	        "type" : "BasicInt32",
+	        "attr" : {
+	            "basicInt" : -1
+	        }
+	    },
+	    "all_aUserType_obj_int64I_obj" : {
+	        "type" : "BasicInt64I",
+	        "attr" : {
+	            "basicInt" :  0
+	        }
+	    },
+	    "all_aUserType_obj_int64V_obj" : {
+	        "type" : "BasicInt64V",
+	        "attr" : {
+	            "basicInt" :  1
+	        }
+	    },
+	    "all_anotherUserType_obj" : {
+	        "type" : "BasicFloats",
+	        "attr" : {
+	            "float32" : "all_anotherUserType_obj_float32_obj",
+	            "float64" : "all_anotherUserType_obj_float64_obj"
+	        }
+	    },
+	    "all_anotherUserType_obj_float32_obj" : {
+	        "type" : "BasicFloat32",
+	        "attr" : {
+	            "basicFloat" : 1
+	        }
+	    },
+	    "all_anotherUserType_obj_float64_obj" : {
+	        "type" : "BasicFloat64",
+	        "attr" : {
+	            "basicFloat" : 2
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "all" : {
+	        "type" : "BasicTypes",
+	        "attr" : {
+	            "anAnnotation" : null,
+	            "aBool" : "all_aBool_obj",
+	            "aString" : "all_aString_obj",
+	            "aUserType" : "all_aUserType_obj",
+	            "anotherUserType" : "all_anotherUserType_obj",
+	            "anArray" : [ "all_aUserType_obj" ],
+	            "aSet"  : [ 2 ],
+	            "aList" : [ 3, 4 ],
+	            "aMap"  : { "5" : 6 }
+	        }
+	    },
+	    "all_aBool_obj" : {
+	        "type" : "BasicBool",
+	        "attr" : {
+	            "basicBool" : true
+	        }
+	    },
+	    "all_aString_obj" : {
+	        "type" : "BasicString",
+	        "attr" : {
+	            "basicString" : "Hello World"
+	        }
+	    },
+	    "all_aUserType_obj" : {
+	        "type" : "BasicIntegers",
+	        "attr" : {
+	            "int8"   : "all_aUserType_obj_int8_obj",
+	            "int16"  : "all_aUserType_obj_int16_obj",
+	            "int32"  : "all_aUserType_obj_int32_obj",
+	            "int64I" : "all_aUserType_obj_int64I_obj",
+	            "int64V" : "all_aUserType_obj_int64V_obj"
+	        }
+	    },
+	    "all_aUserType_obj_int8_obj" : {
+	        "type" : "BasicInt8",
+	        "attr" : {
+	            "basicInt" : -3
+	        }
+	    },
+	    "all_aUserType_obj_int16_obj" : {
+	        "type" : "BasicInt16",
+	        "attr" : {
+	            "basicInt" : -2
+	        }
+	    },
+	    "all_aUserType_obj_int32_obj" : {
+	        "type" : "BasicInt32",
+	        "attr" : {
+	            "basicInt" : -1
+	        }
+	    },
+	    "all_aUserType_obj_int64I_obj" : {
+	        "type" : "BasicInt64I",
+	        "attr" : {
+	            "basicInt" :  0
+	        }
+	    },
+	    "all_aUserType_obj_int64V_obj" : {
+	        "type" : "BasicInt64V",
+	        "attr" : {
+	            "basicInt" :  1
+	        }
+	    },
+	    "all_anotherUserType_obj" : {
+	        "type" : "BasicFloats",
+	        "attr" : {
+	            "float32" : "all_anotherUserType_obj_float32_obj",
+	            "float64" : "all_anotherUserType_obj_float64_obj"
+	        }
+	    },
+	    "all_anotherUserType_obj_float32_obj" : {
+	        "type" : "BasicFloat32",
+	        "attr" : {
+	            "basicFloat" : 1
+	        }
+	    },
+	    "all_anotherUserType_obj_float64_obj" : {
+	        "type" : "BasicFloat64",
+	        "attr" : {
+	            "basicFloat" : 2
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "all" : {
+	        "type" : "BasicTypes",
+	        "attr" : {
+	            "anAnnotation" : null,
+	            "aBool" : "all_aBool_obj",
+	            "aString" : "all_aString_obj",
+	            "aUserType" : "all_aUserType_obj",
+	            "anotherUserType" : "all_anotherUserType_obj",
+	            "anArray" : [ "all_aUserType_obj" ],
+	            "aSet"  : [ 2 ],
+	            "aList" : [ 3, 4 ],
+	            "aMap"  : { "5" : 6 }
+	        }
+	    },
+	    "all_aBool_obj" : {
+	        "type" : "BasicBool",
+	        "attr" : {
+	            "basicBool" : true
+	        }
+	    },
+	    "all_aString_obj" : {
+	        "type" : "BasicString",
+	        "attr" : {
+	            "basicString" : "Hello World"
+	        }
+	    },
+	    "all_aUserType_obj" : {
+	        "type" : "BasicIntegers",
+	        "attr" : {
+	            "int8"   : "all_aUserType_obj_int8_obj",
+	            "int16"  : "all_aUserType_obj_int16_obj",
+	            "int32"  : "all_aUserType_obj_int32_obj",
+	            "int64I" : "all_aUserType_obj_int64I_obj",
+	            "int64V" : "all_aUserType_obj_int64V_obj"
+	        }
+	    },
+	    "all_aUserType_obj_int8_obj" : {
+	        "type" : "BasicInt8",
+	        "attr" : {
+	            "basicInt" : -3
+	        }
+	    },
+	    "all_aUserType_obj_int16_obj" : {
+	        "type" : "BasicInt16",
+	        "attr" : {
+	            "basicInt" : -2
+	        }
+	    },
+	    "all_aUserType_obj_int32_obj" : {
+	        "type" : "BasicInt32",
+	        "attr" : {
+	            "basicInt" : -1
+	        }
+	    },
+	    "all_aUserType_obj_int64I_obj" : {
+	        "type" : "BasicInt64I",
+	        "attr" : {
+	            "basicInt" :  0
+	        }
+	    },
+	    "all_aUserType_obj_int64V_obj" : {
+	        "type" : "BasicInt64V",
+	        "attr" : {
+	            "basicInt" :  -1e+64
+	        }
+	    },
+	    "all_anotherUserType_obj" : {
+	        "type" : "BasicFloats",
+	        "attr" : {
+	            "float32" : "all_anotherUserType_obj_float32_obj",
+	            "float64" : "all_anotherUserType_obj_float64_obj"
+	        }
+	    },
+	    "all_anotherUserType_obj_float32_obj" : {
+	        "type" : "BasicFloat32",
+	        "attr" : {
+	            "basicFloat" : 1
+	        }
+	    },
+	    "all_anotherUserType_obj_float64_obj" : {
+	        "type" : "BasicFloat64",
+	        "attr" : {
+	            "basicFloat" : 2
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "all" : {
+	        "type" : "BasicTypes",
+	        "attr" : {
+	            "anAnnotation" : null,
+	            "aBool" : "all_aBool_obj",
+	            "aString" : "all_aString_obj",
+	            "aUserType" : "all_aUserType_obj",
+	            "anotherUserType" : "all_anotherUserType_obj",
+	            "anArray" : [ "all_aUserType_obj" ],
+	            "aSet"  : [ 333 ],
+	            "aList" : [ 3, 4 ],
+	            "aMap"  : { "5" : 6 }
+	        }
+	    },
+	    "all_aBool_obj" : {
+	        "type" : "BasicBool",
+	        "attr" : {
+	            "basicBool" : true
+	        }
+	    },
+	    "all_aString_obj" : {
+	        "type" : "BasicString",
+	        "attr" : {
+	            "basicString" : "Hello World"
+	        }
+	    },
+	    "all_aUserType_obj" : {
+	        "type" : "BasicIntegers",
+	        "attr" : {
+	            "int8"   : "all_aUserType_obj_int8_obj",
+	            "int16"  : "all_aUserType_obj_int16_obj",
+	            "int32"  : "all_aUserType_obj_int32_obj",
+	            "int64I" : "all_aUserType_obj_int64I_obj",
+	            "int64V" : "all_aUserType_obj_int64V_obj"
+	        }
+	    },
+	    "all_aUserType_obj_int8_obj" : {
+	        "type" : "BasicInt8",
+	        "attr" : {
+	            "basicInt" : -3
+	        }
+	    },
+	    "all_aUserType_obj_int16_obj" : {
+	        "type" : "BasicInt16",
+	        "attr" : {
+	            "basicInt" : -2
+	        }
+	    },
+	    "all_aUserType_obj_int32_obj" : {
+	        "type" : "BasicInt32",
+	        "attr" : {
+	            "basicInt" : -1
+	        }
+	    },
+	    "all_aUserType_obj_int64I_obj" : {
+	        "type" : "BasicInt64I",
+	        "attr" : {
+	            "basicInt" :  0
+	        }
+	    },
+	    "all_aUserType_obj_int64V_obj" : {
+	        "type" : "BasicInt64V",
+	        "attr" : {
+	            "basicInt" :  1
+	        }
+	    },
+	    "all_anotherUserType_obj" : {
+	        "type" : "BasicFloats",
+	        "attr" : {
+	            "float32" : "all_anotherUserType_obj_float32_obj",
+	            "float64" : "all_anotherUserType_obj_float64_obj"
+	        }
+	    },
+	    "all_anotherUserType_obj_float32_obj" : {
+	        "type" : "BasicFloat32",
+	        "attr" : {
+	            "basicFloat" : 1
+	        }
+	    },
+	    "all_anotherUserType_obj_float64_obj" : {
+	        "type" : "BasicFloat64",
+	        "attr" : {
+	            "basicFloat" : 2
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "all" : {
+	        "type" : "BasicTypes",
+	        "attr" : {
+	            "anAnnotation" : null,
+	            "aBool" : "all_aBool_obj",
+	            "aString" : "all_aString_obj",
+	            "aUserType" : "all_aUserType_obj",
+	            "anotherUserType" : "all_anotherUserType_obj",
+	            "anArray" : [ "all_aUserType_obj" ],
+	            "aSet"  : [ 2 ],
+	            "aList" : [ 3, 1e+40 ],
+	            "aMap"  : { "5" : 6 }
+	        }
+	    },
+	    "all_aBool_obj" : {
+	        "type" : "BasicBool",
+	        "attr" : {
+	            "basicBool" : true
+	        }
+	    },
+	    "all_aString_obj" : {
+	        "type" : "BasicString",
+	        "attr" : {
+	            "basicString" : "Hello World"
+	        }
+	    },
+	    "all_aUserType_obj" : {
+	        "type" : "BasicIntegers",
+	        "attr" : {
+	            "int8"   : "all_aUserType_obj_int8_obj",
+	            "int16"  : "all_aUserType_obj_int16_obj",
+	            "int32"  : "all_aUserType_obj_int32_obj",
+	            "int64I" : "all_aUserType_obj_int64I_obj",
+	            "int64V" : "all_aUserType_obj_int64V_obj"
+	        }
+	    },
+	    "all_aUserType_obj_int8_obj" : {
+	        "type" : "BasicInt8",
+	        "attr" : {
+	            "basicInt" : -3
+	        }
+	    },
+	    "all_aUserType_obj_int16_obj" : {
+	        "type" : "BasicInt16",
+	        "attr" : {
+	            "basicInt" : -2
+	        }
+	    },
+	    "all_aUserType_obj_int32_obj" : {
+	        "type" : "BasicInt32",
+	        "attr" : {
+	            "basicInt" : -1
+	        }
+	    },
+	    "all_aUserType_obj_int64I_obj" : {
+	        "type" : "BasicInt64I",
+	        "attr" : {
+	            "basicInt" :  0
+	        }
+	    },
+	    "all_aUserType_obj_int64V_obj" : {
+	        "type" : "BasicInt64V",
+	        "attr" : {
+	            "basicInt" :  1
+	        }
+	    },
+	    "all_anotherUserType_obj" : {
+	        "type" : "BasicFloats",
+	        "attr" : {
+	            "float32" : "all_anotherUserType_obj_float32_obj",
+	            "float64" : "all_anotherUserType_obj_float64_obj"
+	        }
+	    },
+	    "all_anotherUserType_obj_float32_obj" : {
+	        "type" : "BasicFloat32",
+	        "attr" : {
+	            "basicFloat" : 1
+	        }
+	    },
+	    "all_anotherUserType_obj_float64_obj" : {
+	        "type" : "BasicFloat64",
+	        "attr" : {
+	            "basicFloat" : 2
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "all" : {
+	        "type" : "BasicTypes",
+	        "attr" : {
+	            "anAnnotation" : null,
+	            "aBool" : "all_aBool_obj",
+	            "aString" : "all_aString_obj",
+	            "aUserType" : "all_aUserType_obj",
+	            "anotherUserType" : "all_anotherUserType_obj",
+	            "anArray" : [ "all_aUserType_obj" ],
+	            "aSet"  : [ 2 ],
+	            "aList" : [ 3, 4 ],
+	            "aMap"  : { "5" : 333 }
+	        }
+	    },
+	    "all_aBool_obj" : {
+	        "type" : "BasicBool",
+	        "attr" : {
+	            "basicBool" : true
+	        }
+	    },
+	    "all_aString_obj" : {
+	        "type" : "BasicString",
+	        "attr" : {
+	            "basicString" : "Hello World"
+	        }
+	    },
+	    "all_aUserType_obj" : {
+	        "type" : "BasicIntegers",
+	        "attr" : {
+	            "int8"   : "all_aUserType_obj_int8_obj",
+	            "int16"  : "all_aUserType_obj_int16_obj",
+	            "int32"  : "all_aUserType_obj_int32_obj",
+	            "int64I" : "all_aUserType_obj_int64I_obj",
+	            "int64V" : "all_aUserType_obj_int64V_obj"
+	        }
+	    },
+	    "all_aUserType_obj_int8_obj" : {
+	        "type" : "BasicInt8",
+	        "attr" : {
+	            "basicInt" : -3
+	        }
+	    },
+	    "all_aUserType_obj_int16_obj" : {
+	        "type" : "BasicInt16",
+	        "attr" : {
+	            "basicInt" : -2
+	        }
+	    },
+	    "all_aUserType_obj_int32_obj" : {
+	        "type" : "BasicInt32",
+	        "attr" : {
+	            "basicInt" : -1
+	        }
+	    },
+	    "all_aUserType_obj_int64I_obj" : {
+	        "type" : "BasicInt64I",
+	        "attr" : {
+	            "basicInt" :  0
+	        }
+	    },
+	    "all_aUserType_obj_int64V_obj" : {
+	        "type" : "BasicInt64V",
+	        "attr" : {
+	            "basicInt" :  1
+	        }
+	    },
+	    "all_anotherUserType_obj" : {
+	        "type" : "BasicFloats",
+	        "attr" : {
+	            "float32" : "all_anotherUserType_obj_float32_obj",
+	            "float64" : "all_anotherUserType_obj_float64_obj"
+	        }
+	    },
+	    "all_anotherUserType_obj_float32_obj" : {
+	        "type" : "BasicFloat32",
+	        "attr" : {
+	            "basicFloat" : 1
+	        }
+	    },
+	    "all_anotherUserType_obj_float64_obj" : {
+	        "type" : "BasicFloat64",
+	        "attr" : {
+	            "basicFloat" : 2
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "all" : {
+	        "type" : "BasicTypes",
+	        "attr" : {
+	            "anAnnotation" : null,
+	            "aBool" : "all_aBool_obj",
+	            "aString" : "all_aString_obj",
+	            "aUserType" : "all_aUserType_obj",
+	            "anotherUserType" : "all_anotherUserType_obj",
+	            "anArray" : [ "all_aUserType_obj" ],
+	            "aSet"  : [ 2 ],
+	            "aList" : [ 3, 4 ],
+	            "aMap"  : { "5" : 6 }
+	        }
+	    },
+	    "all_aBool_obj" : {
+	        "type" : "BasicBool",
+	        "attr" : {
+	            "basicBool" : true
+	        }
+	    },
+	    "all_aString_obj" : {
+	        "type" : "BasicString",
+	        "attr" : {
+	            "basicString" : "Hello World"
+	        }
+	    },
+	    "all_aUserType_obj" : {
+	        "type" : "BasicIntegers",
+	        "attr" : {
+	            "int8"   : "all_aUserType_obj_int8_obj",
+	            "int16"  : "all_aUserType_obj_int16_obj",
+	            "int32"  : "all_aUserType_obj_int32_obj",
+	            "int64I" : "all_aUserType_obj_int64I_obj",
+	            "int64V" : "all_aUserType_obj_int64V_obj"
+	        }
+	    },
+	    "all_aUserType_obj_int8_obj" : {
+	        "type" : "BasicInt8",
+	        "attr" : {
+	            "basicInt" : -3
+	        }
+	    },
+	    "all_aUserType_obj_int16_obj" : {
+	        "type" : "BasicInt16",
+	        "attr" : {
+	            "basicInt" : -2
+	        }
+	    },
+	    "all_aUserType_obj_int32_obj" : {
+	        "type" : "BasicInt32",
+	        "attr" : {
+	            "basicInt" : -1
+	        }
+	    },
+	    "all_aUserType_obj_int64I_obj" : {
+	        "type" : "BasicInt64I",
+	        "attr" : {
+	            "basicInt" :  0
+	        }
+	    },
+	    "all_aUserType_obj_int64V_obj" : {
+	        "type" : "BasicInt64V",
+	        "attr" : {
+	            "basicInt" :  1
+	        }
+	    },
+	    "all_anotherUserType_obj" : {
+	        "type" : "BasicFloats",
+	        "attr" : {
+	            "float32" : "all_anotherUserType_obj_float32_obj",
+	            "float64" : "all_anotherUserType_obj_float64_obj"
+	        }
+	    },
+	    "all_anotherUserType_obj_float32_obj" : {
+	        "type" : "BasicFloat32",
+	        "attr" : {
+	            "basicFloat" : 1
+	        }
+	    },
+	    "all_anotherUserType_obj_float64_obj" : {
+	        "type" : "BasicFloat64",
+	        "attr" : {
+	            "basicFloat" : 2
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "consts" : {
+	        "type" : "Constant",
+	        "attr" : {
+	            "a" : 8,
+	            "b" : 16,
+	            "c" : 32,
+	            "d" : 64,
+	            "e" : 46
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "consts" : {
+	        "type" : "Constant",
+	        "attr" : { }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "cont" : {
+	        "type" : "Container",
+	        "attr" : {
+	            "arr"  : [ -1, 0 ],
+	            "varr" : [ -2, -1, 0, 1 ],
+	            "l"    : [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ],
+	            "s"    : [ 9, 9, 9 ],
+	            "f"    : { 1 : 2 },
+	            "someSet" : [ ]
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "cont" : {
+	        "type" : "Container",
+	        "attr" : {
+	            "arr"  : [ -1, 0, 1, 2 ],
+	            "varr" : [ -2, -1, 0, 1 ],
+	            "l"    : [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ],
+	            "s"    : [ 9, 9, 9 ],
+	            "f"    : { 1 : 2 },
+	            "someSet" : [ ]
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "cont" : {
+	        "type" : "Container",
+	        "attr" : {
+	            "arr"  : [ -1, 0, 1 ],
+	            "varr" : [ -2, -1, 0, 1 ],
+	            "l"    : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 1e+64 ],
+	            "s"    : [ 9, 9, 9 ],
+	            "f"    : { 1 : 2 },
+	            "someSet" : [ ]
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "cont" : {
+	        "type" : "Container",
+	        "attr" : {
+	            "arr"  : [ -1, 0, 1 ],
+	            "varr" : [ -2, -1, 0, 1 ],
+	            "l"    : [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ],
+	            "s"    : [ 9, 9, 9, 1e+64 ],
+	            "f"    : { 1 : 2 },
+	            "someSet" : [ ]
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "cont" : {
+	        "type" : "Container",
+	        "attr" : {
+	            "arr"  : [ -1, 0, 1 ],
+	            "varr" : [ -2, -1, 0, 1 ],
+	            "l"    : [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ],
+	            "s"    : [ 9, 9, 9 ],
+	            "f"    : { 1 : 2 },
+	            "someSet" : [ ]
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "cont" : {
+	        "type" : "Container",
+	        "attr" : {
+	            "arr"  : [ -1, 0, 1 ],
+	            "varr" : [ -2, -1, 0, 1 ],
+	            "l"    : [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ],
+	            "s"    : [ 9, 9, 9 ],
+	            "f"    : { 1 : 1e+64 },
+	            "someSet" : [ ]
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "cont" : {
+	        "type" : "Container",
+	        "attr" : {
+	            "arr"  : [ -1, 0, 1 ],
+	            "varr" : [ -2, -1, 0, 1 ],
+	            "l"    : [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ],
+	            "s"    : [ 9, 9, 9 ],
+	            "f"    : { 1 : 2 },
+	            "someSet" : [ ]
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "c" : {
+	        "type" : "Custom",
+	        "attr" : {
+	            "any" : null
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : { }
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "enm_default" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "default",
+	            "next" : "second"
+	        }
+	    },
+	    "enm_second" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "second",
+	            "next" : "third"
+	        }
+	    },
+	    "enm_third" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "third",
+	            "next" : "last"
+	        }
+	    },
+	    "enm_last" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "last",
+	            "next" : "default"
+	        }
+	    },
+	    "enm" : {
+	        "type" : "TestEnum",
+	        "attr" : {
+	            "enuminstance" : "enm_default"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "enm_default" : {
+	        "type" : "TestEnum",
+	        "attr" : {
+	            "name" : "default",
+	            "next" : "enm_second"
+	        }
+	    },
+	    "enm_second" : {
+	        "type" : "TestEnum",
+	        "attr" : {
+	            "name" : "second",
+	            "next" : "enm_third"
+	        }
+	    },
+	    "enm_third" : {
+	        "type" : "TestEnum",
+	        "attr" : {
+	            "name" : "third",
+	            "next" : "enm_last"
+	        }
+	    },
+	    "enm_last" : {
+	        "type" : "TestEnum",
+	        "attr" : {
+	            "name" : "last",
+	            "next" : "enm_default"
+	        }
+	    },
+	    "enm" : {
+	        "type" : "TestEnum",
+	        "attr" : {
+	            "enuminstance" : "enm_default"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "enm_default" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "default",
+	            "next" : "enm_second"
+	        }
+	    },
+	    "enm_second" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "second",
+	            "next" : "enm_third"
+	        }
+	    },
+	    "enm_third" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "third",
+	            "next" : "enm_last"
+	        }
+	    },
+	    "enm_last" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "last",
+	            "next" : "enm_default"
+	        }
+	    },
+	    "enm" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "enuminstance" : "enm_default"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "enm_default" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "default",
+	            "next" : "enm_second"
+	        }
+	    },
+	    "enm_second" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "second",
+	            "next" : "enm_third"
+	        }
+	    },
+	    "enm_third" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "third",
+	            "next" : "enm_last"
+	        }
+	    },
+	    "enm_last" : {
+	        "type" : "TestEnum_enuminstance",
+	        "attr" : {
+	            "name" : "last",
+	            "next" : "enm_default"
+	        }
+	    },
+	    "enm" : {
+	        "type" : "TestEnum",
+	        "attr" : {
+	            "enuminstance" : "enm_default"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "esc_1" : {
+	        "type" : "Int",
+	        "attr" : {
+	            "if" : "esc_1",
+	            "for" : "esc_2"
+	        }
+	    },
+	    "esc_2" : {
+	        "type" : "if",
+	        "attr" : { }
+	    },
+	    "esc_3" : {
+	        "type" : "Boolean",
+	        "attr" : {
+	            "bool" : true,
+	            "boolean" : true
+	        }
+	    },
+	    "esc_4" : {
+	        "type" : "∀",
+	        "attr" : {
+	            "€" : "esc_4",
+	            "☢" : "Hello, World!"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "esc_1" : {
+	        "type" : "Int",
+	        "attr" : {
+	            "if" : "esc_1",
+	            "for" : "esc_2"
+	        }
+	    },
+	    "esc_2" : {
+	        "type" : "if",
+	        "attr" : { }
+	    },
+	    "esc_3" : {
+	        "type" : "Boolean",
+	        "attr" : {
+	            "bool" : "esc_3",
+	            "boolean" : "esc_3"
+	        }
+	    },
+	    "esc_4" : {
+	        "type" : "∀",
+	        "attr" : {
+	            "€" : "esc_4",
+	            "☢" : "Hello, World!"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "esc_1" : {
+	        "type" : "Int",
+	        "attr" : {
+	            "if" : "esc_1",
+	            "for" : "esc_2"
+	        }
+	    },
+	    "esc_2" : {
+	        "type" : "if",
+	        "attr" : { }
+	    },
+	    "esc_3" : {
+	        "type" : "Boolean",
+	        "attr" : {
+	            "bool" : "esc_3",
+	            "boolean" : true
+	        }
+	    },
+	    "esc_4" : {
+	        "type" : "∀",
+	        "attr" : {
+	            "€" : "esc_4",
+	            "☢" : "Hello, World!"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "flts" : {
+	        "type" : "FloatTest",
+	        "attr" : {
+	            "zero" : 0,
+	            "minusZero" : -0,
+	            "two" : 2,
+	            "pi":   3.1415926535897932384626433832795028841971693993751058209749445923,
+	            "NaN" : null
+	        }
+	    },
+	    "dbls" : {
+	        "type" : "DoubleTest",
+	        "attr" : {
+	            "zero" : 0,
+	            "minusZero" : -0,
+	            "two" : 2,
+	            "pi":   3.1415926535897932384626433832795028841971693993751058209749445923,
+	            "NaN" : null
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "nd_1" : {
+	        "type" : "Node",
+	        "attr" : {
+	            "color" : "red",
+	            "edges" : "nd_2"
+	        }
+	    },
+	    "nd_2" : {
+	        "type" : "Node",
+	        "attr" : {
+	            "color" : "blue",
+	            "edges" : [ ]
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "nd_1" : {
+	        "type" : "Node",
+	        "attr" : {
+	            "color" : [ "red" ],
+	            "edges" : [ "nd_2" ]
+	        }
+	    },
+	    "nd_2" : {
+	        "type" : "Node",
+	        "attr" : {
+	            "color" : "blue",
+	            "edges" : [ ]
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "nd_1" : {
+	        "type" : "Node",
+	        "attr" : {
+	            "color" : "red",
+	            "edges" : [ "nd_2" ]
+	        }
+	    },
+	    "nd_2" : {
+	        "type" : "Node",
+	        "attr" : {
+	            "color" : "blue",
+	            "edges" : [ ]
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "ch" : {
+	         "type" : "ColorHolder",
+	         "attr" : {
+	             "anAnnotation" : null,
+	             "anAbstractNode" : "cn"
+	         }
+	    },
+	    "mrk" : {
+	         "type" : "Marker",
+	         "attr" : {
+	             "mark" : "mark_object"
+	         }
+	    },
+	    "sn" : {
+	        "type" : "SubNode",
+	        "attr" : {
+	            "edges" : [ "cn" ],
+	            "map" : { "n" : { "cn" : "mrk" } },
+	            "color" : "red",
+	            "mark" : "mark_sn",
+	            "next" : "mrk",
+	            "f" : "mrk",
+	            "n" : "n"
+	        }
+	    },
+	    "cn" : {
+	        "type" : "ColoredNode",
+	        "attr" : {
+	            "edges" : [ "cn" ],
+	            "map" : { "n" : { "cn" : "mrk" } },
+	            "color" : "green",
+	            "mark" : "mark_cn",
+	            "next" : "ch"
+	        }
+	    },
+	    "n" : {
+	        "type" : "Node",
+	        "attr" : {
+	            "edges" : [ ],
+	            "map" : { "n" : { "cn" : "mrk" } },
+	            "color" : "blue",
+	            "mark" : "mark_n",
+	            "next" : "mrk"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "ch" : {
+	         "type" : "ColorHolder",
+	         "attr" : {
+	             "anAnnotation" : null,
+	             "anAbstractNode" : "cn"
+	         }
+	    },
+	    "mrk" : {
+	         "type" : "Marker",
+	         "attr" : {
+	             "mark" : "mark_object"
+	         }
+	    },
+	    "sn" : {
+	        "type" : "SubNode",
+	        "attr" : {
+	            "edges" : [ "cn" ],
+	            "map" : { "n" : { "cn" : "mrk" } },
+	            "color" : "red",
+	            "mark" : "mark_sn",
+	            "next" : "mrk",
+	            "f" : "f_sn",
+	            "n" : "n"
+	        }
+	    },
+	    "cn" : {
+	        "type" : "ColoredNode",
+	        "attr" : {
+	            "edges" : [ "cn" ],
+	            "map" : { "n" : { "cn" : "mrk" } },
+	            "color" : "green",
+	            "mark" : "mark_cn",
+	            "next" : "mrk"
+	        }
+	    },
+	    "n" : {
+	        "type" : "Node",
+	        "attr" : {
+	            "edges" : [ ],
+	            "map" : { "n" : { "cn" : "mrk" } },
+	            "color" : "blue",
+	            "mark" : "mark_n",
+	            "next" : "mrk"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "ch" : {
+	         "type" : "ColorHolder",
+	         "attr" : {
+	             "anAnnotation" : null,
+	             "anAbstractNode" : "cn"
+	         }
+	    },
+	    "mrk" : {
+	         "type" : "Marker",
+	         "attr" : {
+	             "mark" : "mark_object"
+	         }
+	    },
+	    "sn" : {
+	        "type" : "SubNode",
+	        "attr" : {
+	            "edges" : [ "cn" ],
+	            "map" : { "n" : { "cn" : "mrk" } },
+	            "color" : "red",
+	            "mark" : "mark_sn",
+	            "next" : "mrk",
+	            "f" : "mrk",
+	            "n" : "n"
+	        }
+	    },
+	    "cn" : {
+	        "type" : "ColoredNode",
+	        "attr" : {
+	            "edges" : [ "cn" ],
+	            "map" : { "n" : { "cn" : "mrk" } },
+	            "color" : "green",
+	            "mark" : "mark_cn",
+	            "next" : "mrk"
+	        }
+	    },
+	    "n" : {
+	        "type" : "Node",
+	        "attr" : {
+	            "edges" : [ ],
+	            "map" : { "n" : { "cn" : "mrk" } },
+	            "color" : "blue",
+	            "mark" : "mark_n",
+	            "next" : "mrk"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "u" : {
+	        "type" : "User",
+	        "attr" : {
+	            "name" : "User.name",
+	            "age" : 43,
+	            "reflectivelyVisible" : "User.reflectivelyVisible"
+	        }
+	    },
+	    "a" : {
+	        "type" : "Abuser",
+	        "attr" : {
+	            "abuseDescription" : "Abuser.abuseDescription"
+	        }
+	    },
+	    "nas" : {
+	        "type" : "NowASingleton",
+	        "attr" : { }
+	    },
+	    "em" : {
+	        "type" : "ExternMixin",
+	        "attr" : {
+	            "unknownStuff" : null
+	        }
+	    },
+	    "bt" : {
+	        "type" : "BadType",
+	        "attr" : {
+	            "ignoredData" : "BadType.ignoredData",
+	            "reflectivelyInVisible" : "BadType.reflectivelyInVisible"
+	        }
+	    },
+	    "uid" : {
+	        "type" : "UID",
+	        "attr" : {
+	            "identifier" : 7
+	        }
+	    },
+	    "expr" : {
+	        "type" : "Expression",
+	        "attr" : { }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "n" : {
+	        "type" : "Number",
+	        "attr" : {
+	            "number" : 1234567
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 0
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : "op",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : null,
+	            "target" : "op",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : "rp",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : null,
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : "op",
+	            "property" : "rbc"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : "op",
+	            "property" : null
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op_1" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "op_2" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op_1",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : "op_1",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : null,
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : "op",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : "op",
+	            "property" : "sys_obj"
+	        }
+	    },
+
+	    "ps" : {
+	        "type" : "Properties",
+	        "attr" : { }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_1" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "none_2" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_1"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : "op",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 1,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : "op",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 1,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : "op",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : -1,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : "op",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : -1,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : "op",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 360,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : "op",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "Operator.name"
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBorderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBorderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "Comment.text",
+	            "target" : "op",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "sys_1" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    },
+	    "sys_2" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "sys" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : null,
+	            "version" : 1.1
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "sys" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "a" : {
+	        "type" : "A",
+	        "attr" : {
+	            "a" : "a"
+	        }
+	    },
+	    "b" : {
+	        "type" : "B",
+	        "attr" : {
+	            "a" : "a",
+	            "b" : "c"
+	        }
+	    },
+	    "c" : {
+	        "type" : "C",
+	        "attr" : {
+	            "a" : "a",
+	            "c" : "c"
+	        }
+	    },
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "a" : "a",
+	            "b" : "b",
+	            "d" : "d"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "a" : {
+	        "type" : "A",
+	        "attr" : {
+	            "a" : "a"
+	        }
+	    },
+	    "b" : {
+	        "type" : "B",
+	        "attr" : {
+	            "a" : "a",
+	            "b" : "b"
+	        }
+	    },
+	    "c" : {
+	        "type" : "C",
+	        "attr" : {
+	            "a" : "a",
+	            "c" : "a"
+	        }
+	    },
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "a" : "a",
+	            "b" : "b",
+	            "d" : "d"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "a" : {
+	        "type" : "A",
+	        "attr" : {
+	            "a" : "a"
+	        }
+	    },
+	    "b" : {
+	        "type" : "B",
+	        "attr" : {
+	            "a" : "a",
+	            "b" : "b"
+	        }
+	    },
+	    "c" : {
+	        "type" : "C",
+	        "attr" : {
+	            "a" : "a",
+	            "c" : "c"
+	        }
+	    },
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "a" : "a",
+	            "b" : "d",
+	            "d" : "b"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "a" : {
+	        "type" : "A",
+	        "attr" : {
+	            "a" : "a"
+	        }
+	    },
+	    "b" : {
+	        "type" : "B",
+	        "attr" : {
+	            "a" : "a",
+	            "b" : "b"
+	        }
+	    },
+	    "c" : {
+	        "type" : "C",
+	        "attr" : {
+	            "a" : "a",
+	            "c" : "c"
+	        }
+	    },
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "a" : "a",
+	            "b" : "b",
+	            "d" : "d"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "uc" : {
+	        "type" : "Unicode",
+	        "attr" : {
+	            "one" : "1",
+	            "two" : "ö",
+	            "three" : "☢"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "a" : {
+	        "type" : "A",
+	        "attr" : {
+	            "a" : "a"
+	        }
+	    },
+	    "c" : {
+	        "type" : "C",
+	        "attr" : {
+	            "a" : "a"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "a" : {
+	        "type" : "A",
+	        "attr" : {
+	            "a" : "a"
+	        }
+	    },
+	    "c" : {
+	        "type" : "C",
+	        "attr" : { }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "usr" : {
+	        "type" : "User",
+	        "attr" : {
+	            "name" : "User.name",
+	            "age" : "44"
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : true,
+	"data" : {
+	    "usr" : {
+	        "type" : "User",
+	        "attr" : {
+	            "name" : [ "User.name" ],
+	            "age" : 44
+	        }
+	    }
+	}
+}
+
+,
+{
+	"shouldFail" : false,
+	"data" : {
+	    "usr" : {
+	        "type" : "User",
+	        "attr" : {
+	            "name" : "User.name",
+	            "age" : 44
+	        }
+	    }
+	}
+}
+
+]}

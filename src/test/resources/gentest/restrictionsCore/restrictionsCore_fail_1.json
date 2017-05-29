@@ -1,22 +1,20 @@
 {
 	"shouldFail" : true,
-	"data" : [
-	        {
-	            "sys_1" : {
-	                "type" : "restrictionsCore.System",
-	                "attr" : {
-	                    "name" : "System.name",
-	                    "version" : 1.1
-	                }
-	            },
-	            "sys_2" : {
-	                "type" : "restrictionsCore.System",
-	                "attr" : {
-	                    "name" : "System.name",
-	                    "version" : 1.1
-	                }
-	            }
+	"data" : {
+	    "sys_1" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
 	        }
-	]
+	    },
+	    "sys_2" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "System.name",
+	            "version" : 1.1
+	        }
+	    }
+	}
 }
 

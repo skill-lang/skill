@@ -1,37 +1,21 @@
 {
 	"shouldFail" : true,
-	"data" : {	 
-				"e" : {
-	                "type" : "e",
-	                "attr" : {
-	                    "parent" : "d",
-	                    "value" : "e"
-	        		        }
-	        		},       
-	            "d" : {
-	                "type" : "d",
-	                "attr" : {
-	                    "parent" : "d",
-	                    "value" : "e"
-	               		     }
-	            	},
-	            "f" : {
-	                "type" : "f",
-	                "attr" : {
-	                    "parent" : "e",
-	                    "value" : "d",
-	                    "m" : { "e" : "f" }
-	        		        }
-	        		},
-	        
-			    "g" : {
-	                "type" : "g",
-	                "attr" : {
-	                    "parent" : "d",
-	                    "value" : "g",
-	                    "m" : { "e" : "f" }
-	        		        }
-	        		}
+	"data" : {
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "Parent" : "d",
+	            "Value" : "g"
+	        }
+	    },
+	    "g" : {
+	        "type" : "G",
+	        "attr" : {
+	            "Parent" : "d",
+	            "Value" : "g",
+	            "aMap" : { "g" : "g" }
+	        }
+	    }
 	}
 }
 

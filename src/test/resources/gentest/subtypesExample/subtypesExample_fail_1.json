@@ -1,42 +1,34 @@
 {
 	"shouldFail" : true,
-	"data" : [
-	        {
-	            "a" : {
-	                "type" : "subtypes.A",
-	                "attr" : {
-	                    "a" : "a"
-	                }
-	            }
-	        },
-	        {
-	            "b" : {
-	                "type" : "subtypes.B",
-	                "attr" : {
-	                    "a" : "a",
-	                    "b" : "c"
-	                }
-	            }
-	        },
-	        {
-	            "c" : {
-	                "type" : "subtypes.C",
-	                "attr" : {
-	                    "a" : "a",
-	                    "c" : "c"
-	                }
-	            }
-	        },
-	        {
-	            "d" : {
-	                "type" : "subtypes.D",
-	                "attr" : {
-	                    "a" : "a",
-	                    "b" : "b",
-	                    "d" : "d"
-	                }
-	            }
+	"data" : {
+	    "a" : {
+	        "type" : "A",
+	        "attr" : {
+	            "a" : "a"
 	        }
-	]
+	    },
+	    "b" : {
+	        "type" : "B",
+	        "attr" : {
+	            "a" : "a",
+	            "b" : "c"
+	        }
+	    },
+	    "c" : {
+	        "type" : "C",
+	        "attr" : {
+	            "a" : "a",
+	            "c" : "c"
+	        }
+	    },
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "a" : "a",
+	            "b" : "b",
+	            "d" : "d"
+	        }
+	    }
+	}
 }
 
