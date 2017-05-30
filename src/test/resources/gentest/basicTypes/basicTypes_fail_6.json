@@ -24,7 +24,7 @@
 	    "all_aString_obj" : {
 	        "type" : "BasicString",
 	        "attr" : {
-	            "basicString" : "Hello World"
+	            "basicString" : "\"Hello World\""
 	        }
 	    },
 	    "all_aUserType_obj" : {
