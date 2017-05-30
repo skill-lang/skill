@@ -120,7 +120,7 @@ public class GenericJsonTest extends common.CommonTest {
     Constructor<?> refConstructor;Map<String, Access<?>> types = new HashMap<>();
 		Map<String, HashMap<String, FieldDeclaration<?, ?>>> typeFieldMapping = new HashMap<>();
 		
-		Path tempBinaryFile = tmpFile("write.generic.checked");
+		Path tempBinaryFile = tmpFile("write.generic.${testname}.checked");
 		SkillFile sf = SkillFile.open(tempBinaryFile);
         reflectiveInit(sf);
         
