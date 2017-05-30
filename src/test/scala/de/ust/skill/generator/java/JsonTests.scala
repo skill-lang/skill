@@ -83,7 +83,7 @@ import de.ust.skill.common.java.internal.FieldDeclaration;
 import de.ust.skill.common.java.internal.SkillObject;
 import $packagePath.api.SkillFile;
 
-public class GenericReadTest extends common.CommonTest {
+public class GenericJsonTest extends common.CommonTest {
 
 	@Rule //http://stackoverflow.com/a/2935935
 	public final ExpectedException exception = ExpectedException.none();
@@ -198,7 +198,7 @@ public class GenericReadTest extends common.CommonTest {
 
   override def makeGenBinaryTests(name: String) {
     locally {
-      val out = newTestFile(name, "Read")
+      val out = newTestFile(name, "Json")
       closeTestFile(out)
     }
   }
