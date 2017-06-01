@@ -7,14 +7,16 @@ package de.ust.skill.main
 
 import java.io.File
 
+import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import de.ust.skill.BuildInfo
 import de.ust.skill.generator.common.KnownGenerators
-import de.ust.skill.ir.TypeContext
-import de.ust.skill.parser.Parser
 import de.ust.skill.io.PrintingService
+import de.ust.skill.ir.TypeContext
+import de.ust.skill.ir.UserType
+import de.ust.skill.parser.Parser
 
 trait SourceOptions extends AbstractOptions {
 
@@ -48,6 +50,13 @@ trait SourceOptions extends AbstractOptions {
       val tc =
         if ("-".equals(target)) new TypeContext
         else Parser.process(new File(target), keepSpecificationOrder)
+
+      // add all user types to visitors, if the type '*' was selected
+      val visitors = (if (1 == this.visitors.size && this.visitors.head.equals("*")) {
+        tc.getUsertypes.toSeq
+      } else
+        this.visitors.map(tc.get).collect { case t : UserType ⇒ t }
+      )
 
       if (verbose) {
         if (!visitors.isEmpty)
@@ -179,7 +188,7 @@ trait SourceOptions extends AbstractOptions {
       })
 
     opt[Seq[String]]('v', "visitors").optional().action(
-      (v, c) => c.copy(visitors = v)
+      (v, c) ⇒ c.copy(visitors = v)
     ).text("types to generate visitors for")
 
     help("help").text("prints this usage text")
