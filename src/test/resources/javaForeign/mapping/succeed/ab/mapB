@@ -1,0 +1,3 @@
+map B -> simple.B {
+  b -> b;
+}
