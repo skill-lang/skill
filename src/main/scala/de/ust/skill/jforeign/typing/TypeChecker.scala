@@ -15,6 +15,7 @@ import de.ust.skill.ir.TypeContext
 import de.ust.skill.jforeign.ReflectionContext
 import javassist.Modifier
 import javassist.NotFoundException
+import de.ust.skill.ir.UserType
 
 class TypeChecker {
 
@@ -51,6 +52,23 @@ class TypeChecker {
           }
         } else {
           checked += (left → right)
+        }
+
+        // check super relation
+        left match {
+          case left : UserType if (null == left.getSuperType) ⇒
+          // there is no specified super type, hence no action is required
+          // @note add check that super type is in fact unmapped?
+
+          case left : UserType if (null != left.getSuperType) && (null == right.asInstanceOf[UserType].getSuperType) ⇒
+            println(s"${left} is mapped to ${right} but ${left} has a super type")
+            failed = true
+
+          case left : UserType if null != right.asInstanceOf[UserType].getSuperType && (checked(left.getSuperType) != right.asInstanceOf[UserType].getSuperType) ⇒
+            println(s"${left} is mapped to ${right} but their super types are not mapped to the same type")
+            failed = true
+
+          case _ ⇒ // all is well
         }
       }
       case targetExists : TargetTypeExists ⇒ {
