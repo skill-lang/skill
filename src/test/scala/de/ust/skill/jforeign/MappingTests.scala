@@ -22,15 +22,21 @@ import de.ust.skill.main.CommandLine
 
 class MappingTests extends FunSuite {
 
-  final def makeTest(path : File, name : String, mappingFile : File, skillFilePath : String) : Unit = {
+  // rebuild class files
+  "ant -f src/test/resources/javaForeign/mapping/build.xml".!
+
+  // set base path for tests
+  val basePath = new File("src/test/resources/javaForeign/mapping")
+
+  final def makeTest(name : String, mappingFile : File, skillFile : File) : Unit = {
     CommandLine.exit = { s ⇒ throw (new Error(s)) }
     CommandLine.main(Array[String](
-      skillFilePath,
+      skillFile.getPath,
       "--debug-header",
       "-L", "javaforeign",
       "-p", name + "skill",
       s"-Ojavaforeign:M=${mappingFile.getPath}",
-      s"-Ojavaforeign:F=${path.getAbsolutePath}",
+      s"-Ojavaforeign:F=${basePath.getAbsolutePath}",
       "-o", "/tmp"))
   }
 
@@ -45,24 +51,26 @@ class MappingTests extends FunSuite {
   }
 
   def succeedOn(file : File) {
-    test("succeedOn: " + file.getPath()) {
-      makeTest(new File("src/test/resources/javaForeign/mapping"), file.getName,
-        file, "src/test/resources/javaForeign/mapping/simple.skill")
+    test("succeedOn: " + file.getParentFile.getName + " - " + file.getName) {
+      makeTest(file.getName, file, new File(basePath, s"${file.getParentFile.getName}.skill"))
     }
   }
 
   def failOn(file : File) {
-    test("failOn: " + file.getPath()) {
+    test("failOn: " + file.getParentFile.getName + " - " + file.getName) {
       fail[RuntimeException] {
-        makeTest(new File("src/test/resources/javaForeign/mapping"), file.getName,
-          file, "src/test/resources/javaForeign/mapping/simple.skill")
+        makeTest(file.getName, file, new File(basePath, s"${file.getParentFile.getName}.skill"))
       }
     }
   }
 
-  "ant -f src/test/resources/javaForeign/mapping/build.xml".!
+  ∀(new File(basePath, "succeed"), succeedOn)
+  ∀(new File(basePath, "fail"), failOn)
 
-  for (path ← new File("src/test/resources/javaForeign/mapping/succeed").listFiles()) if (path.isFile()) succeedOn(path)
-  for (path ← new File("src/test/resources/javaForeign/mapping/fail").listFiles()) if (path.isFile()) failOn(path)
-
+  def ∀(base : File, action : File ⇒ Unit) {
+    for (f ← base.listFiles()) {
+      if (f.isDirectory()) ∀(f, action)
+      else action(f)
+    }
+  }
 }

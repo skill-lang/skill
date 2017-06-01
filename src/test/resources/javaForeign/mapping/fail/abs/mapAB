@@ -1,0 +1,9 @@
+map A -> simple.A {
+  a -> a;
+}
+
+map B -> simple.B {
+  b -> b;
+}
+
+map S -> simple.S {}
