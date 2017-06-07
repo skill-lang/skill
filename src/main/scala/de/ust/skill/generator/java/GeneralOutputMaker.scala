@@ -102,6 +102,11 @@ trait GeneralOutputMaker extends Generator {
    * Translation of a field to its representation in the source code
    */
   protected def name(f : FieldLike) : String = escaped(f.getName.camel)
+  
+  /**
+   * The name of T's storage pool
+   */
+  protected def storagePool(t : Type) : String = name(t) + "Access"
 
   /**
    * Class name of the representation of a known field

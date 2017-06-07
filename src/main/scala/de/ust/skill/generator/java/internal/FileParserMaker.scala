@@ -30,33 +30,19 @@ ${
       suppressWarnings
     }final public class FileParser extends de.ust.skill.common.java.internal.FileParser<SkillState> {
 
-    public final SkillState state;
-
-    /**
-     * Constructs a parser that parses the file from in and constructs the
-     * state. State is valid immediately after construction.
-     */
-    private FileParser(FileInputStream in, Mode writeMode) throws ParseException {
+    private FileParser(FileInputStream in) {
         super(in);
-
-        // parse blocks
-        while (!in.eof()) {
-            stringBlock();
-            typeBlock();
-        }
-
-        this.state = makeState(writeMode);
     }
 
     /**
      * turns a file into a state.
      *
-     * @note this method is abstract, because some methods, including state
+     * @note this method is generated, because some methods, including state
      *       allocation depend on the specification
      */
     public static SkillState read(FileInputStream in, Mode writeMode) throws ParseException {
-        FileParser p = new FileParser(in, writeMode);
-        return p.state;
+        FileParser p = new FileParser(in);
+        return p.makeState(writeMode);
     }
 
     @SuppressWarnings("unchecked")
