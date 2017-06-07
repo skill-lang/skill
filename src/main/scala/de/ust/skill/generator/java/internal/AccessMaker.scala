@@ -106,22 +106,11 @@ ${
       }
 
     @Override
-    public void insertInstances() {${
-        if (isBasePool) ""
-        else s"""
-        ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access)basePool).data();"""
-      }
-        final Block last = blocks().getLast();
+    protected void allocateInstances(Block last) {
         int i = (int) last.bpo;
-        int high = (int) (last.bpo + last.count);
+        final int high = (int) (i + last.staticCount);
         while (i < high) {
-            if (null != data[i])
-                return;
-
-            $typeT r = new $typeT(i + 1);
-            data[i] = r;
-            staticData.add(r);
-
+            data[i] = new $typeT(i + 1);
             i += 1;
         }
     }
@@ -273,31 +262,14 @@ ${
         }
 
         @Override
-        public void insertInstances() {
-            final Block last = lastBlock();
+        protected void allocateInstances(Block last) {
             int i = (int) last.bpo;
-            int high = (int) (last.bpo + last.count);
-            ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) basePool).data();
+            final int high = (int) (i + last.staticCount);
             while (i < high) {
-                if (null != data[i])
-                    return;
-
-                @SuppressWarnings("unchecked")
-                ${mapType(t)}.SubType r = new ${mapType(t)}.SubType(this, i + 1);
-                data[i] = r;
-                staticData.add(r);
-
+                data[i] = new ${mapType(t)}.SubType(this, i + 1);
                 i += 1;
             }
         }
-    }
-
-    /**
-     * punch a hole into the java type system :)
-     */
-    @SuppressWarnings("unchecked")
-    static <T, U> FieldType<T> cast(FieldType<U> f) {
-        return (FieldType<T>) f;
     }
 }
 """)
