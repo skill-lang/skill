@@ -143,10 +143,8 @@ ${
     private final void rsc(SimpleChunk c, MappedInStream in){$pre
         final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
         int i = (int) c.bpo;
-        final int high = i + (int) c.count;
-        while (i != high) {
+        for (final int h = i + (int) c.count; i != h; i++) {
             ${readField(t, originalF, fieldActualType)}
-            i++;
         }
     }
     
@@ -158,10 +156,8 @@ ${
         while (blockIndex < endBlock) {
             Block b = blocks.get(blockIndex++);
             int i = (int) b.bpo;
-            final int high = i + (int) b.count;
-            while (i != high) {
+            for (final int h = i + (int) b.count; i != h; i++) {
                 ${readField(t, originalF, fieldActualType)}
-                i++;
             }
         }"""
         }
@@ -193,10 +189,8 @@ ${
         final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
         long result = 0L;
         int i = (int) c.bpo;
-        final int high = i + (int) c.count;
-        while (i != high) {
+        for (final int h = i + (int) c.count; i != h; i++) {
             $code
-            i++;
         }
         return result;
     }
@@ -210,10 +204,8 @@ ${
         while (blockIndex < endBlock) {
             Block b = blocks.get(blockIndex++);
             int i = (int) b.bpo;
-            final int high = i + (int) b.count;
-            while (i != high) {
+            for (final int h = i + (int) b.count; i != h; i++) {
                 $code
-                i++;
             }
         }
         return result;"""
@@ -241,10 +233,8 @@ ${
         final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
         long result = 0L;
         int i = (int) c.bpo;
-        final int high = i + (int) c.count;
-        while (i != high) {
+        for (final int h = i + (int) c.count; i != h; i++) {
             ${writeCode(t, originalF)}
-            i++;
         }
     }
     
@@ -257,10 +247,8 @@ ${
         while (blockIndex < endBlock) {
             Block b = blocks.get(blockIndex++);
             int i = (int) b.bpo;
-            final int high = i + (int) b.count;
-            while (i != high) {
+            for (final int h = i + (int) b.count; i != h; i++) {
                 ${writeCode(t, originalF)}
-                i++;
             }
         }"""
           }
