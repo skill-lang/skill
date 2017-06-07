@@ -115,14 +115,9 @@ ${
           if (f.isConstant())
             """
         // this field is constant"""
-          else
-            s"""
-        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
-        final MappedInStream in = ce.in;
-        final Chunk last = ce.c;${
-
+          else{
               // preparation code
-              originalF.getType match {
+            val pre = originalF.getType match {
                 case t : GroundType if "string".equals(t.getSkillName) ⇒ s"""
         final StringPool sp = (StringPool)owner.owner().Strings();"""
 
@@ -133,31 +128,43 @@ ${
                 case t : UserType ⇒ s"""
         final ${name(t)}Access target = (${name(t)}Access)type;"""
                 case _ ⇒ ""
-              }
-            }
+              } 
+            
+            s"""
+        final Chunk last = ce.c;
         
         if (last instanceof SimpleChunk) {
-            final SimpleChunk c = (SimpleChunk) last;
-            int i = (int) c.bpo;
-            final int high = i + (int) c.count;
+            rsc((SimpleChunk) last, ce.in);
+        } else {
+            rbc((BulkChunk) last, ce.in);
+        }
+    }
+    
+    private final void rsc(SimpleChunk c, MappedInStream in){$pre
+        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
+        int i = (int) c.bpo;
+        final int high = i + (int) c.count;
+        while (i != high) {
+            ${readField(t, originalF, fieldActualType)}
+            i++;
+        }
+    }
+    
+    private final void rbc(BulkChunk c, MappedInStream in){$pre
+        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
+        ArrayList<Block> blocks = owner.blocks();
+        int blockIndex = 0;
+        final int endBlock = c.blockCount;
+        while (blockIndex < endBlock) {
+            Block b = blocks.get(blockIndex++);
+            int i = (int) b.bpo;
+            final int high = i + (int) b.count;
             while (i != high) {
                 ${readField(t, originalF, fieldActualType)}
                 i++;
             }
-        } else {
-            ArrayList<Block> blocks = owner.blocks();
-            int blockIndex = 0;
-            final int endBlock = ((BulkChunk) last).blockCount;
-            while (blockIndex < endBlock) {
-                Block b = blocks.get(blockIndex++);
-                int i = (int) b.bpo;
-                final int high = i + (int) b.count;
-                while (i != high) {
-                    ${readField(t, originalF, fieldActualType)}
-                    i++;
-                }
-            }
         }"""
+        }
         }
     }
 
@@ -173,30 +180,40 @@ ${
         Chunk last = dataChunks.getLast().c;
         $code"""
             else s"""
-        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
-        long result = 0L;
-        Chunk last = dataChunks.getLast().c;$pre
+        Chunk last = dataChunks.getLast().c;
         
         if (last instanceof SimpleChunk) {
-            final SimpleChunk c = (SimpleChunk) last;
-            int i = (int) c.bpo;
-            final int high = i + (int) c.count;
+            return osc((SimpleChunk) last);
+        } else {
+            return obc((BulkChunk) last);
+        }
+    }
+    
+    private final long osc(SimpleChunk c){$pre
+        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
+        long result = 0L;
+        int i = (int) c.bpo;
+        final int high = i + (int) c.count;
+        while (i != high) {
+            $code
+            i++;
+        }
+        return result;
+    }
+    
+    private final long obc(BulkChunk c){$pre
+        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
+        long result = 0L;
+        ArrayList<Block> blocks = owner.blocks();
+        int blockIndex = 0;
+        final int endBlock = c.blockCount;
+        while (blockIndex < endBlock) {
+            Block b = blocks.get(blockIndex++);
+            int i = (int) b.bpo;
+            final int high = i + (int) b.count;
             while (i != high) {
                 $code
                 i++;
-            }   
-        } else {
-            ArrayList<Block> blocks = owner.blocks();
-            int blockIndex = 0;
-            final int endBlock = ((BulkChunk) last).blockCount;
-            while (blockIndex < endBlock) {
-                Block b = blocks.get(blockIndex++);
-                int i = (int) b.bpo;
-                final int high = i + (int) b.count;
-                while (i != high) {
-                     $code
-                     i++;
-                }
             }
         }
         return result;"""
@@ -211,29 +228,39 @@ ${
         // this field is constant"""
           else {
             s"""
-        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
         Chunk last = dataChunks.getLast().c;
 
         if (last instanceof SimpleChunk) {
-            final SimpleChunk c = (SimpleChunk) last;
-            int i = (int) c.bpo;
-            final int high = i + (int) c.count;
+            wsc((SimpleChunk) last, out);
+        } else {
+            wbc((BulkChunk) last, out);
+        }
+    }
+    
+    private final void wsc(SimpleChunk c, MappedOutStream out) throws IOException {
+        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
+        long result = 0L;
+        int i = (int) c.bpo;
+        final int high = i + (int) c.count;
+        while (i != high) {
+            ${writeCode(t, originalF)}
+            i++;
+        }
+    }
+    
+    private final void wbc(BulkChunk c, MappedOutStream out) throws IOException {
+        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
+        long result = 0L;
+        ArrayList<Block> blocks = owner.blocks();
+        int blockIndex = 0;
+        final int endBlock = c.blockCount;
+        while (blockIndex < endBlock) {
+            Block b = blocks.get(blockIndex++);
+            int i = (int) b.bpo;
+            final int high = i + (int) b.count;
             while (i != high) {
                 ${writeCode(t, originalF)}
                 i++;
-            }
-        } else {
-            ArrayList<Block> blocks = owner.blocks();
-            int blockIndex = 0;
-            final int endBlock = ((BulkChunk) last).blockCount;
-            while (blockIndex < endBlock) {
-                Block b = blocks.get(blockIndex++);
-                int i = (int) b.bpo;
-                final int high = i + (int) b.count;
-                while (i != high) {
-                    ${writeCode(t, originalF)}
-                    i++;
-                }
             }
         }"""
           }
