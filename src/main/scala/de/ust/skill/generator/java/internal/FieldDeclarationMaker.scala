@@ -142,29 +142,31 @@ ${
           }
         }
     }
-
+${
+          if (f.isConstant()) """
     @Override
-    public long offset() {${
-          if (f.isConstant())
-            """
-        return 0; // this field is constant"""
+    protected final long osc(SimpleChunk c){
+        return 0; // this field is constant
+    }
+    @Override
+    protected final long obc(BulkChunk c){
+        return 0; // this field is constant
+    }"""
           else {
             val (pre, code, isFast) = offsetCode(t, f, originalF.getType, fieldActualType);
 
             if (isFast) s"""
-        Chunk last = lastChunk();
-        $code"""
-            else s"""
-        Chunk last = lastChunk();
-        
-        if (last instanceof SimpleChunk) {
-            return osc((SimpleChunk) last);
-        } else {
-            return obc((BulkChunk) last);
-        }
+    @Override
+    protected final long osc(SimpleChunk c){
+        $code
     }
-    
-    private final long osc(SimpleChunk c){$pre
+    @Override
+    protected final long obc(BulkChunk c){
+        $code
+    }"""
+            else s"""
+    @Override
+    protected final long osc(SimpleChunk c){$pre
         final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner.basePool).data();
         long result = 0L;
         int i = (int) c.bpo;
@@ -174,7 +176,8 @@ ${
         return result;
     }
     
-    private final long obc(BulkChunk c){$pre
+    @Override
+    protected final long obc(BulkChunk c){$pre
         final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner.basePool).data();
         long result = 0L;
         ArrayList<Block> blocks = owner.blocks();
@@ -187,28 +190,20 @@ ${
                 $code
             }
         }
-        return result;"""
+        return result;
+    }"""
           }
         }
-    }
 
+${
+          if (f.isConstant()) """
     @Override
-    public void write(MappedOutStream out) throws IOException {${
-          if (f.isConstant())
-            """
-        // this field is constant"""
-          else {
-            s"""
-        Chunk last = lastChunk();
-
-        if (last instanceof SimpleChunk) {
-            wsc((SimpleChunk) last, out);
-        } else {
-            wbc((BulkChunk) last, out);
-        }
-    }
-    
-    private final void wsc(SimpleChunk c, MappedOutStream out) throws IOException {
+    protected final void wsc(SimpleChunk c, MappedOutStream out){}
+    @Override
+    protected final void wbc(BulkChunk c, MappedOutStream out){}"""
+          else s"""
+    @Override
+    protected final void wsc(SimpleChunk c, MappedOutStream out) throws IOException {
         final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner.basePool).data();
         long result = 0L;
         int i = (int) c.bpo;
@@ -216,8 +211,9 @@ ${
             ${writeCode(t, originalF)}
         }
     }
-    
-    private final void wbc(BulkChunk c, MappedOutStream out) throws IOException {
+
+    @Override
+    protected final void wbc(BulkChunk c, MappedOutStream out) throws IOException {
         final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner.basePool).data();
         long result = 0L;
         ArrayList<Block> blocks = owner.blocks();
@@ -229,10 +225,9 @@ ${
             for (final int h = i + (int) b.count; i != h; i++) {
                 ${writeCode(t, originalF)}
             }
-        }"""
-          }
         }
-    }
+    }"""
+        }
 """
       }
     @Override
@@ -478,8 +473,8 @@ ${
   private final def fastOffsetCode(shift : Int) =
     (
       "",
-      if (shift != 0) s"return last.count << $shift;"
-      else "return last.count;",
+      if (shift != 0) s"return c.count << $shift;"
+      else "return c.count;",
       true
     )
 
