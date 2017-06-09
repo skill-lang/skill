@@ -26,8 +26,7 @@ ${
   if(createVisitors) s"""import ${this.packageName}.api.${name(t.getBaseType)}Visitor;
 """
   else ""
-}import de.ust.skill.common.java.api.FieldDeclaration;
-import de.ust.skill.common.java.internal.NamedType;
+}import de.ust.skill.common.java.internal.NamedType;
 import de.ust.skill.common.java.internal.SkillObject;
 import de.ust.skill.common.java.internal.StoragePool;
 ${customizations.flatMap(_.getOptions.get("import")).map(i⇒s"import $i;\n").mkString}
@@ -194,71 +193,6 @@ ${
     ${comment(c)}$mod ${c.`type`} ${name(c)}; 
 """)
       }
-
-      // generic get
-      locally{
-        val fields = implementedFields.filterNot(_.isIgnored)
-        if(!fields.isEmpty)
-          out.write(s"""
-    /**
-     * unchecked conversions are required, because the Java type system known
-     * nothing of our invariants
-     * 
-     * @note to self: Boxing bei primitiven beachten!
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> T get(FieldDeclaration<T> field) {
-        switch (field.name()) {${
-          (for(f <- fields)
-            yield s"""
-        case "${f.getSkillName}":
-            return (T) ${
-              // cast, iff the object requires boxing
-              val boxed = mapType(f.getType, true)
-              val unboxed = mapType(f.getType, false)
-              if(boxed!=unboxed)
-                s"($boxed) "
-              else 
-                ""
-              }${
-              if(f.isConstant()) "get" + f.getName.capital + "()"
-              else name(f)
-              };""").mkString
-        }
-        default:
-            return super.get(field);
-        }
-    }
-""")
-    }
-
-      // pretty string
-    out.write(s"""
-    /**
-     * potentially expensive but more pretty representation of this instance.
-     */
-    @Override
-    public String prettyString() {
-        StringBuilder sb = new StringBuilder("${name(t)}(this: ").append(this);""")
-    for(f <- t.getAllFields) out.write(
-      if(f.isIgnored) s"""
-        sb.append(", ${name(f)}: <<ignored>>");"""
-      else if (!f.isConstant) s"""
-        sb.append(", ${if(f.isAuto)"auto "else""}${name(f)}: ").append(${name(f)});"""
-      else s"""
-        sb.append(", const ${name(f)}: ${f.constantValue()}");"""
-    )
-    out.write("""
-        return sb.append(")").toString();
-    }
-""")
-
-    val prettyStringArgs = (for(f <- t.getAllFields)
-      yield if(f.isIgnored) s"""+", ${f.getName()}: <<ignored>>" """
-      else if (!f.isConstant) s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+_${f.getName()}"""
-      else s"""+", const ${f.getName()}: ${f.constantValue()}""""
-      ).mkString(""""(this: "+this""", "", """+")"""")
 
       // fix toAnnotation
       if(!t.getSuperInterfaces.isEmpty())
