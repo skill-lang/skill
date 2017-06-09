@@ -34,6 +34,7 @@ trait AccessMaker extends GeneralOutputMaker {
       val isBasePool = (null == t.getSuperType)
       val nameT = name(t)
       val typeT = mapType(t)
+      val accessT = access(t)
 
       // find all fields that belong to the projected version, but use the unprojected variant
       val flatIRFieldNames = flatIR.find(_.getName == t.getName).get.getFields.map(_.getSkillName).toSet
@@ -42,7 +43,7 @@ trait AccessMaker extends GeneralOutputMaker {
         case f ⇒ fields.find(_.getSkillName.equals(f.getSkillName)).get -> f
       }.toMap
 
-      val out = files.open(s"internal/${nameT}Access.java")
+      val out = files.open(s"internal/$accessT.java")
       //package & imports
       out.write(s"""package ${packagePrefix}internal;
 
@@ -64,7 +65,7 @@ ${
         comment(t)
       }${
         suppressWarnings
-      }public class ${nameT}Access extends ${
+      }public class $accessT extends ${
         if (isBasePool) s"BasePool<${typeT}>"
         else s"SubPool<${typeT}, ${mapType(t.getBaseType)}>"
       } {
@@ -80,9 +81,9 @@ ${
     /**
      * Can only be constructed by the SkillFile in this package.
      */
-    ${nameT}Access(int poolIndex${
+    $accessT(int poolIndex${
         if (isBasePool) ""
-        else s", ${name(t.getSuperType)}Access superPool"
+        else s", ${access(t.getSuperType)} superPool"
       }) {
         super(poolIndex, "${t.getSkillName}"${
         if (isBasePool) ""

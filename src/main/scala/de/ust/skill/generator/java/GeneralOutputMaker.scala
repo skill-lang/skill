@@ -19,6 +19,7 @@ import de.ust.skill.ir.InterfaceType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
+import scala.collection.mutable.HashMap
 
 /**
  * The parent class for all output makers.
@@ -102,16 +103,22 @@ trait GeneralOutputMaker extends Generator {
    * Translation of a field to its representation in the source code
    */
   protected def name(f : FieldLike) : String = escaped(f.getName.camel)
-  
+
   /**
    * The name of T's storage pool
    */
-  protected def storagePool(t : Type) : String = name(t) + "Access"
+  protected def access(t : Type) : String = name(t) + "s"
 
+  /**
+   * id's given to fields
+   */
+  protected val fieldNameStore : HashMap[(String, String), Int] = new HashMap()
   /**
    * Class name of the representation of a known field
    */
-  protected def knownField(f : FieldLike) : String = s"F_${name(f.getDeclaredIn)}_${name(f)}"
+  protected def knownField(f : FieldLike) : String = this.synchronized {
+    "F_" + fieldNameStore.getOrElseUpdate((f.getDeclaredIn.getName.getSkillName, f.getSkillName), fieldNameStore.size).toString
+  }
 
   /**
    * Assume a package prefix provider.

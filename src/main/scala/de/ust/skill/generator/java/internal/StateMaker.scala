@@ -25,15 +25,11 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
-import de.ust.skill.common.java.api.Access;
-import de.ust.skill.common.java.api.FieldDeclaration;
 import de.ust.skill.common.java.api.SkillException;
-import de.ust.skill.common.java.internal.BasePool;
-import de.ust.skill.common.java.internal.SkillObject;
 import de.ust.skill.common.java.internal.StoragePool;
 import de.ust.skill.common.java.internal.StringPool;
+import de.ust.skill.common.java.internal.exceptions.ParseException;
 import de.ust.skill.common.java.internal.fieldTypes.Annotation;
 import de.ust.skill.common.java.internal.fieldTypes.StringType;
 import de.ust.skill.common.jvm.streams.FileInputStream;
@@ -49,14 +45,6 @@ import ${packagePrefix}api.SkillFile;
 ${
       suppressWarnings
     }public final class SkillState extends de.ust.skill.common.java.internal.SkillState implements SkillFile {
-
-    // types by skill name
-    private final HashMap<String, StoragePool<?, ?>> poolByName;
-
-    @Override
-    public HashMap<String, StoragePool<?, ?>> poolByName() {
-        return poolByName;
-    }
 
     /**
      * Create a new skill file based on argument path and mode.
@@ -98,57 +86,27 @@ ${
      * @note suppress unused warnings, because sometimes type declarations are
      *       created, although nobody is using them
      */
-    @SuppressWarnings("unused")
     public static SkillState open(Path path, Mode... mode) throws IOException, SkillException {
-        ActualMode actualMode = new ActualMode(mode);
-        switch (actualMode.open) {
-        case Create:
-            // initialization order of type information has to match file parser
-            // and can not be done in place
-            StringPool strings = new StringPool(null);
-            ArrayList<StoragePool<?, ?>> types = new ArrayList<>(1);
-            StringType stringType = new StringType(strings);
-            Annotation annotation = new Annotation(types);
-
-            // create type information${
-      var i = -1
-      (for (t ← IR)
-        yield s"""
-            ${name(t)}Access ${name(t)} = new ${name(t)}Access(${i += 1; i}${
-        if (null == t.getSuperType) ""
-        else { ", " + name(t.getSuperType) }
-      });
-            types.add(${name(t)});"""
-      ).mkString("")
-    }
-            HashMap<String, StoragePool<?, ?>> poolByName = new HashMap<>();
-            for (StoragePool<?, ?> p : types)
-                poolByName.put(p.name(), p);
-
-            return new SkillState(poolByName, strings, stringType, annotation, types, path, actualMode.close);
-
-        case Read:
-            return FileParser.read(FileInputStream.open(path, actualMode.close == Mode.ReadOnly), actualMode.close);
-
-        default:
-            throw new IllegalStateException("should never happen");
-        }
+        return de.ust.skill.common.java.internal.SkillState.open(SkillState.class, FileParser.class, ${IR.size}, path, mode);
     }
 
     public SkillState(HashMap<String, StoragePool<?, ?>> poolByName, StringPool strings, StringType stringType,
-            Annotation annotationType,
-            ArrayList<StoragePool<?, ?>> types, Path path, Mode mode) {
-        super(strings, path, mode, types, stringType, annotationType);
-        this.poolByName = poolByName;
-${
+            Annotation annotationType, ArrayList<StoragePool<?, ?>> types, FileInputStream in, Mode mode) {
+        super(strings, in.path(), mode, types, poolByName, stringType, annotationType);
+
+        try {
+            StoragePool<?, ?> p;${
       (for (t ← IR)
         yield s"""
-        ${name(t)}s = (${name(t)}Access) poolByName.get("${t.getSkillName}");"""
+            ${name(t)}s = (null == (p = poolByName.get("${t.getSkillName}"))) ? FileParser.newPool("${t.getSkillName}", ${
+        if (null == t.getSuperType) "null"
+        else s"${name(t.getSuperType)}s"
+      }, types) : (${access(t)}) p;"""
       ).mkString("")
     }${
       (for (t ← types.getInterfaces)
         yield s"""
-        ${name(t)}s = new ${interfacePool(t)}("${t.getSkillName}", ${
+            ${name(t)}s = new ${interfacePool(t)}("${t.getSkillName}", ${
         if (t.getSuperType.getSkillName.equals("annotation")) "annotationType"
         else name(t.getSuperType) + "s";
       }${
@@ -156,16 +114,22 @@ ${
       });"""
       ).mkString("")
     }
+        } catch (ClassCastException e) {
+            throw new ParseException(in, -1, e,
+                    "A super type does not match the specification; see cause for details.");
+        }
+        for (StoragePool<?, ?> t : types)
+            poolByName.put(t.name(), t);
 
-        finalizePools();
+        finalizePools(in);
     }
 ${
       (for (t ← IR)
         yield s"""
-    private final ${name(t)}Access ${name(t)}s;
+    private final ${access(t)} ${name(t)}s;
 
     @Override
-    public ${name(t)}Access ${name(t)}s() {
+    public ${access(t)} ${name(t)}s() {
         return ${name(t)}s;
     }
 """

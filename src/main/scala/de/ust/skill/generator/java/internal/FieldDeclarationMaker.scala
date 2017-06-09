@@ -73,22 +73,7 @@ ${
         if (f.isAuto) "AutoField"
         else "FieldDeclaration"
       }<$fieldActualType, ${mapType(t)}> implements
-               ${
-        f.getType match {
-          case ft : GroundType ⇒ ft.getSkillName match {
-            case "bool"                  ⇒ s"""KnownBooleanField<${mapType(t)}>"""
-            case "i8"                    ⇒ s"""KnownByteField<${mapType(t)}>"""
-            case "i16"                   ⇒ s"""KnownShortField<${mapType(t)}>"""
-            case "i32"                   ⇒ s"""KnownIntField<${mapType(t)}>"""
-            case "i64" | "v64"           ⇒ s"""KnownLongField<${mapType(t)}>"""
-            case "f32"                   ⇒ s"""KnownFloatField<${mapType(t)}>"""
-            case "f64"                   ⇒ s"""KnownDoubleField<${mapType(t)}>"""
-            case "annotation" | "string" ⇒ s"""KnownField<$fieldActualType, ${mapType(t)}>"""
-            case ft                      ⇒ "???missing specialization for type " + ft
-          }
-          case _ ⇒ s"""KnownField<$fieldActualType, ${mapType(t)}>"""
-        }
-      }${
+               KnownField<$fieldActualType, ${mapType(t)}>${
         // mark ignored fields as ignored; read function is inherited
         if (f.isIgnored()) ", IgnoredField"
         else ""
@@ -101,7 +86,7 @@ ${
     public $nameF(FieldType<$fieldActualType> type, ${
         if (f.isAuto()) ""
         else "int index, "
-      }${name(t)}Access owner) {
+      }${access(t)} owner) {
         super(type, "${f.getSkillName}", ${
         if (f.isAuto()) "0"
         else "index"
@@ -111,45 +96,39 @@ ${
 ${
         if (f.isAuto) "" else s"""
     @Override
-    public void read(ChunkEntry ce) {${
+    protected final void rsc(SimpleChunk c, MappedInStream in){${
           if (f.isConstant())
             """
-        // this field is constant"""
-          else{
-              // preparation code
+        // this field is constant
+    }
+    @Override
+    protected final void rbc(BulkChunk c, MappedInStream in){"""
+          else {
+            // preparation code
             val pre = originalF.getType match {
-                case t : GroundType if "string".equals(t.getSkillName) ⇒ s"""
+              case t : GroundType if "string".equals(t.getSkillName) ⇒ s"""
         final StringPool sp = (StringPool)owner.owner().Strings();"""
 
-                case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒ s"""
-        final ${name(t.getSuperType)}Access target = (${name(t.getSuperType)}Access)
+              case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒ s"""
+        final ${access(t.getSuperType)} target = (${access(t.getSuperType)})
                 FieldDeclaration.<${mapType(t.getSuperType)},${mapType(t)}>cast(type);"""
 
-                case t : UserType ⇒ s"""
-        final ${name(t)}Access target = (${name(t)}Access)type;"""
-                case _ ⇒ ""
-              } 
-            
-            s"""
-        final Chunk last = ce.c;
-        
-        if (last instanceof SimpleChunk) {
-            rsc((SimpleChunk) last, ce.in);
-        } else {
-            rbc((BulkChunk) last, ce.in);
-        }
-    }
-    
-    private final void rsc(SimpleChunk c, MappedInStream in){$pre
-        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
+              case t : UserType ⇒ s"""
+        final ${access(t)} target = (${access(t)})type;"""
+              case _ ⇒ ""
+            }
+
+            s"""$pre
+        final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner.basePool).data();
         int i = (int) c.bpo;
         for (final int h = i + (int) c.count; i != h; i++) {
             ${readField(t, originalF, fieldActualType)}
         }
     }
     
-    private final void rbc(BulkChunk c, MappedInStream in){$pre
-        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
+    @Override
+    protected final void rbc(BulkChunk c, MappedInStream in){$pre
+        final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner.basePool).data();
         ArrayList<Block> blocks = owner.blocks();
         int blockIndex = 0;
         final int endBlock = c.blockCount;
@@ -160,7 +139,7 @@ ${
                 ${readField(t, originalF, fieldActualType)}
             }
         }"""
-        }
+          }
         }
     }
 
@@ -173,10 +152,10 @@ ${
             val (pre, code, isFast) = offsetCode(t, f, originalF.getType, fieldActualType);
 
             if (isFast) s"""
-        Chunk last = dataChunks.getLast().c;
+        Chunk last = lastChunk();
         $code"""
             else s"""
-        Chunk last = dataChunks.getLast().c;
+        Chunk last = lastChunk();
         
         if (last instanceof SimpleChunk) {
             return osc((SimpleChunk) last);
@@ -186,7 +165,7 @@ ${
     }
     
     private final long osc(SimpleChunk c){$pre
-        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
+        final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner.basePool).data();
         long result = 0L;
         int i = (int) c.bpo;
         for (final int h = i + (int) c.count; i != h; i++) {
@@ -196,7 +175,7 @@ ${
     }
     
     private final long obc(BulkChunk c){$pre
-        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
+        final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner.basePool).data();
         long result = 0L;
         ArrayList<Block> blocks = owner.blocks();
         int blockIndex = 0;
@@ -220,7 +199,7 @@ ${
         // this field is constant"""
           else {
             s"""
-        Chunk last = dataChunks.getLast().c;
+        Chunk last = lastChunk();
 
         if (last instanceof SimpleChunk) {
             wsc((SimpleChunk) last, out);
@@ -230,7 +209,7 @@ ${
     }
     
     private final void wsc(SimpleChunk c, MappedOutStream out) throws IOException {
-        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
+        final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner.basePool).data();
         long result = 0L;
         int i = (int) c.bpo;
         for (final int h = i + (int) c.count; i != h; i++) {
@@ -239,7 +218,7 @@ ${
     }
     
     private final void wbc(BulkChunk c, MappedOutStream out) throws IOException {
-        final ${mapType(t.getBaseType)}[] d = ((${storagePool(t.getBaseType)}) owner.basePool()).data();
+        final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner.basePool).data();
         long result = 0L;
         ArrayList<Block> blocks = owner.blocks();
         int blockIndex = 0;
@@ -257,7 +236,7 @@ ${
 """
       }
     @Override
-    public $fieldActualType getR(SkillObject ref) {
+    public $fieldActualType get(SkillObject ref) {
         ${
         if (f.isConstant()) s"return ${mapType(t)}.get${escaped(f.getName.capital)}();"
         else s"return ((${mapType(t)}) ref).get${escaped(f.getName.capital)}();"
@@ -265,26 +244,10 @@ ${
     }
 
     @Override
-    public void setR(SkillObject ref, $fieldActualType value) {
+    public void set(SkillObject ref, $fieldActualType value) {
         ${
         if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
         else s"((${mapType(t)}) ref).set${escaped(f.getName.capital)}(value);"
-      }
-    }
-
-    @Override
-    public $fieldActualTypeUnboxed get(${mapType(t)} ref) {
-        ${
-        if (f.isConstant()) s"return ${mapType(t)}.get${escaped(f.getName.capital)}();"
-        else s"return ref.get${escaped(f.getName.capital)}();"
-      }
-    }
-
-    @Override
-    public void set(${mapType(t)} ref, $fieldActualTypeUnboxed value) {
-        ${
-        if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
-        else s"ref.set${escaped(f.getName.capital)}(value);"
       }
     }
 }

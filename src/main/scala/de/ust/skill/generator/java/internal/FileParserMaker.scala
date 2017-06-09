@@ -14,110 +14,58 @@ trait FileParserMaker extends GeneralOutputMaker {
     //package & imports
     out.write(s"""package ${packagePrefix}internal;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 
-import de.ust.skill.common.java.api.SkillException;
-import de.ust.skill.common.java.api.SkillFile.Mode;
 import de.ust.skill.common.java.internal.BasePool;
-import de.ust.skill.common.java.internal.ParseException;
 import de.ust.skill.common.java.internal.SkillObject;
 import de.ust.skill.common.java.internal.StoragePool;
+import de.ust.skill.common.java.internal.exceptions.ParseException;
 import de.ust.skill.common.java.restrictions.TypeRestriction;
 import de.ust.skill.common.jvm.streams.FileInputStream;
 
 ${
       suppressWarnings
-    }final public class FileParser extends de.ust.skill.common.java.internal.FileParser<SkillState> {
+    }final public class FileParser extends de.ust.skill.common.java.internal.FileParser {
 
-    private FileParser(FileInputStream in) {
-        super(in);
+    public FileParser(FileInputStream in) {
+        super(in, ${IR.size});
     }
 
     /**
-     * turns a file into a state.
-     *
-     * @note this method is generated, because some methods, including state
-     *       allocation depend on the specification
+     * allocate correct pool type and add it to types
      */
-    public static SkillState read(FileInputStream in, Mode writeMode) throws ParseException {
-        FileParser p = new FileParser(in);
-        return p.makeState(writeMode);
+    static <T extends B, B extends SkillObject, P extends StoragePool<T, B>> P newPool(String name,
+            StoragePool<?, ?> superPool, ArrayList<StoragePool<?, ?>> types) {
+        try {
+            switch (name) {${
+      (for (t ← IR)
+        yield if (null == t.getSuperType) s"""
+        case "${t.getSkillName}":
+            return (P) (superPool = new ${access(t)}(types.size()));
+"""
+      else s"""
+        case "${t.getSkillName}": 
+            return (P) (superPool = new ${access(t)}(types.size(), (${access(t.getSuperType)})superPool));
+""").mkString("\n")
+    }
+            default:
+                if (null == superPool)
+                    return (P) (superPool = new BasePool<T>(types.size(), name, Collections.EMPTY_SET, noAutoFields()));
+                else
+                    return (P) (superPool = superPool.makeSubPool(types.size(), name));
+            }
+        } finally {
+            types.add(superPool);
+        }
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected <T extends B, B extends SkillObject> StoragePool<T, B> newPool(String name,
             StoragePool<? super T, B> superPool, HashSet<TypeRestriction> restrictions) {
-        final StoragePool<T, B> p;
-        // allocate correct pool type
-        switch (name) {${
-      (for (t ← IR)
-        yield if (null == t.getSuperType) s"""
-        case "${t.getSkillName}":
-            p = (StoragePool<T, B>) new ${name(t)}Access(types.size());
-            break;
-"""
-      else s"""
-        case "${t.getSkillName}": {
-            ${name(t.getSuperType)}Access parent = (${name(t.getSuperType)}Access)(poolByName.get("${t.getSuperType.getSkillName}"));
-            if (null == parent)
-                throw new ParseException(in, blockCounter, null, "file lacks expected super type ${name(t)}");
-            p = (StoragePool<T, B>) new ${name(t)}Access(types.size(), parent);
-            break;
-        }
-""").mkString("\n")
-    }
-        default:
-            if (null == superPool)
-                p = (StoragePool<T, B>) new BasePool<T>(types.size(), name, Collections.EMPTY_SET, noAutoFields());
-            else
-                p = (StoragePool<T, B>) superPool.makeSubPool(types.size(), name);
-            break;
-        }
-
-        // check super type expectations
-        if (p.superPool() != superPool)
-            throw new ParseException(
-                    in,
-                    blockCounter,
-                    null,
-                    "The super type of %s stored in the file does not match the specification!\\nexpected %s, but was %s",
-                    name, null == p.superPool() ? "<none>" : p.superPool().name(), null == superPool ? "<none>"
-                            : superPool.name());
-
-        types.add(p);
-        poolByName.put(name, p);
-
-        return p;
-    }
-
-    private SkillState makeState(Mode mode) {
-
-        // create missing type information${
-      (for (t ← IR)
-        yield s"""
-        ${name(t)}Access ${name(t)};
-        if (poolByName.containsKey("${t.getSkillName}"))
-            ${name(t)} = (${name(t)}Access) poolByName.get("${t.getSkillName}");
-        else {
-            ${name(t)} = new ${name(t)}Access(types.size()${
-        if (null == t.getSuperType) ""
-        else s", ${name(t.getSuperType)}"
-      });
-            types.add(${name(t)});
-            poolByName.put("${t.getSkillName}", ${name(t)});
-        }
-""").mkString
-    }
-        // make state
-        SkillState r = new SkillState(poolByName, Strings, StringType, Annotation, types, in.path(), mode);
-        try {
-            r.check();
-        } catch (SkillException e) {
-            throw new ParseException(in, blockCounter, e, "Post serialization check failed!");
-        }
-        return r;
+        return newPool(name, superPool, types);
     }
 }
 """)

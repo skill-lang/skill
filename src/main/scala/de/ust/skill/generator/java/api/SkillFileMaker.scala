@@ -74,7 +74,7 @@ ${
     /**
      * @return an access for all ${name(t)}s in this state
      */
-    public ${packagePrefix}internal.${name(t)}Access ${name(t)}s();""").mkString("")
+    public ${packagePrefix}internal.${access(t)} ${name(t)}s();""").mkString("")
     }${
       (for (t ← this.types.getInterfaces) yield s"""
 
