@@ -15,7 +15,6 @@ trait FileParserMaker extends GeneralOutputMaker {
     out.write(s"""package ${packagePrefix}internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 
 import de.ust.skill.common.java.internal.BasePool;
@@ -52,7 +51,7 @@ ${
     }
             default:
                 if (null == superPool)
-                    return (P) (superPool = new BasePool<T>(types.size(), name, Collections.EMPTY_SET, noAutoFields()));
+                    return (P) (superPool = new BasePool<T>(types.size(), name, StoragePool.noKnownFields, noAutoFields()));
                 else
                     return (P) (superPool = superPool.makeSubPool(types.size(), name));
             }
@@ -61,7 +60,6 @@ ${
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected <T extends B, B extends SkillObject> StoragePool<T, B> newPool(String name,
             StoragePool<? super T, B> superPool, HashSet<TypeRestriction> restrictions) {

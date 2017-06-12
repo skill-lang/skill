@@ -48,7 +48,6 @@ trait AccessMaker extends GeneralOutputMaker {
       out.write(s"""package ${packagePrefix}internal;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 
 import de.ust.skill.common.java.api.SkillException;
@@ -67,7 +66,7 @@ ${
         suppressWarnings
       }public class $accessT extends ${
         if (isBasePool) s"BasePool<${typeT}>"
-        else s"SubPool<${typeT}, ${mapType(t.getBaseType)}>"
+        else s"StoragePool<${typeT}, ${mapType(t.getBaseType)}>"
       } {
 ${
         if (isBasePool) s"""
@@ -88,9 +87,10 @@ ${
         super(poolIndex, "${t.getSkillName}"${
         if (isBasePool) ""
         else ", superPool"
-      }, new HashSet<String>(Arrays.asList(new String[] { ${
-        fields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString(", ")
-      } })), ${
+      }, ${
+        if (fields.isEmpty) "noKnownFields"
+        else fields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString("new String[] { ", ", ", " }")
+      }, ${
         fields.count(_.isAuto) match {
           case 0 ⇒ "noAutoFields()"
           case c ⇒ s"(AutoField<?, ${mapType(t)}>[]) java.lang.reflect.Array.newInstance(AutoField.class, $c)"
@@ -125,45 +125,26 @@ ${
         de.ust.skill.common.java.internal.fieldTypes.StringType string,
         de.ust.skill.common.java.internal.fieldTypes.Annotation annotation) {
 
-        final FieldDeclaration<?, $typeT> f;
         switch (name) {${
-          (for (f ← fields if !f.isAuto)
+          (for (f ← fields)
             yield s"""
         case "${f.getSkillName}":
-            f = new ${knownField(projectedField(f))}(${mapToFieldType(f)}, 1 + dataFields.size(), this);
-            break;
-"""
-          ).mkString
-        }${
-          var index = 0;
-          (for (f ← fields if f.isAuto)
-            yield s"""
-        case "${f.getSkillName}":
-            f = new ${knownField(projectedField(f))}(${mapToFieldType(f)}, this);
-            autoFields[${index += 1; index - 1}] = (AutoField<?, $typeT>) f;
-            break;
-"""
-          ).mkString
-        }
-        default:
-            super.addKnownField(name, string, annotation);
+            new ${knownField(projectedField(f))}(${mapToFieldType(f)}, this);
             return;
+"""
+          ).mkString
         }
-        if (!(f instanceof AutoField))
-            dataFields.add(f);
+        }
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <R> FieldDeclaration<R, $typeT> addField(int ID, FieldType<R> type, String name,
-            HashSet<FieldRestriction<?>> restrictions) {
-        final FieldDeclaration<R, $typeT> f;
+    public <R> FieldDeclaration<R, $typeT> addField(FieldType<R> type, String name) {
         switch (name) {${
           (for (f ← fields if !f.isAuto)
             yield s"""
         case "${f.getSkillName}":
-            f = (FieldDeclaration<R, $typeT>) new ${knownField(projectedField(f))}((FieldType<${mapType(f.getType, true)}>) type, ID, this);
-            break;
+            return (FieldDeclaration<R, $typeT>) new ${knownField(projectedField(f))}((FieldType<${mapType(f.getType, true)}>) type, this);
 """
           ).mkString
         }${
@@ -177,15 +158,7 @@ ${
           ).mkString
         }
         default:
-            return super.addField(ID, type, name, restrictions);
-        }${
-          if (fields.forall(_.isAuto())) ""
-          else """
-
-        for (FieldRestriction<?> r : restrictions)
-            f.addRestriction(r);
-        dataFields.add(f);
-        return f;"""
+            return super.addField(type, name);
         }
     }"""
       }
@@ -252,9 +225,9 @@ ${
         return new UnknownSubPool(index, name, this);
     }
 
-    private static final class UnknownSubPool extends SubPool<${mapType(t)}.SubType, ${mapType(t.getBaseType)}> {
+    private static final class UnknownSubPool extends StoragePool<${mapType(t)}.SubType, ${mapType(t.getBaseType)}> {
         UnknownSubPool(int poolIndex, String name, StoragePool<? super ${mapType(t)}.SubType, ${mapType(t.getBaseType)}> superPool) {
-            super(poolIndex, name, superPool, Collections.emptySet(), noAutoFields());
+            super(poolIndex, name, superPool, noKnownFields, noAutoFields());
         }
 
         @Override
