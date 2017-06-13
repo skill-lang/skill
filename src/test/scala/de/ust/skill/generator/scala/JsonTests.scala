@@ -22,6 +22,7 @@ import org.json.JSONTokener
 import org.json.JSONObject
 import org.json.JSONArray
 import scala.collection.JavaConverters._
+
 /**
  * Generic tests built for scala.
  * Generic tests have an implementation for each programming language, because otherwise deleting the generated code
@@ -72,12 +73,18 @@ import de.ust.skill.common.scala.api.Write
 import $packagePath.api.SkillFile
 import de.ust.skill.common.scala.api.SkillObject
 import common.CommonTest
+import org.junit.rules.ExpectedException;
+import org.junit.Rule
+import scala.collection
 
 /**
  * Tests the file reading capabilities.
  */
 class Generic${name}Test extends CommonTest {
-  @inline def read(s: String) = SkillFile.open("../../"+s)
+
+	@Rule // http://stackoverflow.com/a/2935935
+	final def exception = ExpectedException.none();
+
 """)
 
     for (path ← collectSkillSpecification(packagePath).getParentFile().listFiles if path.getName.endsWith(".json")) {
@@ -97,6 +104,9 @@ class Generic${name}Test extends CommonTest {
     
     def types = creator.SkillObjectCreator.generateSkillFileTypeMappings(sf);
     def typeFieldMapping = creator.SkillObjectCreator.generateSkillFileFieldMappings(sf);
+
+	  var refClass: Class[_] = null;
+	  var refConstructor: java.lang.reflect.Constructor[_] = null;
     
     //auto-generated instansiation from json
 
@@ -121,8 +131,9 @@ class Generic${name}Test extends CommonTest {
 
     if (content.getBoolean("shouldFail")) {
       instantiations = instantiations.concat(
-        """			System.out.println("There should be an exception coming up!");
-			exception.expect(Exception.class);
+        """						System.out.println("There should be an exception coming up!");
+			exception.expect(classOf[Exception]);
+
       """);
     }
 
@@ -131,11 +142,11 @@ class Generic${name}Test extends CommonTest {
       val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
       val currentObjType = currentObj.getString("type"); //The type of the skillObject
 
-      instantiations = instantiations.concat("var " + currentObjKey.toLowerCase() + " = types.getOrElse(\"" + currentObjType.toLowerCase() + "\", null);\n");
-      instantiations = instantiations.concat(s"""    if(${currentObjKey.toLowerCase()} == null){
+      instantiations = instantiations.concat("var temp" + currentObjKey.toLowerCase() + " = types.getOrElse(\"" + currentObjType.toLowerCase() + "\", null);\n");
+      instantiations = instantiations.concat(s"""    if(temp${currentObjKey.toLowerCase()} == null){
       throw new Exception("Unable to find skillObject.");
 }
-var new${currentObjKey.toLowerCase()}: SkillObject = age.reflectiveAllocateInstance.asInstanceOf[SkillObject];  
+var ${currentObjKey.toLowerCase()}: SkillObject = temp${currentObjKey.toLowerCase()}.reflectiveAllocateInstance.asInstanceOf[SkillObject];  
 """);
     }
     instantiations = instantiations.concat("\n")
@@ -183,58 +194,10 @@ var new${currentObjKey.toLowerCase()}: SkillObject = age.reflectiveAllocateInsta
     // generate read tests
     locally {
       val out = newTestFile(name, "Json")
-
-      for (f ← accept) out.write(s"""
-  test("$name - read (accept): ${f.getName}") { read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}").check }
-""")
-
-      for (f ← reject) out.write(s"""
-  test("$name - read (reject): ${f.getName}") { intercept[SkillException] { read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}").check } }
-""")
       closeTestFile(out)
     }
 
-    // reflective write tests
-    locally {
-      val out = newTestFile(name, "WriteReflective")
-
-      out.write(s"""
-  test("$name - write reflective") {
-    val path = tmpFile("write.generic");
-    val sf = SkillFile.open(path, Create, Write);
-    reflectiveInit(sf);
-    sf.close
-  }
-
-  test("$name - write reflective checked") {
-    val path = tmpFile("write.generic.checked");
-    val sf = SkillFile.open(path, Create, Write);
-    reflectiveInit(sf);
-    // write file
-    sf.flush()
-
-    // create a name -> type map
-    val types : Map[String, Access[_]] = sf.map(t ⇒ t.name -> t).toMap
-
-    // read file and check skill IDs
-    val sf2 = SkillFile.open(path, Read, ReadOnly);
-    for (t2 ← sf2) {
-      val t = types(t2.name)
-      if(t.size != t2.size)
-        fail("size missmatch")
-    }
-  }
-""")
-      closeTestFile(out)
-    }
-
-    //    mit generischem binding sf parsen um an zu erwartende daten zu kommen
-
-    //    mit parser spec parsen um an lesbare daten zu kommen:)
-
-    //    test generieren, der sicherstellt, dass sich die daten da raus lesen lassen
-
-  }
+      }
 
   override def finalizeTests {
     // nothing yet
@@ -242,7 +205,7 @@ var new${currentObjKey.toLowerCase()}: SkillObject = age.reflectiveAllocateInsta
   
   def instantiateMap(instantiations: String, map: JSONObject, objValueType: String, attrKey: String, mapName: String): String = {
     var ins = instantiations.concat("\n");
-    ins = ins.concat("HashMap " + mapName + " = new HashMap<>();\n");
+    ins = ins.concat("var " + mapName + " = new HashMap<>();\n");
     for (currentObjKey <- asScalaSetConverter(map.keySet()).asScala) {
       var key = currentObjKey;
       if(currentObjKey.contains("\"")){
@@ -262,10 +225,10 @@ var new${currentObjKey.toLowerCase()}: SkillObject = age.reflectiveAllocateInsta
     var ins = instantiations.concat(s"""
     refClass = Class.forName(getProperCollectionType(typeFieldMapping.get("${objValueType}").get("${attrKey}").toString()));
     refConstructor = refClass.getConstructor();
-    Collection ${collectionName} = (Collection) refConstructor.newInstance();
+    var ${collectionName}: Traversable[_] = refConstructor.newInstance().asInstanceOf[Traversable[_]];
     """);
     for (x <- intWrapper(0) until array.length()) {
-      ins = ins.concat(collectionName + ".add(" + getcurrentArrayValue(array, x, attrKey, objValueType) + ");\n");
+      ins = ins.concat(collectionName + "= " + collectionName + " ++ " + getcurrentArrayValue(array, x, attrKey, objValueType) + ".asInstanceOf[scala.collection.GenTraversableOnce[_]];\n");
     }
     ins = ins.concat("\n");
     return ins;
