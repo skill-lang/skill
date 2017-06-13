@@ -70,6 +70,7 @@ import de.ust.skill.common.scala.api.ReadOnly
 import de.ust.skill.common.scala.api.Write
 
 import $packagePath.api.SkillFile
+import de.ust.skill.common.scala.api.SkillObject
 import common.CommonTest
 
 /**
@@ -130,7 +131,12 @@ class Generic${name}Test extends CommonTest {
       val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
       val currentObjType = currentObj.getString("type"); //The type of the skillObject
 
-      instantiations = instantiations.concat("var " + currentObjKey.toLowerCase() + " = sf.get(\"" + currentObjType.toLowerCase() + "\").make();\n");
+      instantiations = instantiations.concat("var " + currentObjKey.toLowerCase() + " = types.getOrElse(\"" + currentObjType.toLowerCase() + "\", null);\n");
+      instantiations = instantiations.concat(s"""    if(${currentObjKey.toLowerCase()} == null){
+      throw new Exception("Unable to find skillObject.");
+}
+var new${currentObjKey.toLowerCase()}: SkillObject = age.reflectiveAllocateInstance.asInstanceOf[SkillObject];  
+""");
     }
     instantiations = instantiations.concat("\n")
     //Set skillobject values
@@ -157,7 +163,7 @@ class Generic${name}Test extends CommonTest {
 
       }
     }
-    instantiations = instantiations.concat("sf.close();\n");
+    instantiations = instantiations.concat("sf.close;\n");
     return instantiations;
   }
   
