@@ -43,7 +43,8 @@ ${
      *             on file or specification consistency errors
      */
     public static SkillFile open(String path, Mode... mode) throws IOException, SkillException {
-        return SkillState.open(path, mode);
+        File f = new File(path);
+        return open(f, mode);
     }
 
     /**
@@ -55,7 +56,12 @@ ${
      *             on file or specification consistency errors
      */
     public static SkillFile open(File path, Mode... mode) throws IOException, SkillException {
-        return SkillState.open(path, mode);
+        for (Mode m : mode) {
+            if (m == Mode.Create && !path.exists())
+                path.createNewFile();
+        }
+        assert path.exists() : "can only open files that already exist in genarel, because of java.nio restrictions";
+        return open(path.toPath(), mode);
     }
 
     /**

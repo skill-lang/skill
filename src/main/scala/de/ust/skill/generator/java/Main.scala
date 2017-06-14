@@ -39,12 +39,9 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * @author Timm Felden
  */
 class Main extends FakeMain
-    with AccessMaker
     with DependenciesMaker
     with InterfacesMaker
-    with FieldDeclarationMaker
-    with FileParserMaker
-    with StateMaker
+    with InternalMaker
     with SkillFileMaker
     with TypesMaker
     with VisitorsMaker {
