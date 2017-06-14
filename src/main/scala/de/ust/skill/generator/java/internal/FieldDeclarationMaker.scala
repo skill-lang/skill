@@ -81,38 +81,36 @@ ${
           if (f.isAuto) ""
           else if (f.isConstant) """
     @Override
-    protected final void rsc(SimpleChunk c, MappedInStream in) {
+    protected final void rsc(int i, final int h, MappedInStream in) {
     }
     @Override
-    protected final long osc(SimpleChunk c) {
-        return 0L;
+    protected final void osc(int i, final int h) {
     }
     @Override
-    protected final void wsc(SimpleChunk c, MappedOutStream out) throws IOException {
+    protected final void wsc(int i, final int h, MappedOutStream out) throws IOException {
     }
 """
           else s"""
     @Override
-    protected final void rsc(SimpleChunk c, MappedInStream in) {
+    protected final void rsc(int i, final int h, MappedInStream in) {
         ${readCode(t, originalF)}
     }
     @Override
-    protected final long osc(SimpleChunk c) {${
+    protected final void osc(int i, final int h) {${
             val (pre, code, isFast) = offsetCode(t, f, originalF.getType, fieldActualType);
             if (isFast)
               code
             else s"""$pre
         final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner.basePool).data();
         long result = 0L;
-        int i = (int) c.bpo;
-        for (final int h = i + (int) c.count; i != h; i++) {
+        for (; i != h; i++) {
             $code
         }
-        return result;"""
+        offset += result;"""
           }
     }
     @Override
-    protected final void wsc(SimpleChunk c, MappedOutStream out) throws IOException {
+    protected final void wsc(int i, final int h, MappedOutStream out) throws IOException {
         ${writeCode(t, originalF)}
     }
 """
@@ -190,8 +188,7 @@ ${
     }
 
     s"""$declareD$pre
-        int i = (int) c.bpo;
-        for (final int h = (int) (i + c.count); i != h; i++) {
+        for (; i != h; i++) {
             $fieldAccess = $code;
         }
 """
@@ -391,8 +388,8 @@ ${
   private final def fastOffsetCode(shift : Int) =
     (
       "",
-      if (shift != 0) s"return c.count << $shift;"
-      else "return c.count;",
+      if (shift != 0) s"offset += (h-i) << $shift;"
+      else "offset += (h-i);",
       true
     )
 
@@ -448,8 +445,7 @@ ${
     }
 
     s"""$declareD$pre
-        int i = (int) c.bpo;
-        for (final int h = (int) (i + c.count); i != h; i++) {
+        for (; i != h; i++) {
             $code;
         }
 """
