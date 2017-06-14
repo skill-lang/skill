@@ -22,10 +22,10 @@ import de.ust.skill.ir.restriction.FloatRangeRestriction
 import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.NonNullRestriction
 import de.ust.skill.ir.UserType
+import de.ust.skill.io.PrintWriter
 
 trait AccessMaker extends GeneralOutputMaker {
-  abstract override def make {
-    super.make
+  final def makePools(out : PrintWriter) {
 
     // reflection has to know projected definitions
     val flatIR = this.types.removeSpecialDeclarations.getUsertypes
@@ -43,20 +43,6 @@ trait AccessMaker extends GeneralOutputMaker {
         case f ⇒ fields.find(_.getSkillName.equals(f.getSkillName)).get -> f
       }.toMap
 
-      val out = files.open(s"internal/$accessT.java")
-      //package & imports
-      out.write(s"""package ${packagePrefix}internal;
-
-import java.util.Arrays;
-import java.util.HashSet;
-
-import de.ust.skill.common.java.api.SkillException;
-import de.ust.skill.common.java.internal.*;
-import de.ust.skill.common.java.internal.fieldDeclarations.AutoField;
-import de.ust.skill.common.java.internal.fieldTypes.*;
-import de.ust.skill.common.java.internal.parts.Block;
-import de.ust.skill.common.java.restrictions.FieldRestriction;
-""")
 
       //class declaration
       out.write(s"""
@@ -64,7 +50,7 @@ ${
         comment(t)
       }${
         suppressWarnings
-      }public class $accessT extends ${
+      }public static final class $accessT extends ${
         if (isBasePool) s"BasePool<${typeT}>"
         else s"StoragePool<${typeT}, ${mapType(t.getBaseType)}>"
       } {
@@ -247,8 +233,6 @@ ${
     }
 }
 """)
-
-      out.close()
     }
   }
 

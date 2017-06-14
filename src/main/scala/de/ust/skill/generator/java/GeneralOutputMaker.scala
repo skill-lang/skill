@@ -105,9 +105,15 @@ trait GeneralOutputMaker extends Generator {
   protected def name(f : FieldLike) : String = escaped(f.getName.camel)
 
   /**
+   * id's given to fields
+   */
+  protected val poolNameStore : HashMap[String, Int] = new HashMap()
+  /**
    * The name of T's storage pool
    */
-  protected def access(t : Type) : String = name(t) + "s"
+  protected def access(t : Type) : String = this.synchronized {
+    "P" + poolNameStore.getOrElseUpdate(t.getSkillName, poolNameStore.size).toString
+  }
 
   /**
    * id's given to fields
@@ -117,7 +123,7 @@ trait GeneralOutputMaker extends Generator {
    * Class name of the representation of a known field
    */
   protected def knownField(f : FieldLike) : String = this.synchronized {
-    "F_" + fieldNameStore.getOrElseUpdate((f.getDeclaredIn.getName.getSkillName, f.getSkillName), fieldNameStore.size).toString
+    "f" + fieldNameStore.getOrElseUpdate((f.getDeclaredIn.getName.getSkillName, f.getSkillName), fieldNameStore.size).toString
   }
 
   /**

@@ -6,29 +6,18 @@
 package de.ust.skill.generator.java.internal
 
 import de.ust.skill.generator.java.GeneralOutputMaker
+import de.ust.skill.io.PrintWriter
 
 trait FileParserMaker extends GeneralOutputMaker {
-  abstract override def make {
-    super.make
-    val out = files.open(s"internal/FileParser.java")
+  final def makeParser(out : PrintWriter) {
+
     //package & imports
-    out.write(s"""package ${packagePrefix}internal;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-
-import de.ust.skill.common.java.internal.BasePool;
-import de.ust.skill.common.java.internal.SkillObject;
-import de.ust.skill.common.java.internal.StoragePool;
-import de.ust.skill.common.java.internal.exceptions.ParseException;
-import de.ust.skill.common.java.restrictions.TypeRestriction;
-import de.ust.skill.common.jvm.streams.FileInputStream;
-
+    out.write(s"""
 ${
       suppressWarnings
-    }final public class FileParser extends de.ust.skill.common.java.internal.FileParser {
+    }public static final class Parser extends de.ust.skill.common.java.internal.FileParser {
 
-    public FileParser(FileInputStream in) {
+    public Parser(FileInputStream in) {
         super(in, ${IR.size});
     }
 
@@ -67,8 +56,5 @@ ${
     }
 }
 """)
-
-    //class prefix
-    out.close()
   }
 }

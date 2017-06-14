@@ -12,30 +12,12 @@ import de.ust.skill.ir.InterfaceType
 import de.ust.skill.ir.Typedef
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
+import de.ust.skill.io.PrintWriter
 
 trait StateMaker extends GeneralOutputMaker {
-  abstract override def make {
-    super.make
-    val out = files.open(s"internal/SkillState.java")
+  final def makeState(out : PrintWriter) {
 
-    out.write(s"""package ${packagePrefix}internal;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-
-import de.ust.skill.common.java.api.SkillException;
-import de.ust.skill.common.java.internal.StoragePool;
-import de.ust.skill.common.java.internal.StringPool;
-import de.ust.skill.common.java.internal.exceptions.ParseException;
-import de.ust.skill.common.java.internal.fieldTypes.Annotation;
-import de.ust.skill.common.java.internal.fieldTypes.StringType;
-import de.ust.skill.common.jvm.streams.FileInputStream;
-
-import ${packagePrefix}api.SkillFile;
-
+    out.write(s"""
 /**
  * Internal implementation of SkillFile.
  *
@@ -44,37 +26,7 @@ import ${packagePrefix}api.SkillFile;
  */
 ${
       suppressWarnings
-    }public final class SkillState extends de.ust.skill.common.java.internal.SkillState implements SkillFile {
-
-    /**
-     * Create a new skill file based on argument path and mode.
-     *
-     * @throws IOException
-     *             on IO and mode related errors
-     * @throws SkillException
-     *             on file or specification consistency errors
-     */
-    public static SkillState open(String path, Mode... mode) throws IOException, SkillException {
-        File f = new File(path);
-        return open(f, mode);
-    }
-
-    /**
-     * Create a new skill file based on argument path and mode.
-     *
-     * @throws IOException
-     *             on IO and mode related errors
-     * @throws SkillException
-     *             on file or specification consistency errors
-     */
-    public static SkillState open(File path, Mode... mode) throws IOException, SkillException {
-        for (Mode m : mode) {
-            if (m == Mode.Create && !path.exists())
-                path.createNewFile();
-        }
-        assert path.exists() : "can only open files that already exist in genarel, because of java.nio restrictions";
-        return open(path.toPath(), mode);
-    }
+    }public static final class SkillState extends de.ust.skill.common.java.internal.SkillState implements SkillFile {
 
     /**
      * Create a new skill file based on argument path and mode.
@@ -87,7 +39,34 @@ ${
      *       created, although nobody is using them
      */
     public static SkillState open(Path path, Mode... mode) throws IOException, SkillException {
-        return de.ust.skill.common.java.internal.SkillState.open(SkillState.class, FileParser.class, ${IR.size}, path, mode);
+        ActualMode actualMode = new ActualMode(mode);
+        try {
+            switch (actualMode.open) {
+            case Create:
+                // initialization order of type information has to match file
+                // parser
+                // and can not be done in place
+                StringPool strings = new StringPool(null);
+                ArrayList<StoragePool<?, ?>> types = new ArrayList<>(${IR.size});
+                StringType stringType = new StringType(strings);
+                Annotation annotation = new Annotation(types);
+
+                return new SkillState(new HashMap<>(), strings, stringType, annotation,
+                        types, FileInputStream.open(path, false), actualMode.close);
+
+            case Read:
+                Parser p = new Parser(FileInputStream.open(path, actualMode.close == Mode.ReadOnly));
+                return p.read(SkillState.class, actualMode.close);
+
+            default:
+                throw new IllegalStateException("should never happen");
+            }
+        } catch (SkillException e) {
+            // rethrow all skill exceptions
+            throw e;
+        } catch (Exception e) {
+            throw new SkillException(e);
+        }
     }
 
     public SkillState(HashMap<String, StoragePool<?, ?>> poolByName, StringPool strings, StringType stringType,
@@ -98,7 +77,7 @@ ${
             StoragePool<?, ?> p;${
       (for (t ← IR)
         yield s"""
-            ${name(t)}s = (null == (p = poolByName.get("${t.getSkillName}"))) ? FileParser.newPool("${t.getSkillName}", ${
+            ${name(t)}s = (null == (p = poolByName.get("${t.getSkillName}"))) ? Parser.newPool("${t.getSkillName}", ${
         if (null == t.getSuperType) "null"
         else s"${name(t.getSuperType)}s"
       }, types) : (${access(t)}) p;"""
@@ -148,7 +127,6 @@ ${
     }}
 """)
 
-    out.close()
   }
 
   private def collectRealizationNames(target : InterfaceType) : Seq[String] = {
