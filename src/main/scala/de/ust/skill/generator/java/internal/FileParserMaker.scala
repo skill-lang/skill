@@ -13,9 +13,7 @@ trait FileParserMaker extends GeneralOutputMaker {
 
     //package & imports
     out.write(s"""
-${
-      suppressWarnings
-    }public static final class Parser extends de.ust.skill.common.java.internal.FileParser {
+public static final class Parser extends de.ust.skill.common.java.internal.FileParser {
 
     public Parser(FileInputStream in) {
         super(in, ${IR.size});

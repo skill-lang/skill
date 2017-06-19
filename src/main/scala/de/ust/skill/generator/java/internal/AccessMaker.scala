@@ -48,8 +48,6 @@ trait AccessMaker extends GeneralOutputMaker {
       out.write(s"""
 ${
         comment(t)
-      }${
-        suppressWarnings
       }public static final class $accessT extends ${
         if (isBasePool) s"BasePool<${typeT}>"
         else s"StoragePool<${typeT}, ${mapType(t.getBaseType)}>"

@@ -29,12 +29,14 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 
 import ${packagePrefix}api.SkillFile;
 import de.ust.skill.common.java.api.SkillException;
 import de.ust.skill.common.java.internal.BasePool;
 import de.ust.skill.common.java.internal.FieldDeclaration;
 import de.ust.skill.common.java.internal.FieldType;
+import de.ust.skill.common.java.internal.InterfacePool;
 import de.ust.skill.common.java.internal.KnownDataField;
 import de.ust.skill.common.java.internal.SkillObject;
 import de.ust.skill.common.java.internal.StoragePool;
@@ -44,13 +46,14 @@ import de.ust.skill.common.java.internal.fieldDeclarations.AutoField;
 import de.ust.skill.common.java.internal.exceptions.ParseException;
 import de.ust.skill.common.java.internal.fieldTypes.*;
 import de.ust.skill.common.java.internal.parts.Block;
-import de.ust.skill.common.java.internal.parts.SimpleChunk;
 import de.ust.skill.common.java.restrictions.TypeRestriction;
 import de.ust.skill.common.jvm.streams.FileInputStream;
 import de.ust.skill.common.jvm.streams.MappedInStream;
 import de.ust.skill.common.jvm.streams.MappedOutStream;
 
-public class internal {
+${
+      suppressWarnings
+    }public final class internal {
     private internal() {}
 
 """)
