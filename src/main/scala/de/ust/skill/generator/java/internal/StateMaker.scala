@@ -24,9 +24,7 @@ trait StateMaker extends GeneralOutputMaker {
  * @author Timm Felden
  * @note type access fields start with a capital letter to avoid collisions
  */
-${
-      suppressWarnings
-    }public static final class SkillState extends de.ust.skill.common.java.internal.SkillState implements SkillFile {
+public static final class SkillState extends de.ust.skill.common.java.internal.SkillState implements SkillFile {
 
     /**
      * Create a new skill file based on argument path and mode.
