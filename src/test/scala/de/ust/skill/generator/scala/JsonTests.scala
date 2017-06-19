@@ -51,7 +51,7 @@ class JsonTests extends common.GenericJsonTests {
   }
 
   def newTestFile(packagePath : String, name : String) : PrintWriter = {
-    val f = new File(s"testsuites/scala/src/test/scala/$packagePath/Generic${name}Test.scala")
+    val f = new File(s"testsuites/scala/src/test/scala/$packagePath/Generic${name}Test.generated.scala")
     f.getParentFile.mkdirs
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
@@ -72,10 +72,11 @@ import de.ust.skill.common.scala.api.Write
 
 import $packagePath.api.SkillFile
 import de.ust.skill.common.scala.api.SkillObject
+import de.ust.skill.common.scala.api.FieldDeclaration
 import common.CommonTest
 import org.junit.rules.ExpectedException;
 import org.junit.Rule
-import scala.collection
+import scala.collection.mutable.HashMap
 
 /**
  * Tests the file reading capabilities.
@@ -142,11 +143,9 @@ class Generic${name}Test extends CommonTest {
       val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
       val currentObjType = currentObj.getString("type"); //The type of the skillObject
 
-      instantiations = instantiations.concat("var temp" + currentObjKey.toLowerCase() + " = types.getOrElse(\"" + currentObjType.toLowerCase() + "\", null);\n");
-      instantiations = instantiations.concat(s"""    if(temp${currentObjKey.toLowerCase()} == null){
-      throw new Exception("Unable to find skillObject.");
-}
-var ${currentObjKey.toLowerCase()}: SkillObject = temp${currentObjKey.toLowerCase()}.reflectiveAllocateInstance.asInstanceOf[SkillObject];  
+      instantiations = instantiations.concat("var temp" + currentObjKey.toLowerCase() + " = types.getOrElse(\"" + currentObjType.toLowerCase() + "\", throw new Exception(\"Unable to find skillObject.\"));\n");
+      instantiations = instantiations.concat(s"""
+      var ${currentObjKey.toLowerCase()}: SkillObject = temp${currentObjKey.toLowerCase()}.reflectiveAllocateInstance.asInstanceOf[SkillObject];  
 """);
     }
     instantiations = instantiations.concat("\n")
@@ -170,7 +169,7 @@ var ${currentObjKey.toLowerCase()}: SkillObject = temp${currentObjKey.toLowerCas
 
         }
 
-        instantiations = instantiations.concat(currentObjKey.toLowerCase() + ".set(cast(typeFieldMapping.get(\"" + currentObjType.toLowerCase() + "\").get(\"" + currentAttrKey.toLowerCase() + "\")), " + currentAttrValue + ");\n\n");
+        instantiations = instantiations.concat(currentObjKey.toLowerCase() + ".set(typeFieldMapping(\"" + currentObjType.toLowerCase() + "\")(\"" + currentAttrKey.toLowerCase() + "\").asInstanceOf[FieldDeclaration[Any]], " + currentAttrValue + ");\n\n");
 
       }
     }
@@ -205,7 +204,7 @@ var ${currentObjKey.toLowerCase()}: SkillObject = temp${currentObjKey.toLowerCas
   
   def instantiateMap(instantiations: String, map: JSONObject, objValueType: String, attrKey: String, mapName: String): String = {
     var ins = instantiations.concat("\n");
-    ins = ins.concat("var " + mapName + " = new HashMap<>();\n");
+    ins = ins.concat("var " + mapName + " = new HashMap[Any,Any]();\n");
     for (currentObjKey <- asScalaSetConverter(map.keySet()).asScala) {
       var key = currentObjKey;
       if(currentObjKey.contains("\"")){
