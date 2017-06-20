@@ -1,6 +1,8 @@
-#! fancy
+#! fancy -v=b,c,d,g,h,j
 #
-# uses a combination of fancy types to challenge code generators.
+# Uses a combination of fancy types to challenge code generators.
+# Also, there is a larger subtyping hierarchy used for testing of subtyping
+# related specifics.
 
 @abstract
 A {
@@ -32,6 +34,12 @@ G : C with E with F {
   view Value as
   G Value;
 }
+
+H : A {}
+
+I : A {}
+
+J : A {}
 
 typedef m
 map <E, F>;
