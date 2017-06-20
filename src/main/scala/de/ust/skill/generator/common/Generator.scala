@@ -12,6 +12,7 @@ import de.ust.skill.ir.FieldLike
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.main.HeaderInfo
 import de.ust.skill.ir.UserType
+import scala.collection.mutable.HashMap
 
 /**
  * every code generator shares these properties.
@@ -128,5 +129,10 @@ trait Generator {
   /**
    * The generated binding will also contain visitors for given types
    */
-  var visitors : Seq[UserType] = _;
+  var visitors : Array[UserType] = _;
+  
+  /**
+   * The generated binding will also contain visitors for given types
+   */
+  val visited = new HashMap[String, UserType];
 }
