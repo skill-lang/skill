@@ -131,8 +131,7 @@ class Generic${name}Test extends CommonTest {
     if (content.getBoolean("shouldFail")) {
       instantiations = instantiations.concat(
         """						System.out.println("There should be an exception coming up!");
-			exception.expect(classOf[Exception]);
-
+			 intercept[Exception]{
       """);
     }
 
@@ -172,6 +171,9 @@ class Generic${name}Test extends CommonTest {
       }
     }
     instantiations = instantiations.concat("sf.close;\n");
+    if (content.getBoolean("shouldFail")) {
+      instantiations = instantiations.concat("}\n");
+    }
     return instantiations;
   }
 
