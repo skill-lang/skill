@@ -53,9 +53,9 @@ trait SourceOptions extends AbstractOptions {
 
       // add all user types to visitors, if the type '*' was selected
       val visitors = (if (1 == this.visitors.size && this.visitors.head.equals("*")) {
-        tc.getUsertypes.toSeq
+        tc.getUsertypes.toSeq.toArray
       } else
-        this.visitors.map(tc.get).collect { case t : UserType ⇒ t }
+        this.visitors.map(tc.get).collect { case t : UserType ⇒ t }.toArray
       )
 
       if (verbose) {
@@ -97,6 +97,8 @@ trait SourceOptions extends AbstractOptions {
         gen.depsPath = depsdir.getAbsolutePath + pathPostfix
         gen.skipDependencies = skipDeps
         gen.visitors = visitors
+        for (t ← visitors)
+          gen.visited(t.getSkillName) = t
 
         if (verbose) print(s"run $lang: ")
 
