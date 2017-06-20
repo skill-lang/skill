@@ -106,8 +106,6 @@ class Generic${name}Test extends CommonTest {
     def types = creator.SkillObjectCreator.generateSkillFileTypeMappings(sf);
     def typeFieldMapping = creator.SkillObjectCreator.generateSkillFileFieldMappings(sf);
 
-	  var refClass: Class[_] = null;
-	  var refConstructor: java.lang.reflect.Constructor[_] = null;
     var tempCacheList:ListBuffer[Any] = null;
     
     //auto-generated instansiation from json
@@ -222,9 +220,7 @@ class Generic${name}Test extends CommonTest {
 
   def instantiateArray(instantiations: String, array: JSONArray, objValueType: String, attrKey: String, collectionName: String): String = {
     var ins = instantiations.concat(s"""
-    refClass = Class.forName(getProperCollectionType(typeFieldMapping.get("${objValueType}").get("${attrKey}").toString()));
-    refConstructor = refClass.getConstructor();
-    var ${collectionName}: Traversable[_] = refConstructor.newInstance().asInstanceOf[Traversable[_]];
+    var ${collectionName}: Traversable[_] = new ListBuffer[Any]();
     tempCacheList = new ListBuffer[Any]();
     """);
     for (x <- intWrapper(0) until array.length()) {
