@@ -33,14 +33,14 @@ import scala.collection.JavaConverters._
 @RunWith(classOf[JUnitRunner])
 class JsonTests extends common.GenericJsonTests {
 
-  override def language : String = "scala"
+  override def language: String = "scala"
 
-  override def deleteOutDir(out : String) {
+  override def deleteOutDir(out: String) {
     import scala.reflect.io.Directory
     Directory(new File("testsuites/scala/src/main/scala/", out)).deleteRecursively
   }
 
-  override def callMainFor(name : String, source : String, options : Seq[String]) {
+  override def callMainFor(name: String, source: String, options: Seq[String]) {
     CommandLine.exit = s ⇒ throw new RuntimeException(s)
     CommandLine.main(Array[String](source,
       "--debug-header",
@@ -50,7 +50,7 @@ class JsonTests extends common.GenericJsonTests {
       "-o", "testsuites/scala/src/main/scala") ++ options)
   }
 
-  def newTestFile(packagePath : String, name : String) : PrintWriter = {
+  def newTestFile(packagePath: String, name: String): PrintWriter = {
     val f = new File(s"testsuites/scala/src/test/scala/$packagePath/Generic${name}Test.generated.scala")
     f.getParentFile.mkdirs
     f.createNewFile
@@ -77,6 +77,7 @@ import common.CommonTest
 import org.junit.rules.ExpectedException;
 import org.junit.Rule
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.ListBuffer
 
 /**
  * Tests the file reading capabilities.
@@ -94,8 +95,7 @@ class Generic${name}Test extends CommonTest {
     rval
   }
 
-  
-  def makeTestForJson(rval: PrintWriter, testfile: String, packagePath : String): PrintWriter = {
+  def makeTestForJson(rval: PrintWriter, testfile: String, packagePath: String): PrintWriter = {
     def testname = new File(testfile).getName.replace(".json", "");
     rval.write(s"""
 	test("${packagePath} - ${testname}") {
@@ -108,6 +108,7 @@ class Generic${name}Test extends CommonTest {
 
 	  var refClass: Class[_] = null;
 	  var refConstructor: java.lang.reflect.Constructor[_] = null;
+    var tempCacheList:ListBuffer[Any] = null;
     
     //auto-generated instansiation from json
 
@@ -122,8 +123,7 @@ class Generic${name}Test extends CommonTest {
 """)
     rval
   }
-  
-  
+
   def generateObjectInstantiation(jsonFile: String): String = {
     val fileTokens = new JSONTokener(new java.io.FileInputStream(jsonFile));
     val content = new JSONObject(fileTokens);
@@ -154,7 +154,7 @@ class Generic${name}Test extends CommonTest {
       val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
       val currentObjType = currentObj.getString("type").toLowerCase(); //The type of the skillObject
       val objAttributes = currentObj.getJSONObject("attr"); //The attributes/Fields of the skillObject 
-      
+
       for (currentAttrKey <- asScalaSetConverter(objAttributes.keySet()).asScala) {
 
         val currentAttrValue = getcurrentAttrValue(objAttributes, currentAttrKey, currentObjKey, currentObjType);
@@ -176,15 +176,15 @@ class Generic${name}Test extends CommonTest {
     instantiations = instantiations.concat("sf.close;\n");
     return instantiations;
   }
-  
-  def closeTestFile(out : java.io.PrintWriter) {
+
+  def closeTestFile(out: java.io.PrintWriter) {
     out.write("""
 }
 """)
     out.close
   }
 
-  override def makeGenBinaryTests(name : String) {
+  override def makeGenBinaryTests(name: String) {
 
     val tmp = collectBinaries(name);
     val accept = tmp._1
@@ -196,22 +196,22 @@ class Generic${name}Test extends CommonTest {
       closeTestFile(out)
     }
 
-      }
+  }
 
   override def finalizeTests {
     // nothing yet
   }
-  
+
   def instantiateMap(instantiations: String, map: JSONObject, objValueType: String, attrKey: String, mapName: String): String = {
     var ins = instantiations.concat("\n");
     ins = ins.concat("var " + mapName + " = new HashMap[Any,Any]();\n");
     for (currentObjKey <- asScalaSetConverter(map.keySet()).asScala) {
       var key = currentObjKey;
-      if(currentObjKey.contains("\"")){
+      if (currentObjKey.contains("\"")) {
         key = "wrapPrimitveMapTypes(" + currentObjKey + ", typeFieldMapping.get(\"" + objValueType.toLowerCase() + "\").get(\"" + attrKey.toLowerCase() + "\"),true)";
       }
       var value = map.get(currentObjKey).toString();
-      if(map.get(currentObjKey).toString().contains("\"")){
+      if (map.get(currentObjKey).toString().contains("\"")) {
         value = "wrapPrimitveMapTypes(" + map.get(currentObjKey).toString() + ", typeFieldMapping.get(\"" + objValueType.toLowerCase() + "\").get(\"" + attrKey.toLowerCase() + "\"),false)";
       }
       ins = ins.concat(mapName + ".put(" + key + ", " + value + ");\n");
@@ -225,10 +225,12 @@ class Generic${name}Test extends CommonTest {
     refClass = Class.forName(getProperCollectionType(typeFieldMapping.get("${objValueType}").get("${attrKey}").toString()));
     refConstructor = refClass.getConstructor();
     var ${collectionName}: Traversable[_] = refConstructor.newInstance().asInstanceOf[Traversable[_]];
+    tempCacheList = new ListBuffer[Any]();
     """);
     for (x <- intWrapper(0) until array.length()) {
-      ins = ins.concat(collectionName + "= " + collectionName + " ++ " + getcurrentArrayValue(array, x, attrKey, objValueType) + ".asInstanceOf[scala.collection.GenTraversableOnce[_]];\n");
+      ins = ins.concat("	tempCacheList += " + getcurrentArrayValue(array, x, attrKey, objValueType) + ";\n");
     }
+    ins = ins.concat("	" + collectionName + " = " + collectionName + " ++ tempCacheList;\n");
     ins = ins.concat("\n");
     return ins;
   }
@@ -264,8 +266,8 @@ class Generic${name}Test extends CommonTest {
       return "null";
     }
   }
-  
-    def getcurrentArrayValue(array: JSONArray, currentObj: Int,currentAttrKey : String, currentObjType: String): String = {
+
+  def getcurrentArrayValue(array: JSONArray, currentObj: Int, currentAttrKey: String, currentObjType: String): String = {
 
     if (array.optBoolean(currentObj) ||
       (!array.optBoolean(currentObj) && !array.optBoolean(currentObj, true))) {
