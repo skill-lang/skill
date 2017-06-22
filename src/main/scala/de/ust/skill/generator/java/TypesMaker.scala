@@ -74,7 +74,7 @@ ${
      * 
      * @param skillID
      */
-    public ${name(t)}(long skillID) {
+    public ${name(t)}(int skillID) {
         super(skillID);
     }
 """)
@@ -85,7 +85,7 @@ ${
     /**
      * Used for internal construction, full allocation.
      */
-    public ${name(t)}(long skillID${appendConstructorArguments(t)}) {
+    public ${name(t)}(int skillID${appendConstructorArguments(t)}) {
         super(skillID);
         ${relevantFields.map{f ⇒ s"this.${name(f)} = ${name(f)};"}.mkString("\n        ")}
     }
@@ -213,7 +213,7 @@ ${
         private final StoragePool<?, ?> τPool;
 
         /** internal use only!!! */
-        public SubType(StoragePool<?, ?> τPool, long skillID) {
+        public SubType(StoragePool<?, ?> τPool, int skillID) {
             super(skillID);
             this.τPool = τPool;
         }

@@ -220,21 +220,21 @@ ${
             }
             $fieldAccess = v;"""
         case t : VariableLengthArrayType ⇒ s"""
-            int size = (int) in.v64();
+            int size = in.v32();
             final ${mapType(f.getType)} v = new ArrayList<>(size);
             while (size-- > 0) {
                 v.add($code);
             }
             $fieldAccess = v;"""
         case t : ListType ⇒ s"""
-            int size = (int) in.v64();
+            int size = in.v32();
             final ${mapType(f.getType)} v = new LinkedList<>();
             while (size-- > 0) {
                 v.add($code);
             }
             $fieldAccess = v;"""
         case t : SetType ⇒ s"""
-            int size = (int) in.v64();
+            int size = in.v32();
             final ${mapType(f.getType)} v = new HashSet<>(size * 3 / 2);
             while (size-- > 0) {
                 v.add($code);
@@ -251,15 +251,15 @@ ${
   private final def readCodeInner(t : Type) : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
       case "annotation" ⇒ "t.readSingleField(in)"
-      case "string"     ⇒ "t.get(in.v64())"
+      case "string"     ⇒ "t.get(in.v32())"
       case _            ⇒ s"""in.${t.getSkillName}()"""
     }
     case t : SingleBaseTypeContainer ⇒ readCodeInner(t.getBaseType)
 
-    case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒ s"(${mapType(t)}) t.getByID(in.v64())"
+    case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒ s"(${mapType(t)}) t.getByID(in.v32())"
     case t : InterfaceType ⇒ s"(${mapType(t)}) t.readSingleField(in)"
 
-    case t : UserType ⇒ "t.getByID(in.v64())"
+    case t : UserType ⇒ "t.getByID(in.v32())"
     case _ ⇒ "type.readSingleField(in)"
   }
 
