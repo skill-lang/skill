@@ -127,14 +127,12 @@ class Main extends FakeMain
 
   override def setOption(option : String, value : String) : Unit = option match {
     case "revealskillid"    ⇒ revealSkillID = ("true".equals(value));
-    case "visitors"         ⇒ createVisitors = ("true".equals(value));
     case "suppresswarnings" ⇒ suppressWarnings = if ("true".equals(value)) "@SuppressWarnings(\"all\")\n" else ""
     case unknown            ⇒ sys.error(s"unkown Argument: $unknown")
   }
 
   override def helpText : String = """
 revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
-visitors          true/false  if set to true, the a visitor for each base type will be generated
 suppressWarnings  true/false  add a @SuppressWarnings("all") annotation to generated classes
 """
 

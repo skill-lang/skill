@@ -11,11 +11,10 @@ trait VisitorsMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    if (createVisitors) {
-      for (b ← IR if b.getSuperType == null) {
-        val out = files.open(s"api/${name(b)}Visitor.java")
-        //package & imports
-        out.write(s"""package ${packagePrefix}api;
+    if (visitors.length > 0) {
+      val out = files.open(s"api/Visitor.java")
+      //package & imports
+      out.write(s"""package ${packagePrefix}api;
 
 import ${packagePrefix}*;
 
@@ -32,15 +31,14 @@ import ${packagePrefix}*;
  * @param <_E>
  *            the type of throws exception; use RuntimeException for nothrow
  */
-abstract public class ${name(b)}Visitor<_R, _A, _E extends Exception> {${
-          (for (t ← IR if t.getBaseType == b) yield s"""
+public abstract class Visitor<_R, _A, _E extends Exception> {${
+        (for (t ← visitors) yield s"""
     public abstract _R visit(${name(t)} self, _A arg) throws _E;""").mkString
-        }
+      }
 }
 """)
 
-        out.close()
-      }
+      out.close()
     }
   }
 }

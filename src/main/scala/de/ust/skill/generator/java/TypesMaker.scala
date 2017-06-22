@@ -23,7 +23,7 @@ trait TypesMaker extends GeneralOutputMaker {
       out.write(s"""package ${this.packageName};
 
 ${
-  if(createVisitors) s"""import ${this.packageName}.api.${name(t.getBaseType)}Visitor;
+  if(visited.contains(t.getSkillName)) s"""import ${this.packageName}.api.Visitor;
 """
   else ""
 }import de.ust.skill.common.java.internal.NamedType;
@@ -92,9 +92,9 @@ ${
 """)
 	}
       
-      if(createVisitors){
+      if(visited.contains(t.getSkillName)){
         out.write(s"""
-    public <_R, _A, _E extends Exception> _R accept(${name(t.getBaseType)}Visitor<_R, _A, _E> v, _A arg) throws _E {
+    public <_R, _A, _E extends Exception> _R accept(Visitor<_R, _A, _E> v, _A arg) throws _E {
         return v.visit(this, arg);
     }
 """)
