@@ -75,7 +75,19 @@ ${
                                      ::skill::api::WriteMode wm = ::skill::api::WriteMode::write) {
                 return open(path, ::skill::api::ReadMode::read, wm);
             }
+        };${
+      // create visitor implementation
+      if (visitors.length > 0) s"""
+
+        // visitor implementation
+        struct Visitor {${
+        (for (t ← visitors) yield s"""
+            virtual void visit(${name(t)} *node) {};""").mkString
+      }
         };
+"""
+      else ""
+    }
 }${packageParts.map(_ ⇒ "}").mkString}
 $endGuard""")
 

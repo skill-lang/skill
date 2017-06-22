@@ -1,4 +1,4 @@
-#! age --visitors=* -Ocpp:visitors=true
+#! age --visitors=*
 # Specification for TR15§8.6
 
 /**
