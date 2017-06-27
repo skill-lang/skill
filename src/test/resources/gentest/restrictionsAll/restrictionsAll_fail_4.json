@@ -5,7 +5,7 @@
 	    "op" : {
 	        "type" : "Operator",
 	        "attr" : {
-	            "name" : ""\Minus"\"
+	            "name" : "\"Minus\""
 	        }
 	    },
 	    "trm" : {

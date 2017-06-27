@@ -17,7 +17,7 @@
 	    "trm" : {
 	        "type" : "Term",
 	        "attr" : {
-	            "operator" : op_1,
+	            "operator" : "op_1",
 	            "arguments" : [ "trm", null ]
 	        }
 	    },
