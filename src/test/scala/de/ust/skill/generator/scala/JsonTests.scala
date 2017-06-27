@@ -130,7 +130,7 @@ class Generic${name}Test extends CommonTest {
 
     if (content.getBoolean("shouldFail")) {
       instantiations = instantiations.concat(
-        """						System.out.println("There should be an exception coming up!");
+        """						java.lang.System.out.println("There should be an exception coming up!");
 			 intercept[Exception]{
       """);
     }

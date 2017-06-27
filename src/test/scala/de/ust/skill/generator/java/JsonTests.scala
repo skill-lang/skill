@@ -96,7 +96,7 @@ public class GenericJsonTest extends common.CommonTest {
 	 */
 	@BeforeClass
 	public static void init() throws JSONException, MalformedURLException, IOException {
-		path = Paths.get(System.getProperty("user.dir"), 
+		path = Paths.get(java.lang.System.getProperty("user.dir"), 
         "src", 
         "test", 
         "resources", 
@@ -148,7 +148,7 @@ public class GenericJsonTest extends common.CommonTest {
 
     if (content.getBoolean("shouldFail")) {
       instantiations = instantiations.concat(
-        """			System.out.println("There should be an exception coming up!");
+        """			java.lang.System.out.println("There should be an exception coming up!");
 			exception.expect(Exception.class);
       """);
     }
