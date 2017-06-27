@@ -62,7 +62,7 @@
 	        "type" : "Comment",
 	        "attr" : {
 	            "text" : "\"I am a comment\"",
-	            "target" : "op",
+	            "target" : "op_1",
 	            "property" : "sys_obj"
 	        }
 	    }
