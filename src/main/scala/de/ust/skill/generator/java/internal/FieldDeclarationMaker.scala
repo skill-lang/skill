@@ -6,474 +6,446 @@
 package de.ust.skill.generator.java.internal
 
 import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.mutable.ArrayBuffer
 
 import de.ust.skill.generator.java.GeneralOutputMaker
+import de.ust.skill.io.PrintWriter
 import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.Field
 import de.ust.skill.ir.GroundType
 import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.ListType
 import de.ust.skill.ir.MapType
+import de.ust.skill.ir.SetType
 import de.ust.skill.ir.SingleBaseTypeContainer
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
-import jdk.nashorn.internal.codegen.CompilerConstants.FieldAccess
+import de.ust.skill.ir.VariableLengthArrayType
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
-  abstract override def make {
-    super.make
+  final def makeFields(out : PrintWriter) {
 
     // project IR, so that reflection implements the binary file format correctly
     val IR = this.types.removeSpecialDeclarations.getUsertypes
 
-    for (t ← IR; f ← t.getFields) {
-      // the field before interface projection
-      val originalF = this.types.removeTypedefs.removeEnums.get(t.getSkillName).asInstanceOf[UserType]
-        .getAllFields.find(_.getName == f.getName).get
+    for (t ← IR) {
+      val autoFieldIndex : Map[Field, Int] = t.getFields.filter(_.isAuto()).zipWithIndex.toMap
 
-      // the type before the interface projection
-      val fieldActualType = mapType(originalF.getType, true)
-      val fieldActualTypeUnboxed = mapType(originalF.getType, false)
+      for (f ← t.getFields) {
+        // the field before interface projection
+        val originalF = this.types.removeTypedefs.removeEnums.get(t.getSkillName).asInstanceOf[UserType]
+          .getAllFields.find(_.getName == f.getName).get
 
-      val tIsBaseType = t.getSuperType == null
+        // the type before the interface projection
+        val fieldActualType = mapType(originalF.getType, true)
+        val fieldActualTypeUnboxed = mapType(originalF.getType, false)
 
-      val nameT = mapType(t)
-      val nameF = knownField(f)
+        val tIsBaseType = t.getSuperType == null
 
-      // casting access to data array using index i
-      val dataAccessI = if (null == t.getSuperType) "data[i]" else s"((${mapType(t)})data[i])"
-      val fieldAccess = s"""get${escaped(f.getName.capital)}()"""
+        val nameT = mapType(t)
+        val nameF = knownField(f)
 
-      val out = files.open(s"internal/$nameF.java")
-      //package
-      out.write(s"""package ${packagePrefix}internal;
+        // casting access to data array using index i
+        val declareD = s"final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner.basePool()).data();"
+        val fieldAccess = (
+          if (null == t.getSuperType) "d[i]"
+          else s"((${mapType(t)})d[i])") + s".${name(f)}"
 
-import java.io.IOException;
-import java.util.Iterator;
-
-import de.ust.skill.common.java.internal.*;
-import de.ust.skill.common.java.internal.fieldDeclarations.*;
-import de.ust.skill.common.java.internal.fieldTypes.Annotation;
-import de.ust.skill.common.java.internal.fieldTypes.MapType;
-import de.ust.skill.common.java.internal.fieldTypes.SingleArgumentType;
-import de.ust.skill.common.java.internal.fieldTypes.StringType;
-import de.ust.skill.common.java.internal.fieldTypes.V64;
-import de.ust.skill.common.java.internal.parts.Block;
-import de.ust.skill.common.java.internal.parts.Chunk;
-import de.ust.skill.common.java.internal.parts.SimpleChunk;
-import de.ust.skill.common.java.iterators.IterableArrayView;
-import de.ust.skill.common.jvm.streams.MappedInStream;
-import de.ust.skill.common.jvm.streams.MappedOutStream;
-
-""")
-
-      out.write(s"""
+        out.write(s"""
 /**
  * ${f.getType.toString} ${t.getName.capital}.${f.getName.camel}
  */
-${
-        suppressWarnings
-      }final class $nameF extends ${
-        if (f.isAuto) "AutoField"
-        else "FieldDeclaration"
-      }<$fieldActualType, ${mapType(t)}> implements
-               ${
-        f.getType match {
-          case ft : GroundType ⇒ ft.getSkillName match {
-            case "bool"                  ⇒ s"""KnownBooleanField<${mapType(t)}>"""
-            case "i8"                    ⇒ s"""KnownByteField<${mapType(t)}>"""
-            case "i16"                   ⇒ s"""KnownShortField<${mapType(t)}>"""
-            case "i32"                   ⇒ s"""KnownIntField<${mapType(t)}>"""
-            case "i64" | "v64"           ⇒ s"""KnownLongField<${mapType(t)}>"""
-            case "f32"                   ⇒ s"""KnownFloatField<${mapType(t)}>"""
-            case "f64"                   ⇒ s"""KnownDoubleField<${mapType(t)}>"""
-            case "annotation" | "string" ⇒ s"""KnownField<$fieldActualType, ${mapType(t)}>"""
-            case ft                      ⇒ "???missing specialization for type " + ft
-          }
-          case _ ⇒ s"""KnownField<$fieldActualType, ${mapType(t)}>"""
-        }
-      }${
-        // mark ignored fields as ignored; read function is inherited
-        if (f.isIgnored()) ", IgnoredField"
-        else ""
-      }${
-        // mark interface fields
-        if (f.getType.isInstanceOf[InterfaceType]) ", InterfaceField"
-        else ""
-      } {
+static final class $nameF extends ${
+          if (f.isAuto) "AutoField"
+          else "KnownDataField"
+        }<$fieldActualType, ${mapType(t)}>${
+          var interfaces = new ArrayBuffer[String]()
 
-    public $nameF(FieldType<$fieldActualType> type, ${
-        if (f.isAuto()) ""
-        else "int index, "
-      }${name(t)}Access owner) {
-        super(type, "${f.getSkillName}", ${
-        if (f.isAuto()) "0"
-        else "index"
-      }, owner);
+          // mark ignored fields as ignored; read function is inherited
+          if (f.isIgnored()) interfaces += "IgnoredField"
+
+          // mark interface fields
+          if (f.getType.isInstanceOf[InterfaceType]) interfaces += "InterfaceField"
+
+          if (interfaces.isEmpty) ""
+          else interfaces.mkString(" implements ", ", ", "")
+        } {
+
+    public $nameF(FieldType<$fieldActualType> type, ${access(t)} owner) {
+        super(type, "${f.getSkillName}"${
+          if (f.isAuto()) ", " + -autoFieldIndex(f)
+          else ""
+        }, owner);
             // TODO insert known restrictions?
     }
 ${
-        if (f.isAuto) "" else s"""
+          if (f.isAuto) ""
+          else if (f.isConstant) """
     @Override
-    public void read(ChunkEntry ce) {${
-          if (f.isConstant())
-            """
-        // this field is constant"""
-          else
-            s"""
-        final MappedInStream in = ce.in;
-        final Chunk last = ce.c;
-        final Iterator<$nameT> is;
-        if (last instanceof SimpleChunk) {
-            SimpleChunk c = (SimpleChunk) last;
-            is = ((${name(t)}Access) owner).dataViewIterator((int) c.bpo, (int) (c.bpo + c.count));
-        } else
-            is = owner.iterator();
-${
-              // preparation code
-              originalF.getType match {
-                case t : GroundType if "string".equals(t.getSkillName) ⇒ s"""
-        final StringPool sp = (StringPool)owner.owner().Strings();"""
-
-                case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒ s"""
-        final ${name(t.getSuperType)}Access target = (${name(t.getSuperType)}Access)${name(t.getSuperType)}Access
-                .<${mapType(t.getSuperType)},${mapType(t)}>cast(type);"""
-
-                case t : UserType ⇒ s"""
-        final ${name(t)}Access target = (${name(t)}Access)type;"""
-                case _ ⇒ ""
-              }
-            }
-        int count = (int) last.count;
-        while (0 != count--) {
-            ${
-              // read next element
-              originalF.getType match {
-                case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒
-                  s"""is.next().set${escaped(f.getName.capital)}(($fieldActualType)target.getByID(in.v64()));"""
-
-                case t : InterfaceType ⇒
-                  s"""is.next().set${escaped(f.getName.capital)}(($fieldActualType)type.readSingleField(in));"""
-
-                case t : GroundType ⇒ t.getSkillName match {
-                  case "annotation" ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
-                  case "string"     ⇒ s"""is.next().set${escaped(f.getName.capital)}(sp.get(in.v64()));"""
-                  case _            ⇒ s"""is.next().set${escaped(f.getName.capital)}(in.${t.getSkillName}());"""
-                }
-
-                case t : UserType ⇒ s"""is.next().set${escaped(f.getName.capital)}(target.getByID(in.v64()));"""
-
-                case _            ⇒ s"""is.next().set${escaped(f.getName.capital)}(type.readSingleField(in));"""
-              }
-            }
-        }"""
+    protected final void rsc(int i, final int h, MappedInStream in) {
+    }
+    @Override
+    protected final void osc(int i, final int h) {
+    }
+    @Override
+    protected final void wsc(int i, final int h, MappedOutStream out) throws IOException {
+    }
+"""
+          else s"""
+    @Override
+    protected final void rsc(int i, final int h, MappedInStream in) {
+        ${readCode(t, originalF)}
+    }
+    @Override
+    protected final void osc(int i, final int h) {${
+            val (code, isFast) = offsetCode(t, f, originalF.getType, fieldActualType);
+            if (isFast)
+              code
+            else s"""${prelude(originalF.getType)}
+        final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner.basePool).data();
+        long result = 0L;
+        for (; i != h; i++) {
+            $code
+        }
+        offset += result;"""
+          }
+    }
+    @Override
+    protected final void wsc(int i, final int h, MappedOutStream out) throws IOException {
+        ${writeCode(t, originalF)}
+    }
+"""
+        }
+    @Override
+    public $fieldActualType get(SkillObject ref) {
+        ${
+          if (f.isConstant()) s"return ${mapType(t)}.get${escaped(f.getName.capital)}();"
+          else s"return ((${mapType(t)}) ref).${name(f)};"
         }
     }
 
     @Override
-    public long offset() {${
-          if (f.isConstant())
-            """
-        return 0; // this field is constant"""
-          else """
-        final Block range = owner.lastBlock();""" + {
-            // this prelude is common to most cases
-            def preludeData : String =
-              s"""final ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
-        long result = 0L;
-        int i = null == range ? 0 : (int) range.bpo;
-        final int high = null == range ? data.length : (int) (range.bpo + range.count);
-        for (; i < high; i++) {"""
+    public void set(SkillObject ref, $fieldActualType value) {
+        ${
+          if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
+          else s"((${mapType(t)}) ref).${name(f)} = value;"
+        }
+    }
+}
+""")
+      }
+    }
+  }
 
-            def offsetCode(fieldType : Type) : String = fieldType match {
+  /**
+   * create local variables holding type representants with correct type to help
+   * the compiler
+   */
+  private final def prelude(t : Type, readHack : Boolean = false, target : String = "this.type") : String = t match {
+    case t : GroundType ⇒ t.getSkillName match {
+      case "annotation" ⇒ s"""
+        final Annotation t = (Annotation) $target;"""
+      case "string" ⇒
+        if (readHack) """
+        final StringPool t = (StringPool) owner.owner().Strings();"""
+        else """
+        final StringType t = (StringType) type;"""
 
-              // read next element
-              case fieldType : GroundType ⇒ fieldType.getSkillName match {
+      case _ ⇒ ""
+    }
 
-                case "annotation" ⇒ s"""
-        final Annotation t = Annotation.cast(type);
-        $preludeData
-            ${mapType(f.getType)} v = $dataAccessI.$fieldAccess;
+    case t : ConstantLengthArrayType ⇒ s"""
+        final ConstantLengthArray<${mapType(t.getBaseType, true)}> type = (ConstantLengthArray<${mapType(t.getBaseType, true)}>) this.type;
+        final int size = type.length;${prelude(t.getBaseType, readHack, "type.groundType")}"""
+    case t : VariableLengthArrayType ⇒ s"""
+        final VariableLengthArray<${mapType(t.getBaseType, true)}> type = (VariableLengthArray<${mapType(t.getBaseType, true)}>) this.type;${prelude(t.getBaseType, readHack, "type.groundType")}"""
+    case t : ListType ⇒ s"""
+        final ListType<${mapType(t.getBaseType, true)}> type = (ListType<${mapType(t.getBaseType, true)}>) this.type;${prelude(t.getBaseType, readHack, "type.groundType")}"""
+    case t : SetType ⇒ s"""
+        final SetType<${mapType(t.getBaseType, true)}> type = (SetType<${mapType(t.getBaseType, true)}>) this.type;${prelude(t.getBaseType, readHack, "type.groundType")}"""
+    case t : MapType ⇒
+      locally {
+        val mt = s"MapType<${mapType(t.getBaseTypes.head, true)}, ${t.getBaseTypes.tail.map(mapType(_, true)).reduceRight((k, v) ⇒ s"$MapTypeName<$k, $v>")}>"
+        s"""
+        final $mt type = ($mt) this.type;
+        final FieldType keyType = type.keyType;
+        final FieldType valueType = type.valueType;"""
+      }
+
+    case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒ s"""
+        final ${access(t.getSuperType)} t;
+        if((FieldType<?>)$target instanceof ${access(t.getSuperType)})
+            t = (${access(t.getSuperType)})
+                FieldDeclaration.<${mapType(t.getSuperType)},${mapType(t)}>cast($target);
+        else
+            t = (${access(t.getSuperType)})((InterfacePool<?,?>)$target).superPool;"""
+
+    case t : InterfaceType ⇒ s"""
+        final Annotation t;
+        // TODO we have to replace Annotation by the respective unrooted pool upon field creation to get rid of this distinction
+        if ((FieldType<?>)$target instanceof Annotation)
+            t = (Annotation) (FieldType<?>) $target;
+        else
+            t = ((UnrootedInterfacePool<?>) $target).getType();"""
+
+    case t : UserType if readHack ⇒ s"""
+        final ${access(t)} t = ((${access(t)}) $target);"""
+    case _ ⇒ ""
+  }
+
+  /**
+   * creates code to read all field elements
+   */
+  private final def readCode(t : UserType, f : Field) : String = {
+    val declareD = s"final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner${
+      if (null == t.getSuperType) ""
+      else ".basePool"
+    }).data();"
+    val fieldAccess = (
+      if (null == t.getSuperType) "d[i]"
+      else s"((${mapType(t)})d[i])") + s".${name(f)}"
+
+    val pre = prelude(f.getType, true)
+
+    val code = readCodeInner(f.getType)
+
+    s"""$declareD$pre
+        for (; i != h; i++) {${
+      f.getType match {
+        case t : ConstantLengthArrayType ⇒ s"""
+            int s = size;
+            final ${mapType(f.getType)} v = new ArrayList<>(size);
+            while (s-- > 0) {
+                v.add($code);
+            }
+            $fieldAccess = v;"""
+        case t : VariableLengthArrayType ⇒ s"""
+            int size = in.v32();
+            final ${mapType(f.getType)} v = new ArrayList<>(size);
+            while (size-- > 0) {
+                v.add($code);
+            }
+            $fieldAccess = v;"""
+        case t : ListType ⇒ s"""
+            int size = in.v32();
+            final ${mapType(f.getType)} v = new LinkedList<>();
+            while (size-- > 0) {
+                v.add($code);
+            }
+            $fieldAccess = v;"""
+        case t : SetType ⇒ s"""
+            int size = in.v32();
+            final ${mapType(f.getType)} v = new HashSet<>(size * 3 / 2);
+            while (size-- > 0) {
+                v.add($code);
+            }
+            $fieldAccess = v;"""
+        case _ ⇒ s"""
+            $fieldAccess = $code;"""
+      }
+    }
+        }
+"""
+  }
+
+  private final def readCodeInner(t : Type) : String = t match {
+    case t : GroundType ⇒ t.getSkillName match {
+      case "annotation" ⇒ "t.readSingleField(in)"
+      case "string"     ⇒ "t.get(in.v32())"
+      case _            ⇒ s"""in.${t.getSkillName}()"""
+    }
+    case t : SingleBaseTypeContainer ⇒ readCodeInner(t.getBaseType)
+
+    case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒ s"(${mapType(t)}) t.getByID(in.v32())"
+    case t : InterfaceType ⇒ s"(${mapType(t)}) t.readSingleField(in)"
+
+    case t : UserType ⇒ "t.getByID(in.v32())"
+    case _ ⇒ "type.readSingleField(in)"
+  }
+
+  /**
+   * generates offset calculation code and a prelude with fields used in the
+   * inner loop
+   *
+   * @return (prelude, code, isFast)
+   */
+  private final def offsetCode(t : UserType, f : Field, fieldType : Type, fieldActualType : String) : (String, Boolean) = {
+
+    val fieldAccess = (
+      if (null == t.getSuperType) "d[i]"
+      else s"((${mapType(t)})d[i])") + s".${name(f)}"
+
+    val code = fieldType match {
+
+      case fieldType : GroundType ⇒ fieldType.getSkillName match {
+
+        case "annotation" ⇒ s"""${mapType(f.getType)} v = $fieldAccess;
             if(null==v)
                 result += 2;
             else
-                result += t.singleOffset(v);
-        }
-        return result;"""
+                result += t.singleOffset(v);"""
 
-                case "string" ⇒ s"""
-        final StringType t = (StringType) type;
-        $preludeData
-            String v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).$fieldAccess;
+        case "string" ⇒ s"""String v = $fieldAccess;
             if(null==v)
                 result++;
             else
-                result += t.singleOffset(v);
-        }
-        return result;"""
+                result += t.singleOffset(v);"""
 
-                case "i8" | "bool" ⇒ s"""
-        return range.count;"""
+        case "i8" | "bool" ⇒ return fastOffsetCode(0);
 
-                case "i16" ⇒ s"""
-        return 2 * range.count;"""
+        case "i16"         ⇒ return fastOffsetCode(1);
 
-                case "i32" | "f32" ⇒ s"""
-        return 4 * range.count;"""
+        case "i32" | "f32" ⇒ return fastOffsetCode(2);
 
-                case "i64" | "f64" ⇒ s"""
-        return 8 * range.count;"""
+        case "i64" | "f64" ⇒ return fastOffsetCode(3);
 
-                case "v64" ⇒ s"""
-        $preludeData
-            long v = (${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).$fieldAccess;
-
-            if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
-                result += 1;
-            } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
-                result += 2;
-            } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
-                result += 3;
-            } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
-                result += 4;
-            } else if (0L == (v & 0xFFFFFFF800000000L)) {
-                result += 5;
-            } else if (0L == (v & 0xFFFFFC0000000000L)) {
-                result += 6;
-            } else if (0L == (v & 0xFFFE000000000000L)) {
-                result += 7;
-            } else if (0L == (v & 0xFF00000000000000L)) {
-                result += 8;
-            } else {
-                result += 9;
-            }
-        }
-        return result;"""
-                case _ ⇒ s"""
+        case "v64"         ⇒ s"""result += V64.singleV64Offset($fieldAccess);"""
+        case _ ⇒ s"""
         throw new NoSuchMethodError();"""
-              }
+      }
 
-              case fieldType : ConstantLengthArrayType ⇒ s"""
-        final SingleArgumentType<${
-                mapType(fieldType)
-              }, ${
-                mapType(fieldType.getBaseType, true)
-              }> t = (SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}>) type;
+      case fieldType : ConstantLengthArrayType ⇒ s"""final ${mapType(f.getType)} v = (${mapType(f.getType)})(${mapVariantType(f.getType)})$fieldAccess;
 
-        final FieldType<${mapType(fieldType.getBaseType, true)}> baseType = t.groundType;
-        $preludeData
-            final ${mapVariantType(f.getType)} v = (${mapVariantType(f.getType)})(${
-                if (tIsBaseType) ""
-                else s"(${mapType(t)})"
-              }data[i]).$fieldAccess;
+            ${offsetCodeInner(fieldType.getBaseType, "v")}"""
 
-            result += baseType.calculateOffset(($fieldActualType)v);
-        }
-        return result;"""
-
-              case fieldType : SingleBaseTypeContainer ⇒ s"""
-        final SingleArgumentType<${
-                mapType(fieldType)
-              }, ${
-                mapType(fieldType.getBaseType, true)
-              }> t = (SingleArgumentType<${mapType(fieldType)}, ${mapType(fieldType.getBaseType, true)}>) type;
-
-        final FieldType<${mapType(fieldType.getBaseType, true)}> baseType = t.groundType;
-        $preludeData
-            final ${mapVariantType(f.getType)} v = (${mapVariantType(f.getType)})(${if (tIsBaseType) "" else s"(${mapType(t)})"}data[i]).$fieldAccess;
-            if(null==v || v.isEmpty())
+      case fieldType : SingleBaseTypeContainer ⇒ s"""final ${mapType(f.getType)} v = (${mapType(f.getType)})(${mapVariantType(f.getType)})$fieldAccess;
+            int size = null == v ? 0 : v.size();
+            if (0 == size)
                 result++;
             else {
-                result += V64.singleV64Offset(v.size());
-                result += baseType.calculateOffset(($fieldActualType)v);
-            }
-        }
-        return result;"""
+                result += V64.singleV64Offset(size);
+                ${offsetCodeInner(fieldType.getBaseType, "v")}
+            }"""
 
-              case fieldType : MapType ⇒ s"""
-        final MapType<?, ?> t = (MapType<?, ?>)(FieldType<?>) type;
-        final FieldType keyType = t.keyType;
-        final FieldType valueType = t.valueType;
-        $preludeData
-            final ${mapVariantType(f.getType)} v = castMap((${
-                if (tIsBaseType) ""
-                else s"(${mapType(t)})"
-              }data[i]).get${escaped(f.getName.capital)}());
+      case fieldType : MapType ⇒ s"""final ${mapVariantType(f.getType)} v = castMap($fieldAccess);
             if(null==v || v.isEmpty())
                 result++;
             else {
                 result += V64.singleV64Offset(v.size());
                 result += keyType.calculateOffset(v.keySet());
                 result += valueType.calculateOffset(v.values());
-            }
-        }
-        return result;"""
+            }"""
 
-              case fieldType : UserType ⇒ s"""
-        $preludeData
-            final ${mapType(f.getType)} instance = $dataAccessI.$fieldAccess;
+      case fieldType : UserType ⇒ s"""final ${mapType(f.getType)} instance = $fieldAccess;
             if (null == instance) {
                 result += 1;
                 continue;
             }
-            long v = instance.getSkillID();
+            result += V64.singleV64Offset(instance.getSkillID());"""
 
-            if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
-                result += 1;
-            } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
-                result += 2;
-            } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
-                result += 3;
-            } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
-                result += 4;
-            } else if (0L == (v & 0xFFFFFFF800000000L)) {
-                result += 5;
-            } else if (0L == (v & 0xFFFFFC0000000000L)) {
-                result += 6;
-            } else if (0L == (v & 0xFFFE000000000000L)) {
-                result += 7;
-            } else if (0L == (v & 0xFF00000000000000L)) {
-                result += 8;
-            } else {
-                result += 9;
-            }
-        }
-        return result;"""
-
-              case fieldType : InterfaceType if fieldType.getSuperType.getSkillName != "annotation" ⇒ s"""
-        $preludeData
-            final ${mapType(fieldType)} instance = $dataAccessI.$fieldAccess;
+      case fieldType : InterfaceType if fieldType.getSuperType.getSkillName != "annotation" ⇒
+        s"""final ${mapType(fieldType)} instance = $fieldAccess;
             if (null == instance) {
                 result += 1;
                 continue;
             }
-            long v = instance.self().getSkillID();
+            result += V64.singleV64Offset(((SkillObject) instance).getSkillID());"""
 
-            if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
-                result += 1;
-            } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
-                result += 2;
-            } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
-                result += 3;
-            } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
-                result += 4;
-            } else if (0L == (v & 0xFFFFFFF800000000L)) {
-                result += 5;
-            } else if (0L == (v & 0xFFFFFC0000000000L)) {
-                result += 6;
-            } else if (0L == (v & 0xFFFE000000000000L)) {
-                result += 7;
-            } else if (0L == (v & 0xFF00000000000000L)) {
-                result += 8;
-            } else {
-                result += 9;
-            }
-        }
-        return result;"""
-
-              case fieldType : InterfaceType ⇒ s"""
-        final Annotation t = ((de.ust.skill.common.java.internal.UnrootedInterfacePool<?>)this.type).getType();
-        $preludeData
-            ${mapType(fieldType)} v = $dataAccessI.$fieldAccess;
+      case fieldType : InterfaceType ⇒ s"""${mapType(fieldType)} v = $fieldAccess;
 
             if(null==v)
                 result += 2;
             else
-                result += t.singleOffset(v.self());
-        }
-        return result;"""
+                result += t.singleOffset((SkillObject)v);"""
 
-              case _ ⇒ s"""
-        throw new NoSuchMethodError();"""
-            }
-
-            offsetCode(originalF.getType)
-          }
-        }
+      case _ ⇒ s"""throw new NoSuchMethodError();"""
     }
 
-    @Override
-    public void write(MappedOutStream out) throws IOException {${
-          if (f.isConstant())
-            """
-        // this field is constant"""
-          else
-            s"""
-        ${mapType(t.getBaseType)}[] data = ((${name(t.getBaseType)}Access) owner.basePool()).data();
-        int i;
-        final int high;
+    (code, false)
+  }
 
-        final Chunk last = dataChunks.getLast().c;
-        if (last instanceof SimpleChunk) {
-            SimpleChunk c = (SimpleChunk) last;
-            i = (int) c.bpo;
-            high = (int) (c.bpo + c.count);
-        } else {${
-              // we have to use the offset of the pool
-              if (tIsBaseType) """
-            i = 0;
-            high = owner.size();
-        """
-              else """
-            i = owner.size() > 0 ? (int) owner.iterator().next().getSkillID() - 1 : 0;
-            high = i + owner.size();
-        """
-            }}
+  private final def offsetCodeInner(t : Type, target : String) : String = t match {
+    case fieldType : GroundType ⇒ fieldType.getSkillName match {
+      case "i8" | "bool" ⇒ return "result += size;";
 
-        for (; i < high; i++) {
-            ${
-              // read next element
-              originalF.getType match {
-                case t : GroundType ⇒ t.getSkillName match {
-                  case "annotation" | "string" ⇒ s"""type.writeSingleField($dataAccessI.get${escaped(f.getName.capital)}(), out);"""
-                  case _                       ⇒ s"""out.${t.getSkillName}($dataAccessI.get${escaped(f.getName.capital)}());"""
-                }
+      case "i16"         ⇒ return "result += (size<<1);";
 
-                case t : UserType ⇒ s"""${mapType(t)} v = $dataAccessI.get${escaped(f.getName.capital)}();
-            if (null == v)
-                out.i8((byte) 0);
-            else
-                out.v64(v.getSkillID());"""
-                case _ ⇒ s"""type.writeSingleField($dataAccessI.get${escaped(f.getName.capital)}(), out);"""
-              }
+      case "i32" | "f32" ⇒ return "result += (size<<2);";
+
+      case "i64" | "f64" ⇒ return "result += (size<<3);";
+
+      case "v64" ⇒ s"""for(long x : $target)
+                    result += V64.singleV64Offset(x);"""
+
+      case _ ⇒ s"""result += type.groundType.calculateOffset($target);"""
+    }
+    case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒ s"""for(${mapType(t.getSuperType)} x : $target)
+                    result += null==x?1:V64.singleV64Offset(x.getSkillID());"""
+
+    case t : UserType ⇒ s"""for(${mapType(t)} x : $target)
+                    result += null==x?1:V64.singleV64Offset(x.getSkillID());"""
+
+    case _ ⇒ s"""result += type.groundType.calculateOffset($target);"""
+  }
+
+  private final def fastOffsetCode(shift : Int) =
+    (
+      if (shift != 0) s"offset += (h-i) << $shift;"
+      else "offset += (h-i);",
+      true
+    )
+
+  /**
+   * creates code to write exactly one field element
+   */
+  private final def writeCode(t : UserType, f : Field) : String = {
+    val declareD = s"final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner${
+      if (null == t.getSuperType) ""
+      else ".basePool"
+    }).data();"
+    val fieldAccess = (
+      if (null == t.getSuperType) "d[i]"
+      else s"((${mapType(t)})d[i])") + s".${name(f)}"
+
+    val pre = prelude(f.getType)
+
+    val code = writeCode(f.getType, fieldAccess)
+
+    s"""$declareD$pre
+        for (; i != h; i++) {
+            $code;
+        }
+"""
+  }
+
+  private final def writeCode(t : Type, fieldAccess : String) : String = t match {
+    case t : GroundType ⇒ t.getSkillName match {
+      case "annotation" ⇒ s"t.writeSingleField($fieldAccess, out)"
+      case "string"     ⇒ s"t.writeSingleField($fieldAccess, out)"
+      case _            ⇒ s"""out.${t.getSkillName}($fieldAccess)"""
+    }
+
+    case t : ConstantLengthArrayType ⇒ s"""
+        final ${mapType(t)} x = $fieldAccess;
+        for (${mapType(t.getBaseType)} e : x){
+            ${writeCode(t.getBaseType, "e")};
+        }"""
+
+    case t : SingleBaseTypeContainer ⇒ s"""
+        final ${mapType(t)} x = $fieldAccess;
+        final int size = null == x ? 0 : x.size();
+        if (0 == size) {
+            out.i8((byte) 0);
+        } else {
+            out.v64(size);
+            for (${mapType(t.getBaseType)} e : x){
+                ${writeCode(t.getBaseType, "e")};
             }
         }"""
-        }
-    }
-"""
-      }
-    @Override
-    public $fieldActualType getR(SkillObject ref) {
-        ${
-        if (f.isConstant()) s"return ${mapType(t)}.get${escaped(f.getName.capital)}();"
-        else s"return ((${mapType(t)}) ref).get${escaped(f.getName.capital)}();"
-      }
-    }
 
-    @Override
-    public void setR(SkillObject ref, $fieldActualType value) {
-        ${
-        if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
-        else s"((${mapType(t)}) ref).set${escaped(f.getName.capital)}(value);"
-      }
-    }
+    case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒ s"""SkillObject v = (SkillObject)$fieldAccess;
+            if(null == v)
+                out.i8((byte)0);
+            else
+                out.v64(v.getSkillID())"""
 
-    @Override
-    public $fieldActualTypeUnboxed get(${mapType(t)} ref) {
-        ${
-        if (f.isConstant()) s"return ${mapType(t)}.get${escaped(f.getName.capital)}();"
-        else s"return ref.get${escaped(f.getName.capital)}();"
-      }
-    }
+    case t : InterfaceType ⇒ s"t.writeSingleField((SkillObject)$fieldAccess, out)"
 
-    @Override
-    public void set(${mapType(t)} ref, $fieldActualTypeUnboxed value) {
-        ${
-        if (f.isConstant()) s"""throw new IllegalAccessError("${f.getName.camel} is a constant!");"""
-        else s"ref.set${escaped(f.getName.capital)}(value);"
-      }
-    }
-}
-""")
-      out.close()
-    }
+    case t : UserType ⇒ s"""${mapType(t)} v = $fieldAccess;
+            if(null == v)
+                out.i8((byte)0);
+            else
+                out.v64(v.getSkillID())"""
+    case _ ⇒ s"type.writeSingleField($fieldAccess, out)"
   }
 }

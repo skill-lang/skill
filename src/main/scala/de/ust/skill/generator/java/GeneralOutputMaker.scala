@@ -19,6 +19,7 @@ import de.ust.skill.ir.InterfaceType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
+import scala.collection.mutable.HashMap
 
 /**
  * The parent class for all output makers.
@@ -52,12 +53,6 @@ trait GeneralOutputMaker extends Generator {
    * if set to true, the generated binding will reveal the values of skill IDs.
    */
   protected var revealSkillID = false;
-
-  /**
-   * if set to true, the generated binding will also contain visitors for each
-   * base type
-   */
-  protected var createVisitors = false;
 
   val ArrayTypeName = "java.util.ArrayList"
   val VarArrayTypeName = "java.util.ArrayList"
@@ -104,9 +99,26 @@ trait GeneralOutputMaker extends Generator {
   protected def name(f : FieldLike) : String = escaped(f.getName.camel)
 
   /**
+   * id's given to fields
+   */
+  protected val poolNameStore : HashMap[String, Int] = new HashMap()
+  /**
+   * The name of T's storage pool
+   */
+  protected def access(t : Type) : String = this.synchronized {
+    "P" + poolNameStore.getOrElseUpdate(t.getSkillName, poolNameStore.size).toString
+  }
+
+  /**
+   * id's given to fields
+   */
+  protected val fieldNameStore : HashMap[(String, String), Int] = new HashMap()
+  /**
    * Class name of the representation of a known field
    */
-  protected def knownField(f : FieldLike) : String = s"F_${name(f.getDeclaredIn)}_${name(f)}"
+  protected def knownField(f : FieldLike) : String = this.synchronized {
+    "f" + fieldNameStore.getOrElseUpdate((f.getDeclaredIn.getName.getSkillName, f.getSkillName), fieldNameStore.size).toString
+  }
 
   /**
    * Assume a package prefix provider.

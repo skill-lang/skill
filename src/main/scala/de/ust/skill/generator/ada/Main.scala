@@ -202,11 +202,9 @@ class Main extends FakeMain
 pragma Ada_2012;""")
 
   override def setOption(option : String, value : String) : Unit = option match {
-    case "visitors" ⇒ createVisitors = ("true".equals(value));
     case unknown    ⇒ sys.error(s"unkown Argument: $unknown")
   }
   override def helpText = """
-visitors          true/false  if set to true, the a visitor for each base type will be generated
 """
 
   override def customFieldManual = """

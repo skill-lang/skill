@@ -127,13 +127,11 @@ class Main extends FakeMain
   override def setOption(option : String, value : String) {
     option match {
       case "revealskillid" ⇒ revealSkillID = ("true" == value)
-      case "visitors"      ⇒ createVisitors = ("true".equals(value));
       case unknown         ⇒ sys.error(s"unkown Argument: $unknown")
     }
   }
   override def helpText : String = """
 revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
-visitors          true/false  if set to true, the a visitor for each base type will be generated
 """
 
   override def customFieldManual : String = """

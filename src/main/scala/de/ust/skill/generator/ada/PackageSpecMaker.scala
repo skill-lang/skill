@@ -170,25 +170,28 @@ ${comment(v)}procedure Set_${name(v)} (This : not null access ${name(t)}_T'Class
    pragma Inline (Set_${name(v)});"""
       }).mkString
     }${
-        if (createVisitors) """
-   -- visitors
-""" + (
-          for (b ← IR if b.getSuperType == null) yield s"""
-   type Abstract_${name(b)}_Visitor is abstract tagged null record;${
-            (for (t ← IR if b.getBaseType == b) yield s"""
-   procedure Visit (This : access Abstract_${name(b)}_Visitor; Node : ${name(t)}) is abstract;
-   procedure Acc (This : access ${name(t)}_T; V : access Abstract_${name(b)}_Visitor'Class);
-""").mkString
-          }
-   type ${name(b)}_Visitor is new Abstract_${name(b)}_Visitor with null record;${
-            (for (t ← IR if b.getBaseType == b) yield s"""
-   procedure Visit (This : access ${name(b)}_Visitor; Node : ${name(t)}) is null;
-""").mkString
-          }
+      // visitors
+      if (visitors.isEmpty) ""
+      else s"""
+   -- base visitor
+   type Abstract_Visitor is abstract tagged null record;${
+        (
+          for (t ← visitors) yield s"""
+   procedure Visit (This : access Abstract_Visitor; Node : ${name(t)}) is abstract;
+   procedure Acc (This : access ${name(t)}_T; V : access Abstract_Visitor'Class);
 """
         ).mkString
-        else ""
       }
+   -- visitor with default implementations
+   type Visitor is new Abstract_Visitor with null record;${
+        (
+          for (t ← visitors) yield s"""
+   procedure Visit (This : access Visitor; Node : ${name(t)}) is null;
+"""
+        ).mkString
+      }
+"""
+    }
 private
 ${
       (for (t ← IR)

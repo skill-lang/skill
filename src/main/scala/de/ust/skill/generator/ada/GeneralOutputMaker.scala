@@ -39,12 +39,6 @@ trait GeneralOutputMaker extends Generator {
   var IR : List[UserType] = _
 
   /**
-   * if set to true, the generated binding will also contain visitors for each
-   * base type
-   */
-  protected var createVisitors = false;
-
-  /**
    * Assume the existence of a translation function for the types.
    */
   protected def mapTypeToId(t : Type, f : Field) : String

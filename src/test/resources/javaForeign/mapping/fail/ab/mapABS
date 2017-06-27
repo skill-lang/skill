@@ -1,0 +1,5 @@
+map S -> simple.A {
+}
+
+map B -> simple.B {
+}

@@ -56,10 +56,10 @@ namespace skill{
 
 ${packageParts.mkString("namespace ", " {\nnamespace", " {")}
 ${
-  if(createVisitors) s"""
+  if(visitors.length>0) s"""
     // predef visitor
     namespace api {
-        class ${name(base)}Visitor;
+        class Visitor;
     }
 """
   else ""
@@ -121,9 +121,9 @@ ${
 """)
 
       // accept visitor
-      if(createVisitors){
+      if(visited.contains(t.getSkillName)){
         out.write(s"""
-        virtual void accept(api::${name(base)}Visitor *v);
+        virtual void accept(api::Visitor *v);
 """)
       }
 
@@ -236,19 +236,6 @@ ${
     };
 """);
     }
-      
-      // create visitor implementation
-      if(createVisitors)
-        out.write(s"""
-    // visitor implementation
-    namespace api {
-        struct ${name(base)}Visitor {${
-          (for(t <- IR if t.getBaseType == base) yield s"""
-            virtual void visit(${name(t)} *node) {};""").mkString
-        }
-        };
-    }
-""")
 
       // close name spaces
       out.write(s"""${packageParts.map(_ ⇒ "}").mkString}
@@ -263,16 +250,16 @@ $endGuard""")
     // one file per base type
     for(base <- IR if null == base.getSuperType) {
       val out = files.open(s"TypesOf${name(base)}.cpp")
-      out.write(s"""#include "TypesOf${name(base)}.h"
-#include <skill/internal/AbstractStoragePool.h>${
+      out.write(s"""#include "File.h"
+#include "TypesOf${name(base)}.h"${
       (for(t <- IR if base == t.getBaseType) yield s"""
 
 const char *const $packageName::${name(t)}::typeName = "${t.getSkillName}";
 const char *$packageName::${name(t)}_UnknownSubType::skillName() const {
     return owner->name->c_str();
 }${
-  if(createVisitors) s"""
-void $packageName::${name(t)}::accept($packageName::api::${name(t.getBaseType)}Visitor *v) {
+  if(visited.contains(t.getSkillName)) s"""
+void $packageName::${name(t)}::accept($packageName::api::Visitor *v) {
     v->visit(this);
 }"""
   else ""

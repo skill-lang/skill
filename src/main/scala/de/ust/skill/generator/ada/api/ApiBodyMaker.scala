@@ -135,7 +135,7 @@ ${
            Types_By_Name => TBN_Local${
       (
         for (t ← IR) yield s""",
-           ${name(t)}s          =>
+           ${escapedLonely(name(t)+"s")}          =>
              Convert
                (TBN_Local.Element (${internalSkillName(t)}))"""
       ).mkString
@@ -228,10 +228,10 @@ ${
    end Close;
 ${
       (for (t ← IR) yield s"""
-   function ${name(t)}s (This : not null access File_T) return ${name(t)}_Pool is
+   function ${escapedLonely(name(t)+"s")} (This : not null access File_T) return ${name(t)}_Pool is
    begin
-      return This.${name(t)}s;
-   end ${name(t)}s;
+      return This.${escapedLonely(name(t)+"s")};
+   end ${escapedLonely(name(t)+"s")};
 """
       ).mkString
     }

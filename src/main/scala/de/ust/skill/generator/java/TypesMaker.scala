@@ -23,11 +23,10 @@ trait TypesMaker extends GeneralOutputMaker {
       out.write(s"""package ${this.packageName};
 
 ${
-  if(createVisitors) s"""import ${this.packageName}.api.${name(t.getBaseType)}Visitor;
+  if(visited.contains(t.getSkillName)) s"""import ${this.packageName}.api.Visitor;
 """
   else ""
-}import de.ust.skill.common.java.api.FieldDeclaration;
-import de.ust.skill.common.java.internal.NamedType;
+}import de.ust.skill.common.java.internal.NamedType;
 import de.ust.skill.common.java.internal.SkillObject;
 import de.ust.skill.common.java.internal.StoragePool;
 ${customizations.flatMap(_.getOptions.get("import")).map(i⇒s"import $i;\n").mkString}
@@ -75,7 +74,7 @@ ${
      * 
      * @param skillID
      */
-    public ${name(t)}(long skillID) {
+    public ${name(t)}(int skillID) {
         super(skillID);
     }
 """)
@@ -86,16 +85,16 @@ ${
     /**
      * Used for internal construction, full allocation.
      */
-    public ${name(t)}(long skillID${appendConstructorArguments(t)}) {
+    public ${name(t)}(int skillID${appendConstructorArguments(t)}) {
         super(skillID);
         ${relevantFields.map{f ⇒ s"this.${name(f)} = ${name(f)};"}.mkString("\n        ")}
     }
 """)
 	}
       
-      if(createVisitors){
+      if(visited.contains(t.getSkillName)){
         out.write(s"""
-    public <_R, _A, _E extends Exception> _R accept(${name(t.getBaseType)}Visitor<_R, _A, _E> v, _A arg) throws _E {
+    public <_R, _A, _E extends Exception> _R accept(Visitor<_R, _A, _E> v, _A arg) throws _E {
         return v.visit(this, arg);
     }
 """)
@@ -195,71 +194,6 @@ ${
 """)
       }
 
-      // generic get
-      locally{
-        val fields = implementedFields.filterNot(_.isIgnored)
-        if(!fields.isEmpty)
-          out.write(s"""
-    /**
-     * unchecked conversions are required, because the Java type system known
-     * nothing of our invariants
-     * 
-     * @note to self: Boxing bei primitiven beachten!
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> T get(FieldDeclaration<T> field) {
-        switch (field.name()) {${
-          (for(f <- fields)
-            yield s"""
-        case "${f.getSkillName}":
-            return (T) ${
-              // cast, iff the object requires boxing
-              val boxed = mapType(f.getType, true)
-              val unboxed = mapType(f.getType, false)
-              if(boxed!=unboxed)
-                s"($boxed) "
-              else 
-                ""
-              }${
-              if(f.isConstant()) "get" + f.getName.capital + "()"
-              else name(f)
-              };""").mkString
-        }
-        default:
-            return super.get(field);
-        }
-    }
-""")
-    }
-
-      // pretty string
-    out.write(s"""
-    /**
-     * potentially expensive but more pretty representation of this instance.
-     */
-    @Override
-    public String prettyString() {
-        StringBuilder sb = new StringBuilder("${name(t)}(this: ").append(this);""")
-    for(f <- t.getAllFields) out.write(
-      if(f.isIgnored) s"""
-        sb.append(", ${name(f)}: <<ignored>>");"""
-      else if (!f.isConstant) s"""
-        sb.append(", ${if(f.isAuto)"auto "else""}${name(f)}: ").append(${name(f)});"""
-      else s"""
-        sb.append(", const ${name(f)}: ${f.constantValue()}");"""
-    )
-    out.write("""
-        return sb.append(")").toString();
-    }
-""")
-
-    val prettyStringArgs = (for(f <- t.getAllFields)
-      yield if(f.isIgnored) s"""+", ${f.getName()}: <<ignored>>" """
-      else if (!f.isConstant) s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+_${f.getName()}"""
-      else s"""+", const ${f.getName()}: ${f.constantValue()}""""
-      ).mkString(""""(this: "+this""", "", """+")"""")
-
       // fix toAnnotation
       if(!t.getSuperInterfaces.isEmpty())
         out.write(s"""
@@ -279,7 +213,7 @@ ${
         private final StoragePool<?, ?> τPool;
 
         /** internal use only!!! */
-        public SubType(StoragePool<?, ?> τPool, long skillID) {
+        public SubType(StoragePool<?, ?> τPool, int skillID) {
             super(skillID);
             this.τPool = τPool;
         }

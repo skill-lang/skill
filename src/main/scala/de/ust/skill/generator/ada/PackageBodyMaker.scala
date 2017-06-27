@@ -99,8 +99,8 @@ ${
    begin
       return Convert (This.To_Annotation);
    end Dynamic_${name(t)};${
-          if (createVisitors) s"""
-   procedure Acc(This : access ${name(t)}_T; V : access Abstract_${name(t.getBaseType)}_Visitor'Class) is
+          if (visited.contains(t.getSkillName)) s"""
+   procedure Acc (This : access ${name(t)}_T; V : access Abstract_Visitor'Class) is
    begin
       V.Visit (${name(t)} (This));
    end Acc;
