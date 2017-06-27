@@ -1,4 +1,5 @@
 {
+	"comment" : "Fail because i32 is to big"
 	"shouldFail" : true,
 	"data" : {
 	    "all" : {
@@ -52,7 +53,7 @@
 	    "all_aUserType_obj_int32_obj" : {
 	        "type" : "BasicInt32",
 	        "attr" : {
-	            "basicInt" : -1
+	            "basicInt" : 5000000000
 	        }
 	    },
 	    "all_aUserType_obj_int64I_obj" : {

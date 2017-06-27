@@ -23,7 +23,7 @@
 	        "type" : "∀",
 	        "attr" : {
 	            "€" : "esc_4",
-	            "☢" : "Hello, World!"
+	            "☢" : "\"Hello, World!\""
 	        }
 	    }
 	}

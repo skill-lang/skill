@@ -4,7 +4,7 @@
 	    "usr" : {
 	        "type" : "User",
 	        "attr" : {
-	            "name" : "User.name",
+	            "name" : "\"Bernd das Brot\"",
 	            "age" : 44
 	        }
 	    }

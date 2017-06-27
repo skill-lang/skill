@@ -3,9 +3,7 @@
 	"data" : {
 	    "c" : {
 	        "type" : "Custom",
-	        "attr" : {
-	            "any" : null
-	        }
+	        "attr" : { }
 	    }
 	}
 }

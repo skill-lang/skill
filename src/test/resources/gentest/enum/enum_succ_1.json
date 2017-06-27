@@ -2,39 +2,34 @@
 	"shouldFail" : false,
 	"data" : {
 	    "enm_default" : {
-	        "type" : "TestEnum_enuminstance",
+	        "type" : "TestEnum",
 	        "attr" : {
-	            "name" : "default",
+	            "name" : "\"default\"",
 	            "next" : "enm_second"
 	        }
 	    },
 	    "enm_second" : {
-	        "type" : "TestEnum_enuminstance",
+	        "type" : "TestEnum",
 	        "attr" : {
-	            "name" : "second",
+	            "name" : "\"second\"",
 	            "next" : "enm_third"
 	        }
 	    },
 	    "enm_third" : {
-	        "type" : "TestEnum_enuminstance",
+	        "type" : "TestEnum",
 	        "attr" : {
-	            "name" : "third",
+	            "name" : "\"third\"",
 	            "next" : "enm_last"
 	        }
 	    },
 	    "enm_last" : {
-	        "type" : "TestEnum_enuminstance",
+	        "type" : "TestEnum",
 	        "attr" : {
-	            "name" : "last",
+	            "name" : "\"last\"",
 	            "next" : "enm_default"
 	        }
 	    },
-	    "enm" : {
-	        "type" : "TestEnum",
-	        "attr" : {
-	            "enuminstance" : "enm_default"
-	        }
-	    }
+	    "enm" : "enm_default"
 	}
 }
 

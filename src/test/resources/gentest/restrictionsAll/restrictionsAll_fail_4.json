@@ -1,10 +1,11 @@
 {
+	"Comment" : "Should fail because there must at most one instance of none",
 	"shouldFail" : true,
 	"data" : {
 	    "op" : {
 	        "type" : "Operator",
 	        "attr" : {
-	            "name" : "Operator.name"
+	            "name" : ""\Minus"\"
 	        }
 	    },
 	    "trm" : {
@@ -22,7 +23,7 @@
 	    "sys_obj" : {
 	        "type" : "System",
 	        "attr" : {
-	            "name" : "System.name",
+	            "name" : "\"Satrun5\"",
 	            "version" : 1.1
 	        }
 	    },
@@ -41,7 +42,7 @@
 	            "system" : "sys_obj",
 	            "nopDefault" : 0,
 	            "float" : -1,
-	            "message" : "Hello World!",
+	            "message" : "\"Hello World!\"",
 	            "none" : "none_1"
 	        }
 	    },
@@ -59,7 +60,7 @@
 	    "cmnt" : {
 	        "type" : "Comment",
 	        "attr" : {
-	            "text" : "Comment.text",
+	            "text" : "\"A comment\"",
 	            "target" : "op",
 	            "property" : "sys_obj"
 	        }

@@ -1,4 +1,5 @@
 {
+	"comment" : "Fail because i16 is to big"
 	"shouldFail" : true,
 	"data" : {
 	    "all" : {
@@ -46,7 +47,7 @@
 	    "all_aUserType_obj_int16_obj" : {
 	        "type" : "BasicInt16",
 	        "attr" : {
-	            "basicInt" : -2
+	            "basicInt" : 33000
 	        }
 	    },
 	    "all_aUserType_obj_int32_obj" : {

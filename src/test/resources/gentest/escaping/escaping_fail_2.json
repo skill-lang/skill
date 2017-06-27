@@ -1,4 +1,5 @@
 {
+	"Comment" : "Should fail because boolean in esc_3 shoudl not be a Boolean-class",
 	"shouldFail" : true,
 	"data" : {
 	    "esc_1" : {
@@ -23,7 +24,7 @@
 	        "type" : "∀",
 	        "attr" : {
 	            "€" : "esc_4",
-	            "☢" : "Hello, World!"
+	            "☢" : "\"Hello, World!\""
 	        }
 	    }
 	}

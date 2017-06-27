@@ -1,23 +1,23 @@
 {
-	"shouldFail" : true,
+	"Comment" : "Should fail because Operator is a unique class an the two objects op_1 and op_2 should be distinct in their serialized form",
+ 	"shouldFail" : true,
 	"data" : {
 	    "op_1" : {
 	        "type" : "Operator",
 	        "attr" : {
-	            "name" : "Operator.name"
+	            "name" : "\"Minus\""
 	        }
 	    },
-	    "op_2" : {
+		"op_2" : {
 	        "type" : "Operator",
 	        "attr" : {
-	            "name" : "Operator.name"
+	            "name" : "\"Minus\""
 	        }
 	    },
-
 	    "trm" : {
 	        "type" : "Term",
 	        "attr" : {
-	            "operator" : "op_1",
+	            "operator" : op_1,
 	            "arguments" : [ "trm", null ]
 	        }
 	    },
@@ -29,7 +29,7 @@
 	    "sys_obj" : {
 	        "type" : "System",
 	        "attr" : {
-	            "name" : "System.name",
+	            "name" : "\"Monosystem\"",
 	            "version" : 1.1
 	        }
 	    },
@@ -43,7 +43,7 @@
 	            "system" : "sys_obj",
 	            "nopDefault" : 0,
 	            "float" : -1,
-	            "message" : "Hello World!",
+	            "message" : "\"Hello World!\"",
 	            "none" : "none_obj"
 	        }
 	    },
@@ -61,8 +61,8 @@
 	    "cmnt" : {
 	        "type" : "Comment",
 	        "attr" : {
-	            "text" : "Comment.text",
-	            "target" : "op_1",
+	            "text" : "\"I am a comment\"",
+	            "target" : "op",
 	            "property" : "sys_obj"
 	        }
 	    }

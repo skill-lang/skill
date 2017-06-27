@@ -1,4 +1,5 @@
 {
+	"comment" : "Fail because i64V is to big"
 	"shouldFail" : true,
 	"data" : {
 	    "all" : {
@@ -10,7 +11,7 @@
 	            "aUserType" : "all_aUserType_obj",
 	            "anotherUserType" : "all_anotherUserType_obj",
 	            "anArray" : [ "all_aUserType_obj" ],
-	            "aSet"  : [ 333 ],
+	            "aSet"  : [ 2 ],
 	            "aList" : [ 3, 4 ],
 	            "aMap"  : { "\"5\"" : "\"6\"" }
 	        }
@@ -64,7 +65,7 @@
 	    "all_aUserType_obj_int64V_obj" : {
 	        "type" : "BasicInt64V",
 	        "attr" : {
-	            "basicInt" :  1
+	            "basicInt" :    -1e+64
 	        }
 	    },
 	    "all_anotherUserType_obj" : {

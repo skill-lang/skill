@@ -1,4 +1,5 @@
 {
+	"comment" : "Fails because a value in s is too big"
 	"shouldFail" : true,
 	"data" : {
 	    "cont" : {
@@ -7,7 +8,7 @@
 	            "arr"  : [ -1, 0, 1 ],
 	            "varr" : [ -2, -1, 0, 1 ],
 	            "l"    : [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ],
-	            "s"    : [ 9, 9, 9, 1e+64 ],
+	            "s"    : [ 9, 9, 9, 1e+64  ],
 	            "f"    : { 1 : 2 },
 	            "someSet" : [ ]
 	        }

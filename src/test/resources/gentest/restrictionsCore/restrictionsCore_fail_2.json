@@ -1,4 +1,5 @@
 {
+	"Comment" : "Should fail because name must be nonnull",
 	"shouldFail" : true,
 	"data" : {
 	    "sys" : {

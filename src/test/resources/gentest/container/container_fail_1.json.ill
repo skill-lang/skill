@@ -1,12 +1,13 @@
 {
+	"comment" : "Fails because arr is not filled with 3 values"
 	"shouldFail" : true,
 	"data" : {
 	    "cont" : {
 	        "type" : "Container",
 	        "attr" : {
-	            "arr"  : [ -1, 0, 1 ],
+	            "arr"  : [ -1, 0 ],
 	            "varr" : [ -2, -1, 0, 1 ],
-	            "l"    : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 1e+64 ],
+	            "l"    : [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ],
 	            "s"    : [ 9, 9, 9 ],
 	            "f"    : { 1 : 2 },
 	            "someSet" : [ ]

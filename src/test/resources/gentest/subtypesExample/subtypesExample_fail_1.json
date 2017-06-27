@@ -1,4 +1,5 @@
 {
+	"Comment" : "Should fail because b must be of type b and not c",
 	"shouldFail" : true,
 	"data" : {
 	    "a" : {

@@ -1,4 +1,5 @@
 {
+	"Comment" : "Should fail because c contains no a",
 	"shouldFail" : false,
 	"data" : {
 	    "a" : {

@@ -1,4 +1,5 @@
 {
+	"comment" : "Fail because f64 is to big"
 	"shouldFail" : true,
 	"data" : {
 	    "all" : {
@@ -77,13 +78,13 @@
 	    "all_anotherUserType_obj_float32_obj" : {
 	        "type" : "BasicFloat32",
 	        "attr" : {
-	            "basicFloat" : 1e+40
+	            "basicFloat" : 1
 	        }
 	    },
 	    "all_anotherUserType_obj_float64_obj" : {
 	        "type" : "BasicFloat64",
 	        "attr" : {
-	            "basicFloat" : 2
+	            "basicFloat" : 1e+320
 	        }
 	    }
 	}

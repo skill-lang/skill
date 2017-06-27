@@ -4,15 +4,15 @@
 	    "u" : {
 	        "type" : "User",
 	        "attr" : {
-	            "name" : "User.name",
+	            "name" : "\"herb\"",
 	            "age" : 43,
-	            "reflectivelyVisible" : "User.reflectivelyVisible"
+	            "reflectivelyVisible" : "\"I am not visible\""
 	        }
 	    },
 	    "a" : {
 	        "type" : "Abuser",
 	        "attr" : {
-	            "abuseDescription" : "Abuser.abuseDescription"
+	            "abuseDescription" : "\"I am a absue description\""
 	        }
 	    },
 	    "nas" : {
@@ -28,8 +28,8 @@
 	    "bt" : {
 	        "type" : "BadType",
 	        "attr" : {
-	            "ignoredData" : "BadType.ignoredData",
-	            "reflectivelyInVisible" : "BadType.reflectivelyInVisible"
+	            "ignoredData" : "\"Ignore me\"",
+	            "reflectivelyInVisible" : "\"I am reflectively visible\""
 	        }
 	    },
 	    "uid" : {

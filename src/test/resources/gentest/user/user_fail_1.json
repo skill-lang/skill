@@ -1,11 +1,12 @@
 {
+	"Comment" : "Should fail because age musst be an int",
 	"shouldFail" : true,
 	"data" : {
 	    "usr" : {
 	        "type" : "User",
 	        "attr" : {
-	            "name" : "User.name",
-	            "age" : "44"
+	            "name" : "\"Bernd das Brot\"",
+	            "age" : "\"44\""
 	        }
 	    }
 	}

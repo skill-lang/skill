@@ -4,9 +4,9 @@
 	    "uc" : {
 	        "type" : "Unicode",
 	        "attr" : {
-	            "one" : "1",
-	            "two" : "ö",
-	            "three" : "☢"
+	            "one" : "\"1\"",
+	            "two" : "\"ö\"",
+	            "three" : "\"☢\""
 	        }
 	    }
 	}

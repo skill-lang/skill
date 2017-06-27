@@ -1,4 +1,5 @@
 {
+	"comment" : "Fail because Map value is to big"
 	"shouldFail" : true,
 	"data" : {
 	    "all" : {
