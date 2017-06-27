@@ -1,5 +1,5 @@
 {
-	"comment" : "Fail because List value is to big"
+	"Comment" : "Fail because List value is to big",
 	"shouldFail" : true,
 	"data" : {
 	    "all" : {

@@ -1,5 +1,5 @@
 {
-	"Comment" : "Should be succesful"
+	"Comment" : "Should be succesful",
 	"shouldFail" : false,
 	"data" : {
 	    "all" : {

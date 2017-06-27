@@ -1,5 +1,5 @@
 {
-	"comment" : "Fail because i32 is to big"
+	"Comment" : "Fail because i32 is to big",
 	"shouldFail" : true,
 	"data" : {
 	    "all" : {
