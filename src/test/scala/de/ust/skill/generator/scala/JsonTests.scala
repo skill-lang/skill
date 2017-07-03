@@ -99,7 +99,7 @@ class Generic${name}Test extends CommonTest {
     def testname = new File(testfile).getName.replace(".json", "");
     rval.write(s"""
 	test("${packagePath} - ${testname}") {
-    val path = tmpFile("write.generic");
+    val path = tmpFile("write.generic.${testname}");
     val sf = SkillFile.open(path, Create, Write);
     reflectiveInit(sf);
     
