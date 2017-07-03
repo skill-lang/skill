@@ -137,37 +137,46 @@ class Generic${name}Test extends CommonTest {
 
     //First create skillobjects
     for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is the name of the skillobj to create
-      val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
-      val currentObjType = currentObj.getString("type"); //The type of the skillObject
 
-      instantiations = instantiations.concat("var temp" + currentObjKey.toLowerCase() + " = types.getOrElse(\"" + currentObjType.toLowerCase() + "\", throw new Exception(\"Unable to find skillObject.\"));\n");
-      instantiations = instantiations.concat(s"""
+      if (jsonObjects.optJSONObject(currentObjKey) == null) { //if value is not a JSONObject value must be a reference to an existing object
+        instantiations = instantiations.concat("var " + currentObjKey.toLowerCase() + " = " + jsonObjects.getString(currentObjKey) + ";\n");
+      } else {
+        val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
+        val currentObjType = currentObj.getString("type"); //The type of the skillObject
+
+        instantiations = instantiations.concat("var temp" + currentObjKey.toLowerCase() + " = types.getOrElse(\"" + currentObjType.toLowerCase() + "\", throw new Exception(\"Unable to find skillObject.\"));\n");
+        instantiations = instantiations.concat(s"""
       var ${currentObjKey.toLowerCase()}: SkillObject = temp${currentObjKey.toLowerCase()}.reflectiveAllocateInstance.asInstanceOf[SkillObject];  
 """);
+      }
     }
     instantiations = instantiations.concat("\n")
+
     //Set skillobject values
     for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is the name of the skillobj to create
-      val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
-      val currentObjType = currentObj.getString("type").toLowerCase(); //The type of the skillObject
-      val objAttributes = currentObj.getJSONObject("attr"); //The attributes/Fields of the skillObject 
+      if (jsonObjects.optJSONObject(currentObjKey) != null) {
 
-      for (currentAttrKey <- asScalaSetConverter(objAttributes.keySet()).asScala) {
+        val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
+        val currentObjType = currentObj.getString("type").toLowerCase(); //The type of the skillObject
+        val objAttributes = currentObj.getJSONObject("attr"); //The attributes/Fields of the skillObject 
 
-        val currentAttrValue = getcurrentAttrValue(objAttributes, currentAttrKey, currentObjKey, currentObjType);
+        for (currentAttrKey <- asScalaSetConverter(objAttributes.keySet()).asScala) {
 
-        if (objAttributes.optJSONArray(currentAttrKey) != null) {
+          val currentAttrValue = getcurrentAttrValue(objAttributes, currentAttrKey, currentObjKey, currentObjType);
 
-          instantiations = instantiateArray(instantiations, objAttributes.getJSONArray(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
+          if (objAttributes.optJSONArray(currentAttrKey) != null) {
 
-        } else if (objAttributes.optJSONObject(currentAttrKey) != null) {
+            instantiations = instantiateArray(instantiations, objAttributes.getJSONArray(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
 
-          instantiations = instantiateMap(instantiations, objAttributes.getJSONObject(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
+          } else if (objAttributes.optJSONObject(currentAttrKey) != null) {
+
+            instantiations = instantiateMap(instantiations, objAttributes.getJSONObject(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
+
+          }
+
+          instantiations = instantiations.concat(currentObjKey.toLowerCase() + ".set(typeFieldMapping(\"" + currentObjType.toLowerCase() + "\")(\"" + currentAttrKey.toLowerCase() + "\").asInstanceOf[FieldDeclaration[Any]], " + currentAttrValue + ");\n\n");
 
         }
-
-        instantiations = instantiations.concat(currentObjKey.toLowerCase() + ".set(typeFieldMapping(\"" + currentObjType.toLowerCase() + "\")(\"" + currentAttrKey.toLowerCase() + "\").asInstanceOf[FieldDeclaration[Any]], " + currentAttrValue + ");\n\n");
-
       }
     }
     instantiations = instantiations.concat("sf.close;\n");
