@@ -154,10 +154,11 @@ public class GenericJsonTest extends common.CommonTest {
     }
 
     //First create skillobjects
+    var referenceInstantiations = "";
     for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is the name of the skillobj to create
 
       if (jsonObjects.optJSONObject(currentObjKey) == null) { //if value is not a JSONObject value must be a reference to an existing object
-        instantiations = instantiations.concat("var " + currentObjKey.toLowerCase() + " = " + jsonObjects.getString(currentObjKey) + ";\n");
+        referenceInstantiations = referenceInstantiations.concat("SkillObject " + currentObjKey.toLowerCase() + " = " + jsonObjects.getString(currentObjKey) + ";\n");
       } else {
         val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
         val currentObjType = currentObj.getString("type"); //The type of the skillObject
@@ -165,6 +166,7 @@ public class GenericJsonTest extends common.CommonTest {
         instantiations = instantiations.concat("SkillObject " + currentObjKey.toLowerCase() + " = types.get(\"" + currentObjType.toLowerCase() + "\").make();\n");
       }
     }
+    instantiations = instantiations.concat(referenceInstantiations);
     instantiations = instantiations.concat("\n")
     //Set skillobject values
     for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is the name of the skillobj to create
