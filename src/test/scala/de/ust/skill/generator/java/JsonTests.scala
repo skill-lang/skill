@@ -217,19 +217,34 @@ public class GenericJsonTest extends common.CommonTest {
     // nothing yet
   }
 
+  /**
+    * Generate code for instantiating a map with the given variable name and fill it using the data contained in the
+    * parameter 'map'
+    *
+    * @param instantiations previously generated code of the test suite
+    * @param map JSON object containing data with which the resulting instantiated map will be filled.
+    * @param objValueType name of SKilL class which is being processed
+    * @param attrKey name of map attribute of the SKilL class
+    * @param mapName variable name the instantiated map should have
+    * @return generated test suite code with added code for instantiating the provided map.
+    */
   def instantiateMap(instantiations: String, map: JSONObject, objValueType: String, attrKey: String, mapName: String): String = {
     var ins = instantiations.concat("\n");
-    ins = ins.concat("HashMap " + mapName + " = new HashMap<>();\n");
+
+    ins = ins.concat("HashMap " + mapName + " = new HashMap<>();\n");   //Declaration
+
     for (currentObjKey <- asScalaSetConverter(map.keySet()).asScala) {
       var key = currentObjKey;
-      if (currentObjKey.contains("\"")) {
+      if (currentObjKey.contains("\"")) {                               //True: interpret 'currentObjKey' as string
         key = "wrapPrimitveMapTypes(" + currentObjKey + ", typeFieldMapping.get(\"" + objValueType.toLowerCase() + "\").get(\"" + attrKey.toLowerCase() + "\"),true)";
-      }
+      }                                                                 //False: interpret 'currentObjKey' as reference
+
       var value = map.get(currentObjKey).toString();
-      if (map.get(currentObjKey).toString().contains("\"")) {
+      if (map.get(currentObjKey).toString().contains("\"")) {           //True: interpret value as string
         value = "wrapPrimitveMapTypes(" + map.get(currentObjKey).toString() + ", typeFieldMapping.get(\"" + objValueType.toLowerCase() + "\").get(\"" + attrKey.toLowerCase() + "\"),false)";
-      }
-      ins = ins.concat(mapName + ".put(" + key + ", " + value + ");\n");
+      }                                                                 //False: interpret value as reference
+
+      ins = ins.concat(mapName + ".put(" + key + ", " + value + ");\n");  //Code for adding key-value-pair
     }
     ins = ins.concat("\n");
     return ins;
