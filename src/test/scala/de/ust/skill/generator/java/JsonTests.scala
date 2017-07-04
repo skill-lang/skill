@@ -178,7 +178,7 @@ public class GenericJsonTest extends common.CommonTest {
 
         for (currentAttrKey <- asScalaSetConverter(objAttributes.keySet()).asScala) {
 
-          val currentAttrValue = getcurrentAttrValue(objAttributes, currentAttrKey, currentObjKey, currentObjType);
+          val currentAttrValue = getAttributeValue(objAttributes, currentAttrKey, currentObjKey, currentObjType);
 
           if (objAttributes.optJSONArray(currentAttrKey) != null) {
 
@@ -257,7 +257,7 @@ public class GenericJsonTest extends common.CommonTest {
     Collection ${collectionName} = (Collection) refConstructor.newInstance();
     """);
     for (x <- intWrapper(0) until array.length()) {
-      ins = ins.concat(collectionName + ".add(" + getcurrentArrayValue(array, x, attrKey, objValueType) + ");\n");
+      ins = ins.concat(collectionName + ".add(" + getArrayElementValue(array, x, attrKey, objValueType) + ");\n");
     }
     ins = ins.concat("\n");
     return ins;
@@ -276,7 +276,7 @@ public class GenericJsonTest extends common.CommonTest {
     * @param currentObjType name of attribute of the SKilL class from which the value will be read
     * @return generated code for a statement yielding the value of the specified attribute
     */
-  def getcurrentAttrValue(attributes: JSONObject, currentAttrKey: String, currentObjKey: String, currentObjType: String): String = {
+  def getAttributeValue(attributes: JSONObject, currentAttrKey: String, currentObjKey: String, currentObjType: String): String = {
 
     if (attributes.optJSONArray(currentAttrKey) != null) {
 
@@ -318,7 +318,7 @@ public class GenericJsonTest extends common.CommonTest {
     * @param currentAttrKey name of the attribute of that SKilL class which uses the array elements
     * @return generated code for a statement yielding an object instantiation of the specified array element
     */
-  def getcurrentArrayValue(array: JSONArray, currentObj: Int, currentAttrKey: String, currentObjType: String): String = {
+  def getArrayElementValue(array: JSONArray, currentObj: Int, currentAttrKey: String, currentObjType: String): String = {
 
     if (array.optBoolean(currentObj) ||
       (!array.optBoolean(currentObj) && !array.optBoolean(currentObj, true))) {
