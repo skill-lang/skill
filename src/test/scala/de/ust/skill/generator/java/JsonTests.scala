@@ -235,6 +235,21 @@ public class GenericJsonTest extends common.CommonTest {
     return ins;
   }
 
+  /**
+    * Generate code for instantiating an array. The code is appended to the template code provided in the parameter
+    * 'instantiations' and then returned.
+    *
+    * The generated code constructs a collection using reflection and adds all elements of the array in parameter
+    * 'array' afterwards.
+    * @param instantiations previously generated code of the test suite
+    * @param array JSON type array to be instantiated
+    * @param objValueType name of SKilL class which is being processed
+    * @param attrKey name of attribute of the SKilL class for which this array is instantiated
+    * @param collectionName variable name of the collection in which this array shall be instantiated. The elements of
+    *                       the JSON array are added to the collection referenced by this name after it has been created
+    *                       using reflection.
+    * @return generated test suite code with added code for instantiating the provided array.
+    */
   def instantiateArray(instantiations: String, array: JSONArray, objValueType: String, attrKey: String, collectionName: String): String = {
     var ins = instantiations.concat(s"""
     refClass = Class.forName(getProperCollectionType(typeFieldMapping.get("${objValueType}").get("${attrKey}").toString()));
@@ -280,6 +295,16 @@ public class GenericJsonTest extends common.CommonTest {
     }
   }
 
+  /**
+    * Generates code for statements yielding the value of the array element at position 'currentObj'. Primitive types
+    * are automatically wrapped into their corresponding wrapper objects in the generated code. Therefore the generated
+    * code statements always yield an object.
+    * @param array array from which the element to be yielded is read
+    * @param currentObj index of the array element
+    * @param currentObjType name of the SKilL class which uses the array elements
+    * @param currentAttrKey name of the attribute of that SKilL class which uses the array elements
+    * @return generated code for a statement yielding an object instantiation of the specified array element
+    */
   def getcurrentArrayValue(array: JSONArray, currentObj: Int, currentAttrKey: String, currentObjType: String): String = {
 
     if (array.optBoolean(currentObj) ||
