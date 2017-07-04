@@ -263,6 +263,19 @@ public class GenericJsonTest extends common.CommonTest {
     return ins;
   }
 
+  /**
+    * Generates code for statements yielding the values of an attribute of a SKilL object
+    *
+    * In case of collections, maps and strings this is a reference to the corresponding object.
+    * In case of booleans it is 'true' or 'false' as string.
+    * In case of doubles, floats, longs and ints this is an object wrapping the actual, primitive value.
+    * @param attributes 'attr' object of a SKilL object. This is a map of SKilL object attribute names to their
+    *                   corresponding values.
+    * @param currentAttrKey name of the attribute from which the value will be retrieved
+    * @param currentObjKey name of SKilL class which is being processed
+    * @param currentObjType name of attribute of the SKilL class from which the value will be read
+    * @return generated code for a statement yielding the value of the specified attribute
+    */
   def getcurrentAttrValue(attributes: JSONObject, currentAttrKey: String, currentObjKey: String, currentObjType: String): String = {
 
     if (attributes.optJSONArray(currentAttrKey) != null) {
