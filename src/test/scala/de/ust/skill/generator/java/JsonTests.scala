@@ -341,4 +341,15 @@ public class GenericJsonTest extends common.CommonTest {
       return "null";
     }
   }
+
+  /**
+    * Generates code for statement yielding the field declaration for the attribute of the given SKilL object.
+    * @param objectType SKilL object which owns the attribute
+    * @param attributeKey attribute for which to get the corresponding field declaration
+    * @return generated code for a statement yielding the FieldDeclaration<?, ?> object of the specified object and
+    *         attribute
+    */
+  def getFieldDeclaration(objectType: String, attributeKey: String): String = {
+    return "typeFieldMapping.get(\"" + objectType + "\").get(\"" + attributeKey.toLowerCase() + "\")";
+  }
 }
