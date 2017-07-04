@@ -55,55 +55,7 @@ class JsonTests extends common.GenericJsonTests {
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
 
-    rval.write(s"""
-package $packagePath;
-
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
-import de.ust.skill.common.java.api.Access;
-import de.ust.skill.common.java.internal.FieldDeclaration;
-import de.ust.skill.common.java.internal.SkillObject;
-import $packagePath.api.SkillFile;
-
-public class GenericJsonTest extends common.CommonTest {
-
-	@Rule //http://stackoverflow.com/a/2935935
-	public final ExpectedException exception = ExpectedException.none();
-
-	private static Path path;
-	private JSONObject currentJSON;
-
-	/**
-	 * Tests the object generation capabilities.
-	 */
-	@BeforeClass
-	public static void init() throws JSONException, MalformedURLException, IOException {
-		path = Paths.get(java.lang.System.getProperty("user.dir"), 
-        "src", 
-        "test", 
-        "resources", 
-        "${packagePath}");
-	}
-
-""")
+    rval.write(getCodeTemplateHeader(packagePath))
 
     for (path ← collectSkillSpecification(packagePath).getParentFile().listFiles if path.getName.endsWith(".json")) {
       makeTestForJson(rval, path.getAbsolutePath());
@@ -154,20 +106,8 @@ public class GenericJsonTest extends common.CommonTest {
     }
 
     //First create skillobjects
-    var referenceInstantiations = "";
-    for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is the name of the skillobj to create
+    instantiations = generateObjectCreationCode(instantiations, jsonObjects);
 
-      if (jsonObjects.optJSONObject(currentObjKey) == null) { //if value is not a JSONObject value must be a reference to an existing object
-        referenceInstantiations = referenceInstantiations.concat("SkillObject " + currentObjKey.toLowerCase() + " = " + jsonObjects.getString(currentObjKey) + ";\n");
-      } else {
-        val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
-        val currentObjType = currentObj.getString("type"); //The type of the skillObject
-
-        instantiations = instantiations.concat("SkillObject " + currentObjKey.toLowerCase() + " = types.get(\"" + currentObjType.toLowerCase() + "\").make();\n");
-      }
-    }
-    instantiations = instantiations.concat(referenceInstantiations);
-    instantiations = instantiations.concat("\n")
     //Set skillobject values
     for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is the name of the skillobj to create
       if (jsonObjects.optJSONObject(currentObjKey) != null) {
@@ -215,6 +155,30 @@ public class GenericJsonTest extends common.CommonTest {
 
   override def finalizeTests {
     // nothing yet
+  }
+
+  /**
+    * Generates code for creating all objects in the parameter 'jsonObjects'
+    * @param templateCode a string containing the test suite template code generated so far
+    * @param jsonObjects a map containing information on all SKilL objects which are to be created
+    * @return
+    */
+  def generateObjectCreationCode(templateCode: String, jsonObjects: JSONObject): String = {
+    var referenceInstantiations = "";
+    var instantiationCode = templateCode;
+    for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is the name of the skillobj to create
+
+      if (jsonObjects.optJSONObject(currentObjKey) == null) { //if value is not a JSONObject value must be a reference to an existing object
+        referenceInstantiations = referenceInstantiations.concat("SkillObject " + currentObjKey.toLowerCase() + " = " + jsonObjects.getString(currentObjKey) + ";\n");
+      } else {
+        val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
+        val currentObjType = currentObj.getString("type"); //The type of the skillObject
+
+        instantiationCode = instantiationCode.concat("SkillObject " + currentObjKey.toLowerCase() + " = types.get(\"" + currentObjType.toLowerCase() + "\").make();\n");
+      }
+    }
+    instantiationCode = instantiationCode.concat(referenceInstantiations);
+    instantiationCode.concat("\n");
   }
 
   /**
@@ -366,5 +330,92 @@ public class GenericJsonTest extends common.CommonTest {
     */
   def getFieldDeclaration(objectType: String, attributeKey: String): String = {
     return "typeFieldMapping.get(\"" + objectType + "\").get(\"" + attributeKey.toLowerCase() + "\")";
+  }
+
+  /**
+    * Generate code for the whole header part of the testsuite
+    * @param packagePath package specifier for the current test class
+    * @return
+    */
+  def getCodeTemplateHeader(packagePath: String): String = {
+    return getImportList(packagePath)
+      .concat(s"""
+public class GenericJsonTest extends common.CommonTest {
+
+  @Rule //http://stackoverflow.com/a/2935935
+  public final ExpectedException exception = ExpectedException.none();
+
+  private static Path path;
+  private JSONObject currentJSON;
+
+         """)
+      .concat(getInitMethod(packagePath))
+  }
+
+  /**
+    * Returns list of needed imports in the generated test suite
+    * @param packagePath package specifier for the current test class
+    * @return
+    */
+  def getImportList(packagePath: String): String = {
+    return s"""
+package $packagePath;
+
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import de.ust.skill.common.java.api.Access;
+import de.ust.skill.common.java.internal.FieldDeclaration;
+import de.ust.skill.common.java.internal.SkillObject;
+import $packagePath.api.SkillFile;
+
+public class GenericJsonTest extends common.CommonTest {
+
+  @Rule //http://stackoverflow.com/a/2935935
+	public final ExpectedException exception = ExpectedException.none();
+
+	private static Path path;
+	private JSONObject currentJSON;
+
+"""
+  }
+
+  /**
+    * Returns code for test suite initialization code
+    * @param packagePath package specifier for the current test class
+    * @return
+    */
+  def getInitMethod(packagePath: String): String = {
+    return s"""
+  /**
+   * Tests the object generation capabilities.
+   */
+  @BeforeClass
+  public static void init() throws JSONException, MalformedURLException, IOException {
+    path = Paths.get(java.lang.System.getProperty("user.dir"),
+        "src",
+        "test",
+        "resources",
+        "${packagePath}");
+   }
+
+       """
   }
 }
