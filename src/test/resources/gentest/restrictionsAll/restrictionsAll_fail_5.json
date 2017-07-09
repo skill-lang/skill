@@ -42,7 +42,7 @@
 	        }
 	    },
 	    "rbc" : {
-	        "type" : "RangeBorderCases",
+	        "type" : "RangeBoarderCases",
 	        "attr" : {
 	            "positive" : -1,
 	            "positive2" : 0,
