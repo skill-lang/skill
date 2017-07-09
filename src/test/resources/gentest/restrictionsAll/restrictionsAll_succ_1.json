@@ -31,7 +31,7 @@
 	        "attr" : { }
 	    },
 	    "dbc" : {
-	        "type" : "DefaultBorderCases",
+	        "type" : "DefaultBoarderCases",
 	        "attr" : {
 	            "system" : "sys_obj",
 	            "nopDefault" : 0,
