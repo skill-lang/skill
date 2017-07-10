@@ -58,12 +58,12 @@ class JsonTests extends common.GenericJsonTests {
     rval.write(getCodeTemplateHeader(packagePath))
 
     for (path ← collectSkillSpecification(packagePath).getParentFile().listFiles if path.getName.endsWith(".json")) {
-      makeTestForJson(rval, path.getAbsolutePath());
+      makeTestForJson(rval, path.getAbsolutePath(), packagePath);
     }
     rval
   }
 
-  def makeTestForJson(rval: PrintWriter, testfile: String): PrintWriter = {
+  def makeTestForJson(rval: PrintWriter, testfile: String, packagePath: String): PrintWriter = {
     def testname = new File(testfile).getName.replace(".json", "");
     rval.write(s"""
 	@Test
@@ -72,7 +72,7 @@ class JsonTests extends common.GenericJsonTests {
     Constructor<?> refConstructor;Map<String, Access<?>> types = new HashMap<>();
 		Map<String, HashMap<String, FieldDeclaration<?, ?>>> typeFieldMapping = new HashMap<>();
 		
-		Path binaryFile = createFile("write.generic.${testname}");
+		Path binaryFile = createFile("${packagePath}/", "write.generic.${testname}");
 		SkillFile sf = SkillFile.open(binaryFile);
         reflectiveInit(sf);
         
@@ -385,14 +385,6 @@ import de.ust.skill.common.java.api.Access;
 import de.ust.skill.common.java.internal.FieldDeclaration;
 import de.ust.skill.common.java.internal.SkillObject;
 import $packagePath.api.SkillFile;
-
-public class GenericJsonTest extends common.CommonTest {
-
-  @Rule //http://stackoverflow.com/a/2935935
-	public final ExpectedException exception = ExpectedException.none();
-
-	private static Path path;
-	private JSONObject currentJSON;
 
 """
   }
