@@ -87,7 +87,7 @@ class Generic${name}Test extends CommonTest {
       .head;
     
     for(path <- files.getParentFile().listFiles){
-      compareFiles("src/test/resources/serializedTestfiles/java/${packagePath}/" + path.getName, "src/test/resources/serializedTestfiles/orakel/${packagePath}/" + path.getName);
+      asser( compareFiles("src/test/resources/serializedTestfiles/java/${packagePath}/" + path.getName, "src/test/resources/serializedTestfiles/orakel/${packagePath}/" + path.getName));
     }
 }
 
@@ -100,14 +100,14 @@ class Generic${name}Test extends CommonTest {
       .head;
     
     for(path <- files.getParentFile().listFiles){
-      compareFiles("src/test/resources/serializedTestfiles/scala/${packagePath}/" + path.getName, "src/test/resources/serializedTestfiles/orakel/${packagePath}/" + path.getName);
+      assert( compareFiles("src/test/resources/serializedTestfiles/scala/${packagePath}/" + path.getName, "src/test/resources/serializedTestfiles/orakel/${packagePath}/" + path.getName));
     }
   }
 
   /**
    * comapre two files
    */
-  def compareFiles(fileA : String, fileB : String) {
+  def compareFiles(fileA : String, fileB : String): Boolean = {
     
       implicit val context = global
             
@@ -120,13 +120,15 @@ class Generic${name}Test extends CommonTest {
 
       val a = Await.result(asyncA, Inf)
       val b = Await.result(asyncB, Inf)
-
+      var equal = false;
       val typenames = (a ++ b).map(_.name).toSet
       for (name ← typenames.par) (a.find(_.name.equals(name)), b.find(_.name.equals(name))) match {
-        case (scala.None, _)            ⇒ println(s"A does not contain type $$name")
-        case (_, scala.None)            ⇒ println(s"B does not contain type $$name")
-        case (Some(ta), Some(tb)) ⇒ compareType(ta, tb)
+        case (scala.None, _)      ⇒ println(s"A does not contain type $name"); return false;
+        case (_, scala.None)      ⇒ println(s"B does not contain type $name"); return false;
+        case (Some(ta), Some(tb)) ⇒  equal = compareType(ta, tb);
       }
+      return equal;
+  }
   }
 """)
 return rval;
