@@ -59,19 +59,16 @@ class InteroperabilityTests extends common.GenericTests {
     rval.write(s"""
 package $packagePath
 
-mport scala.collection.mutable.HashSet
+import scala.collection.mutable.HashSet
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.global
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration.Inf
 
-import de.ust.skill.common.scala.api.Access
-import de.ust.skill.common.scala.api.Read
+import common.CommonTest
 import de.ust.skill.common.scala.api.ReadOnly
-import de.ust.skill.common.scala.api.SkillObject
-import de.ust.skill.common.scala.internal.fieldTypes.MapType
-import de.ust.skill.common.scala.internal.fieldTypes.SetType
-import de.ust.skill.common.scala.internal.fieldTypes.SingleBaseTypeContainer
+import de.ust.skill.common.scala.api.Read
+import java.io.File
 
 
 import $packagePath.api.SkillFile
@@ -82,13 +79,29 @@ import $packagePath.api.SkillFile
  */
 class Generic${name}Test extends CommonTest {
   test("${packagePath} - Java${name}Test") {
-    compareFiles("src/test/resources/serializedTestfiles/java/${packagePath}/blub.sf",
-                              "src/test/resources/serializedTestfiles/orakel/${packagePath}/blub.sf");
-  }
+    
+    val base = new File("src/test/resources/serializedTestfiles/orakel/${packagePath}");
+
+    val files = collect(base)
+      .filter(_.getName.endsWith(".sf"))
+      .head;
+    
+    for(path <- files.getParentFile().listFiles){
+      compareFiles("src/test/resources/serializedTestfiles/java/${packagePath}/" + path.getName, "src/test/resources/serializedTestfiles/orakel/${packagePath}/" + path.getName);
+    }
+}
 
   test("${packagePath} - Scala${name}Test") {
-    compareFiles("src/test/resources/serializedTestfiles/scala/${packagePath}/blub.sf",
-                              "src/test/resources/serializedTestfiles/orakel/${packagePath}/blub.sf");
+
+    val base = new File("src/test/resources/serializedTestfiles/orakel/${packagePath}");
+
+    val files = collect(base)
+      .filter(_.getName.endsWith(".sf"))
+      .head;
+    
+    for(path <- files.getParentFile().listFiles){
+      compareFiles("src/test/resources/serializedTestfiles/scala/${packagePath}/" + path.getName, "src/test/resources/serializedTestfiles/orakel/${packagePath}/" + path.getName);
+    }
   }
 
   /**
@@ -110,84 +123,11 @@ class Generic${name}Test extends CommonTest {
 
       val typenames = (a ++ b).map(_.name).toSet
       for (name ← typenames.par) (a.find(_.name.equals(name)), b.find(_.name.equals(name))) match {
-        case (None, _)            ⇒ println(s"A does not contain type $$name")
-        case (_, None)            ⇒ println(s"B does not contain type $$name")
+        case (scala.None, _)            ⇒ println(s"A does not contain type $$name")
+        case (_, scala.None)            ⇒ println(s"B does not contain type $$name")
         case (Some(ta), Some(tb)) ⇒ compareType(ta, tb)
       }
   }
-
-  /**
-   * compare two types
-   */
-  def compareType(a : Access[_ <: SkillObject], b : Access[_ <: SkillObject]) {
-
-    val fas = a.fields
-
-    // they have no meaningful data
-    if ((fas.isEmpty && b.fields.isEmpty) || a.isEmpty || b.isEmpty) {
-      if (a.size > b.size) {
-        println(s"A.$$a has $${a.size - b.size} more instances");
-      } else if (a.size < b.size) {
-        println(s"B.$$b has $${b.size - a.size} more instances");
-      }
-
-      return
-    }
-
-    if (!a.fields.map(_.name).toSeq.sorted.sameElements(b.fields.map(_.name).toSeq.sorted)) {
-      println(s"Type $$a has different fields")
-    }
-
-    while (fas.hasNext) {
-      val fa = fas.next
-      val fb = b.fields.find(_.name.equals(fa.name)).get
-
-      val as = a.all
-      val bs = b.all
-
-      while (as.hasNext && bs.hasNext) {
-        val xa = as.next
-        val xb = bs.next
-
-        fa.t match {
-          case t : SetType[_] ⇒
-            locally {
-              val (left, right) = (xa.get(fa).asInstanceOf[HashSet[_]], xb.get(fb).asInstanceOf[HashSet[_]])
-              if (compare(left, right) && !left.toArray.map(_.toString).sorted.sameElements(right.toArray.map(_.toString).sorted)) {
-                println(s"A.$$xa.$$fa != B.$$xb.$$fb")
-                println(s"  $${xa.get(fa)} <-> $${xb.get(fb)}")
-              }
-            }
-
-          case t : SingleBaseTypeContainer[_, _] ⇒
-            locally {
-              var i = 0
-              val (left, right) = (xa.get(fa).asInstanceOf[Iterable[_]], xb.get(fb).asInstanceOf[Iterable[_]])
-              if (compare(left, right) && !left.map(_.toString).sameElements(right.map(_.toString))) {
-                println(s"A.$$xa.$$fa != B.$$xb.$$fb")
-                println(s"  $${xa.get(fa)} <-> $${xb.get(fb)}")
-              }
-            }
-          case t : MapType[_, _] ⇒
-
-          case _ ⇒
-            if (compare(xa.get(fa), xb.get(fb))) {
-              println(s"A.$$xa.$$fa != B.$$xb.$$fb")
-              println(s"  $${xa.get(fa)} <-> $${xb.get(fb)}")
-            }
-        }
-      }
-    }
-
-    if (a.size > b.size) {
-      println(s"A.$$a has $${a.size - b.size} more instances");
-    } else if (a.size < b.size) {
-      println(s"B.$$b has $${b.size - a.size} more instances");
-    }
-  }
-
-  @inline
-  def compare(x : Any, y : Any) = x != y && x != null && y != null && x.toString() != y.toString()
 """)
 return rval;
   }
