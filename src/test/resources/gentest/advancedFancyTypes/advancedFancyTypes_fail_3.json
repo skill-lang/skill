@@ -1,4 +1,5 @@
 {
+	"Comment" : "Should fail because d is not from type of F(aMap)",
 	"shouldFail" : true,
 	"data" : {
 	    "d" : {

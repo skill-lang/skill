@@ -1,4 +1,5 @@
 {
+	"Comment" : "Should fail because d is not from type of G(Value in G)",
 	"shouldFail" : true,
 	"data" : {
 	    "d" : {
