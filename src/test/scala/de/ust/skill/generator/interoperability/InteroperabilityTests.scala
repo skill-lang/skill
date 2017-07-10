@@ -83,12 +83,12 @@ import $packagePath.api.SkillFile
 class Generic${name}Test extends CommonTest {
   test("${packagePath} - Java${name}Test") {
     compareFiles("src/test/resources/serializedTestfiles/java/${packagePath}/blub.sf",
-                              "src/test/resources/serializedTestfiles/orakel/${packagePath}/blub.sf" );
+                              "src/test/resources/serializedTestfiles/orakel/${packagePath}/blub.sf");
   }
 
   test("${packagePath} - Scala${name}Test") {
     compareFiles("src/test/resources/serializedTestfiles/scala/${packagePath}/blub.sf",
-                              "src/test/resources/serializedTestfiles/orakel/${packagePath}/blub.sf" );
+                              "src/test/resources/serializedTestfiles/orakel/${packagePath}/blub.sf");
   }
 
   /**
