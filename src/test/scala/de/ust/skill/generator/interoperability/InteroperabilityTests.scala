@@ -81,17 +81,28 @@ import $packagePath.api.SkillFile
  * Tests the file reading capabilities.
  */
 class Generic${name}Test extends CommonTest {
-  test("${packagePath} - ${name}Test") {
-    if (args.length != 2)
-      System.err.println("takes two paths as arguments")
-    else {
+  test("${packagePath} - Java${name}Test") {
+    compareFiles("src/test/resources/serializedTestfiles/java/${packagePath}/blub.sf",
+                              "src/test/resources/serializedTestfiles/orakel/${packagePath}/blub.sf" );
+  }
+
+  test("${packagePath} - Scala${name}Test") {
+    compareFiles("src/test/resources/serializedTestfiles/scala/${packagePath}/blub.sf",
+                              "src/test/resources/serializedTestfiles/orakel/${packagePath}/blub.sf" );
+  }
+
+  /**
+   * comapre two files
+   */
+  def compareFiles(fileA : String, fileB : String) {
+    
       implicit val context = global
             
       val asyncA = Future {
-        SkillFile.open(args(0), Read, ReadOnly)
+        SkillFile.open(fileA, Read, ReadOnly)
       }
       val asyncB = Future {
-        SkillFile.open(args(1), Read, ReadOnly)
+        SkillFile.open(fileB, Read, ReadOnly)
       }
 
       val a = Await.result(asyncA, Inf)
@@ -103,7 +114,6 @@ class Generic${name}Test extends CommonTest {
         case (_, None)            ⇒ println(s"B does not contain type $$name")
         case (Some(ta), Some(tb)) ⇒ compareType(ta, tb)
       }
-    }
   }
 
   /**
