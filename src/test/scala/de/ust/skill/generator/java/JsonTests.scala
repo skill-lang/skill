@@ -74,7 +74,6 @@ class JsonTests extends common.GenericJsonTests {
 		
 		Path binaryFile = createFile("${packagePath}/", "write.generic.${testname}");
 		SkillFile sf = SkillFile.open(binaryFile);
-        reflectiveInit(sf);
         
 		creator.SkillObjectCreator.generateSkillFileMappings(sf, types, typeFieldMapping);
     

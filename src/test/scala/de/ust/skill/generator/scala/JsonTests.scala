@@ -101,7 +101,6 @@ class Generic${name}Test extends CommonTest {
 	test("${packagePath} - ${testname}") {
     val path = createFile("${packagePath}/", "write.generic.${testname}");
     var sf = SkillFile.open(path, Create, Write);
-    reflectiveInit(sf);
     
     def types = creator.SkillObjectCreator.generateSkillFileTypeMappings(sf);
     def typeFieldMapping = creator.SkillObjectCreator.generateSkillFileFieldMappings(sf);
