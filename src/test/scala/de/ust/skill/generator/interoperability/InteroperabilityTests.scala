@@ -87,7 +87,7 @@ class Generic${name}Test extends CommonTest {
       .head;
     
     for(path <- files.getParentFile().listFiles){
-      asser( compareFiles("src/test/resources/serializedTestfiles/java/${packagePath}/" + path.getName, "src/test/resources/serializedTestfiles/orakel/${packagePath}/" + path.getName));
+      assert( compareFiles("src/test/resources/serializedTestfiles/java/${packagePath}/" + path.getName, "src/test/resources/serializedTestfiles/orakel/${packagePath}/" + path.getName));
     }
 }
 
@@ -107,7 +107,7 @@ class Generic${name}Test extends CommonTest {
   /**
    * comapre two files
    */
-  def compareFiles(fileA : String, fileB : String): Boolean = {
+  def compareFiles(fileA : String, fileB : String): scala.Boolean = {
     
       implicit val context = global
             
@@ -129,7 +129,7 @@ class Generic${name}Test extends CommonTest {
       }
       return equal;
   }
-  }
+  
 """)
 return rval;
   }
