@@ -234,15 +234,13 @@ class Generic${name}Test extends CommonTest {
   }
 
   def instantiateArray(instantiations: String, array: JSONArray, objValueType: String, attrKey: String, collectionName: String): String = {
-    var ins = instantiations.concat(s"""
-    var ${collectionName}: Traversable[_] = new ListBuffer[Any]();
-    tempCacheList = new ListBuffer[Any]();
-    """);
+    //var test = initCollection(typeFieldMapping("basictypes")("anarray").t, typeFieldMapping("basictypes")("anarray"), all_ausertype_obj)
+    
+    var ins = instantiations.concat("var " + collectionName + " = initCollection(typeFieldMapping(\"" + objValueType.toLowerCase() + "\")(\"" + attrKey.toLowerCase() + "\").t, typeFieldMapping(\"" + objValueType.toLowerCase() + "\")(\"" + attrKey.toLowerCase() + "\")");
     for (x <- intWrapper(0) until array.length()) {
-      ins = ins.concat("	tempCacheList += " + getcurrentArrayValue(array, x, attrKey, objValueType) + ";\n");
+      ins = ins.concat(", " + getcurrentArrayValue(array, x, attrKey, objValueType));
     }
-    ins = ins.concat("	" + collectionName + " = " + collectionName + " ++ tempCacheList;\n");
-    ins = ins.concat("\n");
+    ins = ins.concat(");\n\n");
     return ins;
   }
 
