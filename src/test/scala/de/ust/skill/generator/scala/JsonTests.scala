@@ -100,7 +100,7 @@ class Generic${name}Test extends CommonTest {
     rval.write(s"""
 	test("${packagePath} - ${testname}") {
     val path = createFile("${packagePath}/", "write.generic.${testname}");
-    val sf = SkillFile.open(path, Create, Write);
+    var sf = SkillFile.open(path, Create, Write);
     reflectiveInit(sf);
     
     def types = creator.SkillObjectCreator.generateSkillFileTypeMappings(sf);
@@ -114,7 +114,7 @@ class Generic${name}Test extends CommonTest {
       +
       generateObjectInstantiation(testfile)
       +
-
+      
       """
 	}
 
@@ -182,6 +182,9 @@ class Generic${name}Test extends CommonTest {
       }
     }
     instantiations = instantiations.concat("sf.close;\n");
+    instantiations = instantiations.concat("""
+      sf = SkillFile.open(path, Read, Write);
+      sf.close;""")
     if (content.getBoolean("shouldFail")) {
       instantiations = instantiations.concat("}\n");
     }

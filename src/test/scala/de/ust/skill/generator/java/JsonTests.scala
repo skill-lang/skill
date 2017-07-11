@@ -86,6 +86,9 @@ class JsonTests extends common.GenericJsonTests {
       +
 
       """
+      
+      sf = SkillFile.open(binaryFile);
+      sf.close();
 	}
 
 """)
