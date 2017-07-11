@@ -120,14 +120,13 @@ class Generic${name}Test extends CommonTest {
 
       val a = Await.result(asyncA, Inf)
       val b = Await.result(asyncB, Inf)
-      var equal = false;
       val typenames = (a ++ b).map(_.name).toSet
       for (name ← typenames.par) (a.find(_.name.equals(name)), b.find(_.name.equals(name))) match {
-        case (scala.None, _)      ⇒ println(s"A does not contain type $name"); return false;
-        case (_, scala.None)      ⇒ println(s"B does not contain type $name"); return false;
-        case (Some(ta), Some(tb)) ⇒  equal = compareType(ta, tb);
+        case (scala.None, _)      ⇒ println(s"A does not contain type interoperability"); return false;
+        case (_, scala.None)      ⇒ println(s"B does not contain type interoperability"); return false;
+        case (Some(ta), Some(tb)) ⇒  if(!compareType(ta, tb)) {return false;}
       }
-      return equal;
+      return true;
   }
   
 """)
