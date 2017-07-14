@@ -63,6 +63,13 @@ class JsonTests extends common.GenericJsonTests {
     rval
   }
 
+  /**
+    * Generates code for a single test case method.
+    * @param rval string containing all code for that test case
+    * @param testfile path to JSON test case specification
+    * @param packagePath path to package of the SKilL class to be tested
+    * @return test case code in rval
+    */
   def makeTestForJson(rval: PrintWriter, testfile: String, packagePath: String): PrintWriter = {
     def testname = new File(testfile).getName.replace(".json", "");
     rval.write(s"""
@@ -100,6 +107,7 @@ class JsonTests extends common.GenericJsonTests {
     val jsonObjects = content.getJSONObject("data");
     var instantiations = "";
 
+    //Add code for expecting exceptions if needed.
     if (content.getBoolean("shouldFail")) {
       instantiations = instantiations.concat(
         """			java.lang.System.out.println("There should be an exception coming up!");
@@ -116,26 +124,21 @@ class JsonTests extends common.GenericJsonTests {
 
         val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
         val currentObjType = currentObj.getString("type").toLowerCase(); //The type of the skillObject
-        val objAttributes = currentObj.getJSONObject("attr"); //The attributes/Fields of the skillObject 
+        val currentObjAttributes = currentObj.getJSONObject("attr"); //The attributes/Fields of the skillObject
 
-        for (currentAttrKey <- asScalaSetConverter(objAttributes.keySet()).asScala) {
+        for (currentAttrKey <- asScalaSetConverter(currentObjAttributes.keySet()).asScala) { //for all attributes
 
-          val currentAttrValue = getAttributeValue(objAttributes, currentAttrKey, currentObjKey, currentObjType);
-
-          if (objAttributes.optJSONArray(currentAttrKey) != null) {
-
-            instantiations = instantiateArray(instantiations, objAttributes.getJSONArray(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
-
-          } else if (objAttributes.optJSONObject(currentAttrKey) != null) {
-
-            instantiations = instantiateMap(instantiations, objAttributes.getJSONObject(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
-
+          //Instantiate collection types
+          val currentAttrValue = getAttributeValue(currentObjAttributes, currentAttrKey, currentObjKey, currentObjType);
+          if (currentObjAttributes.optJSONArray(currentAttrKey) != null) {
+            instantiations = instantiateArray(instantiations, currentObjAttributes.getJSONArray(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
+          } else if (currentObjAttributes.optJSONObject(currentAttrKey) != null) {
+            instantiations = instantiateMap(instantiations, currentObjAttributes.getJSONObject(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
           }
 
           instantiations = instantiations.concat(currentObjKey.toLowerCase() + ".set(cast(typeFieldMapping.get(\"" + currentObjType.toLowerCase() + "\").get(\"" + currentAttrKey.toLowerCase() + "\")), " + currentAttrValue + ");\n\n");
-
         }
-      }
+      } //else: current object is a 'reference' and does not need an instantiation
     }
     instantiations = instantiations.concat("sf.close();\n");
     return instantiations;
