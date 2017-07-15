@@ -1,0 +1,40 @@
+{
+	"shouldFail" : false,
+	"data" : {
+	    "ch" : {
+	         "type" : "ColorHolder",
+	         "attr" : {
+	             "anAnnotation" : null,
+	             "anAbstractNode" : "n"
+	         }
+	    },
+		"mrkmap" : {
+			"type" : "skill.map",
+			"valueTypes" : "<coloredNode, marker>",	
+			"attr" : {"n" : "null"}	
+		},
+	    "sn" : {
+	        "type" : "SubNode",
+	        "attr" : {
+	            "edges" : [ "n" ],
+	            "map" : { "n" : "mrkmap" },
+	            "color" : "\"red\"",
+	            "mark" : "\"Cirlce\"",
+	            "next" : "null",
+	            "f" : "null",
+	            "n" : "n"
+	        }
+	    },
+	    "n" : {
+	        "type" : "Node",
+	        "attr" : {
+	            "edges" : [ ],
+	            "map" : { "n" : "mrkmap" },
+	            "color" : "\"blue\"",
+	            "mark" : "\"Circle\"",
+	            "next" : "null"
+	        }
+	    }
+	}
+}
+
