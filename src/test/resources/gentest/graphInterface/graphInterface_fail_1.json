@@ -11,7 +11,7 @@
 	    },
 		"mrkmap" : {
 			"type" : "skill.map",
-			"valueTypes" : "<coloredNode, marker>",	
+			"valueTypes" : "\"<coloredNode, marker>\"",	
 			"attr" : {"n" : "null"}	
 		},
 	    "sn" : {
