@@ -371,11 +371,11 @@ class JsonTests extends common.GenericJsonTests {
 
     } else if (array.optDouble(currentObj, 2009) != 2009) {
 
-      return "wrapPrimitveTypes(" + array.getDouble(currentObj).toString() + ", \"valueType\")";
+      return "wrapPrimitveTypes(" + array.getDouble(currentObj).toString() + ", \"" + valueType + "\")";
 
     } else if (array.optLong(currentObj, 2009) != 2009) {
 
-      return "wrapPrimitveTypes(" + array.getLong(currentObj).toString() + ", \"valueType\")";
+      return "wrapPrimitveTypes(" + array.getLong(currentObj).toString() + ", \"" + valueType + "\")";
 
     } else if (!array.optString(currentObj).isEmpty()) {
       return array.getString(currentObj).toLowerCase();
