@@ -48,8 +48,12 @@ class JsonTests extends common.GenericJsonTests {
       "-o", "testsuites/cpp/src/" + name) ++ options)
   }
 
+  def packagePathToName(packagePath: String): String = {
+    packagePath.split("/").map(EscapeFunction.apply).mkString("::")
+  }
+
   def newTestFile(packagePath: String, name: String): PrintWriter = {
-    val packageName = packagePath.split("/").map(EscapeFunction.apply).mkString("::")
+    val packageName = packagePathToName(packagePath)
     val f = new File(s"testsuites/cpp/test/$packagePath/generic${name}Test.cpp")
     f.getParentFile.mkdirs
     if (f.exists)
@@ -70,9 +74,10 @@ using ::$packageName::api::SkillFile;
   }
 
   def makeTestForJson(rval: PrintWriter, testfile: String, packagePath: String): PrintWriter = {
+    val packageName = packagePathToName(packagePath)
     def testname = new File(testfile).getName.replace(".json", "");
     rval.write(s"""
-TEST(${testname}, ${testname.replaceAll("_[a-z]+_[0-9]+", "")}) {
+TEST(${testname}, ${packageName}) {
 
 GTEST_SUCCEED();
 
