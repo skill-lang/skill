@@ -72,7 +72,7 @@ using ::$packageName::api::SkillFile;
   def makeTestForJson(rval: PrintWriter, testfile: String, packagePath: String): PrintWriter = {
     def testname = new File(testfile).getName.replace(".json", "");
     rval.write(s"""
-TEST(${testname}Test, ${testname}) {
+TEST(${testname}, ${testname.replaceAll("_[a-z]+_[0-9]+", "")}) {
 
 GTEST_SUCCEED();
 
