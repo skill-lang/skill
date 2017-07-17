@@ -1,5 +1,5 @@
 {	
-	"Comment" : "Should fail because next in n gets a ColorHolder not a marker",
+	"Comment" : "Should fail because next in sn gets a ColorHolder not a marker",
 	"shouldFail" : true,
 	"data" : {
 	    "ch" : {
