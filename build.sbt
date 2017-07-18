@@ -42,3 +42,10 @@ assemblyMergeStrategy in assembly := {
   case _ => MergeStrategy.first
 }
 test in assembly := {}
+
+
+cleanFiles <+= baseDirectory { base => base / "testsuites" }
+cleanFiles <+= baseDirectory { base => base / "target" }
+cleanFiles <+= baseDirectory { base => base / "project/target" }
+cleanFiles <+= baseDirectory { base => base / "project/project/target" }
+cleanFiles <+= baseDirectory { base => base / "src/test/scala/de/ust/skill/generator/cpp/target" }
