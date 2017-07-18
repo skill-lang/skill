@@ -62,10 +62,15 @@ class JsonTests extends common.GenericJsonTests {
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
 
     rval.write(s"""
+#include <fstream>
+
 #include <gtest/gtest.h>
+#include <json/json.h>
 #include "../../src/$packagePath/File.h"
 
 using ::$packageName::api::SkillFile;
+using ::std::ifstream;
+
 """)
     for (path ← collectSkillSpecification(packagePath).getParentFile().listFiles if path.getName.endsWith(".json")) {
       makeTestForJson(rval, path.getAbsolutePath(), packagePath);
@@ -79,9 +84,25 @@ using ::$packageName::api::SkillFile;
     rval.write(s"""
 TEST(${testname}, ${packageName}) {
 
-GTEST_SUCCEED();
+    ifstream json{};
+    json.exceptions(ifstream::failbit | ifstream::badbit);
 
-}
+    try {
+        json.open("$testfile");
+        Json::Value root;
+        json >> root;
+        if ( root.get("shouldFail", false).asBool() )
+            std::cout << "This is a test supposed to fail." << std::endl;
+            // TODO: Implement
+        else
+            std::cout << "This is a test supposed to succeed." << std::endl;
+            // TODO: Implement
+        GTEST_SUCCEED();
+    } catch (ifstream::failure e) {
+        GTEST_FAIL();
+    }
+
+}  // TEST(${testname}, ${packageName})
 """)
     rval
   }
