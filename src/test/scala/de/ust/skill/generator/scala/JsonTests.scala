@@ -113,7 +113,7 @@ class Generic${name}Test extends CommonTest {
       +
       generateObjectInstantiation(testfile)
       +
-      
+
       """
 	}
 
@@ -143,11 +143,19 @@ class Generic${name}Test extends CommonTest {
       } else {
         val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
         val currentObjType = currentObj.getString("type"); //The type of the skillObject
-
-        instantiations = instantiations.concat("var temp" + currentObjKey.toLowerCase() + " = types.getOrElse(\"" + currentObjType.toLowerCase() + "\", throw new Exception(\"Unable to find skillObject.\"));\n");
-        instantiations = instantiations.concat(s"""
+        if (currentObjType.startsWith("skill.")) {
+          currentObjType match {
+            case "skill.map" ⇒ referenceInstantiations = referenceInstantiations.concat("var " + currentObjKey.toLowerCase() + " = new HashMap[Any,Any]();\n");
+            case "skill.list" ⇒ referenceInstantiations = referenceInstantiations.concat("var " + currentObjKey.toLowerCase() + " = new ListBuffer[Any]();\n");
+            case "skill.set" ⇒ referenceInstantiations = referenceInstantiations.concat("var " + currentObjKey.toLowerCase() + " = new HashSet[]();\n");
+            case "skill.array" ⇒ referenceInstantiations = referenceInstantiations.concat("var " + currentObjKey.toLowerCase() + " = new ArrayBuffer[Any]();\n");
+          }
+        } else {
+          instantiations = instantiations.concat("var temp" + currentObjKey.toLowerCase() + " = types.getOrElse(\"" + currentObjType.toLowerCase() + "\", throw new Exception(\"Unable to find skillObject.\"));\n");
+          instantiations = instantiations.concat(s"""
       var ${currentObjKey.toLowerCase()}: SkillObject = temp${currentObjKey.toLowerCase()}.reflectiveAllocateInstance.asInstanceOf[SkillObject];  
-""");
+        """);
+        }
       }
     }
     instantiations = instantiations.concat(referenceInstantiations);
@@ -159,24 +167,50 @@ class Generic${name}Test extends CommonTest {
 
         val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
         val currentObjType = currentObj.getString("type").toLowerCase(); //The type of the skillObject
-        val objAttributes = currentObj.getJSONObject("attr"); //The attributes/Fields of the skillObject 
+        if (currentObjType.startsWith("skill.")) {
+          if (currentObjType.equals("skill.map")) {
+            val objAttributes = currentObj.getJSONObject("attr");
 
-        for (currentAttrKey <- asScalaSetConverter(objAttributes.keySet()).asScala) {
+            for (currentAttrKey <- asScalaSetConverter(objAttributes.keySet()).asScala) {
+              var key = currentAttrKey;
+              if (currentAttrKey.contains("\"")) { //True: interpret 'currentObjKey' as string
+                key = "wrapPrimitveMapTypes(" + currentAttrKey + ", " + currentObj.getString("valueTypes") + ",true)";
+              } //False: interpret 'currentObjKey' as reference
 
-          val currentAttrValue = getcurrentAttrValue(objAttributes, currentAttrKey, currentObjKey, currentObjType);
+              var value = objAttributes.get(currentAttrKey).toString();
+              if (objAttributes.get(currentAttrKey).toString().contains("\"")) { //True: interpret value as string
+                value = "wrapPrimitveMapTypes(" + objAttributes.get(currentAttrKey).toString() + ", " + currentObj.getString("valueTypes") + ",false)";
+              } //False: interpret value as reference
 
-          if (objAttributes.optJSONArray(currentAttrKey) != null) {
+              instantiations = instantiations.concat(currentObjKey.toLowerCase() + ".put(" + key + ", " + value + ");\n"); //Code for adding key-value-pair
+            }
+          } else {
+            val objAttributes = currentObj.getJSONArray("attr");
+            for (x <- intWrapper(0) until objAttributes.length()) {
+              instantiations = instantiations.concat(currentObjKey.toLowerCase() + " ++ " + getcurrentArrayValue(objAttributes, x, currentObj.getString("valueTypes")) + ";\n");
+            }
+            instantiations = instantiations.concat("\n");
+          }
+        } else {
+          val objAttributes = currentObj.getJSONObject("attr"); //The attributes/Fields of the skillObject 
 
-            instantiations = instantiateArray(instantiations, objAttributes.getJSONArray(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
+          for (currentAttrKey <- asScalaSetConverter(objAttributes.keySet()).asScala) {
 
-          } else if (objAttributes.optJSONObject(currentAttrKey) != null) {
+            val currentAttrValue = getcurrentAttrValue(objAttributes, currentAttrKey, currentObjKey, currentObjType);
 
-            instantiations = instantiateMap(instantiations, objAttributes.getJSONObject(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
+            if (objAttributes.optJSONArray(currentAttrKey) != null) {
+
+              instantiations = instantiateArray(instantiations, objAttributes.getJSONArray(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
+
+            } else if (objAttributes.optJSONObject(currentAttrKey) != null) {
+
+              instantiations = instantiateMap(instantiations, objAttributes.getJSONObject(currentAttrKey), currentObjType, currentAttrKey.toLowerCase(), currentAttrValue);
+
+            }
+
+            instantiations = instantiations.concat(currentObjKey.toLowerCase() + ".set(typeFieldMapping(\"" + currentObjType.toLowerCase() + "\")(\"" + currentAttrKey.toLowerCase() + "\").asInstanceOf[FieldDeclaration[Any]], " + currentAttrValue + ");\n\n");
 
           }
-
-          instantiations = instantiations.concat(currentObjKey.toLowerCase() + ".set(typeFieldMapping(\"" + currentObjType.toLowerCase() + "\")(\"" + currentAttrKey.toLowerCase() + "\").asInstanceOf[FieldDeclaration[Any]], " + currentAttrValue + ");\n\n");
-
         }
       }
     }
@@ -235,7 +269,7 @@ class Generic${name}Test extends CommonTest {
 
   def instantiateArray(instantiations: String, array: JSONArray, objValueType: String, attrKey: String, collectionName: String): String = {
     //var test = initCollection(typeFieldMapping("basictypes")("anarray").t, typeFieldMapping("basictypes")("anarray"), all_ausertype_obj)
-    
+
     var ins = instantiations.concat("var " + collectionName + " = initCollection(typeFieldMapping(\"" + objValueType.toLowerCase() + "\")(\"" + attrKey.toLowerCase() + "\").t, typeFieldMapping(\"" + objValueType.toLowerCase() + "\")(\"" + attrKey.toLowerCase() + "\")");
     for (x <- intWrapper(0) until array.length()) {
       ins = ins.concat(", " + getcurrentArrayValue(array, x, attrKey, objValueType));
@@ -290,6 +324,30 @@ class Generic${name}Test extends CommonTest {
     } else if (array.optLong(currentObj, 2009) != 2009) {
 
       return "wrapPrimitveTypes(" + array.getLong(currentObj).toString() + ", typeFieldMapping.get(\"" + currentObjType + "\").get(\"" + currentAttrKey.toLowerCase() + "\"))";
+
+    } else if (!array.optString(currentObj).isEmpty()) {
+      return array.getString(currentObj).toLowerCase();
+
+    } else {
+
+      return "null";
+    }
+  }
+  
+  def getcurrentArrayValue(array: JSONArray, currentObj: Int, valueType: String): String = {
+
+    if (array.optBoolean(currentObj) ||
+      (!array.optBoolean(currentObj) && !array.optBoolean(currentObj, true))) {
+
+      return array.getBoolean(currentObj).toString();
+
+    } else if (array.optDouble(currentObj, 2009) != 2009) {
+
+      return "wrapPrimitveTypes(" + array.getDouble(currentObj).toString() + ", \"" + valueType + "\")";
+
+    } else if (array.optLong(currentObj, 2009) != 2009) {
+
+      return "wrapPrimitveTypes(" + array.getLong(currentObj).toString()+ ", \"" + valueType + "\")";
 
     } else if (!array.optString(currentObj).isEmpty()) {
       return array.getString(currentObj).toLowerCase();

@@ -1,5 +1,5 @@
 {
-	"comment" : "Fails because there are to many values in arr"
+	"comment" : "Fails because there are to many values in arr",
 	"shouldFail" : true,
 	"data" : {
 	    "cont" : {
@@ -9,10 +9,18 @@
 	            "varr" : [ -2, -1, 0, 1 ],
 	            "l"    : [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ],
 	            "s"    : [ 9, 9, 9 ],
-	            "f"    : { 1 : 2 },
+	           "f"    : { "\"String\"" : "fmap" },
 	            "someSet" : [ ]
 	        }
-	    }
+	    },
+		"fmap" : {
+			"type" : "skill.map",
+			"valueTypes" : "\"<v64,v64>\"",
+			"attr" : {
+				"\"2\"" : "\"1\"",
+				"\"3\"" : "\"1\"",			
+			}
+		}
 	}
 }
 
