@@ -30,7 +30,7 @@ libraryDependencies += "org.json" % "json" % "20160810"
 
 buildInfoSettings
 
-sourceGenerators in Compile += buildInfo
+sourceGenerators in Compile <+= buildInfo
 
 buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
 
