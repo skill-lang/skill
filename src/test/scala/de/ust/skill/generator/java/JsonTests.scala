@@ -411,7 +411,6 @@ public class GenericJsonTest extends common.CommonTest {
   public final ExpectedException exception = ExpectedException.none();
 
   private static Path path;
-  private JSONObject currentJSON;
 
          """)
       .concat(getInitMethod(packagePath))
@@ -438,8 +437,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -465,7 +463,7 @@ import $packagePath.api.SkillFile;
    * Tests the object generation capabilities.
    */
   @BeforeClass
-  public static void init() throws JSONException, MalformedURLException, IOException {
+  public static void init() throws MalformedURLException, IOException {
     path = Paths.get(java.lang.System.getProperty("user.dir"),
         "src",
         "test",
