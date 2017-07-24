@@ -39,8 +39,20 @@ The same may be done for Java. Navigate into the folder testsuites/java and run
 ant junitreport
 ```
 
-Interoperability tests may only be run after having executed the previous testsuites at least once. If this is the case,
-you may run the interoperability tests from within the testsuites/interoperability folder with the command
+Interoperability tests may only be run after having executed the previous testsuites at least once. Having done that, 
+the resulting serialized binary files of the testsuites can be found in the folder 
+```
+<Testsuite>/src/test/resources/serializedTestfiles
+``` 
+where \<Testsuite> may be "java" or "scala".
+Copy the contents of these folders into 
+```
+testsuites/interoperability/src/test/resources/serializedTestfiles/<Testsuite>
+```
+You may need to create the folder \<Testsuite> (named after the testsuite to be copied) first.
+
+
+After following these steps, you may run the interoperability tests from within the testsuites/interoperability folder with the command
 ```
 sbt test
 ```
