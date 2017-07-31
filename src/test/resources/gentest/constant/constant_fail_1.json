@@ -2,7 +2,7 @@
 	"shouldFail" : true,
 	"data" :{
 	            "consts" : {
-	                "type" : "constants.Constant",
+	                "type" : "Constant",
 	                "attr" : {
 	                    "a" : 8,
 	                    "b" : 16,
