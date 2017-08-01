@@ -180,7 +180,9 @@ TEST(${testname}, ${packageName}) {
     try {
 """
       + generatePoolInstantiation(packagePath, jsonFile)
-      + generateObjectInstantiation(jsonFile, packagePath))
+      + generateObjectInstantiation(jsonFile, packagePath)
+      + s"""
+        sf->flush();\n""")
       val toFail = new JSONObject(new JSONTokener(new java.io.FileInputStream(jsonFile))).getBoolean("shouldFail")
       if ( toFail )
         rval.write(s"""
@@ -304,7 +306,8 @@ using ::$packageName::api::SkillFile;
   }
 
   def generatePoolInstantiation(packagePath: String, jsonFile: String): String = {
-    var res = s"""        auto sf = common::tempFile<SkillFile>();\n"""
+    var res = s"""        auto sf = common::tempFile<SkillFile>();
+        sf->changePath("write.$packagePath");\n"""
     res
   }
 
