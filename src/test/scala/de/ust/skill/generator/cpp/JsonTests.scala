@@ -96,7 +96,7 @@ class JsonTests extends common.GenericJsonTests {
   }
 
   def mapTypeToPoolName(tp: String): String = {
-    s"${mapTypeToCpp(tp).toLowerCase()}_pool"
+    s"sf->${mapTypeToCpp(tp)}"
   }
 
   def mapValueTypesToCpp(valueTypes: String, testName: String): String = {
@@ -203,6 +203,7 @@ TEST(${testname}, ${packageName}) {
 #include <gtest/gtest.h>
 #include <json/json.h>
 #include "../../src/$packagePath/File.h"
+#include "../../../../../cppTest/test/common/utils.h"
 
 #include <skill/api/SkillException.h>
 #include <skill/api/Sets.h>
@@ -245,39 +246,7 @@ using ::$packageName::api::SkillFile;
   }
 
   def generatePoolInstantiation(packagePath: String): String = {
-    var res = ""
-    var typeID = 0; var done = Set[String]()
-    for ( tp <- supertypes.keysIterator.toSet[String] ) {
-      typeID += 1
-      var superTp = supertypes(tp)
-      if ( ! isInterface(tp) && ! done (tp) && tp == superTp ) {  // Stand-alone pool
-        done += tp
-        res += s"""        ${mapTypeToPoolType(tp, packagePath)} ${mapTypeToPoolName(tp)}{$typeID, nullptr, nullptr};\n"""
-      } else if ( ! isInterface(tp) && ! done(tp) ) {  // Pool with superpool
-        var todo = Stack[String]()
-        while ( ! done(superTp) && superTp != supertypes(superTp) && ! done(supertypes(superTp)) ) {
-          if ( ! isInterface(superTp) )
-            todo.push(superTp)
-          superTp = supertypes(superTp)
-        }
-        if ( ! done(superTp) ) {
-          done += superTp
-          if ( superTp == supertypes(superTp) || isInterface(superTp) )
-            res += s"""        ${mapTypeToPoolType(superTp, packagePath)} ${mapTypeToPoolName(superTp)}{$typeID, nullptr, nullptr};\n"""
-          else
-            res += s"""        ${mapTypeToPoolType(superTp, packagePath)} ${mapTypeToPoolName(superTp)}{$typeID, &${mapTypeToPoolName(supertypes(superTp))}, nullptr, nullptr};\n"""
-        }
-        var lastSuperTp = superTp
-        while ( ! todo.isEmpty ) {
-          lastSuperTp = superTp
-          superTp = todo.pop
-          done += superTp
-          res += s"""        ${mapTypeToPoolType(superTp, packagePath)} ${mapTypeToPoolName(superTp)}{$typeID, &${mapTypeToPoolName(lastSuperTp)}, nullptr, nullptr};\n"""
-        }
-        done += tp
-        res += s"""        ${mapTypeToPoolType(tp, packagePath)} ${mapTypeToPoolName(tp)}{$typeID, &${mapTypeToPoolName(superTp)}, nullptr, nullptr};\n"""
-      }  // if ( ! isInterface(tp) && ! done (tp) && tp == superTp )
-    }  // for ( tp <- ... )
+    var res = "        auto sf = common::tempFile<SkillFile>();\n"
     res
   }
 
@@ -310,7 +279,7 @@ using ::$packageName::api::SkillFile;
           val tp = mapTypeToCpp(objType)
           val pool = mapTypeToPoolName(objType)
           res ++= s"""        {
-            auto* obj = ${pool}.add();\n"""
+            auto* obj = ${pool}->add();\n"""
           val objAttr = obj.getJSONObject("attr")
           for ( attrName <- objAttr.keySet().asScala ) {
             var varName = s"${objName.toLowerCase()}_$attrName"
