@@ -180,16 +180,26 @@ TEST(${testname}, ${packageName}) {
     try {
 """
       + generatePoolInstantiation(packagePath, jsonFile)
-      + generateObjectInstantiation(jsonFile, packagePath)
-      + s"""
-        GTEST_SUCCEED();
-    } catch (ifstream::failure e) {
+      + generateObjectInstantiation(jsonFile, packagePath))
+      val toFail = new JSONObject(new JSONTokener(new java.io.FileInputStream(jsonFile))).getBoolean("shouldFail")
+      if ( toFail )
+        rval.write(s"""
+        GTEST_FAIL();\n""")
+      else
+        rval.write(s"""
+        GTEST_SUCCEED();\n""")
+      rval.write(s"""    } catch (ifstream::failure e) {
         GTEST_FAIL();
     } catch (TestException e) {
         GTEST_FAIL();
-    } catch (skill::SkillException e) {
-        GTEST_FAIL();
-    }
+    } catch (skill::SkillException e) {\n""")
+      if ( toFail )
+        rval.write(s"""
+        GTEST_SUCCEED();\n""")
+      else
+        rval.write(s"""
+        GTEST_FAIL();\n""")
+      rval.write(s"""    }
 
 }  // TEST(${testname}, ${packageName})
 """)
