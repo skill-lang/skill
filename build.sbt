@@ -1,8 +1,8 @@
 name := "skill"
 
-version := "0.3"
+version := "0.9"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.3"
 
 javacOptions ++= Seq("-encoding", "UTF-8")
 
@@ -10,7 +10,7 @@ compileOrder := CompileOrder.JavaThenScala
 
 libraryDependencies ++= Seq(
 	"junit" % "junit" % "4.12" % "test",
-	"org.scalatest" % "scalatest_2.11" % "2.2.4" % "test"
+    "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 )
 
 exportJars := true

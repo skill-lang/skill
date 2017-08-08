@@ -83,7 +83,7 @@ trait SourceOptions extends AbstractOptions {
           else "/generated/" + lang
 
         // set options
-        for ((k, v) ← languageOptions.getOrElse(lang, new HashMap())) {
+        for ((k, v) ← languageOptions.getOrElse(lang, new ArrayBuffer())) {
           gen.setOption(k.toLowerCase, v)
         }
 
