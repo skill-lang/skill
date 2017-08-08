@@ -1,0 +1,111 @@
+#! basicTypes
+
+/** Contains a basic Int8*/
+
+BasicInt8{
+
+  i8 basicInt;
+
+}
+
+/** Contains a basic Int16*/
+
+BasicInt16{
+
+  i16 basicInt;
+
+}
+
+/** Contains a basic Int32*/
+
+BasicInt32{
+
+  i32 basicInt;
+
+}
+
+/** Contains a basic Int64 with i64*/
+
+BasicInt64I{
+
+  i64 basicInt;
+
+}
+
+/** Contains a basic Int64  with v64*/
+
+BasicInt64V{
+
+  v64 basicInt;
+
+}
+
+/** Contains all basic int types */
+
+BasicIntegers{
+
+  BasicInt8 int8;
+  BasicInt16 int16;
+  BasicInt32 int32;
+  BasicInt64I int64I;
+  BasicInt64V int64V;
+
+}
+
+/** Contains a basic Float32*/
+
+BasicFloat32{
+
+  f32 basicFloat;
+
+}
+
+
+/** Contains a basic Float64*/
+
+BasicFloat64{
+
+  f64 basicFloat;
+
+}
+
+/** Contains all basic float types */
+
+BasicFloats{
+
+  BasicFloat32 float32;
+  BasicFloat64 float64;
+
+}
+
+/** Contains a basic bool*/
+
+BasicBool{
+
+  bool basicBool;
+
+}
+
+/** Contains a basic String*/
+
+BasicString{
+
+  string basicString;
+
+}
+
+/** Includes all basic types */
+
+BasicTypes{
+
+  annotation anAnnotation;
+  BasicBool aBool;
+  BasicString aString;
+  BasicIntegers aUserType;
+  BasicFloats anotherUserType;
+  BasicIntegers[] anArray;
+  set<i8>  aSet;
+  list<f32> aList;
+  map<i16,i8> aMap;  
+
+}

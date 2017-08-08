@@ -14,6 +14,11 @@ import org.scalatest.ConfigMap
 import org.scalatest.FunSuite
 
 import de.ust.skill.main.CommandLine
+import java.nio.file.Paths
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.attribute.BasicFileAttributes
+import scala.io.Source
 
 /**
  * Common implementation of generic tests
@@ -48,6 +53,11 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
    */
   def makeGenBinaryTests(name : String) : Unit
 
+  def collect(f : File) : Seq[File] = {
+      (for (path ← f.listFiles if path.isDirectory) yield collect(path)).flatten ++
+        f.listFiles.filterNot(_.isDirectory)
+  }
+  
   /**
    * helper function that collects binaries for a given test name.
    *
@@ -55,9 +65,6 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
    */
   final def collectBinaries(name : String) : (Seq[File], Seq[File]) = {
     val base = new File("src/test/resources/genbinary")
-    def collect(f : File) : Seq[File] =
-      (for (path ← f.listFiles if path.isDirectory) yield collect(path)).flatten ++
-        f.listFiles.filterNot(_.isDirectory)
 
     val targets = (
       collect(new File(base, "[[all]]"))
@@ -66,6 +73,8 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
 
     targets.partition(_.getPath.contains("accept"))
   }
+  
+  
 
   /**
    * hook called once after all tests have been generated
@@ -86,7 +95,7 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
     def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ ⇒ "x") : _*)
   }
 
-  for (path ← new File("src/test/resources/gentest").listFiles if path.getName.endsWith(testOnly + ".skill")) {
+  for (path ← getFileList(new File("src/test/resources/gentest")) if path.getName.endsWith(testOnly + ".skill")) {
     try {
       val r"""#!\s(\w+)${ name }(.*)${ options }""" =
         io.Source.fromFile(path)(Codec.UTF8).getLines.toSeq.headOption.getOrElse("")
@@ -101,5 +110,10 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
 
   override def afterAll(configMap : ConfigMap) {
     finalizeTests
+  }
+
+  def getFileList(startFile: File): Array[File] = {
+    val files = startFile.listFiles();
+    files ++ files.filter(_.isDirectory()).flatMap(getFileList);
   }
 }

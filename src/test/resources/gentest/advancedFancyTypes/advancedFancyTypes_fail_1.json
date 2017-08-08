@@ -1,0 +1,22 @@
+{
+	"Comment" : "Should fail because g is not from type of D(Value in D)",
+	"shouldFail" : true,
+	"data" : {
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "Parent" : "d",
+	            "Value" : "g"
+	        }
+	    },
+	    "g" : {
+	        "type" : "G",
+	        "attr" : {
+	            "Parent" : "d",
+	            "Value" : "g",
+	            "aMap" : { "g" : "g" }
+	        }
+	    }
+	}
+}
+

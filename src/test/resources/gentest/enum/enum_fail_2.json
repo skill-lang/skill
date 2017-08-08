@@ -1,0 +1,36 @@
+{
+	"Comment" : "Should fail because name must be a String not an enum",
+	"shouldFail" : true,
+	"data" : {
+	    "enm_default" : {
+	        "type" : "TestEnum",
+	        "attr" : {
+	            "name" : "enm_second",
+	            "next" : "enm_second"
+	        }
+	    },
+	    "enm_second" : {
+	        "type" : "TestEnum",
+	        "attr" : {
+	            "name" : "enm_second",
+	            "next" : "enm_third"
+	        }
+	    },
+	    "enm_third" : {
+	        "type" : "TestEnum",
+	        "attr" : {
+	            "name" : "enm_second",
+	            "next" : "enm_last"
+	        }
+	    },
+	    "enm_last" : {
+	        "type" : "TestEnum",
+	        "attr" : {
+	            "name" : "enm_second",
+	            "next" : "enm_default"
+	        }
+	    },
+	    "enm" : "enm_default"
+	}
+}
+

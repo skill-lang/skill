@@ -25,6 +25,8 @@ libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % 
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.0"
 
+libraryDependencies += "org.json" % "json" % "20160810"
+
 
 buildInfoSettings
 
@@ -40,3 +42,10 @@ assemblyMergeStrategy in assembly := {
   case _ => MergeStrategy.first
 }
 test in assembly := {}
+
+
+cleanFiles <+= baseDirectory { base => base / "testsuites" }
+cleanFiles <+= baseDirectory { base => base / "target" }
+cleanFiles <+= baseDirectory { base => base / "project/target" }
+cleanFiles <+= baseDirectory { base => base / "project/project/target" }
+cleanFiles <+= baseDirectory { base => base / "src/test/scala/de/ust/skill/generator/cpp/target" }

@@ -1,0 +1,12 @@
+{
+	"shouldFail" : false,
+	"data" : {
+	    "n" : {
+	        "type" : "Number",
+	        "attr" : {
+	            "number" : 1234567
+	        }
+	    }
+	}
+}
+

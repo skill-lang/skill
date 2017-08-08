@@ -1,0 +1,35 @@
+{
+	"Comment" : "Should fail because b is not from type of d",
+	"shouldFail" : true,
+	"data" : {
+	    "a" : {
+	        "type" : "A",
+	        "attr" : {
+	            "a" : "a"
+	        }
+	    },
+	    "b" : {
+	        "type" : "B",
+	        "attr" : {
+	            "a" : "a",
+	            "b" : "b"
+	        }
+	    },
+	    "c" : {
+	        "type" : "C",
+	        "attr" : {
+	            "a" : "a",
+	            "c" : "c"
+	        }
+	    },
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "a" : "a",
+	            "b" : "d",
+	            "d" : "b"
+	        }
+	    }
+	}
+}
+

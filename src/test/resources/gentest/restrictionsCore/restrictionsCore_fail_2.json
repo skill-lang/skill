@@ -1,0 +1,14 @@
+{
+	"Comment" : "Should fail because name must be nonnull",
+	"shouldFail" : true,
+	"data" : {
+	    "sys" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : null,
+	            "version" : 1.1
+	        }
+	    }
+	}
+}
+

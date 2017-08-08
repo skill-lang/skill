@@ -1,0 +1,30 @@
+{
+	"shouldFail" : false,
+	"data" : {
+	    "a" : {
+	        "type" : "A",
+	        "attr" : {
+	            "a" : "a"
+	        }
+	    },
+	    "b" : {
+	        "type" : "B",
+	        "attr" : {
+	            "b" : "b"
+	        }
+	    },
+	    "c" : {
+	        "type" : "C",
+	        "attr" : {
+	            "c" : "c"
+	        }
+	    },
+	    "d" : {
+	        "type" : "D",
+	        "attr" : {
+	            "d" : null
+	        }
+	    }
+	}
+}
+

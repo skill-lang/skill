@@ -1,0 +1,17 @@
+{
+	"Comment" : "Should fail because c contains no a",
+	"shouldFail" : false,
+	"data" : {
+	    "a" : {
+	        "type" : "A",
+	        "attr" : {
+	            "a" : "a"
+	        }
+	    },
+	    "c" : {
+	        "type" : "C",
+	        "attr" : { }
+	    }
+	}
+}
+

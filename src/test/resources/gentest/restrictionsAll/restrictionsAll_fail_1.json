@@ -1,0 +1,71 @@
+{
+	"Comment" : "Should fail because Operator is a unique class an the two objects op_1 and op_2 should be distinct in their serialized form",
+ 	"shouldFail" : true,
+	"data" : {
+	    "op_1" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "\"Minus\""
+	        }
+	    },
+		"op_2" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "\"Minus\""
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op_1",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "\"Monosystem\"",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBoarderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "\"Hello World!\"",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBoarderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "\"I am a comment\"",
+	            "target" : "op_1",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+

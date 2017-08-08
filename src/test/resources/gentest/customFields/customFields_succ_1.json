@@ -1,0 +1,10 @@
+{
+	"shouldFail" : false,
+	"data" : {
+	    "c" : {
+	        "type" : "Custom",
+	        "attr" : { }
+	    }
+	}
+}
+

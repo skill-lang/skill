@@ -1,0 +1,65 @@
+{
+	"Comment" : "Should fail because the operator of a Term musst be not null",
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "\"Minus\""
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : null,
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "\"Saturn 5\"",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "dbc" : {
+	        "type" : "DefaultBoarderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "\"Hello World!\"",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBoarderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "\"I am a comment\"",
+	            "target" : "op",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+

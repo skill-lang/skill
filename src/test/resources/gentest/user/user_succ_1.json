@@ -1,0 +1,13 @@
+{
+	"shouldFail" : false,
+	"data" : {
+	    "usr" : {
+	        "type" : "User",
+	        "attr" : {
+	            "name" : "\"Bernd das Brot\"",
+	            "age" : 44
+	        }
+	    }
+	}
+}
+

@@ -1,0 +1,10 @@
+{
+	"shouldFail" : false,
+	"data" : {
+	    "consts" : {
+	        "type" : "Constant",
+	        "attr" : { }
+	    }
+	}
+}
+

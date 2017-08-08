@@ -1,0 +1,47 @@
+{
+	"shouldFail" : false,
+	"data" : {
+	    "u" : {
+	        "type" : "User",
+	        "attr" : {
+	            "name" : "\"herb\"",
+	            "age" : 43,
+	            "reflectivelyVisible" : "\"I am not visible\""
+	        }
+	    },
+	    "a" : {
+	        "type" : "Abuser",
+	        "attr" : {
+	            "abuseDescription" : "\"I am a absue description\""
+	        }
+	    },
+	    "nas" : {
+	        "type" : "NowASingleton",
+	        "attr" : { }
+	    },
+	    "em" : {
+	        "type" : "ExternMixin",
+	        "attr" : {
+	            "unknownStuff" : null
+	        }
+	    },
+	    "bt" : {
+	        "type" : "BadType",
+	        "attr" : {
+	            "ignoredData" : "\"Ignore me\"",
+	            "reflectivelyInVisible" : "\"I am reflectively visible\""
+	        }
+	    },
+	    "uid" : {
+	        "type" : "UID",
+	        "attr" : {
+	            "identifier" : 7
+	        }
+	    },
+	    "expr" : {
+	        "type" : "Expression",
+	        "attr" : { }
+	    }
+	}
+}
+

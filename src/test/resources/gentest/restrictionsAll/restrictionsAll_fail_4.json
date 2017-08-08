@@ -1,0 +1,70 @@
+{
+	"Comment" : "Should fail because there must at most one instance of none",
+	"shouldFail" : true,
+	"data" : {
+	    "op" : {
+	        "type" : "Operator",
+	        "attr" : {
+	            "name" : "\"Minus\""
+	        }
+	    },
+	    "trm" : {
+	        "type" : "Term",
+	        "attr" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "type" : "RegularProperty",
+	        "attr" : { }
+	    },
+
+	    "sys_obj" : {
+	        "type" : "System",
+	        "attr" : {
+	            "name" : "\"Satrun5\"",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_1" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+	    "none_2" : {
+	        "type" : "None",
+	        "attr" : { }
+	    },
+
+	    "dbc" : {
+	        "type" : "DefaultBoarderCases",
+	        "attr" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "\"Hello World!\"",
+	            "none" : "none_1"
+	        }
+	    },
+	    "rbc" : {
+	        "type" : "RangeBoarderCases",
+	        "attr" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "type" : "Comment",
+	        "attr" : {
+	            "text" : "\"A comment\"",
+	            "target" : "op",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+

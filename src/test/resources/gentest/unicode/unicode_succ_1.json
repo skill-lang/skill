@@ -1,0 +1,14 @@
+{
+	"shouldFail" : false,
+	"data" : {
+	    "uc" : {
+	        "type" : "Unicode",
+	        "attr" : {
+	            "one" : "\"1\"",
+	            "two" : "\"ö\"",
+	            "three" : "\"☢\""
+	        }
+	    }
+	}
+}
+

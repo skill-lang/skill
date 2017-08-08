@@ -1,0 +1,92 @@
+{
+	"Comment" : "Fail because Map value is to big",
+	"shouldFail" : true,
+	"data" : {
+	    "all" : {
+	        "type" : "BasicTypes",
+	        "attr" : {
+	            "anAnnotation" : null,
+	            "aBool" : "all_aBool_obj",
+	            "aString" : "all_aString_obj",
+	            "aUserType" : "all_aUserType_obj",
+	            "anotherUserType" : "all_anotherUserType_obj",
+	            "anArray" : [ "all_aUserType_obj" ],
+	            "aSet"  : [ 2 ],
+	            "aList" : [ 3, 4 ],
+	            "aMap"  : { "\"5\"" : "\"333\"" }
+	        }
+	    },
+	    "all_aBool_obj" : {
+	        "type" : "BasicBool",
+	        "attr" : {
+	            "basicBool" : true
+	        }
+	    },
+	    "all_aString_obj" : {
+	        "type" : "BasicString",
+	        "attr" : {
+	            "basicString" : "\"Hello World\""
+	        }
+	    },
+	    "all_aUserType_obj" : {
+	        "type" : "BasicIntegers",
+	        "attr" : {
+	            "int8"   : "all_aUserType_obj_int8_obj",
+	            "int16"  : "all_aUserType_obj_int16_obj",
+	            "int32"  : "all_aUserType_obj_int32_obj",
+	            "int64I" : "all_aUserType_obj_int64I_obj",
+	            "int64V" : "all_aUserType_obj_int64V_obj"
+	        }
+	    },
+	    "all_aUserType_obj_int8_obj" : {
+	        "type" : "BasicInt8",
+	        "attr" : {
+	            "basicInt" : -3
+	        }
+	    },
+	    "all_aUserType_obj_int16_obj" : {
+	        "type" : "BasicInt16",
+	        "attr" : {
+	            "basicInt" : -2
+	        }
+	    },
+	    "all_aUserType_obj_int32_obj" : {
+	        "type" : "BasicInt32",
+	        "attr" : {
+	            "basicInt" : -1
+	        }
+	    },
+	    "all_aUserType_obj_int64I_obj" : {
+	        "type" : "BasicInt64I",
+	        "attr" : {
+	            "basicInt" :  0
+	        }
+	    },
+	    "all_aUserType_obj_int64V_obj" : {
+	        "type" : "BasicInt64V",
+	        "attr" : {
+	            "basicInt" :  1
+	        }
+	    },
+	    "all_anotherUserType_obj" : {
+	        "type" : "BasicFloats",
+	        "attr" : {
+	            "float32" : "all_anotherUserType_obj_float32_obj",
+	            "float64" : "all_anotherUserType_obj_float64_obj"
+	        }
+	    },
+	    "all_anotherUserType_obj_float32_obj" : {
+	        "type" : "BasicFloat32",
+	        "attr" : {
+	            "basicFloat" : 1
+	        }
+	    },
+	    "all_anotherUserType_obj_float64_obj" : {
+	        "type" : "BasicFloat64",
+	        "attr" : {
+	            "basicFloat" : 2
+	        }
+	    }
+	}
+}
+

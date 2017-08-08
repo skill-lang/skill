@@ -1,0 +1,12 @@
+{
+	"shouldFail" : false,
+	"data" : {
+	    "age" : {
+	        "type" : "Age",
+	        "attr" : {
+	            "age" : 42
+	        }
+	    }
+	}
+}
+
