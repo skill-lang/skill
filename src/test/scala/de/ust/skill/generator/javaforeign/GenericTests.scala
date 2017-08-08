@@ -91,7 +91,7 @@ class GenericTests extends FunSuite with BeforeAndAfterAll {
     }
   }
 
-  override def afterAll(configMap : ConfigMap) {
+  override def afterAll {
     finalizeTests
   }
 }
