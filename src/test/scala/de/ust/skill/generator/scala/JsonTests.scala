@@ -28,7 +28,7 @@ import scala.collection.JavaConverters._
  * Generic tests have an implementation for each programming language, because otherwise deleting the generated code
  * upfront would be ugly.
  *
- * @author Timm Felden
+ * @author Peter von Zameck Glyscinski
  */
 @RunWith(classOf[JUnitRunner])
 class JsonTests extends common.GenericJsonTests {
