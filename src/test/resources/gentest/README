@@ -5,3 +5,30 @@ this feature can be used to create skill specifications that should not be used 
 
 tests will be created for all .skill-files and all known generator implementations.
 output directory will be testsuites/<language name>
+
+API tests are generated for each JSON file in a subdirectory that also contains
+a .skill-specification.
+A JSON file contains an object on top level.
+The fields are "should", "kind" and "obj"; other fields will be ignored.
+- "should" either "fail" or "succeed"; defaults to "succeed"
+- "kind" a name for a test category; defaults to "core"
+- "obj" definitions of named objects. (JSON Type Object)
+Named objects map their name to an object definition.
+An object definition is an object with a single field.
+The name of that field is the name of the type to be allocated.
+The value is an object, that sets values for each field of that type.
+Field values use JSON-equivalents where obvious.
+Reference types use Strings.
+Strings are used as-is.
+Therefore the schema is:
+{
+   ("should" : "fail",)?
+   ("kind" : <name :string>,)?
+   "obj" : {
+      <name : string> : {
+          <type : string> : {
+              <field : string> : <value : value>*
+          }
+      }*
+   }
+}
