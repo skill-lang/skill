@@ -51,7 +51,7 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
   /**
    *  creates unit tests in the target language
    */
-  def makeGenBinaryTests(name : String) : Unit
+  def makeTests(name : String) : Unit
 
   def collect(f : File) : Seq[File] = {
       (for (path ← f.listFiles if path.isDirectory) yield collect(path)).flatten ++
@@ -88,7 +88,7 @@ abstract class GenericTests extends FunSuite with BeforeAndAfterAll {
 
     callMainFor(name, path.getPath, options)
 
-    makeGenBinaryTests(name)
+    makeTests(name)
   }
 
   implicit class Regex(sc : StringContext) {

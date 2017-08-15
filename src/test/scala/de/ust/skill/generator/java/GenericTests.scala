@@ -124,34 +124,25 @@ public class Generic${name}Test extends common.CommonTest {
     out.close
   }
 
-  override def makeGenBinaryTests(name : String) {
+  override def makeTests(name : String) {
     val (accept, reject) = collectBinaries(name)
 
     // generate read tests
-    locally {
-      val out = newTestFile(name, "Read")
+    val out = newTestFile(name, "Read")
 
-      for (f ← accept) out.write(s"""
+    for (f ← accept) out.write(s"""
     @Test
     public void test_${name}_read_accept_${f.getName.replaceAll("\\W", "_")}() throws Exception {
         Assert.assertNotNull(read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}"));
     }
 """)
-      for (f ← reject) out.write(s"""
+    for (f ← reject) out.write(s"""
     @Test(expected = ParseException.class)
     public void test_${name}_read_reject_${f.getName.replaceAll("\\W", "_")}() throws Exception {
         ForceLazyFields.forceFullCheck(read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}"));
     }
 """)
-      closeTestFile(out)
-    }
-
-    //    mit generischem binding sf parsen um an zu erwartende daten zu kommen
-
-    //    mit parser spec parsen um an lesbare daten zu kommen:)
-
-    //    test generieren, der sicherstellt, dass sich die daten da raus lesen lassen
-
+    closeTestFile(out)
   }
 
   override def finalizeTests {

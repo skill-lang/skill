@@ -1,0 +1,12 @@
+{
+    "should" : "fail",
+    "kind" : "restrictions",
+	"obj" : {
+	    "one" : {
+	        "Age" : {
+	            "age" : -1
+	        }
+	    }
+	}
+}
+

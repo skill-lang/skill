@@ -1,0 +1,18 @@
+{	
+	"Comment" : "Should fail because next in sn gets a ColorHolder not a marker",
+    "kind" : "interfaces",
+	"should" : "skip",
+    "skip" : ["java"],
+	"obj" : {
+	    "ch" : {
+	         "ColorHolder" : {
+	         }
+	    },
+	    "sn" : {
+	        "SubNode" : {
+	            "next" : "ch"
+	        }
+	    }
+	}
+}
+

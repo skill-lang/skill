@@ -33,14 +33,14 @@ import scala.collection.JavaConverters._
 @RunWith(classOf[JUnitRunner])
 class JsonTests extends common.GenericJsonTests {
 
-  override def language: String = "scala"
+  override def language : String = "scala"
 
-  override def deleteOutDir(out: String) {
+  override def deleteOutDir(out : String) {
     import scala.reflect.io.Directory
     Directory(new File("testsuites/scala/src/main/scala/", out)).deleteRecursively
   }
 
-  override def callMainFor(name: String, source: String, options: Seq[String]) {
+  override def callMainFor(name : String, source : String, options : Seq[String]) {
     CommandLine.exit = s ⇒ throw new RuntimeException(s)
     CommandLine.main(Array[String](source,
       "--debug-header",
@@ -50,7 +50,7 @@ class JsonTests extends common.GenericJsonTests {
       "-o", "testsuites/scala/src/main/scala") ++ options)
   }
 
-  def newTestFile(packagePath: String, name: String): PrintWriter = {
+  def newTestFile(packagePath : String, name : String) : PrintWriter = {
     val f = new File(s"testsuites/scala/src/test/scala/$packagePath/Generic${name}Test.generated.scala")
     f.getParentFile.mkdirs
     f.createNewFile
@@ -95,7 +95,7 @@ class Generic${name}Test extends CommonTest {
     rval
   }
 
-  def makeTestForJson(rval: PrintWriter, testfile: String, packagePath: String): PrintWriter = {
+  def makeTestForJson(rval : PrintWriter, testfile : String, packagePath : String) : PrintWriter = {
     def testname = new File(testfile).getName.replace(".json", "");
     rval.write(s"""
 	test("${packagePath} - ${testname}") {
@@ -121,7 +121,7 @@ class Generic${name}Test extends CommonTest {
     rval
   }
 
-  def generateObjectInstantiation(jsonFile: String): String = {
+  def generateObjectInstantiation(jsonFile : String) : String = {
     val fileTokens = new JSONTokener(new java.io.FileInputStream(jsonFile));
     val content = new JSONObject(fileTokens);
     val jsonObjects = content.getJSONObject("data");
@@ -136,7 +136,7 @@ class Generic${name}Test extends CommonTest {
 
     //First create skillobjects
     var referenceInstantiations = "";
-    for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is the name of the skillobj to create
+    for (currentObjKey ← asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is the name of the skillobj to create
 
       if (jsonObjects.optJSONObject(currentObjKey) == null) { //if value is not a JSONObject value must be a reference to an existing object
         referenceInstantiations = referenceInstantiations.concat("var " + currentObjKey.toLowerCase() + " = " + jsonObjects.getString(currentObjKey) + ";\n");
@@ -145,9 +145,9 @@ class Generic${name}Test extends CommonTest {
         val currentObjType = currentObj.getString("type"); //The type of the skillObject
         if (currentObjType.startsWith("skill.")) {
           currentObjType match {
-            case "skill.map" ⇒ referenceInstantiations = referenceInstantiations.concat("var " + currentObjKey.toLowerCase() + " = new HashMap[Any,Any]();\n");
-            case "skill.list" ⇒ referenceInstantiations = referenceInstantiations.concat("var " + currentObjKey.toLowerCase() + " = new ListBuffer[Any]();\n");
-            case "skill.set" ⇒ referenceInstantiations = referenceInstantiations.concat("var " + currentObjKey.toLowerCase() + " = new HashSet[]();\n");
+            case "skill.map"   ⇒ referenceInstantiations = referenceInstantiations.concat("var " + currentObjKey.toLowerCase() + " = new HashMap[Any,Any]();\n");
+            case "skill.list"  ⇒ referenceInstantiations = referenceInstantiations.concat("var " + currentObjKey.toLowerCase() + " = new ListBuffer[Any]();\n");
+            case "skill.set"   ⇒ referenceInstantiations = referenceInstantiations.concat("var " + currentObjKey.toLowerCase() + " = new HashSet[]();\n");
             case "skill.array" ⇒ referenceInstantiations = referenceInstantiations.concat("var " + currentObjKey.toLowerCase() + " = new ArrayBuffer[Any]();\n");
           }
         } else {
@@ -162,7 +162,7 @@ class Generic${name}Test extends CommonTest {
     instantiations = instantiations.concat("\n")
 
     //Set skillobject values
-    for (currentObjKey <- asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is the name of the skillobj to create
+    for (currentObjKey ← asScalaSetConverter(jsonObjects.keySet()).asScala) { //currentObjKey is the name of the skillobj to create
       if (jsonObjects.optJSONObject(currentObjKey) != null) {
 
         val currentObj = jsonObjects.getJSONObject(currentObjKey); //The skillobject to create
@@ -171,7 +171,7 @@ class Generic${name}Test extends CommonTest {
           if (currentObjType.equals("skill.map")) {
             val objAttributes = currentObj.getJSONObject("attr");
 
-            for (currentAttrKey <- asScalaSetConverter(objAttributes.keySet()).asScala) {
+            for (currentAttrKey ← asScalaSetConverter(objAttributes.keySet()).asScala) {
               var key = currentAttrKey;
               if (currentAttrKey.contains("\"")) { //True: interpret 'currentObjKey' as string
                 key = "wrapPrimitveMapTypes(" + currentAttrKey + ", " + currentObj.getString("valueTypes") + ",true)";
@@ -186,7 +186,7 @@ class Generic${name}Test extends CommonTest {
             }
           } else {
             val objAttributes = currentObj.getJSONArray("attr");
-            for (x <- intWrapper(0) until objAttributes.length()) {
+            for (x ← intWrapper(0) until objAttributes.length()) {
               instantiations = instantiations.concat(currentObjKey.toLowerCase() + " ++ " + getcurrentArrayValue(objAttributes, x, currentObj.getString("valueTypes")) + ";\n");
             }
             instantiations = instantiations.concat("\n");
@@ -194,7 +194,7 @@ class Generic${name}Test extends CommonTest {
         } else {
           val objAttributes = currentObj.getJSONObject("attr"); //The attributes/Fields of the skillObject 
 
-          for (currentAttrKey <- asScalaSetConverter(objAttributes.keySet()).asScala) {
+          for (currentAttrKey ← asScalaSetConverter(objAttributes.keySet()).asScala) {
 
             val currentAttrValue = getcurrentAttrValue(objAttributes, currentAttrKey, currentObjKey, currentObjType);
 
@@ -224,24 +224,18 @@ class Generic${name}Test extends CommonTest {
     return instantiations;
   }
 
-  def closeTestFile(out: java.io.PrintWriter) {
+  def closeTestFile(out : java.io.PrintWriter) {
     out.write("""
 }
 """)
     out.close
   }
 
-  override def makeGenBinaryTests(name: String) {
-
-    val tmp = collectBinaries(name);
-    val accept = tmp._1
-    val reject = tmp._2
+  override def makeTests(name : String) {
 
     // generate read tests
-    locally {
-      val out = newTestFile(name, "Json")
-      closeTestFile(out)
-    }
+    val out = newTestFile(name, "Json")
+    closeTestFile(out)
 
   }
 
@@ -249,10 +243,10 @@ class Generic${name}Test extends CommonTest {
     // nothing yet
   }
 
-  def instantiateMap(instantiations: String, map: JSONObject, objValueType: String, attrKey: String, mapName: String): String = {
+  def instantiateMap(instantiations : String, map : JSONObject, objValueType : String, attrKey : String, mapName : String) : String = {
     var ins = instantiations.concat("\n");
     ins = ins.concat("var " + mapName + " = new HashMap[Any,Any]();\n");
-    for (currentObjKey <- asScalaSetConverter(map.keySet()).asScala) {
+    for (currentObjKey ← asScalaSetConverter(map.keySet()).asScala) {
       var key = currentObjKey;
       if (currentObjKey.contains("\"")) {
         key = "wrapPrimitveMapTypes(" + currentObjKey + ", typeFieldMapping.get(\"" + objValueType.toLowerCase() + "\").get(\"" + attrKey.toLowerCase() + "\"),true)";
@@ -267,18 +261,18 @@ class Generic${name}Test extends CommonTest {
     return ins;
   }
 
-  def instantiateArray(instantiations: String, array: JSONArray, objValueType: String, attrKey: String, collectionName: String): String = {
+  def instantiateArray(instantiations : String, array : JSONArray, objValueType : String, attrKey : String, collectionName : String) : String = {
     //var test = initCollection(typeFieldMapping("basictypes")("anarray").t, typeFieldMapping("basictypes")("anarray"), all_ausertype_obj)
 
     var ins = instantiations.concat("var " + collectionName + " = initCollection(typeFieldMapping(\"" + objValueType.toLowerCase() + "\")(\"" + attrKey.toLowerCase() + "\").t, typeFieldMapping(\"" + objValueType.toLowerCase() + "\")(\"" + attrKey.toLowerCase() + "\")");
-    for (x <- intWrapper(0) until array.length()) {
+    for (x ← intWrapper(0) until array.length()) {
       ins = ins.concat(", " + getcurrentArrayValue(array, x, attrKey, objValueType));
     }
     ins = ins.concat(");\n\n");
     return ins;
   }
 
-  def getcurrentAttrValue(attributes: JSONObject, currentAttrKey: String, currentObjKey: String, currentObjType: String): String = {
+  def getcurrentAttrValue(attributes : JSONObject, currentAttrKey : String, currentObjKey : String, currentObjType : String) : String = {
 
     if (attributes.optJSONArray(currentAttrKey) != null) {
 
@@ -310,7 +304,7 @@ class Generic${name}Test extends CommonTest {
     }
   }
 
-  def getcurrentArrayValue(array: JSONArray, currentObj: Int, currentAttrKey: String, currentObjType: String): String = {
+  def getcurrentArrayValue(array : JSONArray, currentObj : Int, currentAttrKey : String, currentObjType : String) : String = {
 
     if (array.optBoolean(currentObj) ||
       (!array.optBoolean(currentObj) && !array.optBoolean(currentObj, true))) {
@@ -333,8 +327,8 @@ class Generic${name}Test extends CommonTest {
       return "null";
     }
   }
-  
-  def getcurrentArrayValue(array: JSONArray, currentObj: Int, valueType: String): String = {
+
+  def getcurrentArrayValue(array : JSONArray, currentObj : Int, valueType : String) : String = {
 
     if (array.optBoolean(currentObj) ||
       (!array.optBoolean(currentObj) && !array.optBoolean(currentObj, true))) {
@@ -347,7 +341,7 @@ class Generic${name}Test extends CommonTest {
 
     } else if (array.optLong(currentObj, 2009) != 2009) {
 
-      return "wrapPrimitveTypes(" + array.getLong(currentObj).toString()+ ", \"" + valueType + "\")";
+      return "wrapPrimitveTypes(" + array.getLong(currentObj).toString() + ", \"" + valueType + "\")";
 
     } else if (!array.optString(currentObj).isEmpty()) {
       return array.getString(currentObj).toLowerCase();

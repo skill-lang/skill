@@ -1,0 +1,35 @@
+{
+	"obj" : {
+	    "n1" : {
+	        "Node" : {
+	            "color" : "black",
+	            "edges" : [ "n1","n2","n3","n4","n5" ]
+	        }
+	    },
+	    "n2" : {
+	        "Node" : {
+	            "color" : "schwarz",
+	            "edges" : [ "n1","n2","n3","n4","n5" ]
+	        }
+	    },
+	    "n3" : {
+	        "Node" : {
+	            "color" : "niger",
+	            "edges" : [ "n1","n2","n3","n4","n5" ]
+	        }
+	    },
+	    "n4" : {
+	        "Node" : {
+	            "color" : "noir",
+	            "edges" : [ "n1","n2","n3","n4","n5" ]
+	        }
+	    },
+	    "n5" : {
+	        "Node" : {
+	            "color" : "negro",
+	            "edges" : [ "n1","n2","n3","n4","n5" ]
+	        }
+	    }
+	}
+}
+

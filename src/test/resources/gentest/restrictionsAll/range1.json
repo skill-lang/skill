@@ -1,0 +1,18 @@
+{
+	"Comment" : "Should fail because positive should be positive",
+ 	"should" : "fail",
+    "kind" : "restrictions",
+	"obj" : {
+	    "rbc" : {
+	        "RangeBoarderCases" : {
+	            "positive" : -1,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	}
+}
+

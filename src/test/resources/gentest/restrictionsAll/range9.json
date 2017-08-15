@@ -1,0 +1,17 @@
+{
+ 	"should" : "fail",
+    "kind" : "restrictions",
+	"obj" : {
+	    "rbc" : {
+	        "RangeBoarderCases" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0.001,
+	            "degrees2" : 0
+	        }
+	    },
+	}
+}
+

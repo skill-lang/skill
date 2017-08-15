@@ -1,0 +1,19 @@
+{
+	"Comment" : "Should fail because c cannot be from type of a",
+	"should" : "skip",
+    "skip" : ["java"],
+	"obj" : {
+	    "a" : {
+	        "a" : {
+	            "a" : "a"
+	        }
+	    },
+	    "c" : {
+	        "c" : {
+	            "a" : "a",
+	            "c" : "a"
+	        }
+	    },
+	}
+}
+

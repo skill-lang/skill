@@ -1,0 +1,20 @@
+{
+	"Comment" : "Should fail because System must be a singleton",
+    "kind" : "restrictions",
+	"should" : "fail",
+	"obj" : {
+	    "sys_1" : {
+	        "System" : {
+	            "name" : "Hexadecimal",
+	            "version" : 1.1
+	        }
+	    },
+	    "sys_2" : {
+	        "System" : {
+	            "name" : "Octal",
+	            "version" : 1.2
+	        }
+	    }
+	}
+}
+

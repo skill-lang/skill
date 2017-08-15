@@ -53,7 +53,7 @@ class Main extends FakeMain
   /**
    * Translates types into scala type names.
    */
-  override protected def mapType(t : Type, boxed : Boolean) : String = t match {
+  override def mapType(t : Type, boxed : Boolean) : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
       case "annotation" ⇒ "de.ust.skill.common.java.internal.SkillObject"
 

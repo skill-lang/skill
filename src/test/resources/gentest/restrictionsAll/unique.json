@@ -1,0 +1,18 @@
+{
+	"Comment" : "Should fail because Operator is a unique class an the two objects op_1 and op_2 should be distinct in their serialized form",
+ 	"should" : "fail",
+    "kind" : "restrictions",
+	"obj" : {
+	    "op_1" : {
+	        "Operator" : {
+	            "name" : "Minus"
+	        }
+	    },
+		"op_2" : {
+	        "Operator" : {
+	            "name" : "Minus"
+	        }
+	    }
+    }
+}
+

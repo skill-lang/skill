@@ -37,12 +37,12 @@ class JsonTests extends common.GenericJsonTests {
 
   override val language = "cpp"
 
-  override def deleteOutDir(out: String) {
+  override def deleteOutDir(out : String) {
     import scala.reflect.io.Directory
     Directory(new File("testsuites/cpp/src/", out)).deleteRecursively
   }
 
-  override def callMainFor(name: String, source: String, options: Seq[String]) {
+  override def callMainFor(name : String, source : String, options : Seq[String]) {
     CommandLine.main(Array[String](source,
       "--debug-header",
       "-c",
@@ -52,92 +52,92 @@ class JsonTests extends common.GenericJsonTests {
       "-o", "testsuites/cpp/src/" + name) ++ options)
   }
 
-  def packagePathToName(packagePath: String): String = {
+  def packagePathToName(packagePath : String) : String = {
     packagePath.split("/").map(EscapeFunction.apply).mkString("::")
   }
 
-  def isKnownCppType(tp: String, testName: String) : Boolean = {
+  def isKnownCppType(tp : String, testName : String) : Boolean = {
     // TODO: Change this to sth. like `for ( file <- new File("testsuites/cpp/src/" + testName).listFiles.filter(_.isFile) ) /*...*/`
     tp match {
-            case "MarkerFieldType" => return false
-            case "ColoredNodeFieldType" => return false
-            case _  => return true
+      case "MarkerFieldType"      ⇒ return false
+      case "ColoredNodeFieldType" ⇒ return false
+      case _                      ⇒ return true
     }
   }
 
-  def mapPackageToCpp(packagePath: String): String = {
+  def mapPackageToCpp(packagePath : String) : String = {
     // TODO: use Timm's function
     packagePath match {
-      case "auto" => return "_auto"
-      case _ => return packagePath
+      case "auto" ⇒ return "_auto"
+      case _      ⇒ return packagePath
     }
   }
 
-  def mapTypeToCpp(tp: String): String = {
+  def mapTypeToCpp(tp : String) : String = {
     // TODO: improve
     tp match {
-      case "if" => return "If"
-      case "∀" => return "Z2200"
-      case "bool" => return "Boolean"
-      case "string" => return "String"
-      case _ => return tp
+      case "if"     ⇒ return "If"
+      case "∀"      ⇒ return "Z2200"
+      case "bool"   ⇒ return "Boolean"
+      case "string" ⇒ return "String"
+      case _        ⇒ return tp
     }
   }
 
-  def mapNameToCpp(name: String): String = {
+  def mapNameToCpp(name : String) : String = {
     // TODO: improve
     name match {
-      case "€" => return "Z20AC"
-      case "☢" => return "Z2622"
-      case _ => return name
+      case "€" ⇒ return "Z20AC"
+      case "☢" ⇒ return "Z2622"
+      case _   ⇒ return name
     }
   }
 
-  def mapTypeToPoolType(tp: String, packagePath: String): String = {
+  def mapTypeToPoolType(tp : String, packagePath : String) : String = {
     s"${mapPackageToCpp(packagePath)}::${mapTypeToCpp(tp)}Pool"
   }
 
-  def mapTypeToPoolName(tp: String): String = {
+  def mapTypeToPoolName(tp : String) : String = {
     s"sf->${mapTypeToCpp(tp)}"
   }
 
-  def mapValueTypesToCpp(valueTypes: String, testName: String): String = {
-    var res="<"
+  def mapValueTypesToCpp(valueTypes : String, testName : String) : String = {
+    var res = "<"
     var types = valueTypes.replaceAll("[\" <>]", "").split(",").map(_.capitalize)
-    types = types.map(t => if (isKnownCppType(t + "FieldType", testName)) "::skill::fieldTypes::" + t +  "FieldType"
-                           else "::skill::api::Object *")
+    types = types.map(t ⇒ if (isKnownCppType(t + "FieldType", testName)) "::skill::fieldTypes::" + t + "FieldType"
+    else "::skill::api::Object *")
     types.mkString(",")
   }
 
-  def mapArrayTypeToCpp(attrName: String): String = {
+  def mapArrayTypeToCpp(attrName : String) : String = {
     // TODO: improve
     var res = "Array<"
     val tp = typeMappings(attrName).replaceAll(raw"\[.*", "")
     tp match {
-      case "v64" => res += "int64_t"
-      case _ => res += tp
+      case "v64" ⇒ res += "int64_t"
+      case _     ⇒ res += tp
     }
     res += " *>"
     "Array<Object *>"
   }
 
-  def mapPointerTypeToCpp(attrName: String, packagePath: String): String = {
+  def mapPointerTypeToCpp(attrName : String, packagePath : String) : String = {
     var res = ""
     var tp = typeMappings(attrName)
-    if ( ! tp.startsWith("set<") && tp != "annotation" )
+    if (!tp.startsWith("set<") && tp != "annotation")
       res += s"${mapPackageToCpp(packagePath)}::"
-else
-println(s"Not appending ${mapPackageToCpp(packagePath)}::...")
-    if ( packagePath == "graphInterface" && (attrName == "next" || attrName == "f") ) {
+    else
+      println(s"Not appending ${mapPackageToCpp(packagePath)}::...")
+    if (packagePath == "graphInterface" && (attrName == "next" || attrName == "f")) {
       tp = "Object"
       res = ""
-    } else if ( packagePath == "graphInterface" && attrName == "anAbstractNode" )
+    } else if (packagePath == "graphInterface" && attrName == "anAbstractNode")
       tp = "AbstractNode"
     res += s"${mapTypeToCpp(tp).capitalize} *"
     res.replaceAll("Set<Node>", "Set<graph::Node *>").replaceAll("Annotation", "Object")
   }
 
-  def newTestFile(packagePath: String, name: String): PrintWriter = {
+  def newTestFile(packagePath : String, name : String) : PrintWriter = {
     val packageName = packagePathToName(packagePath)
     val f = new File(s"testsuites/cpp/test/$packagePath/generic${name}Test.cpp")
     f.getParentFile.mkdirs
@@ -166,12 +166,11 @@ using ::$packageName::internal::TestException;
     rval
   }
 
-  def makeTestForJson(rval: PrintWriter, jsonFile: String, packagePath: String): PrintWriter = {
+  def makeTestForJson(rval : PrintWriter, jsonFile : String, packagePath : String) : PrintWriter = {
     val packageName = packagePathToName(packagePath)
     def testname = new File(jsonFile).getName.replace(".json", "");
     val skillSpec = collectSkillSpecification(packagePath)
     var skillFile = skillSpec.getName()
-
 
     rval.write(s"""
 TEST(${testname}, ${packageName}) {
@@ -183,44 +182,44 @@ TEST(${testname}, ${packageName}) {
       + generateObjectInstantiation(jsonFile, packagePath)
       + s"""
         sf->flush();\n""")
-      val toFail = new JSONObject(new JSONTokener(new java.io.FileInputStream(jsonFile))).getBoolean("shouldFail")
-      if ( toFail )
-        rval.write(s"""
+    val toFail = new JSONObject(new JSONTokener(new java.io.FileInputStream(jsonFile))).getBoolean("shouldFail")
+    if (toFail)
+      rval.write(s"""
         GTEST_FAIL();\n""")
-      else
-        rval.write(s"""
+    else
+      rval.write(s"""
         GTEST_SUCCEED();\n""")
-      rval.write(s"""    } catch (ifstream::failure e) {
+    rval.write(s"""    } catch (ifstream::failure e) {
         GTEST_FAIL();
     } catch (TestException e) {
         GTEST_FAIL();
     } catch (skill::SkillException e) {\n""")
-      if ( toFail )
-        rval.write(s"""
+    if (toFail)
+      rval.write(s"""
         GTEST_SUCCEED();\n""")
-      else
-        rval.write(s"""
+    else
+      rval.write(s"""
         GTEST_FAIL();\n""")
-      rval.write(s"""    }
+    rval.write(s"""    }
 
 }  // TEST(${testname}, ${packageName})
 """)
     rval
   }
 
-  def calcTypeMappings(packagePath: String): Map[String,String] = {
-    var res = Map[String,String]()
+  def calcTypeMappings(packagePath : String) : Map[String, String] = {
+    var res = Map[String, String]()
     val skillSpec = collectSkillSpecification(packagePath)
-    for ( line <- Source.fromFile(skillSpec).getLines.filter(_.matches(raw""" *(auto)? *[^ "]*(<[^>]*>|\[[^]]*]|\([^)]*\))? *[^ ]*;""")) ) {  /* appease vim: " */
+    for (line ← Source.fromFile(skillSpec).getLines.filter(_.matches(raw""" *(auto)? *[^ "]*(<[^>]*>|\[[^]]*]|\([^)]*\))? *[^ ]*;"""))) { /* appease vim: " */
       val tp = line.replaceFirst(" *(auto)? *", "").replaceAll(" *[^ ]*$", "")
       val name = line.replaceFirst(".* ", "").replaceAll(";", "")
       res += (name -> tp)
-println("°°° " + tp + " " + name + " (" + packagePath + ")")
+      println("°°° " + tp + " " + name + " (" + packagePath + ")")
     }
     res
   }
 
-  def calcIsInterface(packagePath: String): Set[String] = {
+  def calcIsInterface(packagePath : String) : Set[String] = {
     // TODO: improve
     var res = Set[String]()
     res += "E"
@@ -231,19 +230,19 @@ println("°°° " + tp + " " + name + " (" + packagePath + ")")
     res
   }
 
-  def calcSupertypes(packagePath: String): HashMap[String,String] = {
+  def calcSupertypes(packagePath : String) : HashMap[String, String] = {
     // TODO: improve
-    var res = new HashMap[String,String]()
+    var res = new HashMap[String, String]()
     val skillSpec = collectSkillSpecification(packagePath)
-    for ( line <- Source fromFile(skillSpec) getLines ) {
-      if ( line.matches("^(interface *|enum *)?[A-Zi∀].*") ) {
+    for (line ← Source fromFile (skillSpec) getLines) {
+      if (line.matches("^(interface *|enum *)?[A-Zi∀].*")) {
         var tp = line.replaceAll(""" *[:{].*""", "").replaceAll("""^(interface|enum) *""", "")
         val superTp = line.replaceAll(""".*: *""", "").replaceAll(""" .*""", "")
-        if ( ! superTp.matches(raw".*\{.*") && superTp != "interface" && superTp != "enum" ) {
-//println("Supertype(" + tp + ") = " + superTp)
+        if (!superTp.matches(raw".*\{.*") && superTp != "interface" && superTp != "enum") {
+          //println("Supertype(" + tp + ") = " + superTp)
           res += (tp -> superTp)
         } else {
-//println("Supertype(" + tp + ") = " + tp)
+          //println("Supertype(" + tp + ") = " + tp)
           res += (tp -> tp)
         }
       }
@@ -251,7 +250,7 @@ println("°°° " + tp + " " + name + " (" + packagePath + ")")
     res
   }
 
-  def getImportList(packagePath: String): String = {
+  def getImportList(packagePath : String) : String = {
     val packageName = packagePathToName(packagePath)
     var res = s"""
 #include <fstream>
@@ -274,18 +273,18 @@ println("°°° " + tp + " " + name + " (" + packagePath + ")")
 #include <skill/fieldTypes/BuiltinFieldType.h>
 
 """
-var done = Set[String]()
-for ( tp <- supertypes.valuesIterator.toSet[String] ) {
-  var superTp = tp
-  while ( superTp != supertypes(superTp) ) {
-    superTp = supertypes(superTp)
-  }
-  if ( ! done(superTp) && ! isInterface(superTp) ) {
-    done += superTp
-    res ++= s"""#include "../../src/$packagePath/TypesOf${mapTypeToCpp(superTp)}.h"\n"""
-  }
-}
-res ++= s"""
+    var done = Set[String]()
+    for (tp ← supertypes.valuesIterator.toSet[String]) {
+      var superTp = tp
+      while (superTp != supertypes(superTp)) {
+        superTp = supertypes(superTp)
+      }
+      if (!done(superTp) && !isInterface(superTp)) {
+        done += superTp
+        res ++= s"""#include "../../src/$packagePath/TypesOf${mapTypeToCpp(superTp)}.h"\n"""
+      }
+    }
+    res ++= s"""
 
 using ::std::ifstream;
 
@@ -305,13 +304,13 @@ using ::$packageName::api::SkillFile;
     res
   }
 
-  def generatePoolInstantiation(packagePath: String, jsonFile: String): String = {
+  def generatePoolInstantiation(packagePath : String, jsonFile : String) : String = {
     var res = s"""        auto sf = common::tempFile<SkillFile>();
         sf->changePath("write.$packagePath");\n"""
     res
   }
 
-  def generateObjectInstantiation(jsonFile: String, packagePath: String): String = {
+  def generateObjectInstantiation(jsonFile : String, packagePath : String) : String = {
     val testName = jsonFile.replace("""/[^/]+""", "").replace(""".*/""", "")
     val fileTokens = new JSONTokener(new java.io.FileInputStream(jsonFile));
     val content = new JSONObject(fileTokens);
@@ -322,24 +321,25 @@ using ::$packageName::api::SkillFile;
     if (content.getBoolean("shouldFail")) {
       toFail = true
     }
-    for (currentObjKey <- jsonObjects.keySet().asScala) {
+    for (currentObjKey ← jsonObjects.keySet().asScala) {
       val objName = currentObjKey;
-      if (jsonObjects.optJSONObject(objName) == null) {  // name of another object
-        res ++= "Object* " + objName.toLowerCase()  +";\n"  //+ " = &" + jsonObjects.getString(objName) + ";\n"
-      } else {  // object to instantiate
+      if (jsonObjects.optJSONObject(objName) == null) { // name of another object
+        res ++= "Object* " + objName.toLowerCase() + ";\n" //+ " = &" + jsonObjects.getString(objName) + ";\n"
+      } else { // object to instantiate
         val obj = jsonObjects.getJSONObject(objName);
         val objType = obj.getString("type");
         if (objType.startsWith("skill.")) {
           objType match {
-            case "skill.map" ⇒ res ++= "        std::map<"
-                               res ++= mapValueTypesToCpp(obj.getString("valueTypes"), testName)
-                               res ++= "> " + objName.toLowerCase() + ";\n"
+            case "skill.map" ⇒
+              res ++= "        std::map<"
+              res ++= mapValueTypesToCpp(obj.getString("valueTypes"), testName)
+              res ++= "> " + objName.toLowerCase() + ";\n"
           }
-        } else if ( packagePath != "constants"
-                    && ! jsonFile.endsWith("escaping_fail_1.json")  // failing verified manually :)
-                    && ! jsonFile.endsWith("user_fail_1.json")      // failing verified manually :)
-                    && ! jsonFile.endsWith("enum_fail_1.json")      // failing verified manually :)
-                    && ! jsonFile.endsWith("enum_fail_2.json") ) {  // failing verified manually :)
+        } else if (packagePath != "constants"
+          && !jsonFile.endsWith("escaping_fail_1.json") // failing verified manually :)
+          && !jsonFile.endsWith("user_fail_1.json") // failing verified manually :)
+          && !jsonFile.endsWith("enum_fail_1.json") // failing verified manually :)
+          && !jsonFile.endsWith("enum_fail_2.json")) { // failing verified manually :)
           val pkg = mapPackageToCpp(packagePath)
           val tp = mapTypeToCpp(objType)
           val pool = mapTypeToPoolName(objType)
@@ -347,43 +347,43 @@ using ::$packageName::api::SkillFile;
             auto* obj = ${pool}->add();
             objs["$objName"] = obj;\n"""
           val objAttr = obj.getJSONObject("attr")
-          for ( attrName <- objAttr.keySet().asScala ) {
+          for (attrName ← objAttr.keySet().asScala) {
             var varName = s"${objName.toLowerCase()}_$attrName"
-            if ( objAttr.optJSONArray(attrName) != null ) {  // Array
+            if (objAttr.optJSONArray(attrName) != null) { // Array
               var attr = objAttr.getJSONArray(attrName)
               res ++= s"""            ${mapArrayTypeToCpp(attrName)} $varName{0};\n"""
-//              for ( v <- attr.list ) {
-//                if ( v.isInstanceOf[
-//              }
-"""            $varName.ensureSize($varName.length() + 1);\n"""
-//              res ++= s"""${objName.toLowerCase()}->set${attrName.capitalize}($varName);"""
-            } else if ( objAttr.optJSONObject(attrName) != null ) { // Map
+              //              for ( v <- attr.list ) {
+              //                if ( v.isInstanceOf[
+              //              }
+              """            $varName.ensureSize($varName.length() + 1);\n"""
+              //              res ++= s"""${objName.toLowerCase()}->set${attrName.capitalize}($varName);"""
+            } else if (objAttr.optJSONObject(attrName) != null) { // Map
               var attr = objAttr.getJSONObject(attrName)
-            } else {  // some other type (org.json would deliberately convert it to anything)
+            } else { // some other type (org.json would deliberately convert it to anything)
               var attr = objAttr.get(attrName)
-              if ( attr.isInstanceOf[Boolean] ) {
-                  res ++= s"""            obj->set${mapNameToCpp(attrName).capitalize}(${objAttr.getBoolean(attrName)});\n"""
-              } else if ( attr.isInstanceOf[Int] ) {
-                  res ++= s"""            obj->set${mapNameToCpp(attrName).capitalize}(${objAttr.getInt(attrName)});\n"""
-              } else if ( attr.isInstanceOf[Double] ) {
-                  res ++= s"""            obj->set${mapNameToCpp(attrName).capitalize}(${objAttr.getDouble(attrName)});\n"""
-              } else if ( attr.isInstanceOf[String] && objAttr.getString(attrName).contains('"') ) {
-                  res ++= s"""            obj->set${mapNameToCpp(attrName).capitalize}(((StringPool *) sf->strings)->add(${objAttr.getString(attrName)}));\n"""
-              } else if ( attr.isInstanceOf[String] ) {  // name of another object
-                  if ( ! typeMappings.contains(attrName) )
-                    typeMappings += (attrName -> attrName.capitalize)
-                  res ++= s"""            obj->set${mapNameToCpp(attrName).capitalize}((${mapPointerTypeToCpp(attrName, packagePath)}) objs["${objAttr.getString(attrName)}"]);\n"""
+              if (attr.isInstanceOf[Boolean]) {
+                res ++= s"""            obj->set${mapNameToCpp(attrName).capitalize}(${objAttr.getBoolean(attrName)});\n"""
+              } else if (attr.isInstanceOf[Int]) {
+                res ++= s"""            obj->set${mapNameToCpp(attrName).capitalize}(${objAttr.getInt(attrName)});\n"""
+              } else if (attr.isInstanceOf[Double]) {
+                res ++= s"""            obj->set${mapNameToCpp(attrName).capitalize}(${objAttr.getDouble(attrName)});\n"""
+              } else if (attr.isInstanceOf[String] && objAttr.getString(attrName).contains('"')) {
+                res ++= s"""            obj->set${mapNameToCpp(attrName).capitalize}(((StringPool *) sf->strings)->add(${objAttr.getString(attrName)}));\n"""
+              } else if (attr.isInstanceOf[String]) { // name of another object
+                if (!typeMappings.contains(attrName))
+                  typeMappings += (attrName -> attrName.capitalize)
+                res ++= s"""            obj->set${mapNameToCpp(attrName).capitalize}((${mapPointerTypeToCpp(attrName, packagePath)}) objs["${objAttr.getString(attrName)}"]);\n"""
               }
             }
-          }  // for ( attrName <- objAttr.keySet().asScala )
+          } // for ( attrName <- objAttr.keySet().asScala )
           res ++= s"""\n        }\n"""
-        }  // else if ( packagePath != "constants" )
+        } // else if ( packagePath != "constants" )
       }
-    }  // for (currentObjKey <- jsonObjects.keySet().asScala)
+    } // for (currentObjKey <- jsonObjects.keySet().asScala)
     res
   }
 
-  def generateTypeMappings(packagePath: String) : String = {
+  def generateTypeMappings(packagePath : String) : String = {
     val skillSpec = collectSkillSpecification(packagePath)
     var skillFile = skillSpec.getName()
     var res = s"""
@@ -394,24 +394,22 @@ static std::map<std::string, const AbstractStoragePool*> pools;
     ""
   }
 
-  def closeTestFile(out: java.io.PrintWriter) {
+  def closeTestFile(out : java.io.PrintWriter) {
     out.write("""
 """)
     out.close
   }
 
-  var typeMappings = Map[String,String]()
-  var supertypes = HashMap[String,String]()
+  var typeMappings = Map[String, String]()
+  var supertypes = HashMap[String, String]()
   var isInterface = Set[String]()
 
-  override def makeGenBinaryTests(name: String) {
-    locally {
-      typeMappings = calcTypeMappings(name)
-      supertypes = calcSupertypes(name)
-      isInterface = calcIsInterface(name)
-      val out = newTestFile(name, "Json")
-      closeTestFile(out)
-    }
+  override def makeTests(name : String) {
+    typeMappings = calcTypeMappings(name)
+    supertypes = calcSupertypes(name)
+    isInterface = calcIsInterface(name)
+    val out = newTestFile(name, "Json")
+    closeTestFile(out)
   }
 
   override def finalizeTests {

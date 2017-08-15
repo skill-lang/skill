@@ -10,7 +10,9 @@ API tests are generated for each JSON file in a subdirectory that also contains
 a .skill-specification.
 A JSON file contains an object on top level.
 The fields are "should", "kind" and "obj"; other fields will be ignored.
-- "should" either "fail" or "succeed"; defaults to "succeed"
+- "should" either "fail", "skip" or "succeed"; defaults to "succeed"
+- "skip" tests ignored by the argument back-ends, because they would not compile;
+   if a test should skip, then the test will succeed, otherwise it fails
 - "kind" a name for a test category; defaults to "core"
 - "obj" definitions of named objects. (JSON Type Object)
 Named objects map their name to an object definition.
@@ -22,8 +24,9 @@ Reference types use Strings.
 Strings are used as-is.
 Therefore the schema is:
 {
-   ("should" : "fail",)?
+   ("should" : ("fail"|"skip"),)?
    ("kind" : <name :string>,)?
+   ("skip" : <languages : string[]>,)?
    "obj" : {
       <name : string> : {
           <type : string> : {

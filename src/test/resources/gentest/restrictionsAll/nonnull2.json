@@ -1,0 +1,13 @@
+{
+	"Comment" : "Should fail because Comments text must be nonull",
+ 	"should" : "fail",
+    "kind" : "restrictions",
+	"obj" : {
+	    "cmnt" : {
+	        "Comment" : {
+	            "text" : null
+	        }
+	    }
+	}
+}
+

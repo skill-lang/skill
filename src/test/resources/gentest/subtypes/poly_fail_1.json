@@ -1,0 +1,32 @@
+{
+	"Comment" : "Should fail because b must be of type b and not c",
+	"should" : "skip",
+    "skip" : ["java"],
+	"obj" : {
+	    "a" : {
+	        "a" : {
+	            "a" : "a"
+	        }
+	    },
+	    "b" : {
+	        "b" : {
+	            "a" : "a",
+	            "b" : "c"
+	        }
+	    },
+	    "c" : {
+	        "c" : {
+	            "a" : "a",
+	            "c" : "c"
+	        }
+	    },
+	    "d" : {
+	        "d" : {
+	            "a" : "a",
+	            "b" : "b",
+	            "d" : "d"
+	        }
+	    }
+	}
+}
+

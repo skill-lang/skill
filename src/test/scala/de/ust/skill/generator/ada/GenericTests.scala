@@ -42,7 +42,7 @@ class GenericTests extends common.GenericTests {
 
   val tests = new ArrayBuffer[Name]()
 
-  def makeGenBinaryTests(__name : String) {
+  def makeTests(__name : String) {
     val (accept, reject) = collectBinaries(__name)
     implicit val name = new Name(__name, true, true)
     tests.append(name)

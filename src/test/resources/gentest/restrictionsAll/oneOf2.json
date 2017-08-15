@@ -1,0 +1,16 @@
+{
+	"Comment" : "wrong type of target",
+ 	"should" : "fail",
+    "kind" : "restrictions",
+	"obj" : {
+	    "rp" : {
+	        "RegularProperty" : { }
+	    },
+	    "cmnt" : {
+	        "Comment" : {
+	            "target" : "rp"
+	        }
+	    }
+	}
+}
+

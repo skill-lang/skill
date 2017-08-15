@@ -69,7 +69,7 @@ using ::$packageName::api::SkillFile;
     out.close
   }
 
-  override def makeGenBinaryTests(name : String) {
+  override def makeTests(name : String) {
     val (accept, reject) = collectBinaries(name)
 
     // generate read tests

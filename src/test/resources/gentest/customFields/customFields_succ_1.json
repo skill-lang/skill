@@ -1,9 +1,7 @@
 {
-	"shouldFail" : false,
-	"data" : {
+	"obj" : {
 	    "c" : {
-	        "type" : "Custom",
-	        "attr" : { }
+	        "Custom" : { }
 	    }
 	}
 }

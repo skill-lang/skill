@@ -33,14 +33,14 @@ import scala.collection.JavaConverters._
 @RunWith(classOf[JUnitRunner])
 class InteroperabilityTests extends common.GenericTests {
 
-  override def language: String = "scala"
+  override def language : String = "scala"
 
-  override def deleteOutDir(out: String) {
+  override def deleteOutDir(out : String) {
     import scala.reflect.io.Directory
     Directory(new File("testsuites/interoperability/src/main/scala/", out)).deleteRecursively
   }
 
-  override def callMainFor(name: String, source: String, options: Seq[String]) {
+  override def callMainFor(name : String, source : String, options : Seq[String]) {
     CommandLine.exit = s ⇒ throw new RuntimeException(s)
     CommandLine.main(Array[String](source,
       "--debug-header",
@@ -50,8 +50,9 @@ class InteroperabilityTests extends common.GenericTests {
       "-o", "testsuites/interoperability/src/main/scala") ++ options)
   }
 
-  def newTestFile(packagePath: String, name: String): PrintWriter = {
-    val f = new File(s"testsuites/interoperability/src/test/scala/$packagePath/Generic${name}Test.generated.scala")
+  override
+  def makeTests(packagePath : String) {
+    val f = new File(s"testsuites/interoperability/src/test/scala/$packagePath/GenericInteroperabilityTest.generated.scala")
     f.getParentFile.mkdirs
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
@@ -77,8 +78,8 @@ import $packagePath.api.SkillFile
 /**
  * Tests the file reading capabilities.
  */
-class Generic${name}Test extends CommonTest {
-  test("${packagePath} - Java${name}Test") {
+class GenericInteroperabilityTest extends CommonTest {
+  test("${packagePath} - JavaInteroperabilityTest") {
     
     val base = new File("src/test/resources/serializedTestfiles/orakel/${packagePath}");
 
@@ -91,7 +92,7 @@ class Generic${name}Test extends CommonTest {
     }
 }
 
-  test("${packagePath} - Scala${name}Test") {
+  test("${packagePath} - ScalaInteroperabilityest") {
 
     val base = new File("src/test/resources/serializedTestfiles/orakel/${packagePath}");
 
@@ -130,23 +131,14 @@ class Generic${name}Test extends CommonTest {
   }
   
 """)
-return rval;
+    rval.close;
   }
 
-  def closeTestFile(out: java.io.PrintWriter) {
+  def closeTestFile(out : java.io.PrintWriter) {
     out.write("""
 }
 """)
     out.close
-  }
-
-  override def makeGenBinaryTests(name: String) {
-    // generate read tests
-    locally {
-      val out = newTestFile(name, "interoperability")
-      closeTestFile(out)
-    }
-
   }
 
   override def finalizeTests {

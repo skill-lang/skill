@@ -1,10 +1,10 @@
 {
 	"Comment" : "Should fail because name must be nonnull",
-	"shouldFail" : true,
-	"data" : {
+    "kind" : "restrictions",
+	"should" : "fail",
+	"obj" : {
 	    "sys" : {
-	        "type" : "System",
-	        "attr" : {
+	        "System" : {
 	            "name" : null,
 	            "version" : 1.1
 	        }
