@@ -470,7 +470,8 @@ $checks
       case "annotation" ⇒ s"""auto b = ::skill::box($accessI);
             type->write(out, b);"""
 
-      case "string" ⇒ s"""const ::skill::SKilLID v = ((::skill::api::String)$accessI)->getID();
+      case "string" ⇒ s"""const auto x = (::skill::api::String) $accessI;
+            const ::skill::SKilLID v = x ? x->getID() : 0;
             if (v)
                 out->v64(v);
             else
