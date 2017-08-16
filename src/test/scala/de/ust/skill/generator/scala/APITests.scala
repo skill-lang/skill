@@ -183,7 +183,7 @@ class GenericAPITest extends CommonTest {
     if (1 == ts.length) {
       value(v, ts.head)
     } else {
-      var rval = s"map()"
+      var rval = s"map"
       val obj = v.asInstanceOf[JSONObject]
 
       for (name ← JSONObject.getNames(obj)) {

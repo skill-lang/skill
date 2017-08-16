@@ -45,7 +45,6 @@ class GeneratorTest extends FunSuite {
   test("views: simple retyping")(check("views.skill", "views.retyping"))
 
   test("node")(check("node.skill", "node"))
-  test("subtypesUnknown")(check("subtypesUnknown.skill", "unknown"))
   test("datedMessage")(check("datedMessage.skill", "datedMessage"))
 
   test("escapingg: Unit")(check("unit.skill", "unit"))
