@@ -3,7 +3,7 @@
 ** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
-package de.ust.skill.generator.java
+package de.ust.skill.generator.scala
 
 import java.io.BufferedWriter
 import java.io.File
@@ -40,7 +40,7 @@ import de.ust.skill.main.CommandLine
 @RunWith(classOf[JUnitRunner])
 class APITests extends common.GenericAPITests {
 
-  override val language = "java"
+  override val language = "scala"
 
   val generator = new Main
   import generator._
@@ -51,36 +51,42 @@ class APITests extends common.GenericAPITests {
   override def callMainFor(name : String, source : String, options : Seq[String]) {
     CommandLine.main(Array[String](source,
       "--debug-header",
-      "-c",
-      "-L", "java",
+      "-L", "scala",
       "-p", name,
-      "-Ojava:SuppressWarnings=true",
-      "-d", "testsuites/java/lib",
-      "-o", "testsuites/java/src/main/java/") ++ options)
+      "-d", "testsuites/scala/lib",
+      "-o", "testsuites/scala/src/main/scala") ++ options)
   }
 
   def newTestFile(packagePath : String, name : String) : PrintWriter = {
-    val f = new File(s"testsuites/java/src/test/java/$packagePath/Generic${name}Test.java")
+    generator.setPackage(List(packagePath))
+
+    val f = new File(s"testsuites/scala/src/test/scala/$packagePath/APITest.generated.scala")
     f.getParentFile.mkdirs
     if (f.exists)
       f.delete
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
 
-    rval.write(s"""package $packagePath;
+    rval.write(s"""package $packagePath
 
-import org.junit.Assert;
-import org.junit.Test;
+import java.nio.file.Path
 
-import $packagePath.api.SkillFile;
+import org.junit.Assert
 
-import de.ust.skill.common.java.api.SkillFile.Mode;
+import de.ust.skill.common.scala.api.Access
+import de.ust.skill.common.scala.api.Create
+import de.ust.skill.common.scala.api.SkillException
+import de.ust.skill.common.scala.api.Read
+import de.ust.skill.common.scala.api.ReadOnly
+import de.ust.skill.common.scala.api.Write
+
+import $packagePath.api.SkillFile
+import common.CommonTest
 
 /**
  * Tests the file reading capabilities.
  */
-@SuppressWarnings("static-method")
-public class Generic${name}Test extends common.CommonTest {
+class GenericAPITest extends CommonTest {
 """)
     rval
   }
@@ -94,11 +100,10 @@ public class Generic${name}Test extends common.CommonTest {
 
   def makeSkipTest(out : PrintWriter, kind : String, name : String, testName : String, accept : Boolean) {
     out.write(s"""
-    @Test
-    public void APITest_${escaped(kind)}_${name}_skipped_${escaped(testName)}() {${
+    test("API test - $kind $name skipped : ${testName}") {${
       if (accept) ""
       else """
-         Assert.fail("The test was skipped by the test generator.");"""
+         fail("The test was skipped by the test generator.");"""
     }
     }
 """)
@@ -106,15 +111,25 @@ public class Generic${name}Test extends common.CommonTest {
 
   def makeRegularTest(out : PrintWriter, kind : String, name : String, testName : String, accept : Boolean, tc : TypeContext, obj : JSONObject) {
     out.write(s"""
-    @Test${if (accept) "" else "(expected = Exception.class)"}
-    public void APITest_${escaped(kind)}_${name}_${if (accept) "acc" else "fail"}_${escaped(testName)}() throws Exception {
-        SkillFile sf = SkillFile.open(tmpFile("$testName.sf"), Mode.Create, Mode.Write);
+    test("API test - $kind $name ${if (accept) "acc" else "fail"} : ${testName}") (${
+      if (accept) ""
+      else "try"
+    }{
+        val sf = SkillFile.open(tmpFile("$testName.sf"), Create, Write);
 
         // create objects${createObjects(obj, tc, name)}
+        
         // set fields${setFields(obj, tc)}
 
-        sf.close();
+        sf.close${
+      if (accept) ""
+      else """
+
+        fail("expected failure, but nothing happended")
+    } catch {
+      case e : Exception ⇒"""
     }
+    })
 """)
   }
 
@@ -144,10 +159,10 @@ public class Generic${name}Test extends common.CommonTest {
     case t : GroundType ⇒
       t.getSkillName match {
         case "string"      ⇒ s""""${v.toString()}""""
-        case "i8"          ⇒ "(byte)" + v.toString()
-        case "i16"         ⇒ "(short)" + v.toString()
-        case "f32"         ⇒ "(float)" + v.toString()
-        case "f64"         ⇒ "(double)" + v.toString()
+        case "i8"          ⇒ v.toString() + ".toByte"
+        case "i16"         ⇒ v.toString() + ".toShort"
+        case "f32"         ⇒ v.toString() + ".toFloat"
+        case "f64"         ⇒ v.toString()
         case "v64" | "i64" ⇒ v.toString() + "L"
         case _             ⇒ v.toString()
       }
@@ -161,9 +176,7 @@ public class Generic${name}Test extends common.CommonTest {
 
     case t : MapType if v != null ⇒ valueMap(v.asInstanceOf[JSONObject], t.getBaseTypes.toList)
 
-    case _ ⇒
-      if (v == null || v.toString().equals("null")) s"(${mapType(t)}) null"
-      else v.toString()
+    case _                        ⇒ v.toString()
   }
 
   private def valueMap(v : Any, ts : List[Type]) : String = {
@@ -193,7 +206,7 @@ public class Generic${name}Test extends common.CommonTest {
         val typeName = typ(tc, t);
 
         s"""
-        $packagePath.$typeName $name = sf.${typeName}s().make();"""
+        val $name = sf.${typeName}.reflectiveAllocateInstance;"""
       }
 
       rval.mkString
@@ -215,9 +228,9 @@ public class Generic${name}Test extends common.CommonTest {
         else {
           val assignments = for (fieldName ← JSONObject.getNames(fs).toSeq) yield {
             val f = field(tc, t, fieldName)
-            val setter = escaped("set" + f.getName.capital())
+            val setter = escaped(f.getName.camel())
             s"""
-        $name.$setter(${value(fs.get(fieldName), f)});"""
+        $name.$setter = ${value(fs.get(fieldName), f)};"""
           }
 
           assignments.mkString

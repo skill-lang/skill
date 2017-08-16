@@ -1,7 +1,7 @@
 {
 	"Comment" : "Should fail because c cannot be from type of a",
 	"should" : "skip",
-    "skip" : ["java"],
+    "skip" : ["java", "scala"],
 	"obj" : {
 	    "a" : {
 	        "a" : {

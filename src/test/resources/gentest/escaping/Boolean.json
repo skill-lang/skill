@@ -2,7 +2,7 @@
 	"Comment" : "Should fail because boolean in esc_3 shoudl not be a Boolean-class",
 	"should" : "skip",
     "kind" : "escaped",
-    "skip" : ["java"],
+    "skip" : ["java","scala"],
 	"obj" : {
 	    "esc_3" : {
 	        "Boolean" : {

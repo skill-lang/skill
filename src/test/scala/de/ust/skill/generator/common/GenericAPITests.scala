@@ -10,6 +10,13 @@ import java.io.File
 import scala.collection.mutable.HashMap
 
 import de.ust.skill.parser.Parser
+import org.json.JSONTokener
+import scala.io.Source
+import java.io.PrintWriter
+import org.json.JSONObject
+
+import scala.collection.JavaConversions._
+import de.ust.skill.ir.TypeContext
 
 /**
  * Common implementation of generic tests
@@ -35,4 +42,67 @@ abstract class GenericAPITests extends GenericTests {
   }
 
   def parse(spec : File) = Parser.process(spec)
+
+  def newTestFile(packagePath : String, name : String) : PrintWriter;
+
+  def closeTestFile(out : java.io.PrintWriter) : Unit;
+
+  def makeSkipTest(out : PrintWriter, kind : String, name : String, testName : String, accept : Boolean);
+  
+  def makeRegularTest(out : PrintWriter, kind : String, name : String, testName : String, accept : Boolean, tc : TypeContext, obj : JSONObject);
+
+  final override def makeTests(name : String) {
+    val (spec, tests) = collectTestspecs.filter(file ⇒ {
+      Source.fromFile(file._1).getLines().next().startsWith("#! " + name);
+    }).head
+
+    val IR = parse(spec).removeTypedefs().removeEnums()
+
+    val out = newTestFile(name, "API")
+
+    println(spec.getName)
+
+    // create tests
+    for (f ← tests) {
+      println(s"  - ${f.getName}")
+
+      val test = new JSONObject(new JSONTokener(new java.io.FileInputStream(f)))
+
+      val skipped = try {
+        test.getJSONArray("skip").iterator().contains(language)
+      } catch {
+        case e : Exception ⇒ false;
+      }
+
+      val accept = try {
+        test.getString("should").toLowerCase match {
+          case "fail" ⇒ false
+          case "skip" ⇒ skipped
+          case _      ⇒ true
+        }
+      } catch {
+        case e : Exception ⇒ true;
+      }
+
+      val kind = try {
+        val v = test.getString("kind")
+        if (null == v) "core" else v
+      } catch {
+        case e : Exception ⇒ "core";
+      }
+
+      val testName = f.getName.replace(".json", "");
+
+      if (skipped) {
+        makeSkipTest(out, kind, name, testName, accept);
+      } else {
+        makeRegularTest(out, kind, name, testName, accept, IR, test.getJSONObject("obj"));
+      }
+    }
+    closeTestFile(out)
+  }
+
+  override def finalizeTests {
+    // nothing yet
+  }
 }

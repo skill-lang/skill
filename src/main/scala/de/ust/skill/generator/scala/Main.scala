@@ -62,7 +62,7 @@ class Main extends FakeMain
   /**
    * Translates types into scala type names.
    */
-  override protected def mapType(t : Type) : String = t match {
+  override def mapType(t : Type) : String = t match {
     case t : GroundType ⇒ t.getName.lower match {
       case "annotation" ⇒ "SkillObject"
 
