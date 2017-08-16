@@ -305,6 +305,9 @@ ${
       }
 
       case fieldType : ConstantLengthArrayType ⇒ s"""final ${mapType(f.getType)} v = (${mapType(f.getType)})(${mapVariantType(f.getType)})$fieldAccess;
+            
+            if (v.size() != type.length)
+                throw new IllegalArgumentException("constant length array has wrong size");
 
             ${offsetCodeInner(fieldType.getBaseType, "v")}"""
 
