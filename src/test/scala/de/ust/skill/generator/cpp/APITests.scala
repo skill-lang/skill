@@ -3,7 +3,7 @@
 ** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
-package de.ust.skill.generator.java
+package de.ust.skill.generator.cpp
 
 import java.io.BufferedWriter
 import java.io.File
@@ -40,10 +40,9 @@ import de.ust.skill.main.CommandLine
 @RunWith(classOf[JUnitRunner])
 class APITests extends common.GenericAPITests {
 
-  override val language = "java"
+  override val language = "cpp"
 
-  val generator = new Main
-  import generator._
+  var gen = new Main
 
   override def deleteOutDir(out : String) {
   }
@@ -52,76 +51,82 @@ class APITests extends common.GenericAPITests {
     CommandLine.main(Array[String](source,
       "--debug-header",
       "-c",
-      "-L", "java",
+      "-L", "cpp",
       "-p", name,
-      "-Ojava:SuppressWarnings=true",
-      "-d", "testsuites/java/lib",
-      "-o", "testsuites/java/src/main/java/") ++ options)
+      "-Ocpp:revealSkillID=true",
+      "-o", "testsuites/cpp/src/" + name) ++ options)
   }
 
   def newTestFile(packagePath : String, name : String) : PrintWriter = {
-    val f = new File(s"testsuites/java/src/test/java/$packagePath/Generic${name}Test.java")
+    val packageName = packagePath.split("/").map(EscapeFunction.apply).mkString("::")
+    gen = new Main
+    gen.setPackage(List(packagePath))
+
+    val f = new File(s"testsuites/cpp/test/$packagePath/generic${name}Test.cpp")
     f.getParentFile.mkdirs
     if (f.exists)
       f.delete
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
 
-    rval.write(s"""package $packagePath;
+    rval.write(s"""#include <gtest/gtest.h>
+#include "../common/utils.h"
+#include "../../src/$packagePath/File.h"
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import $packagePath.api.SkillFile;
-
-import de.ust.skill.common.java.api.SkillFile.Mode;
-
-/**
- * Tests the file reading capabilities.
- */
-@SuppressWarnings("static-method")
-public class Generic${name}Test extends common.CommonTest {
+using ::$packageName::api::SkillFile;
+using namespace common;
 """)
     rval
   }
 
   def closeTestFile(out : java.io.PrintWriter) {
     out.write("""
-}
 """)
     out.close
   }
 
   def makeSkipTest(out : PrintWriter, kind : String, name : String, testName : String, accept : Boolean) {
     out.write(s"""
-    @Test
-    public void APITest_${escaped(kind)}_${name}_skipped_${escaped(testName)}() {${
+TEST(${name.capitalize}_APITest, ${gen.escaped(kind)}_skipped_${gen.escaped(testName)}) {${
       if (accept) ""
       else """
-         Assert.fail("The test was skipped by the test generator.");"""
+    GTEST_FAIL() << "The test was skipped by the test generator.";"""
     }
-    }
+}
 """)
   }
 
-  def makeRegularTest(out : PrintWriter, kind : String, name : String, testName : String, accept : Boolean, tc : TypeContext, obj : JSONObject) {
+  def makeRegularTest(out : PrintWriter, kind : String, name : String, testName : String, accept : Boolean, IR : TypeContext, obj : JSONObject) {
+    val tc = IR.removeSpecialDeclarations();
     out.write(s"""
-    @Test${if (accept) "" else "(expected = Exception.class)"}
-    public void APITest_${escaped(kind)}_${name}_${if (accept) "acc" else "fail"}_${escaped(testName)}() throws Exception {
-        SkillFile sf = SkillFile.open(tmpFile("$testName.sf"), Mode.Create, Mode.Write);
+TEST(${name.capitalize}_APITest, ${if (accept) "Acc" else "Fail"}_${gen.escaped(testName)}) {
+    try {
+        auto sf = common::tempFile<SkillFile>();
 
         // create objects${createObjects(obj, tc, name)}
+        
         // set fields${setFields(obj, tc)}
 
-        sf.close();
+        sf->close();
+    } catch (skill::SkillException e) {${
+      if (accept) """
+        GTEST_FAIL() << "an exception was thrown:" << std::endl << e.message;
     }
+    GTEST_SUCCEED();"""
+      else """
+        GTEST_SUCCEED();
+        return;
+    }
+    GTEST_FAIL() << "expected an exception, but none was thrown.";"""
+    }
+}
 """)
   }
 
   private def typ(tc : TypeContext, name : String) : String = {
     val n = name.toLowerCase()
     try {
-      escaped((tc.getUsertypes ++ tc.getInterfaces).filter(_.getSkillName.equals(n)).head.getName.capital())
+      gen.escaped((tc.getUsertypes ++ tc.getInterfaces).filter(_.getSkillName.equals(n)).head.getName.capital())
     } catch {
       case e : NoSuchElementException ⇒ fail(s"Type '$n' does not exist, fix your test description!")
     }
@@ -143,38 +148,59 @@ public class Generic${name}Test extends common.CommonTest {
   private def value(v : Any, t : Type) : String = t match {
     case t : GroundType ⇒
       t.getSkillName match {
-        case "string" if null != v ⇒ s""""${v.toString()}""""
-        case "i8"                  ⇒ "(byte)" + v.toString()
+        case "string" if null != v ⇒ s"""sf->strings->add("${v.toString()}")"""
+        case "i8"                  ⇒ "(int8_t)" + v.toString()
         case "i16"                 ⇒ "(short)" + v.toString()
         case "f32"                 ⇒ "(float)" + v.toString()
         case "f64"                 ⇒ "(double)" + v.toString()
         case "v64" | "i64"         ⇒ v.toString() + "L"
-        case _                     ⇒ v.toString()
+        case _ ⇒
+          if (null == v || v.toString().equals("null"))
+            "nullptr"
+          else
+            v.toString()
       }
 
     case t : SingleBaseTypeContainer ⇒
-      v.asInstanceOf[JSONArray].iterator().toArray.map(value(_, t.getBaseType)).mkString(t match {
-        case t : ListType ⇒ "list("
-        case t : SetType  ⇒ "set("
-        case _            ⇒ "array("
-      }, ", ", ")").replace("java.util.", "")
+      locally {
+        var rval = t match {
+          case t : SetType ⇒ s"set<${gen.mapType(t.getBaseType)}>()"
+          case _           ⇒ s"array<${gen.mapType(t.getBaseType)}>()"
+        }
+        for (x ← v.asInstanceOf[JSONArray].iterator()) {
+          rval = s"put<${gen.mapType(t.getBaseType)}>($rval, ${value(x, t.getBaseType)})"
+        }
+        rval
+      }
 
     case t : MapType if v != null ⇒ valueMap(v.asInstanceOf[JSONObject], t.getBaseTypes.toList)
 
     case _ ⇒
-      if (v == null || v.toString().equals("null")) s"(${mapType(t)}) null"
-      else v.toString()
+      if (null == v || v.toString().equals("null"))
+        "nullptr"
+      else
+        v.toString()
   }
 
   private def valueMap(v : Any, ts : List[Type]) : String = {
     if (1 == ts.length) {
       value(v, ts.head)
     } else {
-      var rval = s"map()"
+      var rval = s"map<${gen.mapType(ts.head)}, ${
+        ts.tail match {
+          case t if t.size >= 2 ⇒ t.map(gen.mapType).reduceRight((k, v) ⇒ s"::skill::api::Map<$k, $v>*")
+          case t               ⇒ gen.mapType(t.head)
+        }
+      }>()"
       val obj = v.asInstanceOf[JSONObject]
 
       for (name ← JSONObject.getNames(obj)) {
-        rval = s"put($rval, ${value(name, ts.head)}, ${valueMap(obj.get(name), ts.tail)})"
+        rval = s"put<${gen.mapType(ts.head)}, ${
+        ts.tail match {
+          case t if t.size >= 2 ⇒ t.map(gen.mapType).reduceRight((k, v) ⇒ s"::skill::api::Map<$k, $v>*")
+          case t               ⇒ gen.mapType(t.head)
+        }
+      }>($rval, ${value(name, ts.head)}, ${valueMap(obj.get(name), ts.tail)})"
       }
 
       rval;
@@ -193,7 +219,7 @@ public class Generic${name}Test extends common.CommonTest {
         val typeName = typ(tc, t);
 
         s"""
-        $packagePath.$typeName $name = sf.${typeName}s().make();"""
+        auto $name = sf->${typeName}->add();"""
       }
 
       rval.mkString
@@ -215,9 +241,9 @@ public class Generic${name}Test extends common.CommonTest {
         else {
           val assignments = for (fieldName ← JSONObject.getNames(fs).toSeq) yield {
             val f = field(tc, t, fieldName)
-            val setter = escaped("set" + f.getName.capital())
+            val setter = gen.escaped("set" + f.getName.capital())
             s"""
-        $name.$setter(${value(fs.get(fieldName), f)});"""
+        $name->$setter(${value(fs.get(fieldName), f)});"""
           }
 
           assignments.mkString

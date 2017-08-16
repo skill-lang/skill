@@ -1,6 +1,6 @@
 {
     "should" : "skip",
-    "skip" : ["java", "scala"],
+    "skip" : ["java", "scala", "cpp"],
 	"obj" : {
 	    "a" : {
 	        "a" : {
