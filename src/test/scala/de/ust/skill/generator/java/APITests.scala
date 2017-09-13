@@ -131,6 +131,7 @@ public class Generic${name}Test extends common.CommonTest {
     val tn = typ.toLowerCase()
     val t = tc.getUsertypes.find(_.getSkillName.equals(tn)).get
     val fn = field.toLowerCase()
+
     try {
       t.getAllFields.find(_.getSkillName.equals(fn)).get
     } catch {
@@ -216,6 +217,7 @@ public class Generic${name}Test extends common.CommonTest {
           val assignments = for (fieldName ← JSONObject.getNames(fs).toSeq) yield {
             val f = field(tc, t, fieldName)
             val setter = escaped("set" + f.getName.capital())
+
             s"""
         $name.$setter(${value(fs.get(fieldName), f)});"""
           }
