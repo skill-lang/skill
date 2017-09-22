@@ -1,6 +1,7 @@
 package de.ust.skill.ir;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -90,7 +91,7 @@ final public class UserType extends Declaration implements WithFields {
         assert null != Fields : "no fields supplied";
         // check for duplicate fields
         {
-            Set<Name> names = new HashSet<>();
+            HashSet<Name> names = new HashSet<>();
             for (FieldLike f : Fields) {
                 names.add(f.name);
                 f.setDeclaredIn(this);
@@ -98,8 +99,18 @@ final public class UserType extends Declaration implements WithFields {
             for (FieldLike f : views) {
                 f.setDeclaredIn(this);
             }
-            if (names.size() != Fields.size())
-                throw new ParseException("Type " + name + " contains duplicate field definitions.");
+            if (names.size() != Fields.size()) {
+                HashSet<Name> duplicates = new HashSet<>();
+                HashSet<Name> seen = new HashSet<>();
+                for (FieldLike f : Fields) {
+                    if (!seen.contains(f.name))
+                        seen.add(f.name);
+                    else
+                        duplicates.add(f.name);
+                }
+                throw new ParseException("Type " + name + " contains duplicate field definitions: "
+                        + Arrays.toString(seen.toArray(new Name[seen.size()])));
+            }
         }
 
         if (null != SuperType) {
