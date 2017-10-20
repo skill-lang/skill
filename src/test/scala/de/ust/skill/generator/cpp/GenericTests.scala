@@ -20,7 +20,7 @@ import de.ust.skill.generator.common
 import de.ust.skill.main.CommandLine
 
 /**
- * Generic tests built for Java.
+ * Generic tests built for C++.
  * Generic tests have an implementation for each programming language, because otherwise deleting the generated code
  * upfront would be ugly.
  *

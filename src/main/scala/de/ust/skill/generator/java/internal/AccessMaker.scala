@@ -183,7 +183,7 @@ ${
         protected ${nameT}Builder(StoragePool<$typeT, ? super $typeT> pool, $typeT instance) {
             super(pool, instance);
         }${
-        (for (f ← fields if !f.isIgnored() && !f.isConstant())
+        (for (f ← t.getAllFields if !f.isIgnored() && !f.isConstant())
           yield s"""
 
         public ${nameT}Builder ${name(f)}(${mapType(f.getType)} ${name(f)}) {
