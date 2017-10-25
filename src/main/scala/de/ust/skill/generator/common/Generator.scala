@@ -13,6 +13,13 @@ import de.ust.skill.ir.TypeContext
 import de.ust.skill.main.HeaderInfo
 import de.ust.skill.ir.UserType
 import scala.collection.mutable.HashMap
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.ConstantLengthArrayType
+import de.ust.skill.ir.VariableLengthArrayType
+import de.ust.skill.ir.ListType
+import de.ust.skill.ir.SetType
+import de.ust.skill.ir.MapType
 
 /**
  * every code generator shares these properties.
@@ -130,9 +137,37 @@ trait Generator {
    * The generated binding will also contain visitors for given types
    */
   var visitors : Array[UserType] = _;
-  
+
   /**
    * The generated binding will also contain visitors for given types
    */
   val visited = new HashMap[String, UserType];
+
+  /**
+   * Turns skill types into typeIDs
+   *
+   * @note obviously, not recursive in container types
+   * @note obviously, there is no typeID for user-defined types
+   */
+  def typeID(t : Type) : Int = t match {
+    case t : GroundType ⇒ t.getSkillName match {
+      case "annotation" ⇒ 5
+      case "bool"       ⇒ 6
+      case "i8"         ⇒ 7
+      case "i16"        ⇒ 8
+      case "i32"        ⇒ 9
+      case "i64"        ⇒ 10
+      case "v64"        ⇒ 11
+      case "f32"        ⇒ 12
+      case "f64"        ⇒ 13
+      case "string"     ⇒ 14
+    }
+    case t : ConstantLengthArrayType ⇒ 15
+    case t : VariableLengthArrayType ⇒ 17
+    case t : ListType                ⇒ 18
+    case t : SetType                 ⇒ 19
+    case t : MapType                 ⇒ 20
+
+    case t                           ⇒ throw new IllegalArgumentException(s"$t has no type id")
+  }
 }

@@ -74,6 +74,7 @@ import org.junit.Test;
 
 import $packagePath.api.SkillFile;
 
+import de.ust.skill.common.java.api.SkillException;
 import de.ust.skill.common.java.api.SkillFile.Mode;
 
 /**
@@ -106,7 +107,7 @@ public class Generic${name}Test extends common.CommonTest {
 
   def makeRegularTest(out : PrintWriter, kind : String, name : String, testName : String, accept : Boolean, tc : TypeContext, obj : JSONObject) {
     out.write(s"""
-    @Test${if (accept) "" else "(expected = Exception.class)"}
+    @Test${if (accept) "" else "(expected = SkillException.class)"}
     public void APITest_${escaped(kind)}_${name}_${if (accept) "acc" else "fail"}_${escaped(testName)}() throws Exception {
         SkillFile sf = SkillFile.open(tmpFile("$testName.sf"), Mode.Create, Mode.Write);
 

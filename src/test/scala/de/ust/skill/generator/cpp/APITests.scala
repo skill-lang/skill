@@ -11,8 +11,7 @@ import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
 
-import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.JavaConversions.asScalaIterator
+import scala.collection.JavaConverters._
 import scala.io.Source
 
 import org.json.JSONArray
@@ -33,7 +32,7 @@ import de.ust.skill.ir.TypeContext
 import de.ust.skill.main.CommandLine
 
 /**
- * Generic API tests built for Java.
+ * Generic API tests built for C++.
  *
  * @author Timm Felden
  */
@@ -48,7 +47,8 @@ class APITests extends common.GenericAPITests {
   }
 
   override def callMainFor(name : String, source : String, options : Seq[String]) {
-    CommandLine.main(Array[String](source,
+    CommandLine.main(Array[String](
+      source,
       "--debug-header",
       "-c",
       "-L", "cpp",
@@ -126,7 +126,7 @@ TEST(${name.capitalize}_APITest, ${if (accept) "Acc" else "Fail"}_${gen.escaped(
   private def typ(tc : TypeContext, name : String) : String = {
     val n = name.toLowerCase()
     try {
-      gen.escaped((tc.getUsertypes ++ tc.getInterfaces).filter(_.getSkillName.equals(n)).head.getName.capital())
+      gen.escaped((tc.getUsertypes.asScala ++ tc.getInterfaces.asScala).filter(_.getSkillName.equals(n)).head.getName.capital())
     } catch {
       case e : NoSuchElementException ⇒ fail(s"Type '$n' does not exist, fix your test description!")
     }
@@ -134,10 +134,10 @@ TEST(${name.capitalize}_APITest, ${if (accept) "Acc" else "Fail"}_${gen.escaped(
 
   private def field(tc : TypeContext, typ : String, field : String) = {
     val tn = typ.toLowerCase()
-    val t = tc.getUsertypes.find(_.getSkillName.equals(tn)).get
+    val t = tc.getUsertypes.asScala.find(_.getSkillName.equals(tn)).get
     val fn = field.toLowerCase()
     try {
-      t.getAllFields.find(_.getSkillName.equals(fn)).get
+      t.getAllFields.asScala.find(_.getSkillName.equals(fn)).get
     } catch {
       case e : NoSuchElementException ⇒ fail(s"Field '$fn' does not exist, fix your test description!")
     }
@@ -167,13 +167,13 @@ TEST(${name.capitalize}_APITest, ${if (accept) "Acc" else "Fail"}_${gen.escaped(
           case t : SetType ⇒ s"set<${gen.mapType(t.getBaseType)}>()"
           case _           ⇒ s"array<${gen.mapType(t.getBaseType)}>()"
         }
-        for (x ← v.asInstanceOf[JSONArray].iterator()) {
+        for (x ← v.asInstanceOf[JSONArray].iterator().asScala) {
           rval = s"put<${gen.mapType(t.getBaseType)}>($rval, ${value(x, t.getBaseType)})"
         }
         rval
       }
 
-    case t : MapType if v != null ⇒ valueMap(v.asInstanceOf[JSONObject], t.getBaseTypes.toList)
+    case t : MapType if v != null ⇒ valueMap(v.asInstanceOf[JSONObject], t.getBaseTypes.asScala.toList)
 
     case _ ⇒
       if (null == v || v.toString().equals("null"))
@@ -189,18 +189,18 @@ TEST(${name.capitalize}_APITest, ${if (accept) "Acc" else "Fail"}_${gen.escaped(
       var rval = s"map<${gen.mapType(ts.head)}, ${
         ts.tail match {
           case t if t.size >= 2 ⇒ t.map(gen.mapType).reduceRight((k, v) ⇒ s"::skill::api::Map<$k, $v>*")
-          case t               ⇒ gen.mapType(t.head)
+          case t                ⇒ gen.mapType(t.head)
         }
       }>()"
       val obj = v.asInstanceOf[JSONObject]
 
       for (name ← JSONObject.getNames(obj)) {
         rval = s"put<${gen.mapType(ts.head)}, ${
-        ts.tail match {
-          case t if t.size >= 2 ⇒ t.map(gen.mapType).reduceRight((k, v) ⇒ s"::skill::api::Map<$k, $v>*")
-          case t               ⇒ gen.mapType(t.head)
-        }
-      }>($rval, ${value(name, ts.head)}, ${valueMap(obj.get(name), ts.tail)})"
+          ts.tail match {
+            case t if t.size >= 2 ⇒ t.map(gen.mapType).reduceRight((k, v) ⇒ s"::skill::api::Map<$k, $v>*")
+            case t                ⇒ gen.mapType(t.head)
+          }
+        }>($rval, ${value(name, ts.head)}, ${valueMap(obj.get(name), ts.tail)})"
       }
 
       rval;

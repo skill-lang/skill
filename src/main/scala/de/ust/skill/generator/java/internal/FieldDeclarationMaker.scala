@@ -5,7 +5,7 @@
 \*                                                                            */
 package de.ust.skill.generator.java.internal
 
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 
 import de.ust.skill.generator.java.GeneralOutputMaker
@@ -28,13 +28,13 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
     // project IR, so that reflection implements the binary file format correctly
     val IR = this.types.removeSpecialDeclarations.getUsertypes
 
-    for (t ← IR) {
-      val autoFieldIndex : Map[Field, Int] = t.getFields.filter(_.isAuto()).zipWithIndex.toMap
+    for (t ← IR.asScala) {
+      val autoFieldIndex : Map[Field, Int] = t.getFields.asScala.filter(_.isAuto()).zipWithIndex.toMap
 
-      for (f ← t.getFields) {
+      for (f ← t.getFields.asScala) {
         // the field before interface projection
         val originalF = this.types.removeTypedefs.removeEnums.get(t.getSkillName).asInstanceOf[UserType]
-          .getAllFields.find(_.getName == f.getName).get
+          .getAllFields.asScala.find(_.getName == f.getName).get
 
         // the type before the interface projection
         val fieldActualType = mapType(originalF.getType, true)
@@ -75,8 +75,24 @@ static final class $nameF extends ${
         super(type, "${f.getSkillName}"${
           if (f.isAuto()) ", " + -autoFieldIndex(f)
           else ""
-        }, owner);
-            // TODO insert known restrictions?
+        }, owner);${
+          if (f.isAuto()) "" // auto fields are always correctly typed
+          else s"""
+        if (${
+            originalF.getType match {
+              case t : GroundType ⇒ s"type.typeID() != ${typeID(f.getType) - (if (f.isConstant()) 7 else 0)}"
+              case t : InterfaceType ⇒
+                if (t.getSuperType.getSkillName.equals("annotation")) "type.typeID() != 5"
+                else s"""!(type instanceof InterfacePool<?, ?>?((InterfacePool<?,?>)type).name().equals("${t.getSkillName}"):((StoragePool<?,?>)type).name().equals("${f.getType.getSkillName}"))"""
+              case t : UserType ⇒ s"""!((StoragePool<?,?>)type).name().equals("${f.getType.getSkillName}")"""
+
+              case _            ⇒ "false)//TODO type check!"
+            }
+          })
+            throw new SkillException("Expected field type ${f.getType.toString} in ${t.getName.capital}.${f.getName.camel} but found " + type);
+"""
+        }
+        // TODO insert known restrictions?
     }
 ${
           if (f.isAuto) ""
@@ -165,7 +181,7 @@ ${
         final SetType<${mapType(t.getBaseType, true)}> type = (SetType<${mapType(t.getBaseType, true)}>) this.type;${prelude(t.getBaseType, readHack, "type.groundType")}"""
     case t : MapType ⇒
       locally {
-        val mt = s"MapType<${mapType(t.getBaseTypes.head, true)}, ${t.getBaseTypes.tail.map(mapType(_, true)).reduceRight((k, v) ⇒ s"$MapTypeName<$k, $v>")}>"
+        val mt = s"MapType<${mapType(t.getBaseTypes.get(0), true)}, ${t.getBaseTypes.asScala.tail.map(mapType(_, true)).reduceRight((k, v) ⇒ s"$MapTypeName<$k, $v>")}>"
         s"""
         final $mt type = ($mt) this.type;
         final FieldType keyType = type.keyType;
@@ -385,8 +401,7 @@ ${
     (
       if (shift != 0) s"offset += (h-i) << $shift;"
       else "offset += (h-i);",
-      true
-    )
+      true)
 
   /**
    * creates code to write exactly one field element
