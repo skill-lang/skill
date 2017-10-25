@@ -6,6 +6,9 @@
 
 @abstract
 A {
+  /* this type makes the annotation test incompatible with subtypes */
+  annotation a;
+
   A Parent;
 }
 
