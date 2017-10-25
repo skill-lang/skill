@@ -27,14 +27,12 @@ libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.0"
 
 libraryDependencies += "org.json" % "json" % "20160810"
 
-
-buildInfoSettings
-
-sourceGenerators in Compile <+= buildInfo
-
-buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
-
-buildInfoPackage := "de.ust.skill"
+lazy val root = (project in file(".")).
+  enablePlugins(BuildInfoPlugin).
+  settings(
+    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+    buildInfoPackage := "de.ust.skill"
+  )
 
 assemblyJarName in assembly := "skill.jar"
 assemblyMergeStrategy in assembly := {
