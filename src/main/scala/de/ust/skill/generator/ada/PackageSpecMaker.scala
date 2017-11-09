@@ -32,6 +32,10 @@ package ${PackagePrefix} is
    use Skill.Equals;
    use Skill.Hashes;
    use type Skill.Types.Annotation;
+   use type Skill.Types.I8;
+   use type Skill.Types.I16;
+   use type Skill.Types.I32;
+   use type Skill.Types.I64;
    use type Skill.Types.V64;
    use type Skill.Types.String_Access;
 ${
