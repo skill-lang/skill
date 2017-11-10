@@ -33,7 +33,7 @@ import ${packagePrefix}*;
  */
 public abstract class Visitor<_R, _A, _E extends Exception> {${
         (for (t ← visitors) yield s"""
-    public abstract _R visit(${name(t)} self, _A arg) throws _E;""").mkString
+    public abstract _R visit(${mapType(t)} self, _A arg) throws _E;""").mkString
       }
 }
 """)
