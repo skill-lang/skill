@@ -18,6 +18,8 @@ import de.ust.skill.generator.common.Generator
 import scala.collection.JavaConversions._
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
+import de.ust.skill.parser.Customization
+import de.ust.skill.ir.LanguageCustomization
 
 /**
  * The parent class for all output makers.
@@ -86,6 +88,8 @@ trait GeneralOutputMaker extends Generator {
   protected def internalName(f : Field) : String = escaped("_" + f.getName.camel())
   protected def knownField(f : Field) : String = escaped(s"KnownField_${f.getDeclaredIn.getName.capital()}_${f.getName.camel()}")
 
+  protected def name(f : LanguageCustomization) : String = escaped(f.getName.camel)
+  
   /**
    * Assume a package prefix provider.
    */

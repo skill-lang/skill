@@ -5,12 +5,14 @@
 \*                                                                            */
 package de.ust.skill.generator.cpp
 
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConverters._
 
 import de.ust.skill.ir.Field
 import de.ust.skill.ir.restriction.FloatRangeRestriction
 import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.MonotoneRestriction
+import de.ust.skill.ir.Type
+import de.ust.skill.ir.UserType
 
 /**
  * creates header and implementation for all type definitions
@@ -34,6 +36,11 @@ trait TypesMaker extends GeneralOutputMaker {
     // one header per base type
     for(base <- IR.par if null == base.getSuperType) {
       val out = files.open(s"TypesOf${name(base)}.h")
+      
+      base.getSubTypes
+      
+      // get all customizations in types below base, so that we can generate includes for them 
+      val customIncludes = gatherCustomIncludes(base).toSet.toArray.sorted
 
       //includes package
       out.write(s"""${beginGuard(s"types_of_${name(base)}")}
@@ -43,6 +50,7 @@ trait TypesMaker extends GeneralOutputMaker {
 #include <vector>
 #include <set>
 #include <map>
+${customIncludes.map(i⇒s"#include <$i>\n").mkString}
 
 namespace skill{
     namespace internal {
@@ -70,7 +78,7 @@ ${
 }
     // type predef known fields for friend declarations
     namespace internal {${
-  (for (t ← IR if base == t.getBaseType; f <- t.getFields) yield s"""
+  (for (t ← IR if base == t.getBaseType; f <- t.getFields.asScala) yield s"""
         class ${knownField(f)};""").mkString
 }
     }
@@ -79,7 +87,7 @@ ${
 
 
     for (t ← IR if base == t.getBaseType){
-      val fields = t.getAllFields.filter(!_.isConstant)
+      val fields = t.getAllFields.asScala.filter(!_.isConstant)
       val relevantFields = fields.filter(!_.isIgnored)
       val Name = name(t)
       val SuperName = if (null != t.getSuperType()) name(t.getSuperType)
@@ -92,14 +100,14 @@ ${
 }class $Name : public $SuperName {
         friend class ::skill::internal::Book<${name(t)}>;
         friend class ::skill::internal::StoragePool<${name(t)},${name(t.getBaseType)}>;${
-  (for (f <- t.getFields) yield s"""
+  (for (f <- t.getFields.asScala) yield s"""
         friend class internal::${knownField(f)};""").mkString
 }
 
     protected:
 """)
       // fields
-	    out.write((for(f <- t.getFields if !f.isConstant)
+	    out.write((for(f <- t.getFields.asScala if !f.isConstant)
         yield s"""    ${mapType(f.getType())} ${localFieldName(f)};
 """).mkString)
 
@@ -108,11 +116,11 @@ ${
         $Name() { }
 
         $Name(::skill::SKilLID _skillID${
-    	  (for(f <- t.getAllFields if !f.isConstant()) yield s""",
+    	  (for(f <- t.getAllFields.asScala if !f.isConstant()) yield s""",
     	    ${mapType(f.getType)} __${name(f)} = ${defaultValue(f)}""").mkString
     	}) {
             this->id = _skillID;${
-    	  (for(f <- t.getAllFields if !f.isConstant()) yield s"""
+    	  (for(f <- t.getAllFields.asScala if !f.isConstant()) yield s"""
             this->${localFieldName(f)} = __${name(f)};""").mkString
     	}
         }
@@ -133,12 +141,20 @@ ${
         inline ::skill::SKilLID skillID() const { return this->id; }
 """)
 
-  //${if(revealSkillID)"" else s"protected[${packageName}] "}final def getSkillID = skillID
+      //${if(revealSkillID)"" else s"protected[${packageName}] "}final def getSkillID = skillID
 
-	///////////////////////
-	// getters & setters //
-	///////////////////////
-	    for(f <- t.getFields) {
+      // custom fields
+      val customizations = t.getCustomizations.asScala.filter(_.language.equals("cpp")).toArray
+      for(c <- customizations) {
+        out.write(s"""
+        ${comment(c)}${c.`type`} ${name(c)}; 
+""")
+      }
+
+     	///////////////////////
+    	// getters & setters //
+    	///////////////////////
+	    for(f <- t.getFields.asScala) {
         implicit val thisF = f;
 
       def makeGetterImplementation:String = {
@@ -155,7 +171,7 @@ ${
           s"""throw ::skill::SkillException::IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint");"""
         else
           s"${
-          f.getRestrictions.map {
+          f.getRestrictions.asScala.map {
             //@range
             case r:IntRangeRestriction ⇒
               (r.getLow == Long.MinValue, r.getHigh == Long.MaxValue) match {
@@ -191,7 +207,7 @@ ${
     out.write(s"""
 /*  override def prettyString : String = s"${name(t)}(#$$skillID${
     (
-        for(f <- t.getAllFields)
+        for(f <- t.getAllFields.asScala)
           yield if(f.isIgnored) s""", ${f.getName()}: <<ignored>>"""
           else if (!f.isConstant) s""", ${if(f.isAuto)"auto "else""}${f.getName()}: $${${name(f)}}"""
           else s""", const ${f.getName()}: ${f.constantValue()}"""
@@ -268,5 +284,10 @@ void $packageName::${name(t)}::accept($packageName::api::Visitor *v) {
 """)
       out.close()
     }
+  }
+  
+  private def gatherCustomIncludes(t : UserType) : Seq[String] = {
+    val x = t.getCustomizations.asScala.filter(_.language.equals("cpp")).flatMap(_.getOptions.get("include").asScala)
+    x ++ t.getSubTypes.asScala.flatMap(gatherCustomIncludes)
   }
 }
