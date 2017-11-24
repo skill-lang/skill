@@ -16,8 +16,6 @@ trait VisitorsMaker extends GeneralOutputMaker {
       //package & imports
       out.write(s"""package ${packagePrefix}api;
 
-import ${packagePrefix}*;
-
 /**
  * Base class of a distributed dispatching function ranging over specified types
  * implemented by the visitor pattern.
