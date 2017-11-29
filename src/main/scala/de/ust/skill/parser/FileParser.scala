@@ -217,7 +217,7 @@ final class FileParser(
    *
    * The intermediate representation is without the leading "/°" and trailing "°/" (where °=*)
    */
-  private def comment : Parser[Comment] = """/\*+""".r ~> ("""([^\*/]|/|\*+[^\*/])*\*+/""".r) ^^ { s ⇒
+  private def comment : Parser[Comment] = """/\*+""".r ~> ("""[\S\s]*?\*/""".r) ^^ { s ⇒
     // scan s to split it into pieces
     @inline def scan(last : Int) : ListBuffer[String] = {
       var begin = 0;
