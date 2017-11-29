@@ -7,8 +7,6 @@ package de.ust.skill.parser
 
 import java.io.File
 
-import scala.language.implicitConversions
-
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.exceptions.TestFailedException
