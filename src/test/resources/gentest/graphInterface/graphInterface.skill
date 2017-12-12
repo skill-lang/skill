@@ -44,3 +44,11 @@ interface Marker {
   !distributed
   string mark;
 }
+
+/* an unused rootless interface; generator corner case */
+interface UnusedRootless {
+}
+
+/* an unused rooted interface; generator corner case */
+interface Unused : Node {
+}
