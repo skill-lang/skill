@@ -207,6 +207,16 @@ Known types are: ${definitionNames.keySet.mkString(", ")}""")
       }.getOrElse(0))
         throw ParseException(s"Type ${d.name} inherits something thats neither a user type nor an interface.")
     }
+    
+    // ensure that all interfaces are used
+    // note: this check is motivated by the fact that unused interfaces cannot be instantiated ever
+    locally {
+      val used = superInterfaces.values.flatten.toSet
+      for(i <- interfaces if !used.contains(i)){
+        // just create a warning 
+        System.err.println(s"Warning: The interface ${i.name.CapitalCase} is not used and is hence useless.")
+      }
+    }
 
     for (t ← defs.collect { case c : DeclarationWithBody ⇒ c }.par) {
       // check duplicate abstract field names?
