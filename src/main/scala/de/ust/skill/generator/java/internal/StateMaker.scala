@@ -78,8 +78,7 @@ public static final class SkillState extends de.ust.skill.common.java.internal.S
             ${name(t)}s = (null == (p = poolByName.get("${t.getSkillName}"))) ? Parser.newPool("${t.getSkillName}", ${
         if (null == t.getSuperType) "null"
         else s"${name(t.getSuperType)}s"
-      }, types) : (${access(t)}) p;"""
-      ).mkString("")
+      }, types) : (${access(t)}) p;""").mkString("")
     }${
       (for (t ← types.getInterfaces)
         yield s"""
@@ -87,9 +86,10 @@ public static final class SkillState extends de.ust.skill.common.java.internal.S
         if (t.getSuperType.getSkillName.equals("annotation")) "annotationType"
         else name(t.getSuperType) + "s";
       }${
-        collectRealizationNames(t).mkString(",", ",", "")
-      });"""
-      ).mkString("")
+        val realizations = collectRealizationNames(t);
+        if (realizations.isEmpty) ""
+        else realizations.mkString(",", ",", "")
+      });""").mkString("")
     }
         } catch (ClassCastException e) {
             throw new ParseException(in, -1, e,
@@ -109,8 +109,7 @@ ${
     public ${access(t)} ${name(t)}s() {
         return ${name(t)}s;
     }
-"""
-      ).mkString("")
+""").mkString("")
     }${
       (for (t ← types.getInterfaces)
         yield s"""
@@ -120,8 +119,7 @@ ${
     public ${interfacePool(t)} ${name(t)}s() {
         return ${name(t)}s;
     }
-"""
-      ).mkString("")
+""").mkString("")
     }}
 """)
 
