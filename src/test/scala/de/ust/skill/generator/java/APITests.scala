@@ -49,7 +49,8 @@ class APITests extends common.GenericAPITests {
   }
 
   override def callMainFor(name : String, source : String, options : Seq[String]) {
-    CommandLine.main(Array[String](source,
+    CommandLine.main(Array[String](
+      source,
       "--debug-header",
       "-c",
       "-L", "java",
@@ -106,7 +107,6 @@ public class Generic${name}Test extends common.CommonTest {
   }
 
   def makeRegularTest(out : PrintWriter, kind : String, name : String, testName : String, accept : Boolean, tc : TypeContext, obj : JSONObject) {
-    try { // TODO remove try
     out.write(s"""
     @Test${if (accept) "" else "(expected = SkillException.class)"}
     public void APITest_${escaped(kind)}_${name}_${if (accept) "acc" else "fail"}_${escaped(testName)}() throws Exception {
@@ -124,9 +124,6 @@ public class Generic${name}Test extends common.CommonTest {
         sf.close();
     }
 """)
-    } catch {
-      case e : Throwable => e.printStackTrace()
-    }
   }
 
   private def typ(tc : TypeContext, name : String) : String = {
@@ -156,14 +153,13 @@ public class Generic${name}Test extends common.CommonTest {
     case t : GroundType ⇒
       t.getSkillName match {
         case "string" if null != v ⇒ s"""$left != null && $left.equals("${v.toString()}")"""
-        case "i8"                  ⇒ s"$left == (byte)" + v.toString()
-        case "i16"                 ⇒ s"$left == (short)" + v.toString()
-        case "f32"                 ⇒ s"$left == (float)" + v.toString()
-        case "f64"                 ⇒ s"$left == (double)" + v.toString()
-        case "v64" | "i64"         ⇒ s"$left == " + v.toString() + "L"
-        case _ if null != v && !v.toString().equals("null") && !v.toString().equals("true") && !v.toString().equals("false")
-                                   ⇒ s"$left == " + v.toString() + "_2"
-        case _                     ⇒ s"$left == " + v.toString()
+        case "i8" ⇒ s"$left == (byte)" + v.toString()
+        case "i16" ⇒ s"$left == (short)" + v.toString()
+        case "f32" ⇒ s"$left == (float)" + v.toString()
+        case "f64" ⇒ s"$left == (double)" + v.toString()
+        case "v64" | "i64" ⇒ s"$left == " + v.toString() + "L"
+        case _ if null != v && !v.toString().equals("null") && !v.toString().equals("true") && !v.toString().equals("false") ⇒ s"$left == " + v.toString() + "_2"
+        case _ ⇒ s"$left == " + v.toString()
       }
 
     case t : SingleBaseTypeContainer ⇒
@@ -243,9 +239,9 @@ public class Generic${name}Test extends common.CommonTest {
         objCountPerType(typeName) = objCountPerType(typeName) + 1
       }
 
-      val rval = for ((typeName, objCount) <- objCountPerType) yield {
+      val rval = for ((typeName, objCount) ← objCountPerType) yield {
         s"""
-            assert(sf.${typeName}s().staticSize() == ${objCount});"""
+            Assert.assertEquals(${objCount}, sf.${typeName}s().staticSize());"""
       }
 
       rval.mkString
@@ -270,7 +266,6 @@ public class Generic${name}Test extends common.CommonTest {
       rval.mkString
     }
   }
-
 
   private def createObjects(obj : JSONObject, tc : TypeContext, packagePath : String) : String = {
     if (null == JSONObject.getNames(obj)) {
@@ -309,7 +304,7 @@ public class Generic${name}Test extends common.CommonTest {
             val getter = escaped("get" + f.getName.capital())
 
             s"""
-            assert(${equalValue(s"${name}_2.$getter()",fs.get(fieldName), f)});"""
+            Assert.assertTrue(${equalValue(s"${name}_2.$getter()", fs.get(fieldName), f)});"""
           }
 
           assignments.mkString
