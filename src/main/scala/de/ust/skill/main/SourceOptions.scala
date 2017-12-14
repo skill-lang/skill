@@ -20,19 +20,20 @@ import de.ust.skill.parser.Parser
 
 trait SourceOptions extends AbstractOptions {
 
-  case class SourceConfig(target : String,
-                          outdir : File = new File("."),
-                          var depsdir : File = null,
-                          var skipDeps : Boolean = false,
-                          clean : Boolean = false,
-                          cleanMode : String = null,
-                          header : HeaderInfo = new HeaderInfo(),
-                          var languages : Set[String] = Set(),
-                          languageOptions : HashMap[String, ArrayBuffer[(String, String)]] = new HashMap(),
-                          packageName : Seq[String] = Seq[String](),
-                          keepSpecificationOrder : Boolean = false,
-                          verbose : Boolean = false,
-                          visitors : Seq[String] = Seq[String]()) extends WithProcess {
+  case class SourceConfig(
+    target :                 String,
+    outdir :                 File                                           = new File("."),
+    var depsdir :            File                                           = null,
+    var skipDeps :           Boolean                                        = false,
+    clean :                  Boolean                                        = false,
+    cleanMode :              String                                         = null,
+    header :                 HeaderInfo                                     = new HeaderInfo(),
+    var languages :          Set[String]                                    = Set(),
+    languageOptions :        HashMap[String, ArrayBuffer[(String, String)]] = new HashMap(),
+    packageName :            Seq[String]                                    = Seq[String](),
+    keepSpecificationOrder : Boolean                                        = false,
+    verbose :                Boolean                                        = false,
+    visitors :               Seq[String]                                    = Seq[String]()) extends WithProcess {
     def process {
       // get known generator for languages
       val known = KnownGenerators.all.map(_.newInstance).map { g ⇒ g.getLanguageName -> g }.toMap
@@ -55,8 +56,7 @@ trait SourceOptions extends AbstractOptions {
       val visitors = (if (1 == this.visitors.size && this.visitors.head.equals("*")) {
         tc.getUsertypes.toSeq.toArray
       } else
-        this.visitors.map(tc.get).collect { case t : UserType ⇒ t }.toArray
-      )
+        this.visitors.map(_.toLowerCase).map(tc.get).collect { case t : UserType ⇒ t }.toArray)
 
       if (verbose) {
         if (!visitors.isEmpty)
@@ -91,8 +91,7 @@ trait SourceOptions extends AbstractOptions {
         gen.setPackage(packageName.toList)
         val printService = new PrintingService(
           new File(new File(outdir, pathPostfix), gen.packageDependentPathPostfix),
-          gen.makeHeader(header)
-        )
+          gen.makeHeader(header))
         gen.files = printService
         gen.depsPath = depsdir.getAbsolutePath + pathPostfix
         gen.skipDependencies = skipDeps
@@ -132,8 +131,7 @@ trait SourceOptions extends AbstractOptions {
             for ((lang, err) ← failures) yield {
               err.printStackTrace();
               s"$lang failed with message: ${err.getMessage}}"
-            }
-          ).mkString("\n"))
+            }).mkString("\n"))
         }
       }
 
@@ -143,16 +141,13 @@ trait SourceOptions extends AbstractOptions {
     head("skillc", BuildInfo.version, "(source specification mode)")
 
     opt[File]('o', "outdir").optional().action(
-      (p, c) ⇒ c.copy(outdir = p)
-    ).text("set the output directory")
+      (p, c) ⇒ c.copy(outdir = p)).text("set the output directory")
 
     opt[Unit]('c', "clean").optional().action(
-      (p, c) ⇒ c.copy(clean = true)
-    ).text("clean output directory after creating source files")
+      (p, c) ⇒ c.copy(clean = true)).text("clean output directory after creating source files")
 
     opt[String]("clean-mode").optional().action(
-      (p, c) ⇒ c.copy(cleanMode = p)
-    ).text("""possible modes are:
+      (p, c) ⇒ c.copy(cleanMode = p)).text("""possible modes are:
      (unspecified)   the back-end use their defaults
               none   no cleaning at all (pointless on cli)
               file   files are deleted in every folder that contains files directly
@@ -161,37 +156,30 @@ trait SourceOptions extends AbstractOptions {
 """)
 
     opt[File]('d', "depsdir").optional().action(
-      (p, c) ⇒ c.copy(depsdir = p)
-    ).text("set the dependency directory (libs, common sources)")
+      (p, c) ⇒ c.copy(depsdir = p)).text("set the dependency directory (libs, common sources)")
 
     opt[Unit]("skip-dependencies").optional().action(
-      (p, c) ⇒ c.copy(skipDeps = true)
-    ).text("do not copy dependencies")
+      (p, c) ⇒ c.copy(skipDeps = true)).text("do not copy dependencies")
 
     opt[String]('p', "package").required().action(
-      (s, c) ⇒ c.copy(packageName = s.split('.'))
-    ).text("set a package name used by all emitted code")
+      (s, c) ⇒ c.copy(packageName = s.split('.'))).text("set a package name used by all emitted code")
 
     opt[Boolean]("keepSpecOrder").optional().action(
-      (v, c) ⇒ c.copy(keepSpecificationOrder = v)
-    ).text("keep order from the specification where possible")
+      (v, c) ⇒ c.copy(keepSpecificationOrder = v)).text("keep order from the specification where possible")
 
     opt[Boolean]("verbose").optional().action(
-      (v, c) ⇒ c.copy(verbose = v)
-    ).text("print some diagnostic information")
+      (v, c) ⇒ c.copy(verbose = v)).text("print some diagnostic information")
 
     opt[String]('L', "language").optional().unbounded().validate(
       lang ⇒
         if (allGeneratorNames.contains(lang.toLowerCase)) success
-        else failure(s"Language $lang is not known and can therefore not be used!")
-    ).action((lang, c) ⇒ lang match {
+        else failure(s"Language $lang is not known and can therefore not be used!")).action((lang, c) ⇒ lang match {
         case "all" ⇒ c.copy(languages = c.languages ++ allGeneratorNames)
         case lang  ⇒ c.copy(languages = c.languages + lang.toLowerCase)
       })
 
     opt[Seq[String]]('v', "visitors").optional().action(
-      (v, c) ⇒ c.copy(visitors = v)
-    ).text("types to generate visitors for")
+      (v, c) ⇒ c.copy(visitors = v)).text("types to generate visitors for")
 
     help("help").text("prints this usage text")
     override def terminate(s : Either[String, Unit]) {
