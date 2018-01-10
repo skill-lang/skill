@@ -236,7 +236,7 @@ size_t $fieldName::offset() const {${
             if (nullptr == instance) {
                 result += 1;
             } else {
-            long v = instance->skillID();
+            long v = skillID(instance);
 
             if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
                 result += 1;
@@ -482,7 +482,7 @@ $checks
 
     case t : UserType ⇒ s"""${mapType(t)} v = $accessI;
             if (v)
-                out->v64(v->skillID());
+                out->v64(skillID(v));
             else
                 out->i8(0);"""
 

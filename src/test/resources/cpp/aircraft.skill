@@ -1,0 +1,12 @@
+Aircraft {
+	string name;
+	bool operational;
+}
+
+Airplane : Aircraft {
+	i16 id;
+}
+
+Helicopter : Aircraft {
+	i8 id;
+}

@@ -73,3 +73,4 @@ src/test/scala/de/ust/skill/generator/cpp/target/
 
 # Mac OS X
 .DS_Store
+/bin/
