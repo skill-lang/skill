@@ -20,7 +20,7 @@ trait StringKeeperMaker extends GeneralOutputMaker {
     //includes package
     out.write(s"""#include <skill/api/String.h>
 
-${packageParts.mkString("namespace ", " {\nnamespace", " {")}
+${packageParts.mkString("namespace ", " {\nnamespace ", " {")}
 
     /**
      * holds instances of all strings

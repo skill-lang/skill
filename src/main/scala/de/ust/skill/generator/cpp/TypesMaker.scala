@@ -62,7 +62,7 @@ namespace skill{
     }
 }
 
-${packageParts.mkString("namespace ", " {\nnamespace", " {")}
+${packageParts.mkString("namespace ", " {\nnamespace ", " {")}
 ${
   if(visitors.length>0) s"""
     // predef visitor

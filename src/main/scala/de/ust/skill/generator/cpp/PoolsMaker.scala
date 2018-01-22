@@ -42,7 +42,7 @@ trait PoolsMaker extends GeneralOutputMaker {
 
 #include "TypesOf${name(base)}.h"
 
-${packageParts.mkString("namespace ", " {\nnamespace", " {")}
+${packageParts.mkString("namespace ", " {\nnamespace ", " {")}
 """)
 
       for (t ← IR if base == t.getBaseType) {

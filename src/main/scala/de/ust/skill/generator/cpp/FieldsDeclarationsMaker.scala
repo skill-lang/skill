@@ -45,7 +45,7 @@ trait FieldDeclarationsMaker extends GeneralOutputMaker {
 #include <skill/api/SkillFile.h>
 #include "${storagePool(base)}s.h"
 
-${packageParts.mkString("namespace ", " {\nnamespace", " {")}
+${packageParts.mkString("namespace ", " {\nnamespace ", " {")}
     namespace internal {
 """)
 

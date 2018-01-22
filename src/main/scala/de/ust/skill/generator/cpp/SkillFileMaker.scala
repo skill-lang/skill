@@ -23,7 +23,7 @@ trait SkillFileMaker extends GeneralOutputMaker {
 #include "${storagePool(t)}s.h"""").mkString
     }
 
-${packageParts.mkString("namespace ", " {\nnamespace", " {")}
+${packageParts.mkString("namespace ", " {\nnamespace ", " {")}
     namespace api {
         /**
          * A skill file that corresponds to your specification. Have fun!
@@ -103,7 +103,7 @@ $endGuard""")
 #include "File.h"
 #include "StringKeeper.h"
 
-${packageParts.mkString("namespace ", " {\nnamespace", " {")}
+${packageParts.mkString("namespace ", " {\nnamespace ", " {")}
     //! create the string pool
     static ::skill::internal::StringPool *initializeStrings(::skill::streams::FileInputStream *in) {
         auto keeper = new StringKeeper;
