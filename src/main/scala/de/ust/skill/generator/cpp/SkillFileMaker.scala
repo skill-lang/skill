@@ -82,7 +82,7 @@ ${
         // visitor implementation
         struct Visitor {${
         (for (t ← visitors) yield s"""
-            virtual void visit(${name(t)} *node) {};""").mkString
+            virtual void visit(${name(t)} *node) {}""").mkString
       }
         };
 """
