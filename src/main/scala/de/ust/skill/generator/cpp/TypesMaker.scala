@@ -13,6 +13,7 @@ import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.MonotoneRestriction
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * creates header and implementation for all type definitions
@@ -287,7 +288,12 @@ void $packageName::${name(t)}::accept($packageName::api::Visitor *v) {
   }
   
   private def gatherCustomIncludes(t : UserType) : Seq[String] = {
-    val x = t.getCustomizations.asScala.filter(_.language.equals("cpp")).flatMap(_.getOptions.get("include").asScala)
+    val x = t.getCustomizations.asScala.filter(_.language.equals("cpp")).flatMap{
+      case null ⇒ ArrayBuffer[String]()
+      case c ⇒ val inc = c.getOptions.get("include")
+      if(null!=inc) inc.asScala
+      else ArrayBuffer[String]()
+    }
     x ++ t.getSubTypes.asScala.flatMap(gatherCustomIncludes)
   }
 }

@@ -1,10 +1,12 @@
 package de.ust.skill.ir;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
- * An auto field like property of a language that will be mixed into the code by a target language generator.
+ * An auto field like property of a language that will be mixed into the code by
+ * a target language generator.
  * 
  * @author Timm Felden
  */
@@ -29,11 +31,11 @@ final public class LanguageCustomization extends FieldLike {
             Map<String, List<String>> options) {
         super(name, comment);
         this.language = language.lower();
-        this.options = options;
+        this.options = null == options ? Collections.emptyMap() : options;
         this.type = type;
     }
 
-	public Map<String, List<String>> getOptions() {
-		return options;
-	}
+    public Map<String, List<String>> getOptions() {
+        return options;
+    }
 }

@@ -30,4 +30,7 @@ Custom {
   custom cpp
   !include "cstdint"
   "uint8_t*" any;
+
+  custom cpp
+  "uint8_t*" any2;
 }
