@@ -169,7 +169,7 @@ final class FileParser(
   /**
    * A field with language custom properties. This field will almost behave like an auto field.
    */
-  private def customField(c : Comment) = ("custom" ~> id) ~ customFiledOptions ~ string ~! id ^^ {
+  private def customField(c : Comment) = ("custom" ~> id) ~! customFiledOptions ~ string ~! id ^^ {
     case lang ~ opts ~ t ~ n ⇒ new Customization(c, lang, opts, t, n)
   }
   private def customFiledOptions : Parser[Map[Name, List[String]]] = (

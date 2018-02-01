@@ -60,7 +60,7 @@ ${
             if (m == Mode.Create && !path.exists())
                 path.createNewFile();
         }
-        assert path.exists() : "can only open files that already exist in genarel, because of java.nio restrictions";
+        assert path.exists() : "can only open files that already exist in general, because of java.nio restrictions";
         return open(path.toPath(), mode);
     }
 
