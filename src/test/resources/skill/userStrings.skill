@@ -1,0 +1,6 @@
+!pure
+!unique
+UserString {
+  !OnDemand
+  i8[] utf8Chars;
+}

@@ -1,0 +1,3 @@
+/** Stores properties of the target system. */
+@singleton System {
+}

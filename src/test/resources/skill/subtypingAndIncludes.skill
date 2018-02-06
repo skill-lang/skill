@@ -1,0 +1,11 @@
+with "runningExample.skill"
+
+/** a message is just a string */
+Message {
+  string message;
+}
+
+/** located messages contain a location as well */
+LocatedMessage extends Message {
+  Location location;
+}

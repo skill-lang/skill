@@ -1,0 +1,10 @@
+@Singleton ToolInfo {
+  /** the guard stays the same */
+  const i16 guard = 0xABCD;
+  
+  /** we accept files adhering to version 1 as well, because the format is compatible in one direction */
+  !constantMutator(1, 1)
+  const i16 version = 2;
+  
+  string toolName;
+}

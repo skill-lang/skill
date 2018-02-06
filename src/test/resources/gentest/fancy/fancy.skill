@@ -1,0 +1,48 @@
+#! fancy -v=b,c,d,g,h,j
+#
+# Uses a combination of fancy types to challenge code generators.
+# Also, there is a larger subtyping hierarchy used for testing of subtyping
+# related specifics.
+
+@abstract
+A {
+  /* this type makes the annotation test incompatible with subtypes */
+  annotation a;
+
+  A Parent;
+}
+
+@abstract
+B : A {}
+
+@abstract
+C : B {
+  C Value;
+}
+
+D : C {
+
+  view Value as
+  D Value;
+}
+
+interface E : C {}
+
+interface F : C {
+  m aMap;
+}
+
+G : C with E with F {
+
+  view Value as
+  G Value;
+}
+
+H : A {}
+
+I : A {}
+
+J : A {}
+
+typedef m
+map <E, F>;

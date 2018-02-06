@@ -1,0 +1,14 @@
+{
+	"Comment" : "Should fail because name must be nonnull",
+    "kind" : "restrictions",
+	"should" : "fail",
+	"obj" : {
+	    "sys" : {
+	        "System" : {
+	            "name" : null,
+	            "version" : 1.1
+	        }
+	    }
+	}
+}
+

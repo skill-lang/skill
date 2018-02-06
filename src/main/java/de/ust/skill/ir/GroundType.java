@@ -1,3 +1,8 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013-18 University of Stuttgart                 **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.ir;
 
 /**
@@ -7,36 +12,31 @@ package de.ust.skill.ir;
  */
 public class GroundType extends Type {
 
-	/**
-	 * String representation of the type.
-	 */
-	private final String name;
+    /**
+     * String representation of the type.
+     */
+    private final Name name;
 
-	GroundType(TypeContext tc, String name) {
-		this.name = name;
-		tc.unifyType(this);
-	}
+    GroundType(TypeContext tc, String name) {
+        this.name = new Name(name);
+        tc.unifyType(this);
+    }
 
-	public boolean isInteger() {
-		return name.charAt(0) == 'i' || name.charAt(0) == 'v';
-	}
+    public boolean isInteger() {
+        return name.lower().charAt(0) == 'i' || name.lower().charAt(0) == 'v';
+    }
 
-	public boolean isFloat() {
-		return name.charAt(0) == 'f';
-	}
+    public boolean isFloat() {
+        return name.lower().charAt(0) == 'f';
+    }
 
-	@Override
-	public String getName() {
-		return name;
-	}
+    @Override
+    public Name getName() {
+        return name;
+    }
 
-	@Override
-	public String getSkillName() {
-		return name;
-	}
-
-	@Override
-	public String getCapitalName() {
-		throw new NoSuchMethodError("capital names of ground types shall not be used");
-	}
+    @Override
+    public String getSkillName() {
+        return name.getSkillName();
+    }
 }

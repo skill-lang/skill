@@ -1,0 +1,13 @@
+!provider(ColorProvider)
+Color { i8 r; i8 g; i8 b; }
+
+/**
+ * A GraphProvider creates graphs.
+ * A ColorProvider adds color.
+ */
+!provider(GraphProvider)
+Node {
+  !provider(ColorProvider)
+  Color color;
+  set<Node> edges;
+}

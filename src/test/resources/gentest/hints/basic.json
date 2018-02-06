@@ -1,0 +1,39 @@
+{
+	"obj" : {
+	    "u" : {
+	        "User" : {
+	            "name" : "herb",
+	            "age" : 43,
+	            "reflectivelyVisible" : "I am not visible"
+	        }
+	    },
+	    "a" : {
+	        "Abuser" : {
+	            "abuseDescription" : "I am a absue description"
+	        }
+	    },
+	    "nas" : {
+	        "NowASingleton" : { }
+	    },
+	    "em" : {
+	        "ExternMixin" : {
+	            "unknownStuff" : null
+	        }
+	    },
+	    "bt" : {
+	        "BadType" : {
+	            "ignoredData" : "Ignore me",
+	            "reflectivelyInVisible" : "I am reflectively visible"
+	        }
+	    },
+	    "uid" : {
+	        "UID" : {
+	            "identifier" : 7
+	        }
+	    },
+	    "expr" : {
+	        "Expression" : { }
+	    }
+	}
+}
+

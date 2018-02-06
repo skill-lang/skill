@@ -1,0 +1,9 @@
+# seems to fail in iml.sf
+
+/**
+ * This type is unrelated to scala.Unit.
+ * @author Timm Felden
+ */
+Unit {
+  Unit int;
+}

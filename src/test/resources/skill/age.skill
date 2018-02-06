@@ -1,0 +1,17 @@
+#! age
+# Specification for TR15§8.6
+
+/**
+ * The age of a person.
+ * @author Timm Felden
+ */
+Age {
+
+ /**
+  * People have a small positive age, but maybe they
+  * will start to live longer in the future, who knows
+  */
+  @min (0)
+  v64 age;
+}
+

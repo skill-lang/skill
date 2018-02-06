@@ -1,0 +1,13 @@
+
+Node {
+    string name;
+    list<Node> edges;
+}
+
+IntNode : Node {
+    i32 content;
+}
+
+StringNode : Node {
+    string content;
+}

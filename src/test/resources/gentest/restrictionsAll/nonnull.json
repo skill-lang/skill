@@ -1,0 +1,13 @@
+{
+	"Comment" : "Should fail because the operator of a Term musst be not null",
+	"should" : "fail",
+    "kind" : "restrictions",
+	"obj" : {
+	    "op" : {
+	        "Term" : {
+	            "operator" : null
+	        }
+	    }
+    }
+}
+

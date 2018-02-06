@@ -1,0 +1,6 @@
+#! unknown -Oscala:revealSkillID=true
+#
+# Checks correct treatment of missing sub type information
+
+A { A a; }
+C : A {  }

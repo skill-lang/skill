@@ -1,0 +1,27 @@
+A {
+ B b;
+}
+
+B {
+ A a;
+}
+
+C {
+ A a;
+}
+
+D {
+ D d;
+}
+
+E {
+}
+
+F extends E {
+f32 f;
+}
+
+G extends F {
+f64 g;
+E e;
+}

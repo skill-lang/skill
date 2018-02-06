@@ -1,0 +1,72 @@
+# definition of tools and build properties for tools 
+
+include "types.skill"
+
+Tool {
+  string name;
+  string description;
+
+  /**
+   * build targets associated with this tool
+   */
+  BuildInformation[] buildTargets;
+
+  /**
+   * the set of user types selected by this tool
+   */
+  set<UserdefinedType> selectedUserTypes;
+
+  /**
+   * The set of fields selected by this tool.
+   * The string argument is used to ensure, that selected fields have unique names. 
+   */
+  map<UserdefinedType, string, FieldLike> selectedFields;
+
+  /* overrides existing annotations */
+  map<UserdefinedType, ToolTypeCustomization> customTypeAnnotations;
+
+  /* overrides existing annotations */
+  map<FieldLike, ToolTypeCustomization> customFieldAnnotations;
+}
+
+/**
+ * this type is used to allow tools to define their own non-standard set of hints and restrictions
+ */
+ToolTypeCustomization extends Annotations {}
+
+BuildInformation {
+
+  /**
+   * the output directory passed to the target generator
+   */
+  FilePath output;
+
+  /**
+   * the name of the language to be used. It is explicitly discouraged to use all languages.
+   * Create different build informations for every language instead, as the output directory should be changed.
+   */
+  string language;
+
+  /**
+   * options are processed as if they were entered in the command line interface
+   * 
+   * @note options consisting of multiple strings will be stored in multiple strings in this form
+   */
+  string[] options;
+}
+
+/**
+ * a path that can be used in the description of a build process
+ */
+FilePath {
+
+  /**
+   * true, iff starting from file system root
+   */
+  bool isAbsolut;
+
+  /**
+   * parts of the path that will be assembled into a usable path
+   */
+  string[] parts;
+}

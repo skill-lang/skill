@@ -1,0 +1,8 @@
+# This file contains a field that expands to map<i8[], string> names.
+#
+
+typedef str i8[];
+
+Err {
+  map<str, string> names;
+}

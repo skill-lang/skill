@@ -1,0 +1,7 @@
+/* this type definition is a union of A and B */
+typedef poorMansUnion
+  @oneOf(A, B)
+  annotation;
+
+A{}
+B{}

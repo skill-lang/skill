@@ -1,0 +1,83 @@
+V "GNAT Lib v4.9"
+A -O3
+A -gnatA
+A -gnatn
+A -gnatN
+A -gnatp
+A -gnat2012
+A -mtune=generic
+A -march=x86-64
+P SS ZX
+
+RN
+RV NO_DISPATCHING_CALLS
+RV NO_IMPLICIT_CONDITIONALS
+RV NO_SECONDARY_STACK
+RV NO_STANDARD_STORAGE_POOLS
+RV NO_UNCHECKED_CONVERSION
+RV NO_IMPLEMENTATION_PRAGMAS
+RV NO_ELABORATION_CODE
+RV SPARK_05
+
+U age%b			age.adb			281b1f38 NE OO PK
+W ada%s			ada.ads			ada.ali
+W ada.unchecked_conversion%s
+
+U age%s			age.ads			568df7b4 EE OO PF PR PK
+W ada.exceptions%s	a-except.adb		a-except.ali
+W ada.streams%s		a-stream.adb		a-stream.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W skill%s		skill.adb		skill.ali
+W skill.types%s		skill-types.ads		skill-types.ali
+W system%s		system.ads		system.ali
+W system.secondary_stack%s  s-secsta.adb	s-secsta.ali
+W system.storage_elements%s  s-stoele.adb	s-stoele.ali
+W system.stream_attributes%s  s-stratt.adb	s-stratt.ali
+
+D ada.ads		20070406091342 3ffc8e18
+D a-except.ads		20140129161953 f86a4103
+D a-ioexce.ads		20140225151544 e4a01f64
+D a-stream.ads		20140122164720 1a984740
+D a-tags.ads		20111212115430 6c0509d0
+D a-unccon.ads		20070406091342 f9eb8f06
+D age.ads		20150727120621 d610bba6
+D age.adb		20150727120935 07e02b98
+D interfac.ads		20140225151838 69adb1b9
+D skill.ads		20150716082453 116540ca
+D skill-types.ads	20150727131323 809d4c12
+D system.ads		20141210093300 90249111
+D s-exctab.ads		20140225151139 54135002
+D s-parame.ads		20140225151139 ab8cb46a
+D s-secsta.ads		20140225151139 86a2856d
+D s-soflin.ads		20140225151139 aa763b52
+D s-stache.ads		20140225151139 a37c21ec
+D s-stalib.ads		20140225151139 a891183f
+D s-stoele.ads		20140225151139 2dc34a04
+D s-stoele.adb		20140225151139 ed88f8fb
+D s-stratt.ads		20131014135145 aedef97e
+D s-stratt.adb		20090409150019 56ef263e
+D s-traent.ads		20140225151139 b5116092
+D s-unstyp.ads		20140225151139 510692af
+X 1 ada.ads
+16K9*Ada 19e8 8|7r6 16r31
+X 6 a-unccon.ads
+20v14*Unchecked_Conversion 8|7w10 16r35
+X 7 age.ads
+10K9*Age 19l5 19e8 8|11b14 21l5 21t8
+13R9*Age_T<11|33R9> 15e14 16r23
+14i7*Age{11|16I12}
+16P9*Age(13R9) 18r67 8|13r68 16r60
+18V13*To_Age{16P9} 18^20 8|13b13 19l8 19t14
+18p20 This(11|33R9) 8|13b21 18r26
+X 8 age.adb
+15P12 T(11|33R9) 16r57 18r23
+16V16 Convert[6|20]{7|16P9} 18s14
+X 9 interfac.ads
+54I9*Integer_64<long_integer>
+X 10 skill.ads
+7K9*Skill 7|7r6 13r22 14r13 18r34 8|13r35 15r28 10|12e10
+X 11 skill-types.ads
+9K15*Types 7|7w12 13r28 14r19 18r40 8|13r41 15r34 11|40e16
+16I12*v64{9|54I9} 7|14r25
+33R9*Skill_Object 7|13r34 18r46 8|13r47 15r40 11|35e14
+

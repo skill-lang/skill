@@ -1,0 +1,9 @@
+A : B {}
+
+B : C {}
+
+C {
+  C c;
+  view c as
+  A a;
+}

@@ -1,3 +1,8 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013-18 University of Stuttgart                 **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.ir;
 
 import java.util.Stack;
@@ -36,7 +41,7 @@ public abstract class Type implements Comparable<Type> {
 		}
 
 		// we have to compare declarations
-		Declaration t = (Declaration) this, s = (Declaration) o;
+		UserType t = (UserType) this, s = (UserType) o;
 
 		if ((l = (t.getBaseType() == null)) | (r = (s.getBaseType() == null))) {
 			if (l && r)
@@ -47,11 +52,11 @@ public abstract class Type implements Comparable<Type> {
 		}
 
 		if (t.getBaseType() == s.getBaseType()) {
-			Stack<Declaration> left = new Stack<>(), right = new Stack<>();
+			Stack<UserType> left = new Stack<>(), right = new Stack<>();
 			// collect super types
-			for (Declaration i = t; i != null; i = i.getSuperType())
+			for (UserType i = t; i != null; i = i.getSuperType())
 				left.push(i);
-			for (Declaration i = s; i != null; i = i.getSuperType())
+			for (UserType i = s; i != null; i = i.getSuperType())
 				right.push(i);
 
 			// pop common super classes (can not be null, because this is not
@@ -89,10 +94,5 @@ public abstract class Type implements Comparable<Type> {
 	 * @return the name of the type as it occurred in the declaration; for
 	 *         built-in types, this is equal to the skill name
 	 */
-	abstract public String getName();
-
-	/**
-	 * @return returns the type with a capitalized first letter
-	 */
-	abstract public String getCapitalName();
+    abstract public Name getName();
 }

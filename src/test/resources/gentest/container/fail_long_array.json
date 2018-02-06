@@ -1,0 +1,12 @@
+{
+	"comment" : "Fails because there are to many values in arr",
+	"should" : "fail",
+	"obj" : {
+	    "cont" : {
+	        "Container" : {
+	            "arr"  : [ -1, 0, 1, 2 ]
+            }
+		}
+	}
+}
+

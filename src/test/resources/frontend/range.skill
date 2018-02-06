@@ -1,0 +1,4 @@
+T {
+  @range(1, 2, "inclusive", "inclusive")
+  i8 f;
+}

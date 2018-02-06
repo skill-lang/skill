@@ -1,0 +1,15 @@
+/**
+Testing hints.
+Not a useful input, but demonstrating some properties of hints.
+*/
+!unique
+!pure
+!monotone
+!readonly
+!IgNoRe
+!ignore
+!IgnorE
+hint {
+  !OndEmanD !distributed !onDEMAND !ignore
+  i64 data;	
+}

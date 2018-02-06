@@ -1,0 +1,67 @@
+include "types.skill"
+
+@abstract
+FieldLike with Annotations {
+
+  /**
+   * the comment provided by the user or null
+   */
+  Comment comment;
+
+  /**
+   * The type of the field. 
+   */
+  Type type;
+
+  /**
+   * the skill name
+   */
+  Identifier name;
+}
+
+Field extends FieldLike {
+
+  /**
+   * true, iff the field is an auto field
+   */
+  bool isAuto;
+}
+
+/**
+ * a language custom field
+ */
+CustomField extends FieldLike {
+
+  /**
+   * the name of the language that treats this fields
+   */
+  string language;
+
+  CustomFieldOption[] options;
+
+  /**
+   * the type name that will be used to create a language specific field type
+   */
+  string typename;
+}
+
+/**
+ * an option passed to a custom field
+ */
+CustomFieldOption {
+  string name;
+  string[] arguments;
+}
+
+/**
+ * a view onto a field
+ * 
+ * @note some components such as annotations must not be set by views
+ */
+FieldView extends FieldLike {
+
+  /**
+   * the viewed component
+   */
+  FieldLike target;
+}

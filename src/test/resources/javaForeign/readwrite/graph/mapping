@@ -1,0 +1,19 @@
+
+map Node -> graph.Node {
+    name -> name;
+    edges -> outEdges;
+}
+
+map IntNode -> graph.IntNode {
+    content -> content;
+}
+
+map StringNode -> graph.StrNode {
+    content -> content;
+}
+
+new graph.XYNode {
+    x;
+}
+
+new! graph.ABNode;

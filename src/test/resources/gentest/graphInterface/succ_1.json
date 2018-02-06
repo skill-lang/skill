@@ -1,0 +1,32 @@
+{
+    "kind" : "interfaces",
+	"obj" : {
+	    "ch" : {
+	         "ColorHolder" : {
+	             "anAnnotation" : null,
+	             "anAbstractNode" : "n"
+	         }
+	    },
+	    "sn" : {
+	        "SubNode" : {
+	            "edges" : [ "n" ],
+	            "map" : { "n" : {"n" : "null"} },
+	            "color" : "red",
+	            "mark" : "Cirlce",
+	            "next" : "null",
+	            "f" : "null",
+	            "n" : "n"
+	        }
+	    },
+	    "n" : {
+	        "Node" : {
+	            "edges" : [ ],
+	            "map" : { "n" : {"n" : "null"} },
+	            "color" : "blue",
+	            "mark" : "Circle",
+	            "next" : "null"
+	        }
+	    }
+	}
+}
+

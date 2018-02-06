@@ -1,0 +1,41 @@
+SimpleType {
+	
+	i64 x;
+	
+	i64 y;
+	
+	i8 b;
+	
+	i16 s;
+	
+	i32 i;
+	
+	i64 l;
+	
+	f32 f;
+	
+	f64 d;
+	
+	string str;
+}
+
+OtherSimpleType {
+	
+	i64 x;
+	
+	i64 y;
+	
+	i8 b;
+	
+	i16 s;
+	
+	i32 i;
+	
+	i64 l;
+	
+	f32 f;
+	
+	f64 d;
+	
+	string str;
+}

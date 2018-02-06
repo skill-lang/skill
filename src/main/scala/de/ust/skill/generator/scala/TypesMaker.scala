@@ -1,190 +1,366 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013 University of Stuttgart                    **
+** \__ \ ' <| | | |__     (c) 2013-18 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.scala
 
-import java.io.PrintWriter
-
 import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.bufferAsJavaList
+import scala.collection.JavaConversions.mapAsScalaMap
 
-import de.ust.skill.ir._
-import de.ust.skill.ir.restriction._
+import de.ust.skill.ir.Declaration
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.UserType
+import de.ust.skill.ir.WithFields
+import de.ust.skill.ir.restriction.FloatRangeRestriction
+import de.ust.skill.ir.restriction.IntRangeRestriction
+import de.ust.skill.ir.restriction.MonotoneRestriction
+import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.FieldLike
+import de.ust.skill.io.PrintWriter
 
 trait TypesMaker extends GeneralOutputMaker {
+
+  @inline def fieldName(implicit f : Field) : String = escaped(f.getName.camel())
+  @inline def localFieldName(implicit f : Field) : String = escaped("_" + f.getName.camel())
+  @inline def fieldAssignName(implicit f : Field) : String = escaped(f.getName.camel() + "_=")
+  @inline def introducesStateRef(t : UserType) : Boolean = t.hasDistributedField() && (
+      null==t.getSuperType() || !t.getSuperType.hasDistributedField()
+    )
+
   abstract override def make {
     super.make
-    val out = open("Types.scala")
+    
+    // requires knowledge about distributed fields inherited from interfaces
+    val flatIR = this.types.removeSpecialDeclarations.getUsertypes
 
-    //package
-    out.write(s"""package ${this.packageName}
+    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1)
+    else this.packageName;
+    
+    // create one file for all base-less interfaces
+    createAnnotationInterfaces;
 
-import ${packagePrefix}api.Access
-import ${packagePrefix}internal.FieldDeclaration
-import ${packagePrefix}internal.SkillType
-import ${packagePrefix}internal.NamedType
-""")
+    // create one file for each type hierarchy to help parallel builds
+    for(base <- IR if null==base.getSuperType){
 
-    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1) else this.packageName;
+      val out = files.open(s"TypesOf${base.getName.capital}.scala")
 
-    for (t ← IR) {
+      //package
+      out.write(s"""package ${this.packageName}
+
+import de.ust.skill.common.scala.SkillID
+import de.ust.skill.common.scala.api.SkillObject
+import de.ust.skill.common.scala.api.Access
+import de.ust.skill.common.scala.api.UnknownObject
+${(for(t ← IR if t.getBaseType == base;
+        c <- t.getCustomizations if c.language.equals("scala");
+        is <- c.getOptions.toMap.get("import").toArray;
+        i  <- is
+        ) yield s"import $i;\n").mkString}""")
+    
+
+
+    for (t ← IR if t.getBaseType == base) {
+      val flatType = flatIR.find(_.getName == t.getName).get
+      
       val fields = t.getAllFields.filter(!_.isConstant)
       val relevantFields = fields.filter(!_.isIgnored)
 
-      //class comment
-      if (t.getSkillComment.size > 0)
-        out.write(s"/*${t.getSkillComment()}*/\n")
-
-      //class prefix
-      val Name = t.getCapitalName;
+      //class declaration
       out.write(s"""
-sealed class $Name private[$packageName] (skillID : Long) ${
-        if (null != t.getSuperType()) { s"extends ${t.getSuperType().getCapitalName()}" }
-        else { "extends SkillType" }
-      }(skillID) {""")
+${
+        comment(t)
+}sealed class ${name(t)} (_skillID : SkillID${
+  if(flatType.hasDistributedField())
+    (", " + (
+      if(introducesStateRef(t)) "val "
+      else ""
+    ) + "__state : api.SkillFile")
+  else ""
+}) extends ${
+        if (null != t.getSuperType()) s"${name(t.getSuperType)}(_skillID${
+          if(flatType.getSuperType.hasDistributedField())", __state"
+          else ""
+        })"
+        else "SkillObject(_skillID)"
+      }${
+  (for(s <- t.getSuperInterfaces)
+    yield " with " + name(s)).mkString
+} {${
+	  if(t.getSuperType == null) s"""
+
+  //reveal skill id
+  ${if(revealSkillID)"" else s"protected[${packageName}] "}final def getSkillID = skillID
+"""
+	  else ""
+	}""")
 
       // constructor
 	if(!relevantFields.isEmpty){
     	out.write(s"""
-  private[$packageName] def this(skillID : Long${appendConstructorArguments(t)}) {
-    this(skillID)
-    ${relevantFields.map{f ⇒ s"_${f.getName()} = ${escaped(f.getName)}"}.mkString("\n    ")}
+  private[$packageName] def this(_skillID : SkillID${
+    	  if(flatType.hasDistributedField()) ", __state : api.SkillFile"
+    	  else ""
+    	}${appendConstructorArguments(t)}) {
+    this(_skillID${
+    	  if(flatType.hasDistributedField()) ", __state"
+    	  else ""
+    	})
+    ${relevantFields.map{
+      case f if f.isDistributed ⇒ s"this.${fieldName(f)} = ${fieldName(f)}"
+      case f ⇒ s"${localFieldName(f)} = ${fieldName(f)}"
+      }.mkString("\n    ")}
   }
 """)
 	}
 
-	///////////////////////
-	// getters & setters //
-	///////////////////////
-	for(f <- t.getFields if !f.isConstant){
-      val name = f.getName()
-      val name_ = escaped(name)
-      val Name = name.capitalize
-
-      def makeField:String = {
-		if(f.isIgnored)
-		  ""
-		else
-	      s"""
-  protected var _${f.getName} : ${mapType(f.getType())} = ${defaultValue(f)}"""
-	  }
-
-      def makeGetterImplementation:String = {
-        if(f.isIgnored)
-          s"""throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
-        else
-          s"_$name"
-      }
-
-      def makeSetterImplementation:String = {
-        if(f.isIgnored)
-          s"""throw new IllegalAccessError("$name has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
-        else
-          s"{ ${//non-null check
-          if(!"annotation".equals(f.getType().getName()) && f.getType().isInstanceOf[ReferenceType] && f.getRestrictions().collect({case r:NullableRestriction⇒r}).isEmpty)
-            s"""require($Name != null, "$name is specified to be nonnull!"); """
-          else
-            ""
-          }${ //@range check
-            if(f.getType().isInstanceOf[GroundType]){
-              if(f.getType().asInstanceOf[GroundType].isInteger)
-                f.getRestrictions.collect{case r:IntRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLow}L <= $Name && $Name <= ${r.getHigh}L, "$name has to be in range [${r.getLow};${r.getHigh}]"); """}.mkString("")
-              else if("f32".equals(f.getType.getName))
-                f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowFloat}f <= $Name && $Name <= ${r.getHighFloat}f, "$name has to be in range [${r.getLowFloat};${r.getHighFloat}]"); """}.mkString("")
-              else if("f64".equals(f.getType.getName))
-               f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowDouble} <= $Name && $Name <= ${r.getHighDouble}, "$name has to be in range [${r.getLowDouble};${r.getHighDouble}]"); """}.mkString("")
-              else
-                ""
-            }
-            else
-              ""
-          }${//@monotone modification check
-            if(!t.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty){
-              s"""require(skillID == -1L, "${t.getName} is specified to be monotone and this instance has already been subject to serialization!"); """
-            }
-            else
-              ""
-        }_$name = $Name }"
-      }
-
-      if ("annotation".equals(f.getType().getName())) { 
-        out.write(s"""$makeField
-  final def $name_ : SkillType = $makeGetterImplementation
-  final def ${name_}_=($Name : SkillType): Unit = $makeSetterImplementation
+	makeGetterAndSetter(out, t, flatType)
+	
+	// views
+	for(v <- t.getViews){
+	  // just redirect to the actual field so it's way simpler than getters & setters
+	  val fieldName = escaped(v.getName.camel)
+	  val target = 
+	    if(v.getName == v.getTarget.getName) "super." + escaped(v.getTarget.getName.camel())
+	    else escaped("_" + v.getTarget.getName.camel())
+	    
+	  val fieldAssignName = escaped(v.getName.camel + "_=")
+	  
+	  out.write(s"""
+	${comment(v)}${
+	  if(v.getName == v.getTarget.getName) "override "
+	  else ""
+	}def $fieldName : ${mapType(v.getType())} = $target.asInstanceOf[${mapType(v.getType())}]
+  ${comment(v)}def $fieldAssignName($fieldName : ${mapType(v.getType())}) : scala.Unit = $target = $fieldName""")
+	}
+	
+	// custom fields
+    for(c <- t.getCustomizations if c.language.equals("scala")){
+      val mod = c.getOptions.toMap.get("modifier").map(_.head).getOrElse("public")
+      
+      out.write(s"""
+  ${comment(c)}$mod var ${name(c)} : ${c.`type`} = _; 
 """)
-      } else {
-        out.write(s"""$makeField
-  final def $name_ = $makeGetterImplementation
-  final def ${name_}_=($Name : ${mapType(f.getType())}) = $makeSetterImplementation
-""")
-      }
     }
 
-    // generic get
+	// usability methods
     out.write(s"""
-  override def get(acc : Access[_ <: SkillType], field : FieldDeclaration) : Any = field.name match {
-${
-      (for(f <- t.getAllFields.filterNot(_.isIgnored)) yield s"""    case "${f.getSkillName}" ⇒ _${f.getName}""").mkString("\n")
-}${
-      (for(f <- t.getAllFields.filter(_.isIgnored)) yield s"""    case "${f.getSkillName}" ⇒ throw new IllegalAccessError("${f.getName} is ignored")""").mkString("\n")
-}
-    case _ ⇒ super.get(acc, field)
-  }
-""")
+  override def prettyString : String = s"${name(t)}(#$$skillID${
+    (
+        for(f <- t.getAllFields)
+          yield if(f.isIgnored) s""", ${f.getName()}: <<ignored>>"""
+          else if (!f.isConstant) s""", ${if(f.isAuto)"auto "else""}${f.getName()}: $${${name(f)}}"""
+          else s""", const ${f.getName()}: ${f.constantValue()}"""
+    ).mkString
+  })"
 
-    // generic set
-    out.write(s"""
-  override def set[@specialized T](acc : Access[_ <: SkillType], field : FieldDeclaration, value : T) : Unit = field.name match {
-${
-  (
-    for(f <- t.getAllFields.filterNot{t ⇒ t.isIgnored || t.isConstant()}) 
-      yield s"""    case "${f.getSkillName}" ⇒ _${f.getName} = value.asInstanceOf[${mapType(f.getType)}]"""
-  ).mkString("\n")
-}${
-  (
-    for(f <- t.getAllFields.filter(_.isIgnored)) 
-      yield s"""    case "${f.getSkillName}" ⇒ throw new IllegalAccessError("${f.getName} is ignored!")"""
-  ).mkString("\n")
-}${
-  (
-    for(f <- t.getAllFields.filter(_.isConstant)) 
-      yield s"""    case "${f.getSkillName}" ⇒ throw new IllegalAccessError("${f.getName} is constant!")"""
-  ).mkString("\n")
-}
-    case _ ⇒ super.set(acc, field, value)
-  }
-""")
-      
-      // pretty string
-    out.write(s"""  override def prettyString : String = "${t.getName()}"+""")
-    
-    val prettyStringArgs = (for(f <- t.getAllFields)
-      yield if(f.isIgnored) s"""+", ${f.getName()}: <<ignored>>" """
-      else if (!f.isConstant) s"""+", ${if(f.isAuto)"auto "else""}${f.getName()}: "+_${f.getName()}"""
-      else s"""+", const ${f.getName()}: ${f.constantValue()}""""
-      ).mkString(""""(this: "+this""", "", """+")"""")
-      
-      out.write(prettyStringArgs)
+  override def getTypeName : String = "${t.getSkillName}"
 
-    // toString
-    out.write(s"""
-  override def toString = "$Name#"+skillID
+  override def toString = "${t.getName.capital}#"+skillID
 }
 """)
 
       out.write(s"""
-object $Name {
-  def unapply(self : $Name) = ${(for (f ← t.getAllFields) yield "self."+f.getName).mkString("Some(", ", ", ")")}
+object ${name(t)} {
+${ // create unapply method if the type has fields, that can be matched (none or more then 12 is pointless)
+  val fs = t.getAllFields().filterNot(_.isConstant())
+  if(fs.isEmpty() || fs.size > 12)""
+  else s"""  def unapply(self : ${name(t)}) = ${(for (f ← fs) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
+"""
+}
+  final class UnknownSubType(
+    _skillID : SkillID,
+    val owner : Access[_ <: ${name(t)}])
+      extends ${name(t)}(_skillID${
+        if(flatType.hasDistributedField()) """,
+        owner.asInstanceOf[de.ust.skill.common.scala.internal.StoragePool[_, _]].basePool.owner.asInstanceOf[api.SkillFile]
+      """
+        else ""}) with UnknownObject[${name(t)}] {
 
-  final class SubType private[$packageName] (val τName : String, skillID : Long) extends $Name(skillID) with NamedType{
-    override def prettyString : String = τName+$prettyStringArgs
-    override def toString = τName+"#"+skillID
+    final override def getTypeName : String = owner.name
+
+    final override def prettyString : String = s"$$getTypeName#$$skillID"
   }
 }
 """);
     }
+      
+    createInterfaces(out, base)
 
     out.close()
+    }
+  }
+  
+  /**
+   * interfaces required to type fields
+   * 
+   * interfaces created here inherit some type defined in this file, i.e. they have a super class
+   */
+  private def createInterfaces(out : PrintWriter, base : UserType) {
+    for(t <- IRInterfaces if t.getBaseType.getSkillName.equals(base.getSkillName)) {
+      out.write(s"""
+${
+        comment(t)
+}sealed trait ${name(t)} extends ${name(t.getSuperType)}${
+  (for(s <- t.getSuperInterfaces)
+    yield " with " + name(s)).mkString
+} {""")
+
+      makeGetterAndSetter(out, t, null)
+
+      out.write("""
+}
+""")
+    }
+  }
+  
+  /**
+   * interfaces required to type fields
+   * 
+   * interfaces created here inherit no regular type, i.e. they have no super class
+   */
+  private def createAnnotationInterfaces {
+    if(IRInterfaces.forall(_.getBaseType.isInstanceOf[UserType]))
+      return;
+
+    val out = files.open(s"TypesOfAnnotation.scala")
+
+    //package
+    out.write(s"""package ${this.packageName}
+
+import de.ust.skill.common.scala.SkillID
+import de.ust.skill.common.scala.api.SkillObject
+import de.ust.skill.common.scala.api.Access
+import de.ust.skill.common.scala.api.UnknownObject
+""")
+
+    for(t <- IRInterfaces if !t.getBaseType.isInstanceOf[UserType]) {
+      out.write(s"""
+${
+        comment(t)
+}trait ${name(t)} extends SkillObject${
+  (for(s <- t.getSuperInterfaces)
+    yield " with " + name(s)).mkString
+} {""")
+
+      makeGetterAndSetter(out, t, null)
+
+      out.write("""
+}
+""")
+    }
+      
+    out.close
+  }
+  
+  
+	///////////////////////
+	// getters & setters //
+	///////////////////////
+  
+  private def makeGetterAndSetter(out : PrintWriter, t : Declaration with WithFields, flatType : UserType) {
+    val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1)
+    else this.packageName;
+    
+    for(f <- t.getFields){
+      implicit val thisF = f;
+      implicit val thisT = t;
+
+      if(f.isConstant){
+        out.write(s"""
+  ${comment(f)}final def $fieldName = $makeGetterImplementation
+  final private[$packageName] def Internal$localFieldName = $makeGetterImplementation
+""")
+      } else if(f.isDistributed()) {
+        if(t.isInstanceOf[InterfaceType])
+        out.write(s"""
+  ${comment(f)}def $fieldName : ${mapType(f.getType())};
+  ${comment(f)}def $fieldAssignName(${name(f)} : ${mapType(f.getType())}) : scala.Unit;
+""")
+        else
+        out.write(s"""
+  ${comment(f)}def $fieldName : ${mapType(f.getType())} = $makeGetterImplementation
+  final private[$packageName] def ${escaped("Internal_"+f.getName.camel)} = $makeGetterImplementation
+  ${comment(f)}def $fieldAssignName(${name(f)} : ${mapType(f.getType())}) : scala.Unit = $makeSetterImplementation
+  final private[$packageName] def ${escaped("Internal_"+f.getName.camel + "_=")}(v : ${mapType(f.getType())}) = $makeGetterImplementation
+""")
+      } else {
+        out.write(s"""
+  final protected var $localFieldName : ${mapType(f.getType())} = ${defaultValue(f)}
+  ${comment(f)}def $fieldName : ${mapType(f.getType())} = $makeGetterImplementation
+  final private[$packageName] def ${escaped("Internal_"+f.getName.camel)} = $localFieldName
+  ${comment(f)}def $fieldAssignName(${name(f)} : ${mapType(f.getType())}) : scala.Unit = $makeSetterImplementation
+  final private[$packageName] def ${escaped("Internal_"+f.getName.camel + "_=")}(v : ${mapType(f.getType())}) = $localFieldName = v
+""")
+      }
+    }
+    
+    // create implementations of distributed fields inherited from interfaces
+    if(null!=flatType && flatType.hasDistributedField()){
+      val _t = t.asInstanceOf[UserType]
+      // collect distributed fields that are not projected onto the super type but onto us
+      val fields = _t.getAllFields.filter{
+        f ⇒ 
+          val name = f.getSkillName
+          f.isDistributed() &&
+          (null == _t.getSuperType() || !_t.getSuperType.getAllFields.exists(_==f)) &&
+          !_t.getFields.exists(_.getSkillName.equals(name))
+      }
+      
+      for(f <- fields){
+        implicit val thisF = flatType.getFields.find(_.getSkillName.equals(f.getSkillName)).get;
+        implicit val thisT = flatType;
+        out.write(s"""
+  ${comment(f)}def $fieldName : ${mapType(f.getType())} = $makeGetterImplementation
+  final private[$packageName] def ${escaped("Internal_"+f.getName.camel)} = $makeGetterImplementation
+  ${comment(f)}def $fieldAssignName(${name(f)} : ${mapType(f.getType())}) : scala.Unit = $makeSetterImplementation
+  final private[$packageName] def ${escaped("Internal_"+f.getName.camel + "_=")}(v : ${mapType(f.getType())}) = $makeGetterImplementation
+""")
+      }
+    }
+  }
+
+  def makeGetterImplementation(implicit t : Declaration, f : Field) : String = {
+          if(f.isIgnored){
+              s"""throw new IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
+          } else if(f.isConstant) {
+              s"${f.constantValue().toString}.to${mapType(f.getType)}"
+          } else if(f.isDistributed()) {
+              s"__state.${name(t)}.${knownField(f)}.getR(this)"
+          } else { 
+              localFieldName
+          }
+  }
+
+  def makeSetterImplementation(implicit t : Declaration, f : Field) : String = {
+          if(f.isIgnored) {
+              s"""throw new IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
+          } else if(f.isDistributed()){
+              s"__state.${name(t)}.${knownField(f)}.setR(this, ${name(f)})"
+          } else {
+              s"{ ${ //@range check
+                  if(f.getType().isInstanceOf[GroundType]) {
+                      if(f.getType().asInstanceOf[GroundType].isInteger) {
+                          f.getRestrictions.collect{case r:IntRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLow}L <= ${name(f)} && ${name(f)} <= ${r.getHigh}L, "${name(f)} has to be in range [${r.getLow};${r.getHigh}]"); """}.mkString("")
+                      } else if("f32".equals(f.getType.getName)) {
+                          f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowFloat}f <= ${name(f)} && ${name(f)} <= ${r.getHighFloat}f, "${name(f)} has to be in range [${r.getLowFloat};${r.getHighFloat}]"); """}.mkString("")
+                      } else if("f64".equals(f.getType.getName)) {
+                          f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowDouble} <= ${name(f)} && ${name(f)} <= ${r.getHighDouble}, "${name(f)} has to be in range [${r.getLowDouble};${r.getHighDouble}]"); """}.mkString("")
+                      } else {
+                          ""
+                      }
+                  } else {
+                      ""
+                  }
+              }${//@monotone modification check
+                  if(!t.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty) {
+                      s"""require(skillID == -1L, "${t.getName} is specified to be monotone and this instance has already been subject to serialization!"); """
+                  } else {
+                      ""
+                  }
+              }$localFieldName = ${name(f)} }"
+          }
   }
 }

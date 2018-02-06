@@ -1,0 +1,28 @@
+#! graphInterface
+#
+# This test is mostly equivalent to graph, but checks interfacing and subtyping
+# capabilities of a generated binding.
+
+@abstract
+AbstractNode {
+  set<Node> edges;
+}
+
+/** The property of being a colored Node */
+interface ColoredNode : AbstractNode with Colored {
+}
+
+/** a graph of colored nodes */
+Node : ColoredNode {
+}
+
+/** anything that has a color is colored */
+interface Colored {
+  string color;
+}
+
+/** check that abstract colors are in fact annotations */
+ColorHolder {
+  Colored anAnnotation;
+  ColoredNode anAbstractNode;
+}

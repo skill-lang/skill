@@ -1,0 +1,55 @@
+{
+	"obj" : {
+	    "op" : {
+	        "Operator" : {
+	            "name" : "Minus"
+	        }
+	    },
+	    "trm" : {
+	        "Term" : {
+	            "operator" : "op",
+	            "arguments" : [ "trm", null ]
+	        }
+	    },
+	    "rp" : {
+	        "RegularProperty" : { }
+	    },
+
+	    "sys_obj" : {
+	        "System" : {
+	            "name" : "Hexadecimal",
+	            "version" : 1.1
+	        }
+	    },
+	    "none_obj" : {
+	        "None" : { }
+	    },
+	    "dbc" : {
+	        "DefaultBoarderCases" : {
+	            "system" : "sys_obj",
+	            "nopDefault" : 0,
+	            "float" : -1,
+	            "message" : "Hello World!",
+	            "none" : "none_obj"
+	        }
+	    },
+	    "rbc" : {
+	        "RangeBoarderCases" : {
+	            "positive" : 0,
+	            "positive2" : 0,
+	            "negative" : 0,
+	            "negative2" : 0,
+	            "degrees" : 0,
+	            "degrees2" : 360
+	        }
+	    },
+	    "cmnt" : {
+	        "Comment" : {
+	            "text" : "A comment",
+	            "target" : "op",
+	            "property" : "sys_obj"
+	        }
+	    }
+	}
+}
+

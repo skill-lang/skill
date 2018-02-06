@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="skillJavaTestsuite" xmlns:jacoco="antlib:org.jacoco.ant">
+    <target name="build">
+        <ant antfile="simple/build.xml" />
+        <ant antfile="simpleEmpty/build.xml" />
+        <ant antfile="simpleunbound/build.xml" />
+        <ant antfile="container/build.xml" />
+        <ant antfile="baseContainer/build.xml" />
+        <ant antfile="inherit/build.xml" />
+        <ant antfile="skillIR/build.xml" />
+        <ant antfile="abstrakt/build.xml" />
+        <ant antfile="explicitPartial/build.xml" />
+        <ant antfile="unboundPartial/build.xml" />
+        <ant antfile="graph/build.xml" />
+    </target>
+    <target name="clean">
+        <delete>
+            <fileset dir="." includes="**/*.class"/>
+        </delete>
+    </target>
+</project>

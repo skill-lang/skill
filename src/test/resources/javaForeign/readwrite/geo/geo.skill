@@ -1,0 +1,11 @@
+
+Point3D {
+    f64 x;
+    f64 y;
+    f64 z;
+}
+
+Line3D {
+    Point3D start;
+    Point3D end;
+}

@@ -1,0 +1,15 @@
+{
+	"Comment" : "Should fail because boolean in esc_3 shoudl not be a Boolean-class",
+	"should" : "skip",
+    "kind" : "escaped",
+    "skip" : ["java","scala"],
+	"obj" : {
+	    "esc_3" : {
+	        "Boolean" : {
+	            "bool" : "esc_3",
+	            "boolean" : "esc_3"
+	        }
+	    }
+	}
+}
+

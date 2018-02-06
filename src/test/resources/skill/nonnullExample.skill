@@ -1,0 +1,4 @@
+Node {
+  /* null-edges are pointless */
+  @nonnull Node[] edges;
+}

@@ -1,0 +1,12 @@
+{
+	"Comment" : "Passes because both nones are identical",
+	"obj" : {
+	    "none_1" : {
+	        "None" : { }
+	    },
+	    "none_2" : {
+	        "None" : { }
+	    },
+	}
+}
+

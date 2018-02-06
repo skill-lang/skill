@@ -1,0 +1,12 @@
+A {
+  A a;
+}
+
+B : A {
+  /** we know that as are Bs in Bs :) */
+  view a as 
+  B a;
+
+  /** required for sane testing */
+  B b;
+}

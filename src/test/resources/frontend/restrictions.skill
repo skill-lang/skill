@@ -1,0 +1,9 @@
+/**
+Restrictions parser test, due to a strange parser bug.
+*/
+@monotone
+@Singleton
+restrictions {
+	@min(0)
+	i64 data;	
+}

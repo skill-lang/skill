@@ -1,31 +1,42 @@
-import de.johoop.jacoco4sbt._
-import JacocoPlugin._
-
 name := "skill"
 
-version := "0.2"
+version := "0.9"
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.12.4"
 
 javacOptions ++= Seq("-encoding", "UTF-8")
 
+compileOrder := CompileOrder.JavaThenScala
+
 libraryDependencies ++= Seq(
-	"junit" % "junit" % "4.11" % "test",
-	"org.scalatest" % "scalatest_2.11" % "2.2.0" % "test"
+	"junit" % "junit" % "4.12" % "test",
+    "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 )
 
-testOptions in Test <+= (target in Test) map {
-  t => Tests.Argument(TestFrameworks.ScalaTest, "junitxml(directory=\"%s\")" format (t / "test-reports"))
-}
+exportJars := true
 
-org.scalastyle.sbt.ScalastylePlugin.Settings
+mainClass := Some("de.ust.skill.main.CommandLine")
 
-seq(com.github.retronym.SbtOneJar.oneJarSettings: _*)
+(testOptions in Test) += Tests.Argument(TestFrameworks.ScalaTest, "-u", "target/tests")
 
 libraryDependencies += "commons-lang" % "commons-lang" % "2.6"
 
-libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.1"
+libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6"
 
-mainClass in oneJar := Some("de.ust.skill.generator.scala.Main")
+libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.0"
 
-jacoco.settings
+libraryDependencies += "org.json" % "json" % "20160810"
+
+lazy val root = (project in file(".")).
+  enablePlugins(BuildInfoPlugin).
+  settings(
+    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+    buildInfoPackage := "de.ust.skill"
+  )
+
+assemblyJarName in assembly := "skill.jar"
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
+  case _ => MergeStrategy.first
+}
+test in assembly := {}

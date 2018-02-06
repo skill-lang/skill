@@ -1,0 +1,7 @@
+ToolDescription {
+
+  /** the log is written by a tool, but usually unused afterwards */
+  !onDemand
+  @coding("zip")
+  string log;
+}

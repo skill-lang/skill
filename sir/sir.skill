@@ -1,0 +1,7 @@
+# meta include for all sir specification files
+
+include "annotations.skill"
+include "comments.skill"
+include "fields.skill"
+include "tools.skill"
+include "types.skill"

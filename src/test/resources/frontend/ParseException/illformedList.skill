@@ -1,0 +1,4 @@
+Fail {
+	/** only one type allowed */
+	list<f32, f32> field;
+}

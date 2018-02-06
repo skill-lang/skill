@@ -1,0 +1,16 @@
+{
+	"Comment" : "Should fail because Comments property should be a specific property",
+ 	"should" : "fail",
+    "kind" : "restrictions",
+	"obj" : {
+	    "rp" : {
+	        "RegularProperty" : { }
+	    },
+	    "cmnt" : {
+	        "Comment" : {
+	            "property" : "rp"
+	        }
+	    }
+	}
+}
+

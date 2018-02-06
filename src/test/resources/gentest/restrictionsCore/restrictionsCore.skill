@@ -1,0 +1,19 @@
+#! restrictionsCore
+#
+#Test to check support for core restrictions at generator level; note that this
+# does not imply their correct or complete implementation.
+
+@default(System)
+Properties {
+}
+/* some properties of the target system */
+@singleton
+System : Properties {
+
+  @nonnull
+  string name;
+
+  @default(1.1)
+  f32 version;
+}
+  

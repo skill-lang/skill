@@ -1,0 +1,32 @@
+{
+    "comment" : "the type TestEnum should be @abstract and therefore not be instantiable",
+    "kind" : "restrictions",
+    "should" : "fail",
+	"obj" : {
+	    "enm_default" : {
+	        "TestEnum" : {
+	            "name" : "default",
+	            "next" : "enm_second"
+	        }
+	    },
+	    "enm_second" : {
+	        "TestEnum" : {
+	            "name" : "second",
+	            "next" : "enm_third"
+	        }
+	    },
+	    "enm_third" : {
+	        "TestEnum" : {
+	            "name" : "third",
+	            "next" : "enm_last"
+	        }
+	    },
+	    "enm_last" : {
+	        "TestEnum" : {
+	            "name" : "last",
+	            "next" : "enm_default"
+	        }
+	    }
+	}
+}
+

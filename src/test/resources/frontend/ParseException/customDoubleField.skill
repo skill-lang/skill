@@ -1,0 +1,12 @@
+#
+# two custom fields for the same language under the same name
+
+Custom {
+  custom ada
+  !with "System.Address"
+  "System.Address" any;
+
+  custom ada
+  !with "System.Address"
+  "System.Address" any;
+}

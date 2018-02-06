@@ -1,0 +1,3 @@
+map SimpleType -> whats.This {
+    x -> y
+}

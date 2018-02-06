@@ -1,204 +1,94 @@
+/*  ___ _  ___ _ _                                                            *\
+** / __| |/ (_) | |       The SKilL Generator                                 **
+** \__ \ ' <| | | |__     (c) 2013-18 University of Stuttgart                 **
+** |___/_|\_\_|_|____|    see LICENSE                                         **
+\*                                                                            */
 package de.ust.skill.ir;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+
+import de.ust.skill.ir.restriction.AbstractRestriction;
 
 /**
  * A declared user type.
  * 
  * @author Timm Felden
  */
-final public class Declaration extends Type implements ReferenceType {
+public abstract class Declaration extends Type implements ReferenceType {
 
 	// names
-	private final String name;
-	private final String skillName;
-	private final String capitalName;
-
-	/**
-	 * super type is the type above this type. base type is the base type of the
-	 * formed type tree. This can even be <i>this</i>.
-	 */
-	private Declaration superType = null, baseType = null;
-	private final List<Declaration> children = new ArrayList<>();
+	protected final Name name;
 
 	/**
 	 * The restrictions applying to this declaration.
 	 */
-	private final List<Restriction> restrictions;
+	protected final List<Restriction> restrictions;
 	/**
 	 * The restrictions applying to this declaration.
 	 */
-	private final Set<Hint> hints;
+	protected final Set<Hint> hints;
 	/**
 	 * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
 	 */
-	private final String skillCommentImage;
+	protected final Comment comment;
 
-	// fields
-	private List<Field> fields = null;
-
-	/**
-	 * Creates a declaration of type name.
-	 * 
-	 * @throws ParseException
-	 *             thrown, if the declaration to be constructed is in fact
-	 *             illegal
-	 * 
-	 * @note the declaration has to be completed, i.e. it has to be evaluated in
-	 *       pre-order over the type hierarchy.
-	 */
-	private Declaration(String name, String comment, List<Restriction> restrictions, List<Hint> hints)
-			throws ParseException {
+	protected Declaration(Name name, Comment comment, Collection<Restriction> restrictions, Collection<Hint> hints) {
 		this.name = name;
-		this.skillName = name.toLowerCase();
-		{
-			char[] ch = name.toCharArray();
-			ch[0] = Character.toUpperCase(ch[0]);
-			this.capitalName = new String(ch);
-		}
-		skillCommentImage = null == comment ? "" : comment;
-		this.restrictions = restrictions;
+		this.comment = comment;
+		this.restrictions = new ArrayList<>(restrictions);
 		this.hints = Collections.unmodifiableSet(new HashSet<Hint>(hints));
-
-		superType = baseType = null;
 	}
 
 	/**
-	 * @param name
-	 * @return a new declaration which is registered at types.
-	 * @throws ParseException
-	 *             if the declaration is already present
-	 */
-	public static Declaration newDeclaration(TypeContext tc, String name, String comment,
-			List<Restriction> restrictions, List<Hint> hints) throws ParseException {
-		String skillName = name.toLowerCase();
-		if (tc.types.containsKey(skillName))
-			throw new ParseException("Duplicate declaration of type " + name);
-
-		Declaration rval = new Declaration(name, comment, restrictions, hints);
-		tc.types.put(skillName, rval);
-		return rval;
-	}
-
-	public boolean isInitialized() {
-		return null != baseType;
-	}
-
-	/**
-	 * Initializes the type declaration with data obtained from parsing the
-	 * declarations body.
+	 * Declarations will depend on other declarations, thus they need to be
+	 * initialized, after all declarations have been allocated.
 	 * 
-	 * @param SuperType
-	 * @param Fields
-	 * @throws ParseException
-	 *             thrown if the declaration is illegal, e.g. because it
-	 *             contains illegal hints
+	 * @return true, iff initialized
 	 */
-	public void initialize(Declaration SuperType, List<Field> Fields) throws ParseException {
-		assert !isInitialized() : "multiple initialization";
-		assert null != Fields : "no fields supplied";
-		// check for duplicate fields
-		{
-			Set<String> names = new HashSet<>();
-			for (Field f : Fields)
-				names.add(f.name);
-			if (names.size() != Fields.size())
-				throw new ParseException("Type " + name + " contains duplicate field definitions.");
-		}
-
-		if (null != SuperType) {
-			assert null != SuperType.baseType : "types have to be initialized in pre-order";
-
-			this.superType = SuperType;
-			this.baseType = SuperType.baseType;
-			SuperType.children.add(this);
-		} else {
-			baseType = this;
-		}
-
-		this.fields = Fields;
-
-		// check hints
-		Hint.checkDeclaration(this, this.hints);
-	}
-
-	public Declaration getBaseType() {
-		return baseType;
-	}
-
-	public Declaration getSuperType() {
-		return superType;
-	}
-
-	/**
-	 * @return the fields added in this type
-	 */
-	public List<Field> getFields() {
-		assert isInitialized() : this.name + " has not been initialized";
-		return fields;
-	}
-
-	/**
-	 * @return all fields of an instance of the type, including fields declared
-	 *         in super types
-	 */
-	public List<Field> getAllFields() {
-		if (null != superType) {
-			List<Field> f = superType.getAllFields();
-			f.addAll(fields);
-			return f;
-		}
-		return new ArrayList<>(fields);
-	}
+	public abstract boolean isInitialized();
 
 	/**
 	 * @return pretty parsable representation of this type
 	 */
-	public String prettyPrint() {
-		StringBuilder sb = new StringBuilder(name);
-		if (null != superType) {
-			sb.append(":").append(superType.name);
-		}
-		sb.append("{");
-		for (Field f : fields)
-			sb.append("\t").append(f.toString()).append("\n");
-		sb.append("}");
+	public abstract String prettyPrint();
 
-		return sb.toString();
+	@Override
+	final public String getSkillName() {
+		return name.getSkillName();
 	}
 
 	@Override
-	public String getSkillName() {
-		return skillName;
-	}
-
-	@Override
-	public String getCapitalName() {
-		return capitalName;
-	}
-
-	@Override
-	public String getName() {
+	final public Name getName() {
 		return name;
 	}
 
 	/**
 	 * The image of the comment excluding begin( / * * ) and end( * / ) tokens.
-	 * 
 	 * This may require further transformation depending on the target language.
 	 * 
 	 * @note can contain newline characters!!!
 	 */
-	public String getSkillComment() {
-		return skillCommentImage;
+	public Comment getComment() {
+		return comment;
 	}
 
 	public List<Restriction> getRestrictions() {
 		return restrictions;
+	}
+
+	public boolean isAbstract() {
+		for (Restriction restriction : restrictions) {
+			if (restriction instanceof AbstractRestriction) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public boolean isUnique() {
@@ -209,19 +99,43 @@ final public class Declaration extends Type implements ReferenceType {
 		return hints.contains(Hint.pure);
 	}
 
-	public boolean isMonotone() {
-		if (this == baseType)
-			return hints.contains(Hint.monotone) || hints.contains(Hint.readonly);
-		return baseType.isMonotone();
-	}
+	public abstract boolean isMonotone();
 
-	public boolean isReadOnly() {
-		if (this == baseType)
-			return hints.contains(Hint.readonly);
-		return baseType.isReadOnly();
-	}
+	public abstract boolean isReadOnly();
 
 	public boolean isIgnored() {
 		return hints.contains(Hint.ignore);
 	}
+
+	public Collection<Hint> getHints() {
+		return hints;
+	}
+
+	/**
+	 * Search hints for a pragma of argument name. Return null, if not present.
+	 * 
+	 * @param id
+	 *            name of the pragma
+	 * @return list of arguments, if present, null else
+	 */
+	public List<Name> getPragma(String id) {
+		Optional<Hint> hint = hints.stream().filter(
+				h -> Hint.Type.pragma == h.type() && h.arguments().get(0).getSkillName().equals(id.toLowerCase()))
+				.findFirst();
+		if (hint.isPresent()) {
+			List<Name> args = hint.get().arguments();
+			return args.subList(1, args.size());
+		}
+		return null;
+	}
+
+	/**
+	 * create a copy of this in tc
+	 * 
+	 * @param tc
+	 *            an argument type context that is different from the type
+	 *            context this is living in
+	 * @return an equivalent copy uninitialized copy of this
+	 */
+	abstract Declaration copy(TypeContext tc);
 }

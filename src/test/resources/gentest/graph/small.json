@@ -1,0 +1,17 @@
+{
+	"obj" : {
+	    "nd_1" : {
+	        "Node" : {
+	            "color" : "red",
+	            "edges" : [ "nd_2" ]
+	        }
+	    },
+	    "nd_2" : {
+	        "Node" : {
+	            "color" : "blue",
+	            "edges" : [ ]
+	        }
+	    }
+	}
+}
+

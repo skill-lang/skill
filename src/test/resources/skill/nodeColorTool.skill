@@ -1,0 +1,5 @@
+Node {
+  i8 ID;
+  /** for the sake of simplicity a string like "red" */
+  string color;
+} 

@@ -1,0 +1,12 @@
+{
+	"comment" : "Fails because arr is not filled with 3 values",
+	"should" : "fail",
+	"obj" : {
+	    "cont" : {
+	        "Container" : {
+	            "arr"  : [ -1, 0 ]
+	        }
+	    }
+	}
+}
+

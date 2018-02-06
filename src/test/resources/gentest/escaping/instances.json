@@ -1,0 +1,27 @@
+{
+    "kind" : "escaped",
+	"obj" : {
+	    "esc_1" : {
+	        "Int" : {
+	            "if" : "esc_1",
+	            "for" : "esc_2"
+	        }
+	    },
+	    "esc_2" : {
+	        "if" : { }
+	    },
+	    "esc_3" : {
+	        "Boolean" : {
+	            "bool" : "esc_3",
+	            "boolean" : true
+	        }
+	    },
+	    "esc_4" : {
+	        "∀" : {
+	            "€" : "esc_4",
+	            "☢" : "Hello, World!"
+	        }
+	    }
+	}
+}
+

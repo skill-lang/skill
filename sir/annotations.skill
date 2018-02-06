@@ -1,0 +1,34 @@
+# everything related to hints
+
+/**
+ * anything that can receive annotations
+ */
+interface Annotations {
+  Hint[] hints;
+  Restriction[] restrictions;
+}
+
+/**
+ * A hint including name and parsed arguments
+ */
+Hint {
+  string name;
+
+  /**
+   * if a string has arguments at all, they are stored as plain text
+   */
+  string[] arguments;
+}
+
+/**
+ * Base of type and field restrictions.
+ */
+Restriction {
+  string name;
+
+  /**
+   * restriction arguments are stored as strings, because I do not want
+   *  to introduce a million restriction types just for range restrictions.
+   */
+  string[] arguments;
+}

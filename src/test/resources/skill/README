@@ -1,0 +1,7 @@
+this folder contains generic tests.
+tests are created using the command line interface and its arguments.
+if the frist line is of the form '#!' <id>, then the <id> is used as package name and a respective test is generated.
+this feature can be used to create skill specifications that should not be used as tests directly.
+
+tests will be created for all .skill-files and all known generator implementations.
+output directory will be testsuites/<language name>

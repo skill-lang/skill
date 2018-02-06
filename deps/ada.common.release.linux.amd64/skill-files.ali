@@ -1,0 +1,245 @@
+V "GNAT Lib v4.9"
+A -O3
+A -gnatA
+A -gnatn
+A -gnatN
+A -gnatp
+A -gnat2012
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_DISPATCH
+RV NO_DISPATCHING_CALLS
+RV NO_EXCEPTION_HANDLERS
+RV NO_EXCEPTIONS
+RV NO_STANDARD_STORAGE_POOLS
+RV NO_IMPLEMENTATION_PRAGMAS
+RV NO_ELABORATION_CODE
+RV SPARK_05
+
+U skill.files%b		skill-files.adb		8c58bfa8 NE OO PK
+W ada.tags%s		a-tags.adb		a-tags.ali
+W skill%s		skill.adb		skill.ali
+W skill.errors%s	skill-errors.adb	skill-errors.ali
+W skill.internal%s	skill-internal.ads	skill-internal.ali
+W skill.internal.file_parsers%s  skill-internal-file_parsers.adb  skill-internal-file_parsers.ali
+W skill.streams%s	skill-streams.adb	skill-streams.ali
+W skill.types%s		skill-types.ads		skill-types.ali
+
+U skill.files%s		skill-files.ads		be9d9b73 BN EE OO PF PK
+W ada%s			ada.ads			ada.ali
+W ada.containers%s	a-contai.ads		a-contai.ali
+Z ada.containers.hash_tables%s  a-cohata.ads	a-cohata.ali
+Z ada.containers.hash_tables.generic_keys%s
+Z ada.containers.hash_tables.generic_operations%s
+W ada.containers.hashed_maps%s
+Z ada.containers.prime_numbers%s  a-coprnu.adb	a-coprnu.ali
+W ada.exceptions%s	a-except.adb		a-except.ali
+Z ada.finalization%s	a-finali.adb		a-finali.ali
+Z ada.iterator_interfaces%s
+W ada.streams%s		a-stream.adb		a-stream.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+Z ada.unchecked_deallocation%s
+W skill%s		skill.adb		skill.ali
+W skill.equals%s	skill-equals.ads	skill-equals.ali
+W skill.hashes%s	skill-hashes.ads	skill-hashes.ali
+W skill.string_pools%s	skill-string_pools.adb	skill-string_pools.ali
+W skill.types%s		skill-types.ads		skill-types.ali
+W skill.types.pools%s	skill-types-pools.adb	skill-types-pools.ali
+W skill.types.vectors%s	skill-types-vectors.adb	skill-types-vectors.ali
+W system%s		system.ads		system.ali
+W system.finalization_masters%s  s-finmas.adb	s-finmas.ali
+W system.img_int%s	s-imgint.adb		s-imgint.ali
+W system.pool_global%s	s-pooglo.adb		s-pooglo.ali
+W system.secondary_stack%s  s-secsta.adb	s-secsta.ali
+W system.soft_links%s	s-soflin.adb		s-soflin.ali
+W system.standard_library%s  s-stalib.adb	s-stalib.ali
+W system.storage_elements%s  s-stoele.adb	s-stoele.ali
+W system.storage_pools%s  s-stopoo.adb		s-stopoo.ali
+W system.storage_pools.subpools%s  s-stposu.adb	s-stposu.ali
+W system.stream_attributes%s  s-stratt.adb	s-stratt.ali
+
+D ada.ads		20070406091342 3ffc8e18
+D a-charac.ads		20070912115821 2d3ec45b
+D a-chlat1.ads		20140225151544 66457d31
+D a-contai.ads		20101025135029 61e5e089
+D a-cdlili.ads		20130411133353 c3008bbb
+D a-cgarso.ads		20070406091342 9129bfa8
+D a-cohata.ads		20110804151834 04abccc5
+D a-chtgke.ads		20140219145932 a7b0f3a2
+D a-chtgke.adb		20140220134615 ee7af212
+D a-chtgop.ads		20140219145932 b47ea0e7
+D a-chtgop.adb		20140220134615 c00683b2
+D a-cohama.ads		20130411133353 9f97b812
+D a-cohama.adb		20140220134615 55a9a6dc
+D a-cohase.ads		20130411133353 1483927e
+D a-cohase.adb		20140220134615 0e3e14a8
+D a-coprnu.ads		20090409150019 0cdf1864
+D a-convec.ads		20120217141546 0aaf3975
+D a-convec.adb		20140220134615 a022038f
+D a-except.ads		20140129161953 f86a4103
+D a-finali.ads		20111121113555 52ecdc1b
+D a-ioexce.ads		20140225151544 e4a01f64
+D a-iteint.ads		20110906092602 7c7305e9
+D a-stream.ads		20140122164720 1a984740
+D a-string.ads		20070406091342 90ac6797
+D a-strhas.ads		20140225151544 c71c2a52
+D a-tags.ads		20111212115430 6c0509d0
+D a-textio.ads		20140129155348 386df5d4
+D a-unccon.ads		20070406091342 f9eb8f06
+D a-uncdea.ads		20070406091342 f15a5ed1
+D interfac.ads		20140225151838 69adb1b9
+D i-c.ads		20110801143639 5421119b
+D i-cpoint.ads		20130104124955 ee8a93ec
+D i-cpoint.adb		20130104124955 8bc8f877
+D i-cstrin.ads		20130104124955 341d0ddf
+D i-cstrea.ads		20130412125801 8128536b
+D i-cstrea.adb		20090409150019 98747b85
+D skill.ads		20150716082453 116540ca
+D skill-equals.ads	20150727121427 04b1e8a1
+D skill-errors.ads	20150716093303 486fc786
+D skill-field_declarations.ads  20150727121434 489e6844
+D skill-field_declarations.adb  20150727092149 9c3ba334
+D skill-field_types.ads	20150723104959 bcbfdddc
+D skill-files.ads	20150727100913 42dce1e6
+D skill-files.adb	20150727090908 29b13e48
+D skill-hashes.ads	20150727121419 ea98993e
+D skill-internal.ads	20150716085413 47a66c46
+D skill-internal-file_parsers.ads  20150727100938 ca5f1083
+D skill-internal-parts.ads  20150727092949 9624b9dd
+D skill-internal-parts.adb  20150727100936 b516ca6e
+D skill-streams.ads	20150723134340 e598fb11
+D skill-streams-reader.ads  20150727130008 df81b079
+D skill-streams-reader.adb  20150727131317 f20f7e18
+D skill-string_pools.ads  20150727100920 9de3c6c8
+D skill-string_pools.adb  20150727100916 81533399
+D skill-synchronization.ads  20150727100918 b5b77a82
+D skill-types.ads	20150727131323 809d4c12
+D skill-types-pools.ads	20150727122734 b4cbbbe8
+D skill-types-pools.adb	20150727123957 151646b7
+D skill-types-vectors.ads  20150727132702 352fc2e0
+D skill-types-vectors.adb  20150727131640 43b72627
+D system.ads		20141210093300 90249111
+D s-atacco.ads		20120515093410 4c36d12f
+D s-crtl.ads		20140225151544 840e6817
+D s-exctab.ads		20140225151139 54135002
+D s-ficobl.ads		20120709130952 55a71d43
+D s-finmas.ads		20140225151139 814daec4
+D s-finroo.ads		20120426095924 4ff27390
+D s-imgint.ads		20090409150019 02dbe0c2
+D s-imglli.ads		20090409150019 114f55d1
+D s-linux.ads		20140409145429 5b2f79a5
+D s-memory.ads		20140225151139 597d6634
+D s-multip.ads		20101011073009 38ac9f73
+D s-oscons.ads		20141210093300 a445b120
+D s-osinte.ads		20140409145429 59011f13
+D s-parame.ads		20140225151139 ab8cb46a
+D s-pooglo.ads		20110804083314 542f33d0
+D s-secsta.ads		20140225151139 86a2856d
+D s-soflin.ads		20140225151139 aa763b52
+D s-soflin.adb		20140225151139 f0f94dbe
+D s-stache.ads		20140225151139 a37c21ec
+D s-stausa.ads		20110804134155 017a0a05
+D s-stalib.ads		20140225151139 a891183f
+D s-stalib.adb		20140225151139 f2fe2716
+D s-stoele.ads		20140225151139 2dc34a04
+D s-stoele.adb		20140225151139 ed88f8fb
+D s-stopoo.ads		20131010103753 b16154c2
+D s-stposu.ads		20121005142121 ffeba1c5
+D s-stratt.ads		20131014135145 aedef97e
+D s-stratt.adb		20090409150019 56ef263e
+D s-tasinf.ads		20120730151500 21316953
+D s-taspri.ads		20110927094500 15f617a8
+D s-taskin.ads		20140131154341 3f821f32
+D s-taprob.ads		20110927094500 502249e3
+D s-tpoben.ads		20121029113218 b641f948
+D s-tpobop.ads		20090409150019 5f548bb3
+D s-traent.ads		20140225151139 b5116092
+D s-traent.adb		20140225151139 39a01b5f
+D s-unstyp.ads		20140225151139 510692af
+D s-wchcon.ads		20140225151139 1b7d22d2
+D s-wchcon.adb		20140225151139 974e87c5
+X 1 ada.ads
+16K9*Ada 19e8 43|7r6 27r30
+X 4 a-contai.ads
+16K13*Containers 24e19 43|7r10 27r34
+19M9*Hash_Type
+X 12 a-cohama.ads
+41+9 Key_Type 43|28r7
+42+9 Element_Type 43|29r7
+44V18 Hash{4|19M9} 43|30r7
+45V18 Equivalent_Keys{boolean} 43|31r7
+48k24*Hashed_Maps 441e31 43|7w21 27r45
+52R9*Map<20|48R9> 43|32r35[27]
+X 22 a-iteint.ads
+24h9 Forward_Iterator
+32h9 Reversible_Iterator<24R9[17|70]>
+X 37 skill.ads
+7K9*Skill 12e10 43|9r6 10r6 11r6 12r6 13r6 14r6 16r9 21r33 23r7 26r13 28r26
+. 29r26 30r26 31r26 36r14 42r17 53r42 55r5 44|7r6 8r6 9r6 10r6 12r14 14r31
+. 17r42 23r5
+X 38 skill-equals.ads
+14K15*Equals 30e17 43|14w12 31r32
+19V13*Equals{boolean} 43|31r39
+X 39 skill-errors.ads
+9K15*Errors 24e17 44|7w12
+X 43 skill-files.ads
+16K15*Files 37|7k9 43|55l11 55e16 44|12b20 23l11 23t16
+18E9*Read_Mode 18e36
+18n23*Create{18E9}
+18n31*Read{18E9}
+19E9*Write_Mode 19e38 39r14
+19n24*Write{19E9}
+19n31*Append{19E9}
+21K12*P_Type_Vector[59|13] 24r27
+24P12*Type_Vector{59|17P9[21]} 45r15
+27K12*P_Type_Map[12|48] 32r24
+32R12*Type_Map{12|52R9[27]} 48r23
+34H9*File_T 49e14 50r33 53r21 44|17r21
+36p7*Path{56|24P9}
+39e7*Mode{19E9}
+42p7*Strings{53|23P9} 44|20r19
+45p7*Types{24P12}
+48r7*Types_By_Name{32R12}
+50P9*File(34R9)
+52V13*Strings{53|23P9} 53^7 44|16b13 21l8 21t15
+53p7 This(34R9) 44|17b7 20r14
+X 44 skill-files.adb
+14K12 FileParser=14:46
+X 45 skill-hashes.ads
+14K15*Hashes 43|13w12 30r32 45|25e17
+17V13*Hash{4|19M9} 43|30r39
+X 46 skill-internal.ads
+7K15*Internal 44|8r12 14r37 46|9e19
+X 47 skill-internal-file_parsers.ads
+16K24*File_Parsers 44|8w21 14r46 47|55e32
+X 50 skill-streams.ads
+14K15*Streams 44|9w12 50|25e18
+X 53 skill-string_pools.ads
+20K15*String_Pools 43|12w12 42r23 53r48 44|17r48 53|85e23
+23P9*Pool(22R9) 43|42r36 53r61 44|17r61
+X 56 skill-types.ads
+9K15*Types 43|9w12 10r12 11r12 21r39 23r13 26r19 28r32 29r32 36r20 44|10w12
+. 56|40e16
+24P9*String_Access(string) 43|28r38 36r26
+X 57 skill-types-pools.ads
+42K21*Pools 43|10w18 23r19 26r25 29r38 57|169e22
+48P9*Pool(47R9) 43|23r25 26r31 29r44
+X 59 skill-types-vectors.ads
+13k21*Vectors 43|11w18 21r45 59|104e24
+16R9*Vector_T
+17P9*Vector(16R9[43|21]) 43|24r41[21]
+X 61 system.ads
+64M9*Address
+X 71 s-memory.ads
+53V13*Alloc{61|64M9} 103i<c,__gnat_malloc>22
+68U14*Free 104i<c,__gnat_free>22
+76V13*Realloc{61|64M9} 105i<c,__gnat_realloc>22
+X 81 s-stausa.ads
+203U14*Initialize 204i<c,__gnat_stack_usage_initialize>22
+268U14*Output_Results 272i<c,__gnat_stack_usage_output_results>22
+X 83 s-stalib.adb
+93U14 Break_Start 94i<c,__gnat_break_start>22
+

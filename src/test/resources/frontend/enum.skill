@@ -1,0 +1,8 @@
+/** with comment */
+enum Unicode {
+  one, two;
+}
+
+enum WithoutComment {
+  one;
+}

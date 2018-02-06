@@ -1,0 +1,11 @@
+{
+	"obj" : {
+	    "usr" : {
+	        "User" : {
+	            "name" : "Bernd das Brot",
+	            "age" : 44
+	        }
+	    }
+	}
+}
+

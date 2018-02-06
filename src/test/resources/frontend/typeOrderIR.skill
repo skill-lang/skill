@@ -1,0 +1,10 @@
+D : B { D d; }
+/** the specification is not in typer order, but the emitted IR should be! */
+A { A a; }
+B : A { B b; }
+C : A { C c; }
+typedef E D;
+
+/** empty rootless interface */
+interface foo {
+}

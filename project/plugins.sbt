@@ -1,7 +1,9 @@
-addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.2.0")
+addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "5.2.3")
 
-addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "0.3.2")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.1")
 
-addSbtPlugin("com.github.retronym" % "sbt-onejar" % "0.8")
+resolvers += Resolver.url("scoverage-bintray", url("https://dl.bintray.com/sksamuel/sbt-plugins/"))(Resolver.ivyStylePatterns)
 
-addSbtPlugin("de.johoop" % "jacoco4sbt" % "2.1.4")
+addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.7.0")
+
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.5")

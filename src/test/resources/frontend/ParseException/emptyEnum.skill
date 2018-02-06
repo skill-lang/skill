@@ -1,0 +1,5 @@
+
+/** no instances */
+enum Fail {
+   ;
+}

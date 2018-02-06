@@ -1,0 +1,33 @@
+#! escaping
+# This test should help detect lack of proper escaping in most languages
+
+/** Stupid typename */
+Int {
+
+  /** A keyword in most languages */
+  Int if;
+
+  /** Another potential name clash */
+  if for;
+}
+
+/** Another stupid typename */
+if{}
+
+/**
+ * Representation of another type.
+ * @note Caused by a Bug in the C generator.
+ */
+Boolean {
+  /** reference to a boolean */
+  Boolean bool;
+
+  /** a flag */
+  bool boolean;
+}
+
+/* non-printable unicode characters */
+∀ {
+  ∀ €;
+ string ☢;
+}

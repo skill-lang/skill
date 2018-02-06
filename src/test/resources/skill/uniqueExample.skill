@@ -1,0 +1,7 @@
+@unique Operator {
+  string name;
+}
+@unique Term {
+  Operator operator;
+  Term[] arguments;
+}

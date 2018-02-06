@@ -1,0 +1,118 @@
+V "GNAT Lib v4.9"
+A -O3
+A -gnatA
+A -gnatn
+A -gnatN
+A -gnatp
+A -gnat2012
+A -mtune=generic
+A -march=x86-64
+P SS ZX
+
+RN
+RV NO_IO
+RV NO_SECONDARY_STACK
+RV NO_STANDARD_STORAGE_POOLS
+RV NO_IMPLEMENTATION_PRAGMAS
+RV NO_ELABORATION_CODE
+RV SPARK_05
+
+U skill.errors%b	skill-errors.adb	c447b1f4 NE OO PK
+W ada%s			ada.ads			ada.ali
+W ada.exceptions%s	a-except.adb		a-except.ali
+W ada.exceptions.traceback%s  a-exctra.adb	a-exctra.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W ada.text_io%s		a-textio.adb		a-textio.ali
+W gnat%s		gnat.ads		gnat.ali
+W gnat.traceback%s	g-traceb.adb		g-traceb.ali
+W gnat.traceback.symbolic%s  g-trasym.adb	g-trasym.ali
+W skill%s		skill.adb		skill.ali
+W system.secondary_stack%s  s-secsta.adb	s-secsta.ali
+
+U skill.errors%s	skill-errors.ads	a160c64f EE OO PK
+W ada%s			ada.ads			ada.ali
+W ada.exceptions%s	a-except.adb		a-except.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W skill%s		skill.adb		skill.ali
+W system%s		system.ads		system.ali
+W system.exception_table%s  s-exctab.adb	s-exctab.ali
+W system.standard_library%s  s-stalib.adb	s-stalib.ali
+
+D ada.ads		20070406091342 3ffc8e18
+D a-except.ads		20140129161953 f86a4103
+D a-exctra.ads		20130102111339 5c8e2c9f
+D a-finali.ads		20111121113555 52ecdc1b
+D a-ioexce.ads		20140225151544 e4a01f64
+D a-stream.ads		20140122164720 1a984740
+D a-tags.ads		20111212115430 6c0509d0
+D a-textio.ads		20140129155348 386df5d4
+D a-unccon.ads		20070406091342 f9eb8f06
+D gnat.ads		20110801150502 fd2ad2f1
+D g-traceb.ads		20120314163337 dee80ba3
+D g-trasym.ads		20130103100924 d90b540f
+D interfac.ads		20140225151838 69adb1b9
+D i-cstrea.ads		20130412125801 8128536b
+D i-cstrea.adb		20090409150019 98747b85
+D skill.ads		20150716082453 116540ca
+D skill-errors.ads	20150716093303 486fc786
+D skill-errors.adb	20150717125407 ef28f095
+D system.ads		20141210093300 90249111
+D s-crtl.ads		20140225151544 840e6817
+D s-exctab.ads		20140225151139 54135002
+D s-exctab.adb		20140225151139 05502b19
+D s-ficobl.ads		20120709130952 55a71d43
+D s-finmas.ads		20140225151139 814daec4
+D s-finroo.ads		20120426095924 4ff27390
+D s-htable.ads		20140225151139 84c2b3ea
+D s-parame.ads		20140225151139 ab8cb46a
+D s-pooglo.ads		20110804083314 542f33d0
+D s-secsta.ads		20140225151139 86a2856d
+D s-soflin.ads		20140225151139 aa763b52
+D s-stache.ads		20140225151139 a37c21ec
+D s-stalib.ads		20140225151139 a891183f
+D s-stoele.ads		20140225151139 2dc34a04
+D s-stoele.adb		20140225151139 ed88f8fb
+D s-stopoo.ads		20131010103753 b16154c2
+D s-traent.ads		20140225151139 b5116092
+D s-unstyp.ads		20140225151139 510692af
+D s-wchcon.ads		20140225151139 1b7d22d2
+D s-wchcon.adb		20140225151139 974e87c5
+X 1 ada.ads
+16K9*Ada 19e8 17|7r6 22r39 18|6r6 7r6 19r7 23r39 25r9 27r7 27r29 28r7
+X 2 a-except.ads
+53K13*Exceptions 360e19 17|7w10 22r43 18|7r10 23r43 25r13 27r33
+62R9*Exception_Occurrence 328e14 17|22r54 18|23r54
+103V13*Exception_Information{string} 18|27s44
+X 3 a-exctra.ads
+40K24*Traceback 60e29 18|7w21 25r24
+47A9*Tracebacks_Array(36|46M12)<integer>
+50V13*Tracebacks{47A9} 18|25s34
+X 8 a-textio.ads
+49K13*Text_IO 471e16 18|6w10 19r11 27r11 28r11
+263U14*Put_Line 18|19s19 27s19 28s19
+X 10 gnat.ads
+34K9*GNAT 37e9 18|9r6 10r6 15r16 18r7 20r10 24r15 29r10
+X 11 g-traceb.ads
+78K14*Traceback 99e19 18|9w11 10r11 15r21 18r12 20r15 24r20 29r15
+84A12*Tracebacks_Array{3|47A9}<integer> 18|15r31 24r30
+91U14*Call_Chain 18|18s22
+X 12 g-trasym.ads
+89K24*Symbolic 100e28 18|10w21 20r25 29r25
+92V13*Symbolic_Traceback{string} 18|20s34 29s34
+X 16 skill.ads
+7K9*Skill 12e10 17|9r9 24r5 18|12r14 32r5
+X 17 skill-errors.ads
+9K15*Errors 16|7k9 17|24l11 24e17 18|12b20 32l11 32t17
+12X4*Skill_Error
+17U14*Print_Stacktrace 18|14b14 21l8 21t24
+22U14*Print_Stacktrace 22>32 18|23b14 30l8 30t24
+22r32 E{2|62R9} 18|23b32 25r46 27r67
+X 18 skill-errors.adb
+15a7 Trace{11|84A12} 18m34 20r54
+16i7 Length{natural} 18m41 20r66
+24a7 Trace{11|84A12} 29r54
+X 19 system.ads
+64M9*Address
+X 36 s-traent.ads
+46M12*Traceback_Entry{19|64M9}
+
