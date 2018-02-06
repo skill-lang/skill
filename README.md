@@ -13,7 +13,7 @@ Language|Supported Features|Testsuite|Libs|Notes
 -------|------------------|---------|----|-----
 Ada 2012 |auto, append, documented, escaped, lazy(only reflection)| yes |commonAda| incomplete resource management
 C 99 |mainly core features| does not compile | - | SKilL TR13, not maintained
-C++ 11 (cpp) |documented, escaped, lazy(only reflection)| yes | commonC++ | 
+C++ 11 (cpp) |customs, documented, escaped, lazy(only reflection)| yes | commonC++ | 
 Haskell | only basic features | yes | - | some basic tests fail, not maintained
 Java 8 |auto, append, customs, documented, escaped, interfaces, lazy(only reflection)| yes | [commonJVM](https://github.com/skill-lang/jvmCommon), commonJava | some multi-state support
 Scala 2.12 |auto, append, customs, documented, escaped, interfaces, lazy, views| yes | [commonJVM](https://github.com/skill-lang/jvmCommon), commonScala | most complete implementation
