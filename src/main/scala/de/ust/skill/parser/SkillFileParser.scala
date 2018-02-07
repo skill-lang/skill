@@ -43,10 +43,10 @@ import de.ust.skill.ir.restriction.DefaultRestriction
  *
  * Grammar as explained in the paper.
  */
-final class FileParser(
+final class SkillFileParser(
     _delimitWithUnderscore : Boolean,
     _delimitWithCamelCase : Boolean)
-      extends AbstractFileParser(
+      extends AbstractFileParser[Declaration](
         _delimitWithUnderscore,
         _delimitWithCamelCase) {
 
@@ -118,6 +118,7 @@ final class FileParser(
   /**
    * The <b>main</b> function of the parser, which turn a string into a list of includes and declarations.
    */
+  override
   def process(in : File) : (List[String], List[Declaration]) = {
     currentFile = in;
     val lines = scala.io.Source.fromFile(in, "utf-8").getLines.mkString("\n")

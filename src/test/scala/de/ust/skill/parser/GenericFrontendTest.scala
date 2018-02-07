@@ -21,12 +21,7 @@ import de.ust.skill.ir
 @RunWith(classOf[JUnitRunner])
 class GenericFrontendTest extends FunSuite {
 
-  private def check(file : File) = {
-    if (file.getName.endsWith(".skill"))
-      Parser.process(file)
-    else
-      IdlParser.process(file)
-  }
+  private def check(file : File) = Parser.process(file)
 
   def fail[E <: Exception](f : ⇒ Unit)(implicit manifest : scala.reflect.Manifest[E]) : E = try {
     f;

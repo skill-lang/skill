@@ -6,7 +6,7 @@
 package de.ust.skill.main
 
 import de.ust.skill.parser.Parser
-import de.ust.skill.parser.IdlParser
+import de.ust.skill.parser.SIDLParser
 
 /**
  * command line parsing is split into three basic modes, depending on the extension of the first argument:
@@ -29,10 +29,8 @@ object CommandLine extends SourceOptions with IROptions with OtherOptions {
 
     val first = args.head
 
-    (if (first.endsWith(".skill") || "-".equals(first)) {
-      sourceParser.parse(args.tail, SourceConfig(target = first, parser=Parser))
-    } else if (first.endsWith(".sidl")) {
-      sourceParser.parse(args.tail, SourceConfig(target = first, parser=IdlParser))
+    (if (first.endsWith(".skill") || first.endsWith(".sidl") || "-".equals(first)) {
+      sourceParser.parse(args.tail, SourceConfig(target = first))
     } else if (first.endsWith(".sir")) {
       irParser.parse(args.tail, IRConfig(target = first))
     } else {

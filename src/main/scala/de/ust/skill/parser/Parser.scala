@@ -43,14 +43,6 @@ import de.ust.skill.ir.restriction.DefaultRestriction
 // TODO merging passiert in IdlParser
 // TODO CommandLine anpassen hoere auf .sidl dateien
 
-abstract class AbstractParser() {
-  def process(input : File,
-              keepSpecificationOrder : Boolean = false,
-              delimitWithUnderscore : Boolean = true,
-              delimitWithCamelCase : Boolean = true,
-              verboseOutput : Boolean = false) : TypeContext
-}
-
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
  * @see #process
@@ -59,24 +51,18 @@ abstract class AbstractParser() {
  * @param delimitWithUnderscore if true, underscores in words are used as delimiters. This will influence name
  * equivalence
  */
-final class Parser(
-    private val delimitWithUnderscore : Boolean = true,
-    private val delimitWithCamelCase : Boolean = true,
-    verboseOutput : Boolean = false) {
+class Parser(
+  protected val delimitWithUnderscore : Boolean = true,
+  protected val delimitWithCamelCase :  Boolean = true,
+  protected val verboseOutput :         Boolean = false) {
 
   val tc = new ir.TypeContext
 
-  /**
-   * Parses a file and all related files and passes back a List of definitions. The returned definitions are also type
-   * checked.
-   */
-  private def parseAll(input : File) = {
-    val parser = new FileParser(delimitWithUnderscore, delimitWithCamelCase)
+  protected def processAllFiles[Decl](input : File, fileParser : AbstractFileParser[Decl]) : ArrayBuffer[Decl] = {
     val base = new File(System.getProperty("user.dir")).toURI();
-    val todo = new HashSet[String]();
-    todo.add(base.relativize(input.toURI()).getPath());
+    val todo = HashSet[String](base.relativize(input.toURI()).getPath());
     val done = new HashSet[String]();
-    var rval = new ArrayBuffer[Declaration]();
+    var rval = new ArrayBuffer[Decl]();
     while (!todo.isEmpty) {
       val file = todo.head
       todo -= file;
@@ -84,7 +70,7 @@ final class Parser(
         done += file;
 
         try {
-          val result = parser.process(new File(file))
+          val result = fileParser.process(new File(file))
 
           // add includes to the todo list
           for (path ← result._1) {
@@ -106,25 +92,36 @@ final class Parser(
     }
     rval
   }
+
+  /**
+   * Parses a file and all related files and passes back a List of definitions. The returned definitions are also type
+   * checked.
+   */
+  private[parser] def parseAll(input : File) = {
+    processAllFiles(input, new SkillFileParser(delimitWithUnderscore, delimitWithCamelCase))
+  }
 }
 
-object Parser extends AbstractParser {
+object Parser {
 
   /**
    * @return a type context containing all type information obtained from the argument file
    */
-  def process(input : File,
-              keepSpecificationOrder : Boolean = false,
-              delimitWithUnderscore : Boolean = true,
-              delimitWithCamelCase : Boolean = true,
-              verboseOutput : Boolean = false) : TypeContext = {
+  def process(
+    input :                  File,
+    keepSpecificationOrder : Boolean = false,
+    delimitWithUnderscore :  Boolean = true,
+    delimitWithCamelCase :   Boolean = true,
+    verboseOutput :          Boolean = false) : TypeContext = {
 
-    val p = new Parser(delimitWithUnderscore, delimitWithCamelCase, verboseOutput)
-    IRBuilder.buildIR(p.parseAll(input).to, verboseOutput, keepSpecificationOrder)
+    val ast = if (input.getName.endsWith(".skill")) {
+      new Parser(delimitWithUnderscore, delimitWithCamelCase, verboseOutput).parseAll(input)
+    } else {
+      new SIDLParser(delimitWithUnderscore, delimitWithCamelCase, verboseOutput).parseAll(input)
+    }
+    IRBuilder.buildIR(ast.to, verboseOutput, keepSpecificationOrder)
   }
 }
-
-// TODO how to remove duplicate code?
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -134,70 +131,37 @@ object Parser extends AbstractParser {
  * @param delimitWithUnderscore if true, underscores in words are used as delimiters. This will influence name
  * equivalence
  */
-final class IdlParser(
-    private val delimitWithUnderscore : Boolean = true,
-    private val delimitWithCamelCase : Boolean = true,
-    verboseOutput : Boolean = false) {
-
-  val tc = new ir.TypeContext
+final class SIDLParser(
+  _delimitWithUnderscore : Boolean = true,
+  _delimitWithCamelCase :  Boolean = true,
+  _verboseOutput :         Boolean = false)
+  extends Parser(_delimitWithUnderscore, _delimitWithCamelCase, _verboseOutput) {
 
   /**
    * Parses a file and all related files and passes back a List of definitions. The returned definitions are also type
    * checked.
    */
-  private def parseAll(input : File) = {
-    val parser = new IdlFileParser(delimitWithUnderscore, delimitWithCamelCase)
-    val base = new File(System.getProperty("user.dir")).toURI();
-    val todo = new HashSet[String]();
-    todo.add(base.relativize(input.toURI()).getPath());
-    val done = new HashSet[String]();
-    var rval = new ArrayBuffer[IdlDefinition]();
-    while (!todo.isEmpty) {
-      val file = todo.head
-      todo -= file;
-      if (!done.contains(file)) {
-        done += file;
-
-        try {
-          val result = parser.process(new File(file))
-
-          // add includes to the todo list
-          for (path ← result._1) {
-            // strip common prefix, if possible
-            todo += base.relativize(new File(path).toURI()).getPath();
-          }
-
-          // add definitions
-          rval = rval ++ result._2
-          if (verboseOutput)
-            println(s"acc: $file ⇒ ${rval.size}")
-        } catch {
-          case e : FileNotFoundException ⇒ ParseException(
-            s"The include $file could not be resolved to an existing file: ${e.getMessage()} \nWD: ${
-              FileSystems.getDefault().getPath(".").toAbsolutePath().toString()
-            }", e)
-        }
-      }
-    }
+  override private[parser] def parseAll(input : File) = {
+    val rval = processAllFiles(input, new SIDLFileParser(delimitWithUnderscore, delimitWithCamelCase))
     combine(rval)
   }
 
-  private def mergeComments(c1: Comment, c2: Comment) = {
+  private def mergeComments(c1 : Comment, c2 : Comment) = {
     Comment.NoComment.get
   }
 
-  private def mergeDescriptions(d1: Description, d2: Description) = {
+  private def mergeDescriptions(d1 : Description, d2 : Description) = {
     new Description(
       mergeComments(d1.comment, d2.comment),
-      d1.restrictions ++ d2. restrictions,
+      d1.restrictions ++ d2.restrictions,
       d1.hints ++ d2.hints)
   }
 
-  private def combine(items : ArrayBuffer[IdlDefinition]) : ArrayBuffer[Declaration] = {
+  private def combine(items : ArrayBuffer[SIDLDefinition]) : ArrayBuffer[Declaration] = {
     val defs = items.filter(!_.isInstanceOf[AddedField])
     val addedFields = items.collect { case t : AddedField ⇒ t }
 
-    val definitionNames = new HashMap[Name, IdlDefinition];
+    val definitionNames = new HashMap[Name, SIDLDefinition];
     // TODO .withDefaultValue({new ArrayBuffer()}) with lambda ?
     val superTypes = new HashMap[Name, ArrayBuffer[Name]]()
 
@@ -205,9 +169,9 @@ final class IdlParser(
     for (d ← defs) {
       // TODO remove repetision? additional "interface" ?
       d match {
-        case e: IdlUserType => {
+        case e : SIDLUserType ⇒ {
           println(s"try insert for UT ${e.name} (${e.subTypes})")
-          for (n <- e.subTypes) {
+          for (n ← e.subTypes) {
             if (!superTypes.contains(n)) {
               superTypes.put(n, new ArrayBuffer[Name]())
             }
@@ -215,9 +179,9 @@ final class IdlParser(
             superTypes(n).append(e.name)
           }
         }
-        case e: IdlInterface => {
+        case e : SIDLInterface ⇒ {
           println(s"try insert for I ${e.name} (${e.subTypes})")
-          for (n <- e.subTypes) {
+          for (n ← e.subTypes) {
             if (!superTypes.contains(n)) {
               superTypes.put(n, new ArrayBuffer[Name]())
             }
@@ -225,33 +189,33 @@ final class IdlParser(
             superTypes(n).append(e.name)
           }
         }
-        case _ => { }
+        case _ ⇒ {}
       }
       if (definitionNames.contains(d.name)) {
         val old = definitionNames(d.name)
         definitionNames(d.name) = (old, d) match {
-          case (p: IdlUserType, q: IdlUserType) => {
-            IdlUserType(
+          case (p : SIDLUserType, q : SIDLUserType) ⇒ {
+            SIDLUserType(
               p.declaredIn, // TODO welches File?
               mergeDescriptions(p.description, q.description),
               p.name,
               List.empty)
           }
-          case (p: IdlEnum, q: IdlEnum) => {
-            IdlEnum(
+          case (p : SIDLEnum, q : SIDLEnum) ⇒ {
+            SIDLEnum(
               p.declaredIn, // TODO welches File?
               mergeComments(p.comment, q.comment),
               p.name,
               p.instances ++ q.instances)
           }
-          case (p: IdlInterface, q: IdlInterface) => {
-            IdlInterface(
+          case (p : SIDLInterface, q : SIDLInterface) ⇒ {
+            SIDLInterface(
               p.declaredIn, // TODO welches File?
               mergeComments(p.comment, q.comment),
               p.name,
               List.empty)
           }
-          case _ => ParseException("TODO")
+          case _ ⇒ ParseException("TODO")
         }
       } else {
         definitionNames.put(d.name, d)
@@ -269,7 +233,7 @@ final class IdlParser(
       }
       println(s"${d.name} extends ${superTypes(d.name)}")
       astNames.put(d.name, d match {
-        case d: IdlUserType => {
+        case d : SIDLUserType ⇒ {
           new UserType(
             d.declaredIn,
             d.description,
@@ -277,7 +241,7 @@ final class IdlParser(
             superTypes(d.name).to,
             List.empty)
         }
-        case d: IdlEnum => {
+        case d : SIDLEnum ⇒ {
           new EnumDefinition(
             d.declaredIn,
             d.comment,
@@ -285,7 +249,7 @@ final class IdlParser(
             d.instances,
             List.empty)
         }
-        case d: IdlInterface => {
+        case d : SIDLInterface ⇒ {
           new InterfaceDefinition(
             d.declaredIn,
             d.comment,
@@ -293,13 +257,13 @@ final class IdlParser(
             superTypes(d.name).to,
             List.empty)
         }
-        case d: IdlTypedef => d.typedef
-        case _ => ParseException("TODO")
+        case d : SIDLTypedef ⇒ d.typedef
+        case _               ⇒ ParseException("TODO")
       })
     }
 
     // merge fields into AST nodes
-    for (addedField <- addedFields) {
+    for (addedField ← addedFields) {
       if (!(definitionNames contains addedField.name)) {
         if (!superTypes.contains(addedField.name)) {
           println(s"empty super for ${addedField.name}")
@@ -311,54 +275,37 @@ final class IdlParser(
             new Description(Comment.NoComment.get, List.empty, List.empty),
             addedField.name,
             superTypes(addedField.name).to,
-            List.empty)
-          )
+            List.empty))
       }
       astNames(addedField.name) =
         astNames(addedField.name) match {
           // TODO can I just have AbstactField and t.copy(body = t.body + addedField.fs)?
           // TODO should/can I use the body as mutlable List
-          case t: UserType =>
+          case t : UserType ⇒
             new UserType(
               t.declaredIn,
               t.description,
               t.name,
               t.superTypes,
               t.body ++ addedField.fields)
-          case t: EnumDefinition =>
+          case t : EnumDefinition ⇒
             new EnumDefinition(
               t.declaredIn,
               t.comment,
               t.name,
               t.instances,
               t.body ++ addedField.fields)
-          case t: InterfaceDefinition =>
+          case t : InterfaceDefinition ⇒
             new InterfaceDefinition(
               t.declaredIn,
               t.comment,
               t.name,
               t.superTypes,
               t.body ++ addedField.fields)
-          case d: Typedef => d
-          case _ => ParseException("TODO")
+          case d : Typedef ⇒ d
+          case _           ⇒ ParseException("TODO")
         }
     }
     astNames.values.to
-  }
-}
-
-object IdlParser extends AbstractParser {
-
-  /**
-   * @return a type context containing all type information obtained from the argument file
-   */
-  def process(input : File,
-              keepSpecificationOrder : Boolean = false,
-              delimitWithUnderscore : Boolean = true,
-              delimitWithCamelCase : Boolean = true,
-              verboseOutput : Boolean = false) : TypeContext = {
-
-    val p = new IdlParser(delimitWithUnderscore, delimitWithCamelCase, verboseOutput)
-    IRBuilder.buildIR(p.parseAll(input).to, verboseOutput, keepSpecificationOrder)
   }
 }

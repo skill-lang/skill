@@ -43,9 +43,9 @@ import de.ust.skill.ir.restriction.DefaultRestriction
  *
  * Grammar as explained in the paper.
  */
-abstract class AbstractFileParser(
-    protected val delimitWithUnderscore : Boolean,
-    protected val delimitWithCamelCase : Boolean) extends RegexParsers {
+abstract class AbstractFileParser[Decl](
+  protected val delimitWithUnderscore : Boolean,
+  protected val delimitWithCamelCase :  Boolean) extends RegexParsers {
 
   def stringToName(name : String) : Name = new Name(name, delimitWithUnderscore, delimitWithCamelCase)
 
@@ -91,7 +91,6 @@ abstract class AbstractFileParser(
    */
   protected def includes = ("include" | "with") ~> rep(
     string ^^ { s ⇒ new File(currentFile.getParentFile, s).getAbsolutePath });
-
 
   /**
    * creates a shorthand for a more complex type
@@ -237,8 +236,7 @@ abstract class AbstractFileParser(
     int ^^ { new IntDefaultRestriction(_) }
     | string ^^ { new StringDefaultRestriction(_) }
     | floatingPointNumber ^^ { new FloatDefaultRestriction(_) }
-    | repsep(id, "." | "::") ^^ { names ⇒ new NameDefaultRestriction(names.map(_.ir)) }
-  )
+    | repsep(id, "." | "::") ^^ { names ⇒ new NameDefaultRestriction(names.map(_.ir)) })
 
   protected def rangeRestrictionInnerArgument = (
     int ~ ("," ~> int) ~ opt("," ~> string ~ ("," ~> string)) ^^ {
@@ -345,4 +343,6 @@ abstract class AbstractFileParser(
   protected def typeDescription = opt(comment) ~ rep(typeRestriction | hint) ^^ {
     case c ~ specs ⇒ new Description(c.getOrElse(Comment.NoComment.get), specs.collect { case r : Restriction ⇒ r }, specs.collect { case h : Hint ⇒ h })
   }
+
+  def process(in : File) : (List[String], List[Decl]);
 }
