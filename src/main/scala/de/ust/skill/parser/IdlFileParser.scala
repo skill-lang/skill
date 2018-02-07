@@ -106,7 +106,7 @@ final class IdlFileParser(
   /**
    * Add fields to a user type.
    */
-  private def addedFields = opt(comment) ~ id ~ ("->" ~> rep1sep(field, ",")) ^^ {
+  private def addedFields = opt(comment) ~ id ~ (("->"|"⇒") ~> rep1sep(field, ",")) ^^ {
       case c ~ n ~ f ⇒ new AddedField(c.getOrElse(Comment.NoComment.get), n, f, currentFile)
   }
 

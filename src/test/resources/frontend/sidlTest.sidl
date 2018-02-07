@@ -1,0 +1,9 @@
+interface I;
+
+interface h ::= i;
+
+A -> f : I;
+
+B ⇒ g : h;
+
+B ::= C;

@@ -21,7 +21,12 @@ import de.ust.skill.ir
 @RunWith(classOf[JUnitRunner])
 class GenericFrontendTest extends FunSuite {
 
-  private def check(file : File) = Parser.process(file)
+  private def check(file : File) = {
+    if (file.getName.endsWith(".skill"))
+      Parser.process(file)
+    else
+      IdlParser.process(file)
+  }
 
   def fail[E <: Exception](f : ⇒ Unit)(implicit manifest : scala.reflect.Manifest[E]) : E = try {
     f;
@@ -50,5 +55,12 @@ class GenericFrontendTest extends FunSuite {
   ) succeedOn(f)
   for (
     f ← new File("src/test/resources/frontend/ParseException").listFiles() if f.isFile() && f.getName.endsWith(".skill")
+  ) failOn(f)
+
+  for (
+    f ← new File("src/test/resources/frontend").listFiles() if f.isFile() && f.getName.endsWith(".sidl")
+  ) succeedOn(f)
+  for (
+    f ← new File("src/test/resources/frontend/ParseException").listFiles() if f.isFile() && f.getName.endsWith(".sidl")
   ) failOn(f)
 }
