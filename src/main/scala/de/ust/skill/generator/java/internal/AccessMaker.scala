@@ -160,7 +160,7 @@ ${
         if (fields.filterNot { f ⇒ f.isConstant() || f.isIgnored() }.isEmpty) ""
         else s"""
     /**
-     * @return a new age instance with the argument field values
+     * @return a new $typeT instance with the argument field values
      */
     public $typeT make(${makeConstructorArguments(t)}) {
         $typeT rval = new $typeT(-1${appendConstructorArguments(t, false)});
