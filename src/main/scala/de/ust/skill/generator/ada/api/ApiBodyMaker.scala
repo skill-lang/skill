@@ -228,7 +228,7 @@ ${
    end Close;
 ${
       (for (t ← IR) yield s"""
-   function ${escapedLonely(name(t)+"s")} (This : not null access File_T) return ${name(t)}_Pool is
+   function ${escapedLonely(name(t)+"s")} (This : not null access constant File_T) return ${name(t)}_Pool is
    begin
       return This.${escapedLonely(name(t)+"s")};
    end ${escapedLonely(name(t)+"s")};

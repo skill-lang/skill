@@ -65,7 +65,7 @@ ${
       (for (t ← IR)
         yield s"""
    overriding
-   function Skill_Name (This : access ${name(t)}_T) return Standard.Skill.Types.String_Access;
+   function Skill_Name (This : access constant ${name(t)}_T) return Standard.Skill.Types.String_Access;
 
    -- ${name(t)} type conversions
    function To_${name(t)} (This : Skill.Types.Annotation) return ${name(t)}
@@ -118,7 +118,7 @@ ${
 ${
         (for (f ← t.getFields)
           yield s"""
-${comment(f)}function Get_${name(f)} (This : not null access ${name(t)}_T'Class) return ${mapType(f)};
+${comment(f)}function Get_${name(f)} (This : not null access constant ${name(t)}_T'Class) return ${mapType(f)};
    pragma Inline (Get_${name(f)});
 
 ${comment(f)}procedure Set_${name(f)} (This : not null access ${name(t)}_T'Class; V : ${mapType(f)});

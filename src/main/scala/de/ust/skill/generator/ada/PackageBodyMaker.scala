@@ -44,7 +44,7 @@ ${
         (for (t ← IR)
           yield s"""
    overriding
-   function Skill_Name (This : access ${name(t)}_T) return Standard.Skill.Types.String_Access is
+   function Skill_Name (This : access constant ${name(t)}_T) return Standard.Skill.Types.String_Access is
      (${internalSkillName(t)});
 
    function To_${name(t)} (This : Skill.Types.Annotation) return ${name(t)} is
@@ -146,7 +146,7 @@ ${
 ${
           (for (f ← t.getFields)
             yield s"""
-   function Get_${name(f)} (This : not null access ${name(t)}_T'Class) return ${mapType(f)}
+   function Get_${name(f)} (This : not null access constant ${name(t)}_T'Class) return ${mapType(f)}
    is
       use Interfaces;
    begin
