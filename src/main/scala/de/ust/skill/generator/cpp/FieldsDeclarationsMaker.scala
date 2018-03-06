@@ -168,7 +168,7 @@ ${
           }
 }
 
-size_t $fieldName::offset() const {${
+std::size_t ($fieldName::offset)() const {${
             if (f.isConstant())
               """
     return 0; // this field is constant"""
@@ -277,7 +277,7 @@ size_t $fieldName::offset() const {${
                 s"""
     ${mapType(t)}* d = ((${storagePool(t)}*) owner)->data;
     const ::skill::internal::Chunk *target = dataChunks.back();
-    size_t result = 0L;
+    std::size_t result = 0L;
     if (dynamic_cast<const ::skill::internal::SimpleChunk *>(target)) {
         for (::skill::SKilLID i = 1 + ((const ::skill::internal::SimpleChunk *) target)->bpo,
                      high = i + target->count; i != high; i++) {
