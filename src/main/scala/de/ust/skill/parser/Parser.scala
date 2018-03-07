@@ -147,7 +147,7 @@ final class SIDLParser(
   }
 
   private def mergeComments(c1 : Comment, c2 : Comment) = {
-    Comment.NoComment.get
+    new Comment(c1, c2)
   }
 
   private def mergeDescriptions(d1 : Description, d2 : Description) = {
@@ -162,31 +162,23 @@ final class SIDLParser(
     val addedFields = items.collect { case t : AddedField ⇒ t }
 
     val definitionNames = new HashMap[Name, SIDLDefinition];
-    // TODO .withDefaultValue({new ArrayBuffer()}) with lambda ?
     val superTypes = new HashMap[Name, ArrayBuffer[Name]]()
 
-    // merge descriptnion and find superTypes
+    println(s"TEST JAN")
+    // merge description and find superTypes
     for (d ← defs) {
-      // TODO remove repetision? additional "interface" ?
+      println(s"def ${d.name}")
       d match {
         case e : SIDLUserType ⇒ {
           println(s"try insert for UT ${e.name} (${e.subTypes})")
           for (n ← e.subTypes) {
-            if (!superTypes.contains(n)) {
-              superTypes.put(n, new ArrayBuffer[Name]())
-            }
-            println(s"insert ${e.name} for ${n}")
-            superTypes(n).append(e.name)
+            superTypes.getOrElseUpdate(n, new ArrayBuffer[Name]()).append(e.name)
           }
         }
         case e : SIDLInterface ⇒ {
           println(s"try insert for I ${e.name} (${e.subTypes})")
           for (n ← e.subTypes) {
-            if (!superTypes.contains(n)) {
-              superTypes.put(n, new ArrayBuffer[Name]())
-            }
-            println(s"insert ${e.name} for ${n}")
-            superTypes(n).append(e.name)
+            superTypes.getOrElseUpdate(n, new ArrayBuffer[Name]()).append(e.name)
           }
         }
         case _ ⇒ {}
@@ -226,19 +218,13 @@ final class SIDLParser(
 
     // convert to AST nodes
     for (d ← definitionNames.values) {
-      // TODO get rid of filling in all the default super types ?
-      if (!superTypes.contains(d.name)) {
-        println(s"empty super for ${d.name}")
-        superTypes.put(d.name, new ArrayBuffer[Name]())
-      }
-      println(s"${d.name} extends ${superTypes(d.name)}")
       astNames.put(d.name, d match {
         case d : SIDLUserType ⇒ {
           new UserType(
             d.declaredIn,
             d.description,
             d.name,
-            superTypes(d.name).to,
+            superTypes.getOrElseUpdate(d.name, new ArrayBuffer[Name]()).to,
             List.empty)
         }
         case d : SIDLEnum ⇒ {
@@ -254,7 +240,7 @@ final class SIDLParser(
             d.declaredIn,
             d.comment,
             d.name,
-            superTypes(d.name).to,
+            superTypes.getOrElseUpdate(d.name, new ArrayBuffer[Name]()).to,
             List.empty)
         }
         case d : SIDLTypedef ⇒ d.typedef
@@ -265,16 +251,12 @@ final class SIDLParser(
     // merge fields into AST nodes
     for (addedField ← addedFields) {
       if (!(definitionNames contains addedField.name)) {
-        if (!superTypes.contains(addedField.name)) {
-          println(s"empty super for ${addedField.name}")
-          superTypes.put(addedField.name, new ArrayBuffer[Name]())
-        }
         astNames += (addedField.name ->
           new UserType(
             addedField.file,
             new Description(Comment.NoComment.get, List.empty, List.empty),
             addedField.name,
-            superTypes(addedField.name).to,
+            superTypes.getOrElseUpdate(addedField.name, ArrayBuffer[Name]()).to,
             List.empty))
       }
       astNames(addedField.name) =
