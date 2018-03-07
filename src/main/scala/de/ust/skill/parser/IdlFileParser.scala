@@ -1,8 +1,3 @@
-/*  ___ _  ___ _ _                                                            *\
-** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-18 University of Stuttgart                 **
-** |___/_|\_\_|_|____|    see LICENSE                                         **
-\*                                                                            */
 package de.ust.skill.parser
 
 import java.io.File
@@ -38,12 +33,49 @@ import de.ust.skill.ir.restriction.StringDefaultRestriction
 import de.ust.skill.ir.restriction.UniqueRestriction
 import de.ust.skill.ir.restriction.DefaultRestriction
 
+// TODO merge decls of Description
+
+// TODO move in AST.scala ! mit kommentar (das nur fuer sidl) erbe von Decl
+// TODO but we only need it here and IdlParser?
+
+abstract class IdlDefinition(val name: Name)
+
+case class AddedField(
+  val comment: Comment,
+  _name: Name,
+  val fields: List[AbstractField],
+  val file: File
+  ) extends IdlDefinition(_name)
+
+case class IdlUserType(
+  val declaredIn : File,
+  val description : Description,
+  _name : Name,
+  val subTypes : List[Name],
+  ) extends IdlDefinition(_name)
+
+case class IdlEnum(
+  val declaredIn : File,
+  val comment : Comment,
+  _name : Name,
+  val instances : List[Name],
+  ) extends IdlDefinition(_name)
+
+case class IdlInterface(
+  val declaredIn : File,
+  val comment : Comment,
+  _name : Name,
+  val subTypes : List[Name],
+  ) extends IdlDefinition(_name)
+
+case class IdlTypedef(typedef : Typedef) extends IdlDefinition(typedef.name)
+
 /**
  * Converts a character stream into an AST using parser combinators.
  *
  * Grammar as explained in the paper.
  */
-final class FileParser(
+final class IdlFileParser(
     _delimitWithUnderscore : Boolean,
     _delimitWithCamelCase : Boolean)
       extends AbstractFileParser(
@@ -60,65 +92,71 @@ final class FileParser(
   /**
    * Declarations add or modify user defined types.
    */
-  private def declaration : Parser[Declaration] = typedef | enumType | interfaceType | userType
+  private def declaration : Parser[IdlDefinition] =
+    typedef ^^ { td => IdlTypedef(td) } | enumType |
+    interfaceType | userType | addedFields
 
   /**
-   * A declaration may start with a description, is followed by modifiers and a name, might have a super class and has
-   * a body.
+   * A declaration may start with a description, is followed by modifiers and a name, might have a super class.
    */
-  private def userType = typeDescription ~ id ~ rep((":" | "with" | "extends") ~> id) ~!
-    ("{" ~> rep(field) <~ "}") ^^ {
-      case d ~ n ~ s ~ b ⇒ new UserType(currentFile, d, n, s.sortBy(_.source), b)
-    }
+  private def userType = typeDescription ~ id ~ ((";" ^^ { x => List.empty }) | ("::=" ~> rep1sep(id, "|"))) ^^ {
+    case d ~ n ~ s ⇒ new IdlUserType(currentFile, d, n, s.sortBy(_.source))
+  }
+
+  /**
+   * Add fields to a user type.
+   */
+  private def addedFields = opt(comment) ~ id ~ ("->" ~> rep1sep(field, ",")) ^^ {
+      case c ~ n ~ f ⇒ new AddedField(c.getOrElse(Comment.NoComment.get), n, f, currentFile)
+  }
 
   /**
    * creates an enum definition
    */
-  private def enumType = opt(comment) ~ ("enum" ~> id) ~ ("{" ~> repsep(id, ",") <~ ";") ~ (rep(field) <~ "}") ^^ {
-    case c ~ n ~ i ~ f ⇒
+  private def enumType = opt(comment) ~ ("enum" ~> id) ~ ((";" ^^ { x => List.empty }) | ("::=" ~> rep1sep(id, "|"))) ^^ {
+    case c ~ n ~ i ⇒
       if (i.isEmpty)
         throw ParseException(s"Enum $n requires a non-empty list of instances!")
       else
-        new EnumDefinition(currentFile, c.getOrElse(Comment.NoComment.get), n, i, f)
+        new IdlEnum(currentFile, c.getOrElse(Comment.NoComment.get), n, i)
   }
 
   /**
    * creates an interface definition
    */
-  private def interfaceType = opt(comment) ~ ("interface" ~> id) ~ rep((":" | "with" | "extends") ~> id) ~ (
-    "{" ~> rep(field) <~ "}") ^^ {
-      case c ~ n ~ i ~ f ⇒
-        new InterfaceDefinition(currentFile, c.getOrElse(Comment.NoComment.get), n, i.sortBy(_.source), f)
-    }
+  private def interfaceType = opt(comment) ~ ("interface" ~> id) ~ ((";" ^^ { x => List.empty }) | ("::=" ~> rep1sep(id, "|"))) ^^ {
+      case c ~ n ~ i ⇒ new IdlInterface(currentFile, c.getOrElse(Comment.NoComment.get), n, i.sortBy(_.source))
+  }
 
   /**
    * A field is either a constant or a real data field.
    */
   private def field = (
-    (opt(comment) ^^ { c ⇒ c.getOrElse(Comment.NoComment.get) }) >> { c ⇒ view(c) | customField(c) } <~ ";"
-    | fieldDescription ~ ((constant | data) <~ ";") ^^ { case d ~ f ⇒ { f.description = d; f } })
+    (opt(comment) ^^ { c ⇒ c.getOrElse(Comment.NoComment.get) }) >> { c ⇒ view(c) | customField(c) }
+    | fieldDescription ~ ((constant | data)) ^^ { case d ~ f ⇒ { f.description = d; f } })
 
   /**
    * View an existing view as something else.
    */
-  private def view(c : Comment) = ("view" ~> opt(id <~ ".")) ~ (id <~ "as") ~ fieldType ~! id ^^ {
-    case targetType ~ targetField ~ newType ~ newName ⇒ new View(c, targetType, targetField, newType, newName)
+  //private def view(c : Comment) = ("view" ~> opt(id <~ ".")) ~ (id <~ "as") ~ fieldType ~! id ^^ {
+  private def view(c : Comment) = id ~ (":" ~> fieldType) ~ ("view" ~> id) ~ opt(":" ~> id) ^^ {
+    case newName ~ newType ~ targetField ~ targetType ⇒ new View(c, targetType, targetField, newType, newName)
   }
 
   /**
    * Constants a recognized by the keyword "const" and are required to have a value.
    */
-  private def constant = "const" ~> fieldType ~! id ~! ("=" ~> int) ^^ { case t ~ n ~ v ⇒ new Constant(t, n, v) }
+  private def constant = id ~ ("=" ~> int <~ ":") ~ ("const" ~> fieldType) ^^ { case n ~ v ~ t ⇒ new Constant(t, n, v) }
 
   /**
    * Data may be marked to be auto and will therefore only be present at runtime.
    */
-  private def data = opt("auto") ~ fieldType ~! id ^^ { case a ~ t ~ n ⇒ new Data(a.isDefined, t, n) }
+  private def data = (id <~ ":") ~ opt("auto") ~ fieldType ^^ { case n ~ a ~ t ⇒ new Data(a.isDefined, t, n) }
 
   /**
    * The <b>main</b> function of the parser, which turn a string into a list of includes and declarations.
    */
-  def process(in : File) : (List[String], List[Declaration]) = {
+  def process(in : File) : (List[String], List[IdlDefinition]) = {
     currentFile = in;
     val lines = scala.io.Source.fromFile(in, "utf-8").getLines.mkString("\n")
 

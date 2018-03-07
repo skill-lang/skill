@@ -16,12 +16,13 @@ import de.ust.skill.generator.common.KnownGenerators
 import de.ust.skill.io.PrintingService
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
-import de.ust.skill.parser.Parser
+import de.ust.skill.parser.AbstractParser
 
 trait SourceOptions extends AbstractOptions {
 
   case class SourceConfig(
     target :                 String,
+    parser :                 AbstractParser,
     outdir :                 File                                           = new File("."),
     var depsdir :            File                                           = null,
     var skipDeps :           Boolean                                        = false,
@@ -50,7 +51,7 @@ trait SourceOptions extends AbstractOptions {
       // this is either the result of parsing a skill file or an empty type context if "-" is specified
       val tc =
         if ("-".equals(target)) new TypeContext
-        else Parser.process(new File(target), keepSpecificationOrder)
+        else parser.process(new File(target), keepSpecificationOrder)
 
       // add all user types to visitors, if the type '*' was selected
       val visitors = (if (1 == this.visitors.size && this.visitors.head.equals("*")) {
