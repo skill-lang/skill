@@ -67,10 +67,10 @@ import org.junit.Test;
 import $packagePath.api.SkillFile;
 
 import de.ust.skill.common.java.api.Access;
+import de.ust.skill.common.java.api.SkillException;
 import de.ust.skill.common.java.api.SkillFile.Mode;
 import de.ust.skill.common.java.internal.ForceLazyFields;
 import de.ust.skill.common.java.internal.SkillObject;
-import de.ust.skill.common.java.internal.exceptions.ParseException;
 
 /**
  * Tests the file reading capabilities.
@@ -137,9 +137,14 @@ public class Generic${name}Test extends common.CommonTest {
     }
 """)
     for (f ← reject) out.write(s"""
-    @Test(expected = ParseException.class)
+    @Test
     public void test_${name}_read_reject_${f.getName.replaceAll("\\W", "_")}() throws Exception {
-        ForceLazyFields.forceFullCheck(read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}"));
+        try {
+            ForceLazyFields.forceFullCheck(read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}"));
+            Assert.fail("Expected ParseException to be thrown");
+        } catch (SkillException e) {
+            return; // success
+        }
     }
 """)
     closeTestFile(out)

@@ -114,6 +114,7 @@ public class Generic${name}Test extends common.CommonTest {
 
         // create objects${createObjects(obj, tc, name)}
         // set fields${setFields(obj, tc)}
+        sf.close();
 
         { // read back and assert correctness
             SkillFile sf2 = SkillFile.open(sf.currentPath(), Mode.Read, Mode.ReadOnly);
@@ -121,7 +122,6 @@ public class Generic${name}Test extends common.CommonTest {
             // create objects from file${createObjects2(obj, tc, name)}
             // assert fields${assertFields(obj, tc)}
         }
-        sf.close();
     }
 """)
   }
