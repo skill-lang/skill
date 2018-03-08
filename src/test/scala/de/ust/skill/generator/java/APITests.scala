@@ -303,7 +303,9 @@ public class Generic${name}Test extends common.CommonTest {
             val f = field(tc, t, fieldName)
             val getter = escaped("get" + f.getName.capital())
 
-            s"""
+            // do not check auto fields as they cannot obtain the stored value from file
+            if (f.isAuto()) ""
+            else s"""
             Assert.assertTrue(${equalValue(s"${name}_2.$getter()", fs.get(fieldName), f)});"""
           }
 
