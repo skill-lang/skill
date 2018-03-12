@@ -19,8 +19,6 @@ mainClass := Some("de.ust.skill.main.CommandLine")
 
 (testOptions in Test) += Tests.Argument(TestFrameworks.ScalaTest, "-u", "target/tests")
 
-libraryDependencies += "commons-lang" % "commons-lang" % "2.6"
-
 libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6"
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.0"
