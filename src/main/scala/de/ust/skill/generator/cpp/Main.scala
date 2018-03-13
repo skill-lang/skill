@@ -5,16 +5,16 @@
 \*                                                                            */
 package de.ust.skill.generator.cpp
 
-
-
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
 
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
 import de.ust.skill.ir.FieldLike
 import de.ust.skill.ir.GroundType
+import de.ust.skill.ir.InterfaceType
 import de.ust.skill.ir.ListType
 import de.ust.skill.ir.MapType
 import de.ust.skill.ir.SetType
@@ -34,12 +34,12 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  *
  * @author Timm Felden
  */
-class Main extends FakeMain
-    with FieldDeclarationsMaker
-    with SkillFileMaker
-    with StringKeeperMaker
-    with PoolsMaker
-    with TypesMaker {
+final class Main extends FakeMain
+  with FieldDeclarationsMaker
+  with SkillFileMaker
+  with StringKeeperMaker
+  with PoolsMaker
+  with TypesMaker {
 
   lineLength = 120
   override def comment(d : Declaration) : String = d.getComment.format("/**\n", "     * ", lineLength, "     */\n    ")
@@ -104,8 +104,7 @@ class Main extends FakeMain
    */
   override protected def makeConstructorArguments(t : UserType) = (
     for (f ← t.getAllFields if !(f.isConstant || f.isIgnored))
-      yield s"${escaped(f.getName.camel)} : ${mapType(f.getType())}"
-  ).mkString(", ")
+      yield s"${escaped(f.getName.camel)} : ${mapType(f.getType())}").mkString(", ")
   override protected def appendConstructorArguments(t : UserType) = {
     val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
     if (r.isEmpty) ""
@@ -126,12 +125,14 @@ class Main extends FakeMain
 
   override def setOption(option : String, value : String) {
     option match {
-      case "revealskillid" ⇒ revealSkillID = ("true" == value)
-      case unknown         ⇒ sys.error(s"unkown Argument: $unknown")
+      case "revealskillid"   ⇒ revealSkillID = ("true".equals(value))
+      case "interfacechecks" ⇒ interfaceChecks = ("true".equals(value))
+      case unknown           ⇒ sys.error(s"unkown Argument: $unknown")
     }
   }
   override def helpText : String = """
 revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
+interfaceChecks   true/false  if set to true, the generated API will contain is[[interface]] methods
 """
 
   override def customFieldManual : String = """
@@ -161,6 +162,33 @@ revealSkillID     true/false  if set to true, the generated binding will reveal 
     escapeCache(target) = result
     result
   })
+
+  protected def filterIntarfacesFromIR() {
+    // find implementers
+    val ts = types.removeTypedefs()
+    for (t ← ts.getUsertypes) {
+      val is : HashSet[InterfaceType] = t.getSuperInterfaces.flatMap(recursiveSuperInterfaces(_, new HashSet[InterfaceType])).to
+      interfaceCheckImplementations(t.getSkillName) = is.map(insertInterface(_, t))
+    }
+  }
+  private def insertInterface(i : InterfaceType, target : UserType) : String = {
+    // register a potential implementation for the target type and interface
+    i.getBaseType match {
+      case b : UserType ⇒
+        interfaceCheckMethods.getOrElseUpdate(b.getSkillName, new HashSet[String]) += i.getName.capital()
+      case _ ⇒
+        interfaceCheckMethods.getOrElseUpdate(target.getBaseType.getSkillName, new HashSet[String]) += i.getName.capital()
+    }
+    // return the name to be used
+    i.getName.capital
+  }
+  private def recursiveSuperInterfaces(i : InterfaceType, r : HashSet[InterfaceType]) : HashSet[InterfaceType] = {
+    r += i
+    for (s ← i.getSuperInterfaces) {
+      recursiveSuperInterfaces(s, r)
+    }
+    r
+  }
 
   protected def writeField(d : UserType, f : Field) : String = {
     val fName = escaped(f.getName.camel)

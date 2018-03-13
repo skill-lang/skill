@@ -14,6 +14,7 @@ import de.ust.skill.ir.restriction.MonotoneRestriction
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashSet
 
 /**
  * creates header and implementation for all type definitions
@@ -141,6 +142,24 @@ ${
         out.write("""
         inline ::skill::SKilLID skillID() const { return this->id; }
 """)
+
+      // show implemented interfaces
+      if(interfaceChecks){
+        val subs = interfaceCheckMethods.getOrElse(t.getSkillName, HashSet())
+        val supers = interfaceCheckImplementations.getOrElse(t.getSkillName, HashSet())
+        val both = subs.intersect(supers)
+        subs --= both
+        supers --= both
+        out.write(subs.map(s ⇒ s"""
+        virtual bool is$s() const { return false; }
+""").mkString)
+        out.write(supers.map(s ⇒ s"""
+        virtual bool is$s() const override { return true; }
+""").mkString)
+        out.write(both.map(s ⇒ s"""
+        inline bool is$s() const { return true; }
+""").mkString)
+      }
 
       //${if(revealSkillID)"" else s"protected[${packageName}] "}final def getSkillID = skillID
 

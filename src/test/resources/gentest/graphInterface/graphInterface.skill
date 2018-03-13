@@ -1,4 +1,4 @@
-#! graphInterface
+#! graphInterface -Ocpp:interfaceChecks=true
 #
 # This test is mostly equivalent to graph, but checks interfacing and subtyping
 # capabilities of a generated binding.

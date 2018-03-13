@@ -5,21 +5,16 @@
 \*                                                                            */
 package de.ust.skill.generator.cpp
 
-import java.io.File
-import java.io.PrintWriter
-import de.ust.skill.ir.Declaration
-import de.ust.skill.ir.Type
-import de.ust.skill.ir.Field
-import java.util.Date
-import java.io.BufferedWriter
-import java.io.OutputStreamWriter
-import java.io.FileOutputStream
+import scala.collection.JavaConversions.`deprecated asScalaBuffer`
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
+
 import de.ust.skill.generator.common.Generator
-import scala.collection.JavaConversions._
+import de.ust.skill.ir.Field
+import de.ust.skill.ir.LanguageCustomization
+import de.ust.skill.ir.Type
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
-import de.ust.skill.parser.Customization
-import de.ust.skill.ir.LanguageCustomization
 
 /**
  * The parent class for all output makers.
@@ -34,6 +29,11 @@ trait GeneralOutputMaker extends Generator {
     this.IR = tc.removeSpecialDeclarations.getUsertypes.to
     // set large specification mode; leave some spare parameters
     largeSpecificationMode = IR.size > 200
+
+    // filter implemented interfaces from original IR
+    if (interfaceChecks) {
+      filterIntarfacesFromIR()
+    }
   }
   var types : TypeContext = _
   var IR : List[UserType] = _
@@ -47,9 +47,28 @@ trait GeneralOutputMaker extends Generator {
 
   // options
   /**
-   * if set to true, the generated binding will reveal the values of skill IDs.
+   * If set to true, the generated binding will reveal the values of skill IDs.
    */
   protected var revealSkillID = false;
+  /**
+   * If set to true, the generated API will contain is[[interface]] methods.
+   * These methods return true iff the type implements that interface.
+   * These methods exist for direct super types of interfaces.
+   * For rootless interfaces, they exist in base types.
+   */
+  protected var interfaceChecks = false;
+  protected def filterIntarfacesFromIR();
+
+  /**
+   * If interfaceChecks then skillName -> Name of sub-interfaces
+   * @note the same interface can be sub and super, iff the type is a base type;
+   * in that case, super wins!
+   */
+  protected val interfaceCheckMethods = new HashMap[String, HashSet[String]]
+  /**
+   * If interfaceChecks then skillName -> Name of super-interfaces
+   */
+  protected val interfaceCheckImplementations = new HashMap[String, HashSet[String]]
 
   /**
    * Assume the existence of a translation function for types.
@@ -89,7 +108,7 @@ trait GeneralOutputMaker extends Generator {
   protected def knownField(f : Field) : String = escaped(s"KnownField_${f.getDeclaredIn.getName.capital()}_${f.getName.camel()}")
 
   protected def name(f : LanguageCustomization) : String = escaped(f.getName.camel)
-  
+
   /**
    * Assume a package prefix provider.
    */
