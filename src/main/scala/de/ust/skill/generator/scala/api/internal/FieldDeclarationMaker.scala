@@ -59,6 +59,7 @@ import java.util.Arrays
 import de.ust.skill.common.jvm.streams.MappedInStream
 import de.ust.skill.common.jvm.streams.MappedOutStream
 import de.ust.skill.common.scala.api.PoolSizeMissmatchError
+import de.ust.skill.common.scala.api.RestrictionCheckFailed
 import de.ust.skill.common.scala.api.SkillObject
 import de.ust.skill.common.scala.internal.AutoField
 import de.ust.skill.common.scala.internal.BulkChunk
@@ -124,6 +125,26 @@ ${
 """, """
 """, """
   }""")
+      }${
+        // check that references to interfaces are actually references to these interfaces
+        // @note the current implementation is fruitless for containers
+        if (f.isAuto() || fieldActualType.equals(mapType(f.getType))) ""
+        else s"""
+  override def check : Unit = {
+    super.check;
+    // ensure that all references are in fact instances of the specified interface
+    val xs = owner.all
+    while (xs.hasNext) {
+      val x = xs.next
+      val ref = getR(x)
+      if (ref!=null && !ref.isInstanceOf[$fieldActualType]) {
+        throw RestrictionCheckFailed(s""${""}"$$ref is not an instance of interface $fieldActualType
+ In: $$x.${f.getName.camel()}
+ Actual type: $${ref.getClass}""${""}")
+      }
+    }
+  }
+"""
       }${
         if (f.isAuto() || f.isDistributed()) ""
         else s"""
