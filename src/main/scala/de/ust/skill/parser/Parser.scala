@@ -164,19 +164,15 @@ final class SIDLParser(
     val definitionNames = new HashMap[Name, SIDLDefinition];
     val superTypes = new HashMap[Name, ArrayBuffer[Name]]()
 
-    println(s"TEST JAN")
     // merge description and find superTypes
     for (d ← defs) {
-      println(s"def ${d.name}")
       d match {
         case e : SIDLUserType ⇒ {
-          println(s"try insert for UT ${e.name} (${e.subTypes})")
           for (n ← e.subTypes) {
             superTypes.getOrElseUpdate(n, new ArrayBuffer[Name]()).append(e.name)
           }
         }
         case e : SIDLInterface ⇒ {
-          println(s"try insert for I ${e.name} (${e.subTypes})")
           for (n ← e.subTypes) {
             superTypes.getOrElseUpdate(n, new ArrayBuffer[Name]()).append(e.name)
           }
