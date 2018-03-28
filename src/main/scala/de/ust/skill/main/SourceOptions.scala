@@ -7,7 +7,7 @@ package de.ust.skill.main
 
 import java.io.File
 
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
@@ -54,7 +54,7 @@ trait SourceOptions extends AbstractOptions {
 
       // add all user types to visitors, if the type '*' was selected
       val visitors = (if (1 == this.visitors.size && this.visitors.head.equals("*")) {
-        tc.getUsertypes.toSeq.toArray
+        tc.getUsertypes.asScala.toSeq.toArray
       } else
         this.visitors.map(_.toLowerCase).map(tc.get).collect { case t : UserType ⇒ t }.toArray)
 

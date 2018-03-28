@@ -66,6 +66,16 @@ public class Comment {
     }
 
     /**
+     * Merge 2 Comments
+     */
+    public Comment(Comment c1, Comment c2) {
+      this.text.addAll(c1.text);
+      this.text.addAll(c2.text);
+      this.tags.addAll(c1.tags);
+      this.tags.addAll(c2.tags);
+    }
+
+    /**
      * called by the parser
      */
     public void init(List<String> text) {

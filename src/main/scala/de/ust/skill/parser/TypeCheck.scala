@@ -10,6 +10,8 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
+import de.ust.skill.ir.Comment
+
 object TypeCheck {
   private def moreSpecific(l : UserType, r : UserType, parent : HashMap[Declaration, UserType]) : UserType = {
     // find the more specific type

@@ -21,11 +21,13 @@ object IRBuilder {
   /**
    * Turns the AST into IR.
    */
-  def buildIR(defs : ArrayBuffer[Declaration], verboseOutput : Boolean, keepSpecificationOrder : Boolean) : TypeContext = {
+  def buildIR(items : ArrayBuffer[Declaration], verboseOutput : Boolean, keepSpecificationOrder : Boolean) : TypeContext = {
     val tc = new ir.TypeContext
 
+    val defs = items.collect { case t : Declaration ⇒ t }
+
     // run the type checker to get information about the type hierarchy
-    val (baseType, parent, superInterfaces) = TypeCheck(defs)
+    val (baseType, parent, superInterfaces) = TypeCheck(items)
 
     // skillname ⇀ definition
     val definitionNames = new HashMap[Name, Declaration];

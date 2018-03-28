@@ -1,0 +1,14 @@
+#
+# Restrictions parser test, due to a strange parser bug.
+
+/* some documentation */
+Foo ⇒
+  @min(0) 
+  data : i64,
+
+  @max(10)
+  small : i8
+
+/* more documentation? */
+@singleton
+Foo;
