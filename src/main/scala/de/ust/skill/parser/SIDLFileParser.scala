@@ -33,18 +33,17 @@ import de.ust.skill.ir.restriction.StringDefaultRestriction
 import de.ust.skill.ir.restriction.UniqueRestriction
 import de.ust.skill.ir.restriction.DefaultRestriction
 
-
 /**
  * Converts a character stream into an AST using parser combinators.
  *
  * Grammar as explained in the paper.
  */
 final class SIDLFileParser(
-    _delimitWithUnderscore : Boolean,
-    _delimitWithCamelCase : Boolean)
-      extends AbstractFileParser[SIDLDefinition](
-        _delimitWithUnderscore,
-        _delimitWithCamelCase) {
+  _delimitWithUnderscore : Boolean,
+  _delimitWithCamelCase :  Boolean)
+  extends AbstractFileParser[SIDLDefinition](
+    _delimitWithUnderscore,
+    _delimitWithCamelCase) {
 
   /**
    * A file is a list of includes followed by a list of declarations.
@@ -57,40 +56,46 @@ final class SIDLFileParser(
    * Declarations add or modify user defined types.
    */
   private def declaration : Parser[SIDLDefinition] =
-    typedef ^^ { td => SIDLTypedef(td) } | enumType |
-    interfaceType | userType | addedFields
+    typedef ^^ { td ⇒ SIDLTypedef(td) } | enumType |
+      interfaceType | userType | addedFields
 
   /**
    * A declaration may start with a description, is followed by modifiers and a name, might have a super class.
    */
-  private def userType = typeDescription ~ id ~ ((";" ^^ { x => List.empty }) | ("::=" ~> rep1sep(id, "|"))) ^^ {
-    case d ~ n ~ s ⇒ new SIDLUserType(currentFile, d, n, s.sortBy(_.source))
-  }
+  private def userType =
+    typeDescription ~ id ~
+      ((";" ^^ { x ⇒ List.empty }) | ("::=" ~> rep1sep(id, "|") <~ opt(";"))) ^^ {
+        case d ~ n ~ s ⇒ new SIDLUserType(currentFile, d, n, s.sortBy(_.source))
+      }
 
   /**
    * Add fields to a user type.
    */
-  private def addedFields = opt(comment) ~ id ~ (("->"|"⇒") ~> rep1sep(field, ",")) ^^ {
-      case c ~ n ~ f ⇒ new AddedField(c.getOrElse(Comment.NoComment.get), n, f, currentFile)
+  private def addedFields = opt(comment) ~ id ~ (("->" | "⇒") ~> rep1sep(field, ",") <~ opt(";")) ^^ {
+    case c ~ n ~ f ⇒ new AddedField(c.getOrElse(Comment.NoComment.get), n, f, currentFile)
   }
 
   /**
    * creates an enum definition
    */
-  private def enumType = opt(comment) ~ ("enum" ~> id) ~ ((";" ^^ { x => List.empty }) | ("::=" ~> rep1sep(id, "|"))) ^^ {
-    case c ~ n ~ i ⇒
-      if (i.isEmpty)
-        throw ParseException(s"Enum $n requires a non-empty list of instances!")
-      else
-        new SIDLEnum(currentFile, c.getOrElse(Comment.NoComment.get), n, i)
-  }
+  private def enumType =
+    opt(comment) ~ ("enum" ~> id) ~
+      ((";" ^^ { x ⇒ List.empty }) | ("::=" ~> rep1sep(id, "|") <~ opt(";"))) ^^ {
+        case c ~ n ~ i ⇒
+          if (i.isEmpty)
+            throw ParseException(s"Enum $n requires a non-empty list of instances!")
+          else
+            new SIDLEnum(currentFile, c.getOrElse(Comment.NoComment.get), n, i)
+      }
 
   /**
    * creates an interface definition
    */
-  private def interfaceType = opt(comment) ~ ("interface" ~> id) ~ ((";" ^^ { x => List.empty }) | ("::=" ~> rep1sep(id, "|"))) ^^ {
-      case c ~ n ~ i ⇒ new SIDLInterface(currentFile, c.getOrElse(Comment.NoComment.get), n, i.sortBy(_.source))
-  }
+  private def interfaceType =
+    opt(comment) ~ ("interface" ~> id) ~
+      ((";" ^^ { x ⇒ List.empty }) | ("::=" ~> rep1sep(id, "|") <~ opt(";"))) ^^ {
+        case c ~ n ~ i ⇒ new SIDLInterface(currentFile, c.getOrElse(Comment.NoComment.get), n, i.sortBy(_.source))
+      }
 
   /**
    * A field is either a constant or a real data field.
@@ -120,8 +125,7 @@ final class SIDLFileParser(
   /**
    * The <b>main</b> function of the parser, which turn a string into a list of includes and declarations.
    */
-  override
-  def process(in : File) : (List[String], List[SIDLDefinition]) = {
+  override def process(in : File) : (List[String], List[SIDLDefinition]) = {
     currentFile = in;
     val lines = scala.io.Source.fromFile(in, "utf-8").getLines.mkString("\n")
 
