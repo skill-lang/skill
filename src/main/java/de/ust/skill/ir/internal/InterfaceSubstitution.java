@@ -18,6 +18,7 @@ import de.ust.skill.ir.Restriction;
 import de.ust.skill.ir.Type;
 import de.ust.skill.ir.TypeContext;
 import de.ust.skill.ir.UserType;
+import de.ust.skill.ir.WithInheritance;
 
 /**
  * Substitutes interfaces.
@@ -83,8 +84,8 @@ public class InterfaceSubstitution extends Substitution {
 				t.getCustomizations());
 	}
 
-	private static UserType findSuperType(UserType t) {
-		UserType rval = t.getSuperType();
+	private static UserType findSuperType(WithInheritance t) {
+		UserType rval = (UserType) t.getSuperType();
 		// search interfaces
 		if (null == rval)
 			for (InterfaceType i : t.getSuperInterfaces())

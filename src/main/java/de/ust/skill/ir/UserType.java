@@ -16,7 +16,7 @@ import java.util.List;
  * 
  * @author Timm Felden
  */
-final public class UserType extends Declaration implements WithFields {
+final public class UserType extends Declaration implements WithInheritance {
 
     /**
      * super type is the type above this type. base type is the base type of the
@@ -136,21 +136,34 @@ final public class UserType extends Declaration implements WithFields {
         Hint.checkDeclaration(this, this.hints);
     }
 
+    /* (non-Javadoc)
+     * @see de.ust.skill.ir.WithInheritance#getBaseType()
+     */
+    @Override
     public UserType getBaseType() {
         return baseType;
     }
 
+    /* (non-Javadoc)
+     * @see de.ust.skill.ir.WithInheritance#getSuperType()
+     */
+    @Override
     public UserType getSuperType() {
         return superType;
     }
 
+    /* (non-Javadoc)
+     * @see de.ust.skill.ir.WithInheritance#getSuperInterfaces()
+     */
+    @Override
     public List<InterfaceType> getSuperInterfaces() {
         return interfaces;
     }
 
-    /**
-     * @return a list of super interfaces and the super type, if exists
+    /* (non-Javadoc)
+     * @see de.ust.skill.ir.WithInheritance#getAllSuperTypes()
      */
+    @Override
     public List<Declaration> getAllSuperTypes() {
         ArrayList<Declaration> rval = new ArrayList<Declaration>();
         rval.addAll(interfaces);
@@ -160,9 +173,6 @@ final public class UserType extends Declaration implements WithFields {
         return rval;
     }
 
-    /**
-     * @return a list of types, that use this type as direct super type
-     */
     public List<UserType> getSubTypes() {
         return children;
     }

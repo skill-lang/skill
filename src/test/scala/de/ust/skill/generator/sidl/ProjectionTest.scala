@@ -3,7 +3,7 @@
 ** \__ \ ' <| | | |__     (c) 2013-18 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
-package de.ust.skill.generator.skill
+package de.ust.skill.generator.sidl
 
 import java.io.File
 
@@ -14,7 +14,7 @@ import org.scalatest.junit.JUnitRunner
 import de.ust.skill.main.CommandLine
 
 /**
- * Test the .skill-back-end and some projections.
+ * Test the .sidl-back-end and some projections.
  *
  * @author Timm Felden
  */
@@ -27,21 +27,21 @@ class ProjectionTest extends FunSuite {
     CommandLine.main(
       Array[String](
         "src/test/resources/skill/" + src,
-        "-L", "skill",
+        "-L", "sidl",
         "-p", out,
-        "-o", "testsuites/skill/" + out)
+        "-o", "testsuites/sidl/" + out)
         ++ args)
 
     // ensure that code can be parsed again
     CommandLine.main(Array[String](
       s"testsuites/skill/$out/specification.skill",
-      "-L", "skill",
+      "-L", "sidl",
       "-p", "tmp",
-      "-o", "testsuites/skill"))
+      "-o", "testsuites/sidl"))
   }
 
   // ordinary spec
-  for (f ← (new File("src/test/resources/skill")).listFiles if f.getName.endsWith(".skill"))
+  for (f ← (new File("src/test/resources/skill")).listFiles.sortBy(_.getName) if f.getName.endsWith(".skill"))
     test(s"${f.getName} - none")(check(f.getName, "none/" + f.getName.replace(".skill", "")))
 
   // ordinary spec without interfaces

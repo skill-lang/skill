@@ -7,7 +7,7 @@ package de.ust.skill.ir;
 
 import java.util.List;
 
-public interface WithFields {
+public interface WithFields extends ReferenceType {
 
 	/**
 	 * @return the fields added in this type

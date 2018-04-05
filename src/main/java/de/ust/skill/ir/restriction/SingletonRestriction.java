@@ -21,7 +21,7 @@ final public class SingletonRestriction extends Restriction {
 
 	@Override
 	public String toString() {
-		throw new NoSuchMethodError("not yet implemented");
+		return "@singleton";
 	}
 
 }

@@ -69,6 +69,15 @@ final class SIDLFileParser(
       }
 
   /**
+   * creates an interface definition
+   */
+  private def interfaceType =
+    opt(comment) ~ ("interface" ~> id) ~
+      ((";" ^^ { x ⇒ List.empty }) | ("::=" ~> rep1sep(id, "|") <~ opt(";"))) ^^ {
+        case c ~ n ~ i ⇒ new SIDLInterface(currentFile, c.getOrElse(Comment.NoComment.get), n, i.sortBy(_.source))
+      }
+
+  /**
    * Add fields to a user type.
    */
   private def addedFields = opt(comment) ~ id ~ (("->" | "⇒") ~> rep1sep(field, ",") <~ opt(";")) ^^ {
@@ -79,22 +88,12 @@ final class SIDLFileParser(
    * creates an enum definition
    */
   private def enumType =
-    opt(comment) ~ ("enum" ~> id) ~
-      ((";" ^^ { x ⇒ List.empty }) | ("::=" ~> rep1sep(id, "|") <~ opt(";"))) ^^ {
+    opt(comment) ~ ("enum" ~> id) ~ ("::=" ~> rep1sep(id, "|") <~ opt(";")) ^^ {
         case c ~ n ~ i ⇒
           if (i.isEmpty)
             throw ParseException(s"Enum $n requires a non-empty list of instances!")
           else
             new SIDLEnum(currentFile, c.getOrElse(Comment.NoComment.get), n, i)
-      }
-
-  /**
-   * creates an interface definition
-   */
-  private def interfaceType =
-    opt(comment) ~ ("interface" ~> id) ~
-      ((";" ^^ { x ⇒ List.empty }) | ("::=" ~> rep1sep(id, "|") <~ opt(";"))) ^^ {
-        case c ~ n ~ i ⇒ new SIDLInterface(currentFile, c.getOrElse(Comment.NoComment.get), n, i.sortBy(_.source))
       }
 
   /**
@@ -107,8 +106,7 @@ final class SIDLFileParser(
   /**
    * View an existing view as something else.
    */
-  //private def view(c : Comment) = ("view" ~> opt(id <~ ".")) ~ (id <~ "as") ~ fieldType ~! id ^^ {
-  private def view(c : Comment) = id ~ (":" ~> fieldType) ~ ("view" ~> id) ~ opt(":" ~> id) ^^ {
+  private def view(c : Comment) = id ~ (":" ~> fieldType) ~ ("view" ~> id) ~ opt("." ~> id) ^^ {
     case newName ~ newType ~ targetField ~ targetType ⇒ new View(c, targetType, targetField, newType, newName)
   }
 

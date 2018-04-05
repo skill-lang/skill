@@ -8,21 +8,28 @@ package de.ust.skill.ir.restriction;
 import de.ust.skill.ir.Restriction;
 
 /**
- * Instances of monotone classes can not be deleted or modified, once they have
- * been (de-)serialized.
- * 
  * @author Timm Felden
  */
-final public class MonotoneRestriction extends Restriction {
+final public class CodingRestriction extends Restriction {
 
-	@Override
-	public String getName() {
-		return "monotone";
+	private final String value;
+
+	public CodingRestriction(String value) {
+		this.value = value;
+	}
+
+	public String getValue() {
+		return this.value;
 	}
 
 	@Override
 	public String toString() {
-		return "@monotone";
+		return "@coding(\"" + value + "\")";
 	}
+
+    @Override
+    public String getName() {
+        return "coding";
+    }
 
 }

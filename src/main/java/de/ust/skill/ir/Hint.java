@@ -6,6 +6,7 @@
 package de.ust.skill.ir;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -58,7 +59,28 @@ final public class Hint {
     }
 
     private Hint(Type type) {
-        this(type, Collections.<Name> emptyList());
+        this(type, Collections.<Name>emptyList());
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("!");
+        sb.append(type.toString());
+        Iterator<Name> args = arguments.iterator();
+        if (type == Type.pragma) {
+            sb.append(' ').append(args.next());
+        }
+        if (args.hasNext()) {
+            sb.append('(');
+            do {
+                sb.append(args.next().camel());
+                if (args.hasNext())
+                    sb.append(", ");
+                else
+                    sb.append(')');
+            } while (args.hasNext());
+        }
+        return sb.toString();
     }
 
     public static Hint get(Type type, List<Name> args) throws ParseException {
@@ -104,7 +126,7 @@ final public class Hint {
      * @throws ParseException
      *             if there is any illegal usage of a hint
      */
-    static void checkDeclaration(final UserType d, Set<Hint> hints) throws ParseException {
+    static void checkDeclaration(final WithInheritance d, Set<Hint> hints) throws ParseException {
         if (hints.contains(distributed))
             throw new ParseException("Illegal hint !distributed on type declaration " + d);
         if (hints.contains(ondemand))

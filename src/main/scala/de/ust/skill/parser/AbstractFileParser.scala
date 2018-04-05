@@ -37,6 +37,7 @@ import de.ust.skill.ir.restriction.SingletonRestriction
 import de.ust.skill.ir.restriction.StringDefaultRestriction
 import de.ust.skill.ir.restriction.UniqueRestriction
 import de.ust.skill.ir.restriction.DefaultRestriction
+import de.ust.skill.ir.restriction.CodingRestriction
 
 /**
  * Converts a character stream into an AST using parser combinators.
@@ -113,7 +114,8 @@ abstract class AbstractFileParser[Decl](
     case lang ~ opts ~ t ~ n ⇒ new Customization(c, lang, opts, t, n)
   }
   protected def customFiledOptions : Parser[Map[Name, List[String]]] = (
-    rep(("!" ~> id ~ (opt(string) ^^ { s ⇒ s.toList } | ("(" ~> rep(string) <~ ")")))) ^^ {
+    rep("!" ~> id ~!
+      (("(" ~> rep(string) <~ ")") | opt(string) ^^ { s ⇒ s.toList })) ^^ {
       s ⇒ s.map { case n ~ args ⇒ n -> args }.toMap
     })
 
@@ -262,7 +264,7 @@ abstract class AbstractFileParser[Decl](
 
       case "range"                 ⇒ "(" ~> rangeRestrictionInnerArgument <~ ")"
 
-      case "coding"                ⇒ ("(" ~> string <~ ")") ^^ { _ ⇒ null }
+      case "coding"                ⇒ ("(" ~> string <~ ")") ^^ { s ⇒ new CodingRestriction(s) }
 
       case "constantlengthpointer" ⇒ opt("(" ~ ")") ^^ { _ ⇒ new ConstantLengthPointerRestriction }
 
