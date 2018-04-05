@@ -30,7 +30,7 @@ class EscapingTest extends FunSuite {
   val known = KnownGenerators.all.map(_.newInstance.getLanguageName)
 
   // if is a keyword in all real languages
-  for (l ← known if !Set[String]("skill", "statistics", "ecore").contains(l))
+  for (l ← known if !Set[String]("sidl", "skill", "statistics", "ecore").contains(l))
     test(s"${l} - none")(check(l, Array("if"), Array(true)))
 
   // some language keywords
