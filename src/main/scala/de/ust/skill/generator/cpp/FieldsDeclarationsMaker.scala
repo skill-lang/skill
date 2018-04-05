@@ -26,6 +26,7 @@ import de.ust.skill.ir.restriction.IntDefaultRestriction
 import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.NameDefaultRestriction
 import de.ust.skill.ir.restriction.NonNullRestriction
+import de.ust.skill.ir.restriction.CodingRestriction
 
 trait FieldDeclarationsMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -445,6 +446,10 @@ $checks
     case r : DefaultRestriction ⇒
       println("[c++] unhandled restriction: " + r.getName);
       s"new ::skill::restrictions::FieldDefault<${mapType(t)}>(0)"
+      
+    case r : CodingRestriction ⇒
+      println("[c++] unhandled restriction: " + r.getName);
+      s"nullptr"
   }
 
   private final def checkRestriction(t : Type, r : Restriction) : String = r match {
