@@ -27,6 +27,7 @@ import de.ust.skill.ir.restriction.IntRangeRestriction
 import de.ust.skill.ir.restriction.NameDefaultRestriction
 import de.ust.skill.ir.restriction.NonNullRestriction
 import de.ust.skill.ir.restriction.StringDefaultRestriction
+import de.ust.skill.ir.restriction.CodingRestriction
 
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -352,6 +353,8 @@ ${mapKnownReadType(f.getType)}
         r.getValue.mkString("\"", ":", "\"")
       }).asInstanceOf[SingletonStoragePool[_ <: de.ust.skill.common.scala.api.SkillObject, _ <: de.ust.skill.common.scala.api.SkillObject]].get)"
     case r : StringDefaultRestriction ⇒ s"""DefaultRestriction("${r.getValue}")"""
+    
+    case r : CodingRestriction ⇒ s"""Coding("${r.getValue}")"""
 
     case r                            ⇒ println("[scala] unhandled restriction: " + r.getName); ""
   }
