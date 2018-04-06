@@ -1,0 +1,674 @@
+/**
+ *  Scopes can contain scope Members. Names of scopes declared inside a scope
+ *  must be unique. Other entities can be overloaded.
+ */
+interface Scope ::= Function | Namespace | TypeDefinition
+Scope -> 
+
+  /**
+   *  contains all members by name that cannot be overloaded
+   *  @note  members that can be overloaded are stored in types; unique names
+   *  are guaranteed by the compiler
+   *  @note  the string is always the name of the member
+   *  @note  member map has to be built from parent relation
+   */
+  members : auto map<string, declaration>
+
+interface WithFormals ::= Function | TypeDefinition
+WithFormals -> 
+
+  /**
+   * 
+   *  @note  at this level, an implicit this parameter is explicit.
+   */
+  params : FormalParameter[]
+
+interface FunctionDeclaration ::= ExtFun | Function
+
+interface TypeDeclaration ::= ExtType | TypeAlias | TypeDefinition | TypeInstantiation
+
+/**
+ *  Instantiations are used to create functions and fields of correct type
+ */
+interface TypeAlias ::= ExtTypeAlias | TypeAliasDefinition
+
+/**
+ *  Instantiations are used to create functions and fields of correct type
+ */
+interface TypeInstantiation ::= ExtTypeInstance | StaticTypeInstance
+
+interface WithProperties ::= Function | TypeDefinition
+WithProperties -> 
+
+  /**
+   *  For now, properties are used like regular types with the contract that.
+   *  DTUs and TypeApplications refer to property declarations.
+   */
+  properties : set<Type>
+
+/**
+ *  The declaration of an entity.
+ */
+Declaration ::= Definition | ExtRef | FunctionDeclaration | TypeAlias | TypeDeclaration | TypeInstantiation | WithProperties
+
+/**
+ *  Entities defined in this package.
+ */
+Definition ::= FormalParameter | Namespace | Referable | Scope | VariableDeclaration | WithFormals
+Definition -> 
+
+  /**
+   *  The name of the entity.
+   */
+  name : string,
+
+  /**
+   *  The scope containing this entity
+   */
+  parent : Scope
+
+FormalParameter -> 
+  type : Type
+
+/**
+ *  Only subtypes of this can be referred from other packages.
+ */
+@abstract
+Referable ::= Field | Function | TypeDefinition
+Referable -> 
+
+  /**
+   *  This pointer is not null iff the reference originated from extern, i.e. an
+   *  ExtRef has to be inserted into this state instead.
+   */
+  origin : auto ExtRef
+
+/**
+ *  A field of a type.
+ */
+Field;
+Field -> 
+
+  /**
+   *  0 = type (aka static) 1 = class (aka in vtable) 2 = default (aka in
+   *  object)
+   *  @note  should be an enum.
+   */
+  kind : v64,
+  type : Type
+
+/**
+ *  a static scope unrelated to a type
+ */
+Namespace ::= RootScope
+Namespace -> 
+  parent : Namespace view Definition.parent
+
+/**
+ *  _root_
+ */
+@singleton
+RootScope;
+
+/**
+ *  the declaration of a variable inside of of a block
+ */
+VariableDeclaration;
+VariableDeclaration -> 
+
+  /**
+   *  begin of life of this variable
+   */
+  begin : BOL,
+
+  /**
+   *  true, iff the variable can be assigned only once
+   */
+  isVal : bool,
+  type : Type
+
+/**
+ *  Reference to another package.
+ *  @note  unused refs shall be removed before writing the file
+ */
+@abstract
+ExtRef ::= ExtFun | ExtType
+ExtRef -> 
+
+  /**
+   *  SKilL ID of the referred object in the respective file.
+   */
+  id : v64,
+  package : ExtPack,
+
+  /**
+   *  This field should be used to store a reference to the target of this.
+   */
+  target : auto Referable
+
+/**
+ *  References to types.
+ */
+ExtFun;
+ExtFun -> 
+
+  /**
+   * 
+   *  @see  Funciton.kind
+   */
+  kind : auto v64,
+  target : Function view ExtRef.target
+
+/**
+ *  References to types.
+ */
+ExtType ::= ExtTypeAlias | ExtTypeInstance
+ExtType -> 
+  target : TypeDefinition view ExtRef.target
+
+ExtTypeAlias -> 
+
+  /**
+   *  The type application is what the user wrote into the code. If a type alias
+   *  is used, it is always and immediately replaced by the instance of that
+   *  application. In consequence, a type alias refers to an alias free type
+   *  hierarchy even if its declaration was done over a chain of aliases. This
+   *  property is important to allow checking of type equivalence. A type alias
+   *  is identical to the instance of its target.
+   */
+  alias : auto TypeApplication,
+  target : TypeAliasDefinition view ExtType.target
+
+/**
+ *  Reference to type instances.
+ */
+ExtTypeInstance;
+ExtTypeInstance -> 
+
+  /**
+   *  The source of the instantiation.
+   *  @note  this is auto, as it points to a foreign state
+   */
+  source : auto TypeApplication,
+  target : StaticTypeInstance view ExtType.target
+
+/**
+ *  Operator or functions that can be used by applies.
+ */
+Function ::= Operator
+Function -> 
+
+  /**
+   *  0 = type (aka static) 1 = class (aka in vtable) 2 = default (aka in
+   *  object)
+   *  @note  should be an enum.
+   */
+  kind : v64,
+  realization : FunctionRealization,
+  type : FunctionType,
+
+  /**
+   *  Only static types can hold functions.
+   */
+  parent : StaticType view Definition.parent,
+  origin : ExtFun view Referable.origin
+
+/**
+ *  Operators have precedence and associativity properties. As these properties
+ *  are commonly used, they are represented by fields for fast access.
+ */
+Operator;
+Operator -> 
+
+  /**
+   *  true for unary postfix operators
+   *  @note  cannot be moved into the type hierarchy because knowing that an
+   *  operator is a unary happens too late
+   */
+  isPostfix : bool,
+
+  /**
+   *  the applicable operation with highest precedence is bound first
+   */
+  precedence : v64,
+
+  /**
+   *  true iff right operation precedes
+   */
+  rightAssociative : bool
+
+/**
+ *  Definition of a type-like construct such as a static type or a property.
+ */
+TypeDefinition ::= PropertyDeclaration | StaticType | TypeAliasDefinition
+TypeDefinition -> 
+  parent : Namespace view Definition.parent,
+  origin : ExtType view Referable.origin
+
+
+
+/**
+ *  Usage of a type that is declared in this file by name. A common form and
+ *  easy to handle.
+ */
+StaticType ::= StaticTypeInstance
+StaticType -> 
+
+  /**
+   *  true, iff bodies of members are elaborated and can be instantiated.
+   *  @note  bodies of abstract methods are always elaborated
+   */
+  elaboratedBodies : auto bool,
+
+  /**
+   *  true, iff members are elaborated and can be instantiated.
+   *  @note  from the perspective of elaboration, super type declarations and
+   *  properties are also members
+   */
+  elaboratedMembers : auto bool,
+  fields : Field[],
+  functions : Function[],
+
+  /**
+   *  Overloaded members of this type.
+   *  @note  the string and signature are those of the member
+   *  @note  map has to be built from typeMembers
+   */
+  overloadedMembers : auto map<string, functiontype, function>,
+
+  /**
+   *  the super type of this type, null only for tyr.lang.any
+   */
+  superType : TypeDeclaration
+
+/**
+ *  Instantiation of a parameterized static type.
+ */
+StaticTypeInstance;
+StaticTypeInstance -> 
+
+  /**
+   *  The source of the instantiation.
+   */
+  source : TypeApplication
+
+/**
+ *  A usable type name that renames something that is at least a static type.
+ *  @note  e.g. int in "type int := integer[32]"
+ */
+TypeAliasDefinition;
+TypeAliasDefinition -> 
+
+  /**
+   *  The type application is what the user wrote into the code. If a type alias
+   *  is used, it is always and immediately replaced by the instance of that
+   *  application. In consequence, a type alias refers to an alias free type
+   *  hierarchy even if its declaration was done over a chain of aliases. This
+   *  property is important to allow checking of type equivalence. A type alias
+   *  is identical to the instance of its target.
+   */
+  alias : TypeApplication
+
+@abstract
+Expression ::= Application | Assignment | Block | BOL | BranchingExpression | ConditionalBranch | DirectUsage | Goto | LiteralExpression | MemberAccess | Phi | Type
+Expression -> 
+
+  /**
+   *  the cached result type of this expression
+   *  @note  this property is serialized because it is used by the back-end and
+   *  re-evaluation is too complicated
+   *  @note  this field can be null, if the type has never been used.
+   */
+  type : Type
+
+/**
+ *  Applies a function to the result of other expressions.
+ */
+Application;
+Application -> 
+  operands : Expression[],
+
+  /**
+   * 
+   *  @note  target can be function, operator or an ExtRef referring the first
+   *  two
+   */
+  target : Declaration
+
+/**
+ *  Assign a value to a location.
+ *  @note  the type of this expression is that of value, because it is more
+ *  specific
+ */
+Assignment;
+Assignment -> 
+  target : Expression,
+  value : Expression
+
+/**
+ *  A block containing a sequence of expressions. A block ends with a single
+ *  branching expression. Also, one cannot jump into the middle of a block.
+ *  @note  Control flow expressions are lowered by the front-end.
+ *  @note  The last statement of a well-formed block is always a branching
+ *  expression.
+ *  @note  Expressions are evaluated in order of appearance inside of that
+ *  block. If an expression is reachable over multiple paths, it will be
+ *  evaluated just once.
+ *  @todo  check that number and order of evaluations is correct
+ *  @todo  whatever I wrote on evaluation of expressions is untested;)
+ *  @todo  blocks can be embedded into the body of another block; this might be
+ *  an error
+ */
+Block;
+Block -> 
+
+  /**
+   *  Expressions in a body may hold other expressions that are not direct
+   *  children of the block. For instance, expressions evaluated by
+   */
+  body : Expression[],
+
+  /**
+   *  all gotos that point to the block executed after execution of this block
+   */
+  nextList : auto set<Goto>,
+
+  /**
+   *  a list of expressions that together yield the result of this block
+   *  @note  results are not necessarily inside of this block
+   *  @note  The type of the block is the intersection of its results or void if
+   *  no result is present.
+   */
+  result : auto set<Expression>
+
+/**
+ *  Begin of life of a stack object
+ *  @todo  EOL, links from declaration to BOL/EOLs
+ */
+BOL;
+BOL -> 
+
+  /**
+   *  Initial value of that stack object. if null, the object will be
+   *  zero-initialized.
+   */
+  init : Expression,
+  target : VariableDeclaration
+
+/**
+ *  The implicit branching of high-level control flow structures is removed at
+ *  this level. Branching expressions make control flow handling explicit.
+ */
+@abstract
+BranchingExpression ::= ReturnExpression | ReturnVoid
+
+/**
+ *  Abort control flow of the current function and return to caller.
+ *  @note  the type of a return expression is always NoReturn
+ */
+ReturnExpression;
+ReturnExpression -> 
+
+  /**
+   *  The return value is that of the result.
+   */
+  result : Expression
+
+/**
+ *  Abort control flow of the current function and return to caller.
+ *  @note  the type of a return expression is always NoReturn
+ */
+ReturnVoid;
+
+/**
+ *  Exit the current block conditionally and continue at target.
+ *  @note  target can be in the middle of a block; that's ok at this stage
+ */
+ConditionalBranch;
+ConditionalBranch -> 
+  cond : Expression,
+
+  /**
+   *  continue here if [[cond]] == false
+   */
+  fb : Block,
+
+  /**
+   *  continue here if [[cond]] == true
+   */
+  tb : Block
+
+/**
+ *  Direct usage of a declaration in this package.
+ *  @todo  static semantics of tyr should guarantee that dynamic access is safe
+ *  :-]
+ */
+DirectUsage;
+DirectUsage -> 
+  target : Declaration
+
+/**
+ *  Exit the current block unconditionally and continue at target.
+ *  @note  target can be in the middle of a block; that's ok at this stage
+ */
+Goto;
+Goto -> 
+  target : Block
+
+@abstract
+LiteralExpression ::= BoolLiteral | DoubleLiteral | FloatLiteral | IntLiteral | StringLiteral
+
+BoolLiteral -> 
+  value : bool
+
+DoubleLiteral -> 
+  value : f64
+
+FloatLiteral -> 
+  value : f32
+
+/**
+ *  This literal represents all integer types.
+ */
+IntLiteral;
+IntLiteral -> 
+  value : v64
+
+StringLiteral -> 
+  value : string
+
+/**
+ *  Access the member of a target expression.
+ *  @note  "foo".print() will result in a call of print not involving a member
+ *  access
+ */
+MemberAccess;
+MemberAccess -> 
+  member : Field,
+  target : Expression
+
+/**
+ *  An expression that returns one of its targets depending on control flow. Phi
+ *  nodes exist to simplify IR code generation. Nonetheless, IR is not in SSA
+ *  form.
+ *  @note  Phi nodes of type Any are an error, as they do not have a physical
+ *  representation. This rule does not hold for blocks, as they can be
+ *  represented if the result is not used.
+ */
+Phi;
+Phi -> 
+
+  /**
+   *  The last result on dynamic control flow will be returned. Hence, the type
+   *  of this node is the intersection of all target types.
+   */
+  targets : Expression[]
+
+/**
+ *  The usage of a type. Either an expression, or a direct usage.
+ *  @note  This special form of expression is required because types are values.
+ *  Also, we need often can and need to know the type resulting from a type
+ *  expression.
+ *  @note  Types usages will not necessarily have the type field set, because
+ *  setting this field correctly can lead to infinite blowup.
+ *  @todo  If function types are implemented in tyr.lang, typing shall be
+ *  refactored such that Type has a field "TypeDeclaration target". This will
+ *  simplify the compiler a lot. Also, FunctionType will become a subtype of
+ *  TypeApplication and type parameters will be a view of regular parameters.
+ */
+Type ::= FunctionType | TypeApplication
+
+/**
+ *  Every type member has a signature. That way, fields and methods can be used
+ *  in a more uniform way. Signatures can be unified in the file. They do not
+ *  contain argument names, because arguments are named by position.
+ *  @note  at this level, an implicit this parameter is explicit.
+ */
+FunctionType;
+FunctionType -> 
+
+  /**
+   * 
+   *  @note  at this level, an implicit this parameter is explicit.
+   */
+  params : Type[],
+  result : Type
+
+/**
+ *  Application on types. Types are not treated as functions, as they have very
+ *  special application rules. For instance, equality of the result can be
+ *  decided without evaluation. As the result is usually unique and unnamed, the
+ *  application is also the representation of the result.
+ */
+TypeApplication;
+TypeApplication -> 
+
+  /**
+   *  Points to the instantiation of the target type if there is any.
+   *  @note  Instantiation is lazy, because eager instantiation could result in
+   *  infinite blowup. Also, instantiation will basically create a copy of the
+   *  type which is quite expensive compared to an unevaluated type application.
+   *  @note  Properties will not be instantiated, because their implementation
+   *  wont change.
+   *  @note  If the target is instantiated with its own formal parameters, the
+   *  instance shall point to the same type as target. This will happen
+   *  regularly while type checking the body of that type. This holds also for
+   *  types without formal parameters.
+   */
+  instance : TypeDeclaration,
+
+  /**
+   *  Values used to instantiate target.
+   *  @note  defacto, these must be compile time values.
+   */
+  params : Expression[],
+
+  /**
+   *  The target is a type declaration, because there is no way to create higher
+   *  order type applications for now. Even when compile time type manipulation
+   *  will have been implemented, it is doubtful that anonymous parameterized
+   *  types can be created.
+   *  @note  this design decision is important to be able to get the set of
+   *  applicable operations with reasonable complexity
+   */
+  target : TypeDeclaration
+
+/**
+ *  External tyr package, that this one depends on.
+ */
+ExtPack;
+ExtPack -> 
+
+  /**
+   *  key as seen when this file was written; if the key is different, then the
+   *  package needs to be recompiled.
+   */
+  key : i64,
+
+  /**
+   *  name separated by dots to achieve some compression
+   */
+  name : string[]
+
+/**
+ *  Unifies file properties.
+ */
+File;
+File -> 
+  name : string,
+
+  /**
+   *  null iff package root directory
+   */
+  parent : File
+
+@abstract
+FunctionRealization ::= AbstractFunction | FunctionAssignment | FunctionBody
+
+/**
+ *  Abstract functions are functions without implementations. Native functions
+ *  are also realized by abstract functions.
+ */
+@singleton
+AbstractFunction;
+
+FunctionAssignment -> 
+  source : FunctionDeclaration
+
+FunctionBody -> 
+  body : Block
+
+/**
+ *  A location inside a file.
+ */
+Location;
+Location -> 
+  column : v64,
+  file : File,
+  line : v64
+
+/**
+ *  tyr comes in packages
+ *  @author  Timm Felden
+ */
+@singleton
+Package;
+Package -> 
+
+  /**
+   *  This constant guards the file format; string id is used elsewhere as well.
+   */
+  ID : i8,
+
+  /**
+   *  The key of this package guarding recompilations.
+   */
+  key : i64,
+
+  /**
+   *  name separated by dots to achieve some compression
+   */
+  name : string[]
+
+/**
+ *  Tests behave like methods except that they are not referred by their types.
+ *  The direction of reference is reversed, so that they can be stripped from
+ *  library files easily.
+ */
+Test;
+Test -> 
+
+  /**
+   *  The test code to be executed.
+   */
+  body : Block,
+
+  /**
+   *  The name of the entity.
+   */
+  name : string,
+
+  /**
+   *  The type that contains this test.
+   */
+  target : StaticType
