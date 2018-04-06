@@ -19,6 +19,7 @@ trait StringKeeperMaker extends GeneralOutputMaker {
 
     //includes package
     out.write(s"""#include <skill/api/String.h>
+#include <skill/internal/StringPool.h>
 
 ${packageParts.mkString("namespace ", " {\nnamespace ", " {")}
 

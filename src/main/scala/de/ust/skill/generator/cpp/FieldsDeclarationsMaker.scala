@@ -117,7 +117,7 @@ $fieldName::${knownField(f)}(
         ::skill::internal::AbstractStoragePool *const owner)
         : FieldDeclaration(type, name, index, owner) {
 ${
-            (for (r ← f.getRestrictions) yield s"""
+            (for (r ← f.getRestrictions if !r.isInstanceOf[CodingRestriction]) yield s"""
     addRestriction(${makeRestriction(f.getType, r)});""").mkString
           }
 }
@@ -446,10 +446,14 @@ $checks
     case r : DefaultRestriction ⇒
       println("[c++] unhandled restriction: " + r.getName);
       s"new ::skill::restrictions::FieldDefault<${mapType(t)}>(0)"
-      
+
     case r : CodingRestriction ⇒
-      println("[c++] unhandled restriction: " + r.getName);
-      s"nullptr"
+      // @note this case is filtered, as known restrictions can only be added as part of file finalization  
+      ???
+//      println("[c++] unhandled restriction: " + r.getName);
+//      s"""new ::skill::restrictions::Coding(
+//            (($packageName::StringKeeper *) (
+//                    (::skill::internal::StringPool *) owner->getOwner()->strings)->keeper)->${escaped(r.getValue)})"""
   }
 
   private final def checkRestriction(t : Type, r : Restriction) : String = r match {

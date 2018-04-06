@@ -15,6 +15,7 @@ import de.ust.skill.ir.LanguageCustomization
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
+import de.ust.skill.ir.restriction.CodingRestriction
 
 /**
  * The parent class for all output makers.
@@ -118,10 +119,17 @@ trait GeneralOutputMaker extends Generator {
 
   /**
    * all string literals used in type and field names
+   *
+   * @note first set are strings whose representations exist as type names
+   * @note second set are strings that will be created and unified by the skill
+   * file.
    */
   protected lazy val allStrings = {
     val types = IR.map(_.getSkillName).toSet
-    val fields = IR.flatMap(_.getFields).map(_.getSkillName).toSet -- types
+    val fields =
+      IR.flatMap(_.getFields).map(_.getSkillName).toSet ++
+        IR.flatMap(_.getFields).flatMap(_.getRestrictions).collect { case f : CodingRestriction ⇒ f }.map(_.getValue).toSet --
+        types
 
     (types, fields)
   }
