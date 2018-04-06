@@ -3,7 +3,6 @@ package de.ust.skill.parser
 import java.io.File
 import de.ust.skill.ir.Comment
 
-// TODO merge decls of Description
 
 abstract class SIDLDefinition(val name: Name)
 

@@ -7,41 +7,16 @@ package de.ust.skill.parser
 
 import java.io.File
 import java.io.FileNotFoundException
-import java.lang.Long
 import java.nio.file.FileSystems
 
-import scala.annotation.migration
-import scala.annotation.tailrec
-import scala.collection.JavaConversions.bufferAsJavaList
-import scala.collection.JavaConversions.seqAsJavaList
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-import scala.collection.mutable.ListBuffer
-import scala.util.parsing.combinator.RegexParsers
 
 import de.ust.skill.ir
 import de.ust.skill.ir.Comment
-import de.ust.skill.ir.Hint
-import de.ust.skill.ir.Restriction
 import de.ust.skill.ir.TypeContext
-import de.ust.skill.ir.restriction.AbstractRestriction
-import de.ust.skill.ir.restriction.ConstantLengthPointerRestriction
-import de.ust.skill.ir.restriction.FloatDefaultRestriction
-import de.ust.skill.ir.restriction.FloatRangeRestriction
-import de.ust.skill.ir.restriction.IntDefaultRestriction
-import de.ust.skill.ir.restriction.IntRangeRestriction
-import de.ust.skill.ir.restriction.MonotoneRestriction
-import de.ust.skill.ir.restriction.NameDefaultRestriction
-import de.ust.skill.ir.restriction.NonNullRestriction
-import de.ust.skill.ir.restriction.SingletonRestriction
-import de.ust.skill.ir.restriction.StringDefaultRestriction
-import de.ust.skill.ir.restriction.UniqueRestriction
-import de.ust.skill.ir.restriction.DefaultRestriction
-
-// TODO AbstractParser und IdlParser
-// TODO merging passiert in IdlParser
-// TODO CommandLine anpassen hoere auf .sidl dateien
+import de.ust.skill.parser.Description
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -208,6 +183,13 @@ final class SIDLParser(
       } else {
         definitionNames.put(d.name, d)
       }
+    }
+
+    // add declarations for types only mentioned in subtype specifications
+    for ((n, s) ← superTypes) {
+      definitionNames.getOrElseUpdate(
+        n,
+        SIDLUserType(null, new Description(Comment.NoComment.get, List.empty, List.empty), n, List.empty))
     }
 
     val astNames = new HashMap[Name, Declaration];

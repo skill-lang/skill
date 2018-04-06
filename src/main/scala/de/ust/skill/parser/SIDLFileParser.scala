@@ -89,12 +89,12 @@ final class SIDLFileParser(
    */
   private def enumType =
     opt(comment) ~ ("enum" ~> id) ~ ("::=" ~> rep1sep(id, "|") <~ opt(";")) ^^ {
-        case c ~ n ~ i ⇒
-          if (i.isEmpty)
-            throw ParseException(s"Enum $n requires a non-empty list of instances!")
-          else
-            new SIDLEnum(currentFile, c.getOrElse(Comment.NoComment.get), n, i)
-      }
+      case c ~ n ~ i ⇒
+        if (i.isEmpty)
+          throw ParseException(s"Enum $n requires a non-empty list of instances!")
+        else
+          new SIDLEnum(currentFile, c.getOrElse(Comment.NoComment.get), n, i)
+    }
 
   /**
    * A field is either a constant or a real data field.
@@ -106,14 +106,14 @@ final class SIDLFileParser(
   /**
    * View an existing view as something else.
    */
-  private def view(c : Comment) = id ~ (":" ~> fieldType) ~ ("view" ~> id) ~ opt("." ~> id) ^^ {
-    case newName ~ newType ~ targetField ~ targetType ⇒ new View(c, targetType, targetField, newType, newName)
+  private def view(c : Comment) = id ~ (":" ~> fieldType) ~ ("view" ~> opt(id <~ ".")) ~ id ^^ {
+    case newName ~ newType ~ targetType ~ targetField ⇒ new View(c, targetType, targetField, newType, newName)
   }
 
   /**
    * Constants a recognized by the keyword "const" and are required to have a value.
    */
-  private def constant = id ~ ("=" ~> int <~ ":") ~ ("const" ~> fieldType) ^^ { case n ~ v ~ t ⇒ new Constant(t, n, v) }
+  private def constant = id ~ ("=" ~> int <~ ":") ~! ("const" ~> fieldType) ^^ { case n ~ v ~ t ⇒ new Constant(t, n, v) }
 
   /**
    * Data may be marked to be auto and will therefore only be present at runtime.

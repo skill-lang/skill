@@ -74,7 +74,7 @@ ${
       (
         for (
           t ← IR.getInterfaces.asScala ++ IR.getUsertypes.asScala;
-          subs = subtypes.getOrElse(t, HashSet.empty);
+          subs = subtypes.getOrElse(t, HashSet.empty).toArray.sortBy(_.getName);
           keyword = if (t.isInstanceOf[InterfaceType]) "interface " else "";
           fields = mkFields(t)
         ) yield {
@@ -125,7 +125,12 @@ ${
       if (!prefix.isEmpty()) prefix = "\n  " + prefix
       else prefix = "  "
 
-      s"""
+      if (f.isConstant()) s"""
+${prefix}${f.getName.camel} = ${f.constantValue()} : const ${
+        if (f.isAuto()) "auto "
+        else ""
+      }${mapType(f.getType)}"""
+      else s"""
 ${prefix}${f.getName.camel} : ${
         if (f.isAuto()) "auto "
         else ""
