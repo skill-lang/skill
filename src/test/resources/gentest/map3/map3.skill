@@ -1,0 +1,6 @@
+#! map3
+
+L {}
+T {
+  map<string, L, string> ref;
+}
