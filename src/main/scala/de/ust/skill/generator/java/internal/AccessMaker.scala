@@ -106,7 +106,7 @@ ${
     @Override
     public void addKnownField(
         String name,
-        de.ust.skill.common.java.internal.fieldTypes.StringType string,
+        de.ust.skill.common.java.internal.StringPool string,
         de.ust.skill.common.java.internal.fieldTypes.Annotation annotation) {
 
         switch (name) {${

@@ -46,10 +46,9 @@ public static final class SkillState extends de.ust.skill.common.java.internal.S
                 // and can not be done in place
                 StringPool strings = new StringPool(null);
                 ArrayList<StoragePool<?, ?>> types = new ArrayList<>(${IR.size});
-                StringType stringType = new StringType(strings);
                 Annotation annotation = new Annotation(types);
 
-                return new SkillState(new HashMap<>(), strings, stringType, annotation,
+                return new SkillState(new HashMap<>(), strings, annotation,
                         types, FileInputStream.open(path, false), actualMode.close);
 
             case Read:
@@ -67,9 +66,9 @@ public static final class SkillState extends de.ust.skill.common.java.internal.S
         }
     }
 
-    public SkillState(HashMap<String, StoragePool<?, ?>> poolByName, StringPool strings, StringType stringType,
+    public SkillState(HashMap<String, StoragePool<?, ?>> poolByName, StringPool strings,
             Annotation annotationType, ArrayList<StoragePool<?, ?>> types, FileInputStream in, Mode mode) {
-        super(strings, in.path(), mode, types, poolByName, stringType, annotationType);
+        super(strings, in.path(), mode, types, poolByName, annotationType);
 
         try {
             StoragePool<?, ?> p;${

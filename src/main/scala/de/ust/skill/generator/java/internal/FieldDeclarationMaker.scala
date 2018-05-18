@@ -165,7 +165,7 @@ ${
         if (readHack) """
         final StringPool t = (StringPool) owner.owner().Strings();"""
         else """
-        final StringType t = (StringType) type;"""
+        final StringPool t = (StringPool) type;"""
 
       case _ ⇒ ""
     }
