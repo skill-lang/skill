@@ -108,6 +108,7 @@ final public class Typedef extends Declaration {
         return false;
     }
 
+    @Override
     public Collection<Hint> getHints() {
         return hints;
     }

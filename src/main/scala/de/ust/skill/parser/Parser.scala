@@ -14,9 +14,6 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
 import de.ust.skill.ir
-import de.ust.skill.ir.Comment
-import de.ust.skill.ir.TypeContext
-import de.ust.skill.parser.Description
 
 /**
  * The Parser does everything required for turning a set of files into a list of definitions.
@@ -90,7 +87,7 @@ object Parser {
     delimitWithUnderscore :  Boolean = true,
     delimitWithCamelCase :   Boolean = true,
     verboseOutput :          Boolean = false
-  ) : TypeContext = {
+  ) : ir.TypeContext = {
 
     val ast = if (input.getName.endsWith(".skill")) {
       new Parser(delimitWithUnderscore, delimitWithCamelCase, verboseOutput).parseAll(input)
@@ -125,8 +122,8 @@ final class SIDLParser(
     combine(rval)
   }
 
-  private def mergeComments(c1 : Comment, c2 : Comment) = {
-    new Comment(c1, c2)
+  private def mergeComments(c1 : ir.Comment, c2 : ir.Comment) = {
+    new ir.Comment(c1, c2)
   }
 
   private def mergeDescriptions(d1 : Description, d2 : Description) = {
@@ -197,7 +194,7 @@ final class SIDLParser(
     for ((n, s) ← superTypes) {
       definitionNames.getOrElseUpdate(
         n,
-        SIDLUserType(null, new Description(Comment.NoComment.get, List.empty, List.empty), n, List.empty)
+        SIDLUserType(null, new Description(ir.Comment.NoComment.get, List.empty, List.empty), n, List.empty)
       )
     }
 
@@ -245,7 +242,7 @@ final class SIDLParser(
         // create a UserType if the type was not declared otherwise
         new UserType(
           f.file,
-          new Description(Comment.NoComment.get, List.empty, List.empty),
+          new Description(ir.Comment.NoComment.get, List.empty, List.empty),
           f.name,
           superTypes.getOrElseUpdate(f.name, ArrayBuffer[Name]()).to,
           List.empty

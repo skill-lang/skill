@@ -19,8 +19,8 @@ import java.util.List;
 final public class UserType extends Declaration implements WithInheritance {
 
     /**
-     * super type is the type above this type. base type is the base type of the
-     * formed type tree. This can even be <i>this</i>.
+     * super type is the type above this type. base type is the base type of the formed type tree. This can even be
+     * <i>this</i>.
      */
     private UserType superType = null, baseType = null;
     private final List<UserType> children = new ArrayList<>();
@@ -35,10 +35,8 @@ final public class UserType extends Declaration implements WithInheritance {
      * Creates a declaration of type name.
      * 
      * @throws ParseException
-     *             thrown, if the declaration to be constructed is in fact
-     *             illegal
-     * @note the declaration has to be completed, i.e. it has to be evaluated in
-     *       pre-order over the type hierarchy.
+     *             thrown, if the declaration to be constructed is in fact illegal
+     * @note the declaration has to be completed, i.e. it has to be evaluated in pre-order over the type hierarchy.
      */
     private UserType(Name name, Comment comment, Collection<Restriction> restrictions, Collection<Hint> hints)
             throws ParseException {
@@ -79,43 +77,18 @@ final public class UserType extends Declaration implements WithInheritance {
     }
 
     /**
-     * Initializes the type declaration with data obtained from parsing the
-     * declarations body.
+     * Initializes the type declaration with data obtained from parsing the declarations body.
      * 
      * @param SuperType
      * @param Fields
      * @param interfaces
      * @throws ParseException
-     *             thrown if the declaration is illegal, e.g. because it
-     *             contains illegal hints
+     *             thrown if the declaration is illegal, e.g. because it contains illegal hints
      */
     public void initialize(UserType SuperType, List<InterfaceType> interfaces, List<Field> Fields, List<View> views,
             List<LanguageCustomization> customizations) throws ParseException {
         assert !isInitialized() : "multiple initialization";
         assert null != Fields : "no fields supplied";
-        // check for duplicate fields
-        {
-            HashSet<Name> names = new HashSet<>();
-            for (FieldLike f : Fields) {
-                names.add(f.name);
-                f.setDeclaredIn(this);
-            }
-            for (FieldLike f : views) {
-                f.setDeclaredIn(this);
-            }
-            if (names.size() != Fields.size()) {
-                HashSet<Name> duplicates = new HashSet<>();
-                HashSet<Name> seen = new HashSet<>();
-                for (FieldLike f : Fields) {
-                    if (!seen.contains(f.name))
-                        seen.add(f.name);
-                    else
-                        duplicates.add(f.name);
-                }
-                throw new ParseException("Type " + name + " contains duplicate field definitions: "
-                        + Arrays.toString(seen.toArray(new Name[seen.size()])));
-            }
-        }
 
         if (null != SuperType) {
             assert null != SuperType.baseType : "types have to be initialized in pre-order";
@@ -128,6 +101,38 @@ final public class UserType extends Declaration implements WithInheritance {
         }
         this.interfaces = interfaces;
 
+        // check for duplicate fields
+        {
+            HashSet<Name> duplicates = new HashSet<>();
+            HashSet<Name> seen = new HashSet<>();
+            // add all field names visible from super types
+            for (Declaration t : getAllSuperTypes()) {
+                if (t instanceof WithFields) {
+                    for (FieldLike f : ((WithFields) t).getAllFields()) {
+                        seen.add(f.name);
+                    }
+                }
+            }
+
+            HashSet<Name> names = new HashSet<>();
+            for (FieldLike f : Fields) {
+                names.add(f.name);
+                if (!seen.contains(f.name))
+                    seen.add(f.name);
+                else
+                    duplicates.add(f.name);
+
+                f.setDeclaredIn(this);
+            }
+            for (FieldLike f : views) {
+                f.setDeclaredIn(this);
+            }
+            if (!duplicates.isEmpty()) {
+                throw new ParseException("Type " + name + " contains duplicate field definitions: "
+                        + Arrays.toString(duplicates.toArray(new Name[duplicates.size()])));
+            }
+        }
+
         this.fields = Fields;
         this.views = views;
         this.customizations = customizations;
@@ -136,7 +141,8 @@ final public class UserType extends Declaration implements WithInheritance {
         Hint.checkDeclaration(this, this.hints);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see de.ust.skill.ir.WithInheritance#getBaseType()
      */
     @Override
@@ -144,7 +150,8 @@ final public class UserType extends Declaration implements WithInheritance {
         return baseType;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see de.ust.skill.ir.WithInheritance#getSuperType()
      */
     @Override
@@ -152,7 +159,8 @@ final public class UserType extends Declaration implements WithInheritance {
         return superType;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see de.ust.skill.ir.WithInheritance#getSuperInterfaces()
      */
     @Override
@@ -160,7 +168,8 @@ final public class UserType extends Declaration implements WithInheritance {
         return interfaces;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see de.ust.skill.ir.WithInheritance#getAllSuperTypes()
      */
     @Override
@@ -179,7 +188,6 @@ final public class UserType extends Declaration implements WithInheritance {
 
     /*
      * (non-Javadoc)
-     * 
      * @see de.ust.skill.ir.WithFields#getFields()
      */
     @Override
@@ -189,9 +197,9 @@ final public class UserType extends Declaration implements WithInheritance {
     }
 
     /**
-     * @return all fields of an instance of the type, including fields declared
-     *         in super types
+     * @return all fields of an instance of the type, including fields declared in super types
      */
+    @Override
     public List<Field> getAllFields() {
         assert isInitialized() : "you can not obtain fields of type " + name + " because it is not initialized";
         List<Field> rval = new ArrayList<>(fields);
@@ -213,8 +221,8 @@ final public class UserType extends Declaration implements WithInheritance {
     private int distributedCached = 0;
 
     /**
-     * cached query for distributed in any field. This is required to create a
-     * correct API in the presence of distributed fields.
+     * cached query for distributed in any field. This is required to create a correct API in the presence of
+     * distributed fields.
      * 
      * @return true, if the type or a super type has a distributed field
      */

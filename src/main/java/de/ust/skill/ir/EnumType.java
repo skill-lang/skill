@@ -27,10 +27,8 @@ final public class EnumType extends Declaration implements WithFields {
      * Creates a declaration of type name.
      * 
      * @throws ParseException
-     *             thrown, if the declaration to be constructed is in fact
-     *             illegal
-     * @note the declaration has to be completed, i.e. it has to be evaluated in
-     *       pre-order over the type hierarchy.
+     *             thrown, if the declaration to be constructed is in fact illegal
+     * @note the declaration has to be completed, i.e. it has to be evaluated in pre-order over the type hierarchy.
      */
     private EnumType(Name name, Comment comment, List<Name> instances) throws ParseException {
         super(name, comment, Collections.<Restriction>emptyList(), Collections.<Hint>emptyList());
@@ -71,14 +69,12 @@ final public class EnumType extends Declaration implements WithFields {
     }
 
     /**
-     * Initializes the type declaration with data obtained from parsing the
-     * declarations body.
+     * Initializes the type declaration with data obtained from parsing the declarations body.
      * 
      * @param SuperType
      * @param Fields
      * @throws ParseException
-     *             thrown if the declaration is illegal, e.g. because it
-     *             contains illegal hints
+     *             thrown if the declaration is illegal, e.g. because it contains illegal hints
      */
     public void initialize(List<Field> Fields, List<View> views, List<LanguageCustomization> customizations)
             throws ParseException {
@@ -110,6 +106,11 @@ final public class EnumType extends Declaration implements WithFields {
     public List<Field> getFields() {
         assert isInitialized() : this.name + " has not been initialized";
         return fields;
+    }
+
+    @Override
+    public List<Field> getAllFields() {
+        return getFields();
     }
 
     /**

@@ -1,0 +1,13 @@
+A {
+  A a;
+}
+
+B : A {
+  /** 
+   * This definition is illegal as of V1.0 §3.6
+   *
+   * @note this definition is legal according to TR13§3.7
+   furthermore, this will result in a field differnt to A.a.
+   */
+  B a;
+}

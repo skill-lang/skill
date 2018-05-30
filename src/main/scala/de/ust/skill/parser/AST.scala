@@ -7,7 +7,7 @@ package de.ust.skill.parser
 
 import java.io.File
 
-import scala.collection.JavaConversions.seqAsJavaList
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.input.Positional
 
@@ -100,13 +100,13 @@ final class View(val comment : Comment, var targetType : Option[Name], val targe
 
 final class Customization(val comment : Comment, val language : Name, val options : Map[Name, List[String]],
                           val typeImage : String, name : Name)
-    extends AbstractField(name);
+  extends AbstractField(name);
 
 /**
  * Representation of skill names.
  */
 final class Name(val source : String, delimitWithUnderscores : Boolean, delimitWithCamelCase : Boolean)
-    extends Positional {
+  extends Positional {
 
   def this(irSource : de.ust.skill.ir.Name) = this(irSource.cStyle, true, false);
 
@@ -144,7 +144,7 @@ final class Name(val source : String, delimitWithUnderscores : Boolean, delimitW
 
   lazy val c_style : String = parts.tail.foldLeft(parts.head.toLowerCase)(_ + "_" + _.toLowerCase)
 
-  def ir : de.ust.skill.ir.Name = new de.ust.skill.ir.Name(parts, lowercase);
+  def ir : de.ust.skill.ir.Name = new de.ust.skill.ir.Name(parts.asJava, lowercase);
 
   override def equals(o : Any) : Boolean = o match {
     case o : Name ⇒ o.lowercase.equals(lowercase)
@@ -159,28 +159,32 @@ final class Name(val source : String, delimitWithUnderscores : Boolean, delimitW
 }
 
 final class UserType(
-  _declaredIn : File,
+  _declaredIn :     File,
   val description : Description,
-  _name : Name,
-  val superTypes : List[Name],
-  _body : List[AbstractField]) extends DeclarationWithBody(_name, _declaredIn, _body);
+  _name :           Name,
+  val superTypes :  List[Name],
+  _body :           List[AbstractField]
+) extends DeclarationWithBody(_name, _declaredIn, _body);
 
 final class EnumDefinition(
-  _declaredIn : File,
-  val comment : Comment,
-  _name : Name,
+  _declaredIn :   File,
+  val comment :   Comment,
+  _name :         Name,
   val instances : List[Name],
-  _body : List[AbstractField]) extends DeclarationWithBody(_name, _declaredIn, _body);
+  _body :         List[AbstractField]
+) extends DeclarationWithBody(_name, _declaredIn, _body);
 
 final case class InterfaceDefinition(
-  _declaredIn : File,
-  val comment : Comment,
-  _name : Name,
+  _declaredIn :    File,
+  val comment :    Comment,
+  _name :          Name,
   val superTypes : List[Name],
-  _body : List[AbstractField]) extends DeclarationWithBody(_name, _declaredIn, _body);
+  _body :          List[AbstractField]
+) extends DeclarationWithBody(_name, _declaredIn, _body);
 
 final case class Typedef(
   _declaredIn : File,
-  _name : Name,
+  _name :       Name,
   description : Description,
-  target : Type) extends Declaration(_name, _declaredIn);
+  target :      Type
+) extends Declaration(_name, _declaredIn);

@@ -11,8 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Represents names of types and fields. This implementation provides
- * conversions for various casing styles such as ADA_STYLE or camelCase.
+ * Represents names of types and fields. This implementation provides conversions for various casing styles such as
+ * ADA_STYLE or camelCase.
  * 
  * @note Names are immutable.
  * @author Timm Felden
@@ -20,8 +20,7 @@ import java.util.List;
 final public class Name implements Comparable<Name> {
 
     /**
-     * Names with equal skillNames are equal. Thus all comparison is deferred to
-     * skillName.
+     * Names with equal skillNames are equal. Thus all comparison is deferred to skillName.
      */
     final private String skillName;
     final private List<String> parts;
@@ -170,8 +169,8 @@ final public class Name implements Comparable<Name> {
     public String getFqdn() {
         if (getPackagePath().length() > 0)
             return getPackagePath() + "." + skillName;
-        else
-            return skillName;
+
+        return skillName;
     }
 
     public void setInternalName(String name) {
@@ -181,8 +180,8 @@ final public class Name implements Comparable<Name> {
     public String getInternalName() {
         if (this.internalName.length() > 0)
             return internalName;
-        else
-            return skillName.toLowerCase();
+
+        return skillName.toLowerCase();
     }
 
 }
