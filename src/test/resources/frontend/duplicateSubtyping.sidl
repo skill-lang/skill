@@ -1,0 +1,4 @@
+/* first appearance */
+A ::= B;
+/* second appearance (legal) */
+A ::= C;
