@@ -8,6 +8,9 @@ abstract class SIDLDefinition(val name: Name)
 
 case class AddedField(
   val comment: Comment,
+  /**
+   * @note this is the name of the type receiving the field declarations
+   */
   _name: Name,
   val fields: List[AbstractField],
   val file: File

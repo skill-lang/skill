@@ -29,7 +29,8 @@ import de.ust.skill.parser.Description
 class Parser(
   protected val delimitWithUnderscore : Boolean = true,
   protected val delimitWithCamelCase :  Boolean = true,
-  protected val verboseOutput :         Boolean = false) {
+  protected val verboseOutput :         Boolean = false
+) {
 
   val tc = new ir.TypeContext
 
@@ -61,7 +62,8 @@ class Parser(
           case e : FileNotFoundException ⇒ ParseException(
             s"The include $file could not be resolved to an existing file: ${e.getMessage()} \nWD: ${
               FileSystems.getDefault().getPath(".").toAbsolutePath().toString()
-            }", e)
+            }", e
+          )
         }
       }
     }
@@ -87,7 +89,8 @@ object Parser {
     keepSpecificationOrder : Boolean = false,
     delimitWithUnderscore :  Boolean = true,
     delimitWithCamelCase :   Boolean = true,
-    verboseOutput :          Boolean = false) : TypeContext = {
+    verboseOutput :          Boolean = false
+  ) : TypeContext = {
 
     val ast = if (input.getName.endsWith(".skill")) {
       new Parser(delimitWithUnderscore, delimitWithCamelCase, verboseOutput).parseAll(input)
@@ -109,7 +112,8 @@ object Parser {
 final class SIDLParser(
   _delimitWithUnderscore : Boolean = true,
   _delimitWithCamelCase :  Boolean = true,
-  _verboseOutput :         Boolean = false)
+  _verboseOutput :         Boolean = false
+)
   extends Parser(_delimitWithUnderscore, _delimitWithCamelCase, _verboseOutput) {
 
   /**
@@ -129,7 +133,8 @@ final class SIDLParser(
     new Description(
       mergeComments(d1.comment, d2.comment),
       d1.restrictions ++ d2.restrictions,
-      d1.hints ++ d2.hints)
+      d1.hints ++ d2.hints
+    )
   }
 
   private def combine(items : ArrayBuffer[SIDLDefinition]) : ArrayBuffer[Declaration] = {
@@ -162,21 +167,24 @@ final class SIDLParser(
               p.declaredIn, // TODO welches File?
               mergeDescriptions(p.description, q.description),
               p.name,
-              List.empty)
+              List.empty
+            )
           }
           case (p : SIDLEnum, q : SIDLEnum) ⇒ {
             SIDLEnum(
               p.declaredIn, // TODO welches File?
               mergeComments(p.comment, q.comment),
               p.name,
-              p.instances ++ q.instances)
+              p.instances ++ q.instances
+            )
           }
           case (p : SIDLInterface, q : SIDLInterface) ⇒ {
             SIDLInterface(
               p.declaredIn, // TODO welches File?
               mergeComments(p.comment, q.comment),
               p.name,
-              List.empty)
+              List.empty
+            )
           }
           case _ ⇒ ParseException("TODO")
         }
@@ -189,12 +197,13 @@ final class SIDLParser(
     for ((n, s) ← superTypes) {
       definitionNames.getOrElseUpdate(
         n,
-        SIDLUserType(null, new Description(Comment.NoComment.get, List.empty, List.empty), n, List.empty))
+        SIDLUserType(null, new Description(Comment.NoComment.get, List.empty, List.empty), n, List.empty)
+      )
     }
 
     val astNames = new HashMap[Name, Declaration];
 
-    // convert to AST nodes
+    // convert SIDL definitions into regular definitions
     for (d ← definitionNames.values) {
       astNames.put(d.name, d match {
         case d : SIDLUserType ⇒ {
@@ -203,7 +212,8 @@ final class SIDLParser(
             d.description,
             d.name,
             superTypes.getOrElseUpdate(d.name, new ArrayBuffer[Name]()).to,
-            List.empty)
+            List.empty
+          )
         }
         case d : SIDLEnum ⇒ {
           new EnumDefinition(
@@ -211,7 +221,8 @@ final class SIDLParser(
             d.comment,
             d.name,
             d.instances,
-            List.empty)
+            List.empty
+          )
         }
         case d : SIDLInterface ⇒ {
           new InterfaceDefinition(
@@ -219,53 +230,55 @@ final class SIDLParser(
             d.comment,
             d.name,
             superTypes.getOrElseUpdate(d.name, new ArrayBuffer[Name]()).to,
-            List.empty)
+            List.empty
+          )
         }
         case d : SIDLTypedef ⇒ d.typedef
         case _               ⇒ ParseException("TODO")
       })
     }
 
-    // merge fields into AST nodes
-    for (addedField ← addedFields) {
-      if (!(definitionNames contains addedField.name)) {
-        astNames += (addedField.name ->
-          new UserType(
-            addedField.file,
-            new Description(Comment.NoComment.get, List.empty, List.empty),
-            addedField.name,
-            superTypes.getOrElseUpdate(addedField.name, ArrayBuffer[Name]()).to,
-            List.empty))
-      }
-      astNames(addedField.name) =
-        astNames(addedField.name) match {
-          // TODO can I just have AbstactField and t.copy(body = t.body + addedField.fs)?
-          // TODO should/can I use the body as mutlable List
+    // merge field definitions into type definitions
+    for (f ← addedFields)
+      astNames(f.name) = astNames.getOrElseUpdate(
+        f.name,
+        // create a UserType if the type was not declared otherwise
+        new UserType(
+          f.file,
+          new Description(Comment.NoComment.get, List.empty, List.empty),
+          f.name,
+          superTypes.getOrElseUpdate(f.name, ArrayBuffer[Name]()).to,
+          List.empty
+        )
+      ) match {
           case t : UserType ⇒
             new UserType(
               t.declaredIn,
               t.description,
               t.name,
               t.superTypes,
-              t.body ++ addedField.fields)
+              t.body ++ f.fields
+            )
           case t : EnumDefinition ⇒
             new EnumDefinition(
               t.declaredIn,
               t.comment,
               t.name,
               t.instances,
-              t.body ++ addedField.fields)
+              t.body ++ f.fields
+            )
           case t : InterfaceDefinition ⇒
             new InterfaceDefinition(
               t.declaredIn,
               t.comment,
               t.name,
               t.superTypes,
-              t.body ++ addedField.fields)
-          case d : Typedef ⇒ d
+              t.body ++ f.fields
+            )
+          case d : Typedef ⇒ ParseException(s"One cannot add fields to a typedef: $f")
           case _           ⇒ ParseException("TODO")
         }
-    }
+
     astNames.values.to
   }
 }

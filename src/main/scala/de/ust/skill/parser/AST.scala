@@ -147,7 +147,7 @@ final class Name(val source : String, delimitWithUnderscores : Boolean, delimitW
   def ir : de.ust.skill.ir.Name = new de.ust.skill.ir.Name(parts, lowercase);
 
   override def equals(o : Any) : Boolean = o match {
-    case o : Name ⇒ o.lowercase == lowercase
+    case o : Name ⇒ o.lowercase.equals(lowercase)
     case _        ⇒ false
   }
 
