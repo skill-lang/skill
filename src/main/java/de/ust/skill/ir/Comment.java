@@ -1,24 +1,23 @@
-/*  ___ _  ___ _ _                                                            *\
-** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-18 University of Stuttgart                 **
-** |___/_|\_\_|_|____|    see LICENSE                                         **
-\*                                                                            */
+/*
+ * ___ _ ___ _ _ *\ / __| |/ (_) | | The SKilL Generator ** \__ \ ' <| | | |__ (c) 2013-18 University of Stuttgart **
+ ** |___/_|\_\_|_|____| see LICENSE ** \*
+ */
 package de.ust.skill.ir;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * A SKilL comment providing abstraction and formatting of documentation
- * provided by the specification.
+ * A SKilL comment providing abstraction and formatting of documentation provided by the specification.
  * 
  * @author Timm Felden
  */
 public class Comment {
 
     /**
-     * Null object of comments, i.e. not a comment. Makes code generation a lot
-     * easier. And resulting code visually appealing.
+     * Null object of comments, i.e. not a comment. Makes code generation a lot easier. And resulting code visually
+     * appealing.
      * 
      * @author Timm Felden
      */
@@ -69,10 +68,10 @@ public class Comment {
      * Merge 2 Comments
      */
     public Comment(Comment c1, Comment c2) {
-      this.text.addAll(c1.text);
-      this.text.addAll(c2.text);
-      this.tags.addAll(c1.tags);
-      this.tags.addAll(c2.tags);
+        text = new ArrayList<>(c1.text);
+        text.addAll(c2.text);
+        this.tags.addAll(c1.tags);
+        this.tags.addAll(c2.tags);
     }
 
     /**
@@ -111,8 +110,7 @@ public class Comment {
     }
 
     /**
-     * Creates a nicely formatted String with line breaks and a prefix for a
-     * code generators output.
+     * Creates a nicely formatted String with line breaks and a prefix for a code generators output.
      * 
      * @note examples use ° instead of *
      * @param prefix
@@ -123,8 +121,7 @@ public class Comment {
      *            Maximum characters in a line, e.g. 80 or 120
      * @param postfix
      *            Postfix of a comment, e.g. " °/"
-     * @return a nicely formatted string, very similar to scala's mkString,
-     *         except that it tries to fill lines
+     * @return a nicely formatted string, very similar to scala's mkString, except that it tries to fill lines
      */
     public String format(String prefix, String linePrefix, int lineWidth, String postfix) {
         StringBuilder sb = new StringBuilder(prefix);
