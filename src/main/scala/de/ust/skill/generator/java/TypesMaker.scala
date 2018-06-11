@@ -54,7 +54,7 @@ ${
       else
     t.getSuperInterfaces.map(name(_)).mkString(" implements ", ", ", "")
       } {
-    private static final long serialVersionUID = 0x5c11L + ((long) "${t.getSkillName}".hashCode()) << 32;
+    private static final long serialVersionUID = ${0x5c11L + (t.getSkillName.hashCode().toLong) << 32}L;
 
     @Override
     public String skillName() {
