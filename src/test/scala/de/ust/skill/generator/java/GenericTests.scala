@@ -84,23 +84,23 @@ public class Generic${name}Test extends common.CommonTest {
     @Test
     public void writeGeneric() throws Exception {
         Path path = tmpFile("write.generic");
-        SkillFile sf = SkillFile.open(path);
-        reflectiveInit(sf);
-        sf.close();
+        try (SkillFile sf = SkillFile.open(path)) {
+            reflectiveInit(sf);
+        }
     }
 
     @Test
     public void writeGenericChecked() throws Exception {
         Path path = tmpFile("write.generic.checked");
-        SkillFile sf = SkillFile.open(path);
-        reflectiveInit(sf);
-        // write file
-        sf.flush();
 
         // create a name -> type map
         Map<String, Access<? extends SkillObject>> types = new HashMap<>();
-        for (Access<?> t : sf.allTypes())
-            types.put(t.name(), t);
+        try (SkillFile sf = SkillFile.open(path)) {
+            reflectiveInit(sf);
+
+            for (Access<?> t : sf.allTypes())
+                types.put(t.name(), t);
+        }
 
         // read file and check skill IDs
         SkillFile sf2 = SkillFile.open(path, Mode.Read);
@@ -133,17 +133,19 @@ public class Generic${name}Test extends common.CommonTest {
     for (f ← accept) out.write(s"""
     @Test
     public void test_${name}_read_accept_${f.getName.replaceAll("\\W", "_")}() throws Exception {
-        Assert.assertNotNull(read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}"));
+        try (SkillFile sf = read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}")) {
+            Assert.assertNotNull(sf);
+        }
     }
 """)
     for (f ← reject) out.write(s"""
     @Test
     public void test_${name}_read_reject_${f.getName.replaceAll("\\W", "_")}() throws Exception {
-        try {
-            ForceLazyFields.forceFullCheck(read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}"));
+        try (SkillFile sf = read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}")) {
+            ForceLazyFields.forceFullCheck(sf);
             Assert.fail("Expected ParseException to be thrown");
         } catch (SkillException e) {
-            return; // success
+            // success
         }
     }
 """)
