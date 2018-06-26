@@ -78,7 +78,7 @@ import de.ust.skill.common.java.internal.SkillObject;
 @SuppressWarnings("static-method")
 public class Generic${name}Test extends common.CommonTest {
     public SkillFile read(String s) throws Exception {
-        return SkillFile.open("../../" + s);
+        return SkillFile.open("../../" + s, Mode.Read, Mode.ReadOnly);
     }
 
     @Test
