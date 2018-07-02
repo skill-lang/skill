@@ -24,6 +24,8 @@ final public class InterfaceType extends Declaration implements WithInheritance 
      */
     private Type superType = null;
     private Type baseType = null;
+    final ArrayList<UserType> subtypes = new ArrayList<>();
+    final ArrayList<InterfaceType> subinterfaces = new ArrayList<>();
 
     // fields
     private List<Field> fields = null;
@@ -84,9 +86,22 @@ final public class InterfaceType extends Declaration implements WithInheritance 
      */
     public void initialize(Type superType, List<InterfaceType> superInterfaces, List<Field> Fields, List<View> views,
             List<LanguageCustomization> customizations) throws ParseException {
-        this.superInterfaces = superInterfaces;
         assert !isInitialized() : "multiple initialization";
         assert null != Fields : "no fields supplied";
+
+        this.superType = superType;
+        if (superType instanceof UserType) {
+            baseType = ((UserType) superType).getBaseType();
+            ((UserType) superType).subinterfaces.add(this);
+        } else
+            baseType = superType;
+
+        this.superInterfaces = superInterfaces;
+
+        // register in super interfaces
+        for (InterfaceType Super : superInterfaces)
+            Super.subinterfaces.add(this);
+
         // check for duplicate fields
         {
             Set<Name> names = new HashSet<>();
@@ -101,15 +116,9 @@ final public class InterfaceType extends Declaration implements WithInheritance 
                 throw new ParseException("Type " + name + " contains duplicate field definitions.");
         }
 
-        this.superType = superType;
-        if (superType instanceof UserType)
-            baseType = ((UserType) superType).getBaseType();
-        else
-            baseType = superType;
-
         this.fields = Fields;
         this.views = views;
-        this.customizations = customizations;
+        this.customizations = null == customizations ? Collections.emptyList() : customizations;
     }
 
     @Override
@@ -133,6 +142,16 @@ final public class InterfaceType extends Declaration implements WithInheritance 
             rval.add((UserType) superType);
 
         return rval;
+    }
+
+    @Override
+    public List<UserType> getSubTypes() {
+        return subtypes;
+    }
+
+    @Override
+    public List<InterfaceType> getSubInterfaces() {
+        return subinterfaces;
     }
 
     /**

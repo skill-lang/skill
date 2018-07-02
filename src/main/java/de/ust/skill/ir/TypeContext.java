@@ -236,6 +236,10 @@ public final class TypeContext {
         return removeTypedefs().removeInterfaces().removeEnums();
     }
 
+    public List<Declaration> getDeclarations() {
+        return declarations;
+    }
+    
     public List<UserType> getUsertypes() {
         return usertypes;
     }

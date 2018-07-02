@@ -23,7 +23,8 @@ final public class UserType extends Declaration implements WithInheritance {
      * <i>this</i>.
      */
     private UserType superType = null, baseType = null;
-    private final List<UserType> children = new ArrayList<>();
+    final ArrayList<UserType> subtypes = new ArrayList<>();
+    final ArrayList<InterfaceType> subinterfaces = new ArrayList<>();
 
     // fields
     private List<Field> fields = null;
@@ -95,11 +96,14 @@ final public class UserType extends Declaration implements WithInheritance {
 
             this.superType = SuperType;
             this.baseType = SuperType.baseType;
-            SuperType.children.add(this);
+            SuperType.subtypes.add(this);
         } else {
             baseType = this;
         }
         this.interfaces = interfaces;
+        // register in super interfaces
+        for (InterfaceType Super : interfaces)
+            Super.subtypes.add(this);
 
         // check for duplicate fields
         {
@@ -182,8 +186,14 @@ final public class UserType extends Declaration implements WithInheritance {
         return rval;
     }
 
+    @Override
     public List<UserType> getSubTypes() {
-        return children;
+        return subtypes;
+    }
+
+    @Override
+    public List<InterfaceType> getSubInterfaces() {
+        return subinterfaces;
     }
 
     /*

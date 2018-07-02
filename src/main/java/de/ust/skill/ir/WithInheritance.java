@@ -14,4 +14,8 @@ public interface WithInheritance extends WithFields {
      * @return a list of super interfaces and the super type, if exists
      */
     List<Declaration> getAllSuperTypes();
+
+    public List<UserType> getSubTypes();
+    
+    public List<InterfaceType> getSubInterfaces();
 }
