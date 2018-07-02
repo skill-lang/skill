@@ -17,10 +17,9 @@ import de.ust.skill.ir.internal.Substitution;
 import de.ust.skill.ir.internal.TypedefSubstitution;
 
 /**
- * The Type Context corresponding to a given SKilL specification. The context
- * provides information about sub types, parent user types, implemented
- * interfaces, and so on. Furthermore, the context can be used to remove certain
- * kinds of types from the list of types.
+ * The Type Context corresponding to a given SKilL specification. The context provides information about sub types,
+ * parent user types, implemented interfaces, and so on. Furthermore, the context can be used to remove certain kinds of
+ * types from the list of types.
  * 
  * @todo cache remove operations to ease code generation
  * @author Timm Felden
@@ -66,8 +65,7 @@ public final class TypeContext {
     }
 
     /**
-     * unification has to be done in the constructor or a factory method and
-     * must not be made visible to a client
+     * unification has to be done in the constructor or a factory method and must not be made visible to a client
      * 
      * @param t
      *            the type to be unified
@@ -83,8 +81,7 @@ public final class TypeContext {
 
     /**
      * @param skillName
-     *            the skill name of the type, i.e. no whitespace, only lower
-     *            case letters
+     *            the skill name of the type, i.e. no whitespace, only lower case letters
      * @return the respective type, if it exists, null otherwise
      * @throws ParseException
      *             if the argument type name is not the name of a known type.
@@ -123,8 +120,7 @@ public final class TypeContext {
     }
 
     /**
-     * @return an equivalent type context that is guaranteed not to have
-     *         interface types
+     * @return an equivalent type context that is guaranteed not to have interface types
      * @note calling this function twice is efficient
      * @note field definitions will be distributed to their implementers
      * @note types will be replaced by the super type
@@ -137,14 +133,12 @@ public final class TypeContext {
     }
 
     /**
-     * The intended translation of an enum is to create an abstract class and a
-     * namespace for each enum type and to add singletons into that namespace
-     * for each instance of the enum.
+     * The intended translation of an enum is to create an abstract class and a namespace for each enum type and to add
+     * singletons into that namespace for each instance of the enum.
      * 
-     * @return an equivalent type context that is guaranteed not to have
-     *         interface types
-     * @note the resulting singletons will contain ':' characters in their name,
-     *       because name spaces did not find their way into the standard
+     * @return an equivalent type context that is guaranteed not to have interface types
+     * @note the resulting singletons will contain ':' characters in their name, because name spaces did not find their
+     *       way into the standard
      */
     public TypeContext removeEnums() throws ParseException {
         if (enums.isEmpty())
@@ -154,8 +148,7 @@ public final class TypeContext {
     }
 
     /**
-     * @return an equivalent type context that is guaranteed not to have
-     *         typedefs
+     * @return an equivalent type context that is guaranteed not to have typedefs
      * @note calling this function twice is efficient
      */
     public TypeContext removeTypedefs() throws ParseException {
@@ -168,9 +161,8 @@ public final class TypeContext {
     /**
      * creates a clone of this applying the substitution σ
      * 
-     * @note this is kind of a silver bullet implementation, because it is the
-     *       generalization of the three available substitutions, although they
-     *       are quite different; saves a lot of code though
+     * @note this is kind of a silver bullet implementation, because it is the generalization of the three available
+     *       substitutions, although they are quite different; saves a lot of code though
      */
     private TypeContext substitute(Substitution σ) throws ParseException {
         TypeContext tc = new TypeContext();
@@ -218,8 +210,9 @@ public final class TypeContext {
         return rval;
     }
 
-    public static List<Field> substituteFields(Substitution σ, TypeContext tc, List<Field> fs) throws ParseException {
-        List<Field> rval = new ArrayList<>();
+    public static ArrayList<Field> substituteFields(Substitution σ, TypeContext tc, List<Field> fs)
+            throws ParseException {
+        ArrayList<Field> rval = new ArrayList<>();
         for (Field f : fs) {
             final Field sf = σ.substitute(tc, f);
             if (null != sf)
@@ -229,8 +222,7 @@ public final class TypeContext {
     }
 
     /**
-     * @return a type context that is equivalent to this except that it contains
-     *         only user types
+     * @return a type context that is equivalent to this except that it contains only user types
      */
     public TypeContext removeSpecialDeclarations() throws ParseException {
         return removeTypedefs().removeInterfaces().removeEnums();
@@ -239,7 +231,7 @@ public final class TypeContext {
     public List<Declaration> getDeclarations() {
         return declarations;
     }
-    
+
     public List<UserType> getUsertypes() {
         return usertypes;
     }

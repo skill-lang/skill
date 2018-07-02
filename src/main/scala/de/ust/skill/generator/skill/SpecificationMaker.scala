@@ -5,14 +5,17 @@
 \*                                                                            */
 package de.ust.skill.generator.skill
 
-import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.JavaConversions.asScalaSet
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.collection.JavaConverters.asScalaSetConverter
+import scala.collection.JavaConverters.mapAsScalaMapConverter
 
 import de.ust.skill.ir.EnumType
 import de.ust.skill.ir.Field
 import de.ust.skill.ir.InterfaceType
+import de.ust.skill.ir.LanguageCustomization
 import de.ust.skill.ir.Typedef
 import de.ust.skill.ir.UserType
+
 /**
  * Creates user type equivalents.
  *
@@ -36,15 +39,15 @@ trait SpecificationMaker extends GeneralOutputMaker {
     out.write(s"""${
       (
         for (
-          name ← IR.allTypeNames;
+          name ← IR.allTypeNames.asScala;
           t = IR.get(name)
         ) yield t match {
           case t : UserType ⇒ s"""${comment(t)}${t.getName.capital} ${
             if (null == t.getSuperType) ""
             else s": ${t.getSuperType.getName.capital} "
           }${
-            t.getSuperInterfaces.map(s ⇒ s"with ${s.getName.capital} ").mkString
-          }{${mkFields(t.getFields.to)}
+            t.getSuperInterfaces.asScala.map(s ⇒ s"with ${s.getName.capital} ").mkString
+          }{${mkFields(t.getFields.asScala.to)}${mkCustom(t.getCustomizations.asScala.to)}
 }
 
 """
@@ -52,21 +55,21 @@ trait SpecificationMaker extends GeneralOutputMaker {
             if (t.getSuperType.getSkillName == "annotation") ""
             else s": ${t.getSuperType.getName.capital} "
           }${
-            t.getSuperInterfaces.map(s ⇒ s"with ${s.getName.capital} ").mkString
-          }{${mkFields(t.getFields.to)}
+            t.getSuperInterfaces.asScala.map(s ⇒ s"with ${s.getName.capital} ").mkString
+          }{${mkFields(t.getFields.asScala.to)}${mkCustom(t.getCustomizations.asScala.to)}
 }
 
 """
           case t : EnumType ⇒ s"""${comment(t)}enum ${t.getName.capital} {
-${t.getInstances.mkString("  ", ",\n  ", ";")}
+${t.getInstances.asScala.mkString("  ", ",\n  ", ";")}
 
-${mkFields(t.getFields.to)}
+${mkFields(t.getFields.asScala.to)}
 }
 
 """
           case t : Typedef ⇒ s"""${comment(t)}typedef ${t.getName.capital}
   ${
-            t.getRestrictions.map(s ⇒ s"$s\n  ").mkString
+            t.getRestrictions.asScala.map(s ⇒ s"$s\n  ").mkString
           }${
             mapType(t.getTarget)
           };
@@ -83,7 +86,19 @@ ${mkFields(t.getFields.to)}
   private def mkFields(fs : List[Field]) : String = (for (f ← fs)
     yield s"""
   ${comment(f)}${
-    f.getRestrictions.map(s ⇒ s"$s\n  ").mkString
-  }${mapType(f.getType)} ${f.getName.camel};"""
-  ).mkString("\n")
+    f.getRestrictions.asScala.map(s ⇒ s"$s\n  ").mkString
+  }${mapType(f.getType)} ${f.getName.camel};""").mkString("\n")
+
+  private def mkCustom(fs : List[LanguageCustomization]) : String = (for (f ← fs)
+    yield s"""
+  ${comment(f)}custom ${f.language}${
+    (for ((k, v) ← f.getOptions.asScala)
+      yield s"""
+  !$k ${
+      val vs = v.asScala.map(s ⇒ s""""$s"""")
+      if (vs.size == 1) vs.head
+      else vs.mkString("(", " ", ")")
+    }""").mkString
+  }
+  "${f.`type`}" ${f.getName.camel};""").mkString("\n")
 }

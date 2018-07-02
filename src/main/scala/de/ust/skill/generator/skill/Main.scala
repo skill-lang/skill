@@ -5,7 +5,7 @@
 \*                                                                            */
 package de.ust.skill.generator.skill
 
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConverters.asScalaBufferConverter
 
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
@@ -29,7 +29,7 @@ abstract class FakeMain extends GeneralOutputMaker { def make {} }
  * @author Timm Felden
  */
 class Main extends FakeMain
-    with SpecificationMaker {
+  with SpecificationMaker {
 
   lineLength = 80
   override def comment(d : Declaration) : String = d.getComment.format("/**\n", " * ", lineLength, " */\n")
@@ -37,7 +37,7 @@ class Main extends FakeMain
 
   override def packageDependentPathPostfix = ""
   override def defaultCleanMode = "none";
-  
+
   /**
    * Translates the types into Ada types.
    */
@@ -47,7 +47,7 @@ class Main extends FakeMain
     case t : VariableLengthArrayType ⇒ s"${mapType(t.getBaseType)}[]"
     case t : ListType                ⇒ s"list<${mapType(t.getBaseType)}>"
     case t : SetType                 ⇒ s"set<${mapType(t.getBaseType)}>"
-    case t : MapType                 ⇒ t.getBaseTypes.mkString("map<", ", ", ">")
+    case t : MapType                 ⇒ t.getBaseTypes.asScala.mkString("map<", ", ", ">")
     case t                           ⇒ t.getName.capital
   }
 
