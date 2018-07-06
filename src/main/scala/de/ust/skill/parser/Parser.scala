@@ -123,7 +123,9 @@ final class SIDLParser(
   }
 
   private def mergeComments(c1 : ir.Comment, c2 : ir.Comment) = {
-    new ir.Comment(c1, c2)
+    if (ir.Comment.NoComment.get == c1) c2
+    else if (ir.Comment.NoComment.get == c2) c1
+    else new ir.Comment(c1, c2)
   }
 
   private def mergeDescriptions(d1 : Description, d2 : Description) = {
@@ -132,6 +134,10 @@ final class SIDLParser(
       d1.restrictions ++ d2.restrictions,
       d1.hints ++ d2.hints
     )
+  }
+
+  private def mergeDescriptions(d : Description, c : ir.Comment) = {
+    new Description(mergeComments(d.comment, c), d.restrictions, d.hints)
   }
 
   private def combine(items : ArrayBuffer[SIDLDefinition]) : ArrayBuffer[Declaration] = {
@@ -161,7 +167,7 @@ final class SIDLParser(
         definitionNames(d.name) = (old, d) match {
           case (p : SIDLUserType, q : SIDLUserType) ⇒ {
             SIDLUserType(
-              p.declaredIn, // TODO welches File?
+              p.declaredIn,
               mergeDescriptions(p.description, q.description),
               p.name,
               List.empty
@@ -169,7 +175,7 @@ final class SIDLParser(
           }
           case (p : SIDLEnum, q : SIDLEnum) ⇒ {
             SIDLEnum(
-              p.declaredIn, // TODO welches File?
+              p.declaredIn,
               mergeComments(p.comment, q.comment),
               p.name,
               p.instances ++ q.instances
@@ -177,7 +183,7 @@ final class SIDLParser(
           }
           case (p : SIDLInterface, q : SIDLInterface) ⇒ {
             SIDLInterface(
-              p.declaredIn, // TODO welches File?
+              p.declaredIn,
               mergeComments(p.comment, q.comment),
               p.name,
               List.empty
@@ -251,7 +257,7 @@ final class SIDLParser(
           case t : UserType ⇒
             new UserType(
               t.declaredIn,
-              t.description,
+              mergeDescriptions(t.description, f.comment),
               t.name,
               t.superTypes,
               t.body ++ f.fields
@@ -259,7 +265,7 @@ final class SIDLParser(
           case t : EnumDefinition ⇒
             new EnumDefinition(
               t.declaredIn,
-              t.comment,
+              mergeComments(t.comment, f.comment),
               t.name,
               t.instances,
               t.body ++ f.fields
@@ -267,7 +273,7 @@ final class SIDLParser(
           case t : InterfaceDefinition ⇒
             new InterfaceDefinition(
               t.declaredIn,
-              t.comment,
+              mergeComments(t.comment, f.comment),
               t.name,
               t.superTypes,
               t.body ++ f.fields

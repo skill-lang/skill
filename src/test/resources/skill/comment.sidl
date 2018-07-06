@@ -1,0 +1,9 @@
+#! comment
+
+/**
+ * A comment.
+ */
+A ::= B;
+
+/* B comment */
+B -> /* f comment */ f : i8
