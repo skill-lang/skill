@@ -53,7 +53,8 @@ abstract class GenericAPITests extends GenericTests {
 
   final override def makeTests(name : String) {
     val (spec, tests) = collectTestspecs.filter(file ⇒ {
-      Source.fromFile(file._1).getLines().next().startsWith("#! " + name);
+      val line = Source.fromFile(file._1).getLines().next() 
+      line.equals("#! " + name) || line.matches(s"#! $name\\s+.*")
     }).head
 
     val IR = parse(spec).removeTypedefs().removeEnums()
