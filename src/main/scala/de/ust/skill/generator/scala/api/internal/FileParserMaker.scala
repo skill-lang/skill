@@ -25,7 +25,6 @@ import de.ust.skill.common.scala.api.SkillObject
 import de.ust.skill.common.scala.api.TypeSystemError
 import de.ust.skill.common.scala.api.WriteMode
 import de.ust.skill.common.scala.internal.BasePool
-import de.ust.skill.common.scala.internal.SkillFileParser
 import de.ust.skill.common.scala.internal.StoragePool
 import de.ust.skill.common.scala.internal.StringPool
 import de.ust.skill.common.scala.internal.UnknownBasePool
@@ -39,7 +38,7 @@ import _root_.${packagePrefix}api.SkillFile
  *
  * @author Timm Felden
  */
-object FileParser extends SkillFileParser[SkillFile] {
+object FileParser extends de.ust.skill.common.scala.internal.FileParser[SkillFile] {
 
   // TODO we can make this faster using a hash map (for large type systems)
   def newPool(
