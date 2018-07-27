@@ -208,23 +208,23 @@ std::size_t ($fieldName::offset)() const {${
                   case "i64" | "f64" ⇒ s"""
         return 8 * target->count;"""
 
-                  case "v64" ⇒ s"""const int64_t v = $accessI;
+                  case "v64" ⇒ s"""const uint64_t v = static_cast<uint64_t>($accessI);
 
-            if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
+            if (v < 0x80U) {
                 result += 1;
-            } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
+            } else if (v < 0x4000U) {
                 result += 2;
-            } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
+            } else if (v < 0x200000U) {
                 result += 3;
-            } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
+            } else if (v < 0x10000000U) {
                 result += 4;
-            } else if (0L == (v & 0xFFFFFFF800000000L)) {
+            } else if (v < 0x800000000U) {
                 result += 5;
-            } else if (0L == (v & 0xFFFFFC0000000000L)) {
+            } else if (v < 0x40000000000U) {
                 result += 6;
-            } else if (0L == (v & 0xFFFE000000000000L)) {
+            } else if (v & 0x2000000000000U) {
                 result += 7;
-            } else if (0L == (v & 0xFF00000000000000L)) {
+            } else if (v < 0x100000000000000U) {
                 result += 8;
             } else {
                 result += 9;
@@ -237,23 +237,23 @@ std::size_t ($fieldName::offset)() const {${
             if (nullptr == instance) {
                 result += 1;
             } else {
-            long v = skillID(instance);
+            const uint64_t v = static_cast<uint64_t>(skillID(instance));
 
-            if (0L == (v & 0xFFFFFFFFFFFFFF80L)) {
+            if (v < 0x80U) {
                 result += 1;
-            } else if (0L == (v & 0xFFFFFFFFFFFFC000L)) {
+            } else if (v < 0x4000U) {
                 result += 2;
-            } else if (0L == (v & 0xFFFFFFFFFFE00000L)) {
+            } else if (v < 0x200000U) {
                 result += 3;
-            } else if (0L == (v & 0xFFFFFFFFF0000000L)) {
+            } else if (v < 0x10000000U) {
                 result += 4;
-            } else if (0L == (v & 0xFFFFFFF800000000L)) {
+            } else if (v < 0x800000000U) {
                 result += 5;
-            } else if (0L == (v & 0xFFFFFC0000000000L)) {
+            } else if (v < 0x40000000000U) {
                 result += 6;
-            } else if (0L == (v & 0xFFFE000000000000L)) {
+            } else if (v & 0x2000000000000U) {
                 result += 7;
-            } else if (0L == (v & 0xFF00000000000000L)) {
+            } else if (v < 0x100000000000000U) {
                 result += 8;
             } else {
                 result += 9;
