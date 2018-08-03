@@ -101,13 +101,6 @@ TEST(${name.capitalize}Parser, Reject_${f.getName.replaceAll("\\W", "_")}) {
 """)
       closeTestFile(out)
     }
-
-    //    mit generischem binding sf parsen um an zu erwartende daten zu kommen
-
-    //    mit parser spec parsen um an lesbare daten zu kommen:)
-
-    //    test generieren, der sicherstellt, dass sich die daten da raus lesen lassen
-
   }
 
   override def finalizeTests {

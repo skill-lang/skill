@@ -62,8 +62,7 @@ ${packageParts.mkString("namespace ", " {\nnamespace ", " {")}
 
             virtual bool check() const;
 
-            virtual void read(const ::skill::streams::MappedInStream *in,
-                              const ::skill::internal::Chunk *target);
+            virtual void rsc(::skill::SKilLID i, const ::skill::SKilLID h, ::skill::streams::MappedInStream *in) override;
 
             virtual ::skill::api::Box getR(const ::skill::api::Object *i) {
                 ${
@@ -78,9 +77,9 @@ ${packageParts.mkString("namespace ", " {\nnamespace ", " {")}
                 ((${mapType(t)})i)->${internalName(f)} = (${mapType(f.getType)})v.${unbox(f.getType)};"""
       }}
 
-            virtual size_t offset() const;
+            virtual size_t osc() const;
 
-            virtual void write(::skill::streams::MappedOutStream* out) const;
+            virtual void wsc(::skill::streams::MappedOutStream* out) const;
         };""").mkString)
 
       out.write(s"""
@@ -122,54 +121,17 @@ ${
           }
 }
 
-void $fieldName::read(
-        const ::skill::streams::MappedInStream *part,
-        const ::skill::internal::Chunk *target) {
-${
-            if (f.isConstant()) "    // reading constants is O(0)"
+void $fieldName::rsc(::skill::SKilLID i, const ::skill::SKilLID h, ::skill::streams::MappedInStream *in) {${
+            if (f.isConstant()) "\n    // reading constants is O(0)"
             else s"""
     auto d = ((${storagePool(t)} *) owner)->data;
-    skill::streams::MappedInStream in(part, target->begin, target->end);
-
-    try {
-        if (dynamic_cast<const ::skill::internal::SimpleChunk *>(target)) {
-            ::skill::SKilLID i = 1 + ((const ::skill::internal::SimpleChunk *) target)->bpo;
-            const ::skill::SKilLID high = i + target->count;
-            for (; i != high; i++) {
-                $readI
-            }
-        } else {
-            //case bci : BulkChunk ⇒
-            for (int j = 0; j < ((const ::skill::internal::BulkChunk *) target)->blockCount; j++) {
-                const auto &b = owner->blocks[j];
-                ::skill::SKilLID i = 1 + b.bpo;
-                const ::skill::SKilLID end = i + b.dynamicCount;
-                for(; i != end; i++) {
-                    $readI
-                }
-            }
-        }
-    } catch (::skill::SkillException e) {
-        throw ParseException(
-                in.getPosition(),
-                part->getPosition() + target->begin,
-                part->getPosition() + target->end, e.message);
-    } catch (...) {
-        throw ParseException(
-                in.getPosition(),
-                part->getPosition() + target->begin,
-                part->getPosition() + target->end, "unexpected foreign exception");
-    }
-
-    if (!in.eof())
-        throw ParseException(
-                in.getPosition(),
-                part->getPosition() + target->begin,
-                part->getPosition() + target->end, "did not consume all bytes");"""
+    for (; i != h; i++) {
+        $readI
+    }"""
           }
 }
 
-std::size_t ($fieldName::offset)() const {${
+std::size_t ($fieldName::osc)() const {${
             if (f.isConstant())
               """
     return 0; // this field is constant"""
@@ -298,7 +260,7 @@ std::size_t ($fieldName::offset)() const {${
           }
 }
 
-void $fieldName::write(::skill::streams::MappedOutStream *out) const {${
+void $fieldName::wsc(::skill::streams::MappedOutStream *out) const {${
             if (f.isConstant()) """
     // -done-"""
             else s"""
@@ -351,23 +313,23 @@ $checks
    */
   private final def readType(t : Type, accessI : String, typ : String = "type") : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
-      case "annotation" ⇒ s"$typ->read(in).annotation"
-      case "string"     ⇒ s"$typ->read(in).string"
-      case "bool"       ⇒ "in.boolean()"
-      case t            ⇒ s"in.$t()"
+      case "annotation" ⇒ s"$typ->read(*in).annotation"
+      case "string"     ⇒ s"$typ->read(*in).string"
+      case "bool"       ⇒ "in->boolean()"
+      case t            ⇒ s"in->$t()"
     }
 
-    case t : ConstantLengthArrayType ⇒ s"((skill::fieldTypes::ConstantLengthArray*)$typ)->read<${mapType(t.getBaseType)}>(in)"
-    case t : VariableLengthArrayType ⇒ s"((skill::fieldTypes::VariableLengthArray*)$typ)->read<${mapType(t.getBaseType)}>(in)"
-    case t : ListType                ⇒ s"((skill::fieldTypes::ListType*)$typ)->read<${mapType(t.getBaseType)}>(in)"
-    case t : SetType                 ⇒ s"((skill::fieldTypes::SetType*)$typ)->read<${mapType(t.getBaseType)}>(in)"
+    case t : ConstantLengthArrayType ⇒ s"((skill::fieldTypes::ConstantLengthArray*)$typ)->read<${mapType(t.getBaseType)}>(*in)"
+    case t : VariableLengthArrayType ⇒ s"((skill::fieldTypes::VariableLengthArray*)$typ)->read<${mapType(t.getBaseType)}>(*in)"
+    case t : ListType                ⇒ s"((skill::fieldTypes::ListType*)$typ)->read<${mapType(t.getBaseType)}>(*in)"
+    case t : SetType                 ⇒ s"((skill::fieldTypes::SetType*)$typ)->read<${mapType(t.getBaseType)}>(*in)"
 
     case t : MapType ⇒
       s"""nullptr;
                 ${mapType(t)} m = new ${newMapType(t.getBaseTypes.toList)};
                 const auto t1 = (skill::fieldTypes::MapType*)type;
 
-                for(auto idx = in.v64(); idx > 0; idx--) {
+                for(auto idx = in->v64(); idx > 0; idx--) {
                     auto k1 = ${readType(t.getBaseTypes.get(0), "", s"t1->key")};
                     ${readInnerMap(t.getBaseTypes.toList.tail, 2)}
                     (*m)[k1] = v1;
@@ -375,7 +337,7 @@ $checks
                 $accessI = m"""
 
     //case t : UserType ⇒ s"    val t = this.t.asInstanceOf[${storagePool(t)}]"
-    case _ ⇒ s"(${mapType(t)})$typ->read(in).${unbox(t)}"
+    case _ ⇒ s"(${mapType(t)})$typ->read(*in).${unbox(t)}"
   }
 
   def innerMapType(ts : List[Type]) : String = ts.map(mapType).reduceRight((k, v) ⇒ s"::skill::api::Map<$k, $v>*")
@@ -391,7 +353,7 @@ $checks
       s"""${innerMapType(ts)} v${depth - 1} = new ${newMapType(ts)};
                     const auto t$depth = (skill::fieldTypes::MapType*)(t${depth - 1}->value);
 
-                    for(auto idx$depth = in.v64(); idx$depth > 0; idx$depth--) {
+                    for(auto idx$depth = in->v64(); idx$depth > 0; idx$depth--) {
                         auto k$depth = ${readType(ts.head, "", s"t${depth - 1}->key")};
                         ${readInnerMap(ts.tail, depth + 1)}
                         (*v${depth - 1})[k$depth] = v$depth;
@@ -448,12 +410,12 @@ $checks
       s"new ::skill::restrictions::FieldDefault<${mapType(t)}>(0)"
 
     case r : CodingRestriction ⇒
-      // @note this case is filtered, as known restrictions can only be added as part of file finalization  
+      // @note this case is filtered, as known restrictions can only be added as part of file finalization
       ???
-//      println("[c++] unhandled restriction: " + r.getName);
-//      s"""new ::skill::restrictions::Coding(
-//            (($packageName::StringKeeper *) (
-//                    (::skill::internal::StringPool *) owner->getOwner()->strings)->keeper)->${escaped(r.getValue)})"""
+    //      println("[c++] unhandled restriction: " + r.getName);
+    //      s"""new ::skill::restrictions::Coding(
+    //            (($packageName::StringKeeper *) (
+    //                    (::skill::internal::StringPool *) owner->getOwner()->strings)->keeper)->${escaped(r.getValue)})"""
   }
 
   private final def checkRestriction(t : Type, r : Restriction) : String = r match {
