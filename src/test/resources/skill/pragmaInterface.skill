@@ -1,0 +1,10 @@
+#ensure that customizations are pushed down on project just like regular fields
+
+interface CustomFields {
+  @min(0)
+  !pragma x
+  !ondemand
+  i32 f;
+}
+
+Projected : CustomFields {}
