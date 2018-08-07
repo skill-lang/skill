@@ -5,9 +5,7 @@
 \*                                                                            */
 package de.ust.skill.generator.skill
 
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.JavaConverters.asScalaSetConverter
-import scala.collection.JavaConverters.mapAsScalaMapConverter
+import scala.collection.JavaConverters._
 
 import de.ust.skill.ir.EnumType
 import de.ust.skill.ir.Field
@@ -15,6 +13,7 @@ import de.ust.skill.ir.InterfaceType
 import de.ust.skill.ir.LanguageCustomization
 import de.ust.skill.ir.Typedef
 import de.ust.skill.ir.UserType
+import de.ust.skill.ir.Declaration
 
 /**
  * Creates user type equivalents.
@@ -42,7 +41,7 @@ trait SpecificationMaker extends GeneralOutputMaker {
           name ← IR.allTypeNames.asScala;
           t = IR.get(name)
         ) yield t match {
-          case t : UserType ⇒ s"""${comment(t)}${t.getName.capital} ${
+          case t : UserType ⇒ s"""${prefix(t)}${t.getName.capital} ${
             if (null == t.getSuperType) ""
             else s": ${t.getSuperType.getName.capital} "
           }${
@@ -51,7 +50,7 @@ trait SpecificationMaker extends GeneralOutputMaker {
 }
 
 """
-          case t : InterfaceType ⇒ s"""${comment(t)}interface ${t.getName.capital} ${
+          case t : InterfaceType ⇒ s"""${prefix(t)}interface ${t.getName.capital} ${
             if (t.getSuperType.getSkillName == "annotation") ""
             else s": ${t.getSuperType.getName.capital} "
           }${
@@ -83,11 +82,16 @@ ${mkFields(t.getFields.asScala.to)}
     out.close()
   }
 
-  private def mkFields(fs : List[Field]) : String = (for (f ← fs)
-    yield s"""
-  ${comment(f)}${
-    f.getRestrictions.asScala.map(s ⇒ s"$s\n  ").mkString
-  }${mapType(f.getType)} ${f.getName.camel};""").mkString("\n")
+  private def mkFields(fs : List[Field]) : String = (for (f ← fs) yield {
+    if (f.isConstant())
+      s"""
+  ${prefix(f)}const ${mapType(f.getType)} ${f.getName.camel} = 0x${f.constantValue().toHexString.toUpperCase()};"""
+    else s"""
+  ${prefix(f)}${
+    if(f.isAuto()) "auto "
+    else ""
+  }${mapType(f.getType)} ${f.getName.camel};"""
+  }).mkString("\n")
 
   private def mkCustom(fs : List[LanguageCustomization]) : String = (for (f ← fs)
     yield s"""
@@ -101,4 +105,22 @@ ${mkFields(t.getFields.asScala.to)}
     }""").mkString
   }
   "${f.`type`}" ${f.getName.camel};""").mkString("\n")
+
+  private def prefix(t : Declaration) : String = {
+    var prefix = comment(t) + (t.getHints.asScala ++ t.getRestrictions.asScala).map(s ⇒ s"$s\n").mkString
+    if (!prefix.isEmpty()) {
+      prefix = "\n" + prefix
+    }
+
+    prefix
+  }
+
+  private def prefix(f : Field) : String = {
+    var prefix = comment(f) + (f.getHints.asScala ++ f.getRestrictions.asScala).map(s ⇒ s"$s\n  ").mkString
+    if (!prefix.isEmpty()) {
+      prefix = "\n  " + prefix
+    }
+
+    prefix
+  }
 }
