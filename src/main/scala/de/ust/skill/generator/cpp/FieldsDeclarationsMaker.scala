@@ -170,7 +170,7 @@ std::size_t ($fieldName::osc)() const {${
                   case "i64" | "f64" ⇒ s"""
         return 8 * target->count;"""
 
-                  case "v64" ⇒ s"""const uint64_t v = static_cast<uint64_t>($accessI);
+                  case "v64" ⇒ s"""const uint64_t v = ::skill::unsign($accessI);
 
             if (v < 0x80U) {
                 result += 1;
@@ -184,7 +184,7 @@ std::size_t ($fieldName::osc)() const {${
                 result += 5;
             } else if (v < 0x40000000000U) {
                 result += 6;
-            } else if (v & 0x2000000000000U) {
+            } else if (v < 0x2000000000000U) {
                 result += 7;
             } else if (v < 0x100000000000000U) {
                 result += 8;
@@ -199,7 +199,7 @@ std::size_t ($fieldName::osc)() const {${
             if (nullptr == instance) {
                 result += 1;
             } else {
-            const uint64_t v = static_cast<uint64_t>(skillID(instance));
+            const uint64_t v = ::skill::unsign(skillID(instance));
 
             if (v < 0x80U) {
                 result += 1;
@@ -213,7 +213,7 @@ std::size_t ($fieldName::osc)() const {${
                 result += 5;
             } else if (v < 0x40000000000U) {
                 result += 6;
-            } else if (v & 0x2000000000000U) {
+            } else if (v < 0x2000000000000U) {
                 result += 7;
             } else if (v < 0x100000000000000U) {
                 result += 8;
