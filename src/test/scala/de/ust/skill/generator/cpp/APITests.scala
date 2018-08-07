@@ -108,6 +108,9 @@ TEST(${name.capitalize}_APITest, ${if (accept) "Acc" else "Fail"}_${gen.escaped(
         // set fields${setFields(obj, tc)}
 
         sf->close();
+
+        auto sf2 = SkillFile::open(sf->currentPath());
+        sf2->check();
     } catch (skill::SkillException e) {${
       if (accept) """
         GTEST_FAIL() << "an exception was thrown:" << std::endl << e.message;

@@ -1,0 +1,155 @@
+{
+	"obj" : {
+	    "v_0_a" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  1
+	        }
+	    },
+	    "v_0_b" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  0
+	        }
+	    },
+	    "v_0_c" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  -1
+	        }
+	    },
+	    "v_1_a" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  129
+	        }
+	    },
+	    "v_1_b" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  128
+	        }
+	    },
+	    "v_1_c" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  127
+	        }
+	    },
+	    "v_2_a" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  16385
+	        }
+	    },
+	    "v_2_b" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  16384
+	        }
+	    },
+	    "v_2_c" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  16383
+	        }
+	    },
+	    "v_3_a" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  2097153
+	        }
+	    },
+	    "v_3_b" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  2097152
+	        }
+	    },
+	    "v_3_c" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  2097151
+	        }
+	    },
+	    "v_4_a" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  268435457
+	        }
+	    },
+	    "v_4_b" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  268435456
+	        }
+	    },
+	    "v_4_c" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  268435455
+	        }
+	    },
+	    "v_5_a" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  34359738369
+	        }
+	    },
+	    "v_5_b" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  34359738368
+	        }
+	    },
+	    "v_5_c" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  34359738367
+	        }
+	    },
+	    "v_6_a" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  4398046511105
+	        }
+	    },
+	    "v_6_b" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  4398046511104
+	        }
+	    },
+	    "v_6_c" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  4398046511103
+	        }
+	    },
+	    "v_7_a" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  562949953421313
+	        }
+	    },
+	    "v_7_b" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  562949953421312
+	        }
+	    },
+	    "v_7_c" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  562949953421311
+	        }
+	    },
+	    "v_8_a" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  72057594037927937
+	        }
+	    },
+	    "v_8_b" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  72057594037927936
+	        }
+	    },
+	    "v_8_c" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  72057594037927935
+	        }
+	    },
+	    "v_9_a" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  -9223372036854775807
+	        }
+	    },
+	    "v_9_b" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  -9223372036854775808
+	        }
+	    },
+	    "v_9_c" : {
+	        "BasicInt64V" : {
+	            "basicInt" :  9223372036854775807
+	        }
+	    },
+	}
+}
+
