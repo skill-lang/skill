@@ -73,7 +73,15 @@ final public class Hint {
         if (args.hasNext()) {
             sb.append('(');
             do {
-                sb.append(args.next().camel());
+                switch (type) {
+                case constantmutator:
+                    sb.append(args.next().getSkillName());
+                    break;
+
+                default:
+                    sb.append(args.next().camel());
+                    break;
+                }
                 if (args.hasNext())
                     sb.append(", ");
                 else
@@ -86,7 +94,7 @@ final public class Hint {
     public static Hint get(Type type, List<Name> args) throws ParseException {
         switch (type) {
         case constantmutator:
-            return constantMutator;
+            return new Hint(type, args);
         case distributed:
             return distributed;
         case flat:
