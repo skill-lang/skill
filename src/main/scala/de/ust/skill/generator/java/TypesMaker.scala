@@ -136,27 +136,7 @@ ${
         if(f.isIgnored)
           s"""throw new IllegalAccessError("${name(f)} has ${if(f.hasIgnoredType)"a type with "else""}an !ignore hint")"""
         else
-          s"${ //@range check
-//            if(f.getType().isInstanceOf[GroundType]){
-//              if(f.getType().asInstanceOf[GroundType].isInteger)
-//                f.getRestrictions.collect{case r:IntRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLow}L <= $Name && $Name <= ${r.getHigh}L, "$name has to be in range [${r.getLow};${r.getHigh}]"); """}.mkString("")
-//              else if("f32".equals(f.getType.getName))
-//                f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowFloat}f <= $Name && $Name <= ${r.getHighFloat}f, "$name has to be in range [${r.getLowFloat};${r.getHighFloat}]"); """}.mkString("")
-//              else if("f64".equals(f.getType.getName))
-//               f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowDouble} <= $Name && $Name <= ${r.getHighDouble}, "$name has to be in range [${r.getLowDouble};${r.getHighDouble}]"); """}.mkString("")
-//              else
-//                ""
-//            }
-//            else
-//              ""
-//          }${//@monotone modification check
-//            if(!t.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty){
-//              s"""assert skillID == -1L : "${t.getName} is specified to be monotone and this instance has already been subject to serialization!";
-//        """
-//            }
-//            else
-              ""
-        }this.${name(f)} = ${name(f)};"
+          s"this.${name(f)} = ${name(f)};"
       }
 
       if(f.isConstant)
