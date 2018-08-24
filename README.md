@@ -22,7 +22,7 @@ Scala 2.12 |auto, append, customs, documented, escaped, interfaces, lazy, views|
 Utilities
 =========
 
-Viewer for graphs stored in binary files: skillView
+Viewer for graphs stored in binary files: [skillView](https://github.com/skill-lang/skillView)
 
 Basic reachability-based garbage collector: [skillGC](https://github.com/skill-lang/skillGC)
 
