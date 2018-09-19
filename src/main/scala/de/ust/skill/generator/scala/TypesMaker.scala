@@ -5,9 +5,7 @@
 \*                                                                            */
 package de.ust.skill.generator.scala
 
-import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.JavaConversions.bufferAsJavaList
-import scala.collection.JavaConversions.mapAsScalaMap
+import scala.collection.JavaConverters._
 
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
@@ -34,7 +32,7 @@ trait TypesMaker extends GeneralOutputMaker {
     super.make
     
     // requires knowledge about distributed fields inherited from interfaces
-    val flatIR = this.types.removeSpecialDeclarations.getUsertypes
+    val flatIR = this.types.removeSpecialDeclarations.getUsertypes.asScala.toArray
 
     val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1)
     else this.packageName;
@@ -55,9 +53,9 @@ import de.ust.skill.common.scala.api.SkillObject
 import de.ust.skill.common.scala.api.Access
 import de.ust.skill.common.scala.api.UnknownObject
 ${(for(t ← IR if t.getBaseType == base;
-        c <- t.getCustomizations if c.language.equals("scala");
-        is <- c.getOptions.toMap.get("import").toArray;
-        i  <- is
+        c <- t.getCustomizations.asScala if c.language.equals("scala");
+        is <- c.getOptions.asScala.toMap.get("import").toArray;
+        i  <- is.asScala
         ) yield s"import $i;\n").mkString}""")
     
 
@@ -65,7 +63,7 @@ ${(for(t ← IR if t.getBaseType == base;
     for (t ← IR if t.getBaseType == base) {
       val flatType = flatIR.find(_.getName == t.getName).get
       
-      val fields = t.getAllFields.filter(!_.isConstant)
+      val fields = t.getAllFields.asScala.filter(!_.isConstant)
       val relevantFields = fields.filter(!_.isIgnored)
 
       //class declaration
@@ -86,7 +84,7 @@ ${
         })"
         else "SkillObject(_skillID)"
       }${
-  (for(s <- t.getSuperInterfaces)
+  (for(s <- t.getSuperInterfaces.asScala)
     yield " with " + name(s)).mkString
 } {${
 	  if(t.getSuperType == null) s"""
@@ -119,7 +117,7 @@ ${
 	makeGetterAndSetter(out, t, flatType)
 	
 	// views
-	for(v <- t.getViews){
+	for(v <- t.getViews.asScala){
 	  // just redirect to the actual field so it's way simpler than getters & setters
 	  val fieldName = escaped(v.getName.camel)
 	  val target = 
@@ -140,7 +138,7 @@ ${
     out.write(s"""
   override def prettyString : String = s"${name(t)}(#$$skillID${
     (
-        for(f <- t.getAllFields)
+        for(f <- t.getAllFields.asScala)
           yield if(f.isIgnored) s""", ${f.getName()}: <<ignored>>"""
           else if (!f.isConstant) s""", ${if(f.isAuto)"auto "else""}${f.getName()}: $${${name(f)}}"""
           else s""", const ${f.getName()}: ${f.constantValue()}"""
@@ -156,8 +154,8 @@ ${
       out.write(s"""
 object ${name(t)} {
 ${ // create unapply method if the type has fields, that can be matched (none or more then 12 is pointless)
-  val fs = t.getAllFields().filterNot(_.isConstant())
-  if(fs.isEmpty() || fs.size > 12)""
+  val fs = t.getAllFields.asScala.filterNot(_.isConstant())
+  if(0==fs.size || fs.size > 12)""
   else s"""  def unapply(self : ${name(t)}) = ${(for (f ← fs) yield "self."+escaped(f.getName.camel)).mkString("Some(", ", ", ")")}
 """
 }
@@ -195,7 +193,7 @@ ${ // create unapply method if the type has fields, that can be matched (none or
 ${
         comment(t)
 }sealed trait ${name(t)} extends ${name(t.getSuperType)}${
-  (for(s <- t.getSuperInterfaces)
+  (for(s <- t.getSuperInterfaces.asScala)
     yield " with " + name(s)).mkString
 } {""")
 
@@ -226,9 +224,9 @@ import de.ust.skill.common.scala.api.SkillObject
 import de.ust.skill.common.scala.api.Access
 import de.ust.skill.common.scala.api.UnknownObject
 ${(for(t <- IRInterfaces if !t.getBaseType.isInstanceOf[UserType];
-        c <- t.getCustomizations if c.language.equals("scala");
-        is <- c.getOptions.toMap.get("import").toArray;
-        i  <- is
+        c <- t.getCustomizations.asScala if c.language.equals("scala");
+        is <- c.getOptions.asScala.toMap.get("import").toArray;
+        i  <- is.asScala
         ) yield s"import $i;\n").mkString}""")
 
     for(t <- IRInterfaces if !t.getBaseType.isInstanceOf[UserType]) {
@@ -236,7 +234,7 @@ ${(for(t <- IRInterfaces if !t.getBaseType.isInstanceOf[UserType];
 ${
         comment(t)
 }trait ${name(t)} extends SkillObject${
-  (for(s <- t.getSuperInterfaces)
+  (for(s <- t.getSuperInterfaces.asScala)
     yield " with " + name(s)).mkString
 } {""")
 
@@ -259,7 +257,7 @@ ${
     val packageName = if(this.packageName.contains('.')) this.packageName.substring(this.packageName.lastIndexOf('.')+1)
     else this.packageName;
     
-    for(f <- t.getFields){
+    for(f <- t.getFields.asScala){
       implicit val thisF = f;
       implicit val thisT = t;
 
@@ -296,16 +294,16 @@ ${
     if(null!=flatType && flatType.hasDistributedField()){
       val _t = t.asInstanceOf[UserType]
       // collect distributed fields that are not projected onto the super type but onto us
-      val fields = _t.getAllFields.filter{
+      val fields = _t.getAllFields.asScala.filter{
         f ⇒ 
           val name = f.getSkillName
           f.isDistributed() &&
-          (null == _t.getSuperType() || !_t.getSuperType.getAllFields.exists(_==f)) &&
-          !_t.getFields.exists(_.getSkillName.equals(name))
+          (null == _t.getSuperType() || !_t.getSuperType.getAllFields.asScala.exists(_==f)) &&
+          !_t.getFields.asScala.exists(_.getSkillName.equals(name))
       }
       
       for(f <- fields){
-        implicit val thisF = flatType.getFields.find(_.getSkillName.equals(f.getSkillName)).get;
+        implicit val thisF = flatType.getFields.asScala.find(_.getSkillName.equals(f.getSkillName)).get;
         implicit val thisT = flatType;
         out.write(s"""
   ${comment(f)}def $fieldName : ${mapType(f.getType())} = $makeGetterImplementation
@@ -317,10 +315,10 @@ ${
     }
     
     // custom fields
-    for(c <- t.getCustomizations if c.language.equals("scala")){
-      val opts = c.getOptions.toMap
-      val mod = opts.get("modifier").map(_.head + " ").getOrElse("")
-      val default = opts.get("default").map(_.head).getOrElse("_")
+    for(c <- t.getCustomizations.asScala if c.language.equals("scala")){
+      val opts = c.getOptions.asScala.toMap
+      val mod = opts.get("modifier").map(_.get(0) + " ").getOrElse("")
+      val default = opts.get("default").map(_.get(0)).getOrElse("_")
       
       out.write(s"""
   ${comment(c)}${mod}var ${name(c)} : ${c.`type`} = $default; 
@@ -349,11 +347,11 @@ ${
               s"{ ${ //@range check
                   if(f.getType().isInstanceOf[GroundType]) {
                       if(f.getType().asInstanceOf[GroundType].isInteger) {
-                          f.getRestrictions.collect{case r:IntRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLow}L <= ${name(f)} && ${name(f)} <= ${r.getHigh}L, "${name(f)} has to be in range [${r.getLow};${r.getHigh}]"); """}.mkString("")
+                          f.getRestrictions.asScala.collect{case r:IntRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLow}L <= ${name(f)} && ${name(f)} <= ${r.getHigh}L, "${name(f)} has to be in range [${r.getLow};${r.getHigh}]"); """}.mkString("")
                       } else if("f32".equals(f.getType.getName)) {
-                          f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowFloat}f <= ${name(f)} && ${name(f)} <= ${r.getHighFloat}f, "${name(f)} has to be in range [${r.getLowFloat};${r.getHighFloat}]"); """}.mkString("")
+                          f.getRestrictions.asScala.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowFloat}f <= ${name(f)} && ${name(f)} <= ${r.getHighFloat}f, "${name(f)} has to be in range [${r.getLowFloat};${r.getHighFloat}]"); """}.mkString("")
                       } else if("f64".equals(f.getType.getName)) {
-                          f.getRestrictions.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowDouble} <= ${name(f)} && ${name(f)} <= ${r.getHighDouble}, "${name(f)} has to be in range [${r.getLowDouble};${r.getHighDouble}]"); """}.mkString("")
+                          f.getRestrictions.asScala.collect{case r:FloatRangeRestriction⇒r}.map{r ⇒ s"""require(${r.getLowDouble} <= ${name(f)} && ${name(f)} <= ${r.getHighDouble}, "${name(f)} has to be in range [${r.getLowDouble};${r.getHighDouble}]"); """}.mkString("")
                       } else {
                           ""
                       }
@@ -361,7 +359,7 @@ ${
                       ""
                   }
               }${//@monotone modification check
-                  if(!t.getRestrictions.collect{case r:MonotoneRestriction⇒r}.isEmpty) {
+                  if(!t.getRestrictions.asScala.collect{case r:MonotoneRestriction⇒r}.isEmpty) {
                       s"""require(skillID == -1L, "${t.getName} is specified to be monotone and this instance has already been subject to serialization!"); """
                   } else {
                       ""
