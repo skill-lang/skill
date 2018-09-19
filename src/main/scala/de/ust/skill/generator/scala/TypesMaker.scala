@@ -135,15 +135,6 @@ ${
 	}def $fieldName : ${mapType(v.getType())} = $target.asInstanceOf[${mapType(v.getType())}]
   ${comment(v)}def $fieldAssignName($fieldName : ${mapType(v.getType())}) : scala.Unit = $target = $fieldName""")
 	}
-	
-	// custom fields
-    for(c <- t.getCustomizations if c.language.equals("scala")){
-      val mod = c.getOptions.toMap.get("modifier").map(_.head).getOrElse("public")
-      
-      out.write(s"""
-  ${comment(c)}$mod var ${name(c)} : ${c.`type`} = _; 
-""")
-    }
 
 	// usability methods
     out.write(s"""
@@ -234,7 +225,11 @@ import de.ust.skill.common.scala.SkillID
 import de.ust.skill.common.scala.api.SkillObject
 import de.ust.skill.common.scala.api.Access
 import de.ust.skill.common.scala.api.UnknownObject
-""")
+${(for(t <- IRInterfaces if !t.getBaseType.isInstanceOf[UserType];
+        c <- t.getCustomizations if c.language.equals("scala");
+        is <- c.getOptions.toMap.get("import").toArray;
+        i  <- is
+        ) yield s"import $i;\n").mkString}""")
 
     for(t <- IRInterfaces if !t.getBaseType.isInstanceOf[UserType]) {
       out.write(s"""
@@ -319,6 +314,15 @@ ${
   final private[$packageName] def ${escaped("Internal_"+f.getName.camel + "_=")}(v : ${mapType(f.getType())}) = $makeGetterImplementation
 """)
       }
+    }
+    
+    // custom fields
+    for(c <- t.getCustomizations if c.language.equals("scala")){
+      val mod = c.getOptions.toMap.get("modifier").map(_.head + " ").getOrElse("")
+      
+      out.write(s"""
+  ${comment(c)}${mod}var ${name(c)} : ${c.`type`} = _; 
+""")
     }
   }
 
