@@ -129,8 +129,15 @@ public final class TypeContext {
         if (interfaces.isEmpty())
             return this;
 
-        return substitute(new InterfaceSubstitution());
+        if (null == removedInterfaces) {
+            removedInterfaces = substitute(new InterfaceSubstitution());
+        }
+
+        return removedInterfaces;
     }
+
+    // projection cache as specified
+    private TypeContext removedInterfaces = null;
 
     /**
      * The intended translation of an enum is to create an abstract class and a namespace for each enum type and to add
@@ -144,8 +151,14 @@ public final class TypeContext {
         if (enums.isEmpty())
             return this;
 
-        return substitute(new EnumSubstitution(enums));
+        if (null == removedEnums)
+            removedEnums = substitute(new EnumSubstitution(enums));
+
+        return removedEnums;
     }
+
+    // projection cache as specified
+    private TypeContext removedEnums = null;
 
     /**
      * @return an equivalent type context that is guaranteed not to have typedefs
@@ -155,8 +168,14 @@ public final class TypeContext {
         if (typedefs.isEmpty())
             return this;
 
-        return substitute(new TypedefSubstitution());
+        if (null == removedTypedefs)
+            removedTypedefs = substitute(new TypedefSubstitution());
+
+        return removedTypedefs;
     }
+
+    // projection cache as specified
+    private TypeContext removedTypedefs = null;
 
     /**
      * creates a clone of this applying the substitution σ
@@ -184,11 +203,11 @@ public final class TypeContext {
                 InterfaceType t = (InterfaceType) types.get(d.getSkillName());
                 ((InterfaceType) d).initialize(σ.substitute(tc, t.getSuperType()),
                         substituteTypes(σ, tc, t.getSuperInterfaces()), substituteFields(σ, tc, t.getFields()),
-                        java.util.Collections.emptyList(), ((InterfaceType) d).getCustomizations());
+                        java.util.Collections.emptyList(), t.getCustomizations());
             } else if (d instanceof EnumType) {
                 EnumType t = (EnumType) types.get(d.getSkillName());
                 ((EnumType) d).initialize(substituteFields(σ, tc, t.getFields()), java.util.Collections.emptyList(),
-                        ((EnumType) d).getCustomizations());
+                        t.getCustomizations());
             } else {
                 Typedef t = (Typedef) types.get(d.getSkillName());
                 ((Typedef) d).initialize(σ.substitute(tc, t.getTarget()));

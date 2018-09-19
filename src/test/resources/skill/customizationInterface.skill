@@ -12,3 +12,6 @@ interface CustomFields {
 }
 
 Projected : CustomFields {}
+
+
+typedef long v64;

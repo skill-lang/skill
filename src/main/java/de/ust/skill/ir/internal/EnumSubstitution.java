@@ -27,6 +27,7 @@ import de.ust.skill.ir.TypeContext;
 import de.ust.skill.ir.UserType;
 import de.ust.skill.ir.View;
 import de.ust.skill.ir.WithFields;
+import de.ust.skill.ir.WithInheritance;
 import de.ust.skill.ir.restriction.SingletonRestriction;
 
 /**
@@ -106,19 +107,19 @@ public class EnumSubstitution extends Substitution {
             d.initialize(tops.get(d), Collections.<InterfaceType>emptyList(), Collections.<Field>emptyList(),
                     Collections.<View>emptyList(), Collections.<LanguageCustomization>emptyList());
         }
-        // case 2: d always was a user type ⇒ behave as always
-        else if (source instanceof UserType) {
-            UserType t = (UserType) source;
-            d.initialize((UserType) substitute(tc, t.getSuperType()),
-                    TypeContext.substituteTypes(this, tc, t.getSuperInterfaces()),
-                    TypeContext.substituteFields(this, tc, t.getFields()), t.getViews(), t.getCustomizations());
-        }
-        // case 3: we replaced an enum
-        else {
+        // case 2: we replaced an enum
+        else if (source instanceof EnumType) {
             WithFields t = (WithFields) source;
             List<Field> fs = TypeContext.substituteFields(this, tc, t.getFields());
             d.initialize(null, Collections.<InterfaceType>emptyList(), fs, Collections.<View>emptyList(),
                     Collections.<LanguageCustomization>emptyList());
+        }
+        // case 3: we replace something else
+        else {
+            WithInheritance t = (WithInheritance) source;
+            d.initialize((UserType) substitute(tc, t.getSuperType()),
+                    TypeContext.substituteTypes(this, tc, t.getSuperInterfaces()),
+                    TypeContext.substituteFields(this, tc, t.getFields()), t.getViews(), t.getCustomizations());
         }
     }
 
