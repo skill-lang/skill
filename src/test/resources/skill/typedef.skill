@@ -1,0 +1,10 @@
+Super {}
+
+typedef par super;
+
+
+Child : Super {
+  child c;
+  par p;
+  super s;
+}
