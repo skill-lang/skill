@@ -54,4 +54,18 @@ class ProjectionTest extends FunSuite {
       test(s"${f.getName} - interfaces")(
         check(f.getName, "interface/" + f.getName.replace(ext, ""), Array("-Oskill:drop=interfaces"))
       )
+
+  // ordinary spec without enums
+  for (ext ← Seq(".skill", ".sidl"))
+    for (f ← (new File("src/test/resources/skill")).listFiles if f.getName.endsWith(ext))
+      test(s"${f.getName} - enums")(
+        check(f.getName, "enums/" + f.getName.replace(ext, ""), Array("-Oskill:drop=enums"))
+      )
+
+  // ordinary spec without typedefs
+  for (ext ← Seq(".skill", ".sidl"))
+    for (f ← (new File("src/test/resources/skill")).listFiles if f.getName.endsWith(ext))
+      test(s"${f.getName} - typedefs")(
+        check(f.getName, "typedefs/" + f.getName.replace(ext, ""), Array("-Oskill:drop=typedefs"))
+      )
 }

@@ -24,12 +24,16 @@ trait SpecificationMaker extends GeneralOutputMaker {
   abstract override def make {
     super.make
 
-    // drop types
+    // drop types in correct order
     var IR = tc;
-    for (d ← droppedKinds) d match {
-      case Interfaces ⇒ IR = IR.removeInterfaces()
-      case Enums      ⇒ IR = IR.removeEnums()
-      case Typedefs   ⇒ IR = IR.removeTypedefs()
+    if (droppedKinds(Typedefs)) {
+      IR = IR.removeTypedefs()
+    }
+    if (droppedKinds(Interfaces)) {
+      IR = IR.removeInterfaces()
+    }
+    if (droppedKinds(Enums)) {
+      IR = IR.removeEnums()
     }
 
     // write specification
@@ -41,6 +45,10 @@ trait SpecificationMaker extends GeneralOutputMaker {
           name ← IR.allTypeNames.asScala;
           t = IR.get(name)
         ) yield t match {
+          case t : Declaration if t.getName.getSkillName.contains(':') ⇒
+            println("warning: will not handle projected enum instance " + t.getName.capital())
+            ""
+
           case t : UserType ⇒ s"""${prefix(t)}${t.getName.capital} ${
             if (null == t.getSuperType) ""
             else s": ${t.getSuperType.getName.capital} "
@@ -88,9 +96,9 @@ ${mkFields(t.getFields.asScala.to)}
   ${prefix(f)}const ${mapType(f.getType)} ${f.getName.camel} = 0x${f.constantValue().toHexString.toUpperCase()};"""
     else s"""
   ${prefix(f)}${
-    if(f.isAuto()) "auto "
-    else ""
-  }${mapType(f.getType)} ${f.getName.camel};"""
+      if (f.isAuto()) "auto "
+      else ""
+    }${mapType(f.getType)} ${f.getName.camel};"""
   }).mkString("\n")
 
   private def mkCustom(fs : List[LanguageCustomization]) : String = (for (f ← fs)

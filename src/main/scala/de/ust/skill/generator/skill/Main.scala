@@ -65,6 +65,9 @@ class Main extends FakeMain
     option match {
       case "drop" ⇒ value match {
         case "interfaces" ⇒ droppedKinds += Interfaces
+        case "typedefs"   ⇒ droppedKinds += Typedefs
+        case "enums"      ⇒ droppedKinds += Enums
+        case "all"        ⇒ droppedKinds ++= Seq(Interfaces, Typedefs, Enums)
       }
       case unknown ⇒ sys.error(s"unkown Argument: $unknown")
     }
