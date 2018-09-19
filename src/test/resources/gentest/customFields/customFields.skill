@@ -4,11 +4,36 @@
 # @note The language name is case-insensitive.
 
 /**
+ * Check that custom fields survive projection and exist in unprojected interfaces.
+ */
+interface ProjectedCustom {
+  custom ada
+  !with "System.Address"
+  "System.Address" any2;
+
+  /** some comment */
+  custom java
+  !import "java.lang.Object"
+  !modifier "public transient"
+  "Object" any2;
+
+  custom ScaLa
+  "Any" any2;
+
+  custom cpp
+  !include "cstdint"
+  "uint8_t*" any4;
+
+  custom cpp
+  "uint8_t*" any5;
+}
+
+/**
  * Demonstration of the capabilities of custom fields.
  *
  * @note Despite the appearance in the specification, for any given language, the Type has at most one field.
  */
-Custom {
+Custom : ProjectedCustom {
   custom ada
   !with "System.Address"
   "System.Address" any;
