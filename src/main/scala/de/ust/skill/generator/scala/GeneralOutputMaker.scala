@@ -37,8 +37,8 @@ trait GeneralOutputMaker extends Generator {
     largeSpecificationMode = IR.size > 200
   }
   var types : TypeContext = _
-  var IR : List[UserType] = _
-  var IRInterfaces : scala.collection.immutable.List[InterfaceType] = _
+  var IR : Array[UserType] = _
+  var IRInterfaces : Array[InterfaceType] = _
 
   /**
    * This flag is set iff the specification is too large to be passed as parameter list
