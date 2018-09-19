@@ -318,10 +318,12 @@ ${
     
     // custom fields
     for(c <- t.getCustomizations if c.language.equals("scala")){
-      val mod = c.getOptions.toMap.get("modifier").map(_.head + " ").getOrElse("")
+      val opts = c.getOptions.toMap
+      val mod = opts.get("modifier").map(_.head + " ").getOrElse("")
+      val default = opts.get("default").map(_.head).getOrElse("_")
       
       out.write(s"""
-  ${comment(c)}${mod}var ${name(c)} : ${c.`type`} = _; 
+  ${comment(c)}${mod}var ${name(c)} : ${c.`type`} = $default; 
 """)
     }
   }

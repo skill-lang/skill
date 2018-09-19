@@ -134,7 +134,8 @@ revealSkillID     true/false  if set to true, the generated binding will reveal 
 
   override def customFieldManual : String = """
 !import string+    A list of imports that will be added where required.
-!modifier string   A modifier, that will be put in front of the variable declaration."""
+!modifier string   A modifier, that will be put in front of the variable declaration.
+!default string    Text to be inserted as replacement for default initialization."""
 
   override protected def defaultValue(f : Field) : String = {
     val fr = f.getRestrictions.collect {
