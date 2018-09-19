@@ -3,6 +3,13 @@
 #
 # @note The language name is case-insensitive.
 
+Basis {}
+
+interface IBase : Basis {
+  custom scala
+  "Any" any3;
+}
+
 /**
  * Check that custom fields survive projection and exist in unprojected interfaces.
  */
@@ -33,7 +40,7 @@ interface ProjectedCustom {
  *
  * @note Despite the appearance in the specification, for any given language, the Type has at most one field.
  */
-Custom : ProjectedCustom {
+Custom : ProjectedCustom : IBase {
   custom ada
   !with "System.Address"
   "System.Address" any;

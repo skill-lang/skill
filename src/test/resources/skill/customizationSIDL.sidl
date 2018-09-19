@@ -1,4 +1,4 @@
-#ensure that customizations are pushed down on project just like regular fields
+#ensure that customizations are pushed down on projection just like regular fields
 
 interface CustomFields ::= Projected; 
 
