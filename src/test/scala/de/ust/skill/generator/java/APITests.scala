@@ -57,7 +57,8 @@ class APITests extends common.GenericAPITests {
       "-p", name,
       "-Ojava:SuppressWarnings=true",
       "-d", "testsuites/java/lib",
-      "-o", "testsuites/java/src/main/java/") ++ options)
+      "-o", "testsuites/java/src/main/java/"
+    ) ++ options)
   }
 
   def newTestFile(packagePath : String, name : String) : PrintWriter = {
@@ -155,6 +156,7 @@ public class Generic${name}Test extends common.CommonTest {
         case "string" if null != v ⇒ s"""$left != null && $left.equals("${v.toString()}")"""
         case "i8" ⇒ s"$left == (byte)" + v.toString()
         case "i16" ⇒ s"$left == (short)" + v.toString()
+        case "i32" ⇒ s"$left == " + v.toString()
         case "f32" ⇒ s"$left == (float)" + v.toString()
         case "f64" ⇒ s"$left == (double)" + v.toString()
         case "v64" | "i64" ⇒ s"$left == " + v.toString() + "L"
@@ -184,6 +186,7 @@ public class Generic${name}Test extends common.CommonTest {
         case "string" if null != v ⇒ s""""${v.toString()}""""
         case "i8"                  ⇒ "(byte)" + v.toString()
         case "i16"                 ⇒ "(short)" + v.toString()
+        case "i32"                 ⇒ v.toString()
         case "f32"                 ⇒ "(float)" + v.toString()
         case "f64"                 ⇒ "(double)" + v.toString()
         case "v64" | "i64"         ⇒ v.toString() + "L"
