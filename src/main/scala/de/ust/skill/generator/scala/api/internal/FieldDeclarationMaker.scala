@@ -86,6 +86,7 @@ final class ${knownField(f)}(${
   _owner : ${storagePool(t)},
   _type : FieldType[$fieldActualType]${
         if (f.getType.isInstanceOf[ReferenceType] || f.getType.isInstanceOf[ContainerType]) ""
+        else if (f.isConstant()) s" = Constant${mapToFieldType(f.getType)}(${f.constantValue()}L.to${mapType(f.getType)})"
         else s" = ${mapToFieldType(f.getType)}"
       })
     extends ${
@@ -196,7 +197,10 @@ ${mapKnownReadType(f.getType)}
         }
   }
 
-  def offset: Unit = {
+  def offset: Unit = {${
+          if (f.isConstant()) """
+    cachedOffset = 0"""
+          else s"""
     val data = owner.data
     var result = 0L
     dataChunks.last match {
@@ -223,10 +227,14 @@ ${mapKnownReadType(f.getType)}
           }
         }
     }
-    cachedOffset = result
+    cachedOffset = result"""
+        }
   }
 
-  def write(out: MappedOutStream): Unit = {
+  def write(out: MappedOutStream): Unit = {${
+          if (f.isConstant()) """
+    // writing constants is O(0)"""
+          else s"""
     val data = owner.data
     dataChunks.last match {
       case c : SimpleChunk ⇒
@@ -251,7 +259,8 @@ ${mapKnownReadType(f.getType)}
             i += 1
           }
         }
-    }
+    }"""
+        }
   }"""
 
       }${
@@ -353,8 +362,8 @@ ${mapKnownReadType(f.getType)}
         r.getValue.mkString("\"", ":", "\"")
       }).asInstanceOf[SingletonStoragePool[_ <: de.ust.skill.common.scala.api.SkillObject, _ <: de.ust.skill.common.scala.api.SkillObject]].get)"
     case r : StringDefaultRestriction ⇒ s"""DefaultRestriction("${r.getValue}")"""
-    
-    case r : CodingRestriction ⇒ s"""Coding("${r.getValue}")"""
+
+    case r : CodingRestriction        ⇒ s"""Coding("${r.getValue}")"""
 
     case r                            ⇒ println("[scala] unhandled restriction: " + r.getName); ""
   }

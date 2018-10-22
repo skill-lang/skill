@@ -104,8 +104,7 @@ final class ${storagePool(t)}(poolIndex : Int${
           if (f.getType.isInstanceOf[ReferenceType] || f.getType.isInstanceOf[ContainerType])
             s""", t.asInstanceOf[FieldType[${mapType(f.getType)}]]"""
           else ""
-        })"""
-        ).mkString("")
+        })""").mkString("")
       }
       case _      ⇒ return super.addField(ID, t, name, restrictions)
     }).asInstanceOf[FieldDeclaration[T, $typeName]]
@@ -144,8 +143,10 @@ final class ${storagePool(t)}(poolIndex : Int${
 ${
           (for (f ← dfs)
             yield s"""    if(fields.contains(${clsName(f)}))
-        dataFields += new ${knownField(projectedField(f))}(dataFields.size + 1, this, ${mapFieldDefinition(f.getType)})"""
-          ).mkString("\n")
+        dataFields += new ${knownField(projectedField(f))}(dataFields.size + 1, this, ${
+            if (f.isConstant()) s"Constant${mapFieldDefinition(f.getType)}(${f.constantValue()}L.to${mapType(f.getType)})"
+            else mapFieldDefinition(f.getType)
+          })""").mkString("\n")
         }
 """) + (
           if (afs.isEmpty) "    // no auto fields\n"
@@ -159,7 +160,8 @@ ${
               }"""
             }.mkString
           }
-  """)
+  """
+        )
       }
 
     val fs = (dataFields ++ autoFields).iterator
