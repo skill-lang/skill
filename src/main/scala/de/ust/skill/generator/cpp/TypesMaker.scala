@@ -166,8 +166,10 @@ ${
       // custom fields
       val customizations = t.getCustomizations.asScala.filter(_.language.equals("cpp")).toArray
       for(c <- customizations) {
+        val opts = c.getOptions.asScala.toMap
+        val default = opts.get("default").map(s ⇒ s" = ${s.get(0)}").getOrElse("")
         out.write(s"""
-        ${comment(c)}${c.`type`} ${name(c)}; 
+        ${comment(c)}${c.`type`} ${name(c)}$default; 
 """)
       }
 
