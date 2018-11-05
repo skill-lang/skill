@@ -239,20 +239,12 @@ std::size_t ($fieldName::osc)() const {${
               } else {
                 s"""
     ${mapType(t)}* d = ((${storagePool(t)}*) owner)->data;
-    const ::skill::internal::Chunk *target = dataChunks.back();
+    const auto target = dynamic_cast<const ::skill::internal::SimpleChunk *>(dataChunks.back());
     std::size_t result = 0L;
-    if (dynamic_cast<const ::skill::internal::SimpleChunk *>(target)) {
-        for (::skill::SKilLID i = 1 + ((const ::skill::internal::SimpleChunk *) target)->bpo,
-                     high = i + target->count; i != high; i++) {
-            ${offsetCode(f.getType)}
-        }
-    } else {
-        for (int i = 0; i < ((const ::skill::internal::BulkChunk *) target)->blockCount; i++) {
-          const auto &b = owner->blocks[i];
-          for (::skill::SKilLID i = 1 + b.bpo, end = i + b.dynamicCount; i != end; i++) {
-            ${offsetCode(f.getType)}
-          }
-        }
+    ::skill::SKilLID i = 1 + target->bpo;
+    const ::skill::SKilLID high = i + target->count;
+    for (; i != high; ++i) {
+        ${offsetCode(f.getType)}
     }
     return result;"""
               }
@@ -265,20 +257,11 @@ void $fieldName::wsc(::skill::streams::MappedOutStream *out) const {${
     // -done-"""
             else s"""
     ${mapType(t)}* d = ((${storagePool(t)}*) owner)->data;
-    const ::skill::internal::Chunk *target = dataChunks.back();
-    if (dynamic_cast<const ::skill::internal::SimpleChunk *>(target)) {
-        ::skill::SKilLID i = 1 + ((const ::skill::internal::SimpleChunk *) target)->bpo;
-        ::skill::SKilLID high = i + target->count;
-        for (; i != high; i++) {
-            ${writeCode(accessI, f)}
-        }
-    } else {
-        for (int i = 0; i < ((const ::skill::internal::BulkChunk *) target)->blockCount; i++) {
-          const auto &b = owner->blocks[i];
-          for (::skill::SKilLID i = 1 + b.bpo, end = i + b.dynamicCount; i != end; i++) {
-            ${writeCode(accessI, f)}
-          }
-        }
+    const auto target = dynamic_cast<const ::skill::internal::SimpleChunk *>(dataChunks.back());
+    ::skill::SKilLID i = 1 + target->bpo;
+    const ::skill::SKilLID high = i + target->count;
+    for (; i != high; i++) {
+        ${writeCode(accessI, f)}
     }"""
           }
 }
