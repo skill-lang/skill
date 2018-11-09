@@ -54,10 +54,10 @@ ${
    end To_${name(t)};
 
    function Unchecked_Access (This : access ${name(t)}_T) return ${name(t)} is
-      type T is access all ${name(t)}_T;
-      function Convert is new Ada.Unchecked_Conversion (T, ${name(t)});
+      type ZT is access all ${name(t)}_T;
+      function Convert is new Ada.Unchecked_Conversion (ZT, ${name(t)});
    begin
-      return Convert (T (This));
+      return Convert (ZT (This));
    end Unchecked_Access;${
           // type conversions to super types
           var r = new StringBuilder
