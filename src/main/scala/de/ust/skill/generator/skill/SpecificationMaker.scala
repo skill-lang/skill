@@ -41,10 +41,8 @@ trait SpecificationMaker extends GeneralOutputMaker {
 
     out.write(s"""${
       (
-        for (
-          name ← IR.allTypeNames.asScala;
-          t = IR.get(name)
-        ) yield t match {
+        for (t ← IR.getDeclarations.asScala) yield t match {
+
           case t : Declaration if t.getName.getSkillName.contains(':') ⇒
             println("warning: will not handle projected enum instance " + t.getName.capital())
             ""

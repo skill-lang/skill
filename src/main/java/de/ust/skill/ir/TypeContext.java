@@ -7,6 +7,7 @@ package de.ust.skill.ir;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -214,7 +215,7 @@ public final class TypeContext {
             }
         }
 
-        tc.setDefs(defs);
+        tc.setDefs(topologicalSort(defs));
 
         return tc;
     }
@@ -265,5 +266,14 @@ public final class TypeContext {
 
     public List<Typedef> getTypedefs() {
         return typedefs;
+    }
+
+    /**
+     * sort a list of declarations in topological order maintaining its internal order
+     * 
+     * @note this is required by projects, as removing edges can change order
+     */
+    private static LinkedList<Declaration> topologicalSort(List<Declaration> nodes) {
+        return new TopologicalSort(nodes).result;
     }
 }
