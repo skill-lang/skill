@@ -1,8 +1,8 @@
-/*  ___ _  ___ _ _                                                            *\
- * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 06.12.2016                               *
- * |___/_|\_\_|_|____|    by: feldentm                                        *
-\*                                                                            */
+/*  ___ _  ___ _ _                                                                                                    *\
+** / __| |/ (_) | |     Your SKilL scala Binding                                                                      **
+** \__ \ ' <| | | |__   generated: 01.02.2019                                                                         **
+** |___/_|\_\_|_|____|  by: feldentm                                                                                  **
+\*                                                                                                                    */
 package de.ust.skill.sir.api.internal
 
 import scala.collection.mutable.ArrayBuffer
@@ -40,9 +40,9 @@ superPool
   override def addField[T : Manifest](ID : Int, t : FieldType[T], name : String,
                            restrictions : HashSet[FieldRestriction]) : FieldDeclaration[T, _root_.de.ust.skill.sir.CustomField] = {
     val f = (name match {
-      case "language" ⇒ new KnownField_CustomField_language(ID, this, t.asInstanceOf[FieldType[java.lang.String]])
-      case "options" ⇒ new KnownField_CustomField_options(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.CustomFieldOption]]])
-      case "typename" ⇒ new KnownField_CustomField_typename(ID, this, t.asInstanceOf[FieldType[java.lang.String]])
+      case "language" ⇒ new F_CustomField_language(ID, this, t.asInstanceOf[FieldType[java.lang.String]])
+      case "options" ⇒ new F_CustomField_options(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.CustomFieldOption]]])
+      case "typename" ⇒ new F_CustomField_typename(ID, this, t.asInstanceOf[FieldType[java.lang.String]])
       case _      ⇒ return super.addField(ID, t, name, restrictions)
     }).asInstanceOf[FieldDeclaration[T, _root_.de.ust.skill.sir.CustomField]]
 
@@ -50,16 +50,19 @@ superPool
     if (t != f.t)
       throw new TypeMissmatchError(t, f.t.toString, f.name, name)
 
-    restrictions.foreach(f.addRestriction(_))
+    val rs = restrictions.iterator
+    while(rs.hasNext)
+      f.addRestriction(rs.next())
+
     dataFields += f
     return f
   }
   override def ensureKnownFields(st : SkillState) {
     val state = st.asInstanceOf[SkillFile]
     // data fields
-    val Clslanguage = classOf[KnownField_CustomField_language]
-    val Clsoptions = classOf[KnownField_CustomField_options]
-    val Clstypename = classOf[KnownField_CustomField_typename]
+    val Clslanguage = classOf[F_CustomField_language]
+    val Clsoptions = classOf[F_CustomField_options]
+    val Clstypename = classOf[F_CustomField_typename]
 
     val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.CustomField]]](Clslanguage,Clsoptions,Clstypename)
     var dfi = dataFields.size
@@ -68,16 +71,17 @@ superPool
       fields.remove(dataFields(dfi).getClass)
     }
     if(fields.contains(Clslanguage))
-        dataFields += new KnownField_CustomField_language(dataFields.size + 1, this, state.String)
+        dataFields += new F_CustomField_language(dataFields.size + 1, this, state.String)
     if(fields.contains(Clsoptions))
-        dataFields += new KnownField_CustomField_options(dataFields.size + 1, this, VariableLengthArray(state.CustomFieldOption))
+        dataFields += new F_CustomField_options(dataFields.size + 1, this, VariableLengthArray(state.CustomFieldOption))
     if(fields.contains(Clstypename))
-        dataFields += new KnownField_CustomField_typename(dataFields.size + 1, this, state.String)
+        dataFields += new F_CustomField_typename(dataFields.size + 1, this, state.String)
     // no auto fields
 
 
-    for(f <- dataFields ++ autoFields)
-      f.createKnownRestrictions
+    val fs = (dataFields ++ autoFields).iterator
+    while (fs.hasNext)
+      fs.next().createKnownRestrictions
   }
 
   override def makeSubPool(name : String, poolIndex : Int) = new CustomFieldSubPool(poolIndex, name, this)

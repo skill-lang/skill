@@ -1,8 +1,8 @@
-/*  ___ _  ___ _ _                                                            *\
- * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 06.12.2016                               *
- * |___/_|\_\_|_|____|    by: feldentm                                        *
-\*                                                                            */
+/*  ___ _  ___ _ _                                                                                                    *\
+** / __| |/ (_) | |     Your SKilL scala Binding                                                                      **
+** \__ \ ' <| | | |__   generated: 01.02.2019                                                                         **
+** |___/_|\_\_|_|____|  by: feldentm                                                                                  **
+\*                                                                                                                    */
 package de.ust.skill.sir.api.internal
 
 import scala.collection.mutable.ArrayBuffer
@@ -40,9 +40,9 @@ superPool
   override def addField[T : Manifest](ID : Int, t : FieldType[T], name : String,
                            restrictions : HashSet[FieldRestriction]) : FieldDeclaration[T, _root_.de.ust.skill.sir.ClassType] = {
     val f = (name match {
-      case "fields" ⇒ new KnownField_ClassType_fields(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike]]])
-      case "interfaces" ⇒ new KnownField_ClassType_interfaces(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.HashSet[_root_.de.ust.skill.sir.InterfaceType]]])
-      case "super" ⇒ new KnownField_ClassType_super(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.ClassType]])
+      case "fields" ⇒ new F_ClassType_fields(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike]]])
+      case "interfaces" ⇒ new F_ClassType_interfaces(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.HashSet[_root_.de.ust.skill.sir.InterfaceType]]])
+      case "super" ⇒ new F_ClassType_super(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.ClassType]])
       case _      ⇒ return super.addField(ID, t, name, restrictions)
     }).asInstanceOf[FieldDeclaration[T, _root_.de.ust.skill.sir.ClassType]]
 
@@ -50,16 +50,19 @@ superPool
     if (t != f.t)
       throw new TypeMissmatchError(t, f.t.toString, f.name, name)
 
-    restrictions.foreach(f.addRestriction(_))
+    val rs = restrictions.iterator
+    while(rs.hasNext)
+      f.addRestriction(rs.next())
+
     dataFields += f
     return f
   }
   override def ensureKnownFields(st : SkillState) {
     val state = st.asInstanceOf[SkillFile]
     // data fields
-    val Clsfields = classOf[KnownField_ClassType_fields]
-    val Clsinterfaces = classOf[KnownField_ClassType_interfaces]
-    val Clssuper = classOf[KnownField_ClassType_super]
+    val Clsfields = classOf[F_ClassType_fields]
+    val Clsinterfaces = classOf[F_ClassType_interfaces]
+    val Clssuper = classOf[F_ClassType_super]
 
     val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.ClassType]]](Clsfields,Clsinterfaces,Clssuper)
     var dfi = dataFields.size
@@ -68,16 +71,17 @@ superPool
       fields.remove(dataFields(dfi).getClass)
     }
     if(fields.contains(Clsfields))
-        dataFields += new KnownField_ClassType_fields(dataFields.size + 1, this, VariableLengthArray(state.FieldLike))
+        dataFields += new F_ClassType_fields(dataFields.size + 1, this, VariableLengthArray(state.FieldLike))
     if(fields.contains(Clsinterfaces))
-        dataFields += new KnownField_ClassType_interfaces(dataFields.size + 1, this, SetType(state.InterfaceType))
+        dataFields += new F_ClassType_interfaces(dataFields.size + 1, this, SetType(state.InterfaceType))
     if(fields.contains(Clssuper))
-        dataFields += new KnownField_ClassType_super(dataFields.size + 1, this, state.ClassType)
+        dataFields += new F_ClassType_super(dataFields.size + 1, this, state.ClassType)
     // no auto fields
 
 
-    for(f <- dataFields ++ autoFields)
-      f.createKnownRestrictions
+    val fs = (dataFields ++ autoFields).iterator
+    while (fs.hasNext)
+      fs.next().createKnownRestrictions
   }
 
   override def makeSubPool(name : String, poolIndex : Int) = new ClassTypeSubPool(poolIndex, name, this)

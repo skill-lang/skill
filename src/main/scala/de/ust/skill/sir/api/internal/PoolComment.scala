@@ -1,8 +1,8 @@
-/*  ___ _  ___ _ _                                                            *\
- * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 06.12.2016                               *
- * |___/_|\_\_|_|____|    by: feldentm                                        *
-\*                                                                            */
+/*  ___ _  ___ _ _                                                                                                    *\
+** / __| |/ (_) | |     Your SKilL scala Binding                                                                      **
+** \__ \ ' <| | | |__   generated: 01.02.2019                                                                         **
+** |___/_|\_\_|_|____|  by: feldentm                                                                                  **
+\*                                                                                                                    */
 package de.ust.skill.sir.api.internal
 
 import scala.collection.mutable.ArrayBuffer
@@ -38,8 +38,8 @@ final class CommentPool(poolIndex : Int)
   override def addField[T : Manifest](ID : Int, t : FieldType[T], name : String,
                            restrictions : HashSet[FieldRestriction]) : FieldDeclaration[T, _root_.de.ust.skill.sir.Comment] = {
     val f = (name match {
-      case "tags" ⇒ new KnownField_Comment_tags(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.CommentTag]]])
-      case "text" ⇒ new KnownField_Comment_text(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[java.lang.String]]])
+      case "tags" ⇒ new F_Comment_tags(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.CommentTag]]])
+      case "text" ⇒ new F_Comment_text(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[java.lang.String]]])
       case _      ⇒ return super.addField(ID, t, name, restrictions)
     }).asInstanceOf[FieldDeclaration[T, _root_.de.ust.skill.sir.Comment]]
 
@@ -47,15 +47,18 @@ final class CommentPool(poolIndex : Int)
     if (t != f.t)
       throw new TypeMissmatchError(t, f.t.toString, f.name, name)
 
-    restrictions.foreach(f.addRestriction(_))
+    val rs = restrictions.iterator
+    while(rs.hasNext)
+      f.addRestriction(rs.next())
+
     dataFields += f
     return f
   }
   override def ensureKnownFields(st : SkillState) {
     val state = st.asInstanceOf[SkillFile]
     // data fields
-    val Clstags = classOf[KnownField_Comment_tags]
-    val Clstext = classOf[KnownField_Comment_text]
+    val Clstags = classOf[F_Comment_tags]
+    val Clstext = classOf[F_Comment_text]
 
     val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.Comment]]](Clstags,Clstext)
     var dfi = dataFields.size
@@ -64,14 +67,15 @@ final class CommentPool(poolIndex : Int)
       fields.remove(dataFields(dfi).getClass)
     }
     if(fields.contains(Clstags))
-        dataFields += new KnownField_Comment_tags(dataFields.size + 1, this, VariableLengthArray(state.CommentTag))
+        dataFields += new F_Comment_tags(dataFields.size + 1, this, VariableLengthArray(state.CommentTag))
     if(fields.contains(Clstext))
-        dataFields += new KnownField_Comment_text(dataFields.size + 1, this, VariableLengthArray(state.String))
+        dataFields += new F_Comment_text(dataFields.size + 1, this, VariableLengthArray(state.String))
     // no auto fields
 
 
-    for(f <- dataFields ++ autoFields)
-      f.createKnownRestrictions
+    val fs = (dataFields ++ autoFields).iterator
+    while (fs.hasNext)
+      fs.next().createKnownRestrictions
   }
 
   override def makeSubPool(name : String, poolIndex : Int) = new CommentSubPool(poolIndex, name, this)

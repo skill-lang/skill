@@ -1,8 +1,8 @@
-/*  ___ _  ___ _ _                                                            *\
- * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 06.12.2016                               *
- * |___/_|\_\_|_|____|    by: feldentm                                        *
-\*                                                                            */
+/*  ___ _  ___ _ _                                                                                                    *\
+** / __| |/ (_) | |     Your SKilL scala Binding                                                                      **
+** \__ \ ' <| | | |__   generated: 01.02.2019                                                                         **
+** |___/_|\_\_|_|____|  by: feldentm                                                                                  **
+\*                                                                                                                    */
 package de.ust.skill.sir.api.internal
 
 import scala.collection.mutable.ArrayBuffer
@@ -38,8 +38,8 @@ final class ToolTypeCustomizationPool(poolIndex : Int)
   override def addField[T : Manifest](ID : Int, t : FieldType[T], name : String,
                            restrictions : HashSet[FieldRestriction]) : FieldDeclaration[T, _root_.de.ust.skill.sir.ToolTypeCustomization] = {
     val f = (name match {
-      case "hints" ⇒ new KnownField_ToolTypeCustomization_hints(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint]]])
-      case "restrictions" ⇒ new KnownField_ToolTypeCustomization_restrictions(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]]])
+      case "hints" ⇒ new F_ToolTypeCustomization_hints(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint]]])
+      case "restrictions" ⇒ new F_ToolTypeCustomization_restrictions(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]]])
       case _      ⇒ return super.addField(ID, t, name, restrictions)
     }).asInstanceOf[FieldDeclaration[T, _root_.de.ust.skill.sir.ToolTypeCustomization]]
 
@@ -47,15 +47,18 @@ final class ToolTypeCustomizationPool(poolIndex : Int)
     if (t != f.t)
       throw new TypeMissmatchError(t, f.t.toString, f.name, name)
 
-    restrictions.foreach(f.addRestriction(_))
+    val rs = restrictions.iterator
+    while(rs.hasNext)
+      f.addRestriction(rs.next())
+
     dataFields += f
     return f
   }
   override def ensureKnownFields(st : SkillState) {
     val state = st.asInstanceOf[SkillFile]
     // data fields
-    val Clshints = classOf[KnownField_ToolTypeCustomization_hints]
-    val Clsrestrictions = classOf[KnownField_ToolTypeCustomization_restrictions]
+    val Clshints = classOf[F_ToolTypeCustomization_hints]
+    val Clsrestrictions = classOf[F_ToolTypeCustomization_restrictions]
 
     val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.ToolTypeCustomization]]](Clshints,Clsrestrictions)
     var dfi = dataFields.size
@@ -64,14 +67,15 @@ final class ToolTypeCustomizationPool(poolIndex : Int)
       fields.remove(dataFields(dfi).getClass)
     }
     if(fields.contains(Clshints))
-        dataFields += new KnownField_ToolTypeCustomization_hints(dataFields.size + 1, this, VariableLengthArray(state.Hint))
+        dataFields += new F_ToolTypeCustomization_hints(dataFields.size + 1, this, VariableLengthArray(state.Hint))
     if(fields.contains(Clsrestrictions))
-        dataFields += new KnownField_ToolTypeCustomization_restrictions(dataFields.size + 1, this, VariableLengthArray(state.Restriction))
+        dataFields += new F_ToolTypeCustomization_restrictions(dataFields.size + 1, this, VariableLengthArray(state.Restriction))
     // no auto fields
 
 
-    for(f <- dataFields ++ autoFields)
-      f.createKnownRestrictions
+    val fs = (dataFields ++ autoFields).iterator
+    while (fs.hasNext)
+      fs.next().createKnownRestrictions
   }
 
   override def makeSubPool(name : String, poolIndex : Int) = new ToolTypeCustomizationSubPool(poolIndex, name, this)

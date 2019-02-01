@@ -1,8 +1,8 @@
-/*  ___ _  ___ _ _                                                            *\
- * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 06.12.2016                               *
- * |___/_|\_\_|_|____|    by: feldentm                                        *
-\*                                                                            */
+/*  ___ _  ___ _ _                                                                                                    *\
+** / __| |/ (_) | |     Your SKilL scala Binding                                                                      **
+** \__ \ ' <| | | |__   generated: 01.02.2019                                                                         **
+** |___/_|\_\_|_|____|  by: feldentm                                                                                  **
+\*                                                                                                                    */
 package de.ust.skill.sir.api.internal
 
 import scala.collection.mutable.ArrayBuffer
@@ -38,11 +38,11 @@ final class FieldLikePool(poolIndex : Int)
   override def addField[T : Manifest](ID : Int, t : FieldType[T], name : String,
                            restrictions : HashSet[FieldRestriction]) : FieldDeclaration[T, _root_.de.ust.skill.sir.FieldLike] = {
     val f = (name match {
-      case "comment" ⇒ new KnownField_FieldLike_comment(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Comment]])
-      case "name" ⇒ new KnownField_FieldLike_name(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Identifier]])
-      case "type" ⇒ new KnownField_FieldLike_type(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Type]])
-      case "hints" ⇒ new KnownField_FieldLike_hints(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint]]])
-      case "restrictions" ⇒ new KnownField_FieldLike_restrictions(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]]])
+      case "comment" ⇒ new F_FieldLike_comment(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Comment]])
+      case "name" ⇒ new F_FieldLike_name(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Identifier]])
+      case "type" ⇒ new F_FieldLike_type(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Type]])
+      case "hints" ⇒ new F_FieldLike_hints(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint]]])
+      case "restrictions" ⇒ new F_FieldLike_restrictions(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]]])
       case _      ⇒ return super.addField(ID, t, name, restrictions)
     }).asInstanceOf[FieldDeclaration[T, _root_.de.ust.skill.sir.FieldLike]]
 
@@ -50,18 +50,21 @@ final class FieldLikePool(poolIndex : Int)
     if (t != f.t)
       throw new TypeMissmatchError(t, f.t.toString, f.name, name)
 
-    restrictions.foreach(f.addRestriction(_))
+    val rs = restrictions.iterator
+    while(rs.hasNext)
+      f.addRestriction(rs.next())
+
     dataFields += f
     return f
   }
   override def ensureKnownFields(st : SkillState) {
     val state = st.asInstanceOf[SkillFile]
     // data fields
-    val Clscomment = classOf[KnownField_FieldLike_comment]
-    val Clsname = classOf[KnownField_FieldLike_name]
-    val Clstype = classOf[KnownField_FieldLike_type]
-    val Clshints = classOf[KnownField_FieldLike_hints]
-    val Clsrestrictions = classOf[KnownField_FieldLike_restrictions]
+    val Clscomment = classOf[F_FieldLike_comment]
+    val Clsname = classOf[F_FieldLike_name]
+    val Clstype = classOf[F_FieldLike_type]
+    val Clshints = classOf[F_FieldLike_hints]
+    val Clsrestrictions = classOf[F_FieldLike_restrictions]
 
     val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.FieldLike]]](Clscomment,Clsname,Clstype,Clshints,Clsrestrictions)
     var dfi = dataFields.size
@@ -70,20 +73,21 @@ final class FieldLikePool(poolIndex : Int)
       fields.remove(dataFields(dfi).getClass)
     }
     if(fields.contains(Clscomment))
-        dataFields += new KnownField_FieldLike_comment(dataFields.size + 1, this, state.Comment)
+        dataFields += new F_FieldLike_comment(dataFields.size + 1, this, state.Comment)
     if(fields.contains(Clsname))
-        dataFields += new KnownField_FieldLike_name(dataFields.size + 1, this, state.Identifier)
+        dataFields += new F_FieldLike_name(dataFields.size + 1, this, state.Identifier)
     if(fields.contains(Clstype))
-        dataFields += new KnownField_FieldLike_type(dataFields.size + 1, this, state.Type)
+        dataFields += new F_FieldLike_type(dataFields.size + 1, this, state.Type)
     if(fields.contains(Clshints))
-        dataFields += new KnownField_FieldLike_hints(dataFields.size + 1, this, VariableLengthArray(state.Hint))
+        dataFields += new F_FieldLike_hints(dataFields.size + 1, this, VariableLengthArray(state.Hint))
     if(fields.contains(Clsrestrictions))
-        dataFields += new KnownField_FieldLike_restrictions(dataFields.size + 1, this, VariableLengthArray(state.Restriction))
+        dataFields += new F_FieldLike_restrictions(dataFields.size + 1, this, VariableLengthArray(state.Restriction))
     // no auto fields
 
 
-    for(f <- dataFields ++ autoFields)
-      f.createKnownRestrictions
+    val fs = (dataFields ++ autoFields).iterator
+    while (fs.hasNext)
+      fs.next().createKnownRestrictions
   }
 
   override def makeSubPool(name : String, poolIndex : Int) = new FieldLikeSubPool(poolIndex, name, this)

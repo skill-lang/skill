@@ -1,8 +1,8 @@
-/*  ___ _  ___ _ _                                                            *\
- * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 06.12.2016                               *
- * |___/_|\_\_|_|____|    by: feldentm                                        *
-\*                                                                            */
+/*  ___ _  ___ _ _                                                                                                    *\
+** / __| |/ (_) | |     Your SKilL scala Binding                                                                      **
+** \__ \ ' <| | | |__   generated: 01.02.2019                                                                         **
+** |___/_|\_\_|_|____|  by: feldentm                                                                                  **
+\*                                                                                                                    */
 package de.ust.skill.sir.api.internal
 
 import scala.collection.mutable.ArrayBuffer
@@ -40,7 +40,7 @@ superPool
   override def addField[T : Manifest](ID : Int, t : FieldType[T], name : String,
                            restrictions : HashSet[FieldRestriction]) : FieldDeclaration[T, _root_.de.ust.skill.sir.ConstantInteger] = {
     val f = (name match {
-      case "value" ⇒ new KnownField_ConstantInteger_value(ID, this)
+      case "value" ⇒ new F_ConstantInteger_value(ID, this)
       case _      ⇒ return super.addField(ID, t, name, restrictions)
     }).asInstanceOf[FieldDeclaration[T, _root_.de.ust.skill.sir.ConstantInteger]]
 
@@ -48,14 +48,17 @@ superPool
     if (t != f.t)
       throw new TypeMissmatchError(t, f.t.toString, f.name, name)
 
-    restrictions.foreach(f.addRestriction(_))
+    val rs = restrictions.iterator
+    while(rs.hasNext)
+      f.addRestriction(rs.next())
+
     dataFields += f
     return f
   }
   override def ensureKnownFields(st : SkillState) {
     val state = st.asInstanceOf[SkillFile]
     // data fields
-    val Clsvalue = classOf[KnownField_ConstantInteger_value]
+    val Clsvalue = classOf[F_ConstantInteger_value]
 
     val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.ConstantInteger]]](Clsvalue)
     var dfi = dataFields.size
@@ -64,12 +67,13 @@ superPool
       fields.remove(dataFields(dfi).getClass)
     }
     if(fields.contains(Clsvalue))
-        dataFields += new KnownField_ConstantInteger_value(dataFields.size + 1, this, V64)
+        dataFields += new F_ConstantInteger_value(dataFields.size + 1, this, V64)
     // no auto fields
 
 
-    for(f <- dataFields ++ autoFields)
-      f.createKnownRestrictions
+    val fs = (dataFields ++ autoFields).iterator
+    while (fs.hasNext)
+      fs.next().createKnownRestrictions
   }
 
   override def makeSubPool(name : String, poolIndex : Int) = new ConstantIntegerSubPool(poolIndex, name, this)

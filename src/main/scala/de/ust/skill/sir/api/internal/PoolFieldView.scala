@@ -1,8 +1,8 @@
-/*  ___ _  ___ _ _                                                            *\
- * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 06.12.2016                               *
- * |___/_|\_\_|_|____|    by: feldentm                                        *
-\*                                                                            */
+/*  ___ _  ___ _ _                                                                                                    *\
+** / __| |/ (_) | |     Your SKilL scala Binding                                                                      **
+** \__ \ ' <| | | |__   generated: 01.02.2019                                                                         **
+** |___/_|\_\_|_|____|  by: feldentm                                                                                  **
+\*                                                                                                                    */
 package de.ust.skill.sir.api.internal
 
 import scala.collection.mutable.ArrayBuffer
@@ -40,7 +40,7 @@ superPool
   override def addField[T : Manifest](ID : Int, t : FieldType[T], name : String,
                            restrictions : HashSet[FieldRestriction]) : FieldDeclaration[T, _root_.de.ust.skill.sir.FieldView] = {
     val f = (name match {
-      case "target" ⇒ new KnownField_FieldView_target(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.FieldLike]])
+      case "target" ⇒ new F_FieldView_target(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.FieldLike]])
       case _      ⇒ return super.addField(ID, t, name, restrictions)
     }).asInstanceOf[FieldDeclaration[T, _root_.de.ust.skill.sir.FieldView]]
 
@@ -48,14 +48,17 @@ superPool
     if (t != f.t)
       throw new TypeMissmatchError(t, f.t.toString, f.name, name)
 
-    restrictions.foreach(f.addRestriction(_))
+    val rs = restrictions.iterator
+    while(rs.hasNext)
+      f.addRestriction(rs.next())
+
     dataFields += f
     return f
   }
   override def ensureKnownFields(st : SkillState) {
     val state = st.asInstanceOf[SkillFile]
     // data fields
-    val Clstarget = classOf[KnownField_FieldView_target]
+    val Clstarget = classOf[F_FieldView_target]
 
     val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.FieldView]]](Clstarget)
     var dfi = dataFields.size
@@ -64,12 +67,13 @@ superPool
       fields.remove(dataFields(dfi).getClass)
     }
     if(fields.contains(Clstarget))
-        dataFields += new KnownField_FieldView_target(dataFields.size + 1, this, state.FieldLike)
+        dataFields += new F_FieldView_target(dataFields.size + 1, this, state.FieldLike)
     // no auto fields
 
 
-    for(f <- dataFields ++ autoFields)
-      f.createKnownRestrictions
+    val fs = (dataFields ++ autoFields).iterator
+    while (fs.hasNext)
+      fs.next().createKnownRestrictions
   }
 
   override def makeSubPool(name : String, poolIndex : Int) = new FieldViewSubPool(poolIndex, name, this)

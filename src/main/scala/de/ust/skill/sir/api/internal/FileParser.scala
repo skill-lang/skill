@@ -1,8 +1,8 @@
-/*  ___ _  ___ _ _                                                            *\
- * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 06.12.2016                               *
- * |___/_|\_\_|_|____|    by: feldentm                                        *
-\*                                                                            */
+/*  ___ _  ___ _ _                                                                                                    *\
+** / __| |/ (_) | |     Your SKilL scala Binding                                                                      **
+** \__ \ ' <| | | |__   generated: 01.02.2019                                                                         **
+** |___/_|\_\_|_|____|  by: feldentm                                                                                  **
+\*                                                                                                                    */
 package de.ust.skill.sir.api.internal
 
 import java.nio.file.Path
@@ -16,7 +16,6 @@ import de.ust.skill.common.scala.api.SkillObject
 import de.ust.skill.common.scala.api.TypeSystemError
 import de.ust.skill.common.scala.api.WriteMode
 import de.ust.skill.common.scala.internal.BasePool
-import de.ust.skill.common.scala.internal.SkillFileParser
 import de.ust.skill.common.scala.internal.StoragePool
 import de.ust.skill.common.scala.internal.StringPool
 import de.ust.skill.common.scala.internal.UnknownBasePool
@@ -30,7 +29,7 @@ import _root_.de.ust.skill.sir.api.SkillFile
  *
  * @author Timm Felden
  */
-object FileParser extends SkillFileParser[SkillFile] {
+object FileParser extends de.ust.skill.common.scala.internal.FileParser[SkillFile] {
 
   // TODO we can make this faster using a hash map (for large type systems)
   def newPool(
@@ -362,7 +361,11 @@ object FileParser extends SkillFileParser[SkillFile] {
     // read eager fields
     triggerFieldDeserialization(types, dataList)
 
-    types.par.foreach(_.ensureKnownFields(r))
+    locally {
+      val ts = types.iterator
+      while(ts.hasNext)
+        ts.next().ensureKnownFields(r)
+    }
     r
   }
 }

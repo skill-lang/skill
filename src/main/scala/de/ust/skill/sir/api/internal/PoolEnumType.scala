@@ -1,8 +1,8 @@
-/*  ___ _  ___ _ _                                                            *\
- * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 06.12.2016                               *
- * |___/_|\_\_|_|____|    by: feldentm                                        *
-\*                                                                            */
+/*  ___ _  ___ _ _                                                                                                    *\
+** / __| |/ (_) | |     Your SKilL scala Binding                                                                      **
+** \__ \ ' <| | | |__   generated: 01.02.2019                                                                         **
+** |___/_|\_\_|_|____|  by: feldentm                                                                                  **
+\*                                                                                                                    */
 package de.ust.skill.sir.api.internal
 
 import scala.collection.mutable.ArrayBuffer
@@ -40,8 +40,8 @@ superPool
   override def addField[T : Manifest](ID : Int, t : FieldType[T], name : String,
                            restrictions : HashSet[FieldRestriction]) : FieldDeclaration[T, _root_.de.ust.skill.sir.EnumType] = {
     val f = (name match {
-      case "fields" ⇒ new KnownField_EnumType_fields(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike]]])
-      case "instances" ⇒ new KnownField_EnumType_instances(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Identifier]]])
+      case "fields" ⇒ new F_EnumType_fields(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.FieldLike]]])
+      case "instances" ⇒ new F_EnumType_instances(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Identifier]]])
       case _      ⇒ return super.addField(ID, t, name, restrictions)
     }).asInstanceOf[FieldDeclaration[T, _root_.de.ust.skill.sir.EnumType]]
 
@@ -49,15 +49,18 @@ superPool
     if (t != f.t)
       throw new TypeMissmatchError(t, f.t.toString, f.name, name)
 
-    restrictions.foreach(f.addRestriction(_))
+    val rs = restrictions.iterator
+    while(rs.hasNext)
+      f.addRestriction(rs.next())
+
     dataFields += f
     return f
   }
   override def ensureKnownFields(st : SkillState) {
     val state = st.asInstanceOf[SkillFile]
     // data fields
-    val Clsfields = classOf[KnownField_EnumType_fields]
-    val Clsinstances = classOf[KnownField_EnumType_instances]
+    val Clsfields = classOf[F_EnumType_fields]
+    val Clsinstances = classOf[F_EnumType_instances]
 
     val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.EnumType]]](Clsfields,Clsinstances)
     var dfi = dataFields.size
@@ -66,14 +69,15 @@ superPool
       fields.remove(dataFields(dfi).getClass)
     }
     if(fields.contains(Clsfields))
-        dataFields += new KnownField_EnumType_fields(dataFields.size + 1, this, VariableLengthArray(state.FieldLike))
+        dataFields += new F_EnumType_fields(dataFields.size + 1, this, VariableLengthArray(state.FieldLike))
     if(fields.contains(Clsinstances))
-        dataFields += new KnownField_EnumType_instances(dataFields.size + 1, this, VariableLengthArray(state.Identifier))
+        dataFields += new F_EnumType_instances(dataFields.size + 1, this, VariableLengthArray(state.Identifier))
     // no auto fields
 
 
-    for(f <- dataFields ++ autoFields)
-      f.createKnownRestrictions
+    val fs = (dataFields ++ autoFields).iterator
+    while (fs.hasNext)
+      fs.next().createKnownRestrictions
   }
 
   override def makeSubPool(name : String, poolIndex : Int) = new EnumTypeSubPool(poolIndex, name, this)

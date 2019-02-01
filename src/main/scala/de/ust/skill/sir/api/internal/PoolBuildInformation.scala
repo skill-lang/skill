@@ -1,8 +1,8 @@
-/*  ___ _  ___ _ _                                                            *\
- * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 06.12.2016                               *
- * |___/_|\_\_|_|____|    by: feldentm                                        *
-\*                                                                            */
+/*  ___ _  ___ _ _                                                                                                    *\
+** / __| |/ (_) | |     Your SKilL scala Binding                                                                      **
+** \__ \ ' <| | | |__   generated: 01.02.2019                                                                         **
+** |___/_|\_\_|_|____|  by: feldentm                                                                                  **
+\*                                                                                                                    */
 package de.ust.skill.sir.api.internal
 
 import scala.collection.mutable.ArrayBuffer
@@ -38,9 +38,9 @@ final class BuildInformationPool(poolIndex : Int)
   override def addField[T : Manifest](ID : Int, t : FieldType[T], name : String,
                            restrictions : HashSet[FieldRestriction]) : FieldDeclaration[T, _root_.de.ust.skill.sir.BuildInformation] = {
     val f = (name match {
-      case "language" ⇒ new KnownField_BuildInformation_language(ID, this, t.asInstanceOf[FieldType[java.lang.String]])
-      case "options" ⇒ new KnownField_BuildInformation_options(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[java.lang.String]]])
-      case "output" ⇒ new KnownField_BuildInformation_output(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.FilePath]])
+      case "language" ⇒ new F_BuildInformation_language(ID, this, t.asInstanceOf[FieldType[java.lang.String]])
+      case "options" ⇒ new F_BuildInformation_options(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[java.lang.String]]])
+      case "output" ⇒ new F_BuildInformation_output(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.FilePath]])
       case _      ⇒ return super.addField(ID, t, name, restrictions)
     }).asInstanceOf[FieldDeclaration[T, _root_.de.ust.skill.sir.BuildInformation]]
 
@@ -48,16 +48,19 @@ final class BuildInformationPool(poolIndex : Int)
     if (t != f.t)
       throw new TypeMissmatchError(t, f.t.toString, f.name, name)
 
-    restrictions.foreach(f.addRestriction(_))
+    val rs = restrictions.iterator
+    while(rs.hasNext)
+      f.addRestriction(rs.next())
+
     dataFields += f
     return f
   }
   override def ensureKnownFields(st : SkillState) {
     val state = st.asInstanceOf[SkillFile]
     // data fields
-    val Clslanguage = classOf[KnownField_BuildInformation_language]
-    val Clsoptions = classOf[KnownField_BuildInformation_options]
-    val Clsoutput = classOf[KnownField_BuildInformation_output]
+    val Clslanguage = classOf[F_BuildInformation_language]
+    val Clsoptions = classOf[F_BuildInformation_options]
+    val Clsoutput = classOf[F_BuildInformation_output]
 
     val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.BuildInformation]]](Clslanguage,Clsoptions,Clsoutput)
     var dfi = dataFields.size
@@ -66,16 +69,17 @@ final class BuildInformationPool(poolIndex : Int)
       fields.remove(dataFields(dfi).getClass)
     }
     if(fields.contains(Clslanguage))
-        dataFields += new KnownField_BuildInformation_language(dataFields.size + 1, this, state.String)
+        dataFields += new F_BuildInformation_language(dataFields.size + 1, this, state.String)
     if(fields.contains(Clsoptions))
-        dataFields += new KnownField_BuildInformation_options(dataFields.size + 1, this, VariableLengthArray(state.String))
+        dataFields += new F_BuildInformation_options(dataFields.size + 1, this, VariableLengthArray(state.String))
     if(fields.contains(Clsoutput))
-        dataFields += new KnownField_BuildInformation_output(dataFields.size + 1, this, state.FilePath)
+        dataFields += new F_BuildInformation_output(dataFields.size + 1, this, state.FilePath)
     // no auto fields
 
 
-    for(f <- dataFields ++ autoFields)
-      f.createKnownRestrictions
+    val fs = (dataFields ++ autoFields).iterator
+    while (fs.hasNext)
+      fs.next().createKnownRestrictions
   }
 
   override def makeSubPool(name : String, poolIndex : Int) = new BuildInformationSubPool(poolIndex, name, this)

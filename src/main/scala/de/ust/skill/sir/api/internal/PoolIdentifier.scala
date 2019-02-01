@@ -1,8 +1,8 @@
-/*  ___ _  ___ _ _                                                            *\
- * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 06.12.2016                               *
- * |___/_|\_\_|_|____|    by: feldentm                                        *
-\*                                                                            */
+/*  ___ _  ___ _ _                                                                                                    *\
+** / __| |/ (_) | |     Your SKilL scala Binding                                                                      **
+** \__ \ ' <| | | |__   generated: 01.02.2019                                                                         **
+** |___/_|\_\_|_|____|  by: feldentm                                                                                  **
+\*                                                                                                                    */
 package de.ust.skill.sir.api.internal
 
 import scala.collection.mutable.ArrayBuffer
@@ -38,8 +38,8 @@ final class IdentifierPool(poolIndex : Int)
   override def addField[T : Manifest](ID : Int, t : FieldType[T], name : String,
                            restrictions : HashSet[FieldRestriction]) : FieldDeclaration[T, _root_.de.ust.skill.sir.Identifier] = {
     val f = (name match {
-      case "parts" ⇒ new KnownField_Identifier_parts(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[java.lang.String]]])
-      case "skillname" ⇒ new KnownField_Identifier_skillname(ID, this, t.asInstanceOf[FieldType[java.lang.String]])
+      case "parts" ⇒ new F_Identifier_parts(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[java.lang.String]]])
+      case "skillname" ⇒ new F_Identifier_skillname(ID, this, t.asInstanceOf[FieldType[java.lang.String]])
       case _      ⇒ return super.addField(ID, t, name, restrictions)
     }).asInstanceOf[FieldDeclaration[T, _root_.de.ust.skill.sir.Identifier]]
 
@@ -47,15 +47,18 @@ final class IdentifierPool(poolIndex : Int)
     if (t != f.t)
       throw new TypeMissmatchError(t, f.t.toString, f.name, name)
 
-    restrictions.foreach(f.addRestriction(_))
+    val rs = restrictions.iterator
+    while(rs.hasNext)
+      f.addRestriction(rs.next())
+
     dataFields += f
     return f
   }
   override def ensureKnownFields(st : SkillState) {
     val state = st.asInstanceOf[SkillFile]
     // data fields
-    val Clsparts = classOf[KnownField_Identifier_parts]
-    val Clsskillname = classOf[KnownField_Identifier_skillname]
+    val Clsparts = classOf[F_Identifier_parts]
+    val Clsskillname = classOf[F_Identifier_skillname]
 
     val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.Identifier]]](Clsparts,Clsskillname)
     var dfi = dataFields.size
@@ -64,14 +67,15 @@ final class IdentifierPool(poolIndex : Int)
       fields.remove(dataFields(dfi).getClass)
     }
     if(fields.contains(Clsparts))
-        dataFields += new KnownField_Identifier_parts(dataFields.size + 1, this, VariableLengthArray(state.String))
+        dataFields += new F_Identifier_parts(dataFields.size + 1, this, VariableLengthArray(state.String))
     if(fields.contains(Clsskillname))
-        dataFields += new KnownField_Identifier_skillname(dataFields.size + 1, this, state.String)
+        dataFields += new F_Identifier_skillname(dataFields.size + 1, this, state.String)
     // no auto fields
 
 
-    for(f <- dataFields ++ autoFields)
-      f.createKnownRestrictions
+    val fs = (dataFields ++ autoFields).iterator
+    while (fs.hasNext)
+      fs.next().createKnownRestrictions
   }
 
   override def makeSubPool(name : String, poolIndex : Int) = new IdentifierSubPool(poolIndex, name, this)

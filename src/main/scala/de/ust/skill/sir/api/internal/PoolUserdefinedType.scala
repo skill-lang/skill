@@ -1,8 +1,8 @@
-/*  ___ _  ___ _ _                                                            *\
- * / __| |/ (_) | |       Your SKilL Scala Binding                            *
- * \__ \ ' <| | | |__     generated: 06.12.2016                               *
- * |___/_|\_\_|_|____|    by: feldentm                                        *
-\*                                                                            */
+/*  ___ _  ___ _ _                                                                                                    *\
+** / __| |/ (_) | |     Your SKilL scala Binding                                                                      **
+** \__ \ ' <| | | |__   generated: 01.02.2019                                                                         **
+** |___/_|\_\_|_|____|  by: feldentm                                                                                  **
+\*                                                                                                                    */
 package de.ust.skill.sir.api.internal
 
 import scala.collection.mutable.ArrayBuffer
@@ -40,10 +40,10 @@ superPool
   override def addField[T : Manifest](ID : Int, t : FieldType[T], name : String,
                            restrictions : HashSet[FieldRestriction]) : FieldDeclaration[T, _root_.de.ust.skill.sir.UserdefinedType] = {
     val f = (name match {
-      case "comment" ⇒ new KnownField_UserdefinedType_comment(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Comment]])
-      case "hints" ⇒ new KnownField_UserdefinedType_hints(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint]]])
-      case "restrictions" ⇒ new KnownField_UserdefinedType_restrictions(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]]])
-      case "name" ⇒ new KnownField_UserdefinedType_name(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Identifier]])
+      case "comment" ⇒ new F_UserdefinedType_comment(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Comment]])
+      case "hints" ⇒ new F_UserdefinedType_hints(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Hint]]])
+      case "restrictions" ⇒ new F_UserdefinedType_restrictions(ID, this, t.asInstanceOf[FieldType[scala.collection.mutable.ArrayBuffer[_root_.de.ust.skill.sir.Restriction]]])
+      case "name" ⇒ new F_UserdefinedType_name(ID, this, t.asInstanceOf[FieldType[_root_.de.ust.skill.sir.Identifier]])
       case _      ⇒ return super.addField(ID, t, name, restrictions)
     }).asInstanceOf[FieldDeclaration[T, _root_.de.ust.skill.sir.UserdefinedType]]
 
@@ -51,17 +51,20 @@ superPool
     if (t != f.t)
       throw new TypeMissmatchError(t, f.t.toString, f.name, name)
 
-    restrictions.foreach(f.addRestriction(_))
+    val rs = restrictions.iterator
+    while(rs.hasNext)
+      f.addRestriction(rs.next())
+
     dataFields += f
     return f
   }
   override def ensureKnownFields(st : SkillState) {
     val state = st.asInstanceOf[SkillFile]
     // data fields
-    val Clscomment = classOf[KnownField_UserdefinedType_comment]
-    val Clshints = classOf[KnownField_UserdefinedType_hints]
-    val Clsrestrictions = classOf[KnownField_UserdefinedType_restrictions]
-    val Clsname = classOf[KnownField_UserdefinedType_name]
+    val Clscomment = classOf[F_UserdefinedType_comment]
+    val Clshints = classOf[F_UserdefinedType_hints]
+    val Clsrestrictions = classOf[F_UserdefinedType_restrictions]
+    val Clsname = classOf[F_UserdefinedType_name]
 
     val fields = HashSet[Class[_ <: FieldDeclaration[_, _root_.de.ust.skill.sir.UserdefinedType]]](Clscomment,Clshints,Clsrestrictions,Clsname)
     var dfi = dataFields.size
@@ -70,18 +73,19 @@ superPool
       fields.remove(dataFields(dfi).getClass)
     }
     if(fields.contains(Clscomment))
-        dataFields += new KnownField_UserdefinedType_comment(dataFields.size + 1, this, state.Comment)
+        dataFields += new F_UserdefinedType_comment(dataFields.size + 1, this, state.Comment)
     if(fields.contains(Clshints))
-        dataFields += new KnownField_UserdefinedType_hints(dataFields.size + 1, this, VariableLengthArray(state.Hint))
+        dataFields += new F_UserdefinedType_hints(dataFields.size + 1, this, VariableLengthArray(state.Hint))
     if(fields.contains(Clsrestrictions))
-        dataFields += new KnownField_UserdefinedType_restrictions(dataFields.size + 1, this, VariableLengthArray(state.Restriction))
+        dataFields += new F_UserdefinedType_restrictions(dataFields.size + 1, this, VariableLengthArray(state.Restriction))
     if(fields.contains(Clsname))
-        dataFields += new KnownField_UserdefinedType_name(dataFields.size + 1, this, state.Identifier)
+        dataFields += new F_UserdefinedType_name(dataFields.size + 1, this, state.Identifier)
     // no auto fields
 
 
-    for(f <- dataFields ++ autoFields)
-      f.createKnownRestrictions
+    val fs = (dataFields ++ autoFields).iterator
+    while (fs.hasNext)
+      fs.next().createKnownRestrictions
   }
 
   override def makeSubPool(name : String, poolIndex : Int) = new UserdefinedTypeSubPool(poolIndex, name, this)
