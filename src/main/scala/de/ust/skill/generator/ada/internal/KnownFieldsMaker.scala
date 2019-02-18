@@ -451,22 +451,90 @@ ${readBlock(t, f)}
             end if;
          end;"""
 
-            case t : ConstantLengthArrayType ⇒ s"""Skill.Field_Types.Builtin.Const_Arrays_P.Field_Type
-           (This.T).Write_Box (Output, Boxed ($fieldAccessI));"""
+            case t : ConstantLengthArrayType ⇒ s"""
+         declare
+            pragma Warnings (Off);
+            use type ${mapType(f)};
 
-            case t : VariableLengthArrayType ⇒ s"""Skill.Field_Types.Builtin.Var_Arrays_P.Field_Type
-           (This.T).Write_Box (Output, Boxed ($fieldAccessI));"""
+            function Boxed is new Ada.Unchecked_Conversion (${mapType(f)}, Skill.Types.Box);
 
-            case t : ListType ⇒ s"""Skill.Field_Types.Builtin.List_Type_P.Field_Type
-           (This.T).Write_Box (Output, Boxed ($fieldAccessI));"""
+            V : ${mapType(f)} := $fieldAccessI;
+         begin
+            if null = V then
+               Output.I8 (0);
+            else
+               Skill.Field_Types.Builtin.Const_Arrays_P.Field_Type
+                 (This.T).Write_Box (Output, Boxed (V));
+            end if;
+         end;"""
 
-            case t : SetType ⇒ s"""Skill.Field_Types.Builtin.Set_Type_P.Field_Type
-           (This.T).Write_Box
-         (Output, Skill.Field_Types.Builtin.Set_Type_P.Boxed
-            ($fieldAccessI));"""
+            case t : VariableLengthArrayType ⇒ s"""
+         declare
+            pragma Warnings (Off);
+            use type ${mapType(f)};
 
-            case t : MapType ⇒ s"""Skill.Field_Types.Builtin.Map_Type_P.Field_Type
-           (This.T).Write_Box (Output, Boxed ($fieldAccessI));"""
+            function Boxed is new Ada.Unchecked_Conversion (${mapType(f)}, Skill.Types.Box);
+
+            V : ${mapType(f)} := $fieldAccessI;
+         begin
+            if null = V then
+               Output.I8 (0);
+            else
+               Skill.Field_Types.Builtin.Var_Arrays_P.Field_Type
+                 (This.T).Write_Box (Output, Boxed (V));
+            end if;
+         end;"""
+
+            case t : ListType ⇒ s"""
+         declare
+            pragma Warnings (Off);
+            use type ${mapType(f)};
+
+            function Boxed is new Ada.Unchecked_Conversion (${mapType(f)}, Skill.Types.Box);
+
+            V : ${mapType(f)} := $fieldAccessI;
+         begin
+            if null = V then
+               Output.I8 (0);
+            else
+               Skill.Field_Types.Builtin.List_Type_P.Field_Type
+                 (This.T).Write_Box (Output, Boxed (V));
+            end if;
+         end;"""
+
+            case t : SetType ⇒ s"""
+         declare
+            pragma Warnings (Off);
+            use type ${mapType(f)};
+
+            function Boxed is new Ada.Unchecked_Conversion (${mapType(f)}, Skill.Types.Box);
+
+            V : ${mapType(f)} := $fieldAccessI;
+         begin
+            if null = V then
+               Output.I8 (0);
+            else
+               Skill.Field_Types.Builtin.Set_Type_P.Field_Type
+                 (This.T).Write_Box (Output, Boxed (V));
+            end if;
+         end;"""
+
+            case t : MapType ⇒ s"""
+         declare
+            pragma Warnings (Off);
+            use type ${mapType(f)};
+
+            function Boxed is new Ada.Unchecked_Conversion (${mapType(f)}, Skill.Types.Box);
+
+            V : ${mapType(f)} := $fieldAccessI;
+         begin
+            if null = V then
+               Output.I8 (0);
+            else
+               Skill.Field_Types.Builtin.Map_Type_P.Field_Type
+                 (This.T).Write_Box (Output, Boxed (V));
+            end if;
+         end;"""
           }
         }
       end loop;
