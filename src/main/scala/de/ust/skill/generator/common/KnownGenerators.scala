@@ -17,6 +17,7 @@ object KnownGenerators {
     classOf[haskell.Main],
     classOf[java.Main],
     classOf[jforeign.Main],
+    classOf[python.Main],
     classOf[scala.Main],
     classOf[sidl.Main],
     classOf[skill.Main],
