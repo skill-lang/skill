@@ -7,7 +7,6 @@ package de.ust.skill.generator.python
 
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.HashMap
-
 import de.ust.skill.ir.ConstantLengthArrayType
 import de.ust.skill.ir.Declaration
 import de.ust.skill.ir.Field
@@ -20,6 +19,8 @@ import de.ust.skill.ir.Type
 import de.ust.skill.ir.UserType
 import de.ust.skill.ir.VariableLengthArrayType
 import de.ust.skill.main.HeaderInfo
+
+import scala.collection.mutable
 
 /**
  * Fake Main implementation required to make trait stacking work.
@@ -45,7 +46,7 @@ class Main extends FakeMain
    */
   override def mapType(t : Type) : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
-      case "annotation"                         ⇒ "src.internal.SkillObject.SkillObject"
+      case "annotation"                         ⇒ "SkillObject"
 
       case "bool"                               ⇒ "bool"
 
@@ -62,7 +63,7 @@ class Main extends FakeMain
     case t : SetType                 ⇒ s"$SetTypeName"
     case t : MapType                 ⇒ s"$MapTypeName"
 
-    case t : Declaration             ⇒ packagePrefix + name(t)
+    case t : Declaration             ⇒ name(t)
 
     case _                           ⇒ throw new IllegalStateException(s"Unknown type $t")
   }
@@ -76,7 +77,21 @@ class Main extends FakeMain
   override protected def appendConstructorArguments(t : UserType, prependTypes : Boolean): String = {
     val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
     if (r.isEmpty) ""
-    else if (prependTypes) r.map({ f ⇒ s", ${name(f)}: ${mapType(f.getType)}" }).mkString("")
+    else if (prependTypes) r.map({ f ⇒ s", ${name(f)}=None" }).mkString("")
+    else r.map({ f ⇒ s", ${name(f)}=None" }).mkString("")
+  }
+
+  protected def checkThisType(t: UserType, f: Field): String = {
+    var str = ""
+    if (mapType(f.getType) != t.toString) {
+      str = ": " + mapType(f.getType)
+    }
+    return str
+  }
+
+  override protected def appendInitializationArguments(t : UserType, prependTypes : Boolean): String = {
+    val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
+    if (r.isEmpty) ""
     else r.map({ f ⇒ s", ${name(f)}" }).mkString("")
   }
 
@@ -100,30 +115,25 @@ class Main extends FakeMain
   override def defaultCleanMode = "file"
 
   override def setOption(option : String, value : String) : Unit = option match {
-    case "revealskillid"    ⇒ revealSkillID = ("true".equals(value));
-    case "suppresswarnings" ⇒ suppressWarnings = if ("true".equals(value)) "@SuppressWarnings(\"all\")\n" else ""
+    case "suppresswarnings" ⇒ suppressWarnings = if ("true".equals(value)) "import warnings\nwarnings.simplefilter(\"ignore\")" else ""
     case unknown            ⇒ sys.error(s"unknown Argument: $unknown")
   }
 
   override def helpText : String = """
-revealSkillID     true/false  if set to true, the generated binding will reveal SKilL IDs in the API
-suppressWarnings  true/false  add a @SuppressWarnings("all") annotation to generated classes
+suppressWarnings  true/false  disables warnings in every module
 """
 
   override def customFieldManual : String = """
 !import string+    A list of imports that will be added where required.
 !modifier string   A modifier, that will be put in front of the variable declaration."""
 
-  override protected def defaultValue(f : Field) = f.getType match {
+  override protected def defaultValue(f : Field): String = f.getType match {
     case t : GroundType ⇒ t.getSkillName match {
       case "i8" | "i16" | "i32" | "i64" | "v64" ⇒ "0"
-      case "f32" | "f64"                        ⇒ "0.0f"
-      case "bool"                               ⇒ "false"
+      case "f32" | "f64"                        ⇒ "0.0"
+      case "bool"                               ⇒ "False"
       case _                                    ⇒ "None"
     }
-
-    // TODO compound types would behave more nicely if they would be initialized with empty collections instead of null
-
     case _ ⇒ "None"
   }
 
@@ -131,13 +141,20 @@ suppressWarnings  true/false  add a @SuppressWarnings("all") annotation to gener
    * Tries to escape a string without decreasing the usability of the generated identifier.
    * Will add Z's if escaping is required.
    */
-  private val escapeCache = new HashMap[String, String]()
+  private val escapeCache = new mutable.HashMap[String, String]()
   final def escaped(target : String) : String = escapeCache.getOrElse(target, {
     val result = target match {
-      case "continue" | "for" | "assert" | "if" | "bool" | "self" | "break" | "raise" | "elif" | "else"
-        | "from" | "import" | "raise" | "isinstance" | "return" | "except" | "int" | "try" | "class"
-        | "finally" | "float" | "while" ⇒ "Z" + target
-
+        case "abs" | "all" | "and" | "any" | "as" | "ascii" | "assert" | "bin" | "bool" | "break" | "breakpoint"
+             | "bytearray" | "bytes" | "callable" | "chr" | "class" | "classmethod" | "compile" | "complex"
+             | "continue" | "def" | "del" | "delattr" | "dict" | "dir" | "divmod" | "elif" | "else" | "enumerate"
+             | "eval" | "exec" | "except" | "False" | "filter" | "finally" | "float" | "for" | "format" | "from"
+             | "frozenset" | "getattr" | "global" | "globals" | "hasattr" | "hash" | "help" | "hex" | "id" | "if"
+             | "import" | "in" | "input" | "int" | "is" | "isinstance" | "issubclass" | "iter" | "lambda" | "len"
+             | "list" | "locals" | "map" | "max" | "memoryview" | "min" | "next" | "None" | "nonlocal" | "not"
+             | "object" | "oct" | "open" | "or" | "ord" | "pass" | "pow" | "print" | "property" | "raise" | "range"
+             | "repr" | "return" | "reversed" | "round" | "set" | "settattr" | "slice" | "sorted" | "staticmethod"
+             | "str" | "sum" | "super" | "True" | "try" | "tuple" | "type" | "vars" | "while" | "with" | "yield"
+             | "zip" | "__import__" ⇒ "Z" + target
       case _ ⇒ target.map {
         case ':'                                    ⇒ "$"
         case 'Z'                                    ⇒ "ZZ"

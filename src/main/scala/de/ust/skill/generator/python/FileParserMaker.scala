@@ -9,7 +9,7 @@ import de.ust.skill.io.PrintWriter
 
 trait FileParserMaker extends GeneralOutputMaker {
   final def makeParser(out : PrintWriter) {
-
+    var tab = "    "
     //package & imports
     out.write(s"""
 class Parser(FileParser):
@@ -24,7 +24,7 @@ class Parser(FileParser):
           (for (t ← IR)
             yield if (null == t.getSuperType) s"""
             if name == "${t.getSkillName}":
-                self.superPool = ${access(t)}(len(types))
+                superPool = ${access(t)}(len(types))
                 return superPool"""
           else s"""
             if name == "${t.getSkillName}":
@@ -32,11 +32,10 @@ class Parser(FileParser):
                 return superPool
     """).mkString("\n")
     }
+            if superPool is None:
+                superPool = BasePool(len(types), name, StoragePool.noKnownFields, StoragePool.noAutoFields)
             else:
-                if superPool is None:
-                    superPool = BasePool(len(types), name, StoragePool.noKnownFields, StoragePool.noAutoFields)
-                else:
-                    superPool = superPool.makeSubPool(len(types), name)
+                superPool = superPool.makeSubPool(len(types), name)
             return superPool
         finally:
             types.append(superPool)

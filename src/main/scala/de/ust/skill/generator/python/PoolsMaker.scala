@@ -45,22 +45,16 @@ ${comment (t)}
         \"\"\"
         Can only be constructed by the SkillFile in this package.
         \"\"\"
-        super(${name(t)}, self).__init__(self, poolIndex, "${t.getSkillName}"${
+        super(${access(t)}, self).__init__(poolIndex, "${t.getSkillName}"${
           if (isBasePool) ""
           else ", superPool"
       }, ${
-          if (fields.isEmpty) "self.noKnownFields"
-          else fields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString("[ ", ", ", " ]")
-      }, ${
-          fields.count(_.isAuto) match {
-          case 0 ⇒ "self.noAutoFields"
-          case c ⇒ s"[]"
-          }
-      })
+          if (fields.isEmpty) "[]"
+          else fields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString("[", ", ", "]")
+      }, list())
     ${
         // export data for sub pools
         if (isBasePool) s"""
-
     def data(self):
         return self.__data
     """
@@ -70,23 +64,21 @@ ${comment (t)}
         i = last.bpo
         high = i + last.staticCount
         while i < high:
-            self.data[i] = $typeT(i + 1)
+            self.__data[i] = $typeT(i + 1)
             i += 1
 ${
         if (fields.isEmpty) ""
         else s"""
-    def addKnownField(self, name, string, annotation):
-        # TODO
-        ${
+    def addKnownField(self, name, string, annotation):${
           (for (f ← fields) //TODO
             yield
-            s"""if name == "${f.getSkillName}":
-            ${knownField(projectedField(f))}(${mapToFieldType(f)}, self)
-            return
+            s"""
+            if name == "${f.getSkillName}":
+                ${knownField(projectedField(f))}(${mapToFieldType(f)}, self)
+                return
 """
           ).mkString
         }
-
     def addField(self, fType, name):
         ${
           (for (f ← fields if !f.isAuto)
@@ -101,14 +93,12 @@ ${
         if name == "${f.getSkillName}":
             raise SkillException(
                 "The file contains a field declaration %s.%s, but there is an auto field of similar name!".format(
-                    self.name, name));
-"""
+                    self.name, name))"""
           ).mkString
         }
         else:
-            return super($nameT, self).addField(fType, name)"""
+            return LazyField(fType, name, self)"""
       }
-
 ${
         if (fields.forall { f ⇒ f.isConstant || f.isIgnored }) ""
         else s"""
@@ -116,14 +106,13 @@ ${
         \"\"\"
         :return a new $typeT instance with the argument field values
         \"\"\"
-        rval = $typeT(-1${appendConstructorArguments(t, prependTypes = false)})
+        rval = $typeT(-1${appendInitializationArguments(t, prependTypes = false)})
         self.add(rval)
         return rval
 """
       }
     def build(self):
-        return ${nameT}Builder(self, $typeT())
-
+        return self.${nameT}Builder(self, $typeT())
 
     class ${name(t)}Builder(StoragePool.Builder):
         \"\"\"
@@ -137,7 +126,6 @@ ${
             return self
         """).mkString
       }
-
         def make(self):
             self.pool.add(self.instance)
             rval = self.instance
@@ -148,11 +136,11 @@ ${
         \"\"\"
         used internally for type forest construction
         \"\"\"
-        return UnknownSubPool(index, name, self)
+        return $accessT.UnknownSubPool(index, name, self)
 
     class UnknownSubPool(StoragePool):
         def __init__(self, poolIndex, name, superPools):
-            super(P0.UnknownSubPool, self).__init__(poolIndex, name, superPools, self.noKnownFields, self.noAutoFields)
+            super(${access(t)}.UnknownSubPool, self).__init__(poolIndex, name, superPools, self.noKnownFields, self.noAutoFields)
 
         def makeSubPool(self, index, name):
             return type(self)(index, name, self)
@@ -161,7 +149,7 @@ ${
             i = last.bpo
             high = i + last.staticCount
             while i < high:
-                self.data[i] = SubType(self, i + 1)
+                self.__data[i] = SubType$nameT(self, i + 1)
                 i += 1
 
 """)
@@ -171,7 +159,7 @@ ${
   protected def mapToFieldType(f : Field) : String = {
     //@note temporary string & annotation will be replaced later on
     @inline def mapGroundType(t : Type) : String = t.getSkillName match {
-      case "annotation" ⇒ "Annotation" //TODO
+      case "annotation" ⇒ "annotation"
       case "bool"       ⇒ "BoolType()"
       case "i8"         ⇒ if (f.isConstant) s"ConstantI8(${f.constantValue})" else "I8()"
       case "i16"        ⇒ if (f.isConstant) s"ConstantI16(${f.constantValue})" else "I16()"

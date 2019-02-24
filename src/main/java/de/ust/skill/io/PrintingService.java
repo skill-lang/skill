@@ -140,4 +140,11 @@ public class PrintingService {
 
         return false;
     }
+
+    /**
+     * @return BasePath for output directory
+     */
+    public File getOutPath(){
+        return this.outPath;
+    }
 }

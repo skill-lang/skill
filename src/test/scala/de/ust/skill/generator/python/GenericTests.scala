@@ -46,6 +46,7 @@ class GenericTests extends common.GenericTests {
 
     rval.write(s"""
 from unittest import Testcase
+from tempfle import TemporaryFile
 from src.test.de.ust.skill.generator.common.CommonTest import CommonTest
 from $packagePath.api.SkillFile import SkillFile
 
@@ -54,22 +55,21 @@ from src.api.SkillFile import SkillFile.Mode
 from src.internal.ForceLazyFields import ForceLazyFields
 from src.internal.SkillObject import SkillObject
 
-/**
- * Tests the file reading capabilities.
- */
+
 class Generic${name}Test(CommonTest, Testcase):
+    \"\"\"
+    Tests the file reading capabilities.
+    \"\"\"
     def test_read(self, s):
         return SkillFile.open("../../" + s, Mode.Read, Mode.ReadOnly)
 
-    def test_writeGeneric(self) throws Exception {
-        Path path = tmpFile("write.generic");
-        try (SkillFile sf = SkillFile.open(path)) {
-            reflectiveInit(sf);
-        }
-    }
+    def test_writeGeneric(self):
+        path = tmpFile("write.generic")
+        try:
+            sf = SkillFile.open(path))
+            self.reflectiveInit(sf)
 
-    @Test
-    public void writeGenericChecked(self):
+    def test_writeGenericChecked(self):
         path = tmpFile("write.generic.checked")
 
         // create a name -> type map
@@ -88,9 +88,6 @@ class Generic${name}Test(CommonTest, Testcase):
             for o in t:
                 assertTrue("to few instances in read stat", os.hasNext())
                 assertEquals(o.getSkillID(), os.next().getSkillID())
-
-
-
 """)
     rval
   }
@@ -98,7 +95,7 @@ class Generic${name}Test(CommonTest, Testcase):
   def closeTestFile(out : java.io.PrintWriter) {
     out.write("""
 """)
-    out.close
+    out.close()
   }
 
   override def makeTests(name : String) {
@@ -108,28 +105,24 @@ class Generic${name}Test(CommonTest, Testcase):
     val out = newTestFile(name, "Read")
 
     for (f ← accept) out.write(s"""
-    @Test
-    public void test_${name}_read_accept_${f.getName.replaceAll("\\W", "_")}() throws Exception {
-        try (SkillFile sf = read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}")) {
-            Assert.assertNotNull(sf);
-        }
-    }
+    def test_${name}_read_accept_${f.getName.replaceAll("\\W", "_")}(self):
+        try:
+            sf = read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}")
+            self.assertIsNotNone(sf)
 """)
     for (f ← reject) out.write(s"""
-    @Test
-    public void test_${name}_read_reject_${f.getName.replaceAll("\\W", "_")}() throws Exception {
-        try (SkillFile sf = read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}")) {
+    def test_${name}_read_reject_${f.getName.replaceAll("\\W", "_")}(self):
+        try:
+            sf = read("${f.getPath.replaceAll("\\\\", "\\\\\\\\")}")
             ForceLazyFields.forceFullCheck(sf);
             Assert.fail("Expected ParseException to be thrown");
-        } catch (SkillException e) {
-            // success
-        }
-    }
+        except SkillException:
+            # success
 """)
     closeTestFile(out)
   }
 
-  override def finalizeTests {
+  override def finalizeTests() {
     // nothing yet
   }
 }

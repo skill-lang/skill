@@ -19,7 +19,7 @@ import scala.collection.JavaConversions.{asScalaBuffer, asScalaIterator}
 /**
  * Generic API tests built for Java.
  *
- * @author Timm Felden
+ * @author Alexander Maisch
  */
 @RunWith(classOf[JUnitRunner])
 class APITests extends common.GenericAPITests {
@@ -37,37 +37,33 @@ class APITests extends common.GenericAPITests {
       source,
       "--debug-header",
       "-c",
-      "-L", "java",
+      "-L", language,
       "-p", name,
-      "-Ojava:SuppressWarnings=true",
-      "-d", "testsuites/java/lib",
-      "-o", "testsuites/java/src/main/java/"
+      "-d", "testsuites/python/lib",
+      "-o", "testsuites/python/src/main/python/"
     ) ++ options)
   }
 
   def newTestFile(packagePath : String, name : String) : PrintWriter = {
-    val f = new File(s"testsuites/java/src/test/java/$packagePath/Generic${name}Test.java")
+    val f = new File(s"testsuites/python/src/test/python/$packagePath/Generic${name}Test.py")
     f.getParentFile.mkdirs
     if (f.exists)
       f.delete
     f.createNewFile
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
 
-    rval.write(s"""package $packagePath;
+    rval.write(s"""
 
-import org.junit.Assert;
-import org.junit.Test;
+from unittest import Testcase
+from $packagePath.api.SkillFile import SkillFile
 
-import $packagePath.api.SkillFile;
+from src.api.SkillException import SkillException
+from src..api.SkillFile import Mode
 
-import de.ust.skill.common.java.api.SkillException;
-import de.ust.skill.common.java.api.SkillFile.Mode;
-
-/**
- * Tests the file reading capabilities.
- */
-@SuppressWarnings("static-method")
-public class Generic${name}Test extends common.CommonTest {
+class Generic${name}Test(Testcase, common.CommonTest):
+    \"\"\"
+    Tests the file reading capabilities.
+    \"\"\"
 """)
     rval
   }
@@ -76,16 +72,15 @@ public class Generic${name}Test extends common.CommonTest {
     out.write("""
 }
 """)
-    out.close
+    out.close()
   }
 
   def makeSkipTest(out : PrintWriter, kind : String, name : String, testName : String, accept : Boolean) {
     out.write(s"""
-    @Test
-    public void APITest_${escaped(kind)}_${name}_skipped_${escaped(testName)}() {${
+    def test_API_${escaped(kind)}_${name}_skipped_${escaped(testName)}(self):${
       if (accept) ""
       else """
-         Assert.fail("The test was skipped by the test generator.");"""
+         print("The test was skipped by the test generator.")"""
     }
     }
 """)
@@ -93,21 +88,18 @@ public class Generic${name}Test extends common.CommonTest {
 
   def makeRegularTest(out : PrintWriter, kind : String, name : String, testName : String, accept : Boolean, tc : TypeContext, obj : JSONObject) {
     out.write(s"""
-    @Test${if (accept) "" else "(expected = SkillException.class)"}
-    public void APITest_${escaped(kind)}_${name}_${if (accept) "acc" else "fail"}_${escaped(testName)}() throws Exception {
-        SkillFile sf = SkillFile.open(tmpFile("$testName.sf"), Mode.Create, Mode.Write);
+    def test_API_${escaped(kind)}_${name}_${if (accept) "acc" else "fail"}_${escaped(testName)}(self):
+        sf = SkillFile.open(tmpFile("$testName.sf"), Mode.Create, Mode.Write)
 
-        // create objects${createObjects(obj, tc, name)}
-        // set fields${setFields(obj, tc)}
-        sf.close();
+        # create objects${createObjects(obj, tc, name)}
+        # set fields${setFields(obj, tc)}
+        sf.close()
 
-        { // read back and assert correctness
-            SkillFile sf2 = SkillFile.open(sf.currentPath(), Mode.Read, Mode.ReadOnly);
-            // check count per Type${createCountChecks(obj, tc, name)}
-            // create objects from file${createObjects2(obj, tc, name)}
-            // assert fields${assertFields(obj, tc)}
-        }
-    }
+        # read back and assert correctness
+        SkillFile sf2 = SkillFile.open(sf.currentPath(), Mode.Read, Mode.ReadOnly);
+        # check count per Type${createCountChecks(obj, tc, name)}
+        # create objects from file${createObjects2(obj, tc, name)}
+        # assert fields${assertFields(obj, tc)}
 """)
   }
 
@@ -137,29 +129,24 @@ public class Generic${name}Test extends common.CommonTest {
   private def equalValue(left : String, v : Any, t : Type) : String = t match {
     case t : GroundType ⇒
       t.getSkillName match {
-        case "string" if null != v ⇒ s"""$left != null && $left.equals("${v.toString()}")"""
-        case "i8" ⇒ s"$left == (byte)" + v.toString()
-        case "i16" ⇒ s"$left == (short)" + v.toString()
-        case "i32" ⇒ s"$left == " + v.toString()
-        case "f32" ⇒ s"$left == (float)" + v.toString()
-        case "f64" ⇒ s"$left == (double)" + v.toString()
-        case "v64" | "i64" ⇒ s"$left == " + v.toString() + "L"
-        case _ if null != v && !v.toString().equals("null") && !v.toString().equals("true") && !v.toString().equals("false") ⇒ s"$left == " + v.toString() + "_2"
-        case _ ⇒ s"$left == " + v.toString()
+        case "string" if null != v ⇒ s"""$left is not None && $left == "${v.toString}""""
+        case "i8" | "i16" | "i32" | "v64" | "i64" | "f32" | "f64" ⇒ s"$left == " + v.toString
+        case _ if null != v && !v.toString.equals("None") && !v.toString.equals("True")
+            && !v.toString.equals("False") ⇒ s"$left == " + v.toString + "_2" //TODO _2 ?
+        case _ ⇒ s"$left == " + v.toString
       }
 
     case t : SingleBaseTypeContainer ⇒
       v.asInstanceOf[JSONArray].iterator().toArray.map(value(_, t.getBaseType, "_2")).mkString(t match {
-        case t : ListType ⇒ s"$left != null && $left.equals(list("
-        case t : SetType  ⇒ s"$left != null && $left.equals(set("
-        case _            ⇒ s"$left != null && $left.equals(array("
-      }, ", ", "))").replace("java.util.", "")
+        case t : SetType  ⇒ s"$left is not None and $left == set("
+        case _ ⇒ s"$left is not None and $left == list("
+      }, ", ", "))")
 
-    case t : MapType if v != null ⇒ s"$left != null && $left.equals(" + valueMap(v.asInstanceOf[JSONObject], t.getBaseTypes.toList, "_2") + ")"
+    case t : MapType if v != null ⇒ s"$left is not None and $left == " + valueMap(v.asInstanceOf[JSONObject], "_2")
 
     case _ ⇒
-      if (v == null || v.toString().equals("null")) s"$left == (${mapType(t)}) null"
-      else s"$left == ${v.toString()}_2"
+      if (v == null || v.toString.equals("None")) s"$left is None"
+      else s"$left == ${v.toString}_2"
   }
 
   //private def value(v : Any, f : Field, suffix : String = "") : String = value(v, f.getType, suffix)
@@ -167,46 +154,36 @@ public class Generic${name}Test extends common.CommonTest {
   private def value(v : Any, t : Type, suffix : String = "") : String = t match {
     case t : GroundType ⇒
       t.getSkillName match {
-        case "string" if null != v ⇒ s""""${v.toString()}""""
-        case "i8"                  ⇒ "(byte)" + v.toString()
-        case "i16"                 ⇒ "(short)" + v.toString()
-        case "i32"                 ⇒ v.toString()
-        case "f32"                 ⇒ "(float)" + v.toString()
-        case "f64"                 ⇒ "(double)" + v.toString()
-        case "v64" | "i64"         ⇒ v.toString() + "L"
-        case _ if null != v        ⇒ v.toString() + suffix
-        case _                     ⇒ v.toString()
+        case "string" if null != v ⇒ s""""${v.toString}""""
+        case "i8" | "i16" | "i32" | "v64" | "i64" | "f32" | "f64" ⇒ v.toString
+        case _ if null != v        ⇒ v.toString + suffix
+        case _                     ⇒ v.toString
       }
 
     case t : SingleBaseTypeContainer ⇒
       v.asInstanceOf[JSONArray].iterator().toArray.map(value(_, t.getBaseType, suffix)).mkString(t match {
-        case t : ListType ⇒ "list("
         case t : SetType  ⇒ "set("
-        case _            ⇒ "array("
-      }, ", ", ")").replace("java.util.", "")
+        case _            ⇒ "list("
+      }, ", ", ")")
 
-    case t : MapType if v != null ⇒ valueMap(v.asInstanceOf[JSONObject], t.getBaseTypes.toList, suffix)
+    case t : MapType if v != null ⇒ valueMap(v.asInstanceOf[JSONObject], suffix)
 
     case _ ⇒
-      if (v == null || v.toString().equals("null")) s"(${mapType(t)}) null"
-      else v.toString() + suffix
+      if (v == null || v.toString.equals("None")) s"None"
+      else v.toString + suffix
   }
 
-  private def valueMap(v : Any, ts : List[Type], suffix : String = "") : String = {
-    if (1 == ts.length) {
-      value(v, ts.head, suffix)
-    } else {
-      var rval = s"map()"
+  private def valueMap(v: Any, suffix: String = "") = {
+      var rval = s"dict()"
       val obj = v.asInstanceOf[JSONObject]
 
       // https://docs.scala-lang.org/overviews/collections/maps.html#operations-in-class-map
       // ms put (k, v) Adds mapping from key k to value v to ms and returns any value previously associated with k as an option.
       for (name ← JSONObject.getNames(obj)) {
-        rval = s"put($rval, ${value(name, ts.head, suffix)}, ${valueMap(obj.get(name), ts.tail, suffix)})"
+        rval = s"put($rval, ${value(name, null, suffix)}, ${suffix})"
       }
 
-      rval;
-    }
+      rval
   }
 
   private def createCountChecks(obj : JSONObject, tc : TypeContext, packagePath : String) : String = {

@@ -46,7 +46,7 @@ class $nameF(${
     ${f.getType.toString} ${t.getName.capital}.${f.getName.camel}
     \"\"\"
     def __init__(self, fType, owner):
-        super(f0, self).__init__(fType, "${f.getSkillName}", owner${
+        super($nameF, self).__init__(fType, "${f.getSkillName}", owner${
             if (f.isAuto) ", " + -autoFieldIndex(f)
             else ""
         })
@@ -62,9 +62,8 @@ class $nameF(${
               case _            ⇒ "false)  # TODO type check!"
             }
           }:
-            raise SkillException("Expected field type ${f.getType.toString} in ${t.getName.capital}.${f.getName.camel} but found " + fType)"""
+            raise SkillException("Expected field type ${f.getType.toString} in ${t.getName.capital}.${f.getName.camel} but found []".format(fType))"""
         }
-
     def get(self, ref):
         ${
           if (f.isConstant) s"return ${mapType(t)}.get${escaped(f.getName.capital)}()"
@@ -75,7 +74,9 @@ class $nameF(${
         ${
           if (f.isConstant) s"""raise Exception("${f.getName.camel} is a constant!")"""
           else s"ref.${name(f)} = value"
-        }""")
+        }
+
+            """)
       }
     }
   }

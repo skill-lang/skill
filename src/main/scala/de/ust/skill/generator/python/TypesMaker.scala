@@ -24,18 +24,22 @@ trait TypesMaker extends GeneralOutputMaker {
 from src.internal.FieldDeclaration import NamedType
 from src.internal.SkillObject import SkillObject
 from src.internal.StoragePool import StoragePool
-${customizations.flatMap(_.getOptions.get("import")).map(i⇒s"import $i\n").mkString}
-""")//TODO
 
+${
+          if (null != t.getSuperType) {
+              printAllFiles(name(t))
+          }
+      }
+${customizations.flatMap(_.getOptions.get("import")).map(i⇒s"import $i\n").mkString}""")//TODO
 
       val fields = t.getAllFields.filter(!_.isConstant)
       val relevantFields = fields.filter(!_.isIgnored)
 
       out.write(s"""
-class ${name(t)}${
-        if (null != t.getSuperType()) { name(t.getSuperType) }
-        else { "(SkillObject)" }
-      }:\n${comment(t)}
+class ${name(t)}(${
+        if (null != t.getSuperType) { name(t.getSuperType) }
+        else { "SkillObject" }
+      }):\n${comment(t)}
     def __init__(self${appendConstructorArguments(t)}, skillID=-1):
         \"\"\"
         Create a new unmanaged ${t.getName.capital()}. Allocation of objects without using the
@@ -43,8 +47,8 @@ class ${name(t)}${
         :param: Used for internal construction only!
         \"\"\"
         super(${name(t)}, self).__init__(skillID)
-        self.skillName = ${t.getSkillName}
-        ${relevantFields.map { f ⇒ s"self.${name(f)} = ${name(f)}" }.mkString("\n        ")}
+        self.skillName = "${t.getSkillName}"
+        ${relevantFields.map { f ⇒ s"self.${name(f)}: ${mapType(f.getType)} = ${name(f)}" }.mkString("\n        ")}
 """)
 
       var implementedFields = t.getFields.toSeq
@@ -57,10 +61,7 @@ class ${name(t)}${
             ""
           } else {
             s"""
-            ${
-              if(f.isAuto()) "transient " //TODO
-              else ""
-            }${name(f)} = ${defaultValue(f)}
+            ${name(f)} = ${defaultValue(f)}
 """
           }
       }
@@ -73,24 +74,44 @@ class ${name(t)}${
       }
 
       out.write(s"""
-    class SubType(${name(t)}, NamedType):
-        \"\"\"
-        Generic sub types of this type.
-        \"\"\"
 
-        def __init__(self, tPool, skillID):
-            \"\"\"internal use only!!!\"\"\"
-            super(SubType, self).__init__(skillID)
-            super(skillID)
-            self.tPool = tPool
+class SubType${name(t)}(${name(t)}, NamedType):
+    \"\"\"
+    Generic sub types of this type.
+    \"\"\"
 
-        def skillName(self):
-            return self.tPool.name
+    def __init__(self, tPool, skillID):
+        \"\"\"internal use only!!!\"\"\"
+        super(SubType${name(t)}, self).__init__(skillID)
+        super(skillID)
+        self.tPool = tPool
 
-        def toString(self):
-            return self.skillName + "#" + self.skillID
+    def skillName(self):
+        return self.tPool.name
+
+    def toString(self):
+        return self.skillName() + "#" + self.skillID
 """)
       out.close()
     }
   }
+
+    private def printAllFiles(name: String): String = {
+        val dir = files.getOutPath
+        var str = "\n"
+        val fs = dir.listFiles()
+        val list = new Array[String](fs.length)
+        for(i <- 0 until fs.length){
+            list(i) = fs(i).getName
+            var f = fs(i).getName
+            if (f.endsWith(".py")) {
+                f = f.substring(0, f.length - 3)
+                if(!f.equals("internal") && !f.equals(name)) {
+                    val dirName = dir.getName
+                    str = str + s"""from $dirName.$f import $f\n"""
+                }
+            }
+        }
+        return str
+    }
 }

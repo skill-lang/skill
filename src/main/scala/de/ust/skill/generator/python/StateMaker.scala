@@ -53,8 +53,9 @@ class SkillState(State):
             p = poolByName.get("${t.getSkillName}")\n
             self.${name(t)}s = p if (p is not None) else Parser.newPools("${t.getSkillName}", ${
         if (null == t.getSuperType) "None"
-        else s"${name(t.getSuperType)}s"
+        else s"self.${name(t.getSuperType)}s"
       }, types)""").mkString("")
+        if (IR.isEmpty) s"""p = None"""
     }
         except Exception as e:
             raise ParseException(inStream, -1, e,
