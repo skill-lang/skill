@@ -34,10 +34,9 @@ trait FieldDeclarationMaker extends GeneralOutputMaker {
         val nameF = knownField(f)
 
         // casting access to data array using index i
-        val declareD = s"d: [] = owner.basePool.data"
-        val fieldAccess = "d[i]"
 
         out.write(s"""
+
 class $nameF(${
           if (f.isAuto) "AutoField"
           else "KnownDataField"
@@ -58,12 +57,13 @@ class $nameF(${
               case t : GroundType ⇒ s"fType.typeID != ${typeID(f.getType) - (if (f.isConstant) 7 else 0)}"
               case t : InterfaceType ⇒
                 if (t.getSuperType.getSkillName.equals("annotation")) "type.typeID != 5"
-              case t : UserType ⇒ s"""!fType.name == "${f.getType.getSkillName}""""
-              case _            ⇒ "false)  # TODO type check!"
+              case t : UserType ⇒ s"""fType.typeID != "${f.getType.getSkillName}""""
+              case _            ⇒ "False:  # TODO type check!"
             }
           }:
             raise SkillException("Expected field type ${f.getType.toString} in ${t.getName.capital}.${f.getName.camel} but found []".format(fType))"""
         }
+
     def get(self, ref):
         ${
           if (f.isConstant) s"return ${mapType(t)}.get${escaped(f.getName.capital)}()"
@@ -76,7 +76,11 @@ class $nameF(${
           else s"ref.${name(f)} = value"
         }
 
-            """)
+    def wsc(self, i, end, outStream):
+        d = self.owner._data
+        for j in range(i, end):
+            outStream.v64(d[j].${name(f)})
+""")
       }
     }
   }

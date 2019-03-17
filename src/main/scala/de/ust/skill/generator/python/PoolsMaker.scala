@@ -41,7 +41,7 @@ ${comment (t)}
     def __init__(self, poolIndex${
         if (isBasePool) ""
         else s", superPool"
-      }):
+      }, cls, subCls):
         \"\"\"
         Can only be constructed by the SkillFile in this package.
         \"\"\"
@@ -51,46 +51,46 @@ ${comment (t)}
       }, ${
           if (fields.isEmpty) "[]"
           else fields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString("[", ", ", "]")
-      }, list())
-    ${
-        // export data for sub pools
-        if (isBasePool) s"""
-    def data(self):
-        return self.__data
-    """
-        else ""
-      }
-    def allocateInstances(self, last: Block):
-        i = last.bpo
-        high = i + last.staticCount
-        while i < high:
-            self.__data[i] = $typeT(i + 1)
-            i += 1
+      }, [])
+        self.cls = cls
+        self.subCls = subCls
 ${
         if (fields.isEmpty) ""
         else s"""
     def addKnownField(self, name, string, annotation):${
-          (for (f ← fields) //TODO
+          (for (f ← fields)
             yield
-            s"""
+            if (f == fields.head)s"""
             if name == "${f.getSkillName}":
                 ${knownField(projectedField(f))}(${mapToFieldType(f)}, self)
                 return
 """
+            else s"""
+            elif name == "${f.getSkillName}":
+                ${knownField(projectedField(f))}(${mapToFieldType(f)}, self)
+                return
+                """
           ).mkString
         }
     def addField(self, fType, name):
         ${
           (for (f ← fields if !f.isAuto)
             yield
-                s"""if name == "${f.getSkillName}":
+                s"""
+        if name == "${f.getSkillName}":
             return ${knownField(projectedField(f))}(fType, self)
 """
           ).mkString
         }${
           (for (f ← fields if f.isAuto)
-            yield s"""
+            yield
+                if (f == fields.head)s"""
         if name == "${f.getSkillName}":
+            raise SkillException(
+                "The file contains a field declaration %s.%s, but there is an auto field of similar name!".format(
+                    self.name, name))"""
+                else s"""
+        elif name == "${f.getSkillName}":
             raise SkillException(
                 "The file contains a field declaration %s.%s, but there is an auto field of similar name!".format(
                     self.name, name))"""
@@ -102,17 +102,17 @@ ${
 ${
         if (fields.forall { f ⇒ f.isConstant || f.isIgnored }) ""
         else s"""
-    def make(self, ${makeConstructorArguments(t)}):
+    def make(self${appendInitializationArguments(t)}):
         \"\"\"
         :return a new $typeT instance with the argument field values
         \"\"\"
-        rval = $typeT(-1${appendInitializationArguments(t, prependTypes = false)})
+        rval = self.cls(-1${appendInitializationArguments(t, prependTypes = false)})
         self.add(rval)
         return rval
 """
       }
     def build(self):
-        return self.${nameT}Builder(self, $typeT())
+        return self.${nameT}Builder(self, self.cls())
 
     class ${name(t)}Builder(StoragePool.Builder):
         \"\"\"
@@ -136,22 +136,15 @@ ${
         \"\"\"
         used internally for type forest construction
         \"\"\"
-        return $accessT.UnknownSubPool(index, name, self)
+        return $accessT.UnknownSubPool(index, name, self, self.subCls)
 
     class UnknownSubPool(StoragePool):
-        def __init__(self, poolIndex, name, superPools):
+        def __init__(self, poolIndex, name, superPools, subCls):
             super(${access(t)}.UnknownSubPool, self).__init__(poolIndex, name, superPools, self.noKnownFields, self.noAutoFields)
+            self.subCls = subCls
 
         def makeSubPool(self, index, name):
             return type(self)(index, name, self)
-
-        def allocateInstances(self, last: Block):
-            i = last.bpo
-            high = i + last.staticCount
-            while i < high:
-                self.__data[i] = SubType$nameT(self, i + 1)
-                i += 1
-
 """)
       }
     }

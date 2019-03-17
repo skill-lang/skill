@@ -25,7 +25,7 @@ trait GeneralOutputMaker extends Generator {
   // remove special stuff
   final def setTC(tc : TypeContext) {
     this.types = tc
-    val flat = tc.removeTypedefs.removeEnums
+    val flat = tc.removeTypedefs().removeEnums()
     this.IR = flat.getUsertypes.to
     this.interfaces = flat.getInterfaces.to
     // set large specification mode; leave some spare parameters
@@ -101,14 +101,14 @@ trait GeneralOutputMaker extends Generator {
    * Class name of the representation of a known field
    */
   protected def knownField(f : FieldLike) : String = this.synchronized {
-    "f" + fieldNameStore.getOrElseUpdate((f.getDeclaredIn.getName.getSkillName, f.getSkillName), fieldNameStore.size).toString
+    "F" + fieldNameStore.getOrElseUpdate((f.getDeclaredIn.getName.getSkillName, f.getSkillName), fieldNameStore.size).toString
   }
 
   /**
    * Assume a package prefix provider.
    */
   protected def packagePrefix() : String
-  protected def packageName = packagePrefix.substring(0, packagePrefix.length - 1)
+  protected def packageName = packagePrefix().substring(0, packagePrefix().length - 1)
 
   /**
    * this string may contain a "@SuppressWarnings("all")\n", in order to suppress warnings in generated code;

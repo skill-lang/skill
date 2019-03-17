@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-18 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.generator.common
@@ -53,7 +53,7 @@ abstract class GenericAPITests extends GenericTests {
 
   final override def makeTests(name : String) {
     val (spec, tests) = collectTestspecs.filter(file ⇒ {
-      val line = Source.fromFile(file._1).getLines().next() 
+      val line = Source.fromFile(file._1).getLines().next()
       line.equals("#! " + name) || line.matches(s"#! $name\\s+.*")
     }).head
 

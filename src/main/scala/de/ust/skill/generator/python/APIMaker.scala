@@ -9,27 +9,22 @@ import de.ust.skill.io.PrintWriter
 
 import scala.collection.JavaConversions.asScalaBuffer
 
-trait TypesMaker extends GeneralOutputMaker {
-    abstract override def make {
+trait APIMaker extends GeneralOutputMaker {
+  abstract override def make {
     super.make
+    val out = files.open(s"api.py")
+    var path = files.getOutPath
 
+    //package & imports
+    out.write(
+      s"""
+from python.src.${packagePrefix()}internal import SkillState, SkillObject, NamedType, Mode
+""")
     for(t <- IR) {
-      val out = files.open(s"${name(t)}.py")
-
       val customizations = t.getCustomizations.filter(_.language.equals("python")).toArray
 
       // no package
       out.write(s"""
-
-from src.internal.FieldDeclaration import NamedType
-from src.internal.SkillObject import SkillObject
-from src.internal.StoragePool import StoragePool
-
-${
-          if (null != t.getSuperType) {
-              printAllFiles(name(t))
-          }
-      }
 ${customizations.flatMap(_.getOptions.get("import")).map(i⇒s"import $i\n").mkString}""")//TODO
 
       val fields = t.getAllFields.filter(!_.isConstant)
@@ -40,7 +35,7 @@ class ${name(t)}(${
         if (null != t.getSuperType) { name(t.getSuperType) }
         else { "SkillObject" }
       }):\n${comment(t)}
-    def __init__(self${appendConstructorArguments(t)}, skillID=-1):
+    def __init__(self, skillID=-1${appendConstructorArguments(t)}):
         \"\"\"
         Create a new unmanaged ${t.getName.capital()}. Allocation of objects without using the
         access factory method is discouraged.
@@ -57,13 +52,13 @@ class ${name(t)}(${
       // getters & setters //
       ///////////////////////
       for(f <- implementedFields) {
-          if(f.isIgnored){
-            ""
-          } else {
-            s"""
+        if(f.isIgnored){
+          ""
+        } else {
+          s"""
             ${name(f)} = ${defaultValue(f)}
 """
-          }
+        }
       }
 
       // custom fields
@@ -80,10 +75,9 @@ class SubType${name(t)}(${name(t)}, NamedType):
     Generic sub types of this type.
     \"\"\"
 
-    def __init__(self, tPool, skillID):
+    def __init__(self, tPool, skillID=-1):
         \"\"\"internal use only!!!\"\"\"
         super(SubType${name(t)}, self).__init__(skillID)
-        super(skillID)
         self.tPool = tPool
 
     def skillName(self):
@@ -92,26 +86,37 @@ class SubType${name(t)}(${name(t)}, NamedType):
     def toString(self):
         return self.skillName() + "#" + self.skillID
 """)
-      out.close()
     }
-  }
+      out.write(
+          s"""
 
-    private def printAllFiles(name: String): String = {
-        val dir = files.getOutPath
-        var str = "\n"
-        val fs = dir.listFiles()
-        val list = new Array[String](fs.length)
-        for(i <- 0 until fs.length){
-            list(i) = fs(i).getName
-            var f = fs(i).getName
-            if (f.endsWith(".py")) {
-                f = f.substring(0, f.length - 3)
-                if(!f.equals("internal") && !f.equals(name)) {
-                    val dirName = dir.getName
-                    str = str + s"""from $dirName.$f import $f\n"""
-                }
-            }
-        }
-        return str
-    }
+class SkillFile(SkillState):
+    \"\"\"
+    An abstract skill file that is hiding all the dirty implementation details
+    from you.
+    \"\"\"
+""")
+      var knownTypes = "["
+      for(t <- IR){
+          if(t == IR.head){knownTypes = knownTypes + s"""${name(t)}"""}
+          else{knownTypes = knownTypes + s""", ${name(t)}"""}
+      }
+      knownTypes = knownTypes + "]"
+
+      var knownSubTypes = """["""
+      for (t <- IR) {
+          if (t == IR.head) {knownSubTypes= knownSubTypes + s"""SubType${name(t)}"""}
+          else {knownSubTypes = knownSubTypes + s""", SubType${name(t)}"""}
+      }
+      knownSubTypes = knownSubTypes + """]"""
+      out.write(s"""
+    @staticmethod
+    def open(path, *mode):
+        \"\"\"
+        Create a new skill file based on argument path and mode.
+        \"\"\"
+        return SkillState.open(path, mode, $knownTypes, $knownSubTypes)
+""")
+    out.close()
+  }
 }

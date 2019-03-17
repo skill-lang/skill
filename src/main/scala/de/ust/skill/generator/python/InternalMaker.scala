@@ -24,48 +24,36 @@ trait InternalMaker extends FakeMain
     val out = files.open(s"internal.py")
 
     out.write(s"""
-from src.api.SkillFile import SkillFile
-from src.api.SkillFile import ActualMode
-from src.internal.FileParser import FileParser
-from src.internal.SkillState import SkillState as State
-from src.internal.Exceptions import SkillException
-from src.internal.BasePool import BasePool
-from src.internal.FieldDeclaration import FieldDeclaration
-from src.internal.FieldType import FieldType
-from src.internal.KnownDataField import KnownDataField
-from src.internal.SkillObject import SkillObject
-from src.internal.StoragePool import StoragePool
-from src.internal.StringPool import StringPool
-from src.internal.fieldDeclarations import AutoField
-from src.internal.Exceptions import ParseException
-from src.internal.KnownDataField import LazyField
-from src.internal.fieldTypes.Annotation import Annotation
-from src.internal.fieldTypes.BoolType import BoolType
-from src.internal.fieldTypes.ConstantLengthArray import ConstantLengthArray
-from src.internal.fieldTypes.ConstantTypes import ConstantI8
-from src.internal.fieldTypes.ConstantTypes import ConstantI16
-from src.internal.fieldTypes.ConstantTypes import ConstantI32
-from src.internal.fieldTypes.ConstantTypes import ConstantI64
-from src.internal.fieldTypes.ConstantTypes import ConstantV64
-from src.internal.fieldTypes.FloatType import F32
-from src.internal.fieldTypes.FloatType import F64
-from src.internal.fieldTypes.IntegerTypes import I8
-from src.internal.fieldTypes.IntegerTypes import I16
-from src.internal.fieldTypes.IntegerTypes import I32
-from src.internal.fieldTypes.IntegerTypes import I64
-from src.internal.fieldTypes.IntegerTypes import V64
-from src.internal.fieldTypes.ListType import ListType
-from src.internal.fieldTypes.MapType import MapType
-from src.internal.fieldTypes.ReferenceType import ReferenceType
-from src.internal.fieldTypes.SetType import SetType
-from src.internal.fieldTypes.SingleArgumentType import SingleArgumentType
-from src.internal.fieldTypes.VariableLengthArray import VariableLengthArray
-from src.internal.Blocks import *
-from src.streams.FileInputStream import FileInputStream
-from src.streams.MappedInStream import MappedInStream
-from src.streams.MappedOutputStream import MappedOutputStream
+from common.internal.FileParser import FileParser
+from common.internal.SkillState import SkillState as State
+from common.internal.Exceptions import SkillException, ParseException
+from common.internal.BasePool import BasePool
+from common.internal.FieldDeclaration import FieldDeclaration
+from common.internal.FieldType import FieldType
+from common.internal.KnownDataField import KnownDataField
+from common.internal.SkillObject import SkillObject
+from common.internal.StoragePool import StoragePool
+from common.internal.StringPool import StringPool
+from common.internal.AutoField import AutoField
+from common.internal.LazyField import LazyField
+from common.internal.fieldTypes.Annotation import Annotation
+from common.internal.fieldTypes.BoolType import BoolType
+from common.internal.fieldTypes.ConstantLengthArray import ConstantLengthArray
+from common.internal.fieldTypes.ConstantTypes import ConstantI8, ConstantI16, ConstantI32, ConstantI64, ConstantV64
+from common.internal.fieldTypes.FloatType import F32, F64
+from common.internal.fieldTypes.IntegerTypes import I8, I16, I32, I64, V64
+from common.internal.fieldTypes.ListType import ListType
+from common.internal.fieldTypes.MapType import MapType
+from common.internal.fieldTypes.SetType import SetType
+from common.internal.fieldTypes.SingleArgumentType import SingleArgumentType
+from common.internal.fieldTypes.VariableLengthArray import VariableLengthArray
+from common.internal.Blocks import *
+from common.streams.FileInputStream import FileInputStream
+from common.streams.MappedInStream import MappedInStream
+from common.streams.MappedOutputStream import MappedOutputStream
+from common.internal.Mode import ActualMode, Mode
+from common.internal.NamedType import NamedType
 
-${printAllFiles()}
 """)
 
     makeState(out)
@@ -78,25 +66,5 @@ ${printAllFiles()}
 
     out.close()
   }
-
-    def printAllFiles(): String = {
-        val dir = files.getOutPath
-        var str = "\n"
-        val fs = dir.listFiles()
-        if (fs == null) return str
-        val list = new Array[String](fs.length)
-        for(i <- 0 until fs.length){
-            list(i) = fs(i).getName
-            var f = fs(i).getName
-            if (f.endsWith(".py")) {
-                f = f.substring(0, f.length - 3)
-                if(!f.equals("internal")) {
-                    val fileName = dir.getName + "." + f
-                    str = str + s"""from $fileName import *\n"""
-                }
-            }
-        }
-        return str
-    }
 }
 

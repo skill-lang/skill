@@ -21,20 +21,20 @@ class SkillState(State):
     \"\"\"
 
     @staticmethod
-    def open(path, *mode):
+    def open(path, mode: [], knownTypes: [], knownSubTypes: []):
         \"\"\"
         Create a new skill file based on argument path and mode.
         \"\"\"
         actualMode = ActualMode(mode)
         try:
-            if actualMode.openMode == State.Mode.Create:
+            if actualMode.openMode == Mode.Create:
                 strings = StringPool(None)
                 types = []
                 annotation = Annotation(types)
                 return SkillState({}, strings, annotation, types,
-                                    FileInputStream.open(path, False), actualMode.closeMode)
-            elif actualMode.openMode == State.Mode.Read:
-                p = Parser(FileInputStream.open(path, (actualMode.closeMode == State.Mode.ReadOnly)))
+                                    FileInputStream.open(path, False), actualMode.closeMode, knownTypes, knownSubTypes)
+            elif actualMode.openMode == Mode.Read:
+                p = Parser(FileInputStream.open(path, (actualMode.closeMode == Mode.ReadOnly)), knownTypes, knownSubTypes)
                 return p.read(SkillState, actualMode.closeMode)
             else:
                 raise Exception("should never happen")
@@ -43,25 +43,29 @@ class SkillState(State):
         except Exception as e:
             raise SkillException(e)
 
-    def __init__(self, poolByName, strings, annotationType, types, inStream, mode):
+    def __init__(self, poolByName, strings, annotationType, types, inStream, mode, knownTypes, knownSubTypes):
         super(SkillState, self).__init__(strings, inStream.path, mode, types, poolByName, annotationType)
+        self.knownTypes = knownTypes
+        self.knownSubTypes = knownSubTypes
 
-        try:
-            ${
-      (for (t ← IR)
-        yield s"""
-            p = poolByName.get("${t.getSkillName}")\n
-            self.${name(t)}s = p if (p is not None) else Parser.newPools("${t.getSkillName}", ${
-        if (null == t.getSuperType) "None"
-        else s"self.${name(t.getSuperType)}s"
-      }, types)""").mkString("")
-        if (IR.isEmpty) s"""p = None"""
-    }
+        try:""")
+      var i = 0
+      for (t ← IR) {
+          i = i + 1
+          out.write(s"""
+            p = poolByName.get("${t.getSkillName}")
+            self.${name(t)} = p if (p is not None) else Parser.newPool("${t.getSkillName}", """)
+          if (null == t.getSuperType) out.write("None")
+          else out.write(s"self.${name(t.getSuperType)}")
+          out.write(s""", types, self.knownTypes, self.knownSubTypes)""")
+      }
+      if (i == 0) {out.write(s"""p = None""")}
+      out.write(s"""
         except Exception as e:
             raise ParseException(inStream, -1, e,
-                    "A super type does not match the specification; see cause for details.")
+                                 "A super type does not match the specification; see cause for details.")
         for t in types:
-            self.poolByName.put(t.name, t)
+            self.poolByName[t.name] = t
 
         self.finalizePools(inStream)
 """)

@@ -39,13 +39,13 @@ class APITests extends common.GenericAPITests {
       "-c",
       "-L", language,
       "-p", name,
-      "-d", "testsuites/python/lib",
-      "-o", "testsuites/python/src/main/python/"
+      "-d", "testsuites",
+      "-o", "testsuites/python/src/"
     ) ++ options)
   }
 
   def newTestFile(packagePath : String, name : String) : PrintWriter = {
-    val f = new File(s"testsuites/python/src/test/python/$packagePath/Generic${name}Test.py")
+    val f = new File(s"testsuites/python/src/$packagePath/Generic${name}Test.py")
     f.getParentFile.mkdirs
     if (f.exists)
       f.delete
@@ -54,13 +54,13 @@ class APITests extends common.GenericAPITests {
 
     rval.write(s"""
 
-from unittest import Testcase
-from $packagePath.api.SkillFile import SkillFile
+import os
+from unittest import TestCase
+from python.src.$packagePath.api import *
+from python.src.common.CommonTest import CommonTest
 
-from src.api.SkillException import SkillException
-from src..api.SkillFile import Mode
 
-class Generic${name}Test(Testcase, common.CommonTest):
+class Generic${name}Test(TestCase, CommonTest):
     \"\"\"
     Tests the file reading capabilities.
     \"\"\"
@@ -70,7 +70,6 @@ class Generic${name}Test(Testcase, common.CommonTest):
 
   def closeTestFile(out : java.io.PrintWriter) {
     out.write("""
-}
 """)
     out.close()
   }
@@ -89,17 +88,23 @@ class Generic${name}Test(Testcase, common.CommonTest):
   def makeRegularTest(out : PrintWriter, kind : String, name : String, testName : String, accept : Boolean, tc : TypeContext, obj : JSONObject) {
     out.write(s"""
     def test_API_${escaped(kind)}_${name}_${if (accept) "acc" else "fail"}_${escaped(testName)}(self):
-        sf = SkillFile.open(tmpFile("$testName.sf"), Mode.Create, Mode.Write)
+        file = self.tmpFile("$testName.sf")
+        sf = SkillFile.open(file.name, Mode.Create, Mode.Write)
+        try:
+            # create objects${createObjects(obj, tc, name)}
+            # set fields${setFields(obj, tc)}
+            sf.close()
 
-        # create objects${createObjects(obj, tc, name)}
-        # set fields${setFields(obj, tc)}
-        sf.close()
-
-        # read back and assert correctness
-        SkillFile sf2 = SkillFile.open(sf.currentPath(), Mode.Read, Mode.ReadOnly);
-        # check count per Type${createCountChecks(obj, tc, name)}
-        # create objects from file${createObjects2(obj, tc, name)}
-        # assert fields${assertFields(obj, tc)}
+            # read back and assert correctness
+            sf2 = SkillFile.open(sf.currentPath(), Mode.Read, Mode.ReadOnly)
+            # check count per Type${createCountChecks(obj, tc, name)}
+            # create objects from file${createObjects2(obj, tc, name)}
+            # assert fields${assertFields(obj, tc)}
+            # close file
+            sf2.close()
+        finally:
+            # delete files
+            os.remove(sf.currentPath())
 """)
   }
 
@@ -132,7 +137,7 @@ class Generic${name}Test(Testcase, common.CommonTest):
         case "string" if null != v ⇒ s"""$left is not None && $left == "${v.toString}""""
         case "i8" | "i16" | "i32" | "v64" | "i64" | "f32" | "f64" ⇒ s"$left == " + v.toString
         case _ if null != v && !v.toString.equals("None") && !v.toString.equals("True")
-            && !v.toString.equals("False") ⇒ s"$left == " + v.toString + "_2" //TODO _2 ?
+            && !v.toString.equals("False") ⇒ s"$left == " + v.toString + "_2"
         case _ ⇒ s"$left == " + v.toString
       }
 
@@ -180,7 +185,7 @@ class Generic${name}Test(Testcase, common.CommonTest):
       // https://docs.scala-lang.org/overviews/collections/maps.html#operations-in-class-map
       // ms put (k, v) Adds mapping from key k to value v to ms and returns any value previously associated with k as an option.
       for (name ← JSONObject.getNames(obj)) {
-        rval = s"put($rval, ${value(name, null, suffix)}, ${suffix})"
+        rval = s"put($rval, ${value(name, null, suffix)}, $suffix)"
       }
 
       rval
@@ -194,9 +199,9 @@ class Generic${name}Test(Testcase, common.CommonTest):
       val objCountPerType = scala.collection.mutable.Map[String, Int]()
       for (name ← JSONObject.getNames(obj)) {
         val x = obj.getJSONObject(name)
-        val t = JSONObject.getNames(x).head;
+        val t = JSONObject.getNames(x).head
 
-        val typeName = typ(tc, t);
+        val typeName = typ(tc, t)
         if (!(objCountPerType contains typeName)) {
           objCountPerType += (typeName -> 0)
         }
@@ -205,7 +210,7 @@ class Generic${name}Test(Testcase, common.CommonTest):
 
       val rval = for ((typeName, objCount) ← objCountPerType) yield {
         s"""
-            Assert.assertEquals(${objCount}, sf.${typeName}s().staticSize());"""
+            self.assertEqual($objCount, sf.${typeName}s.staticSize)"""
       }
 
       rval.mkString
@@ -219,12 +224,12 @@ class Generic${name}Test(Testcase, common.CommonTest):
 
       val rval = for (name ← JSONObject.getNames(obj)) yield {
         val x = obj.getJSONObject(name)
-        val t = JSONObject.getNames(x).head;
+        val t = JSONObject.getNames(x).head
 
-        val typeName = typ(tc, t);
+        val typeName = typ(tc, t)
 
         s"""
-            $packagePath.$typeName ${name}_2 = sf2.${typeName}s().getByID($name.getSkillID());"""
+            ${name}_2 = sf2.$typeName.getByID($name.getSkillID())"""
       }
 
       rval.mkString
@@ -238,12 +243,12 @@ class Generic${name}Test(Testcase, common.CommonTest):
 
       val rval = for (name ← JSONObject.getNames(obj)) yield {
         val x = obj.getJSONObject(name)
-        val t = JSONObject.getNames(x).head;
+        val t = JSONObject.getNames(x).head
 
-        val typeName = typ(tc, t);
+        val typeName = typ(tc, t)
 
         s"""
-        $packagePath.$typeName $name = sf.${typeName}s().make();"""
+            $name = sf.$typeName.make()"""
       }
 
       rval.mkString
@@ -257,20 +262,20 @@ class Generic${name}Test(Testcase, common.CommonTest):
 
       val rval = for (name ← JSONObject.getNames(obj)) yield {
         val x = obj.getJSONObject(name)
-        val t = JSONObject.getNames(x).head;
-        val fs = x.getJSONObject(t);
+        val t = JSONObject.getNames(x).head
+        val fs = x.getJSONObject(t)
 
         if (null == JSONObject.getNames(fs))
           ""
         else {
           val assignments = for (fieldName ← JSONObject.getNames(fs).toSeq) yield {
             val f = field(tc, t, fieldName)
-            val getter = escaped("get" + f.getName.capital())
+            val getter = escaped(f.getName.lower())
 
             // do not check auto fields as they cannot obtain the stored value from file
-            if (f.isAuto()) ""
+            if (f.isAuto) ""
             else s"""
-            Assert.assertTrue(${equalValue(s"${name}_2.$getter()", fs.get(fieldName), f)});"""
+            self.assertTrue(${equalValue(s"${name}_2.$getter()", fs.get(fieldName), f)})"""
           }
 
           assignments.mkString
@@ -288,18 +293,18 @@ class Generic${name}Test(Testcase, common.CommonTest):
 
       val rval = for (name ← JSONObject.getNames(obj)) yield {
         val x = obj.getJSONObject(name)
-        val t = JSONObject.getNames(x).head;
-        val fs = x.getJSONObject(t);
+        val t = JSONObject.getNames(x).head
+        val fs = x.getJSONObject(t)
 
         if (null == JSONObject.getNames(fs))
           ""
         else {
           val assignments = for (fieldName ← JSONObject.getNames(fs).toSeq) yield {
             val f = field(tc, t, fieldName)
-            val setter = escaped("set" + f.getName.capital())
+            val setter = escaped(f.getName.lower())
 
             s"""
-        $name.$setter(${value(fs.get(fieldName), f.getType)});"""
+            $name.$setter = ${value(fs.get(fieldName), f.getType)}"""
           }
 
           assignments.mkString

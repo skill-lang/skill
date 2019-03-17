@@ -34,8 +34,8 @@ abstract class FakeMain extends de.ust.skill.generator.python.GeneralOutputMaker
  * @author Alexander Maisch
  */
 class Main extends FakeMain
-    with InternalMaker
-    with TypesMaker {
+    with APIMaker
+    with InternalMaker {
 
   lineLength = 120
   override def comment(d : Declaration) : String = d.getComment.format("    \"\"\"\n", "    ", lineLength, "    \"\"\"\n")
@@ -91,8 +91,10 @@ class Main extends FakeMain
 
   override protected def appendInitializationArguments(t : UserType, prependTypes : Boolean): String = {
     val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
+    var a = ""
+    if (prependTypes) a = "=None"
     if (r.isEmpty) ""
-    else r.map({ f ⇒ s", ${name(f)}" }).mkString("")
+    else r.map({ f ⇒ s", ${name(f)}$a" }).mkString("")
   }
 
   override def makeHeader(headerInfo : HeaderInfo) : String = headerInfo.format(this, "#", "#", "#", "#", "#", "#")
@@ -156,7 +158,7 @@ suppressWarnings  true/false  disables warnings in every module
              | "str" | "sum" | "super" | "True" | "try" | "tuple" | "type" | "vars" | "while" | "with" | "yield"
              | "zip" | "__import__" ⇒ "Z" + target
       case _ ⇒ target.map {
-        case ':'                                    ⇒ "$"
+        case ':'                                    ⇒ "_"
         case 'Z'                                    ⇒ "ZZ"
         case c if Character.isJavaIdentifierPart(c) ⇒ c.toString
         case c                                      ⇒ "Z" + c.toHexString

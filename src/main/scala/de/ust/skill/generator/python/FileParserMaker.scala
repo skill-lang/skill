@@ -14,34 +14,49 @@ trait FileParserMaker extends GeneralOutputMaker {
     out.write(s"""
 class Parser(FileParser):
 
-    def __init__(self, inStream):
-        super(Parser, self).__init__(inStream)
+    def __init__(self, inStream, knownTypes, knownSubTypes):
+        super(Parser, self).__init__(inStream, knownTypes, knownSubTypes)
 
     @staticmethod
-    def newPools(name: str, superPool, types: []):
+    def newPool(name: str, superPool, types: [], knownTypes, knownSubTypes):
         \"\"\"allocate correct pool type and add it to types\"\"\"
-        try:${
-          (for (t ← IR)
-            yield if (null == t.getSuperType) s"""
+        try:""")
+        var i = 0
+        for (t ← IR) {
+            if (null == t.getSuperType)
+                if (t == IR.head) out.write(
+                    s"""
             if name == "${t.getSkillName}":
-                superPool = ${access(t)}(len(types))
-                return superPool"""
-          else s"""
+                superPool = ${access(t)}(len(types), knownTypes[$i], knownSubTypes[$i])
+                return superPool""")
+                else out.write(
+                    s"""
+            elif name == "${t.getSkillName}":
+                superPool = ${access(t)}(len(types), knownTypes[$i], knownSubTypes[$i])
+                return superPool""")
+            else if (t == IR.head) out.write(
+                s"""
             if name == "${t.getSkillName}":
-                superPool = ${access(t)}(len(types), superPool)
+                superPool = ${access(t)}(len(types), superPool, knownTypes[$i], knownSubTypes[$i])
+                return superPool""")
+            else
+                out.write(
+                    s"""
+            elif name == "${t.getSkillName}":
+                superPool = ${access(t)}(len(types), superPool, knownTypes[$i], knownSubTypes[$i])
                 return superPool
-    """).mkString("\n")
-    }
-            if superPool is None:
-                superPool = BasePool(len(types), name, StoragePool.noKnownFields, StoragePool.noAutoFields)
+                 """)
+            i = i + 1
+        }
+    out.write(s"""
             else:
-                superPool = superPool.makeSubPool(len(types), name)
+                if superPool is None:
+                    superPool = BasePool(len(types), name, StoragePool.noKnownFields, StoragePool.noAutoFields)
+                else:
+                    superPool = superPool.makeSubPool(len(types), name)
             return superPool
         finally:
             types.append(superPool)
-
-    def newPool(self, name, superPool, restrictions):
-        return self.newPools(name, superPool, self.types)
 """)
   }
 }
