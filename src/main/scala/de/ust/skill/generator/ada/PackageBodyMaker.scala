@@ -12,6 +12,7 @@ import de.ust.skill.ir.MapType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.Field
 import de.ust.skill.ir.View
+import de.ust.skill.ir.ContainerType
 
 trait PackageBodyMaker extends GeneralOutputMaker {
   abstract override def make {
@@ -148,8 +149,21 @@ ${
             yield s"""
    function Get_${name(f)} (This : not null access constant ${name(t)}_T'Class) return ${mapType(f)}
    is
-      use Interfaces;
-   begin
+      use Interfaces;${
+        if(f.getType.isInstanceOf[ContainerType]) s"""
+      use type ${mapType(f)};
+      type Z is not null access constant ${name(t)}_T;
+      function Convert is new Ada.Unchecked_Conversion (Z, ${name(t)});
+"""
+        else ""
+      }
+   begin${
+     if(f.getType.isInstanceOf[ContainerType]) s"""
+      if null = This.${name(f)} then
+         Convert (Z (This)).${name(f)} := ${mapType(f).replace(".Ref", ".Make")};
+      end if;"""
+     else ""
+   }
       return ${
             if (f.isConstant()) mapConstantValue(f)
             else s"This.${name(f)}"
