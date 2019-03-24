@@ -35,7 +35,7 @@ class SkillState(State):
                                     FileInputStream.open(path, False), actualMode.closeMode, knownTypes, knownSubTypes)
             elif actualMode.openMode == Mode.Read:
                 p = Parser(FileInputStream.open(path, (actualMode.closeMode == Mode.ReadOnly)), knownTypes, knownSubTypes)
-                return p.read(SkillState, actualMode.closeMode)
+                return p.read(SkillState, actualMode.closeMode, knownTypes, knownSubTypes)
             else:
                 raise Exception("should never happen")
         except SkillException as e:

@@ -76,10 +76,15 @@ class $nameF(${
           else s"ref.${name(f)} = value"
         }
 
-    def wsc(self, i, end, outStream):
-        d = self.owner._data
-        for j in range(i, end):
-            outStream.v64(d[j].${name(f)})
+    def osc(self, i, h):${
+        val (code, isFast) = offsetCode(t, f, originalF.getType, fieldActualType)
+        s"""${prelude(originalF.getType)}
+        d = self.owner.basePool.data
+        result = 0
+        for j in range(i, h):
+            $code
+        self.offset += result
+                """}
 """)
       }
     }
@@ -97,7 +102,7 @@ class $nameF(${
         if (readHack) """
         t = owner.owner.strings"""
         else """
-        t = fType"""
+        t = self.fType"""
 
       case _ ⇒ ""
     }
@@ -119,7 +124,7 @@ class $nameF(${
 
     case t : InterfaceType if t.getSuperType.getSkillName == "annotation" ⇒ s"""
         if isinstance($target, Annotation):
-            t = (Annotation) (FieldType<?>) $target;"""
+            t = (Annotation) (FieldType<?>) $target"""
 
     case t : UserType if readHack ⇒ s"""
         t = $target"""
@@ -133,7 +138,7 @@ class $nameF(${
     val declareD = s"final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner${
       if (null == t.getSuperType) ""
       else ".basePool"
-    }).data();"
+    }).data()"
     val fieldAccess = (
       if (null == t.getSuperType) "d[i]"
       else s"((${mapType(t)})d[i])") + s".${name(f)}"
@@ -203,25 +208,23 @@ class $nameF(${
    */
   private final def offsetCode(t : UserType, f : Field, fieldType : Type, fieldActualType : String) : (String, Boolean) = {
 
-    val fieldAccess = (
-      if (null == t.getSuperType) "d[i]"
-      else s"((${mapType(t)})d[i])") + s".${name(f)}"
+    val fieldAccess = "d[j]" + s".${name(f)}"
 
     val code = fieldType match {
 
       case fieldType : GroundType ⇒ fieldType.getSkillName match {
 
-        case "annotation" ⇒ s"""${mapType(f.getType)} v = $fieldAccess;
-            if(null==v)
-                result += 2;
-            else
-                result += t.singleOffset(v);"""
+        case "annotation" ⇒ s"""v = $fieldAccess;
+            if v is None:
+                result += 2
+            else:
+                result += self.fType.singleOffset(v)"""
 
-        case "string" ⇒ s"""String v = $fieldAccess;
-            if(null==v)
-                result++;
-            else
-                result += t.singleOffset(v);"""
+        case "string" ⇒ s"""v = $fieldAccess;
+            if v is None:
+                result += 1
+            else:
+                result += self.fType.singleOffset(v)"""
 
         case "i8" | "bool" ⇒ return fastOffsetCode(0);
 
@@ -233,57 +236,44 @@ class $nameF(${
 
         case "v64"         ⇒ s"""result += V64.singleV64Offset($fieldAccess);"""
         case _ ⇒ s"""
-        throw new NoSuchMethodError();"""
+        raise AttributeError()"""
       }
 
       case fieldType : ConstantLengthArrayType ⇒ s"""v = $fieldAccess;
             
-            if (v.size() != type.length)
-                throw new IllegalArgumentException("constant length array has wrong size");
+            if len(v) != len(self.fType):
+                raise Exception("constant length array has wrong size")
 
             ${offsetCodeInner(fieldType.getBaseType, "v")}"""
 
       case fieldType : SingleBaseTypeContainer ⇒ s"""v = $fieldAccess
-            int size = null == v ? 0 : v.size();
-            if (0 == size)
-                result++;
-            else {
+            if v is None:
+                size = 0
+            else:
+                size = len(v)
+            if 0 == size
+                result += 1
+            else:
                 result += V64.singleV64Offset(size);
                 ${offsetCodeInner(fieldType.getBaseType, "v")}
             }"""
 
       case fieldType : MapType ⇒ s"""v = $fieldAccess
-            if(null==v || v.isEmpty())
-                result++;
-            else {
-                result += V64.singleV64Offset(v.size());
+            if v is None or len(v) == 0:
+                result += 1
+            else:
+                result += V64.singleV64Offset(len(v))
                 result += keyType.calculateOffset(v.keySet());
                 result += valueType.calculateOffset(v.values());
             }"""
 
-      case fieldType : UserType ⇒ s"""final ${mapType(f.getType)} instance = $fieldAccess;
-            if (null == instance) {
-                result += 1;
+      case fieldType : UserType ⇒ s"""instance = $fieldAccess
+            if instance is None:
+                result += 1
                 continue;
-            }
-            result += V64.singleV64Offset(instance.getSkillID());"""
+            result += V64.singleV64Offset(instance.getSkillID())"""
 
-      case fieldType : InterfaceType if fieldType.getSuperType.getSkillName != "annotation" ⇒
-        s"""final ${mapType(fieldType)} instance = $fieldAccess;
-            if (null == instance) {
-                result += 1;
-                continue;
-            }
-            result += V64.singleV64Offset(((SkillObject) instance).getSkillID());"""
-
-      case fieldType : InterfaceType ⇒ s"""${mapType(fieldType)} v = $fieldAccess;
-
-            if(null==v)
-                result += 2;
-            else
-                result += t.singleOffset((SkillObject)v);"""
-
-      case _ ⇒ s"""throw new NoSuchMethodError();"""
+      case _ ⇒ s"""raise AttributeError()"""
     }
 
     (code, false)
@@ -291,32 +281,33 @@ class $nameF(${
 
   private final def offsetCodeInner(t : Type, target : String) : String = t match {
     case fieldType : GroundType ⇒ fieldType.getSkillName match {
-      case "i8" | "bool" ⇒ return "result += size;";
+      case "i8" | "bool" ⇒ return "result += size";
 
-      case "i16"         ⇒ return "result += (size<<1);";
+      case "i16"         ⇒ return "result += (size<<1)";
 
-      case "i32" | "f32" ⇒ return "result += (size<<2);";
+      case "i32" | "f32" ⇒ return "result += (size<<2)";
 
-      case "i64" | "f64" ⇒ return "result += (size<<3);";
+      case "i64" | "f64" ⇒ return "result += (size<<3)";
 
-      case "v64" ⇒ s"""for(long x : $target)
-                    result += V64.singleV64Offset(x);"""
+      case "v64" ⇒ s"""for x in $target:
+                    result += V64.singleV64Offset(x)"""
 
-      case _ ⇒ s"""result += type.groundType.calculateOffset($target);"""
+      case _ ⇒ s"""result += self.fType.groundType.calculateOffset($target)"""
     }
-    case t : InterfaceType if t.getSuperType.getSkillName != "annotation" ⇒ s"""for(${mapType(t.getSuperType)} x : $target)
-                    result += null==x?1:V64.singleV64Offset(x.getSkillID());"""
 
-    case t : UserType ⇒ s"""for(${mapType(t)} x : $target)
-                    result += null==x?1:V64.singleV64Offset(x.getSkillID());"""
+    case t : UserType ⇒ s"""for x in $target:
+                    if x is None:
+                        result += 1
+                    else:
+                        result += V64.singleV64Offset(x.getSkillID())"""
 
-    case _ ⇒ s"""result += type.groundType.calculateOffset($target);"""
+    case _ ⇒ s"""result += self.fType.groundType.calculateOffset($target);"""
   }
 
   private final def fastOffsetCode(shift : Int) =
     (
-      if (shift != 0) s"offset += (h-i) << $shift;"
-      else "offset += (h-i);",
+      if (shift != 0) s"offset += (end-i) << $shift"
+      else "offset += (h-i)",
       true)
 
   /**

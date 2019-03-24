@@ -136,8 +136,8 @@ class Generic${name}Test(TestCase, CommonTest):
       t.getSkillName match {
         case "string" if null != v ⇒ s"""$left is not None && $left == "${v.toString}""""
         case "i8" | "i16" | "i32" | "v64" | "i64" | "f32" | "f64" ⇒ s"$left == " + v.toString
-        case _ if null != v && !v.toString.equals("None") && !v.toString.equals("True")
-            && !v.toString.equals("False") ⇒ s"$left == " + v.toString + "_2"
+        case _ if null != v && !v.toString.equals("null") && !v.toString.equals("true")
+            && !v.toString.equals("false") ⇒ s"$left == " + v.toString + "_2"
         case _ ⇒ s"$left == " + v.toString
       }
 
@@ -210,7 +210,7 @@ class Generic${name}Test(TestCase, CommonTest):
 
       val rval = for ((typeName, objCount) ← objCountPerType) yield {
         s"""
-            self.assertEqual($objCount, sf.${typeName}s.staticSize)"""
+            self.assertEqual($objCount, sf.$typeName.staticSize())"""
       }
 
       rval.mkString
@@ -229,7 +229,7 @@ class Generic${name}Test(TestCase, CommonTest):
         val typeName = typ(tc, t)
 
         s"""
-            ${name}_2 = sf2.$typeName.getByID($name.getSkillID())"""
+            ${name}_2 = sf2.$typeName.getByID($name.skillID)"""
       }
 
       rval.mkString
@@ -275,7 +275,7 @@ class Generic${name}Test(TestCase, CommonTest):
             // do not check auto fields as they cannot obtain the stored value from file
             if (f.isAuto) ""
             else s"""
-            self.assertTrue(${equalValue(s"${name}_2.$getter()", fs.get(fieldName), f)})"""
+            self.assertTrue(${equalValue(s"${name}_2.$getter", fs.get(fieldName), f)})"""
           }
 
           assignments.mkString
@@ -304,7 +304,7 @@ class Generic${name}Test(TestCase, CommonTest):
             val setter = escaped(f.getName.lower())
 
             s"""
-            $name.$setter = ${value(fs.get(fieldName), f.getType)}"""
+            $name.$setter = ${if (value(fs.get(fieldName), f.getType) == "null") {"None"} else {value(fs.get(fieldName), f.getType)}}"""
           }
 
           assignments.mkString
