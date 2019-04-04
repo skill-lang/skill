@@ -134,11 +134,11 @@ class Generic${name}Test(TestCase, CommonTest):
   private def equalValue(left : String, v : Any, t : Type) : String = t match {
     case t : GroundType ⇒
       t.getSkillName match {
-        case "string" if null != v ⇒ s"""$left is not None && $left == "${v.toString}""""
+        case "string" if null != v ⇒ s"""$left is not None & $left == "${v.toString}""""
         case "i8" | "i16" | "i32" | "v64" | "i64" | "f32" | "f64" ⇒ s"$left == " + v.toString
         case _ if null != v && !v.toString.equals("null") && !v.toString.equals("true")
             && !v.toString.equals("false") ⇒ s"$left == " + v.toString + "_2"
-        case _ ⇒ s"$left == " + v.toString
+        case _ ⇒ s"$left == " + {if(v.toString == "null"){"None"}}
       }
 
     case t : SingleBaseTypeContainer ⇒

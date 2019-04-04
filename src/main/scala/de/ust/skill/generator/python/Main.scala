@@ -159,6 +159,8 @@ suppressWarnings  true/false  disables warnings in every module
              | "zip" | "__import__" ⇒ "Z" + target
       case _ ⇒ target.map {
         case ':'                                    ⇒ "_"
+        case '€'                                    ⇒ "euro"
+        case '$'                                    ⇒ "dollar"
         case 'Z'                                    ⇒ "ZZ"
         case c if Character.isJavaIdentifierPart(c) ⇒ c.toString
         case c                                      ⇒ "Z" + c.toHexString

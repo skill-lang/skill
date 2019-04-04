@@ -46,7 +46,7 @@ class $nameF(${
     \"\"\"
     def __init__(self, fType, owner):
         super($nameF, self).__init__(fType, "${f.getSkillName}", owner${
-            if (f.isAuto) ", " + -autoFieldIndex(f)
+            if (f.isAuto) ", True, " + -autoFieldIndex(f)
             else ""
         })
         ${
@@ -54,37 +54,44 @@ class $nameF(${
           else s"""
         if ${
             originalF.getType match {
-              case t : GroundType ⇒ s"fType.typeID != ${typeID(f.getType) - (if (f.isConstant) 7 else 0)}"
+              case t : GroundType ⇒ s"self.fieldType().typeID() != ${typeID(f.getType) - (if (f.isConstant) 7 else 0)}"
               case t : InterfaceType ⇒
-                if (t.getSuperType.getSkillName.equals("annotation")) "type.typeID != 5"
-              case t : UserType ⇒ s"""fType.typeID != "${f.getType.getSkillName}""""
+                if (t.getSuperType.getSkillName.equals("annotation")) "type.typeID() != 5"
+              case t : UserType ⇒ s"""self.fieldType().typeID() != "${f.getType.getSkillName}""""
               case _            ⇒ "False:  # TODO type check!"
             }
           }:
-            raise SkillException("Expected field type ${f.getType.toString} in ${t.getName.capital}.${f.getName.camel} but found []".format(fType))"""
+            raise SkillException("Expected field type ${f.getType.toString} in ${t.getName.capital}.${f.getName.camel} but found {}".format(fType))"""
         }
 
-    def get(self, ref):
-        ${
-          if (f.isConstant) s"return ${mapType(t)}.get${escaped(f.getName.capital)}()"
-          else s"return ref.${name(f)}"
-        }
+    ${
+        if (f.isAuto) ""
+        else if (f.isConstant) """
+    def _rsc(self, i, h, inStream): pass
 
-    def set(self, ref, value):
-        ${
-          if (f.isConstant) s"""raise Exception("${f.getName.camel} is a constant!")"""
-          else s"ref.${name(f)} = value"
-        }
+    def _osc(self, i, h): pass
 
-    def osc(self, i, h):${
-        val (code, isFast) = offsetCode(t, f, originalF.getType, fieldActualType)
-        s"""${prelude(originalF.getType)}
-        d = self.owner.basePool.data
+    def _wsc(self, i, h, outStream): pass
+"""
+        else s"""
+    def _rsc(self, i, h, inStream):
+        ${readCode(t, originalF)}
+
+    def _osc(self, i, h):${
+            val (code, isFast) = offsetCode(t, f, originalF.getType, fieldActualType)
+            if (isFast)
+                code
+            else s"""${prelude(originalF.getType)}
+        d = self.owner.basePool.data()
         result = 0
-        for j in range(i, h):
+        for i in range(i, h):
             $code
-        self.offset += result
-                """}
+        self._offset += result"""
+        }
+
+    def _wsc(self, i, h, out):
+        ${writeCode(t, originalF)}
+"""}
 """)
       }
     }
@@ -94,32 +101,36 @@ class $nameF(${
    * create local variables holding type representants with correct type to help
    * the compiler
    */
-  private final def prelude(t : Type, readHack : Boolean = false, target : String = "self.fType") : String = t match {
+  private final def prelude(t : Type, readHack : Boolean = false, target : String = "self.fieldType()") : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
       case "annotation" ⇒ s"""
         t = $target"""
       case "string" ⇒
         if (readHack) """
-        t = owner.owner.strings"""
+        t = self.owner.owner.strings"""
         else """
-        t = self.fType"""
+        t = self.fieldType()"""
 
       case _ ⇒ ""
     }
 
     case t : ConstantLengthArrayType ⇒ s"""
-        fType = self.fType
-        size = len(fType)"""
+        fType = self.fieldType()
+        size = len(fType)
+        ${prelude(t.getBaseType, readHack, "fType.groundType")}"""
     case t : VariableLengthArrayType ⇒ s"""
-        fType = self.fType"""
+        fType = self.fieldType()
+        ${prelude(t.getBaseType, readHack, "fType.groundType")}"""
     case t : ListType ⇒ s"""
-        fType = self.fType"""
+        fType = self.fieldType()
+        ${prelude(t.getBaseType, readHack, "fType.groundType")}"""
     case t : SetType ⇒ s"""
-        fType = self.fType"""
+        fType = self.fieldType()
+        ${prelude(t.getBaseType, readHack, "fType.groundType")}"""
     case t : MapType ⇒
       locally {
         s"""
-        fType = self.fType"""
+        fType = self.fieldType()"""
       }
 
     case t : InterfaceType if t.getSuperType.getSkillName == "annotation" ⇒ s"""
@@ -135,69 +146,62 @@ class $nameF(${
    * creates code to read all field elements
    */
   private final def readCode(t : UserType, f : Field) : String = {
-    val declareD = s"final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner${
+    val declareD = s"d = self.owner${
       if (null == t.getSuperType) ""
       else ".basePool"
-    }).data()"
-    val fieldAccess = (
-      if (null == t.getSuperType) "d[i]"
-      else s"((${mapType(t)})d[i])") + s".${name(f)}"
+    }.data()"
+    val fieldAccess = "d[i]" + s".${name(f)}"
 
     val pre = prelude(f.getType, readHack = true)
 
     val code = readCodeInner(f.getType)
 
     s"""$declareD$pre
-        for (; i != h; i++) {${
+        for i in range(i, h):${
       f.getType match {
         case t : ConstantLengthArrayType ⇒ s"""
-            int s = size;
-            final ${mapType(f.getType)} v = new ArrayList<>(size);
-            while (s-- > 0) {
-                v.add($code);
-            }
-            $fieldAccess = v;"""
+            v = []
+            for _ in range(0,size):
+                v.append($code)
+            $fieldAccess = v"""
         case t : VariableLengthArrayType ⇒ s"""
-            int size = in.v32();
-            final ${mapType(f.getType)} v = new ArrayList<>(size);
-            while (size-- > 0) {
-                v.add($code);
-            }
-            $fieldAccess = v;"""
+            size = inStream.v64()
+            v = []
+            for k in range(0, size):
+                v.append($code)
+            $fieldAccess = v"""
         case t : ListType ⇒ s"""
-            int size = in.v32();
-            final ${mapType(f.getType)} v = new LinkedList<>();
-            while (size-- > 0) {
-                v.add($code);
-            }
-            $fieldAccess = v;"""
+            size = inStream.v64()
+            v = []
+            for k in range(0, size):
+                v.append($code)
+            $fieldAccess = v"""
         case t : SetType ⇒ s"""
-            int size = in.v32();
-            final ${mapType(f.getType)} v = new HashSet<>(size * 3 / 2);
-            while (size-- > 0) {
-                v.add($code);
-            }
-            $fieldAccess = v;"""
+            size = inStream.v64()
+            v = set()
+            t = self.fieldType().groundType
+            for k in range(0, size):
+                v.add($code)
+            $fieldAccess = v"""
         case _ ⇒ s"""
-            $fieldAccess = $code;"""
+            $fieldAccess = $code"""
       }
     }
-        }
 """
   }
 
   private final def readCodeInner(t : Type) : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
       case "annotation" ⇒ "t.readSingleField(inStream)"
-      case "string"     ⇒ "t.get(inStream.v32())"
+      case "string"     ⇒ "t.get(inStream.v64())"
       case _            ⇒ s"""inStream.${t.getSkillName}()"""
     }
     case t : SingleBaseTypeContainer ⇒ readCodeInner(t.getBaseType)
 
     case t : InterfaceType if t.getSuperType.getSkillName == "annotation" ⇒ s"t.readSingleField(inStream)"
 
-    case t : UserType ⇒ "t.getByID(inStream.v32())"
-    case _ ⇒ "fType.readSingleField(in)"
+    case t : UserType ⇒ "t.getByID(inStream.v64())"
+    case _ ⇒ "fType.readSingleField(inStream)"
   }
 
   /**
@@ -208,23 +212,23 @@ class $nameF(${
    */
   private final def offsetCode(t : UserType, f : Field, fieldType : Type, fieldActualType : String) : (String, Boolean) = {
 
-    val fieldAccess = "d[j]" + s".${name(f)}"
+    val fieldAccess = "d[i]" + s".${name(f)}"
 
     val code = fieldType match {
 
       case fieldType : GroundType ⇒ fieldType.getSkillName match {
 
-        case "annotation" ⇒ s"""v = $fieldAccess;
+        case "annotation" ⇒ s"""v = $fieldAccess
             if v is None:
                 result += 2
             else:
-                result += self.fType.singleOffset(v)"""
+                result += self.fieldType().singleOffset(v)"""
 
-        case "string" ⇒ s"""v = $fieldAccess;
+        case "string" ⇒ s"""v = $fieldAccess
             if v is None:
                 result += 1
             else:
-                result += self.fType.singleOffset(v)"""
+                result += self.fieldType().singleOffset(v)"""
 
         case "i8" | "bool" ⇒ return fastOffsetCode(0);
 
@@ -234,14 +238,13 @@ class $nameF(${
 
         case "i64" | "f64" ⇒ return fastOffsetCode(3);
 
-        case "v64"         ⇒ s"""result += V64.singleV64Offset($fieldAccess);"""
+        case "v64"         ⇒ s"""result += V64.singleV64Offset($fieldAccess)"""
         case _ ⇒ s"""
         raise AttributeError()"""
       }
 
-      case fieldType : ConstantLengthArrayType ⇒ s"""v = $fieldAccess;
-            
-            if len(v) != len(self.fType):
+      case fieldType : ConstantLengthArrayType ⇒ s"""v = $fieldAccess
+            if len(v) != len(self.fieldType()):
                 raise Exception("constant length array has wrong size")
 
             ${offsetCodeInner(fieldType.getBaseType, "v")}"""
@@ -251,26 +254,26 @@ class $nameF(${
                 size = 0
             else:
                 size = len(v)
-            if 0 == size
+            if 0 == size:
                 result += 1
             else:
-                result += V64.singleV64Offset(size);
+                result += V64.singleV64Offset(size)
                 ${offsetCodeInner(fieldType.getBaseType, "v")}
-            }"""
+            """
 
       case fieldType : MapType ⇒ s"""v = $fieldAccess
             if v is None or len(v) == 0:
                 result += 1
             else:
                 result += V64.singleV64Offset(len(v))
-                result += keyType.calculateOffset(v.keySet());
-                result += valueType.calculateOffset(v.values());
-            }"""
+                result += fType.keyType.calculateOffset(v.keySet())
+                result += fType.valueType.calculateOffset(v.values())
+            """
 
       case fieldType : UserType ⇒ s"""instance = $fieldAccess
             if instance is None:
                 result += 1
-                continue;
+                continue
             result += V64.singleV64Offset(instance.getSkillID())"""
 
       case _ ⇒ s"""raise AttributeError()"""
@@ -292,7 +295,7 @@ class $nameF(${
       case "v64" ⇒ s"""for x in $target:
                     result += V64.singleV64Offset(x)"""
 
-      case _ ⇒ s"""result += self.fType.groundType.calculateOffset($target)"""
+      case _ ⇒ s"""result += self.fieldType().groundType.calculateOffset($target)"""
     }
 
     case t : UserType ⇒ s"""for x in $target:
@@ -301,35 +304,32 @@ class $nameF(${
                     else:
                         result += V64.singleV64Offset(x.getSkillID())"""
 
-    case _ ⇒ s"""result += self.fType.groundType.calculateOffset($target);"""
+    case _ ⇒ s"""result += self.fieldType().groundType.calculateOffset($target)"""
   }
 
   private final def fastOffsetCode(shift : Int) =
     (
-      if (shift != 0) s"offset += (end-i) << $shift"
-      else "offset += (h-i)",
+      if (shift != 0) s"self._offset += (h-i) << $shift"
+      else "self._offset += (h-i)",
       true)
 
   /**
    * creates code to write exactly one field element
    */
   private final def writeCode(t : UserType, f : Field) : String = {
-    val declareD = s"final ${mapType(t.getBaseType)}[] d = ((${access(t.getBaseType)}) owner${
+    val declareD = s"d = self.owner${
       if (null == t.getSuperType) ""
       else ".basePool"
-    }).data();"
-    val fieldAccess = (
-      if (null == t.getSuperType) "d[i]"
-      else s"((${mapType(t)})d[i])") + s".${name(f)}"
+    }.data()"
+    val fieldAccess = "d[i]" + s".${name(f)}"
 
     val pre = prelude(f.getType)
 
     val code = writeCode(f.getType, fieldAccess)
 
     s"""$declareD$pre
-        for (; i != h; i++) {
-            $code;
-        }
+        for i in range(i, h):
+            $code
 """
   }
 
@@ -341,30 +341,30 @@ class $nameF(${
     }
 
     case t : ConstantLengthArrayType ⇒ s"""
-        x = $fieldAccess
-        for e in x:
-            ${writeCode(t.getBaseType, "e")}
-        """
-
-    case t : SingleBaseTypeContainer ⇒ s"""
-        x = $fieldAccess;
-        size = 0 if x is None else len(x)
-        if size == 0:
-            out.i8(0);
-        else:
-            out.v64(size);
+            x = $fieldAccess
             for e in x:
                 ${writeCode(t.getBaseType, "e")}
+            """
+
+    case t : SingleBaseTypeContainer ⇒ s"""
+            x = $fieldAccess
+            size = 0 if x is None else len(x)
+            if size == 0:
+                out.i8(0)
+            else:
+                out.v64(size)
+                for e in x:
+                    ${writeCode(t.getBaseType, "e")}
 
         """
 
     case t : InterfaceType if t.getSuperType.getSkillName == "annotation" ⇒ s"t.writeSingleField($fieldAccess, out)"
 
-    case t : UserType ⇒ s"""v = $fieldAccess;
+    case t : UserType ⇒ s"""v = $fieldAccess
             if v is None:
-                out.i8(0);
-            else
+                out.i8(0)
+            else:
                 out.v64(v.getSkillID())"""
-    case _ ⇒ s"fType.writeSingleField($fieldAccess, out)"
+    case _ ⇒ s"self.fieldType().writeSingleField($fieldAccess, out)"
   }
 }

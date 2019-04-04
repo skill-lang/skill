@@ -23,7 +23,7 @@ class Parser(FileParser):
         try:""")
         var i = 0
         for (t ← IR) {
-            if (null == t.getSuperType)
+            if (null == t.getSuperType) {
                 if (t == IR.head) out.write(
                     s"""
             if name == "${t.getSkillName}":
@@ -34,20 +34,34 @@ class Parser(FileParser):
             elif name == "${t.getSkillName}":
                 superPool = ${access(t)}(len(types), knownTypes[$i], knownSubTypes[$i])
                 return superPool""")
-            else if (t == IR.head) out.write(
-                s"""
+            } else {
+                if (t == IR.head) out.write(
+                    s"""
             if name == "${t.getSkillName}":
                 superPool = ${access(t)}(len(types), superPool, knownTypes[$i], knownSubTypes[$i])
                 return superPool""")
-            else
-                out.write(
-                    s"""
+                else
+                    out.write(
+                        s"""
             elif name == "${t.getSkillName}":
                 superPool = ${access(t)}(len(types), superPool, knownTypes[$i], knownSubTypes[$i])
                 return superPool
                  """)
-            i = i + 1
+                i = i + 1
+            }
         }
+        if(IR.isEmpty){
+    out.write(
+        s"""
+            if superPool is None:
+                superPool = BasePool(len(types), name, StoragePool.noKnownFields, StoragePool.noAutoFields)
+            else:
+                superPool = superPool.makeSubPool(len(types), name)
+            return superPool
+        finally:
+            types.append(superPool)
+         """.stripMargin)
+        } else {
     out.write(s"""
             else:
                 if superPool is None:
@@ -57,6 +71,6 @@ class Parser(FileParser):
             return superPool
         finally:
             types.append(superPool)
-""")
+""")}
   }
 }

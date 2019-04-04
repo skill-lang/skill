@@ -6,14 +6,14 @@
 package de.ust.skill.generator.python
 
 import scala.collection.JavaConversions.asScalaBuffer
-
 import de.ust.skill.generator.common.Generator
 import de.ust.skill.ir.FieldLike
 import de.ust.skill.ir.InterfaceType
 import de.ust.skill.ir.Type
 import de.ust.skill.ir.TypeContext
 import de.ust.skill.ir.UserType
-import scala.collection.mutable.HashMap
+
+import scala.collection.mutable
 
 /**
  * The parent class for all output makers.
@@ -40,13 +40,13 @@ trait GeneralOutputMaker extends Generator {
    */
   var largeSpecificationMode = false
 
-  override def getLanguageName : String = "python";
+  override def getLanguageName : String = "python"
 
   // options
   /**
    * if set to true, the generated binding will reveal the values of skill IDs.
    */
-  protected var revealSkillID = false;
+  protected var revealSkillID = false
 
   val ArrayTypeName = "list"
   val VarArrayTypeName = "list"
@@ -85,7 +85,7 @@ trait GeneralOutputMaker extends Generator {
   /**
    * id's given to fields
    */
-  protected val poolNameStore : HashMap[String, Int] = new HashMap()
+  protected val poolNameStore : mutable.HashMap[String, Int] = new mutable.HashMap()
   /**
    * The name of T's storage pool
    */
@@ -96,7 +96,7 @@ trait GeneralOutputMaker extends Generator {
   /**
    * id's given to fields
    */
-  protected val fieldNameStore : HashMap[(String, String), Int] = new HashMap()
+  protected val fieldNameStore : mutable.HashMap[(String, String), Int] = new mutable.HashMap()
   /**
    * Class name of the representation of a known field
    */
@@ -108,11 +108,11 @@ trait GeneralOutputMaker extends Generator {
    * Assume a package prefix provider.
    */
   protected def packagePrefix() : String
-  protected def packageName = packagePrefix().substring(0, packagePrefix().length - 1)
+  protected def packageName: String = packagePrefix().substring(0, packagePrefix().length - 1)
 
   /**
    * this string may contain a "@SuppressWarnings("all")\n", in order to suppress warnings in generated code;
    * the option can be enabled by "-O@java:SuppressWarnings=true"
    */
-  protected var suppressWarnings = "";
+  protected var suppressWarnings = ""
 }

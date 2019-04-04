@@ -39,8 +39,8 @@ class $accessT(${
       }):
 ${comment (t)}
     def __init__(self, poolIndex${
-        if (isBasePool) ""
-        else s", superPool"
+        if (isBasePool){""}
+        else ", superPool"
       }, cls, subCls):
         \"\"\"
         Can only be constructed by the SkillFile in this package.
@@ -52,8 +52,8 @@ ${comment (t)}
           if (fields.isEmpty) "[]"
           else fields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString("[", ", ", "]")
       }, [])
-        self.cls = cls
-        self.subCls = subCls
+        self._cls = cls
+        self._subCls = subCls
 ${
         if (fields.isEmpty) ""
         else s"""
@@ -88,12 +88,12 @@ ${
         if name == "${f.getSkillName}":
             raise SkillException(
                 "The file contains a field declaration %s.%s, but there is an auto field of similar name!".format(
-                    self.name, name))"""
+                    self.name(), name))"""
                 else s"""
         elif name == "${f.getSkillName}":
             raise SkillException(
                 "The file contains a field declaration %s.%s, but there is an auto field of similar name!".format(
-                    self.name, name))"""
+                    self.name(), name))"""
           ).mkString
         }
         else:
@@ -106,13 +106,13 @@ ${
         \"\"\"
         :return a new $typeT instance with the argument field values
         \"\"\"
-        rval = self.cls(-1${appendInitializationArguments(t, prependTypes = false)})
+        rval = self._cls(-1${appendInitializationArguments(t, prependTypes = false)})
         self.add(rval)
         return rval
 """
       }
     def build(self):
-        return self.${nameT}Builder(self, self.cls())
+        return self.${nameT}Builder(self, self._cls())
 
     class ${name(t)}Builder(StoragePool.Builder):
         \"\"\"
@@ -136,12 +136,12 @@ ${
         \"\"\"
         used internally for type forest construction
         \"\"\"
-        return $accessT.UnknownSubPool(index, name, self, self.subCls)
+        return $accessT.UnknownSubPool(index, name, self, self._subCls)
 
     class UnknownSubPool(StoragePool):
         def __init__(self, poolIndex, name, superPools, subCls):
             super(${access(t)}.UnknownSubPool, self).__init__(poolIndex, name, superPools, self.noKnownFields, self.noAutoFields)
-            self.subCls = subCls
+            self._subCls = subCls
 
         def makeSubPool(self, index, name):
             return type(self)(index, name, self)
@@ -163,7 +163,7 @@ ${
       case "f64"        ⇒ "F64()"
       case "string"     ⇒ "string"
 
-      case _            ⇒ s"""self.owner().${name(t)}s"""
+      case _            ⇒ s"""self.owner().${name(t)}"""
     }
 
     f.getType match {
@@ -183,7 +183,7 @@ ${
       case t : MapType ⇒
         t.getBaseTypes.map(mapGroundType).reduceRight((k, v) ⇒ s"MapType($k, $v)")
 
-      case t ⇒ s"""self.owner().${name(t)}s"""
+      case t ⇒ s"""self.owner().${name(t)}"""
 
     }
   }

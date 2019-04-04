@@ -45,8 +45,8 @@ class SkillState(State):
 
     def __init__(self, poolByName, strings, annotationType, types, inStream, mode, knownTypes, knownSubTypes):
         super(SkillState, self).__init__(strings, inStream.path, mode, types, poolByName, annotationType)
-        self.knownTypes = knownTypes
-        self.knownSubTypes = knownSubTypes
+        self._knownTypes = knownTypes
+        self._knownSubTypes = knownSubTypes
 
         try:""")
       var i = 0
@@ -57,7 +57,7 @@ class SkillState(State):
             self.${name(t)} = p if (p is not None) else Parser.newPool("${t.getSkillName}", """)
           if (null == t.getSuperType) out.write("None")
           else out.write(s"self.${name(t.getSuperType)}")
-          out.write(s""", types, self.knownTypes, self.knownSubTypes)""")
+          out.write(s""", types, self._knownTypes, self._knownSubTypes)""")
       }
       if (i == 0) {out.write(s"""p = None""")}
       out.write(s"""
@@ -65,9 +65,9 @@ class SkillState(State):
             raise ParseException(inStream, -1, e,
                                  "A super type does not match the specification; see cause for details.")
         for t in types:
-            self.poolByName[t.name] = t
+            self._poolByName[t.name] = t
 
-        self.finalizePools(inStream)
+        self._finalizePools(inStream)
 """)
 
   }

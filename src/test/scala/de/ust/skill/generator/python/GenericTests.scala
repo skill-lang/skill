@@ -51,7 +51,7 @@ from python.src.$packagePath.api import *
 from python.src.common.CommonTest import CommonTest
 
 
-class Generic${name}Test(CommonTest, TestCase):
+class Generic${name}Test(TestCase, CommonTest):
     \"\"\"
     Tests the file reading capabilities.
     \"\"\"
@@ -69,14 +69,14 @@ class Generic${name}Test(CommonTest, TestCase):
 
         # create a name -> type map
         types = dict()
-        sf = SkillFile.open(path)
+        sf = SkillFile.open(path.name)
         self.reflectiveInit(sf)
 
         for t in sf.allTypes():
             types[t.name()] = t
 
         # read file and check skill IDs
-        sf2 = SkillFile.open(path, Mode.Read)
+        sf2 = SkillFile.open(path.name, Mode.Read)
         for t in sf2.allTypes():
             os = types.get(t.name()).iterator()
             for o in t:
