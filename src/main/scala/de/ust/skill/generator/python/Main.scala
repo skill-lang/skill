@@ -75,10 +75,10 @@ class Main extends FakeMain
     for (f ← t.getAllFields if !(f.isConstant || f.isIgnored))
       yield s"${name(f)}: ${mapType(f.getType)}=None").mkString(", ")
   override protected def appendConstructorArguments(t : UserType, prependTypes : Boolean): String = {
-    val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
+    val r = t.getAllFields.filterNot { f ⇒ f.isIgnored }
     if (r.isEmpty) ""
-    else if (prependTypes) r.map({ f ⇒ s", ${name(f)}=None" }).mkString("")
-    else r.map({ f ⇒ s", ${name(f)}=None" }).mkString("")
+    else if (prependTypes) r.map({ f ⇒ s", ${name(f)}=${defaultValue(f)}" }).mkString("")
+    else r.map({ f ⇒ s", ${name(f)}=${defaultValue(f)}" }).mkString("")
   }
 
   protected def checkThisType(t: UserType, f: Field): String = {
@@ -92,9 +92,9 @@ class Main extends FakeMain
   override protected def appendInitializationArguments(t : UserType, prependTypes : Boolean): String = {
     val r = t.getAllFields.filterNot { f ⇒ f.isConstant || f.isIgnored }
     var a = ""
-    if (prependTypes) a = "=None"
+    if (prependTypes) a = s""
     if (r.isEmpty) ""
-    else r.map({ f ⇒ s", ${name(f)}$a" }).mkString("")
+    else r.map({ f ⇒ s", ${name(f)}${if(prependTypes){s"=${defaultValue(f)}"}else{""}}" }).mkString("")
   }
 
   override def makeHeader(headerInfo : HeaderInfo) : String = headerInfo.format(this, "#", "#", "#", "#", "#", "#")

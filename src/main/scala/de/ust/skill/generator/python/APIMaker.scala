@@ -34,6 +34,7 @@ ${customizations.flatMap(_.getOptions.get("import")).map(i⇒s"import $i\n").mkS
 class ${name(t)}(${
         if (null != t.getSuperType) { name(t.getSuperType) }
         else { "SkillObject" }
+        //TODO Interface
       }):\n${comment(t)}
     def __init__(self, skillID=-1${appendConstructorArguments(t)}):
         \"\"\"
@@ -56,9 +57,16 @@ class ${name(t)}(${
           ""
         } else {
           s"""
-            ${name(f)} = ${defaultValue(f)}
+            self.${name(f)} = ${defaultValue(f)}
 """
         }
+          s"""
+            def get${escaped(f.getName.capital)}(self):
+                return self.${name(f)}
+
+            def set${escaped(f.getName.capital)}(self, value: ${mapType(f.getType)}):
+                self.${name(f)} = value
+           """.stripMargin
       }
 
       // custom fields
@@ -83,7 +91,7 @@ class SubType${name(t)}(${name(t)}, NamedType):
     def skillName(self):
         return self.tPool.name
 
-    def toString(self):
+    def __str__(self):
         return self.skillName() + "#" + self.skillID
 """)
     }

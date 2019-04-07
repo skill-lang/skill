@@ -47,8 +47,8 @@ class Parser(FileParser):
                 superPool = ${access(t)}(len(types), superPool, knownTypes[$i], knownSubTypes[$i])
                 return superPool
                  """)
-                i = i + 1
             }
+            i = i + 1
         }
         if(IR.isEmpty){
     out.write(

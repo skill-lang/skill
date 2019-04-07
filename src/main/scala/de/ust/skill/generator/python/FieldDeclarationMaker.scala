@@ -14,87 +14,100 @@ import scala.collection.mutable.ArrayBuffer
 trait FieldDeclarationMaker extends GeneralOutputMaker {
   final def makeFields(out : PrintWriter) {
 
-    // project IR, so that reflection implements the binary file format correctly
-    val IR = this.types.removeSpecialDeclarations().getUsertypes
+      // project IR, so that reflection implements the binary file format correctly
+      val IR = this.types.removeSpecialDeclarations().getUsertypes
 
-    for (t ← IR.asScala) {
-      val autoFieldIndex : Map[Field, Int] = t.getFields.asScala.filter(_.isAuto()).zipWithIndex.toMap
+      for (t ← IR.asScala) {
+          val autoFieldIndex: Map[Field, Int] = t.getFields.asScala.filter(_.isAuto()).zipWithIndex.toMap
 
-      for (f ← t.getFields.asScala) {
-        // the field before interface projection
-        val originalF = this.types.removeTypedefs().removeEnums().get(t.getSkillName).asInstanceOf[UserType]
-          .getAllFields.asScala.find(_.getName == f.getName).get
+          for (f ← t.getFields.asScala) {
+              // the field before interface projection
+              val originalF = this.types.removeTypedefs().removeEnums().get(t.getSkillName).asInstanceOf[UserType]
+                  .getAllFields.asScala.find(_.getName == f.getName).get
 
-        // the type before the interface projection
-        val fieldActualType = mapType(originalF.getType)
+              // the type before the interface projection
+              val fieldActualType = mapType(originalF.getType)
 
-        val tIsBaseType = t.getSuperType == null
+              val tIsBaseType = t.getSuperType == null
 
-        val nameT = mapType(t)
-        val nameF = knownField(f)
+              val nameT = mapType(t)
+              val nameF = knownField(f)
 
-        // casting access to data array using index i
+              // casting access to data array using index i
 
-        out.write(s"""
+              out.write(
+                  s"""
 
 class $nameF(${
-          if (f.isAuto) "AutoField"
-          else "KnownDataField"
-        }):
+                      if (f.isAuto) "AutoField"
+                      else "KnownDataField"
+                  }):
     \"\"\"
     ${f.getType.toString} ${t.getName.capital}.${f.getName.camel}
     \"\"\"
     def __init__(self, fType, owner):
         super($nameF, self).__init__(fType, "${f.getSkillName}", owner${
-            if (f.isAuto) ", True, " + -autoFieldIndex(f)
-            else ""
-        })
+                      if (f.isAuto) ", " + -autoFieldIndex(f)
+                      else ""
+                  })
         ${
-          if (f.isAuto) "" // auto fields are always correctly typed
-          else s"""
+                      if (f.isAuto) "" // auto fields are always correctly typed
+                      else
+                          s"""
         if ${
-            originalF.getType match {
-              case t : GroundType ⇒ s"self.fieldType().typeID() != ${typeID(f.getType) - (if (f.isConstant) 7 else 0)}"
-              case t : InterfaceType ⇒
-                if (t.getSuperType.getSkillName.equals("annotation")) "type.typeID() != 5"
-              case t : UserType ⇒ s"""self.fieldType().typeID() != "${f.getType.getSkillName}""""
-              case _            ⇒ "False:  # TODO type check!"
-            }
-          }:
+                              originalF.getType match {
+                                  case t: GroundType ⇒ s"self.fieldType().typeID() != ${typeID(f.getType) - (if (f.isConstant) 7 else 0)}"
+                                  case t: InterfaceType ⇒
+                                      if (t.getSuperType.getSkillName.equals("annotation")) "type.typeID() != 5"
+                                  case t: UserType ⇒ s"""self.fieldType().typeID() != "${f.getType.getSkillName}""""
+                                  case _ ⇒ "False:  # TODO type check!"
+                              }
+                          }:
             raise SkillException("Expected field type ${f.getType.toString} in ${t.getName.capital}.${f.getName.camel} but found {}".format(fType))"""
-        }
+                  }
 
     ${
-        if (f.isAuto) ""
-        else if (f.isConstant) """
+                      if (f.isAuto) ""
+                      else if (f.isConstant)
+                          """
     def _rsc(self, i, h, inStream): pass
 
     def _osc(self, i, h): pass
 
     def _wsc(self, i, h, outStream): pass
 """
-        else s"""
+                      else
+                          s"""
     def _rsc(self, i, h, inStream):
         ${readCode(t, originalF)}
 
     def _osc(self, i, h):${
-            val (code, isFast) = offsetCode(t, f, originalF.getType, fieldActualType)
-            if (isFast)
-                code
-            else s"""${prelude(originalF.getType)}
+                              val (code, isFast) = offsetCode(t, f, originalF.getType, fieldActualType)
+                              if (isFast)
+                                  code
+                              else
+                                  s"""${prelude(originalF.getType)}
         d = self.owner.basePool.data()
         result = 0
         for i in range(i, h):
             $code
         self._offset += result"""
-        }
+                          }
 
     def _wsc(self, i, h, out):
         ${writeCode(t, originalF)}
-"""}
+"""
+                  }
+
+    def set(self, ref, value: $fieldActualType):
+        ${
+                      if (f.isConstant)
+                          s"""raise Exception("${f.getName.camel} is a constant!")"""
+                      else s"ref.${name(f)} = value"
+                  }
 """)
+          }
       }
-    }
   }
 
   /**

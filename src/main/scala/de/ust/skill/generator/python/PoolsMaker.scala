@@ -22,6 +22,7 @@ trait PoolsMaker extends GeneralOutputMaker {
       val nameT = name(t)
       val typeT = mapType(t)
       val accessT = access(t)
+      var numberAutoFields = 0
 
       // find all fields that belong to the projected version, but use the unprojected variant
       val flatIRFieldNames = flatIR.find(_.getName == t.getName).get.getFields.map(_.getSkillName).toSet
@@ -29,6 +30,7 @@ trait PoolsMaker extends GeneralOutputMaker {
       val projectedField = flatIR.find(_.getName == t.getName).get.getFields.map {
         case f ⇒ fields.find(_.getSkillName.equals(f.getSkillName)).get -> f
       }.toMap
+      for (f ← fields if f.isAuto){numberAutoFields += 1}
 
 
       //class declaration
@@ -51,7 +53,7 @@ ${comment (t)}
       }, ${
           if (fields.isEmpty) "[]"
           else fields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString("[", ", ", "]")
-      }, [])
+      }, [None for i in range(0, $numberAutoFields)])
         self._cls = cls
         self._subCls = subCls
 ${
@@ -61,19 +63,16 @@ ${
           (for (f ← fields)
             yield
             if (f == fields.head)s"""
-            if name == "${f.getSkillName}":
-                ${knownField(projectedField(f))}(${mapToFieldType(f)}, self)
-                return
+        if name == "${f.getSkillName}":
+            ${knownField(projectedField(f))}(${mapToFieldType(f)}, self)
 """
             else s"""
-            elif name == "${f.getSkillName}":
-                ${knownField(projectedField(f))}(${mapToFieldType(f)}, self)
-                return
+        elif name == "${f.getSkillName}":
+            ${knownField(projectedField(f))}(${mapToFieldType(f)}, self)
                 """
           ).mkString
         }
-    def addField(self, fType, name):
-        ${
+    def addField(self, fType, name):${
           (for (f ← fields if !f.isAuto)
             yield
                 s"""
