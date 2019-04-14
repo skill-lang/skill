@@ -52,22 +52,21 @@ class ${name(t)}(${
       // getters & setters //
       ///////////////////////
       for(f <- implementedFields) {
-        if(f.isIgnored){
-          ""
+      out.write(s"""
+    def get${escaped(f.getName.capital)}(self):
+        return self.${name(f)}
+
+    def set${escaped(f.getName.capital)}(self, value: ${mapType(f.getType)}):
+        ${if (f.isConstant){
+        s"""\"\"\" Constant field. You cannot set ${name(f)} \"\"\"
+          raise Exception("You are not allowed to set ${name(f)}")
+        """
         } else {
-          s"""
-            self.${name(f)} = ${defaultValue(f)}
-"""
+          s"""self.${name(f)} = value"""
         }
-          s"""
-            def get${escaped(f.getName.capital)}(self):
-                return self.${name(f)}
-
-            def set${escaped(f.getName.capital)}(self, value: ${mapType(f.getType)}):
-                self.${name(f)} = value
-           """.stripMargin
       }
-
+""")
+      }
       // custom fields
       for(c <- customizations) {
         out.write(s"""

@@ -51,13 +51,13 @@ class SkillState(State):
         try:""")
       var i = 0
       for (t ← IR) {
-          i = i + 1
           out.write(s"""
             p = poolByName.get("${t.getSkillName}")
             self.${name(t)} = p if (p is not None) else Parser.newPool("${t.getSkillName}", """)
           if (null == t.getSuperType) out.write("None")
           else out.write(s"self.${name(t.getSuperType)}")
-          out.write(s""", types, self._knownTypes, self._knownSubTypes)""")
+          out.write(s""", types, self._knownTypes[$i], self._knownSubTypes[$i])""")
+          i = i + 1
       }
       if (i == 0) {out.write(s"""p = None""")}
       out.write(s"""
