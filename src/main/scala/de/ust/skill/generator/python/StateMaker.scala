@@ -32,9 +32,9 @@ class SkillState(State):
                 types = []
                 annotation = Annotation(types)
                 return SkillState({}, strings, annotation, types,
-                                    FileInputStream.open(path, False), actualMode.closeMode, knownTypes, knownSubTypes)
+                                    FileInputStream.open(path), actualMode.closeMode, knownTypes, knownSubTypes)
             elif actualMode.openMode == Mode.Read:
-                p = Parser(FileInputStream.open(path, (actualMode.closeMode == Mode.ReadOnly)), knownTypes, knownSubTypes)
+                p = Parser(FileInputStream.open(path), knownTypes, knownSubTypes)
                 return p.read(SkillState, actualMode.closeMode, knownTypes, knownSubTypes)
             else:
                 raise Exception("should never happen")

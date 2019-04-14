@@ -81,12 +81,12 @@ class $nameF(${
     def _rsc(self, i, h, inStream):
         ${readCode(t, originalF)}
 
-    def _osc(self, i, h):${
-                              val (code, isFast) = offsetCode(t, f, originalF.getType, fieldActualType)
-                              if (isFast)
-                                  code
-                              else
-                                  s"""${prelude(originalF.getType)}
+    def _osc(self, i, h):
+        ${
+        val (code, isFast) = offsetCode(t, f, originalF.getType, fieldActualType)
+        if (isFast)code
+          else
+              s"""${prelude(originalF.getType)}
         d = self.owner.basePool.data()
         result = 0
         for i in range(i, h):
@@ -97,13 +97,6 @@ class $nameF(${
     def _wsc(self, i, h, out):
         ${writeCode(t, originalF)}
 """
-                  }
-
-    def set(self, ref, value: $fieldActualType):
-        ${
-                      if (f.isConstant)
-                          s"""raise Exception("${f.getName.camel} is a constant!")"""
-                      else s"ref.${name(f)} = value"
                   }
 """)
           }
@@ -120,7 +113,7 @@ class $nameF(${
         t = $target"""
       case "string" ⇒
         if (readHack) """
-        t = self.owner.owner.strings"""
+        t = self.owner.owner().Strings()"""
         else """
         t = self.fieldType()"""
 

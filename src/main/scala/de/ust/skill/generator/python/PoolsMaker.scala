@@ -53,9 +53,7 @@ ${comment (t)}
       }, ${
           if (fields.isEmpty) "[]"
           else fields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString("[", ", ", "]")
-      }, [None for i in range(0, $numberAutoFields)])
-        self._cls = cls
-        self._subCls = subCls
+      }, [None for i in range(0, $numberAutoFields)], cls, subCls)
 ${
         if (fields.isEmpty) ""
         else s"""
@@ -98,9 +96,7 @@ ${
         else:
             return LazyField(fType, name, self)"""
       }
-${
-        if (fields.forall { f ⇒ f.isConstant || f.isIgnored }) ""
-        else s"""
+
     def make(self${appendInitializationArguments(t)}):
         \"\"\"
         :return a new $typeT instance with the argument field values
@@ -108,8 +104,7 @@ ${
         rval = self._cls(-1${appendInitializationArguments(t, prependTypes = false)})
         self.add(rval)
         return rval
-"""
-      }
+
     def build(self):
         return self.${nameT}Builder(self, self._cls())
 

@@ -25,20 +25,11 @@ trait GeneralOutputMaker extends Generator {
   // remove special stuff
   final def setTC(tc : TypeContext) {
     this.types = tc
-    val flat = tc.removeTypedefs().removeEnums()
+    val flat = tc.removeSpecialDeclarations()
     this.IR = flat.getUsertypes.to
-    this.interfaces = flat.getInterfaces.to
-    // set large specification mode; leave some spare parameters
-    largeSpecificationMode = IR.size > 200
   }
   var types : TypeContext = _
   var IR : List[UserType] = _
-  var interfaces : List[InterfaceType] = _
-
-  /**
-   * This flag is set iff the specification is too large to be passed as parameter list
-   */
-  var largeSpecificationMode = false
 
   override def getLanguageName : String = "python"
 

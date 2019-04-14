@@ -34,7 +34,6 @@ ${customizations.flatMap(_.getOptions.get("import")).map(i⇒s"import $i\n").mkS
 class ${name(t)}(${
         if (null != t.getSuperType) { name(t.getSuperType) }
         else { "SkillObject" }
-        //TODO Interface
       }):\n${comment(t)}
     def __init__(self, skillID=-1${appendConstructorArguments(t)}):
         \"\"\"
@@ -98,7 +97,7 @@ class SubType${name(t)}(${name(t)}, NamedType):
       out.write(
           s"""
 
-class SkillFile(SkillState):
+class SkillFile:
     \"\"\"
     An abstract skill file that is hiding all the dirty implementation details
     from you.
