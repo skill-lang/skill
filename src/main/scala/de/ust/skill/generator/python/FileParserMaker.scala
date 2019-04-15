@@ -14,11 +14,11 @@ trait FileParserMaker extends GeneralOutputMaker {
     out.write(s"""
 class Parser(FileParser):
 
-    def __init__(self, inStream, knownTypes, knownSubTypes):
-        super(Parser, self).__init__(inStream, knownTypes, knownSubTypes)
+    def __init__(self, inStream, knownTypes):
+        super(Parser, self).__init__(inStream, knownTypes)
 
     @staticmethod
-    def newPool(name: str, superPool, types: [], cls, subCls):
+    def newPool(name: str, superPool, types: [], cls):
         \"\"\"allocate correct pool type and add it to types\"\"\"
         try:""")
         var i = 0
@@ -27,24 +27,24 @@ class Parser(FileParser):
                 if (t == IR.head) out.write(
                     s"""
             if name == "${t.getSkillName}":
-                superPool = ${access(t)}(len(types), cls, subCls)
+                superPool = ${access(t)}(len(types), cls)
                 return superPool""")
                 else out.write(
                     s"""
             elif name == "${t.getSkillName}":
-                superPool = ${access(t)}(len(types), cls, subCls)
+                superPool = ${access(t)}(len(types), cls)
                 return superPool""")
             } else {
                 if (t == IR.head) out.write(
                     s"""
             if name == "${t.getSkillName}":
-                superPool = ${access(t)}(len(types), superPool, cls, subCls)
+                superPool = ${access(t)}(len(types), superPool, cls)
                 return superPool""")
                 else
                     out.write(
                         s"""
             elif name == "${t.getSkillName}":
-                superPool = ${access(t)}(len(types), superPool, cls, subCls)
+                superPool = ${access(t)}(len(types), superPool, cls)
                 return superPool
                  """)
             }
@@ -54,7 +54,7 @@ class Parser(FileParser):
     out.write(
         s"""
             if superPool is None:
-                superPool = BasePool(len(types), name, StoragePool.noKnownFields, StoragePool.noAutoFields, cls, subCls)
+                superPool = BasePool(len(types), name, StoragePool.noKnownFields, StoragePool.noAutoFields, cls)
             else:
                 superPool = superPool.makeSubPool(len(types), name)
             return superPool
@@ -65,9 +65,9 @@ class Parser(FileParser):
     out.write(s"""
             else:
                 if superPool is None:
-                    superPool = BasePool(len(types), name, StoragePool.noKnownFields, StoragePool.noAutoFields, cls, subCls)
+                    superPool = BasePool(len(types), name, StoragePool.noKnownFields, StoragePool.noAutoFields, cls)
                 else:
-                    superPool = superPool.makeSubPool(len(types), name, cls, subCls)
+                    superPool = superPool.makeSubPool(len(types), name, cls)
             return superPool
         finally:
             types.append(superPool)

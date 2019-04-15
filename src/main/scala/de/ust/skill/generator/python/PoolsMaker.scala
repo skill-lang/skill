@@ -43,7 +43,7 @@ ${comment (t)}
     def __init__(self, poolIndex${
         if (isBasePool){""}
         else ", superPool"
-      }, cls, subCls):
+      }, cls):
         \"\"\"
         Can only be constructed by the SkillFile in this package.
         \"\"\"
@@ -53,7 +53,7 @@ ${comment (t)}
       }, ${
           if (fields.isEmpty) "[]"
           else fields.map { f ⇒ s""""${f.getSkillName}"""" }.mkString("[", ", ", "]")
-      }, [None for i in range(0, $numberAutoFields)], cls, subCls)
+      }, [None for i in range(0, $numberAutoFields)], cls)
 ${
         if (fields.isEmpty) ""
         else s"""
@@ -130,12 +130,11 @@ ${
         \"\"\"
         used internally for type forest construction
         \"\"\"
-        return $accessT.UnknownSubPool(index, name, self, self._subCls)
+        return $accessT.UnknownSubPool(index, name, self)
 
     class UnknownSubPool(StoragePool):
-        def __init__(self, poolIndex, name, superPools, subCls):
+        def __init__(self, poolIndex, name, superPools):
             super(${access(t)}.UnknownSubPool, self).__init__(poolIndex, name, superPools, self.noKnownFields, self.noAutoFields)
-            self._subCls = subCls
 
         def makeSubPool(self, index, name):
             return type(self)(index, name, self)

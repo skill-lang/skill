@@ -56,13 +56,14 @@ class ${name(t)}(${
     def get${escaped(f.getName.capital)}(self):
         return self.${name(f)}
 
-    def set${escaped(f.getName.capital)}(self, value: ${mapType(f.getType)}):
+    def set${escaped(f.getName.capital)}(self, value):
         ${if (f.isConstant){
         s"""\"\"\" Constant field. You cannot set ${name(f)} \"\"\"
-          raise Exception("You are not allowed to set ${name(f)}")
+        raise Exception("You are not allowed to set ${name(f)}")
         """
         } else {
-          s"""self.${name(f)} = value"""
+          s"""assert isinstance(value, ${mapType(f.getType)})
+        self.${name(f)} = value""".stripMargin
         }
       }
 """)
@@ -73,25 +74,6 @@ class ${name(t)}(${
     ${comment(c)} ${name(c)}
 """)
       }
-
-      out.write(s"""
-
-class SubType${name(t)}(${name(t)}, NamedType):
-    \"\"\"
-    Generic sub types of this type.
-    \"\"\"
-
-    def __init__(self, tPool, skillID=-1):
-        \"\"\"internal use only!!!\"\"\"
-        super(SubType${name(t)}, self).__init__(skillID)
-        self.tPool = tPool
-
-    def skillName(self):
-        return self.tPool.name
-
-    def __str__(self):
-        return self.skillName() + "#" + self.skillID
-""")
     }
       out.write(
           s"""
@@ -109,19 +91,13 @@ class SkillFile:
       }
       knownTypes = knownTypes + "]"
 
-      var knownSubTypes = """["""
-      for (t <- IR) {
-          if (t == IR.head) {knownSubTypes= knownSubTypes + s"""SubType${name(t)}"""}
-          else {knownSubTypes = knownSubTypes + s""", SubType${name(t)}"""}
-      }
-      knownSubTypes = knownSubTypes + """]"""
       out.write(s"""
     @staticmethod
     def open(path, *mode):
         \"\"\"
         Create a new skill file based on argument path and mode.
         \"\"\"
-        return SkillState.open(path, mode, $knownTypes, $knownSubTypes)
+        return SkillState.open(path, mode, $knownTypes)
 """)
     out.close()
   }

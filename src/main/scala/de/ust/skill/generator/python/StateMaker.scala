@@ -21,7 +21,7 @@ class SkillState(State):
     \"\"\"
 
     @staticmethod
-    def open(path, mode: [], knownTypes: [], knownSubTypes: []):
+    def open(path, mode: [], knownTypes: []):
         \"\"\"
         Create a new skill file based on argument path and mode.
         \"\"\"
@@ -32,10 +32,10 @@ class SkillState(State):
                 types = []
                 annotation = Annotation(types)
                 return SkillState({}, strings, annotation, types,
-                                    FileInputStream.open(path), actualMode.closeMode, knownTypes, knownSubTypes)
+                                    FileInputStream.open(path), actualMode.closeMode, knownTypes)
             elif actualMode.openMode == Mode.Read:
-                p = Parser(FileInputStream.open(path), knownTypes, knownSubTypes)
-                return p.read(SkillState, actualMode.closeMode, knownTypes, knownSubTypes)
+                p = Parser(FileInputStream.open(path), knownTypes)
+                return p.read(SkillState, actualMode.closeMode, knownTypes)
             else:
                 raise Exception("should never happen")
         except SkillException as e:
@@ -43,10 +43,9 @@ class SkillState(State):
         except Exception as e:
             raise SkillException(e)
 
-    def __init__(self, poolByName, strings, annotationType, types, inStream, mode, knownTypes, knownSubTypes):
+    def __init__(self, poolByName, strings, annotationType, types, inStream, mode, knownTypes):
         super(SkillState, self).__init__(strings, inStream.path, mode, types, poolByName, annotationType)
         self._knownTypes = knownTypes
-        self._knownSubTypes = knownSubTypes
 
         try:""")
       var i = 0
@@ -56,7 +55,7 @@ class SkillState(State):
             self.${name(t)} = p if (p is not None) else Parser.newPool("${t.getSkillName}", """)
           if (null == t.getSuperType) out.write("None")
           else out.write(s"self.${name(t.getSuperType)}")
-          out.write(s""", types, self._knownTypes[$i], self._knownSubTypes[$i])""")
+          out.write(s""", types, self._knownTypes[$i])""")
           i = i + 1
       }
       if (i == 0) {out.write(s"""p = None""")}
