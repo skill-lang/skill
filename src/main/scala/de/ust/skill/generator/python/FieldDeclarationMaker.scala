@@ -59,7 +59,7 @@ class $nameF(${
                                   case t: GroundType ⇒ s"self.fieldType().typeID() != ${typeID(f.getType) - (if (f.isConstant) 7 else 0)}"
                                   case t: InterfaceType ⇒
                                       if (t.getSuperType.getSkillName.equals("annotation")) "type.typeID() != 5"
-                                  case t: UserType ⇒ s"""self.fieldType().typeID() != "${f.getType.getSkillName}""""
+                                  case t: UserType ⇒ s"""fType.name() != "${f.getType.getSkillName}""""
                                   case _ ⇒ "False:  # TODO type check!"
                               }
                           }:

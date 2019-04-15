@@ -134,24 +134,25 @@ class Generic${name}Test(TestCase, CommonTest):
   private def equalValue(left : String, v : Any, t : Type) : String = t match {
     case t : GroundType ⇒
       t.getSkillName match {
-        case "string" if null != v ⇒ s"""$left is not None & $left == "${v.toString}""""
-        case "i8" | "i16" | "i32" | "v64" | "i64" | "f32" | "f64" ⇒ s"$left == " + v.toString
+        case "string" if null != v ⇒ s"""$left is not None and $left, "${v.toString}""""
+        case "i8" | "i16" | "i32" | "v64" | "i64" | "f32" | "f64" ⇒ s"$left, " + v.toString
         case _ if null != v && !v.toString.equals("null") && !v.toString.equals("true")
-            && !v.toString.equals("false") ⇒ s"$left == " + v.toString + "_2"
-        case _ ⇒ s"$left == " + {if(v.toString == "null"){"None"}}
+            && !v.toString.equals("false") ⇒ s"$left, " + v.toString + "_2"
+        case "true" ⇒  s"$left, " + "True"
+        case "false" ⇒ s"$left, " + "False"
+        case "null" ⇒ s"$left, " + "None"
+        case _ ⇒ s"$left, " + v.toString
       }
 
-    case t : SingleBaseTypeContainer ⇒
-      v.asInstanceOf[JSONArray].iterator().toArray.map(value(_, t.getBaseType, "_2")).mkString(t match {
-        case t : SetType  ⇒ s"$left is not None and $left == set("
-        case _ ⇒ s"$left is not None and $left == list("
-      }, ", ", "))")
+    case t : SetType ⇒ v.asInstanceOf[JSONArray].iterator().toArray.map(value(_, t.getBaseType)).mkString(s"$left is not None and $left, set(", ", ", ")")
 
-    case t : MapType if v != null ⇒ s"$left is not None and $left == " + valueMap(v.asInstanceOf[JSONObject], "_2")
+    case t : ListType ⇒ v.asInstanceOf[JSONArray].iterator().toArray.map(value(_, t.getBaseType)).mkString(s"$left is not None and $left, [", ", ", "]")
+
+    case t : MapType if v != null ⇒ s"$left is not None and $left, " + valueMap(v.asInstanceOf[JSONObject], "_2")
 
     case _ ⇒
       if (v == null || v.toString.equals("None")) s"$left is None"
-      else s"$left == ${v.toString}_2"
+      else s"$left, ${v.toString}_2"
   }
 
   //private def value(v : Any, f : Field, suffix : String = "") : String = value(v, f.getType, suffix)
@@ -160,16 +161,15 @@ class Generic${name}Test(TestCase, CommonTest):
     case t : GroundType ⇒
       t.getSkillName match {
         case "string" if null != v ⇒ s""""${v.toString}""""
-        case "i8" | "i16" | "i32" | "v64" | "i64" | "f32" | "f64" ⇒ v.toString
+        case "i8" | "i16" | "i32" | "v64" | "i64" ⇒ v.toString
+        case "f32" | "f64" ⇒ if (!v.toString.contains(".")){v.toString + ".0"} else {v.toString}
         case _ if null != v        ⇒ v.toString + suffix
         case _                     ⇒ v.toString
       }
 
-    case t : SingleBaseTypeContainer ⇒
-      v.asInstanceOf[JSONArray].iterator().toArray.map(value(_, t.getBaseType, suffix)).mkString(t match {
-        case t : SetType  ⇒ "set("
-        case _            ⇒ "list("
-      }, ", ", ")")
+    case t : SetType ⇒ v.asInstanceOf[JSONArray].iterator().toArray.map(value(_, t.getBaseType, suffix)).mkString("{", ", ", "}") //TODO
+
+    case t : ListType ⇒ v.asInstanceOf[JSONArray].iterator().toArray.map(value(_, t.getBaseType, suffix)).mkString("[", ", ", "]")
 
     case t : MapType if v != null ⇒ valueMap(v.asInstanceOf[JSONObject], suffix)
 
@@ -185,7 +185,7 @@ class Generic${name}Test(TestCase, CommonTest):
       // https://docs.scala-lang.org/overviews/collections/maps.html#operations-in-class-map
       // ms put (k, v) Adds mapping from key k to value v to ms and returns any value previously associated with k as an option.
       for (name ← JSONObject.getNames(obj)) {
-        rval = s"put($rval, ${value(name, null, suffix)}, $suffix)"
+        rval = s"self.put($rval, '${value(name, null, suffix)}', $suffix)"
       }
 
       rval
@@ -270,13 +270,14 @@ class Generic${name}Test(TestCase, CommonTest):
         else {
           val assignments = for (fieldName ← JSONObject.getNames(fs).toSeq) yield {
             val f = field(tc, t, fieldName)
-            val getter = escaped(f.getName.lower())
+            val getter = "get" + escaped(f.getName.capital()) + "()"
 
             // do not check auto fields as they cannot obtain the stored value from file
             if (f.isAuto) ""
-            else s"""
-            self.assertTrue(${equalValue(s"${name}_2.$getter", fs.get(fieldName), f)})"""
-          }
+            else {
+                s"""
+            self.assertEqual(${equalValue(s"${name}_2.$getter", fs.get(fieldName), f)})"""
+            }}
 
           assignments.mkString
         }
@@ -301,10 +302,10 @@ class Generic${name}Test(TestCase, CommonTest):
         else {
           val assignments = for (fieldName ← JSONObject.getNames(fs).toSeq) yield {
             val f = field(tc, t, fieldName)
-            val setter = escaped(f.getName.lower())
+            val setter = "set" + escaped(f.getName.capital())
 
             s"""
-            $name.$setter = ${if (value(fs.get(fieldName), f.getType) == "null") {"None"} else {value(fs.get(fieldName), f.getType)}}"""
+            $name.$setter(${if (value(fs.get(fieldName), f.getType) == "null") {"None"} else {value(fs.get(fieldName), f.getType)}})"""
           }
 
           assignments.mkString

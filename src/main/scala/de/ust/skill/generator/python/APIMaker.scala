@@ -62,7 +62,7 @@ class ${name(t)}(${
         raise Exception("You are not allowed to set ${name(f)}")
         """
         } else {
-          s"""assert isinstance(value, ${mapType(f.getType)})
+          s"""assert isinstance(value, ${mapType(f.getType)}) or value is None
         self.${name(f)} = value""".stripMargin
         }
       }

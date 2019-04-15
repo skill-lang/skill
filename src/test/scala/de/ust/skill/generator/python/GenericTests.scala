@@ -56,7 +56,7 @@ class Generic${name}Test(TestCase, CommonTest):
     Tests the file reading capabilities.
     \"\"\"
     def read(self, s):
-        return SkillFile.open("../../" + s, Mode.Read, Mode.ReadOnly)
+        return SkillFile.open("../../../../" + s, Mode.Read, Mode.ReadOnly)
 
     def test_writeGeneric(self):
         path = self.tmpFile("write.generic")
@@ -78,7 +78,7 @@ class Generic${name}Test(TestCase, CommonTest):
         # read file and check skill IDs
         sf2 = SkillFile.open(path.name, Mode.Read)
         for t in sf2.allTypes():
-            os = types.get(t.name()).iterator()
+            os = types.get(t.name()).__iter__()
             for o in t:
                 self.assertTrue("to few instances in read stat", os.hasNext())
                 self.assertEquals(o.getSkillID(), os.next().getSkillID())
