@@ -49,8 +49,6 @@ from common.internal.fieldTypes.SingleArgumentType import SingleArgumentType
 from common.internal.fieldTypes.VariableLengthArray import VariableLengthArray
 from common.internal.Blocks import *
 from common.streams.FileInputStream import FileInputStream
-from common.streams.MappedInStream import MappedInStream
-from common.streams.MappedOutputStream import MappedOutputStream
 from common.internal.Mode import ActualMode, Mode
 from common.internal.NamedType import NamedType
 

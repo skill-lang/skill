@@ -98,6 +98,14 @@ class $nameF(${
         ${writeCode(t, originalF)}
 """
                   }
+    def get(self, ref):
+        return ref.${name(f)}
+
+    def set(self, ref, value):
+        ${
+          if (f.isConstant()) s"""raise Exception("${f.getName.camel} is a constant!")"""
+          else s"ref.${name(f)} = value"
+      }
 """)
           }
       }
@@ -272,7 +280,7 @@ class $nameF(${
                 result += 1
             else:
                 result += V64.singleV64Offset(len(v))
-                result += fType.keyType.calculateOffset(v.keySet())
+                result += fType.keyType.calculateOffset(v.keys())
                 result += fType.valueType.calculateOffset(v.values())
             """
 

@@ -64,7 +64,7 @@ class SkillState(State):
             raise ParseException(inStream, -1, e,
                                  "A super type does not match the specification; see cause for details.")
         for t in types:
-            self._poolByName[t.name] = t
+            self._poolByName[t.name()] = t
 
         self._finalizePools(inStream)
 """)
