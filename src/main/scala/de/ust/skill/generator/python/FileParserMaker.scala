@@ -56,7 +56,7 @@ class Parser(FileParser):
             if superPool is None:
                 superPool = BasePool(len(types), name, StoragePool.noKnownFields, StoragePool.noAutoFields, cls)
             else:
-                superPool = superPool.makeSubPool(len(types), name)
+                superPool = superPool.makeSubPool(len(types), name, cls)
             return superPool
         finally:
             types.append(superPool)
