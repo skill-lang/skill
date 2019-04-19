@@ -104,40 +104,6 @@ ${
         rval = self._cls(-1${appendInitializationArguments(t, prependTypes = false)})
         self.add(rval)
         return rval
-
-    def build(self):
-        return self.${nameT}Builder(self, self._cls())
-
-    class ${name(t)}Builder(StoragePool.Builder):
-        \"\"\"
-        Builder for new $nameT instances.
-        \"\"\"
-        ${
-        (for (f ← t.getAllFields if !f.isIgnored && !f.isConstant)
-          yield s"""
-        def ${name(f)}(self, ${name(f)}):
-            self.instance.set${escaped(f.getName.capital)}(${name(f)})
-            return self
-        """).mkString
-      }
-        def make(self):
-            self.pool.add(self.instance)
-            rval = self.instance
-            self.instance = None
-            return rval
-
-    def makeSubPool(self, index, name):
-        \"\"\"
-        used internally for type forest construction
-        \"\"\"
-        return $accessT.UnknownSubPool(index, name, self)
-
-    class UnknownSubPool(StoragePool):
-        def __init__(self, poolIndex, name, superPools):
-            super(${access(t)}.UnknownSubPool, self).__init__(poolIndex, name, superPools, self.noKnownFields, self.noAutoFields)
-
-        def makeSubPool(self, index, name):
-            return type(self)(index, name, self)
 """)
       }
     }
