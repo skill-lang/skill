@@ -347,7 +347,7 @@ class $nameF(${
 """
   }
 
-  private final def writeCode(t : Type, fieldAccess : String) : String = t match {
+  private final def writeCode(t : Type, fieldAccess : String, SingBaseCont : Boolean = false) : String = t match {
     case t : GroundType ⇒ t.getSkillName match {
       case "annotation" ⇒ s"t.writeSingleField($fieldAccess, out)"
       case "string"     ⇒ s"t.writeSingleField($fieldAccess, out)"
@@ -368,17 +368,18 @@ class $nameF(${
             else:
                 out.v64(size)
                 for e in x:
-                    ${writeCode(t.getBaseType, "e")}
+                    ${writeCode(t.getBaseType, "e", true)}
 
         """
 
     case t : InterfaceType if t.getSuperType.getSkillName == "annotation" ⇒ s"t.writeSingleField($fieldAccess, out)"
 
-    case t : UserType ⇒ s"""v = $fieldAccess
-            if v is None:
-                out.i8(0)
-            else:
-                out.v64(v.getSkillID())"""
+    case t : UserType ⇒ s"""
+${if (SingBaseCont) "        " else ""}            v = $fieldAccess
+${if (SingBaseCont) "        " else ""}            if v is None:
+${if (SingBaseCont) "        " else ""}                out.i8(0)
+${if (SingBaseCont) "        " else ""}            else:
+${if (SingBaseCont) "        " else ""}                out.v64(v.getSkillID())"""
     case _ ⇒ s"self.fieldType().writeSingleField($fieldAccess, out)"
   }
 }
