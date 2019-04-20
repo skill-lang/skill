@@ -55,12 +55,12 @@ class APITests extends common.GenericAPITests {
     rval.write(s"""
 
 import os
-from unittest import TestCase
+import unittest
 from python.src.$packagePath.api import *
 from python.src.common.CommonTest import CommonTest
 
 
-class Generic${name}Test(TestCase, CommonTest):
+class Generic${name}Test(unittest.TestCase, CommonTest):
     \"\"\"
     Tests the file reading capabilities.
     \"\"\"
