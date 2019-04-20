@@ -39,7 +39,7 @@ class Main extends FakeMain
 
   lineLength = 120
   override def comment(d : Declaration) : String = d.getComment.format("    \"\"\"\n", "    ", lineLength, "    \"\"\"\n")
-  override def comment(f : FieldLike) : String = f.getComment.format("# ", "    # ", lineLength, "\n")
+  override def comment(f : FieldLike) : String = f.getComment.format("#\n", "    # ", lineLength, "\n")
 
   /**
    * Translates types into python type names.
