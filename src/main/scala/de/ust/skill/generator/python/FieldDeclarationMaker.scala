@@ -101,10 +101,11 @@ class $nameF(${
     def get(self, ref):
         return ref.${name(f)}
 
-    def set(self, ref, value):
+    def set(self, ref: SkillObject, value):
         ${
           if (f.isConstant()) s"""raise Exception("${f.getName.camel} is a constant!")"""
-          else s"ref.${name(f)} = value"
+          else s"""assert isinstance(value, ${mapType(f.getType)}) or value is None
+        ref.${name(f)} = value"""
       }
 """)
           }

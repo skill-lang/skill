@@ -167,7 +167,7 @@ class Generic${name}Test(unittest.TestCase, CommonTest):
         case _                     ⇒ v.toString
       }
 
-    case t : SetType ⇒ v.asInstanceOf[JSONArray].iterator().toArray.map(value(_, t.getBaseType, suffix)).mkString("{", ", ", "}") //TODO
+    case t : SetType ⇒ v.asInstanceOf[JSONArray].iterator().toArray.map(value(_, t.getBaseType, suffix)).mkString("{", ", ", "}")
 
     case t : ListType ⇒ v.asInstanceOf[JSONArray].iterator().toArray.map(value(_, t.getBaseType, suffix)).mkString("[", ", ", "]")
 

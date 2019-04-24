@@ -18,7 +18,7 @@ trait APIMaker extends GeneralOutputMaker {
     //package & imports
     out.write(
       s"""
-from python.src.${packagePrefix()}internal import SkillState, SkillObject, Mode
+from ${packagePrefix()}internal import SkillState, SkillObject, Mode
 """)
     for(t <- IR) {
       val customizations = t.getCustomizations.filter(_.language.equals("python")).toArray
