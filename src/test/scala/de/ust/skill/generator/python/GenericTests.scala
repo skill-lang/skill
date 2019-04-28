@@ -45,13 +45,13 @@ class GenericTests extends common.GenericTests {
     val rval = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))
 
     rval.write(s"""
-from unittest import TestCase
+import unittest
 from tempfile import TemporaryFile
 from python.src.$packagePath.api import *
 from python.src.common.CommonTest import CommonTest
 
 
-class Generic${name}Test(TestCase, CommonTest):
+class Generic${name}Test(unittest.TestCase, CommonTest):
     \"\"\"
     Tests the file reading capabilities.
     \"\"\"

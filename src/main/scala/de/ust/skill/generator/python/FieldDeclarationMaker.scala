@@ -58,7 +58,7 @@ class $nameF(${
                               originalF.getType match {
                                   case t: GroundType ⇒ s"self.fieldType().typeID() != ${typeID(f.getType) - (if (f.isConstant) 7 else 0)}"
                                   case t: InterfaceType ⇒
-                                      if (t.getSuperType.getSkillName.equals("annotation")) "type.typeID() != 5"
+                                      if (t.getSuperType.getSkillName.equals("annotation")) "fType.typeID() != 5"
                                   case t: UserType ⇒ s"""fType.name() != "${f.getType.getSkillName}""""
                                   case _ ⇒ "False:  # TODO type check!"
                               }
@@ -101,10 +101,10 @@ class $nameF(${
     def get(self, ref):
         return ref.${name(f)}
 
-    def set(self, ref: SkillObject, value):
+    def set(self, ref, value):
         ${
           if (f.isConstant()) s"""raise Exception("${f.getName.camel} is a constant!")"""
-          else s"""assert isinstance(value, ${mapType(f.getType)}) or value is None
+          else s"""assert isinstance(ref, self.owner._cls)
         ref.${name(f)} = value"""
       }
 """)
