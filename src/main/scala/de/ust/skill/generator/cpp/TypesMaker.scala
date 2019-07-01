@@ -212,7 +212,7 @@ ${
 
             case _ ⇒ ""
           }.mkString
-          }$localFieldName = ${name(f)};"
+          }this->$localFieldName = ${name(f)};"
       }
 
       if(f.isConstant)
