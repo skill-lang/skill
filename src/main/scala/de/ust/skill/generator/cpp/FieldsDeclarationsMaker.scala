@@ -337,7 +337,7 @@ $checks
                     const auto t$depth = (skill::fieldTypes::MapType*)(t${depth - 1}->value);
 
                     for(auto idx$depth = in->v64(); idx$depth > 0; idx$depth--) {
-                        auto k$depth = ${readType(ts.head, "", s"t${depth - 1}->key")};
+                        auto k$depth = ${readType(ts.head, "", s"t${depth}->key")};
                         ${readInnerMap(ts.tail, depth + 1)}
                         (*v${depth - 1})[k$depth] = v$depth;
                     }"""
