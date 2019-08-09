@@ -12,6 +12,7 @@ object KnownGenerators {
     classOf[ada.Main],
     classOf[c.Main],
     classOf[cpp.Main],
+    classOf[csharp.Main],
     classOf[doxygen.Main],
     classOf[ecore.Main],
     classOf[haskell.Main],
