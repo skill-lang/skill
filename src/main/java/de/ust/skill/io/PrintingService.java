@@ -1,8 +1,3 @@
-/*  ___ _  ___ _ _                                                            *\
-** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-18 University of Stuttgart                 **
-** |___/_|\_\_|_|____|    see LICENSE                                         **
-\*                                                                            */
 package de.ust.skill.io;
 
 import java.io.File;
@@ -139,5 +134,9 @@ public class PrintingService {
             throw new RuntimeException("Unable to delete " + file.getAbsolutePath());
 
         return false;
+    }
+
+    public String getOutPath(){
+        return outPath.getAbsolutePath();
     }
 }

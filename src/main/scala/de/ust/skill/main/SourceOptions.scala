@@ -1,6 +1,6 @@
 /*  ___ _  ___ _ _                                                            *\
 ** / __| |/ (_) | |       The SKilL Generator                                 **
-** \__ \ ' <| | | |__     (c) 2013-18 University of Stuttgart                 **
+** \__ \ ' <| | | |__     (c) 2013-16 University of Stuttgart                 **
 ** |___/_|\_\_|_|____|    see LICENSE                                         **
 \*                                                                            */
 package de.ust.skill.main
@@ -62,8 +62,8 @@ trait SourceOptions extends AbstractOptions {
         if (!visitors.isEmpty)
           println(s"Visitors for types ${visitors.mkString(",")} will be generated.")
 
-        println(s"Parsed $target -- found ${tc.allTypeNames.size - (new TypeContext().allTypeNames.size)} types.")
-        println(s"Generating sources into ${outdir.getAbsolutePath()}")
+        println(s"Parsed $target -- found ${tc.allTypeNames.size - new TypeContext().allTypeNames.size} types.")
+        println(s"Generating sources into ${outdir.getAbsolutePath}")
       }
 
       // warn if target did not contain any user types
