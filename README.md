@@ -35,6 +35,9 @@ Usage
 
 TBD
 =======
+
+Language|Supported Features|Testsuite|Libs|Notes
+-------|------------------|---------|----|-----
 C++ 11 |documented,escaped,lazy(only reflection)| yes | commonC++ | 
 Haskell | only basic features | yes | - | some basic tests fail
 Java 8 |auto,append,customs,documented,escaped,interfaces,lazy(only reflection)| yes | commonJVM, commonJava | some multi-state support, last Arch.8 implementation
